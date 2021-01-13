@@ -32,12 +32,6 @@ contract ValidatorManager {
     address[] validators;
     address[] pendingValidators;
 
-    struct Validator {
-        address validator;
-        uint256[] epochsWithClaim; // epochs in which this validator sent a claim TODO: need a better name for this
-        uint8 participationRate; // number of claims on the last x blocks
-    }
-
     // TODO: Add Events
 
     // returns true if registration was successful
