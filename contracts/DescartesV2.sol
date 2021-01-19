@@ -24,117 +24,121 @@
 /// @title Interface DescartesV2 contract
 pragma solidity ^0.7.0;
 
-
-// TODO: Should this be an instantiator?
 contract DescartesV2 {
 
-    State state; // current state
-    Epoch[] epochs; // list of all epochs - elements of this list are always
-                    // finalize
 
     // inputs received during InputAccumulation will be included in the
     // current epoch. Inputs received while WaitingClaims or ChallengesInProgress
     // are accumulated for N + 1
-    enum Phase {InputAccumulation, WaitingClaims, ChallengesInProgress};
+    enum Phase {InputAccumulation, AwaitingConsensus, AwaitingDisputes};
+    /**
+    * // TODO: this is quite ugly, once agreed upon we can beautify it
+    *
+    *                All claims agreed OR challenge period ended
+    *                functions: claim() or finalizeEpoch()
+    *          +--------------------------------------------------+
+    *          |                                                  |
+    * +--------v-----------+   new input after IPAD     +---------+----------+
+    * |                    +--------------------------->+                    |
+    * | Input Accumulation |   firt claim after IPAD    | Awaiting Consensus |
+    * |                    +--------------------------->+                    |
+    * +-+------------------+                            +-----------------+--+
+    *   ^                                                                 ^  |
+    *   |                                              dispute resolved   |  |
+    *   |  dispute resolved                            before challenge   |  |
+    *   |  after challenge     +--------------------+  period ended       |  |
+    *   |  period ended        |                    +---------------------+  |
+    *   +----------------------+  Awaiting Dispute  |                        |
+    *                          |                    +<-----------------------+
+    *                          +--------------------+    conflicting claim
+    **/
 
-    bytes32[] inputs; // global inbox of inputs, inputs are hashes
+    struct State {
+        bytes32 epochHash; // epoch hash to being suggested for epochs merkle tree
+        uint256 timestamp; // timestamp of claim submission
 
-    // TODO: Is this the minimum time? And then the claimers can be flexible about it
-    // or is this always the same (defined on the constructor/instantiate)?
+        bytes32 attestatorMask; // mask of all addresses that agreed with claim
+
+        // address claimer and address challenger
+        // will probably live in the dispute resolution contract
+        // they only exist if there is a dispute
+
+        Phase phase; // phase of current state
+    }
+
+
+    // DescartesV2 only keeps the summary of all epochs, using the Merkle Hash
+    bytes32 epochsMRH; // Merkle root hash of epochs
+    /**
+    * Suggested epochsMRH structure
+    *                                    +-----+
+    *                                    | MRH |
+    *                                    +--+--+
+    *                                       |
+    *                           +-------+   |  +-------+
+    *                           |Epoch 1|---+--|Epoch 2|
+    *                           +---+---+      +-------+
+    *                               |
+    *                   +-----+     |    +-----+
+    *                   |I/O 1|-----+----|I/0 2|
+    *                   +--+--+          +-----+
+    *                      |
+    *          +-------+   |   +---------+
+    *          |Input 1|---+---|Output MR|
+    *          +-------+       +---------+
+    *                               |
+    *                  +--------+   |     +--------+
+    *                  |Output 0|---+-----|Output 1|
+    *                  +--------+         +--------+
+    *
+    *
+    * TODO: discuss what here has to be accessed frequently by the chain
+    * to weight the tradeoffs between storage/processing
+    **/
+
+    // max number of machine cycles accross every possible dapp computation
+    uint64 maxCycle;
+
+    // contract responsible for input/output management
+    address IOManager;
+
+    // contract that manages the validators
+    address validatorManager;
+
+    // contract that manages this dapps disputes
+    address disputeManager;
+
+    // this might move to IOManager as well
+    // new inputs after inputWindow get accumulated for next epoch
     uint64 inputWindow;  // time in seconds each epoch waits for inputs
                          // if there is a challenge/invalid state, the inputs
                          // get accumulated to the next epoch
 
-    uint64 claimDeadline; // after claimDeadline seconds after last input checkpoint
-                          // anyone can claim a state (so validators cannot freeze withdrawals forever)
-    uint64 challengeDeadline; // after challengeDeadline seconds a new claim can be accepted
+    uint64 challengePeriod; // after challengePeriod the current state is finalized
+
+    State state; // current state
+
+// THIS BELONGS TO IOManager
+//    struct Output {
+//        bytes32 outputHash; // hash of output - includes destination, payload, input hash and maybe highestGas
+//
+//        // THIS MOVES TO THE BRIDGE CONTRACT
+//        bool executed; // true if executed without reverting
+//        bytes32[] dependencies; // outputs that this output depends on
+//                                // can only be executed if all of them have been
+//                                // properly executed (executed == true)
+//    }
 
 
-    // THE BRIDGE CONTRACT WILL DEAL WITH OUTPUTS - will keep track of dependencies
-    // and figure out if they were executed or not
-    // DescartesV2 only keeps the summary of all outputs, using the Merkle Hash
-    bytes32 outputsMRH; // Merkle root hash of outputs
-
-
-    address logger; // address of logger contract
-    address inputValidator; // if input is permissionless, == 0x00
-                            // if not, this is a contract
-    address quorum; // contract that manages the quorum
-
-    struct Epoch {
-        bytes32 state; // machine hash at the end of this epoch
-        bytes32 epochOutputs; // hash of outputs from this epoch
-        bytes32 epochLogs; // hash of the logs
-        uint32 lastInput; // max uint32 ~= 4e+9, thats enough right?
+    function claim(bytes32 _epochHash) {
+        // check if its the first claim
+        // if not, if it agrees with previous claim update the attestorMask
+        // if attestors mask == consensus mask (validatorManager.getConsensusMask?)
+        //      state change from awaiting consensus -> accumulating input
+        // if it doesnt agree instantiates a dispute
     }
 
-    struct State {
-        bytes32 stateHash; // updated hash of cartesi machine
-        uint256 maxCycle; // max number of machine cycle to run
-        uint256 timestamp; // timestamp of claim submission
-        address claimer; // claimed by
-
-        //TODO: do we need a list of challengers?
-        address challenger; // if !status.Challenged, challenger == 0x00
-
-        address[] attestators; // validators that attested the validity of state
-
-        uint64 inputCheckpoint; // index of last input this epoch.
-        bytes32 outputMetaHash; // merkle root hash of all outputs generated by this state
-        Phase phase; // phase of current state
-    }
-
-    struct Output {
-        bytes32 outputHash; // hash of output - includes destination, payload, input hash and maybe highestGas
-
-        // THIS MOVES TO THE BRIDGE CONTRACT
-        bool executed; // true if executed without reverting
-        bytes32[] dependencies; // outputs that this output depends on
-                                // can only be executed if all of them have been
-                                // properly executed (executed == true)
-    }
-
-    // this will be a contract
-    struct Quorum {
-        uint256 size; // size of quorum
-        address[] validators;
-        // func addMember;
-        // func kickMember;
-        // func penalizeMember;
-        // func isValidator;
-    }
-
-
-    function addInput(bytes32 _input, bytes32 _payload) {
-        // prepend msg.sender and timestamp (maybe blockhash)?
-        // if inputValidator != 0x00, require(inputValidator.validate(_input, msg.sender)
-
-        // add input
-
-    }
-
-    function claim(bytes32 _finalHash, uint256 _maxCycle,  bytes32 outputs) {
-        // if phase == InputAccumulation
-        //      require time > minimum duration
-
-        // require msg.sender is validator OR timestamp > challengeDeadline
-
-        // require outputs is cointained in the final hash
-
-        // if first claim for new state
-        //      add state to epoch list
-        //      state.stateHash = _finalHash
-        //// dont need initial hash, its equal epochs[epochs.length() - 1].state)
-
-        // else if !new state
-        //      if _finalHash == state.stateHash && maxCycle == && outputs ==
-        //          add as attestator
-        //          if every quorum member attested, Phase -> InputAccumulation
-        //      else Phase -> ChallengesInProgress
-
-    }
-
-    function finalizeState() {
+    function finalizeEpoch() {
         // anyone can call
 
         // require phase == WaitingClaims && claim deadline passed
@@ -143,15 +147,16 @@ contract DescartesV2 {
         //                  (challenge deadline passed || there is a winner)
     }
 
-    function executeOutput(
-        Epoch _outputEpoch,
-        bytes32 _outputHash,
-        uint256 _outputIndex, // index of the output leaf
-        bytes32[] _inputSiblings, // Siblings to prove inputs merkle root hash
-        bytes32[] _outputSiblings, // Siblings to prove outputs merkle root hash
-        bytes32 _payload, // should be contained in outputHash?
-        address _destination // should be contained in outputHash?
-    ) returns (bool) {
-        if (executed[_outputHash]) return true;
-    }
+    // THIS GOES TO IOContract
+    // function executeOutput(
+    //     Epoch _outputEpoch,
+    //     bytes32 _outputHash,
+    //     uint256 _outputIndex, // index of the output leaf
+    //     bytes32[] _inputSiblings, // Siblings to prove inputs merkle root hash
+    //     bytes32[] _outputSiblings, // Siblings to prove outputs merkle root hash
+    //     bytes32 _payload, // should be contained in outputHash?
+    //     address _destination // should be contained in outputHash?
+    // ) returns (bool) {
+    //     if (executed[_outputHash]) return true;
+    // }
 }
