@@ -25,80 +25,61 @@
 pragma solidity ^0.7.0;
 
 // TODO: What is the incentive for validators to not just copy the first claim that arrived?
-contract ValidatorManager {
-    uint256 collateral; // required collateral per validator
-    uint8 maxSize; // max amount of validators accepted
-    uint8 minParticipationRate; // forced num of participations (claim) on the last 100 blocks?
-    address[] validators;
-    address[] pendingValidators;
+interface ValidatorManager {
+    address immutable descartesV2; // descartes 2 contract using this validator
+    bytes32[] claims; // current's epoch claims
+    address[] validators; // current validators
+    bytes20 currentMask; // mask of validatos that agree on the current claims
+    bytes20 consensusMask; // mask of all validators - cant be immutable because
+                           // because validators can be added/kicked out
 
-    // TODO: Add Events
+    enum Result {NoConflict, Consensus, Conflict} // Result after analyzing the claim
+                                                  // NoConflict - No conflicting claims or consensus
+                                                  // Consensus - All validators had equal claims
+                                                  // Conflict - Claim is conflicting with previous one
 
-    // returns true if registration was successful
-    function addValidators(address[] _validators) onlyOwner returns bool {
-        // creates list of validators
-        // add to pending validators, because collateral was not yet deposited
+
+    // @notice functions modified by onlyDescartesV2 will only be executed if
+    // they're called by DescartesV2 contract, otherwise it will throw an exception
+    modifier onlyDescartesV2 {
+        require(
+            msg.sender == descartesV2,
+            "Only descartesV2 can call this functions"
+        );
+        _;
     }
 
-    // can only be called by pending validator
-    // returns true if validator was accepted
-    function acceptValidatorRole()
-    onlyPendingValidator
-    returns (bool) {
-        // msg.sender transfers collateral to this contract
-        // msg.sender goes from pending validators to validators list
-    }
+    // @notice called when a claim is received by descartesv2
+    // @params _sender address of sender of that claim
+    // @params _claim claim received by descartesv2
+    // @returns result of claim, signaling current state of claims
+    function onClaim(
+        address _sender,
+        bytes32 _claim
+    )
+    onlyDescartesV2
+    returns (Result);
 
+    // @notice called when a dispute ends in descartesv2
+    // @params _winner address of dispute winner
+    // @params _loser address of dispute loser
+    // @returns result of dispute being finished
+    function onDisputeEnd(
+        address _winner,
+        address _loser
+    )
+    onlyDescartesV2
+    returns (Result);
 
-    // returns if registrantion withdraw was successful
-    function retire() onlyValidators returns bool {
-        // cant do this if last claim/challenge of msg.sender is still active
-        // transfer back collateral to validator
-        // remove from validators list
-    }
+    // @notice called when challenging period timed out
+    // @params _winner address of dispute winner
+    // @params _loser address of dispute loser
+    // @returns result of dispute being finished
+    function onChallengePeriodTimeout()
+    onlyDescartesV2
+    returns (Result);
 
-    // returns if all validators on _validators list were removed successfully
-    function removeValidators(address[] _validators, bytes32[] fraudProof) returns bool {
-        // prove that a validator cheated (can you only remove when they cheated? Can you remove from inactivity?)
-        // maybe you can send either a fraudProof or a list of the x most recent epochs where this validator hasn't participated
-        // but then the lazy validator can participate on the minimum amount of epochs possible, just to not get kicked
-        // not sure if this would make economical sense, because his collateral would be locked and he wouldn't be gettint the retainer fee. But it might be a griefing attack of sorts.
-
-
-        // takes collateral
-        // kick validator
-    }
-
-    // TODO: Only CTSI? Only Ether? Any ERC20 token?
-    function transferRetainer(uint256 _epoch) onlyCartesiContract returns (bool) {
-        // pay retainer to validators who contributed
-    }
-
-    // GETTERS
-
-    // returns is address is an active validator
-    function isValidator(address _validator) returns bool{}
-
-    // returns if validator has claimed for epoch _epoch
-    // returns validator claim
-    function hasClaimed(address _validator, uint256 _epoch)
-    returns (bool, bytes32) {}
-
-    // returns set of active validators
-    function getCurrentValidatorSet() returns address[] {}
-
-    //returns validator set that claimed for epoch _epoch
-    function getValidatorSetOnEpoch() returns address[] {}
-
-    // returns all claims by validator
-    function getClaimHistory(address _validator) returns bytes32[] {}
-
-    // returns epochs in which validator got into a challenge
-    function getContestedEpochs(address _validator) returns uint256[] {}
-
-    // returns collateral
-    function getCollateral() returns uint256 {}
-
-    // returns contract's balance
-    function getBalance() returns uint256 {}
+    // @notice removes claim from claims[]
+    // @returns claim being removed, returns 0x if there are no claims
+    function popClaim() onlyDescartesV2 returns (bytes32);
 }
