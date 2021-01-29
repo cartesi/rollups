@@ -26,28 +26,11 @@ pragma solidity ^0.7.0;
 
 // TODO: What is the incentive for validators to not just copy the first claim that arrived?
 interface ValidatorManager {
-    address immutable descartesV2; // descartes 2 contract using this validator
-    bytes32[] claims; // current's epoch claims
-    address[] validators; // current validators
-    bytes20 currentMask; // mask of validatos that agree on the current claims
-    bytes20 consensusMask; // mask of all validators - cant be immutable because
-                           // because validators can be added/kicked out
+    // NoConflict - No conflicting claims or consensus
+    // Consensus - All validators had equal claims
+    // Conflict - Claim is conflicting with previous one
+    enum Result {NoConflict, Consensus, Conflict};
 
-    enum Result {NoConflict, Consensus, Conflict} // Result after analyzing the claim
-                                                  // NoConflict - No conflicting claims or consensus
-                                                  // Consensus - All validators had equal claims
-                                                  // Conflict - Claim is conflicting with previous one
-
-
-    // @notice functions modified by onlyDescartesV2 will only be executed if
-    // they're called by DescartesV2 contract, otherwise it will throw an exception
-    modifier onlyDescartesV2 {
-        require(
-            msg.sender == descartesV2,
-            "Only descartesV2 can call this functions"
-        );
-        _;
-    }
 
     // @notice called when a claim is received by descartesv2
     // @params _sender address of sender of that claim
@@ -71,13 +54,8 @@ interface ValidatorManager {
     onlyDescartesV2
     returns (Result);
 
-    // @notice called when challenging period timed out
-    // @params _winner address of dispute winner
-    // @params _loser address of dispute loser
-    // @returns result of dispute being finished
-    function onChallengePeriodTimeout()
-    onlyDescartesV2
-    returns (Result);
+    // @notice called when a new epoch starts
+    function onNewEpoch() onlyDescartesV2 {
 
     // @notice removes claim from claims[]
     // @returns claim being removed, returns 0x if there are no claims
