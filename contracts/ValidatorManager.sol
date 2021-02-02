@@ -40,8 +40,8 @@ interface ValidatorManager {
         address _sender,
         bytes32 _claim
     )
-    onlyDescartesV2
-    returns (Result);
+    external
+    returns (Result, bytes32[2] claims, address[2] claimers)
 
     // @notice called when a dispute ends in descartesv2
     // @params _winner address of dispute winner
@@ -49,15 +49,16 @@ interface ValidatorManager {
     // @returns result of dispute being finished
     function onDisputeEnd(
         address _winner,
-        address _loser
+        address _loser,
+        bytes32 _winningClaim
     )
-    onlyDescartesV2
-    returns (Result);
+    external
+    returns (Result, bytes32[2] claims, address[2] claimers)
 
     // @notice called when a new epoch starts
-    function onNewEpoch() onlyDescartesV2 {
+    function onNewEpoch() external;
 
-    // @notice removes claim from claims[]
-    // @returns claim being removed, returns 0x if there are no claims
-    function popClaim() onlyDescartesV2 returns (bytes32);
+    // @notice gets a claimer from current claim
+    // @returns address of claimer, reverts if no claimer for current claim
+    function popClaimer() external returns (address);
 }

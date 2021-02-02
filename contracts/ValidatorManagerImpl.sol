@@ -24,13 +24,14 @@
 /// @title Validator Manager Implementation
 pragma solidity ^0.7.0;
 
-interface ValidatorManagerImpl {
+import "./ValidatorManager.sol"
+
+contract ValidatorManagerImpl is ValidatorManager {
     address immutable descartesV2; // descartes 2 contract using this validator
-    bytes32[] claims; // current's epoch claims
+    bytes32 claim; // first claim
     address[] validators; // current validators
-    bytes20 currentMask; // mask of validatos that agree on the current claims
-    bytes20 consensusMask; // mask of all validators - cant be immutable because
-                           // because validators can be added/kicked out
+    uint32 validatorBitmask; //  each validator is represented by one bit
+    uint32 consensusGoal; // number that represents validatorBitMask with all relevant bits turned on
 
 
     // @notice functions modified by onlyDescartesV2 will only be executed if
@@ -49,7 +50,10 @@ interface ValidatorManagerImpl {
     constructor(address _descartesV2, address[] _validators) {
         descartesV2 = _descartesV2;
         validators = _validators;
-        newConsensusMask();
+
+        // create consensus goal, represents the scenario where all
+        // all validators claimed and agreed
+        newConsensusGoal();
     }
 
     // @notice called when a claim is received by descartesv2
@@ -60,17 +64,30 @@ interface ValidatorManagerImpl {
         address _sender,
         bytes32 _claim
     )
+    public
     onlyDescartesV2
-    returns (Result)
+    returns (Result, bytes32[2] claims, address[2] claimers)
     {
         // TODO: should claims by non validators just revert?
-        if (!isAllowed(_sender)) return Result.NoConflict;
+        if (!isAllowed(_sender)) return (Result.NoConflict, new bytes32[2], new address[2];
 
-        claims.push(_claim);
+        if (claim == bytes32(0)) {
+            claim = _claim;
+        }
 
-        return claims[0] == _claim ?
-            updateMask(_sender) :
-            Result.Conflict;
+        if (_claim != claim) {
+            return (
+                Result.Conflict,
+                bytes32[claim, _claim],
+                address[popClaimer(), _sender]
+            );
+        }
+
+        return (
+            updateValidatorMask(_sender),
+            new bytes32[_claim, bytes32(0)],
+            new address[_sender, address(0)]
+        );
     }
 
     // @notice called when a dispute ends in descartesv2
@@ -79,69 +96,98 @@ interface ValidatorManagerImpl {
     // @returns result of dispute being finished
     function onDisputeEnd(
         address _winner,
-        address _loser
+        address _loser,
+        bytes32 _winningClaim
     )
     onlyDescartesV2
-    returns (Result) {
-        // remove validator also updates consensus mask
+    public
+    returns (Result, bytes32[2], address[2]) {
+        // remove validator also removes validator from bitmask
         removeValidator(_loser);
-        return updateMask(_winner);
+
+        newConsensusGoal();
+        if (_winningClaim == claim) {
+            // first claim stood, dont need to update the bitmask
+            return consensusGoal == validatorBitMask ?
+                (Result.Consensus, bytes32[_winningClaim, bytes32(0)], address[_winner, address(0)]) :
+                (Result.NoConflict, bytes32[_winningClaim, bytes32(0)], address[_winner, address(0)]); 
+        }
+
+        // if first claim lost, and other validators have agreed with it
+        // there is a new dispute to be played
+        if (validatorBitMask != 0) {
+            return (
+                Result.Conflict,
+                bytes32[claim, _winningClaim],
+                address[popClaimer(), _winner]
+            );
+        }
+        // else there are no valdiators that agree with losing claim
+        return updateValidatorMask(_winner);
     }
 
     // @notice called when a new epoch starts
-    function onNewEpoch() onlyDescartesV2 {
-        // clear claims array
-        delete claims;
-
-        // resets current mask
-        currentMask = 0;
-    }
-
-
-    // @notice removes claim from claims[]
-    // @returns claim being removed, returns 0x if there are no claims
-    function popClaim() onlyDescartesV2 returns (bytes32) {
-        uint cLength = claims.length;
-
-        if (cLength == 0) return bytes32(0);
-
-        bytes32 claim = claims[cLength - 1];
-        claims.pop()
-
-        return claim;
+    function onNewEpoch() public onlyDescartesV2 {
+        claim = bytes32(0);
+        validatorBitMask = 0;
     }
 
     // INTERNAL FUNCTIONS
 
-    // @notice creates a new consensus mask
-    function newConsensusMask(){
-        for (uint i = 0; i < validators.length; i++) {
-            consensusMask = consensusMask & validators[i];
+    // @notice get validator that claimed current claim
+    function popClaimer() internal returns (address) {
+        require(
+            validatorBitMask == 0,
+             "No validators agree with current claim"
+        );
+
+        for (uint i = 0; i < validators.length(); i++) {
+            if (validatorBitMask & (1 << i) == 1) {
+               return validators[i];
+            }
         }
     }
 
-    // @notice updates current consensus mask
+    // @notice creates a new consensus goal
+    function newConsensusGoal() internal {
+        // consensus goal is a number where
+        // all bits related to validators are turned on
+        uint32 tmpConsensusGoal = (2 ** validators.length) - 1;
+
+        // is it cheaper to start from zero and update for non zero addresses?
+        for (uint i = 0; i < validators.length; i++) {
+            if (validators[i] == address(0)) {
+                uint32 zeroMask = ~(1 << i);
+                tmpConsensusGoal = tmpConsensusGoal & zeroMask;
+            }
+        }
+        consensusGoal = tempoConsensusGoal;
+    }
+
+    // @notice updates current validator bit mask
     // @params _sender address that will be included in mask
     // @return if mask updated led to consensus
-    function updateMask(address _sender) internal returns (Result) {
-        currentMask = currentMask & _sender;
-        return currentMask == consensusMask ?
-            Result.Consensus :
-            Result.NoConflict;
+    function updateValidatorMask(address _sender) internal returns (Result) {
+        for (uint i = 0; i < validators.length; i++) {
+            if (_sender == validators[i]) break;
+        }
+        validatorBitMask = validatorBitMask & (1 << i);
+
+        return validatorBitMask == consensusGoal? Result.Consensus : Result.NoConflict;
     }
 
     // @notice removes a validator
     // @params address of validator to be removed
     function removeValidator(address _validator) internal {
-        // finds and remove validator
+        // put address(0) in validators position
+        // removes them from validator bitmask
         for (uint i = 0; i < validators.length; i++) {
             if (_validator == validators[i]) {
-                validators[i] = validators[validators.length - 1];
-                validators.pop();
+                validators[i] = address(0);
+                bytes32 zeroMask = ~(1 << i);
+                validatorsBitMask = validatorBitMask & zeroMask;
                 break;
             }
         }
-        // creates new consensus mask
-        newConsensusMask();
     }
 }
