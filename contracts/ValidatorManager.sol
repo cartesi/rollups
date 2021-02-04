@@ -20,7 +20,6 @@
 // be used independently under the Apache v2 license. After this component is
 // rewritten, the entire component will be released under the Apache v2 license.
 
-
 /// @title Validator Manager
 pragma solidity ^0.7.0;
 
@@ -29,36 +28,36 @@ interface ValidatorManager {
     // NoConflict - No conflicting claims or consensus
     // Consensus - All validators had equal claims
     // Conflict - Claim is conflicting with previous one
-    enum Result {NoConflict, Consensus, Conflict};
-
+    enum Result {NoConflict, Consensus, Conflict}
 
     // @notice called when a claim is received by descartesv2
     // @params _sender address of sender of that claim
     // @params _claim claim received by descartesv2
     // @returns result of claim, signaling current state of claims
-    function onClaim(
-        address _sender,
-        bytes32 _claim
-    )
-    external
-    returns (Result, bytes32[2] claims, address[2] claimers)
+    function onClaim(address payable _sender, bytes32 _claim)
+        external
+        returns (
+            Result,
+            bytes32[2] memory claims,
+            address payable[2] memory claimers
+        );
 
     // @notice called when a dispute ends in descartesv2
     // @params _winner address of dispute winner
     // @params _loser address of dispute loser
     // @returns result of dispute being finished
     function onDisputeEnd(
-        address _winner,
-        address _loser,
+        address payable _winner,
+        address payable _loser,
         bytes32 _winningClaim
     )
-    external
-    returns (Result, bytes32[2] claims, address[2] claimers)
+        external
+        returns (
+            Result,
+            bytes32[2] memory claims,
+            address payable[2] memory claimers
+        );
 
     // @notice called when a new epoch starts
-    function onNewEpoch() external;
-
-    // @notice gets a claimer from current claim
-    // @returns address of claimer, reverts if no claimer for current claim
-    function popClaimer() external returns (address);
+    function onNewEpoch() external returns (bytes32);
 }
