@@ -30,7 +30,7 @@ contract DescartesV2 {
     // inputs received during InputAccumulation will be included in the
     // current epoch. Inputs received while WaitingClaims or ChallengesInProgress
     // are accumulated for N + 1
-    enum Phase {InputAccumulation, AwaitingConsensus, AwaitingDisputes};
+    enum Phase { InputAccumulation, AwaitingConsensus, AwaitingDisputes }
     /**
     * // TODO: this is quite ugly, once agreed upon we can beautify it
     *
@@ -69,7 +69,7 @@ contract DescartesV2 {
 
     // DescartesV2 only keeps the summary of all epochs, using the Merkle Hash
     bytes32 epochsMRH; // Merkle root hash of epochs
-    /**
+    /*
     * Suggested epochsMRH structure
     *                                    +-----+
     *                                    | MRH |
@@ -94,7 +94,7 @@ contract DescartesV2 {
     *
     * TODO: discuss what here has to be accessed frequently by the chain
     * to weight the tradeoffs between storage/processing
-    **/
+    */
 
     // max number of machine cycles accross every possible dapp computation
     uint64 maxCycle;
@@ -130,7 +130,7 @@ contract DescartesV2 {
 //    }
 
 
-    function claim(bytes32 _epochHash) {
+    function claim(bytes32 _epochHash) public {
         // check if its the first claim
         // if not, if it agrees with previous claim update the attestorMask
         // if attestors mask == consensus mask (validatorManager.getConsensusMask?)
@@ -138,7 +138,7 @@ contract DescartesV2 {
         // if it doesnt agree instantiates a dispute
     }
 
-    function finalizeEpoch() {
+    function finalizeEpoch() public {
         // anyone can call
 
         // require phase == WaitingClaims && claim deadline passed
