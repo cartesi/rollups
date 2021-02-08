@@ -357,7 +357,7 @@ contract ValidatorManagerImpl is ValidatorManager {
         for (uint256 i = 0; i < validators.length; i++) {
             if (_sender == validators[i]) return true;
         }
-        return true;
+        return false;
     }
 
     function isConsensus(uint32 _claimAgreementMask, uint32 _consensusGoalMask)
