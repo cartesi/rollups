@@ -60,4 +60,24 @@ interface ValidatorManager {
 
     // @notice called when a new epoch starts
     function onNewEpoch() external returns (bytes32);
+
+    // @notice emitted on Claim received
+    event ClaimReceived(
+        Result result,
+        bytes32[2] claims,
+        address payable[2] validators
+    );
+
+    // @notice emitted on Dispute end
+    event DisputeEnded(
+        Result result,
+        bytes32[2] claims,
+        address payable[2] validators
+    );
+
+    // @notice emitted on new Epoch
+    event NewEpoch(
+        bytes32 claim
+    );
+
 }
