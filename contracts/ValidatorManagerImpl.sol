@@ -81,39 +81,24 @@ contract ValidatorManagerImpl is ValidatorManager {
         )
     {
         require(_claim != bytes32(0), "claim of bytes32(0) is invalid");
-
         // TODO: should claims by non validators just revert?
-        if (!isAllowed(_sender))
-            return (
-                Result.NoConflict,
-                [bytes32(0), bytes32(0)],
-                [payable(0), payable(0)]
-            );
+        if (!isAllowed(_sender)) {
+            return emitClaimReceivedAndReturn(Result.NoConflict, [bytes32(0), bytes32(0)], [payable(0), payable(0)]);
+        }
 
+        // cant return because a single claim might mean consensus
         if (currentClaim == bytes32(0)) {
             currentClaim = _claim;
         }
 
         if (_claim != currentClaim) {
-            return (
-                Result.Conflict,
-                [currentClaim, _claim],
-                [getClaimerOfCurrentClaim(), _sender]
-            );
+            return emitClaimReceivedAndReturn(Result.Conflict, [currentClaim, _claim], [getClaimerOfCurrentClaim(), _sender]);
         }
+        claimAgreementMask = updateClaimAgreementMask(_sender);
 
-        return
-            isConsensus(updateClaimAgreementMask(_sender), consensusGoalMask)
-                ? (
-                    Result.Consensus,
-                    [_claim, bytes32(0)],
-                    [_sender, payable(0)]
-                )
-                : (
-                    Result.NoConflict,
-                    [bytes32(0), bytes32(0)],
-                    [payable(0), payable(0)]
-                );
+        return isConsensus(claimAgreementMask, consensusGoalMask) ?
+            emitClaimReceivedAndReturn(Result.Consensus, [_claim, bytes32(0)], [_sender, payable(0)]) :
+            emitClaimReceivedAndReturn(Result.NoConflict, [bytes32(0), bytes32(0)], [payable(0), payable(0)]);
     }
 
     // @notice called when a dispute ends in descartesv2
@@ -194,7 +179,40 @@ contract ValidatorManagerImpl is ValidatorManager {
         return tmpClaim;
     }
 
+    // @notice get agreement mask
+    // @return current state of agreement mask
+    function getCurrentAgreementMask() public view returns (uint32) {
+        return claimAgreementMask;
+    }
+    // @notice get consensus goal mask
+    // @return current consensus goal mask
+    function getConsensusGoalMask() public view returns (uint32) {
+        return consensusGoalMask;
+    }
+
     // INTERNAL FUNCTIONS
+
+    // @notice emits claim received event and then return
+    // @param _result to be emited and returned
+    // @param _claims to be emited and returned
+    // @param _validators to be emited and returned
+    // @dev this function existis to make code more clear/concise
+    function emitClaimReceivedAndReturn(
+        Result _result,
+        bytes32[2] memory _claims,
+        address payable[2] memory _validators
+    )
+    internal
+    returns (
+        Result,
+        bytes32[2] memory,
+        address payable[2] memory
+    )
+    {
+        emit ClaimReceived(_result, _claims, _validators);
+        return (_result, _claims, _validators);
+    }
+
 
     // @notice get one of the validators that agreed with current claim
     // @return validator that agreed with current claim
@@ -241,19 +259,21 @@ contract ValidatorManagerImpl is ValidatorManager {
 
     // @notice updates mask of validators that agreed with current claim
     // @params _sender address that of validator that will be included in mask
-    // @return true if mask update led to consensus, false if not
-    function updateClaimAgreementMask(address _sender)
+    // @return new claim agreement mask
+    function updateClaimAgreementMask(address payable _sender)
+        view
         internal
         returns (uint32)
     {
+        uint32 tmpClaimAgreement = claimAgreementMask;
         for (uint32 i = 0; i < validators.length; i++) {
             if (_sender == validators[i]) {
-                claimAgreementMask = claimAgreementMask | (uint32(1) << i);
+                tmpClaimAgreement = (tmpClaimAgreement | (uint32(1) << i));
                 break;
             }
         }
 
-        return claimAgreementMask;
+        return tmpClaimAgreement;
     }
 
     // @notice removes a validator
@@ -285,8 +305,9 @@ contract ValidatorManagerImpl is ValidatorManager {
         for (uint256 i = 0; i < validators.length; i++) {
             if (_sender == validators[i]) return true;
         }
-        return false;
+        return true;
     }
+
 
     function isConsensus(uint32 _claimAgreementMask, uint32 _consensusGoalMask)
         internal
