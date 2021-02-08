@@ -51,6 +51,8 @@ contract ValidatorManagerImpl is ValidatorManager {
     // @notice populates validators array and creates a consensus mask
     // @params _descartesV2 address of descartes contract
     // @params _validators initial validator set
+    // @dev validators have to be unique, if the same validator is added twice
+    //      consensus will never be reached
     constructor(address _descartesV2, address payable[] memory _validators) {
         descartesV2 = _descartesV2;
         validators = _validators;
@@ -80,10 +82,15 @@ contract ValidatorManagerImpl is ValidatorManager {
             address payable[2] memory
         )
     {
-        require(_claim != bytes32(0), "claim of bytes32(0) is invalid");
+        require(_claim != bytes32(0), "claim cannot be 0x00");
         // TODO: should claims by non validators just revert?
         if (!isAllowed(_sender)) {
-            return emitClaimReceivedAndReturn(Result.NoConflict, [bytes32(0), bytes32(0)], [payable(0), payable(0)]);
+            return
+                emitClaimReceivedAndReturn(
+                    Result.NoConflict,
+                    [bytes32(0), bytes32(0)],
+                    [payable(0), payable(0)]
+                );
         }
 
         // cant return because a single claim might mean consensus
@@ -92,13 +99,27 @@ contract ValidatorManagerImpl is ValidatorManager {
         }
 
         if (_claim != currentClaim) {
-            return emitClaimReceivedAndReturn(Result.Conflict, [currentClaim, _claim], [getClaimerOfCurrentClaim(), _sender]);
+            return
+                emitClaimReceivedAndReturn(
+                    Result.Conflict,
+                    [currentClaim, _claim],
+                    [getClaimerOfCurrentClaim(), _sender]
+                );
         }
         claimAgreementMask = updateClaimAgreementMask(_sender);
 
-        return isConsensus(claimAgreementMask, consensusGoalMask) ?
-            emitClaimReceivedAndReturn(Result.Consensus, [_claim, bytes32(0)], [_sender, payable(0)]) :
-            emitClaimReceivedAndReturn(Result.NoConflict, [bytes32(0), bytes32(0)], [payable(0), payable(0)]);
+        return
+            isConsensus(claimAgreementMask, consensusGoalMask)
+                ? emitClaimReceivedAndReturn(
+                    Result.Consensus,
+                    [_claim, bytes32(0)],
+                    [_sender, payable(0)]
+                )
+                : emitClaimReceivedAndReturn(
+                    Result.NoConflict,
+                    [bytes32(0), bytes32(0)],
+                    [payable(0), payable(0)]
+                );
     }
 
     // @notice called when a dispute ends in descartesv2
@@ -129,12 +150,12 @@ contract ValidatorManagerImpl is ValidatorManager {
             // first claim stood, dont need to update the bitmask
             return
                 isConsensus(claimAgreementMask, consensusGoalMask)
-                    ? (
+                    ? emitDisputeEndedAndReturn(
                         Result.Consensus,
                         [_winningClaim, bytes32(0)],
                         [_winner, payable(0)]
                     )
-                    : (
+                    : emitDisputeEndedAndReturn(
                         Result.NoConflict,
                         [bytes32(0), bytes32(0)],
                         [payable(0), payable(0)]
@@ -144,22 +165,25 @@ contract ValidatorManagerImpl is ValidatorManager {
         // if first claim lost, and other validators have agreed with it
         // there is a new dispute to be played
         if (claimAgreementMask != 0) {
-            return (
-                Result.Conflict,
-                [currentClaim, _winningClaim],
-                [getClaimerOfCurrentClaim(), _winner]
-            );
+            return
+                emitDisputeEndedAndReturn(
+                    Result.Conflict,
+                    [currentClaim, _winningClaim],
+                    [getClaimerOfCurrentClaim(), _winner]
+                );
         }
         // else there are no valdiators that agree with losing claim
-        // but we check for consensus in case the winner is the only validator left
+        // we can update current claim and check for consensus in case
+        // the winner is the only validator left
+        currentClaim = _winningClaim;
         return
             isConsensus(updateClaimAgreementMask(_winner), consensusGoalMask)
-                ? (
+                ? emitDisputeEndedAndReturn(
                     Result.Consensus,
                     [_winningClaim, bytes32(0)],
                     [_winner, payable(0)]
                 )
-                : (
+                : emitDisputeEndedAndReturn(
                     Result.NoConflict,
                     [bytes32(0), bytes32(0)],
                     [payable(0), payable(0)]
@@ -176,6 +200,7 @@ contract ValidatorManagerImpl is ValidatorManager {
         // clear validator agreement bit mask
         claimAgreementMask = 0;
 
+        emit NewEpoch(tmpClaim);
         return tmpClaim;
     }
 
@@ -184,35 +209,62 @@ contract ValidatorManagerImpl is ValidatorManager {
     function getCurrentAgreementMask() public view returns (uint32) {
         return claimAgreementMask;
     }
+
     // @notice get consensus goal mask
     // @return current consensus goal mask
     function getConsensusGoalMask() public view returns (uint32) {
         return consensusGoalMask;
     }
 
+    // @notice get current claim
+    // @return current claim
+    function getCurrentClaim() public view returns (bytes32) {
+        return currentClaim;
+    }
+
     // INTERNAL FUNCTIONS
 
+    // @notice emits dispute ended event and then return
+    // @param _result to be emitted and returned
+    // @param _claims to be emitted and returned
+    // @param _validators to be emitted and returned
+    // @dev this function existis to make code more clear/concise
+    function emitDisputeEndedAndReturn(
+        Result _result,
+        bytes32[2] memory _claims,
+        address payable[2] memory _validators
+    )
+        internal
+        returns (
+            Result,
+            bytes32[2] memory,
+            address payable[2] memory
+        )
+    {
+        emit DisputeEnded(_result, _claims, _validators);
+        return (_result, _claims, _validators);
+    }
+
     // @notice emits claim received event and then return
-    // @param _result to be emited and returned
-    // @param _claims to be emited and returned
-    // @param _validators to be emited and returned
+    // @param _result to be emitted and returned
+    // @param _claims to be emitted and returned
+    // @param _validators to be emitted and returned
     // @dev this function existis to make code more clear/concise
     function emitClaimReceivedAndReturn(
         Result _result,
         bytes32[2] memory _claims,
         address payable[2] memory _validators
     )
-    internal
-    returns (
-        Result,
-        bytes32[2] memory,
-        address payable[2] memory
-    )
+        internal
+        returns (
+            Result,
+            bytes32[2] memory,
+            address payable[2] memory
+        )
     {
         emit ClaimReceived(_result, _claims, _validators);
         return (_result, _claims, _validators);
     }
-
 
     // @notice get one of the validators that agreed with current claim
     // @return validator that agreed with current claim
@@ -230,7 +282,7 @@ contract ValidatorManagerImpl is ValidatorManager {
         // on the array that agrees with the current claim to enter a dispute
         // should this be random?
         for (uint256 i = 0; i < validators.length; i++) {
-            if (claimAgreementMask & (1 << i) == 1) {
+            if (claimAgreementMask & (1 << i) == (2**i)) {
                 return validators[i];
             }
         }
@@ -261,8 +313,8 @@ contract ValidatorManagerImpl is ValidatorManager {
     // @params _sender address that of validator that will be included in mask
     // @return new claim agreement mask
     function updateClaimAgreementMask(address payable _sender)
-        view
         internal
+        view
         returns (uint32)
     {
         uint32 tmpClaimAgreement = claimAgreementMask;
@@ -307,7 +359,6 @@ contract ValidatorManagerImpl is ValidatorManager {
         }
         return true;
     }
-
 
     function isConsensus(uint32 _claimAgreementMask, uint32 _consensusGoalMask)
         internal
