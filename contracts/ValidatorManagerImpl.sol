@@ -83,15 +83,7 @@ contract ValidatorManagerImpl is ValidatorManager {
         )
     {
         require(_claim != bytes32(0), "claim cannot be 0x00");
-        // TODO: should claims by non validators just revert?
-        if (!isAllowed(_sender)) {
-            return
-                emitClaimReceivedAndReturn(
-                    Result.NoConflict,
-                    [bytes32(0), bytes32(0)],
-                    [payable(0), payable(0)]
-                );
-        }
+        require(isAllowed(_sender), "_sender was not allowed to claim");
 
         // cant return because a single claim might mean consensus
         if (currentClaim == bytes32(0)) {
