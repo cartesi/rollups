@@ -20,17 +20,11 @@
 // rewritten, the entire component will be released under the Apache v2 license.
 
 import { expect, use } from 'chai'
-import { deployments, ethers } from 'hardhat'
-import {
-  deployMockContract,
-  MockContract,
-} from '@ethereum-waffle/mock-contract'
+import { ethers } from 'hardhat'
 import { solidity, MockProvider } from 'ethereum-waffle'
 import { ValidatorManagerImpl__factory } from '../src/types/factories/ValidatorManagerImpl__factory'
-import { BytesLike, Signer } from 'ethers'
+import { Signer } from 'ethers'
 import { ValidatorManagerImpl } from '../src/types/ValidatorManagerImpl'
-import { AnyARecord } from 'dns'
-import { isBytesLike } from 'ethers/lib/utils'
 
 use(solidity)
 
