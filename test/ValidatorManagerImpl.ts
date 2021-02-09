@@ -73,6 +73,14 @@ describe('Validator Manager Implementation', async () => {
     ).to.be.revertedWith('claim cannot be 0x00')
   })
 
+  it('onClaim should revert if sender is not allowed', async () => {
+    var claim = '0x' + '1'.repeat(64);
+    await expect(
+      VMI.onClaim(address_zero, claim),
+      'should revert if sender is not in validators array',
+    ).to.be.revertedWith('_sender was not allowed to claim')
+  })
+
   it('onClaim NoConflict and Consensus', async () => {
     var claim = '0x' + '1'.repeat(64);
 
