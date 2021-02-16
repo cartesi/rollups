@@ -47,5 +47,8 @@
     "pretest": "run-s prepare",
     "test": "hardhat test",
     "start": "hardhat node"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.4.0"
   }
 }
