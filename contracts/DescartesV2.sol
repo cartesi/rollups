@@ -147,6 +147,11 @@ contract DescartesV2 {
         //                  (challenge deadline passed || there is a winner)
     }
 
+    // descartesv2 gets notified when there is a new input
+    // only by input contract
+    function notifyInput() public {
+
+    }
     // THIS GOES TO IOContract
     // function executeOutput(
     //     Epoch _outputEpoch,
