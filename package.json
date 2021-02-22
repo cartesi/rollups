@@ -49,6 +49,8 @@
     "start": "hardhat node"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.4.0"
+    "@cartesi/logger": "^0.6.2",
+    "@openzeppelin/contracts": "^3.4.0",
+    "solidity-bytes-utils": "^0.1.2"
   }
 }
