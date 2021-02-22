@@ -27,7 +27,6 @@ import "@nomiclabs/hardhat-waffle";
 import "solidity-coverage";
 import "hardhat-typechain";
 import "hardhat-deploy";
-import "hardhat-gas-reporter"
 import "@tenderly/hardhat-tenderly";
 
 // read MNEMONIC from env variable
