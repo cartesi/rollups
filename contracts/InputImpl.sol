@@ -41,6 +41,7 @@ contract InputImpl is Input {
 
     DescartesV2 immutable descartesV2; // descartes 2 contract using this input contract
     LoggerInterface immutable logger; // logger contract
+    uint64 immutable log2size; // log2size of input flashdrive
 
     // always needs to keep track of two input boxes:
     // 1 for the input accumulation of next epoch
@@ -59,6 +60,7 @@ contract InputImpl is Input {
         );
         _;
     }
+
     constructor(address _descartesV2, address _logger) {
         descartesV2 = DescartesV2(_descartesV2);
         logger = LoggerInterface(_logger);
@@ -69,14 +71,18 @@ contract InputImpl is Input {
     ///      is power of 2 and multiple of 8 since the offchain machine
     ///      has a 8 byte word
     function addInput(
-        bytes calldata _input,
-        uint64 _log2Size
+        bytes calldata _input
     )
     public
     override
     returns (bytes32)
     {
         require(_input.length > 0, "input is empty");
+
+        // lock to guard reentrancy
+        bool lock;
+        require(!lock, "Reentrancy not allowed");
+        lock = true;
 
         // prepend msg.sender and block timestamp to _input
         bytes memory data = abi.encode(msg.sender, block.timestamp, _input);
@@ -88,13 +94,19 @@ contract InputImpl is Input {
         }
 
         // get merkle root hash of input
-        bytes32 root = logger.calculateMerkleRootFromData(_log2Size, data64);
+        bytes32 root = logger.calculateMerkleRootFromData(log2Size, data64);
+
+        // notifyInput returns true if that input belongs
+        // belong to a new epoch
+        if (descartesV2.notifyInput()) {
+            swapInputBox();
+        }
 
         // add input to correct inbox
         currentInputBox == 0? inputBox0.push(root) : inputBox1.push(root);
 
+        lock = false;
         // notify descartesV2 of new input 
-        descartesV2.notifyInput();
         return root;
     }
 
