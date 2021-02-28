@@ -88,7 +88,7 @@ contract InputImpl is Input {
             "input is larger than drive"
         );
 
-        bytes32 root = bytes32(0);//Merkle.calculateRootFromBytes(log2Size, data);
+        bytes32 root = Merkle.calculateRootFromBytes(log2Size, data);
 
         // notifyInput returns true if that input belongs
         // belong to a new epoch
