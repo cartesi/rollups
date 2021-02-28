@@ -27,18 +27,20 @@ interface Input {
 
     /// @notice adds input to correct inbox
     /// @param _input bytes array of input
-    /// @param _log2Size log 2 size of input after msg.sender
-    ///        and block.timestamp prepend
-    /// @return merkel root hash of input
+    /// @return merkle root hash of input
     /// @dev  msg.sender and timestamp are preppended log2 size
     ///       has to be calculated offchain taking that into account
     function addInput(
-        bytes calldata _input,
-        uint64 _log2Size
+        bytes calldata _input
     ) external returns (bytes32);
 
     /// @notice returns input from correct input inbox
-    function getInput(uint256 _index) external returns (bytes32);
+    /// @param _index position of the input on inbox
+    /// @return root hash of input
+    function getInput(uint256 _index) external view returns (bytes32);
+
+    /// @notice returns number of inputs on correct inbox
+    function getNumberOfInputs() external view returns (uint256);
 
     /// @notice called whenever there is a new input accumulation epoch
     /// @dev has to be  called even if new input accumulation happens
