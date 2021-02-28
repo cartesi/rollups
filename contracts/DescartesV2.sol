@@ -149,7 +149,7 @@ contract DescartesV2 {
 
     // descartesv2 gets notified when there is a new input
     // only by input contract
-    function notifyInput() public {
+    function notifyInput() public returns (bool) {
 
     }
     // THIS GOES TO IOContract
