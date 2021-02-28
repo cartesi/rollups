@@ -26,10 +26,7 @@ pragma solidity ^0.7.0;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// https://github.com/GNSPS/solidity-bytes-utils
-import "solidity-bytes-utils/contracts/BytesLib.sol";
-
-import "@cartesi/logger/contracts/LoggerInterface.sol";
+import "@cartesi/util/contracts/Merkle.sol";
 
 import "./Input.sol";
 import "./DescartesV2.sol";
@@ -37,11 +34,9 @@ import "./DescartesV2.sol";
 // TODO: this contract seems to be very unsafe, need to think about security implications
 contract InputImpl is Input {
     using SafeMath for uint256;
-    using BytesLib for bytes;
 
     DescartesV2 immutable descartesV2; // descartes 2 contract using this input contract
-    LoggerInterface immutable logger; // logger contract
-    uint64 immutable log2size; // log2size of input flashdrive
+    uint8 immutable log2Size; // log2size of input flashdrive
 
     // always needs to keep track of two input boxes:
     // 1 for the input accumulation of next epoch
@@ -70,9 +65,12 @@ contract InputImpl is Input {
         lock = false;
     }
 
-    constructor(address _descartesV2, address _logger) {
+    constructor(address _descartesV2, uint8 _log2Size) {
+        require(_log2Size >= 3, "log2Size smaller than a word");
+        require(_log2Size <= 64, "log2Size bigger than machine");
+
         descartesV2 = DescartesV2(_descartesV2);
-        logger = LoggerInterface(_logger);
+        log2Size = _log2Size;
     }
 
     /// @dev offchain code is responsible for making sure
@@ -85,7 +83,12 @@ contract InputImpl is Input {
         // prepend msg.sender and block timestamp to _input
         bytes memory data = abi.encode(msg.sender, block.timestamp, _input);
 
-        bytes32 root = Merkle.calculateRootFromBytes(log2Size, data);
+        require(
+            uint64(1) << (log2Size - 3)  >= data.length,
+            "input is larger than drive"
+        );
+
+        bytes32 root = bytes32(0);//Merkle.calculateRootFromBytes(log2Size, data);
 
         // notifyInput returns true if that input belongs
         // belong to a new epoch
@@ -102,12 +105,12 @@ contract InputImpl is Input {
 
     // this has to check if state is input accumulation
     // otherwise it could be looking at the wrong inbox
-    function getInput(uint256 _index) public override returns (bytes32) {
+    function getInput(uint256 _index) public view override returns (bytes32) {
         return currentInputBox == 0 ? inputBox1[_index] : inputBox0[_index];
     }
 
-    function getNumberOfInputs() public override returns (bytes32) {
-        return currentInputBox == 0 ? inputBox1.length() : inputBox0.length();
+    function getNumberOfInputs() public view override returns (uint256) {
+        return currentInputBox == 0 ? inputBox1.length: inputBox0.length;
     }
 
     // new input accumulation has to be called even when there are no new
