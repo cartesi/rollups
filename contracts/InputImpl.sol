@@ -50,7 +50,7 @@ contract InputImpl is Input {
     bytes32[] inputBox0;
     bytes32[] inputBox1;
 
-    uint currentInputBox;
+    uint256 currentInputBox;
     // @notice functions modified by onlyDescartesV2 will only be executed if
     // they're called by DescartesV2 contract, otherwise it will throw an exception
     modifier onlyDescartesV2 {
@@ -70,13 +70,7 @@ contract InputImpl is Input {
     ///      that input size plus msg.sender and block timestamp
     ///      is power of 2 and multiple of 8 since the offchain machine
     ///      has a 8 byte word
-    function addInput(
-        bytes calldata _input
-    )
-    public
-    override
-    returns (bytes32)
-    {
+    function addInput(bytes calldata _input) public override returns (bytes32) {
         require(_input.length > 0, "input is empty");
 
         // lock to guard reentrancy
@@ -89,7 +83,7 @@ contract InputImpl is Input {
 
         bytes8[] memory data64 = new bytes8[](data.length / 8);
         // transform bytes into bytes8[] array
-        for (uint i = 0; i < data.length; i += 8) {
+        for (uint256 i = 0; i < data.length; i += 8) {
             data64[i / 8] = bytes8(data.toUint64(i));
         }
 
@@ -103,45 +97,33 @@ contract InputImpl is Input {
         }
 
         // add input to correct inbox
-        currentInputBox == 0? inputBox0.push(root) : inputBox1.push(root);
+        currentInputBox == 0 ? inputBox0.push(root) : inputBox1.push(root);
 
         lock = false;
-        // notify descartesV2 of new input 
+        // notify descartesV2 of new input
         return root;
     }
 
     // this has to check if state is input accumulation
     // otherwise it could be looking at the wrong inbox
     function getInput(uint256 _index) public override returns (bytes32) {
-        if (currentInputBox == 0) {
-            require(
-                inputBox0.length > _index,
-                "index out of bounds"
-            );
-            return inputBox0[_index];
-        }
-
-        require(
-            inputBox1.length > _index,
-            "index out of bounds"
-        );
-        return inputBox1[_index];
+        return currentInputBox == 0 ? inputBox1[_index] : inputBox0[_index];
     }
 
     // new input accumulation has to be called even when there are no new
     // input but the epoch is over
-    function onNewInputAccumulation() onlyDescartesV2 public override {
+    function onNewInputAccumulation() public override onlyDescartesV2 {
         swapInputBox();
     }
 
-    function onNewEpoch() onlyDescartesV2 public override {
+    function onNewEpoch() public override onlyDescartesV2 {
         // clear input box for new inputs
         // the current input box should be accumulating inputs
         // for the new epoch already. So we clear the other one.
-        currentInputBox == 0? delete inputBox1 : delete inputBox0;
+        currentInputBox == 0 ? delete inputBox1 : delete inputBox0;
     }
-    
+
     function swapInputBox() internal {
-        currentInputBox == 0? currentInputBox = 1 : currentInputBox = 0;
+        currentInputBox == 0 ? currentInputBox = 1 : currentInputBox = 0;
     }
 }
