@@ -43,6 +43,12 @@ contract OutputImpl is Output {
         _;
     }
 
+    // @notice creates OutputImpl contract
+    // @params _descartesV2 address of descartes contract
+    constructor(address _descartesV2) {
+        descartesV2 = _descartesV2;
+    }
+
     /// @notice executes output
     /// @param _epochIndex which epoch the output belongs to
     /// @param _inputIndex which input, inside the epoch, the output belongs to
