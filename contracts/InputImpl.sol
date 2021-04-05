@@ -79,7 +79,7 @@ contract InputImpl is Input {
     ///      that input size plus msg.sender and block timestamp
     ///      is power of 2 and multiple of 8 since the offchain machine
     ///      has a 8 byte word
-    function addInput(bytes memory _input) public override noReentrancy() returns (bytes32) {
+    function addInput(bytes calldata _input) public override noReentrancy() returns (bytes32) {
         require(_input.length > 0, "input is empty");
 
         // 64 bytes
