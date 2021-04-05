@@ -35,6 +35,8 @@ import "./DescartesV2.sol";
 contract InputImpl is Input {
     using SafeMath for uint256;
 
+    uint256 constant L_WORD_SIZE = 3; // word = 8 bytes, log = 3
+
     DescartesV2 immutable descartesV2; // descartes 2 contract using this input contract
     uint8 immutable log2Size; // log2size of input flashdrive
 
@@ -53,7 +55,7 @@ contract InputImpl is Input {
     modifier onlyDescartesV2 {
         require(
             msg.sender == address(descartesV2),
-            "Only descartesV2 can call this functions"
+            "Only descartesV2 can call this function"
         );
         _;
     }
@@ -77,19 +79,20 @@ contract InputImpl is Input {
     ///      that input size plus msg.sender and block timestamp
     ///      is power of 2 and multiple of 8 since the offchain machine
     ///      has a 8 byte word
-    function addInput(bytes calldata _input) public override noReentrancy() returns (bytes32) {
+    function addInput(bytes memory _input) public override noReentrancy() returns (bytes32) {
         require(_input.length > 0, "input is empty");
 
-        // prepend msg.sender and block timestamp to _input
-        bytes memory data = abi.encode(msg.sender, block.timestamp, _input);
+        // 64 bytes
+        bytes memory metadata = abi.encode(msg.sender, block.timestamp);
 
+        // total size of the drive in words
+        uint256 size = 1 << uint256(log2Size - 3);
         require(
-            uint64(1) << (log2Size - 3)  >= data.length,
-            "input is larger than drive"
+            size << L_WORD_SIZE >= (_input.length.add(metadata.length)),
+            "input  + metadata is larger than drive"
         );
 
-        bytes32 root = Merkle.calculateRootFromBytes(log2Size, data);
-
+        bytes32 inputHash = keccak256(abi.encode(metadata, _input));
         // notifyInput returns true if that input belongs
         // belong to a new epoch
         if (descartesV2.notifyInput()) {
@@ -97,10 +100,9 @@ contract InputImpl is Input {
         }
 
         // add input to correct inbox
-        currentInputBox == 0 ? inputBox0.push(root) : inputBox1.push(root);
+        currentInputBox == 0 ? inputBox0.push(inputHash) : inputBox1.push(inputHash);
 
-        // notify descartesV2 of new input
-        return root;
+        return inputHash;
     }
 
     // this has to check if state is input accumulation
@@ -113,6 +115,9 @@ contract InputImpl is Input {
         return currentInputBox == 0 ? inputBox1.length: inputBox0.length;
     }
 
+    function getCurrentInbox() public view override returns (uint256) {
+        return currentInputBox;
+    }
     // new input accumulation has to be called even when there are no new
     // input but the epoch is over
     function onNewInputAccumulation() public override onlyDescartesV2 {

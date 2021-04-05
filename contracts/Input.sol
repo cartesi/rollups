@@ -40,7 +40,12 @@ interface Input {
     function getInput(uint256 _index) external view returns (bytes32);
 
     /// @notice returns number of inputs on correct inbox
+    /// @return number of inputs of non active inbox
     function getNumberOfInputs() external view returns (uint256);
+
+    /// @notice returns active current inbox index
+    /// @return index of current active inbox
+    function getCurrentInbox() external view returns (uint256);
 
     /// @notice called whenever there is a new input accumulation epoch
     /// @dev has to be  called even if new input accumulation happens
