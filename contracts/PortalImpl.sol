@@ -29,22 +29,28 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Portal.sol";
 import "./Input.sol";
 
-// TODO: this contract seems to be very unsafe, need to think about security implications
 contract PortalImpl is Portal {
     using SafeMath for uint256;
     address immutable outputContract;
     Input immutable inputContract;
+    bool lock;
 
     modifier onlyOutputContract {
         require(msg.sender == outputContract, "msg.sender != outputContract");
         _;
     }
 
+    /// TODO: this is also defined on InputImpl
+    /// @notice functions modified by noReentrancy are not subject to recursion
+    modifier noReentrancy() {
+        require(!lock, "reentrancy not allowed");
+        lock = true;
+        _;
+        lock = false;
+    }
+
     constructor(address _inputContract, address _outputContract) {
         inputContract = Input(_inputContract);
-
-        // TODO: we still dont have interface for output,
-        //      change this once we do
         outputContract = _outputContract;
     }
 
@@ -58,7 +64,7 @@ contract PortalImpl is Portal {
         address[] calldata _L2receivers,
         uint256[] calldata _amounts,
         bytes calldata _data
-    ) public payable override returns (bytes32) {
+    ) noReentrancy() public payable override returns (bytes32) {
         require(
             _L2receivers.length == _amounts.length,
             "receivers array length != amounts array length"
@@ -92,7 +98,7 @@ contract PortalImpl is Portal {
         address[] calldata _L2receivers,
         uint256[] calldata _amounts,
         bytes calldata _data
-    ) public override returns (bytes32) {
+    ) noReentrancy() public override returns (bytes32) {
         require(
             _L2receivers.length == _amounts.length,
             "receivers array length != amounts array length"
@@ -106,7 +112,10 @@ contract PortalImpl is Portal {
 
         IERC20 token = IERC20(_ERC20);
 
-        token.transferFrom(_L1Sender, address(this), totalAmount);
+        require(
+            token.transferFrom(_L1Sender, address(this), totalAmount),
+            "erc20 transferFrom failed"
+        );
 
         bytes memory input =
             abi.encode(
