@@ -61,6 +61,9 @@ interface ValidatorManager {
     // @notice called when a new epoch starts
     function onNewEpoch() external returns (bytes32);
 
+    // @notice get current claim
+    function getCurrentClaim() external view returns (bytes32);
+
     // @notice emitted on Claim received
     event ClaimReceived(
         Result result,

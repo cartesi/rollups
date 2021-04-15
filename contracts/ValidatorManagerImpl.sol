@@ -210,7 +210,7 @@ contract ValidatorManagerImpl is ValidatorManager {
 
     // @notice get current claim
     // @return current claim
-    function getCurrentClaim() public view returns (bytes32) {
+    function getCurrentClaim() public override view returns (bytes32) {
         return currentClaim;
     }
 
