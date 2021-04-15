@@ -27,6 +27,7 @@ import "./Input.sol";
 import "./Output.sol";
 import "./ValidatorManager.sol";
 import "./DescartesV2.sol";
+import "./DisputeManager.sol";
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -60,7 +61,7 @@ contract DescartesV2Impl is DescartesV2 {
     Input immutable input; // contract responsible for inputs
     Output immutable output; // contract responsible for ouputs
     ValidatorManager immutable validatorManager; // contract responsible for validators
-    address immutable disputeManager; // contract responsible for dispute resolution
+    DisputeManager immutable disputeManager; // contract responsible for dispute resolution
 
     uint64 immutable maxCycle; // max number of cycles for any instruction
 
@@ -106,7 +107,7 @@ contract DescartesV2Impl is DescartesV2 {
         input = Input(_input);
         output = Output(_output);
         validatorManager = ValidatorManager(_validatorManager);
-        disputeManager = _disputeManager;
+        disputeManager = DisputeManager(_disputeManager);
         inputDuration = _inputDuration;
         challengePeriod = _challengePeriod;
         maxCycle = _maxCycle;
@@ -120,7 +121,7 @@ contract DescartesV2Impl is DescartesV2 {
     /// @dev ValidatorManager makes sure that msg.sender is allowed
     //       and that claim != bytes32(0)
     /// TODO: add signatures for aggregated claims
-    function claim(bytes32 _epochHash) override public {
+    function claim(bytes32 _epochHash) public override {
         ValidatorManager.Result result;
         bytes32[2] memory claims;
         address payable[2] memory claimers;
@@ -145,7 +146,7 @@ contract DescartesV2Impl is DescartesV2 {
 
     /// @notice finalize epoch after timeout
     /// @dev can only be called if challenge period is over
-    function finalizeEpoch() override public {
+    function finalizeEpoch() public override {
         require(
             currentPhase == Phase.AwaitingConsensus,
             "Phase != Awaiting Consensus"
@@ -165,7 +166,7 @@ contract DescartesV2Impl is DescartesV2 {
 
     /// @notice called when new input arrives, manages the phase changes
     /// @dev can only be called by input contract
-    function notifyInput() onlyInputContract override public returns (bool) {
+    function notifyInput() public override onlyInputContract returns (bool) {
         if (
             currentPhase == Phase.InputAccumulation &&
             block.timestamp > inputAccumulationStart.add(inputDuration)
@@ -180,12 +181,12 @@ contract DescartesV2Impl is DescartesV2 {
     /// @param _winner winner of dispute
     /// @param _loser lose of sipute
     /// @param _winningClaim initial claim of winning validator
-    /// @dev can only by the dispute contract 
+    /// @dev can only by the dispute contract
     function resolveDispute(
         address payable _winner,
         address payable _loser,
         bytes32 _winningClaim
-    ) override public onlyDisputeContract {
+    ) public override onlyDisputeContract {
         ValidatorManager.Result result;
         bytes32[2] memory claims;
         address payable[2] memory claimers;
@@ -222,8 +223,8 @@ contract DescartesV2Impl is DescartesV2 {
             currentPhase = Phase.InputAccumulation;
             startNewEpoch();
         } else if (_result == ValidatorManager.Result.Conflict) {
-            // initiate dispute
             currentPhase = Phase.AwaitingDispute;
+            disputeManager.initiateDispute(_claims, _claimers, maxCycle);
         }
     }
 }
