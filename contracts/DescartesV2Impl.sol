@@ -135,7 +135,7 @@ contract DescartesV2Impl is DescartesV2 {
             msg.sender,
             _epochHash
         );
-        resolveResult(result, claims, claimers);
+        resolveValidatorResult(result, claims, claimers);
     }
 
     /// @notice finalize epoch after timeout
@@ -191,7 +191,7 @@ contract DescartesV2Impl is DescartesV2 {
             _winningClaim
         );
 
-        resolveResult(result, claims, claimers);
+        resolveValidatorResult(result, claims, claimers);
     }
 
     /// @notice starts new epoch
@@ -206,7 +206,7 @@ contract DescartesV2Impl is DescartesV2 {
     /// @param _result result from claim or dispute operation
     /// @param _claims array of claims in case of new conflict
     /// @param _claimers array of claimers in case of new conflict
-    function resolveResult(
+    function resolveValidatorResult(
         ValidatorManager.Result _result,
         bytes32[2] memory _claims,
         address payable[2] memory _claimers
