@@ -29,8 +29,8 @@ import "./DescartesV2.sol";
 contract DisputeManagerImpl is DisputeManager {
     DescartesV2 immutable descartesV2; // descartes 2 contract
 
-    // @notice functions modified by onlyDescartesV2 will only be executed if
-    // they're called by DescartesV2 contract, otherwise it will throw an exception
+    /// @notice functions modified by onlyDescartesV2 will only be executed if
+    //  they're called by DescartesV2 contract, otherwise it will throw an exception
     modifier onlyDescartesV2 {
         require(
             msg.sender == address(descartesV2),
@@ -43,10 +43,14 @@ contract DisputeManagerImpl is DisputeManager {
         descartesV2 = DescartesV2(_descartesV2);
     }
 
+    /// @notice initiates a dispute betweent two players
+    /// @param _claims conflicting claims
+    /// @param _claimers addresses of senders of conflicting claim
+    /// @dev this is a mock implementation that just gives the win
+    ///      to the address in the first posititon of _claimers array
     function initiateDispute(
         bytes32[2] memory _claims,
-        address payable[2] memory _claimers,
-        uint64 _maxCycle
+        address payable[2] memory _claimers
     ) public override onlyDescartesV2 {
         descartesV2.resolveDispute(_claimers[0], _claimers[1], _claims[0]);
     }

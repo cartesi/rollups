@@ -26,7 +26,6 @@ pragma solidity ^0.7.0;
 interface DisputeManager {
     function initiateDispute(
         bytes32[2] memory _claims,
-        address payable[2] memory _claimers,
-        uint64 _maxCycle
+        address payable[2] memory _claimers
     ) external;
 }
