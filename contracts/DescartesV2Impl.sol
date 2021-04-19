@@ -34,25 +34,24 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract DescartesV2Impl is DescartesV2 {
     using SafeMath for uint256;
 
-    //// TODO: this is quite ugly, once agreed upon we can beautify it
-    //
-    //              All claims agreed OR challenge period ended
-    //               functions: claim() or finalizeEpoch()
-    //         +--------------------------------------------------+
-    //         |                                                  |
-    //+--------v-----------+   new input after IPAD     +---------+----------+
-    //|                    +--------------------------->+                    |
-    //| Input Accumulation |   firt claim after IPAD    | Awaiting Consensus |
-    //|                    +--------------------------->+                    |
-    //+-+------------------+                            +-----------------+--+
-    //  ^                                                                 ^  |
-    //  |                                              dispute resolved   |  |
-    //  |  dispute resolved                            before challenge   |  |
-    //  |  after challenge     +--------------------+  period ended       |  |
-    //  |  period ended        |                    +---------------------+  |
-    //  +----------------------+  Awaiting Dispute  |                        |
-    //                         |                    +<-----------------------+
-    //                         +--------------------+    conflicting claim
+    ////               
+    //                             All claims agreed OR challenge period ended
+    //                              functions: claim() or finalizeEpoch()
+    //                        +--------------------------------------------------+
+    //                        |                                                  |
+    //               +--------v-----------+   new input after IPAD     +---------+----------+
+    //               |                    +--------------------------->+                    |
+    //   START  ---> | Input Accumulation |   firt claim after IPAD    | Awaiting Consensus |
+    //               |                    +--------------------------->+                    |
+    //               +-+------------------+                            +-----------------+--+
+    //                 ^                                                                 ^  |
+    //                 |                                              dispute resolved   |  |
+    //                 |  dispute resolved                            before challenge   |  |
+    //                 |  after challenge     +--------------------+  period ended       |  |
+    //                 |  period ended        |                    +---------------------+  |
+    //                 +----------------------+  Awaiting Dispute  |                        |
+    //                                        |                    +<-----------------------+
+    //                                        +--------------------+    conflicting claim
     ///
 
     uint256 immutable inputDuration; // duration of input accumulation phase in seconds
