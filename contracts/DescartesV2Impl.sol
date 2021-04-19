@@ -36,7 +36,7 @@ contract DescartesV2Impl is DescartesV2 {
 
     //// TODO: this is quite ugly, once agreed upon we can beautify it
     //
-    //               All claims agreed OR challenge period ended
+    //              All claims agreed OR challenge period ended
     //               functions: claim() or finalizeEpoch()
     //         +--------------------------------------------------+
     //         |                                                  |
@@ -62,8 +62,6 @@ contract DescartesV2Impl is DescartesV2 {
     Output immutable output; // contract responsible for ouputs
     ValidatorManager immutable validatorManager; // contract responsible for validators
     DisputeManager immutable disputeManager; // contract responsible for dispute resolution
-
-    uint64 immutable maxCycle; // max number of cycles for any instruction
 
     uint256 inputAccumulationStart; // timestamp when current input accumulation phase started
     uint256 firstClaimTS; // timestamp of first claim this epoch
@@ -94,15 +92,13 @@ contract DescartesV2Impl is DescartesV2 {
     /// @param _disputeManager address of disputeManager contract
     /// @param _inputDuration duration of input accumulation phase in seconds
     /// @param _challengePeriod duration of challenge period in seconds
-    /// @param _maxCycle max number of cycles for any possible instruction
     constructor(
         address _input,
         address _output,
         address _validatorManager,
         address _disputeManager,
         uint256 _inputDuration,
-        uint256 _challengePeriod,
-        uint64 _maxCycle
+        uint256 _challengePeriod
     ) {
         input = Input(_input);
         output = Output(_output);
@@ -110,7 +106,6 @@ contract DescartesV2Impl is DescartesV2 {
         disputeManager = DisputeManager(_disputeManager);
         inputDuration = _inputDuration;
         challengePeriod = _challengePeriod;
-        maxCycle = _maxCycle;
 
         inputAccumulationStart = block.timestamp;
         currentPhase = Phase.InputAccumulation;
@@ -121,7 +116,7 @@ contract DescartesV2Impl is DescartesV2 {
     /// @dev ValidatorManager makes sure that msg.sender is allowed
     //       and that claim != bytes32(0)
     /// TODO: add signatures for aggregated claims
-    function claim(bytes32 _epochHash) public override {
+    function claim(bytes32 _epochHash) override public {
         ValidatorManager.Result result;
         bytes32[2] memory claims;
         address payable[2] memory claimers;
@@ -146,7 +141,7 @@ contract DescartesV2Impl is DescartesV2 {
 
     /// @notice finalize epoch after timeout
     /// @dev can only be called if challenge period is over
-    function finalizeEpoch() public override {
+    function finalizeEpoch() override public {
         require(
             currentPhase == Phase.AwaitingConsensus,
             "Phase != Awaiting Consensus"
@@ -166,7 +161,7 @@ contract DescartesV2Impl is DescartesV2 {
 
     /// @notice called when new input arrives, manages the phase changes
     /// @dev can only be called by input contract
-    function notifyInput() public override onlyInputContract returns (bool) {
+    function notifyInput() onlyInputContract override public returns (bool) {
         if (
             currentPhase == Phase.InputAccumulation &&
             block.timestamp > inputAccumulationStart.add(inputDuration)
@@ -181,12 +176,12 @@ contract DescartesV2Impl is DescartesV2 {
     /// @param _winner winner of dispute
     /// @param _loser lose of sipute
     /// @param _winningClaim initial claim of winning validator
-    /// @dev can only by the dispute contract
+    /// @dev can only be called by the dispute contract
     function resolveDispute(
         address payable _winner,
         address payable _loser,
         bytes32 _winningClaim
-    ) public override onlyDisputeContract {
+    ) override public onlyDisputeContract {
         ValidatorManager.Result result;
         bytes32[2] memory claims;
         address payable[2] memory claimers;
@@ -224,7 +219,7 @@ contract DescartesV2Impl is DescartesV2 {
             startNewEpoch();
         } else if (_result == ValidatorManager.Result.Conflict) {
             currentPhase = Phase.AwaitingDispute;
-            disputeManager.initiateDispute(_claims, _claimers, maxCycle);
+            disputeManager.initiateDispute(_claims, _claimers);
         }
     }
 }
