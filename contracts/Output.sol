@@ -23,7 +23,7 @@
 /// @title Output
 pragma solidity ^0.7.0;
 
-interface OutputImpl {
+interface Output {
     
     /// @notice executes output
     /// @param _epochIndex which epoch the output belongs to
