@@ -24,7 +24,7 @@
 pragma solidity ^0.7.0;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-//import "@cartesi/util/contracts/Bitmask.sol";
+import "@cartesi/util/contracts/Bitmask.sol";
 import "@cartesi/util/contracts/Merkle.sol";
 
 import "./Output.sol";
@@ -82,17 +82,17 @@ contract OutputImpl is Output {
         uint256 _outputIndex,
         bytes calldata _output,
         bytes32[] calldata _proof
-    ) noReentrancy public override returns (bool) {
+    ) public override noReentrancy returns (bool) {
         uint256 bitmaskPosition =
             getBitMaskPosition(_outputIndex, _inputIndex, _epochIndex);
 
         uint64 drivePosition =
             getOutputDrivePosition(_inputIndex, _outputIndex);
 
-        //require(
-        //    outputBitmask.getBit(bitmaskPosition) == 0,
-        //    "output has already been executed"
-        //);
+        require(
+            outputBitmask.getBit(bitmaskPosition) == 0,
+            "output has already been executed"
+        );
 
         bytes32 outputHash = keccak256(_output);
 
@@ -111,7 +111,7 @@ contract OutputImpl is Output {
         // do we need return data? emit event?
         (bool succ, bytes memory returnData) = address(target).call(data);
 
-        //if (succ) outputBitmask.setBit(position, 1);
+        if (succ) outputBitmask.setBit(position, 1);
 
         return succ;
     }
