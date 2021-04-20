@@ -81,31 +81,38 @@ contract InputImpl is Input {
     /// @notice add input to processed by next epoch
     /// @param _input input to be understood by offchain machine
     /// @dev offchain code is responsible for making sure
-    ///      that input size plus msg.sender and block timestamp
-    ///      is power of 2 and multiple of 8 since the offchain machine
-    ///      has a 8 byte word
-    function addInput(bytes calldata _input) public override noReentrancy() returns (bytes32) {
+    ///      that input size is power of 2 and multiple of 8 since
+    // the offchain machine has a 8 byte word
+    function addInput(bytes calldata _input)
+        public
+        override
+        noReentrancy()
+        returns (bytes32)
+    {
         require(_input.length > 0, "input is empty");
 
         // 64 bytes
         bytes memory metadata = abi.encode(msg.sender, block.timestamp);
 
-        // total size of the drive in words
-        uint256 size = 1 << uint256(log2Size - 3);
-        require(
-            size << L_WORD_SIZE >= (_input.length.add(metadata.length)),
-            "input  + metadata is larger than drive"
-        );
-
-        bytes32 inputHash = keccak256(abi.encode(metadata, _input));
-        // notifyInput returns true if that input belongs
-        // belong to a new epoch
+        // inputHash = keccak( keccak(metadata), input.length, keccak(input) )
+        bytes32 inputHash =
+            keccak256(
+                abi.encode(
+                    keccak256(metadata),
+                    _input.length,
+                    keccak256(_input)
+                )
+            );
+        // notifyInput returns true if that input
+        // belongs to a new epoch
         if (descartesV2.notifyInput()) {
             swapInputBox();
         }
 
         // add input to correct inbox
-        currentInputBox == 0 ? inputBox0.push(inputHash) : inputBox1.push(inputHash);
+        currentInputBox == 0
+            ? inputBox0.push(inputHash)
+            : inputBox1.push(inputHash);
 
         return inputHash;
     }
@@ -124,7 +131,7 @@ contract InputImpl is Input {
     /// @dev currentInputBox being zero means that the inputs for
     ///      the claimed epoch are on input box one
     function getNumberOfInputs() public view override returns (uint256) {
-        return currentInputBox == 0 ? inputBox1.length: inputBox0.length;
+        return currentInputBox == 0 ? inputBox1.length : inputBox0.length;
     }
 
     /// @notice get inbox currently receiveing inputs
@@ -132,6 +139,7 @@ contract InputImpl is Input {
     function getCurrentInbox() public view override returns (uint256) {
         return currentInputBox;
     }
+
     /// @notice called when a new input accumulation phase begins
     ///         swap inbox to receive inputs for upcoming epoch
     /// @dev can only be called by DescartesV2 contract
