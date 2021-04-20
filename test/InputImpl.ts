@@ -61,24 +61,6 @@ describe('Input Implementation', async () => {
     ).to.be.revertedWith('input is empty')
   })
 
-  it('addInput should revert if input is larger than drive (log2Size)', async () => {
-    var input_150_bytes = Buffer.from("a".repeat(150), "utf-8");
-
-    // metadata = 64 bytes = 8 words
-    var input_65_bytes = Buffer.from("a".repeat(65), "utf-8");
-
-    await expect(
-      inputImpl.addInput(input_150_bytes),
-      'input cant be bigger than drive',
-    ).to.be.revertedWith('input  + metadata is larger than drive')
-
-    // input shouldnt fit because of one byte
-    await expect(
-      inputImpl.addInput(input_65_bytes),
-      'input should still revert because metadata doesnt fit',
-    ).to.be.revertedWith('input  + metadata is larger than drive')
-  })
-
   it('addInput should add input to inbox', async () => {
     var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
     
