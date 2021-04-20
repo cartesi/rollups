@@ -129,10 +129,19 @@ contract OutputImpl is Output {
     /// @return data contained on _output
     function decodeOutput(bytes calldata _output)
         public
+        pure
         returns (address, bytes memory)
     {
-        // TODO: we have to decide how the output is going to be encoded
-        // where do we store this information?
+        bytes memory outputCopy = _output;
+        bytes32 addressWord;
+
+        assembly {
+            // skip 0x20 for length and get address
+            addressWord := mload(add(outputCopy, 0x20))
+        }
+        // TODO: _output still contains the address in the payload
+        //  need to slice
+        return (address(uint160(uint256(addressWord))), _output);
     }
 
     /// @notice get output position on bitmask
