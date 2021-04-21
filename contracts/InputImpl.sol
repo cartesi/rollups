@@ -93,13 +93,18 @@ contract InputImpl is Input {
 
         // 64 bytes
         bytes memory metadata = abi.encode(msg.sender, block.timestamp);
+        // total size of the drive in words
+        uint256 size = 1 << uint256(log2Size - 3);
 
-        // inputHash = keccak( keccak(metadata), input.length, keccak(input) )
+        require(
+          _input.length <= (size << L_WORD_SIZE),
+          "input is larger than drive"
+        );
+
         bytes32 inputHash =
             keccak256(
                 abi.encode(
                     keccak256(metadata),
-                    _input.length,
                     keccak256(_input)
                 )
             );
