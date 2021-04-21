@@ -24,14 +24,14 @@
 pragma solidity ^0.7.0;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-//import "@cartesi/util/contracts/Bitmask.sol";
+import "@cartesi/util/contracts/Bitmask.sol";
 import "@cartesi/util/contracts/Merkle.sol";
 
 import "./Output.sol";
 
 contract OutputImpl is Output {
     using SafeMath for uint256;
-    //using Bitmask for mapping(uint248 => uint256);
+    using Bitmask for mapping(uint248 => uint256);
 
     // TODO: update constant values
     uint256 constant INPUT_DRIVE_SIZE = 512; // size of input drives
@@ -90,10 +90,10 @@ contract OutputImpl is Output {
         uint64 drivePosition =
             getOutputDrivePosition(_inputIndex, _outputIndex);
 
-        //require(
-        //    outputBitmask.getBit(bitmaskPosition) == 0,
-        //    "output has already been executed"
-        //);
+        require(
+            outputBitmask.getBit(bitmaskPosition) == 0,
+            "output has already been executed"
+        );
 
         bytes32 outputHash = keccak256(_output);
 
@@ -112,7 +112,7 @@ contract OutputImpl is Output {
         // do we need return data? emit event?
         (bool succ, bytes memory returnData) = address(target).call(data);
 
-        //if (succ) outputBitmask.setBit(position, 1);
+        if (succ) outputBitmask.setBit(position, 1);
 
         return succ;
     }
