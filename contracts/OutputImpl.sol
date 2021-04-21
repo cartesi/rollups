@@ -86,6 +86,7 @@ contract OutputImpl is Output {
         uint256 bitmaskPosition =
             getBitMaskPosition(_outputIndex, _inputIndex, _epochIndex);
 
+        // start of this output drive in the machine address space
         uint64 drivePosition =
             getOutputDrivePosition(_inputIndex, _outputIndex);
 
