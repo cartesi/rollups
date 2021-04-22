@@ -91,7 +91,7 @@ contract OutputImpl is Output {
             getOutputDrivePosition(_inputIndex, _outputIndex);
 
         require(
-            outputBitmask.getBit(bitmaskPosition) == 0,
+            !outputBitmask.getBit(bitmaskPosition),
             "output has already been executed"
         );
 
@@ -112,7 +112,7 @@ contract OutputImpl is Output {
         // do we need return data? emit event?
         (bool succ, bytes memory returnData) = address(target).call(data);
 
-        if (succ) outputBitmask.setBit(position, 1);
+        if (succ) outputBitmask.setBit(bitmaskPosition, true);
 
         return succ;
     }
