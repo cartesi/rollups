@@ -32,7 +32,7 @@ import { InputImpl } from '../src/types/InputImpl'
 
 use(solidity)
 
-describe('Input Implementation', async () => {
+describe('Input Implementation', () => {
   let signer: Signer;
   let inputImpl: InputImpl;
   let mockDescartesv2: MockContract; //mock descartesv2 implementation
@@ -79,9 +79,7 @@ describe('Input Implementation', async () => {
   it('addInput should add input to inbox', async () => {
     var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
     
-    mockDescartesv2.mock.notifyInput.returns(false);
-    mockDescartesv2.mock.notifyInput.returns(false);
-    mockDescartesv2.mock.notifyInput.returns(false);
+    await mockDescartesv2.mock.notifyInput.returns(false);
 
     await inputImpl.addInput(input_64_bytes)
     await inputImpl.addInput(input_64_bytes)
@@ -92,7 +90,7 @@ describe('Input Implementation', async () => {
       "Number of inputs should be zero, because non active inbox is empty"
     ).to.equal(0);
     
-    mockDescartesv2.mock.notifyInput.returns(true);
+    await mockDescartesv2.mock.notifyInput.returns(true);
 
     await inputImpl.addInput(input_64_bytes);
 
@@ -105,7 +103,7 @@ describe('Input Implementation', async () => {
   it('getNumberOfInputs should return from correct inbox', async () => {
     var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
     
-    mockDescartesv2.mock.notifyInput.returns(false);
+    await mockDescartesv2.mock.notifyInput.returns(false);
     //mockDescartesv2.mock.notifyInput.returns(false);
     //mockDescartesv2.mock.notifyInput.returns(false);
 
@@ -152,13 +150,13 @@ describe('Input Implementation', async () => {
   it('getCurrentInbox should return correct inbox', async () => {
     var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
-    mockDescartesv2.mock.notifyInput.returns(true);
+    await mockDescartesv2.mock.notifyInput.returns(true);
     expect(
       await inputImpl.getCurrentInbox(),
       "current inbox should start as zero"
     ).to.equal(0);
 
-    mockDescartesv2.mock.notifyInput.returns(false);
+    await mockDescartesv2.mock.notifyInput.returns(false);
     await inputImpl.addInput(input_64_bytes);
 
     expect(
@@ -166,7 +164,7 @@ describe('Input Implementation', async () => {
       "inbox shouldnt change if notifyInput returns false"
     ).to.equal(0);
 
-    mockDescartesv2.mock.notifyInput.returns(true);
+    await mockDescartesv2.mock.notifyInput.returns(true);
     await inputImpl.addInput(input_64_bytes);
 
     expect(
