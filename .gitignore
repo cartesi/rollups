@@ -17,3 +17,4 @@ build
 .env
 .venv
 offchain/target
+offchain/src/fold/contracts
