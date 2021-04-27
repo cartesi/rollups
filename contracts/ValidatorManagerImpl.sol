@@ -168,8 +168,9 @@ contract ValidatorManagerImpl is ValidatorManager {
         // we can update current claim and check for consensus in case
         // the winner is the only validator left
         currentClaim = _winningClaim;
+        claimAgreementMask = updateClaimAgreementMask(_winner);
         return
-            isConsensus(updateClaimAgreementMask(_winner), consensusGoalMask)
+            isConsensus(claimAgreementMask, consensusGoalMask)
                 ? emitDisputeEndedAndReturn(
                     Result.Consensus,
                     [_winningClaim, bytes32(0)],
