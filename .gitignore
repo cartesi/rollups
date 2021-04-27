@@ -16,3 +16,4 @@ test/*/
 build
 .env
 .venv
+offchain/target
