@@ -241,10 +241,17 @@ contract DescartesV2Impl is DescartesV2 {
         }
     }
 
+    /// @notice get the current phase
+    /// @return the current phase
+    function getCurrentPhase() public view override returns (Phase) {
+        return currentPhase;
+    }
+
     /// @notice returns phase and emits events
     /// @param _newPhase phase to be returned and emitted
     function updatePhase(Phase _newPhase) internal returns (Phase) {
         emit PhaseChange(_newPhase);
         return _newPhase;
     }
+    
 }

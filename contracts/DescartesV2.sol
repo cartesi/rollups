@@ -66,6 +66,10 @@ interface DescartesV2 {
         bytes32 _winningClaim
     ) external;
 
+    /// @notice get the current phase
+    /// @return the current phase
+    function getCurrentPhase() external view returns (Phase);
+
     // events
 
     /// @notice contract created
