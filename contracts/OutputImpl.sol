@@ -33,8 +33,6 @@ contract OutputImpl is Output {
     using SafeMath for uint256;
     using Bitmask for mapping(uint248 => uint256);
 
-    // TODO: update constant values
-    uint256 constant INPUT_DRIVE_SIZE = 512; // size of input drives
     uint8 constant OUTPUT_LOG2_SIZE = 5; // log2 size of output drive (has to be > 3)
 
     address immutable descartesV2; // descartes 2 contract using this validator
@@ -69,48 +67,62 @@ contract OutputImpl is Output {
     }
 
     /// @notice executes output
+    /// @param _destination address that will execute output
+    /// @param _payload payload to be executed by destination
     /// @param _epochIndex which epoch the output belongs to
     /// @param _inputIndex which input, inside the epoch, the output belongs to
     /// @param _outputIndex index of output inside the input
-    /// @param _output bytes that describe the ouput, can encode different things
-    /// @param _proof siblings of output, to prove it is contained on epoch hash
+    /// @param _outputsHash hash of the outputs drive where this output is contained
+    /// @param _outputProof bytes that describe the ouput, can encode different things
+    /// @param _epochProof siblings of outputs hash, to prove it is contained on epoch hash
     /// @return true if output was executed successfully
     /// @dev  outputs can only be executed once
     function executeOutput(
+        address _destination,
+        bytes calldata _payload,
         uint256 _epochIndex,
         uint256 _inputIndex,
         uint256 _outputIndex,
-        bytes calldata _output,
-        bytes32[] calldata _proof
+        bytes32 _outputsHash,
+        bytes32[] calldata _outputProof,
+        bytes32[] calldata _epochProof
     ) public override noReentrancy returns (bool) {
         uint256 bitmaskPosition =
             getBitMaskPosition(_outputIndex, _inputIndex, _epochIndex);
-
-        // start of this output drive in the machine address space
-        uint64 drivePosition =
-            getOutputDrivePosition(_inputIndex, _outputIndex);
 
         require(
             !outputBitmask.getBit(bitmaskPosition),
             "output has already been executed"
         );
 
-        bytes32 outputHash = keccak256(_output);
+        bytes32 hashOfOutput =
+            keccak256(abi.encodePacked(_destination, _payload));
 
+        // prove outputs hash drive contains this specific output
         require(
             Merkle.getRootWithDrive(
-                drivePosition,
+                uint64(_outputIndex.mul(OUTPUT_LOG2_SIZE)),
                 OUTPUT_LOG2_SIZE,
-                outputHash,
-                _proof
-            ) == epochHashes[_epochIndex],
-            "output drive not contained in epoch hash"
+                hashOfOutput,
+                _outputProof
+            ) == _outputsHash,
+            "output drive not contained in outputs merkle hash"
         );
 
-        (address target, bytes memory data) = decodeOutput(_output);
+        // prove that epoch hash contains the claimed outputs hash
+        require(
+            Merkle.getRootWithDrive(
+                uint64(_inputIndex.mul(OUTPUT_LOG2_SIZE)),
+                OUTPUT_LOG2_SIZE,
+                _outputsHash,
+                _epochProof
+            ) == epochHashes[_epochIndex],
+            "outputs hash not contained in epochHashes"
+        );
 
         // do we need return data? emit event?
-        (bool succ, bytes memory returnData) = address(target).call(data);
+        (bool succ, bytes memory returnData) =
+            address(_destination).call(_payload);
 
         if (succ) outputBitmask.setBit(bitmaskPosition, true);
 
@@ -122,18 +134,6 @@ contract OutputImpl is Output {
     /// @dev an epoch being finalized means that its outputs can be called
     function onNewEpoch(bytes32 _epochHash) public override onlyDescartesV2 {
         epochHashes.push(_epochHash);
-    }
-
-    /// @notice translate output into coherent information
-    /// @param _output output bytes
-    /// @return target address contained on _output
-    /// @return data contained on _output
-    function decodeOutput(bytes calldata _output)
-        public
-        pure
-        returns (address, bytes memory)
-    {
-        return abi.decode(_output, (address, bytes));
     }
 
     /// @notice get output position on bitmask
@@ -149,23 +149,5 @@ contract OutputImpl is Output {
         // output * 2 ** 128 + input * 2 ** 64 + epoch
         // this can't overflow because its impossible to have > 2**128 outputs
         return (_output << 128) + (_input << 64) + _epoch;
-    }
-
-    /// @notice get position of output drive
-    /// @param _inputIndex which input that output belongs to
-    /// @param _outputIndex output index inside input
-    /// @dev every epoch has n inputs, and each input has m outputs
-    function getOutputDrivePosition(uint256 _inputIndex, uint256 _outputIndex)
-        public
-        pure
-        returns (uint64)
-    {
-        uint256 outputSize = 1 << (OUTPUT_LOG2_SIZE - 3);
-        return
-            uint64(
-                _inputIndex.mul(INPUT_DRIVE_SIZE).add(
-                    outputSize.mul(_outputIndex)
-                )
-            );
     }
 }
