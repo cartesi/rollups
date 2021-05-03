@@ -33,7 +33,7 @@ contract OutputImpl is Output {
     using SafeMath for uint256;
     using Bitmask for mapping(uint248 => uint256);
 
-    uint8 constant OUTPUT_LOG2_SIZE = 5; // log2 size of output drive (has to be > 3)
+    uint8 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
 
     address immutable descartesV2; // descartes 2 contract using this validator
 
@@ -101,8 +101,8 @@ contract OutputImpl is Output {
         // prove outputs hash drive contains this specific output
         require(
             Merkle.getRootWithDrive(
-                uint64(_outputIndex.mul(OUTPUT_LOG2_SIZE)),
-                OUTPUT_LOG2_SIZE,
+                uint64(_outputIndex.mul(KECCAK_LOG2_SIZE)),
+                KECCAK_LOG2_SIZE,
                 hashOfOutput,
                 _outputProof
             ) == _outputsHash,
@@ -112,8 +112,8 @@ contract OutputImpl is Output {
         // prove that epoch hash contains the claimed outputs hash
         require(
             Merkle.getRootWithDrive(
-                uint64(_inputIndex.mul(OUTPUT_LOG2_SIZE)),
-                OUTPUT_LOG2_SIZE,
+                uint64(_inputIndex.mul(KECCAK_LOG2_SIZE)),
+                KECCAK_LOG2_SIZE,
                 _outputsHash,
                 _epochProof
             ) == epochHashes[_epochIndex],
