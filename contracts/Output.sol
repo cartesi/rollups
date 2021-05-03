@@ -26,21 +26,26 @@ pragma solidity ^0.7.0;
 interface Output {
     
     /// @notice executes output
+    /// @param _destination address that will execute output
+    /// @param _payload payload to be executed by destination
     /// @param _epochIndex which epoch the output belongs to
     /// @param _inputIndex which input, inside the epoch, the output belongs to
     /// @param _outputIndex index of output inside the input
-    /// @param _output bytes that describe the ouput, can encode different things
-    /// @param _proof siblings of output, to prove it is contained on epoch hash
+    /// @param _outputsHash hash of the outputs drive where this output is contained
+    /// @param _outputProof bytes that describe the ouput, can encode different things
+    /// @param _epochProof siblings of outputs hash, to prove it is contained on epoch hash
     /// @return true if output was executed successfully
     /// @dev  outputs can only be executed once
     function executeOutput(
+        address _destination,
+        bytes calldata _payload,
         uint256 _epochIndex,
         uint256 _inputIndex,
         uint256 _outputIndex,
-        bytes calldata _output,
-        bytes32[] calldata _proof
+        bytes32 _outputsHash,
+        bytes32[] calldata _outputProof,
+        bytes32[] calldata _epochProof
     ) external returns (bool);
-
 
     /// @notice called by descartesv2 when an epoch is finalized
     /// @param _epochHash hash of finalized epoch 
