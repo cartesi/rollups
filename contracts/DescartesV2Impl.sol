@@ -235,8 +235,8 @@ contract DescartesV2Impl is DescartesV2 {
         } else if (_result == ValidatorManager.Result.Consensus) {
             currentPhase = updatePhase(Phase.InputAccumulation);
             startNewEpoch();
-        } else if (_result == ValidatorManager.Result.Conflict) {
-            currentPhase = updatePhase(Phase.AwaitingDispute);
+        } else { // for the case when _result == ValidatorManager.Result.Conflict
+            currentPhase = Phase.AwaitingDispute;
             disputeManager.initiateDispute(_claims, _claimers);
         }
     }
