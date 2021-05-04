@@ -51,4 +51,10 @@ interface Output {
     /// @param _epochHash hash of finalized epoch 
     /// @dev an epoch being finalized means that its outputs can be called
     function onNewEpoch(bytes32 _epochHash) external;
+
+    /// @notice get number of finalized epochs
+    function getNumberOfFinalizedEpochs()
+        external
+        view
+        returns (uint256);
 }

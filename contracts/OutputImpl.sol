@@ -150,4 +150,14 @@ contract OutputImpl is Output {
         // this can't overflow because its impossible to have > 2**128 outputs
         return (_output << 128) + (_input << 64) + _epoch;
     }
+
+    /// @notice get number of finalized epochs
+    function getNumberOfFinalizedEpochs()
+        public
+        view
+        override
+        returns (uint256)
+    {
+        return epochHashes.length;
+    }
 }
