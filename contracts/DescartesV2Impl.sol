@@ -107,8 +107,7 @@ contract DescartesV2Impl is DescartesV2 {
         challengePeriod = _challengePeriod;
 
         inputAccumulationStart = block.timestamp;
-        currentPhase = Phase.InputAccumulation;
-        emit PhaseChange(Phase.InputAccumulation);
+        currentPhase = updatePhase(Phase.InputAccumulation);
 
         emit DescartesV2Created(
             _input,
@@ -134,8 +133,7 @@ contract DescartesV2Impl is DescartesV2 {
             currentPhase == Phase.InputAccumulation &&
             block.timestamp > inputAccumulationStart.add(inputDuration)
         ) {
-            currentPhase = Phase.AwaitingConsensus;
-            emit PhaseChange(Phase.AwaitingConsensus);
+            currentPhase = updatePhase(Phase.AwaitingConsensus);
             firstClaimTS = block.timestamp; // update timestamp of first claim
         }
         require(
@@ -171,8 +169,7 @@ contract DescartesV2Impl is DescartesV2 {
             validatorManager.getCurrentClaim() != bytes32(0),
             "No Claim to be finalized"
         );
-        currentPhase = Phase.InputAccumulation;
-        emit PhaseChange(Phase.InputAccumulation);
+        currentPhase = updatePhase(Phase.InputAccumulation);
 
         startNewEpoch();
     }
@@ -184,8 +181,7 @@ contract DescartesV2Impl is DescartesV2 {
             currentPhase == Phase.InputAccumulation &&
             block.timestamp > inputAccumulationStart.add(inputDuration)
         ) {
-            currentPhase = Phase.AwaitingConsensus;
-            emit PhaseChange(Phase.AwaitingConsensus);
+            currentPhase = updatePhase(Phase.AwaitingConsensus);
             return true;
         }
         return false;
@@ -235,16 +231,20 @@ contract DescartesV2Impl is DescartesV2 {
         address payable[2] memory _claimers
     ) internal {
         if (_result == ValidatorManager.Result.NoConflict) {
-            currentPhase = Phase.AwaitingConsensus;
-            emit PhaseChange(Phase.AwaitingConsensus);
+            currentPhase = updatePhase(Phase.AwaitingConsensus);
         } else if (_result == ValidatorManager.Result.Consensus) {
-            currentPhase = Phase.InputAccumulation;
-            emit PhaseChange(Phase.InputAccumulation);
+            currentPhase = updatePhase(Phase.InputAccumulation);
             startNewEpoch();
         } else if (_result == ValidatorManager.Result.Conflict) {
-            currentPhase = Phase.AwaitingDispute;
-            emit PhaseChange(Phase.AwaitingDispute);
+            currentPhase = updatePhase(Phase.AwaitingDispute);
             disputeManager.initiateDispute(_claims, _claimers);
         }
+    }
+
+    /// @notice returns phase and emits events
+    /// @param _newPhase phase to be returned and emitted
+    function updatePhase(Phase _newPhase) internal returns (Phase) {
+        emit PhaseChange(_newPhase);
+        return _newPhase;
     }
 }
