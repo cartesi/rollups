@@ -65,4 +65,56 @@ interface DescartesV2 {
         address payable _loser,
         bytes32 _winningClaim
     ) external;
+
+    // events
+
+    /// @notice contract created
+    /// @param _input address of input contract
+    /// @param _output address of output contract
+    /// @param _validatorManager address of validatorManager contract
+    /// @param _disputeManager address of disputeManager contract
+    /// @param _inputDuration duration of input accumulation phase in seconds
+    /// @param _challengePeriod duration of challenge period in seconds
+    event DescartesV2Created(
+        address _input,
+        address _output,
+        address _validatorManager,
+        address _disputeManager,
+        uint256 _inputDuration,
+        uint256 _challengePeriod
+    );
+
+    /// @notice claim submitted
+    /// @param _epochHash claim being submitted by this epoch
+    /// @param _claimer address of current claimer
+    /// @param _epochNumber number of the epoch being submitted
+    event Claim(
+        bytes32 _epochHash,
+        address _claimer,
+        uint256 _epochNumber
+    );
+
+    /// @notice epoch finalized
+    /// @param _epochHash claim being submitted by this epoch
+    /// @param _epochNumber number of the epoch being finalized
+    event FinalizeEpoch(
+        bytes32 _epochHash,
+        uint256 _epochNumber
+    );
+
+    /// @notice dispute resolved
+    /// @param _winner winner of dispute
+    /// @param _loser lose of sipute
+    /// @param _winningClaim initial claim of winning validator
+    event ResolveDispute(
+        address _winner,
+        address _loser,
+        bytes32 _winningClaim
+    );
+
+    /// @notice phase change
+    /// @param _newPhase new phase
+    event PhaseChange (
+        Phase _newPhase
+    );
 }
