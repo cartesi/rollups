@@ -34,7 +34,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract DescartesV2Impl is DescartesV2 {
     using SafeMath for uint256;
 
-    ////               
+    ////
     //                             All claims agreed OR challenge period ended
     //                              functions: claim() or finalizeEpoch()
     //                        +--------------------------------------------------+
@@ -108,6 +108,16 @@ contract DescartesV2Impl is DescartesV2 {
 
         inputAccumulationStart = block.timestamp;
         currentPhase = Phase.InputAccumulation;
+        emit PhaseChange(Phase.InputAccumulation);
+
+        emit DescartesV2Created(
+            _input,
+            _output,
+            _validatorManager,
+            _disputeManager,
+            _inputDuration,
+            _challengePeriod
+        );
     }
 
     /// @notice claim the result of current epoch
@@ -115,7 +125,7 @@ contract DescartesV2Impl is DescartesV2 {
     /// @dev ValidatorManager makes sure that msg.sender is allowed
     //       and that claim != bytes32(0)
     /// TODO: add signatures for aggregated claims
-    function claim(bytes32 _epochHash) override public {
+    function claim(bytes32 _epochHash) public override {
         ValidatorManager.Result result;
         bytes32[2] memory claims;
         address payable[2] memory claimers;
@@ -125,6 +135,7 @@ contract DescartesV2Impl is DescartesV2 {
             block.timestamp > inputAccumulationStart.add(inputDuration)
         ) {
             currentPhase = Phase.AwaitingConsensus;
+            emit PhaseChange(Phase.AwaitingConsensus);
             firstClaimTS = block.timestamp; // update timestamp of first claim
         }
         require(
@@ -136,11 +147,18 @@ contract DescartesV2Impl is DescartesV2 {
             _epochHash
         );
         resolveValidatorResult(result, claims, claimers);
+
+        // finalized epochs + 1 is the epoch being suggested
+        emit Claim(
+            _epochHash,
+            msg.sender,
+            output.getNumberOfFinalizedEpochs() + 1
+        );
     }
 
     /// @notice finalize epoch after timeout
     /// @dev can only be called if challenge period is over
-    function finalizeEpoch() override public {
+    function finalizeEpoch() public override {
         require(
             currentPhase == Phase.AwaitingConsensus,
             "Phase != Awaiting Consensus"
@@ -154,18 +172,20 @@ contract DescartesV2Impl is DescartesV2 {
             "No Claim to be finalized"
         );
         currentPhase = Phase.InputAccumulation;
+        emit PhaseChange(Phase.InputAccumulation);
 
         startNewEpoch();
     }
 
     /// @notice called when new input arrives, manages the phase changes
     /// @dev can only be called by input contract
-    function notifyInput() onlyInputContract override public returns (bool) {
+    function notifyInput() public override onlyInputContract returns (bool) {
         if (
             currentPhase == Phase.InputAccumulation &&
             block.timestamp > inputAccumulationStart.add(inputDuration)
         ) {
             currentPhase = Phase.AwaitingConsensus;
+            emit PhaseChange(Phase.AwaitingConsensus);
             return true;
         }
         return false;
@@ -180,7 +200,7 @@ contract DescartesV2Impl is DescartesV2 {
         address payable _winner,
         address payable _loser,
         bytes32 _winningClaim
-    ) override public onlyDisputeContract {
+    ) public override onlyDisputeContract {
         ValidatorManager.Result result;
         bytes32[2] memory claims;
         address payable[2] memory claimers;
@@ -191,6 +211,7 @@ contract DescartesV2Impl is DescartesV2 {
             _winningClaim
         );
 
+        emit ResolveDispute(_winner, _loser, _winningClaim);
         resolveValidatorResult(result, claims, claimers);
     }
 
@@ -200,6 +221,8 @@ contract DescartesV2Impl is DescartesV2 {
 
         output.onNewEpoch(finalClaim);
         input.onNewEpoch();
+
+        emit FinalizeEpoch(finalClaim, output.getNumberOfFinalizedEpochs());
     }
 
     /// @notice resolve results returned by validator manager
@@ -213,11 +236,14 @@ contract DescartesV2Impl is DescartesV2 {
     ) internal {
         if (_result == ValidatorManager.Result.NoConflict) {
             currentPhase = Phase.AwaitingConsensus;
+            emit PhaseChange(Phase.AwaitingConsensus);
         } else if (_result == ValidatorManager.Result.Consensus) {
             currentPhase = Phase.InputAccumulation;
+            emit PhaseChange(Phase.InputAccumulation);
             startNewEpoch();
         } else if (_result == ValidatorManager.Result.Conflict) {
             currentPhase = Phase.AwaitingDispute;
+            emit PhaseChange(Phase.AwaitingDispute);
             disputeManager.initiateDispute(_claims, _claimers);
         }
     }
