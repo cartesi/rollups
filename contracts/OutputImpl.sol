@@ -72,7 +72,7 @@ contract OutputImpl is Output {
     /// @param _epochIndex which epoch the output belongs to
     /// @param _inputIndex which input, inside the epoch, the output belongs to
     /// @param _outputIndex index of output inside the input
-    /// @param _outputsHash hash of the outputs drive where this output is contained
+    /// @param _outputDriveHash hash of the outputs drive where this output is contained
     /// @param _outputProof bytes that describe the ouput, can encode different things
     /// @param _epochProof siblings of outputs hash, to prove it is contained on epoch hash
     /// @return true if output was executed successfully
@@ -83,7 +83,7 @@ contract OutputImpl is Output {
         uint256 _epochIndex,
         uint256 _inputIndex,
         uint256 _outputIndex,
-        bytes32 _outputsHash,
+        bytes32 _outputDriveHash,
         bytes32[] calldata _outputProof,
         bytes32[] calldata _epochProof
     ) public override noReentrancy returns (bool) {
@@ -98,15 +98,15 @@ contract OutputImpl is Output {
         bytes32 hashOfOutput =
             keccak256(abi.encodePacked(_destination, _payload));
 
-        // prove outputs hash drive contains this specific output
+        // prove that the epoch contains that outputdrive
         require(
             Merkle.getRootWithDrive(
                 uint64(_outputIndex.mul(KECCAK_LOG2_SIZE)),
                 KECCAK_LOG2_SIZE,
                 hashOfOutput,
                 _outputProof
-            ) == _outputsHash,
-            "output drive not contained in outputs merkle hash"
+            ) == _outputDriveHash,
+            "specific output is not contained in output drive merkle hash"
         );
 
         // prove that epoch hash contains the claimed outputs hash
@@ -114,10 +114,10 @@ contract OutputImpl is Output {
             Merkle.getRootWithDrive(
                 uint64(_inputIndex.mul(KECCAK_LOG2_SIZE)),
                 KECCAK_LOG2_SIZE,
-                _outputsHash,
+                _outputDriveHash,
                 _epochProof
             ) == epochHashes[_epochIndex],
-            "outputs hash not contained in epochHashes"
+            "output drive hash not contained in epochHashes"
         );
 
         // do we need return data? emit event?
