@@ -148,9 +148,9 @@ contract DescartesV2Impl is DescartesV2 {
 
         // finalized epochs + 1 is the epoch being suggested
         emit Claim(
-            _epochHash,
+            output.getNumberOfFinalizedEpochs() + 1,
             msg.sender,
-            output.getNumberOfFinalizedEpochs() + 1
+            _epochHash
         );
     }
 
@@ -218,7 +218,7 @@ contract DescartesV2Impl is DescartesV2 {
         output.onNewEpoch(finalClaim);
         input.onNewEpoch();
 
-        emit FinalizeEpoch(finalClaim, output.getNumberOfFinalizedEpochs());
+        emit FinalizeEpoch(output.getNumberOfFinalizedEpochs(), finalClaim);
     }
 
     /// @notice resolve results returned by validator manager

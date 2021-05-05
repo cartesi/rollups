@@ -89,17 +89,17 @@ interface DescartesV2 {
     /// @param _claimer address of current claimer
     /// @param _epochNumber number of the epoch being submitted
     event Claim(
-        bytes32 _epochHash,
+        uint256 _epochNumber,
         address _claimer,
-        uint256 _epochNumber
+        bytes32 _epochHash
     );
 
     /// @notice epoch finalized
     /// @param _epochHash claim being submitted by this epoch
     /// @param _epochNumber number of the epoch being finalized
     event FinalizeEpoch(
-        bytes32 _epochHash,
-        uint256 _epochNumber
+        uint256 _epochNumber,
+        bytes32 _epochHash
     );
 
     /// @notice dispute resolved
