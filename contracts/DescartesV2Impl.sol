@@ -189,7 +189,7 @@ contract DescartesV2Impl is DescartesV2 {
 
     /// @notice called when a dispute is resolved by the dispute manager
     /// @param _winner winner of dispute
-    /// @param _loser lose of sipute
+    /// @param _loser loser of dispute
     /// @param _winningClaim initial claim of winning validator
     /// @dev can only be called by the dispute contract
     function resolveDispute(

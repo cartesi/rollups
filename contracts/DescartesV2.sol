@@ -108,7 +108,7 @@ interface DescartesV2 {
 
     /// @notice dispute resolved
     /// @param _winner winner of dispute
-    /// @param _loser lose of sipute
+    /// @param _loser loser of dispute
     /// @param _winningClaim initial claim of winning validator
     event ResolveDispute(
         address _winner,
