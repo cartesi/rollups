@@ -111,6 +111,8 @@ contract InputImpl is Input {
             ? inputBox0.push(inputHash)
             : inputBox1.push(inputHash);
 
+        emit InputAdded(descartesV2.getCurrentEpoch(), metadata, _input);
+
         return inputHash;
     }
 

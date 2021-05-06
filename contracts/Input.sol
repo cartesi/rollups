@@ -53,9 +53,11 @@ interface Input {
     function onNewEpoch() external;
 
     /// @notice input added
+    /// @param _epochNumber which epoch this input belongs to
     /// @param _metadata abi.encode of msg.sender and timestamp
     /// @param _input input data
     event InputAdded(
+        uint256 _epochNumber,
         bytes _metadata,
         bytes _input
     );
