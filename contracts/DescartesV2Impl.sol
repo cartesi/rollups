@@ -21,7 +21,7 @@
 // rewritten, the entire component will be released under the Apache v2 license.
 
 /// @title Interface DescartesV2 contract
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 import "./Input.sol";
 import "./Output.sol";
@@ -29,10 +29,7 @@ import "./ValidatorManager.sol";
 import "./DescartesV2.sol";
 import "./DisputeManager.sol";
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-
 contract DescartesV2Impl is DescartesV2 {
-    using SafeMath for uint256;
 
     ////
     //                             All claims agreed OR challenge period ended
@@ -131,7 +128,7 @@ contract DescartesV2Impl is DescartesV2 {
 
         if (
             currentPhase == Phase.InputAccumulation &&
-            block.timestamp > inputAccumulationStart.add(inputDuration)
+            block.timestamp > inputAccumulationStart + inputDuration
         ) {
             currentPhase = updatePhase(Phase.AwaitingConsensus);
             firstClaimTS = block.timestamp; // update timestamp of first claim
@@ -141,7 +138,7 @@ contract DescartesV2Impl is DescartesV2 {
             "Phase != AwaitingConsensus"
         );
         (result, claims, claimers) = validatorManager.onClaim(
-            msg.sender,
+            payable(msg.sender),
             _epochHash
         );
         resolveValidatorResult(result, claims, claimers);
@@ -162,7 +159,7 @@ contract DescartesV2Impl is DescartesV2 {
             "Phase != Awaiting Consensus"
         );
         require(
-            block.timestamp > firstClaimTS.add(challengePeriod),
+            block.timestamp > firstClaimTS + challengePeriod,
             "Challenge period is not over"
         );
         require(
@@ -179,7 +176,7 @@ contract DescartesV2Impl is DescartesV2 {
     function notifyInput() public override onlyInputContract returns (bool) {
         if (
             currentPhase == Phase.InputAccumulation &&
-            block.timestamp > inputAccumulationStart.add(inputDuration)
+            block.timestamp > inputAccumulationStart + inputDuration
         ) {
             currentPhase = updatePhase(Phase.AwaitingConsensus);
             return true;

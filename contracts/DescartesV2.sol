@@ -21,14 +21,12 @@
 // rewritten, the entire component will be released under the Apache v2 license.
 
 /// @title Interface DescartesV2 contract
-pragma solidity ^0.7.0;
+pragma solidity >=0.7.0;
 
 import "./Input.sol";
 import "./Output.sol";
 import "./ValidatorManager.sol";
 import "./DescartesV2.sol";
-
-import "@openzeppelin/contracts/math/SafeMath.sol";
 
 interface DescartesV2 {
 

@@ -21,7 +21,7 @@
 // rewritten, the entire component will be released under the Apache v2 license.
 
 /// @title Validator Manager Implementation
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 import "./ValidatorManager.sol";
 
@@ -336,7 +336,7 @@ contract ValidatorManagerImpl is ValidatorManager {
         // removes validator from consensus goal mask
         for (uint32 i = 0; i < validators.length; i++) {
             if (_validator == validators[i]) {
-                validators[i] = address(0);
+                validators[i] = payable(0);
                 uint32 zeroMask = ~(uint32(1) << i);
                 newClaimAgreementMask = claimAgreementMask & zeroMask;
                 newConsensusGoalMask = consensusGoalMask & zeroMask;

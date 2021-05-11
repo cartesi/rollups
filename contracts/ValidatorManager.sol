@@ -21,7 +21,7 @@
 // rewritten, the entire component will be released under the Apache v2 license.
 
 /// @title Validator Manager
-pragma solidity ^0.7.0;
+pragma solidity >=0.7.0;
 
 // TODO: What is the incentive for validators to not just copy the first claim that arrived?
 interface ValidatorManager {

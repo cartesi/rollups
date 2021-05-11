@@ -21,7 +21,7 @@
 // rewritten, the entire component will be released under the Apache v2 license.
 
 /// @title DisputeManager
-pragma solidity ^0.7.0;
+pragma solidity >=0.7.0;
 
 interface DisputeManager {
     function initiateDispute(

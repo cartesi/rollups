@@ -21,16 +21,14 @@
 // rewritten, the entire component will be released under the Apache v2 license.
 
 /// @title Validator Manager
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./Portal.sol";
 import "./Input.sol";
 
 contract PortalImpl is Portal {
-    using SafeMath for uint256;
     address immutable outputContract;
     Input immutable inputContract;
     bool lock;
@@ -73,7 +71,7 @@ contract PortalImpl is Portal {
         uint256 totalAmount;
 
         for (uint256 i = 0; i < _amounts.length; i++) {
-            totalAmount = totalAmount.add(_amounts[i]);
+            totalAmount = totalAmount + _amounts[i];
         }
         require(msg.value >= totalAmount, "msg.value < totalAmount)");
 
@@ -107,7 +105,7 @@ contract PortalImpl is Portal {
         uint256 totalAmount;
 
         for (uint256 i = 0; i < _amounts.length; i++) {
-            totalAmount = totalAmount.add(_amounts[i]);
+            totalAmount = totalAmount + _amounts[i];
         }
 
         IERC20 token = IERC20(_ERC20);

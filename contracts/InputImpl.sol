@@ -21,9 +21,8 @@
 // rewritten, the entire component will be released under the Apache v2 license.
 
 /// @title Input Implementation
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "@cartesi/util/contracts/Merkle.sol";
@@ -33,7 +32,6 @@ import "./DescartesV2.sol";
 
 // TODO: this contract seems to be very unsafe, need to think about security implications
 contract InputImpl is Input {
-    using SafeMath for uint256;
 
     uint256 constant L_WORD_SIZE = 3; // word = 8 bytes, log = 3
 
