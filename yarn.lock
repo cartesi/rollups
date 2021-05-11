@@ -156,19 +156,12 @@
     "@babel/helper-validator-identifier" "^7.14.0"
     to-fast-properties "^2.0.0"
 
-"@cartesi/logger@^0.6.2":
-  version "0.6.2"
-  resolved "https://registry.yarnpkg.com/@cartesi/logger/-/logger-0.6.2.tgz#70949eab6bd1a0e37c35f14a9605efe20919b3f1"
-  integrity sha512-rcyBqjQ64WPsgpic/tR831LmVRsi0DGxPTCjRfeFRVNvAnVkYUqGeWDmnabYdXIjVb3LUJTGUvggBycAGnNYVw==
+"@cartesi/logger@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@cartesi/logger/-/logger-0.7.0.tgz#29b2ce945f06c517e065268ffce2151a3965ca9f"
+  integrity sha512-SLaOg4XHzESIA6hdC5zBXBoefLmHR5YpDK26tNxCiyU0+C+hlKeR6MAh6MWyh7wS0Q8SxFYJSd0XA/1Fmuabtw==
   dependencies:
-    "@cartesi/util" "^0.6.2"
-
-"@cartesi/util@^0.6.2":
-  version "0.6.2"
-  resolved "https://registry.yarnpkg.com/@cartesi/util/-/util-0.6.2.tgz#8626cf67397bf4609c7a1782d40bb21ef9ad7a97"
-  integrity sha512-GVdsNXmN7Nrc5WkWL9uHLF1eEyZ2EHWcoq/4hxyK8dJIAh/gklKc9z1S4/8yk89FvZBntDveGuiZyfGPSRoaGA==
-  dependencies:
-    "@openzeppelin/contracts" "3.2.1-solc-0.7"
+    "@cartesi/util" "^2.0.1"
 
 "@cartesi/util@^2.0.1":
   version "2.0.1"
