@@ -170,6 +170,11 @@
   dependencies:
     "@openzeppelin/contracts" "3.2.1-solc-0.7"
 
+"@cartesi/util@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@cartesi/util/-/util-3.0.0.tgz#ec335c28a2dc1398a763a0a7c64236865229a78e"
+  integrity sha512-TNou4SGGGomakaSFhHYVivtZCkiTQLWgtNqS+7c71cBaZGrtzSNG7f4vMJc9AkIIyH6muBP9yHOk3tHAm6TRcg==
+
 "@ensdomains/ens@^0.4.4":
   version "0.4.5"
   resolved "https://registry.yarnpkg.com/@ensdomains/ens/-/ens-0.4.5.tgz#e0aebc005afdc066447c6e22feb4eda89a5edbfc"
