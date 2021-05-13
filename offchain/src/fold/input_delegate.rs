@@ -1,4 +1,4 @@
-use super::contracts::descartesv2_contract::*;
+use super::contracts::input_contract::*;
 
 use dispatcher::state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
@@ -9,17 +9,16 @@ use dispatcher::state_fold::{
 use dispatcher::types::Block;
 
 use async_trait::async_trait;
-use im::{HashMap, HashSet, OrdMap};
+use im::OrdMap;
 use snafu::ResultExt;
-use std::convert::{TryFrom, TryInto};
 
-use ethers::types::{Address, H256, U256};
+use ethers::types::{Address, U256};
 
 #[derive(Clone, Debug)]
 pub struct Input {
     pub sender: Address,
-    pub hash: H256,
-    pub timestamp: U256,
+    pub timestamp: U256, // TODO: Currently broken.
+    pub payload: Vec<u8>,
 }
 
 #[derive(Clone, Debug)]
@@ -50,7 +49,31 @@ impl StateFoldDelegate for InputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        todo!()
+        let (input_address, epoch) = initial_state.clone();
+
+        let contract = access
+            .build_sync_contract(input_address, block.number, InputImpl::new)
+            .await;
+
+        let ev = contract
+            .input_added_filter()
+            .topic1(epoch)
+            .query()
+            .await
+            .context(SyncContractError {
+                err: "Error querying for input added events",
+            })?;
+
+        let mut inputs: OrdMap<U256, Input> = OrdMap::new();
+        for (index, ev) in ev.into_iter().enumerate() {
+            inputs = inputs.update(index.into(), ev.into());
+        }
+
+        Ok(InputState {
+            input_address,
+            epoch,
+            inputs,
+        })
     }
 
     async fn fold<A: FoldAccess + Send + Sync>(
@@ -59,7 +82,40 @@ impl StateFoldDelegate for InputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        todo!()
+        if fold_utils::contains_address(
+            &block.logs_bloom,
+            &previous_state.input_address,
+        ) {
+            return Ok(previous_state.clone());
+        }
+
+        let contract = access
+            .build_fold_contract(
+                previous_state.input_address,
+                block.hash,
+                InputImpl::new,
+            )
+            .await;
+
+        let ev = contract
+            .input_added_filter()
+            .topic1(previous_state.epoch)
+            .query()
+            .await
+            .context(FoldContractError {
+                err: "Error querying for input added events",
+            })?;
+
+        let mut inputs: OrdMap<U256, Input> = previous_state.inputs.clone();
+        for (index, ev) in ev.into_iter().enumerate() {
+            inputs = inputs.update(index.into(), ev.into());
+        }
+
+        Ok(InputState {
+            input_address: previous_state.input_address,
+            epoch: previous_state.epoch,
+            inputs,
+        })
     }
 
     fn convert(
@@ -67,5 +123,15 @@ impl StateFoldDelegate for InputFoldDelegate {
         accumulator: &BlockState<Self::Accumulator>,
     ) -> Self::State {
         accumulator.clone()
+    }
+}
+
+impl From<InputAddedFilter> for Input {
+    fn from(ev: InputAddedFilter) -> Self {
+        Self {
+            sender: ev.sender,
+            payload: ev.input,
+            timestamp: U256::zero(),
+        }
     }
 }

@@ -12,7 +12,7 @@ use dispatcher::types::Block;
 use async_trait::async_trait;
 use im::{HashMap, HashSet, OrdMap};
 use snafu::ResultExt;
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 
 use ethers::types::{Address, H256, U256};
 
@@ -41,22 +41,17 @@ pub struct FinalizedEpoch {
 }
 
 #[derive(Clone, Debug)]
-pub struct CurrentEpoch {
+pub struct SealedEpoch {
     pub number: U256,
     pub claimers: HashMap<H256, HashSet<Address>>, // Claim -> Set of Addresses with that claim
     pub inputs: InputState,
 }
 
 #[derive(Clone, Debug)]
-pub struct Input {
-    pub sender: Address,
-    pub hash: H256,
-    pub timestamp: U256,
+pub struct AccumulatingEpoch {
+    pub number: U256,
+    pub inputs: InputState,
 }
-
-// #[derive(Clone, Debug)]
-// pub struct Inputs {
-// }
 
 #[derive(Clone, Debug)]
 pub struct DescartesV2State {
@@ -66,11 +61,12 @@ pub struct DescartesV2State {
     pub constants: ImmutableState, // Only used for frontend
 
     pub current_phase: PhaseState,
+    pub initial_epoch: U256,
     pub finalized_epochs: OrdMap<U256, FinalizedEpoch>, // EpochNumber -> Epoch
     pub current_epoch: CurrentEpoch,
 }
 
-/// Partition StateActor Delegate, which implements `sync` and `fold`.
+/// DescartesV2 StateActor Delegate, which implements `sync` and `fold`.
 pub struct DescartesV2FoldDelegate<DA: DelegateAccess> {
     descartesv2_address: Address,
     input_fold: StateFold<InputFoldDelegate, DA>,
@@ -92,13 +88,13 @@ impl<DA: DelegateAccess> DescartesV2FoldDelegate<DA> {
 impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     for DescartesV2FoldDelegate<DA>
 {
-    type InitialState = ();
+    type InitialState = U256;
     type Accumulator = DescartesV2State;
     type State = BlockState<Self::Accumulator>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
-        initial_state: &(),
+        initial_state: &U256,
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
@@ -212,6 +208,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         Ok(DescartesV2State {
             constants,
+            initial_epoch: *initial_state,
             current_phase,
             finalized_epochs,
             current_epoch,
@@ -330,6 +327,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         Ok(DescartesV2State {
             constants,
             current_phase,
+            initial_epoch: previous_state.initial_epoch,
             finalized_epochs,
             current_epoch,
         })

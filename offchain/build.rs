@@ -25,6 +25,7 @@ fn main() {
             "DescartesV2Impl",
             "descartesv2_contract.rs",
         ),
+        ("InputImpl", "InputImpl", "input_contract.rs"),
     ];
 
     for (name, file, rs) in contracts {
