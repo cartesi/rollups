@@ -97,9 +97,7 @@ interface DescartesV2 {
 
     /// @notice epoch finalized
     /// @param _epochHash claim being submitted by this epoch
-    event FinalizeEpoch(
-        bytes32 _epochHash
-    );
+    event FinalizeEpoch(bytes32 _epochHash);
 
     /// @notice dispute resolved
     /// @param _winner winner of dispute

@@ -65,9 +65,7 @@ describe("Portal Implementation", async () => {
                 [await signer.getAddress()],
                 [50, 30],
                 "0x00",
-                {
-                    value: ethers.utils.parseEther("50"),
-                }
+                { value: ethers.utils.parseEther("50") }
             ),
             "ether deposit should revert if amount.length > addresses.length"
         ).to.be.revertedWith("receivers array length != amounts array length");
@@ -112,16 +110,14 @@ describe("Portal Implementation", async () => {
     });
 
     it("etherDeposit should emit events", async () => {
-        await mockInput.mock.addInput.returns(keccak256("0x00"));
+        mockInput.mock.addInput.returns(keccak256("0x00"));
 
         expect(
             await portalImpl.etherDeposit(
                 [await signer.getAddress()],
                 [50],
                 "0x00",
-                {
-                    value: ethers.utils.parseEther("50"),
-                }
+                { value: ethers.utils.parseEther("50") }
             ),
             "expect etherDeposit function to emit EtherDeposited event"
         ).to.emit(portalImpl, "EtherDeposited");
@@ -176,7 +172,7 @@ describe("Portal Implementation", async () => {
     });
 
     it("erc20Deposit should revert if transfer from returns false", async () => {
-        await mockERC20.mock.transferFrom.returns(false);
+        mockERC20.mock.transferFrom.returns(false);
 
         await expect(
             portalImpl.erc20Deposit(
@@ -191,8 +187,8 @@ describe("Portal Implementation", async () => {
     });
 
     it("erc20Deposit should emit events", async () => {
-        await mockERC20.mock.transferFrom.returns(true);
-        await mockInput.mock.addInput.returns(keccak256("0x00"));
+        mockERC20.mock.transferFrom.returns(true);
+        mockInput.mock.addInput.returns(keccak256("0x00"));
 
         expect(
             await portalImpl.erc20Deposit(

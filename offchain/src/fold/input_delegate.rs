@@ -16,9 +16,9 @@ use ethers::types::{Address, U256};
 
 #[derive(Clone, Debug)]
 pub struct Input {
-    pub sender: Address,
-    pub timestamp: U256, // TODO: Currently broken.
-    pub payload: Vec<u8>,
+    pub sender: Address,  // TODO: Get from calldata.
+    pub timestamp: U256,  // TODO: Get from calldata.
+    pub payload: Vec<u8>, // TODO: Get from calldata.
 }
 
 #[derive(Clone, Debug)]
@@ -131,7 +131,7 @@ impl From<InputAddedFilter> for Input {
         Self {
             sender: ev.sender,
             payload: ev.input,
-            timestamp: U256::zero(),
+            timestamp: ev.timestamp,
         }
     }
 }
