@@ -62,7 +62,7 @@ contract PortalImpl is Portal {
         address[] calldata _L2receivers,
         uint256[] calldata _amounts,
         bytes calldata _data
-    ) noReentrancy() public payable override returns (bytes32) {
+    ) public payable override noReentrancy() returns (bytes32) {
         require(
             _L2receivers.length == _amounts.length,
             "receivers array length != amounts array length"
@@ -96,7 +96,7 @@ contract PortalImpl is Portal {
         address[] calldata _L2receivers,
         uint256[] calldata _amounts,
         bytes calldata _data
-    ) noReentrancy() public override returns (bytes32) {
+    ) public override noReentrancy() returns (bytes32) {
         require(
             _L2receivers.length == _amounts.length,
             "receivers array length != amounts array length"

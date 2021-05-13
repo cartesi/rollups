@@ -19,223 +19,226 @@
 // be used independently under the Apache v2 license. After this component is
 // rewritten, the entire component will be released under the Apache v2 license.
 
-import { expect, use } from 'chai'
-import { ethers } from 'hardhat'
-import { solidity, MockProvider } from 'ethereum-waffle'
-import { ValidatorManagerImpl__factory } from '../src/types/factories/ValidatorManagerImpl__factory'
-import { Signer } from 'ethers'
-import { ValidatorManagerImpl } from '../src/types/ValidatorManagerImpl'
+import { expect, use } from "chai";
+import { ethers } from "hardhat";
+import { solidity, MockProvider } from "ethereum-waffle";
+import { ValidatorManagerImpl__factory } from "../src/types/factories/ValidatorManagerImpl__factory";
+import { Signer } from "ethers";
+import { ValidatorManagerImpl } from "../src/types/ValidatorManagerImpl";
 
-use(solidity)
+use(solidity);
 
-describe('Validator Manager Implementation', async () => {
-  var descartesV2: Signer
-  var VMI: ValidatorManagerImpl
-  const provider = new MockProvider()
-  var validators: string[] = []
+describe("Validator Manager Implementation", async () => {
+    var descartesV2: Signer;
+    var VMI: ValidatorManagerImpl;
+    const provider = new MockProvider();
+    var validators: string[] = [];
 
-  let hash_zero = ethers.constants.HashZero
-  let address_zero = '0x0000000000000000000000000000000000000000'
+    let hash_zero = ethers.constants.HashZero;
+    let address_zero = "0x0000000000000000000000000000000000000000";
 
-  enum Result {
-    NoConflict,
-    Consensus,
-    Conflict,
-  }
-
-  beforeEach(async () => {
-    [descartesV2] = await ethers.getSigners()
-    const vmiFactory = new ValidatorManagerImpl__factory(descartesV2)
-    var address: any
-
-    var wallets = provider.getWallets()
-    validators = []
-
-    // add all wallets as validators
-    for (var wallet of wallets) {
-      address = await wallet.getAddress()
-      validators.push(address)
+    enum Result {
+        NoConflict,
+        Consensus,
+        Conflict,
     }
 
-    VMI = await vmiFactory.deploy(await descartesV2.getAddress(), validators)
-  })
+    beforeEach(async () => {
+        [descartesV2] = await ethers.getSigners();
+        const vmiFactory = new ValidatorManagerImpl__factory(descartesV2);
+        var address: any;
 
-  it('onClaim should revert if claim is 0x00', async () => {
-    await expect(
-      VMI.onClaim(validators[0], hash_zero),
-      'should revert if claim == 0x00',
-    ).to.be.revertedWith('claim cannot be 0x00')
-  })
+        var wallets = provider.getWallets();
+        validators = [];
 
-  it('onClaim should revert if sender is not allowed', async () => {
-    var claim = '0x' + '1'.repeat(64);
-    await expect(
-      VMI.onClaim(address_zero, claim),
-      'should revert if sender is not in validators array',
-    ).to.be.revertedWith('_sender was not allowed to claim')
-  })
+        // add all wallets as validators
+        for (var wallet of wallets) {
+            address = await wallet.getAddress();
+            validators.push(address);
+        }
 
-  it('onClaim NoConflict and Consensus', async () => {
-    var claim = '0x' + '1'.repeat(64);
+        VMI = await vmiFactory.deploy(
+            await descartesV2.getAddress(),
+            validators
+        );
+    });
 
-    // if validators keep agreeing there is no conflict
-    for (var i = 0; i < validators.length - 1; i++) {
-      await expect(
-        await VMI.onClaim(validators[i], claim),
-        'equal claims should not generate conflict nor consensus, if not all validators have agreed',
-      )
-        .to.emit(VMI, 'ClaimReceived')
-        .withArgs(
-          Result.NoConflict,
-          [hash_zero, hash_zero],
-          [address_zero, address_zero],
+    it("onClaim should revert if claim is 0x00", async () => {
+        await expect(
+            VMI.onClaim(validators[0], hash_zero),
+            "should revert if claim == 0x00"
+        ).to.be.revertedWith("claim cannot be 0x00");
+    });
+
+    it("onClaim should revert if sender is not allowed", async () => {
+        var claim = "0x" + "1".repeat(64);
+        await expect(
+            VMI.onClaim(address_zero, claim),
+            "should revert if sender is not in validators array"
+        ).to.be.revertedWith("_sender was not allowed to claim");
+    });
+
+    it("onClaim NoConflict and Consensus", async () => {
+        var claim = "0x" + "1".repeat(64);
+
+        // if validators keep agreeing there is no conflict
+        for (var i = 0; i < validators.length - 1; i++) {
+            await expect(
+                await VMI.onClaim(validators[i], claim),
+                "equal claims should not generate conflict nor consensus, if not all validators have agreed"
+            )
+                .to.emit(VMI, "ClaimReceived")
+                .withArgs(
+                    Result.NoConflict,
+                    [hash_zero, hash_zero],
+                    [address_zero, address_zero]
+                );
+        }
+        // when last validator agrees, should return consensus
+        var lastValidator = validators[validators.length - 1];
+        await expect(
+            await VMI.onClaim(lastValidator, claim),
+            "after all validators claim should be consensus"
         )
-    }
-    // when last validator agrees, should return consensus
-    var lastValidator = validators[validators.length - 1]
-    await expect(
-      await VMI.onClaim(lastValidator, claim),
-      'after all validators claim should be consensus',
-    )
-      .to.emit(VMI, 'ClaimReceived')
-      .withArgs(
-        Result.Consensus,
-        [claim, hash_zero],
-        [lastValidator, address_zero],
-      )
-  })
+            .to.emit(VMI, "ClaimReceived")
+            .withArgs(
+                Result.Consensus,
+                [claim, hash_zero],
+                [lastValidator, address_zero]
+            );
+    });
 
-  it('onClaim with different claims should return conflict', async () => {
-    var claim = '0x' + '1'.repeat(64)
-    var claim2 = '0x' + '2'.repeat(64)
+    it("onClaim with different claims should return conflict", async () => {
+        var claim = "0x" + "1".repeat(64);
+        var claim2 = "0x" + "2".repeat(64);
 
-    await expect(
-      await VMI.onClaim(validators[0], claim),
-      'first claim should not generate conflict',
-    )
-      .to.emit(VMI, 'ClaimReceived')
-      .withArgs(
-        Result.NoConflict,
-        [hash_zero, hash_zero],
-        [address_zero, address_zero],
-      )
-
-    await expect(
-      await VMI.onClaim(validators[1], claim2),
-      'different claim should generate conflict',
-    )
-      .to.emit(VMI, 'ClaimReceived')
-      .withArgs(
-        Result.Conflict,
-        [claim, claim2],
-        [validators[0], validators[1]],
-      )
-  })
-
-  it('onDisputeEnd with no conflict after', async () => {
-    var claim = '0x' + '1'.repeat(64)
-
-    // start with no conflict claim to populate
-    // variables
-    await VMI.onClaim(validators[0], claim);
-
-    await expect(
-        await VMI.onDisputeEnd(validators[0], validators[1], claim),
-        "if winning claim is current claim and there is no consensus, should return NoConflict",
-    )
-        .to.emit(VMI, "DisputeEnded")
-        .withArgs(
-            Result.NoConflict,
-            [],
-            []
+        await expect(
+            await VMI.onClaim(validators[0], claim),
+            "first claim should not generate conflict"
         )
+            .to.emit(VMI, "ClaimReceived")
+            .withArgs(
+                Result.NoConflict,
+                [hash_zero, hash_zero],
+                [address_zero, address_zero]
+            );
 
-  })
-
-  it('onDisputeEnd with consensus after', async () => {
-    var claim = '0x' + '1'.repeat(64)
-    var lastValidator = validators[validators.length - 1]
-
-    // all validators agree but last one
-    for (var i = 0; i < validators.length - 1; i++) {
-        await VMI.onClaim(validators[i], claim);
-    }
-
-    // last validator lost dispute, the only one that disagreed
-    await expect(
-        await VMI.onDisputeEnd(validators[0], lastValidator, claim),
-        "if losing claim was the only one not agreeing, should return consensus",
-    )
-        .to.emit(VMI, "DisputeEnded")
-        .withArgs(
-            Result.Consensus,
-            [claim, hash_zero],
-            [validators[0], address_zero]
+        await expect(
+            await VMI.onClaim(validators[1], claim2),
+            "different claim should generate conflict"
         )
-  });
+            .to.emit(VMI, "ClaimReceived")
+            .withArgs(
+                Result.Conflict,
+                [claim, claim2],
+                [validators[0], validators[1]]
+            );
+    });
 
-  it('onDisputeEnd multiple validators defending lost claim', async () => {
-    var claim = '0x' + '1'.repeat(64)
-    var claim2 = '0x' + '2'.repeat(64)
-    var lastValidator = validators[validators.length - 1]
+    it("onDisputeEnd with no conflict after", async () => {
+        var claim = "0x" + "1".repeat(64);
 
-    // all validators agree but last one
-    for (var i = 0; i < validators.length - 1; i++) {
-        await VMI.onClaim(validators[i], claim);
-    }
-    // last validator lost dispute, the only one that disagreed
-    // next defender should be validators[1]
-    await expect(
-        await VMI.onDisputeEnd(lastValidator, validators[0], claim2),
-        "conflict should continue if there are validators still defending claim that lost",
-    )
-        .to.emit(VMI, "DisputeEnded")
-        .withArgs(
-            Result.Conflict,
-            [claim, claim2],
-            [validators[1], lastValidator]
+        // start with no conflict claim to populate
+        // variables
+        await VMI.onClaim(validators[0], claim);
+
+        await expect(
+            await VMI.onDisputeEnd(validators[0], validators[1], claim),
+            "if winning claim is current claim and there is no consensus, should return NoConflict"
         )
+            .to.emit(VMI, "DisputeEnded")
+            .withArgs(Result.NoConflict, [], []);
+    });
 
-    // make all other validators but last agreeing one lose dispute
-    for (var i = 1; i < validators.length - 2; i++) {
-        await VMI.onDisputeEnd(lastValidator, validators[i], claim2);
-    }
+    it("onDisputeEnd with consensus after", async () => {
+        var claim = "0x" + "1".repeat(64);
+        var lastValidator = validators[validators.length - 1];
 
-    // honest validator by himself can generate consensus
-    // by winning his last dispute
-    await expect(
-        await VMI.onDisputeEnd(lastValidator, validators[validators.length - 2], claim2),
-        "lastValidator should be the last one in the validator set",
-    )
-        .to.emit(VMI, "DisputeEnded")
-        .withArgs(
-            Result.Consensus,
-            [claim2, hash_zero],
-            [lastValidator, address_zero]
+        // all validators agree but last one
+        for (var i = 0; i < validators.length - 1; i++) {
+            await VMI.onClaim(validators[i], claim);
+        }
+
+        // last validator lost dispute, the only one that disagreed
+        await expect(
+            await VMI.onDisputeEnd(validators[0], lastValidator, claim),
+            "if losing claim was the only one not agreeing, should return consensus"
         )
-  });
+            .to.emit(VMI, "DisputeEnded")
+            .withArgs(
+                Result.Consensus,
+                [claim, hash_zero],
+                [validators[0], address_zero]
+            );
+    });
 
-  it('onNewEpoch', async () => {
-    var claim = '0x' + '1'.repeat(64);
+    it("onDisputeEnd multiple validators defending lost claim", async () => {
+        var claim = "0x" + "1".repeat(64);
+        var claim2 = "0x" + "2".repeat(64);
+        var lastValidator = validators[validators.length - 1];
 
-    // one validator claims
-    await VMI.onClaim(validators[0], claim);
+        // all validators agree but last one
+        for (var i = 0; i < validators.length - 1; i++) {
+            await VMI.onClaim(validators[i], claim);
+        }
+        // last validator lost dispute, the only one that disagreed
+        // next defender should be validators[1]
+        await expect(
+            await VMI.onDisputeEnd(lastValidator, validators[0], claim2),
+            "conflict should continue if there are validators still defending claim that lost"
+        )
+            .to.emit(VMI, "DisputeEnded")
+            .withArgs(
+                Result.Conflict,
+                [claim, claim2],
+                [validators[1], lastValidator]
+            );
 
-    // epoch ends without consensus
-    await expect(
-        await VMI.onNewEpoch(),
-        "new epoch should return current claim"
-    ).to.emit(VMI, "NewEpoch").withArgs(claim);
+        // make all other validators but last agreeing one lose dispute
+        for (var i = 1; i < validators.length - 2; i++) {
+            await VMI.onDisputeEnd(lastValidator, validators[i], claim2);
+        }
 
-    expect(
-        await VMI.getCurrentAgreementMask(),
-        "current agreement mask should reset"
-    ).to.equal(0)
+        // honest validator by himself can generate consensus
+        // by winning his last dispute
+        await expect(
+            await VMI.onDisputeEnd(
+                lastValidator,
+                validators[validators.length - 2],
+                claim2
+            ),
+            "lastValidator should be the last one in the validator set"
+        )
+            .to.emit(VMI, "DisputeEnded")
+            .withArgs(
+                Result.Consensus,
+                [claim2, hash_zero],
+                [lastValidator, address_zero]
+            );
+    });
 
-    expect(
-        await VMI.getCurrentClaim(),
-        "current claim should reset"
-    ).to.equal(hash_zero)
+    it("onNewEpoch", async () => {
+        var claim = "0x" + "1".repeat(64);
 
-  })
-})
+        // one validator claims
+        await VMI.onClaim(validators[0], claim);
+
+        // epoch ends without consensus
+        await expect(
+            await VMI.onNewEpoch(),
+            "new epoch should return current claim"
+        )
+            .to.emit(VMI, "NewEpoch")
+            .withArgs(claim);
+
+        expect(
+            await VMI.getCurrentAgreementMask(),
+            "current agreement mask should reset"
+        ).to.equal(0);
+
+        expect(
+            await VMI.getCurrentClaim(),
+            "current claim should reset"
+        ).to.equal(hash_zero);
+    });
+});

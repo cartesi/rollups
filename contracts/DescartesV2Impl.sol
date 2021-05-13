@@ -30,7 +30,6 @@ import "./DescartesV2.sol";
 import "./DisputeManager.sol";
 
 contract DescartesV2Impl is DescartesV2 {
-
     ////
     //                             All claims agreed OR challenge period ended
     //                              functions: claim() or finalizeEpoch()
@@ -232,7 +231,8 @@ contract DescartesV2Impl is DescartesV2 {
         } else if (_result == ValidatorManager.Result.Consensus) {
             currentPhase = updatePhase(Phase.InputAccumulation);
             startNewEpoch();
-        } else { // for the case when _result == ValidatorManager.Result.Conflict
+        } else {
+            // for the case when _result == ValidatorManager.Result.Conflict
             currentPhase = Phase.AwaitingDispute;
             disputeManager.initiateDispute(_claims, _claimers);
         }
@@ -250,5 +250,4 @@ contract DescartesV2Impl is DescartesV2 {
         emit PhaseChange(_newPhase);
         return _newPhase;
     }
-    
 }

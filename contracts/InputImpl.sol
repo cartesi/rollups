@@ -32,7 +32,6 @@ import "./DescartesV2.sol";
 
 // TODO: this contract seems to be very unsafe, need to think about security implications
 contract InputImpl is Input {
-
     uint256 constant L_WORD_SIZE = 3; // word = 8 bytes, log = 3
 
     DescartesV2 immutable descartesV2; // descartes 2 contract using this input contract
@@ -95,17 +94,12 @@ contract InputImpl is Input {
         uint256 size = 1 << uint256(log2Size - 3);
 
         require(
-          _input.length <= (size << L_WORD_SIZE),
-          "input is larger than drive"
+            _input.length <= (size << L_WORD_SIZE),
+            "input is larger than drive"
         );
 
         bytes32 inputHash =
-            keccak256(
-                abi.encode(
-                    keccak256(metadata),
-                    keccak256(_input)
-                )
-            );
+            keccak256(abi.encode(keccak256(metadata), keccak256(_input)));
         // notifyInput returns true if that input
         // belongs to a new epoch
         if (descartesV2.notifyInput()) {

@@ -79,8 +79,5 @@ interface ValidatorManager {
     );
 
     // @notice emitted on new Epoch
-    event NewEpoch(
-        bytes32 claim
-    );
-
+    event NewEpoch(bytes32 claim);
 }

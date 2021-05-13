@@ -24,15 +24,12 @@
 pragma solidity >=0.7.0;
 
 interface Input {
-
     /// @notice adds input to correct inbox
     /// @param _input bytes array of input
     /// @return merkle root hash of input
     /// @dev  msg.sender and timestamp are preppended log2 size
     ///       has to be calculated offchain taking that into account
-    function addInput(
-        bytes calldata _input
-    ) external returns (bytes32);
+    function addInput(bytes calldata _input) external returns (bytes32);
 
     /// @notice returns input from correct input inbox
     /// @param _index position of the input on inbox
@@ -54,5 +51,4 @@ interface Input {
 
     /// @notice called when a new epoch begins, clears correct input box
     function onNewEpoch() external;
-
 }

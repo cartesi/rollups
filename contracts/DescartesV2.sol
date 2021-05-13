@@ -29,7 +29,6 @@ import "./ValidatorManager.sol";
 import "./DescartesV2.sol";
 
 interface DescartesV2 {
-
     // InputAccumulation - Inputs being accumulated for currrent epoch
     // AwaitingConsensus - No disagreeing claims (or no claims)
     // AwaitingDispute - Waiting for dispute to be over
@@ -48,7 +47,7 @@ interface DescartesV2 {
     /// @notice finalize epoch after timeout
     /// @dev can only be called if challenge period is over
     function finalizeEpoch() external;
-    
+
     /// @notice called when new input arrives, manages the phase changes
     /// @dev can only be called by input contract
     function notifyInput() external returns (bool);
@@ -57,7 +56,7 @@ interface DescartesV2 {
     /// @param _winner winner of dispute
     /// @param _loser lose of sipute
     /// @param _winningClaim initial claim of winning validator
-    /// @dev can only by the dispute contract 
+    /// @dev can only by the dispute contract
     function resolveDispute(
         address payable _winner,
         address payable _loser,
@@ -90,19 +89,12 @@ interface DescartesV2 {
     /// @param _epochHash claim being submitted by this epoch
     /// @param _claimer address of current claimer
     /// @param _epochNumber number of the epoch being submitted
-    event Claim(
-        uint256 _epochNumber,
-        address _claimer,
-        bytes32 _epochHash
-    );
+    event Claim(uint256 _epochNumber, address _claimer, bytes32 _epochHash);
 
     /// @notice epoch finalized
     /// @param _epochHash claim being submitted by this epoch
     /// @param _epochNumber number of the epoch being finalized
-    event FinalizeEpoch(
-        uint256 _epochNumber,
-        bytes32 _epochHash
-    );
+    event FinalizeEpoch(uint256 _epochNumber, bytes32 _epochHash);
 
     /// @notice dispute resolved
     /// @param _winner winner of dispute
@@ -116,7 +108,5 @@ interface DescartesV2 {
 
     /// @notice phase change
     /// @param _newPhase new phase
-    event PhaseChange (
-        Phase _newPhase
-    );
+    event PhaseChange(Phase _newPhase);
 }

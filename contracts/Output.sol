@@ -24,7 +24,6 @@
 pragma solidity >=0.7.0;
 
 interface Output {
-    
     /// @notice executes output
     /// @param _destination address that will execute output
     /// @param _payload payload to be executed by destination
@@ -48,13 +47,10 @@ interface Output {
     ) external returns (bool);
 
     /// @notice called by descartesv2 when an epoch is finalized
-    /// @param _epochHash hash of finalized epoch 
+    /// @param _epochHash hash of finalized epoch
     /// @dev an epoch being finalized means that its outputs can be called
     function onNewEpoch(bytes32 _epochHash) external;
 
     /// @notice get number of finalized epochs
-    function getNumberOfFinalizedEpochs()
-        external
-        view
-        returns (uint256);
+    function getNumberOfFinalizedEpochs() external view returns (uint256);
 }
