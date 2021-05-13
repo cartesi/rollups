@@ -17,13 +17,6 @@ use std::convert::TryFrom;
 use ethers::types::{Address, H256, U256};
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum PhaseState {
-    InputAccumulation,
-    AwaitingConsensus,
-    AwaitingDispute,
-}
-
-#[derive(Clone, Debug, PartialEq)]
 pub struct ImmutableState {
     pub input_duration: U256, // duration of input accumulation phase in seconds
     pub challenge_period: U256, // duration of challenge period in seconds
@@ -54,16 +47,43 @@ pub struct AccumulatingEpoch {
 }
 
 #[derive(Clone, Debug)]
+pub enum PhaseState {
+    InputAccumulation {
+        current_epoch: AccumulatingEpoch,
+    },
+
+    ExpiredInputAccumulation {
+        sealing_epoch: AccumulatingEpoch,
+    },
+
+    AwaitingConsensus {
+        sealed_epoch: SealedEpoch,
+        current_epoch: AccumulatingEpoch,
+    },
+
+    ConsensusTimeout {
+        sealed_epoch: SealedEpoch,
+        current_epoch: AccumulatingEpoch,
+    },
+
+    AwaitingDispute {
+        sealed_epoch: SealedEpoch,
+        current_epoch: AccumulatingEpoch,
+    },
+    // TODO: add dispute timeout when disputes are turned on.
+}
+
+#[derive(Clone, Debug)]
 pub struct DescartesV2State {
     // TODO: Add these for frontend.
     // pub input_accumulation_start: U256, // Only used for frontend
     // pub first_claim_TS: Option<U256>, // Only used for frontend
     pub constants: ImmutableState, // Only used for frontend
 
-    pub current_phase: PhaseState,
     pub initial_epoch: U256,
     pub finalized_epochs: OrdMap<U256, FinalizedEpoch>, // EpochNumber -> Epoch
-    pub current_epoch: CurrentEpoch,
+
+    pub current_phase: PhaseState,
 }
 
 /// DescartesV2 StateActor Delegate, which implements `sync` and `fold`.
