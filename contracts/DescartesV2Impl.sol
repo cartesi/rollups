@@ -247,7 +247,7 @@ contract DescartesV2Impl is DescartesV2 {
     /// @notice returns phase and emits events
     /// @param _newPhase phase to be returned and emitted
     function updatePhase(Phase _newPhase) internal returns (Phase) {
-        if(_newPhase != currentPhase){
+        if (_newPhase != currentPhase) {
             emit PhaseChange(_newPhase);
         }
         return _newPhase;

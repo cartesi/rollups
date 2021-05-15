@@ -65,7 +65,9 @@ describe("Portal Implementation", async () => {
                 [await signer.getAddress()],
                 [50, 30],
                 "0x00",
-                { value: ethers.utils.parseEther("50") }
+                {
+                    value: ethers.utils.parseEther("50"),
+                }
             ),
             "ether deposit should revert if amount.length > addresses.length"
         ).to.be.revertedWith("receivers array length != amounts array length");
@@ -117,7 +119,9 @@ describe("Portal Implementation", async () => {
                 [await signer.getAddress()],
                 [50],
                 "0x00",
-                { value: ethers.utils.parseEther("50") }
+                {
+                    value: ethers.utils.parseEther("50"),
+                }
             ),
             "expect etherDeposit function to emit EtherDeposited event"
         ).to.emit(portalImpl, "EtherDeposited");
