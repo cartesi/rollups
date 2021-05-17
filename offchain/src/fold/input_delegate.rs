@@ -9,26 +9,27 @@ use dispatcher::state_fold::{
 use dispatcher::types::Block;
 
 use async_trait::async_trait;
-use im::OrdMap;
+use im::Vector;
 use snafu::ResultExt;
+use std::sync::Arc;
 
 use ethers::types::{Address, U256};
 
 #[derive(Clone, Debug)]
 pub struct Input {
-    pub sender: Address,  // TODO: Get from calldata.
-    pub timestamp: U256,  // TODO: Get from calldata.
-    pub payload: Vec<u8>, // TODO: Get from calldata.
+    pub sender: Address,       // TODO: Get from calldata.
+    pub timestamp: U256,       // TODO: Get from calldata.
+    pub payload: Arc<Vec<u8>>, // TODO: Get from calldata.
 }
 
 #[derive(Clone, Debug)]
 pub struct InputState {
     pub input_address: Address,
     pub epoch: U256,
-    pub inputs: OrdMap<U256, Input>,
+    pub inputs: Vector<Input>,
 }
 
-/// Partition StateActor Delegate, which implements `sync` and `fold`.
+/// Input StateFold Delegate
 pub struct InputFoldDelegate {}
 
 impl InputFoldDelegate {
@@ -55,7 +56,7 @@ impl StateFoldDelegate for InputFoldDelegate {
             .build_sync_contract(input_address, block.number, InputImpl::new)
             .await;
 
-        let ev = contract
+        let events = contract
             .input_added_filter()
             .topic1(epoch)
             .query()
@@ -64,9 +65,9 @@ impl StateFoldDelegate for InputFoldDelegate {
                 err: "Error querying for input added events",
             })?;
 
-        let mut inputs: OrdMap<U256, Input> = OrdMap::new();
-        for (index, ev) in ev.into_iter().enumerate() {
-            inputs = inputs.update(index.into(), ev.into());
+        let mut inputs: Vector<Input> = Vector::new();
+        for ev in events {
+            inputs.push_back(ev.into());
         }
 
         Ok(InputState {
@@ -97,7 +98,7 @@ impl StateFoldDelegate for InputFoldDelegate {
             )
             .await;
 
-        let ev = contract
+        let events = contract
             .input_added_filter()
             .topic1(previous_state.epoch)
             .query()
@@ -106,9 +107,9 @@ impl StateFoldDelegate for InputFoldDelegate {
                 err: "Error querying for input added events",
             })?;
 
-        let mut inputs: OrdMap<U256, Input> = previous_state.inputs.clone();
-        for (index, ev) in ev.into_iter().enumerate() {
-            inputs = inputs.update(index.into(), ev.into());
+        let mut inputs = previous_state.inputs.clone();
+        for ev in events {
+            inputs.push_back(ev.into());
         }
 
         Ok(InputState {
@@ -130,7 +131,7 @@ impl From<InputAddedFilter> for Input {
     fn from(ev: InputAddedFilter) -> Self {
         Self {
             sender: ev.sender,
-            payload: ev.input,
+            payload: Arc::new(ev.input),
             timestamp: ev.timestamp,
         }
     }
