@@ -10,21 +10,24 @@ use dispatcher::state_fold::{
 use dispatcher::types::Block;
 
 use async_trait::async_trait;
-use im::{HashMap, HashSet, OrdMap};
+use im::{HashMap, HashSet, Vector};
 use snafu::ResultExt;
 use std::convert::TryFrom;
 
+use ethers::contract::LogMeta;
+use ethers::providers::Middleware;
 use ethers::types::{Address, H256, U256};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ImmutableState {
     pub input_duration: U256, // duration of input accumulation phase in seconds
     pub challenge_period: U256, // duration of challenge period in seconds
+    pub contract_creation_timestamp: U256, // timestamp of the contract creation
 
-    pub input_address: Address, // contract responsible for inputs
-    pub output_address: Address, // contract responsible for ouputs
-    pub validator_manager_address: Address, // contract responsible for validators
-    pub dispute_manager_address: Address, // contract responsible for dispute resolution
+    pub input_contract_address: Address, // contract responsible for inputs
+    pub output_contract_address: Address, // contract responsible for ouputs
+    pub validator_contract_address: Address, // contract responsible for validators
+    pub dispute_contract_address: Address, // contract responsible for dispute resolution
 }
 
 #[derive(Clone, Debug)]
@@ -76,12 +79,12 @@ pub enum PhaseState {
 #[derive(Clone, Debug)]
 pub struct DescartesV2State {
     // TODO: Add these for frontend.
-    // pub input_accumulation_start: U256, // Only used for frontend
     // pub first_claim_TS: Option<U256>, // Only used for frontend
-    pub constants: ImmutableState, // Only used for frontend
+    pub constants: ImmutableState,
+    pub input_accumulation_start: U256,
 
     pub initial_epoch: U256,
-    pub finalized_epochs: OrdMap<U256, FinalizedEpoch>, // EpochNumber -> Epoch
+    pub finalized_epochs: Vector<FinalizedEpoch>, // EpochNumber -> Epoch
 
     pub current_phase: PhaseState,
 }
@@ -127,10 +130,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .await;
 
         let constants = {
-            let create_event = {
+            let (create_event, meta) = {
                 let e = contract
                     .descartes_v2_created_filter()
-                    .query()
+                    .query_with_meta()
                     .await
                     .context(SyncContractError {
                         err: "Error querying for descartes created",
@@ -144,19 +147,39 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 }
 
                 assert_eq!(e.len(), 1);
-                e[0].clone()
+                e[0]
             };
 
-            ImmutableState::from(&create_event)
+            let middleware = access
+                .build_sync_contract(Address::zero(), block.number, |_, m| m)
+                .await;
+
+            let timestamp = middleware
+                .get_block(meta.block_hash)
+                .await
+                .context(SyncAccessError {})?
+                .ok_or(snafu::NoneError)
+                .context(SyncDelegateError {
+                    err: "Block not found",
+                })?
+                .timestamp;
+
+            ImmutableState::from(&(create_event, timestamp))
         };
 
-        let current_phase = {
-            let phase_change_events =
-                contract.phase_change_filter().query().await.context(
-                    SyncContractError {
-                        err: "Error querying for descartes phase change",
-                    },
-                )?;
+        let (current_phase, input_accumulation_start) = {
+            let phase_change_events = contract
+                .phase_change_filter()
+                .query_with_meta()
+                .await
+                .context(SyncContractError {
+                    err: "Error querying for descartes phase change",
+                })?;
+
+            // if phase_change_events.is_empty() {
+            //     PhaseState::InputAccumulation
+            // } else {
+            // }
 
             if let Some(p) = phase_change_events.last() {
                 PhaseState::try_from(p)
@@ -418,15 +441,17 @@ impl std::convert::TryFrom<&PhaseChangeFilter> for PhaseState {
     }
 }
 
-impl From<&DescartesV2CreatedFilter> for ImmutableState {
-    fn from(ev: &DescartesV2CreatedFilter) -> Self {
+impl From<&(DescartesV2CreatedFilter, U256)> for ImmutableState {
+    fn from(src: &(DescartesV2CreatedFilter, U256)) -> Self {
+        let (ev, ts) = src;
         Self {
             input_duration: ev.input_duration,
             challenge_period: ev.challenge_period,
-            input_address: ev.input,
-            output_address: ev.output,
-            validator_manager_address: ev.validator_manager,
-            dispute_manager_address: ev.dispute_manager,
+            contract_creation_timestamp: ts.clone(),
+            input_contract_address: ev.input,
+            output_contract_address: ev.output,
+            validator_contract_address: ev.validator_manager,
+            dispute_contract_address: ev.dispute_manager,
         }
     }
 }

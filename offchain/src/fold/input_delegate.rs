@@ -24,7 +24,7 @@ pub struct Input {
 
 #[derive(Clone, Debug)]
 pub struct InputState {
-    pub input_address: Address,
+    pub input_contract_address: Address,
     pub epoch: U256,
     pub inputs: Vector<Input>,
 }
@@ -50,10 +50,14 @@ impl StateFoldDelegate for InputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (input_address, epoch) = initial_state.clone();
+        let (input_contract_address, epoch) = initial_state.clone();
 
         let contract = access
-            .build_sync_contract(input_address, block.number, InputImpl::new)
+            .build_sync_contract(
+                input_contract_address,
+                block.number,
+                InputImpl::new,
+            )
             .await;
 
         let events = contract
@@ -71,7 +75,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         }
 
         Ok(InputState {
-            input_address,
+            input_contract_address,
             epoch,
             inputs,
         })
@@ -85,14 +89,14 @@ impl StateFoldDelegate for InputFoldDelegate {
     ) -> FoldResult<Self::Accumulator, A> {
         if fold_utils::contains_address(
             &block.logs_bloom,
-            &previous_state.input_address,
+            &previous_state.input_contract_address,
         ) {
             return Ok(previous_state.clone());
         }
 
         let contract = access
             .build_fold_contract(
-                previous_state.input_address,
+                previous_state.input_contract_address,
                 block.hash,
                 InputImpl::new,
             )
@@ -113,7 +117,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         }
 
         Ok(InputState {
-            input_address: previous_state.input_address,
+            input_contract_address: previous_state.input_contract_address,
             epoch: previous_state.epoch,
             inputs,
         })
