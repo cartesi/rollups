@@ -209,6 +209,8 @@ contract DescartesV2Impl is DescartesV2 {
 
     /// @notice starts new epoch
     function startNewEpoch() internal {
+        inputAccumulationStart = block.timestamp;
+
         bytes32 finalClaim = validatorManager.onNewEpoch();
 
         output.onNewEpoch(finalClaim);
