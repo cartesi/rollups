@@ -240,12 +240,6 @@ contract DescartesV2Impl is DescartesV2 {
         }
     }
 
-    /// @notice get the current phase
-    /// @return the current phase
-    function getCurrentPhase() public view override returns (Phase) {
-        return currentPhase;
-    }
-
     /// @notice returns phase and emits events
     /// @param _newPhase phase to be returned and emitted
     function updatePhase(Phase _newPhase) internal returns (Phase) {
@@ -260,4 +254,23 @@ contract DescartesV2Impl is DescartesV2 {
     function getCurrentEpoch() public view override returns (uint256) {
         return output.getNumberOfFinalizedEpochs() + 1;
     }
+
+    /// @notice get the current phase
+    /// @return the current phase
+    function getCurrentPhase() public view override returns (Phase) {
+        return currentPhase;
+    }
+
+    /// @notice get the timestamp of input accumulation start
+    /// @return timestamp of input accumulation start
+    function getInputAccumulationStart() public view override returns (uint256) {
+        return inputAccumulationStart;
+    }
+
+    /// @notice get the timestamp of this epoch's first claim
+    /// @return timestamp of claim
+    function getFirstClaimTS() public view override returns (uint256) {
+        return firstClaimTS;
+    }
+
 }

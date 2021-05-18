@@ -71,6 +71,14 @@ interface DescartesV2 {
     /// @return index of current epoch
     function getCurrentEpoch() external view returns (uint256);
 
+    /// @notice get the timestamp of input accumulation start
+    /// @return timestamp of input accumulation start
+    function getInputAccumulationStart() external view returns (uint256);
+
+    /// @notice get the timestamp of this epoch's first claim
+    /// @return timestamp of claim
+    function getFirstClaimTS() external view returns (uint256);
+
     // events
 
     /// @notice contract created
