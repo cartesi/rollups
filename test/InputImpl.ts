@@ -82,6 +82,7 @@ describe("Input Implementation", () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
         await mockDescartesv2.mock.notifyInput.returns(false);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
 
         await inputImpl.addInput(input_64_bytes);
         await inputImpl.addInput(input_64_bytes);
@@ -93,6 +94,7 @@ describe("Input Implementation", () => {
         ).to.equal(0);
 
         await mockDescartesv2.mock.notifyInput.returns(true);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
 
         await inputImpl.addInput(input_64_bytes);
 
@@ -106,33 +108,15 @@ describe("Input Implementation", () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
         await mockDescartesv2.mock.notifyInput.returns(false);
-        //mockDescartesv2.mock.notifyInput.returns(false);
-        //mockDescartesv2.mock.notifyInput.returns(false);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
 
         await inputImpl.addInput(input_64_bytes);
-        //await inputImpl.addInput(input_64_bytes);
-        //await inputImpl.addInput(input_64_bytes);
 
         expect(
             await inputImpl.getNumberOfInputs(),
             "previous inbox should return zero"
         ).to.equal(0);
 
-        //mockDescartesv2.mock.notifyInput.returns(true);
-        //await inputImpl.addInput(input_64_bytes);
-
-        //expect(
-        //  await inputImpl.getNumberOfInputs(),
-        //  "non active inbox should have 3 inputs"
-        //).to.equal(3);
-
-        //mockDescartesv2.mock.notifyInput.returns(true);
-        //await inputImpl.addInput(input_64_bytes);
-
-        //expect(
-        //  await inputImpl.getNumberOfInputs(),
-        //  "non active inbox should have 1 input"
-        //).to.equal(1);
     });
 
     it("onNewEpoch() can only be called by descartesv2", async () => {
@@ -153,12 +137,14 @@ describe("Input Implementation", () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
         await mockDescartesv2.mock.notifyInput.returns(true);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
         expect(
             await inputImpl.getCurrentInbox(),
             "current inbox should start as zero"
         ).to.equal(0);
 
         await mockDescartesv2.mock.notifyInput.returns(false);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
         await inputImpl.addInput(input_64_bytes);
 
         expect(
@@ -167,6 +153,7 @@ describe("Input Implementation", () => {
         ).to.equal(0);
 
         await mockDescartesv2.mock.notifyInput.returns(true);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
         await inputImpl.addInput(input_64_bytes);
 
         expect(
@@ -175,6 +162,7 @@ describe("Input Implementation", () => {
         ).to.equal(1);
 
         mockDescartesv2.mock.notifyInput.returns(false);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
         await inputImpl.addInput(input_64_bytes);
 
         expect(
