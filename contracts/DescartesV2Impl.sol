@@ -263,7 +263,12 @@ contract DescartesV2Impl is DescartesV2 {
 
     /// @notice get the timestamp of input accumulation start
     /// @return timestamp of input accumulation start
-    function getInputAccumulationStart() public view override returns (uint256) {
+    function getInputAccumulationStart()
+        public
+        view
+        override
+        returns (uint256)
+    {
         return inputAccumulationStart;
     }
 
@@ -272,5 +277,4 @@ contract DescartesV2Impl is DescartesV2 {
     function getFirstClaimTS() public view override returns (uint256) {
         return firstClaimTS;
     }
-
 }

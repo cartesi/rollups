@@ -116,7 +116,6 @@ describe("Input Implementation", () => {
             await inputImpl.getNumberOfInputs(),
             "previous inbox should return zero"
         ).to.equal(0);
-
     });
 
     it("onNewEpoch() can only be called by descartesv2", async () => {
