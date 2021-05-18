@@ -611,7 +611,8 @@ describe("Descartes V2 Implementation", () => {
     });
 
     it("event PhaseChange", async () => {
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
+        //advance input duration from input accumulation start 
+        await network.provider.send("evm_increaseTime", [(await descartesV2Impl.getInputAccumulationStart()).toNumber() + inputDuration + 1]);
         await network.provider.send("evm_mine");
 
         //event PhaseChange: AwaitingConsensus
@@ -648,6 +649,10 @@ describe("Descartes V2 Implementation", () => {
         )
             .to.emit(descartesV2Impl, "PhaseChange")
             .withArgs(Phase.InputAccumulation);
+
+        //advance input duration from input accumulation start 
+        await network.provider.send("evm_increaseTime", [(await descartesV2Impl.getInputAccumulationStart()).toNumber() + inputDuration + 1]);
+        await network.provider.send("evm_mine");
 
         //event PhaseChange: AwaitingDispute
         await mockValidatorManager.mock.onClaim.returns(
@@ -688,7 +693,6 @@ describe("Descartes V2 Implementation", () => {
         )
             .to.emit(descartesV2Impl, "FinalizeEpoch")
             .withArgs(
-                numberOfFinalizedEpochs,
                 ethers.utils.formatBytes32String("hello")
             );
     });
