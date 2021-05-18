@@ -103,7 +103,7 @@ contract DescartesV2Impl is DescartesV2 {
         challengePeriod = _challengePeriod;
 
         inputAccumulationStart = block.timestamp;
-        currentPhase = updatePhase(Phase.InputAccumulation);
+        currentPhase = Phase.InputAccumulation;
 
         emit DescartesV2Created(
             _input,
@@ -251,5 +251,11 @@ contract DescartesV2Impl is DescartesV2 {
             emit PhaseChange(_newPhase);
         }
         return _newPhase;
+    }
+
+    /// @notice returns index of current epoch
+    /// @return index of current epoch
+    function getCurrentEpoch() public view override returns (uint256) {
+        return output.getNumberOfFinalizedEpochs() + 1;
     }
 }

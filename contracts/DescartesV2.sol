@@ -67,6 +67,10 @@ interface DescartesV2 {
     /// @return the current phase
     function getCurrentPhase() external view returns (Phase);
 
+    /// @notice returns index of current epoch
+    /// @return index of current epoch
+    function getCurrentEpoch() external view returns (uint256);
+
     // events
 
     /// @notice contract created

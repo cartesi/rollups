@@ -51,4 +51,12 @@ interface Input {
 
     /// @notice called when a new epoch begins, clears correct input box
     function onNewEpoch() external;
+
+    /// @notice input added
+    /// @param _metadata abi.encode of msg.sender and timestamp
+    /// @param _input input data
+    event InputAdded(
+        bytes _metadata,
+        bytes _input
+    );
 }
