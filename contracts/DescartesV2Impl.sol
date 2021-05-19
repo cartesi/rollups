@@ -61,7 +61,7 @@ contract DescartesV2Impl is DescartesV2 {
     uint256 public inputAccumulationStart; // timestamp when current input accumulation phase started
     uint256 public firstClaimTS; // timestamp of first claim this epoch
 
-    Phase currentPhase; // current state
+    Phase public currentPhase; // current state
 
     /// @notice functions modified by onlyInputContract can only be called
     // by input contract
@@ -253,11 +253,5 @@ contract DescartesV2Impl is DescartesV2 {
     /// @return index of current epoch
     function getCurrentEpoch() public view override returns (uint256) {
         return output.getNumberOfFinalizedEpochs() + 1;
-    }
-
-    /// @notice get the current phase
-    /// @return the current phase
-    function getCurrentPhase() public view override returns (Phase) {
-        return currentPhase;
     }
 }

@@ -63,10 +63,6 @@ interface DescartesV2 {
         bytes32 _winningClaim
     ) external;
 
-    /// @notice get the current phase
-    /// @return the current phase
-    function getCurrentPhase() external view returns (Phase);
-
     /// @notice returns index of current epoch
     /// @return index of current epoch
     function getCurrentEpoch() external view returns (uint256);
