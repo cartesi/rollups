@@ -700,7 +700,7 @@ describe("Descartes V2 Implementation", () => {
             descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
         )
             .to.emit(descartesV2Impl, "FinalizeEpoch")
-            .withArgs(ethers.utils.formatBytes32String("hello"));
+            .withArgs(numberOfFinalizedEpochs, ethers.utils.formatBytes32String("hello"));
     });
 
     /// modifiers off

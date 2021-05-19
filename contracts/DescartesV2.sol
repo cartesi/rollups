@@ -104,8 +104,9 @@ interface DescartesV2 {
     event Claim(uint256 _epochNumber, address _claimer, bytes32 _epochHash);
 
     /// @notice epoch finalized
+    /// @param _epochNumber number of the epoch being finalized
     /// @param _epochHash claim being submitted by this epoch
-    event FinalizeEpoch(bytes32 _epochHash);
+    event FinalizeEpoch(uint256 _epochNumber, bytes32 _epochHash);
 
     /// @notice dispute resolved
     /// @param _winner winner of dispute

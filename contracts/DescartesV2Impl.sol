@@ -216,7 +216,7 @@ contract DescartesV2Impl is DescartesV2 {
         output.onNewEpoch(finalClaim);
         input.onNewEpoch();
 
-        emit FinalizeEpoch(finalClaim);
+        emit FinalizeEpoch(output.getNumberOfFinalizedEpochs(), finalClaim);
     }
 
     /// @notice resolve results returned by validator manager
