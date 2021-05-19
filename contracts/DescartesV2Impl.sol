@@ -58,8 +58,8 @@ contract DescartesV2Impl is DescartesV2 {
     ValidatorManager immutable validatorManager; // contract responsible for validators
     DisputeManager immutable disputeManager; // contract responsible for dispute resolution
 
-    uint256 inputAccumulationStart; // timestamp when current input accumulation phase started
-    uint256 firstClaimTS; // timestamp of first claim this epoch
+    uint256 public inputAccumulationStart; // timestamp when current input accumulation phase started
+    uint256 public firstClaimTS; // timestamp of first claim this epoch
 
     Phase currentPhase; // current state
 
@@ -259,22 +259,5 @@ contract DescartesV2Impl is DescartesV2 {
     /// @return the current phase
     function getCurrentPhase() public view override returns (Phase) {
         return currentPhase;
-    }
-
-    /// @notice get the timestamp of input accumulation start
-    /// @return timestamp of input accumulation start
-    function getInputAccumulationStart()
-        public
-        view
-        override
-        returns (uint256)
-    {
-        return inputAccumulationStart;
-    }
-
-    /// @notice get the timestamp of this epoch's first claim
-    /// @return timestamp of claim
-    function getFirstClaimTS() public view override returns (uint256) {
-        return firstClaimTS;
     }
 }

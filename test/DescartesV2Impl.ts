@@ -613,7 +613,7 @@ describe("Descartes V2 Implementation", () => {
     it("event PhaseChange", async () => {
         //advance input duration from input accumulation start
         await network.provider.send("evm_increaseTime", [
-            (await descartesV2Impl.getInputAccumulationStart()).toNumber() +
+            (await descartesV2Impl.inputAccumulationStart()).toNumber() +
                 inputDuration +
                 1,
         ]);
@@ -656,7 +656,7 @@ describe("Descartes V2 Implementation", () => {
 
         //advance input duration from input accumulation start
         await network.provider.send("evm_increaseTime", [
-            (await descartesV2Impl.getInputAccumulationStart()).toNumber() +
+            (await descartesV2Impl.inputAccumulationStart()).toNumber() +
                 inputDuration +
                 1,
         ]);
