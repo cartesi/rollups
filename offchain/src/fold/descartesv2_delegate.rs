@@ -150,6 +150,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 e[0]
             };
 
+            // f: move middleware out of this context
             let middleware = access
                 .build_sync_contract(Address::zero(), block.number, |_, m| m)
                 .await;
@@ -189,8 +190,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             }
         };
 
+        // f: let (finalized_epochs, input_accumulation_timestamp) =
         let finalized_epochs = {
             let epoch_finalized_events =
+                // f: query_with_meta
                 contract.finalize_epoch_filter().query().await.context(
                     SyncContractError {
                         err: "Error querying for descartes finalized epochs",
@@ -215,9 +218,17 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                     },
                 )
             }
-            finalized_epochs
+
+            // f: maybe we should only do this when PhaseState is Input Accumulation?
+            // f: if last(finalized_epochs exist)
+            // timestamp = middleware.get_block(meta_hash).../.timestamp
+            finalized_epochs, // if timestamp exists return timestamp else return creation timestamp
         };
 
+        // f:
+        // if system.timestamp > input_accumulation_timestamp + constant.input_duration{
+        //  Phase == expired input
+        //}
         let current_epoch = {
             let number = finalized_epochs.len().into();
 
@@ -241,6 +252,11 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                     .or_insert(HashSet::new())
                     .insert(claim.claimer);
             }
+
+            // f: get last claim timestamp
+            // f: if system.timestamp > last_claim_timestamp + challenge duration
+            // f: && if Phase::AwaitnConsensus
+            // f: phase = expired awaiting consensus
 
             CurrentEpoch {
                 number,
