@@ -13,6 +13,7 @@ use async_trait::async_trait;
 use im::{HashMap, HashSet, Vector};
 use snafu::ResultExt;
 use std::convert::TryFrom;
+use std::sync::Arc;
 
 use ethers::contract::LogMeta;
 use ethers::providers::Middleware;
@@ -39,15 +40,24 @@ pub struct FinalizedEpoch {
 #[derive(Clone, Debug)]
 pub struct SealedEpoch {
     pub number: U256,
-    pub claimers: HashMap<H256, HashSet<Address>>, // Claim -> Set of Addresses with that claim
-    pub first_claim_timestamp: Option<U256>,
-    pub round_start: Option<U256>,
+
+    // Claim -> (Set of Addresses with that claim, timestamp of first claim)
+    pub claimers: HashMap<H256, (HashSet<Address>, U256)>,
+
     pub inputs: InputState,
 }
 
 impl SealedEpoch {
-    pub fn consensus_round_start(&self) -> Option<U256> {
-        todo!()
+    pub fn first_claim_timestamp(&self) -> Option<U256> {
+        let mut first_ts = None;
+        for (k, (_, ts)) in self.claimers {
+            first_ts = match first_ts {
+                None => Some(ts),
+                Some(x) => Some(std::cmp::min(x, ts)),
+            }
+        }
+
+        first_ts
     }
 }
 
@@ -70,6 +80,7 @@ pub enum PhaseState {
     AwaitingConsensus {
         sealed_epoch: SealedEpoch,
         current_epoch: AccumulatingEpoch,
+        round_start: U256,
     },
 
     ConsensusTimeout {
@@ -82,6 +93,29 @@ pub enum PhaseState {
         current_epoch: AccumulatingEpoch,
     },
     // TODO: add dispute timeout when disputes are turned on.
+}
+
+impl PhaseState {
+    pub fn consensus_round_start(&self) -> Option<U256> {
+        match self {
+            PhaseState::AwaitingConsensus {
+                round_start,
+                sealed_epoch,
+                ..
+            } => match sealed_epoch.first_claim_timestamp() {
+                None => None,
+                Some(x) => Some(std::cmp::max(*round_start, x)),
+            },
+            _ => None,
+        }
+    }
+
+    // pub fn advance_state(
+    //     self,
+    //     phase_change: PhaseChangeFilter,
+    // ) -> Option<Self> {
+    //     todo!()
+    // }
 }
 
 #[derive(Clone, Debug)]
@@ -144,17 +178,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let contract = access
-            .build_sync_contract(
-                self.descartesv2_address,
-                block.number,
-                DescartesV2Impl::new,
-            )
-            .await;
-
         let middleware = access
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
+
+        let contract = DescartesV2Impl::new(
+            self.descartesv2_address,
+            Arc::clone(&middleware),
+        );
 
         let constants = {
             let (create_event, meta) = {
@@ -190,15 +221,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             ImmutableState::from(&(create_event, timestamp))
         };
 
-        let epoch_finalized_events =
-                // f: query_with_meta
-                contract.finalize_epoch_filter().query_with_meta().await.context(
-                    SyncContractError {
-                        err: "Error querying for descartes finalized epochs",
-                    },
-                )?;
+        let epoch_finalized_events = contract
+            .finalize_epoch_filter()
+            .query_with_meta()
+            .await
+            .context(SyncContractError {
+                err: "Error querying for descartes finalized epochs",
+            })?;
 
-        // f: let (finalized_epochs, input_accumulation_timestamp) =
         let finalized_epochs = {
             let mut finalized_epochs = Vector::new();
             for (epoch, (ev, _)) in epoch_finalized_events.iter().enumerate() {
@@ -219,21 +249,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 )
             }
 
-            // f: maybe we should only do this when PhaseState is Input Accumulation?
-            // f: if last(finalized_epochs exist)
-            // timestamp = middleware.get_block(meta_hash).../.timestamp
-            finalized_epochs // if timestamp exists return timestamp else return creation timestamp
+            finalized_epochs
         };
 
-        let phase_change_events = contract
-            .phase_change_filter()
-            .query_with_meta()
-            .await
-            .context(SyncContractError {
-                err: "Error querying for descartes phase change",
-            })?;
-
-        let input_accumulation_start = {
+        let input_accumulation_start_timestamp = {
             match epoch_finalized_events.last() {
                 None => constants.contract_creation_timestamp,
                 Some((_, meta)) => {
@@ -249,6 +268,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 }
             }
         };
+
+        let phase_change_events = contract
+            .phase_change_filter()
+            .query_with_meta()
+            .await
+            .context(SyncContractError {
+                err: "Error querying for descartes phase change",
+            })?;
 
         let first_non_finalized_epoch_inputs = {
             // Index of first non finalized epoch
@@ -266,11 +293,12 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             AccumulatingEpoch { inputs, number }
         };
 
-        let phase = match phase_change_events.last() {
+        let current_phase = match phase_change_events.last() {
             // InputAccumulation
-            Some((PhaseChangeFilter { new_phase: 0 }, m)) => {
+            Some((PhaseChangeFilter { new_phase: 0 }, _)) => {
                 if block.timestamp
-                    > input_accumulation_start + constants.input_duration
+                    > input_accumulation_start_timestamp
+                        + constants.input_duration
                 {
                     PhaseState::ExpiredInputAccumulation {
                         sealing_epoch: first_non_finalized_epoch_inputs,
@@ -283,10 +311,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             }
 
             // AwaitingConsensus | AwaitingDispute
-            Some((PhaseChangeFilter { new_phase: 1 }, m))
-            | Some((PhaseChangeFilter { new_phase: 2 }, m)) => {
+            Some((phase @ PhaseChangeFilter { new_phase: 1 }, m))
+            | Some((phase @ PhaseChangeFilter { new_phase: 2 }, m)) => {
                 // Current epoch
-                let number = finalized_epochs.len().into() + 1;
+                let number = (finalized_epochs.len() + 1).into();
 
                 // Inputs of current epoch
                 let inputs = self
@@ -309,17 +337,12 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
                 let mut claimers: HashMap<H256, _> = HashMap::new();
                 for (claim_event, meta) in claim_events {
-                    claimers
+                    let x = claimers
                         .entry(claim_event.epoch_hash.into())
-                        .or_insert(HashSet::new())
-                        .insert(claim_event.claimer);
-                }
-
-                let first_claim_timestamp = {
-                    if let Some((_, meta)) = claim_events.first() {
-                        Some(
+                        .or_insert((
+                            HashSet::new(),
                             middleware
-                                .get_block(block.hash)
+                                .get_block(meta.block_hash)
                                 .await
                                 .context(SyncAccessError {})?
                                 .ok_or(snafu::NoneError)
@@ -327,20 +350,62 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                                     err: "Block not found",
                                 })?
                                 .timestamp,
-                        )
-                    } else {
-                        None
-                    }
-                };
+                        ));
+
+                    x.0.insert(claim_event.claimer);
+                }
 
                 let sealed_epoch = SealedEpoch {
                     claimers,
                     number,
-                    first_claim_timestamp,
                     inputs,
                 };
 
-                todo!()
+                if phase.new_phase == 1 {
+                    // AwaitingConsensus
+
+                    // Timestamp of when we entered this phase.
+                    let round_start = middleware
+                        .get_block(m.block_hash)
+                        .await
+                        .context(SyncAccessError {})?
+                        .ok_or(snafu::NoneError)
+                        .context(SyncDelegateError {
+                            err: "Block not found",
+                        })?
+                        .timestamp;
+
+                    let awaiting_consensus = PhaseState::AwaitingConsensus {
+                        sealed_epoch,
+                        current_epoch: first_non_finalized_epoch_inputs,
+                        round_start,
+                    };
+
+                    match awaiting_consensus.consensus_round_start() {
+                        // No claims
+                        None => awaiting_consensus,
+
+                        // Some claims
+                        Some(ts) => {
+                            if block.timestamp > ts + constants.challenge_period
+                            {
+                                PhaseState::ConsensusTimeout {
+                                    sealed_epoch,
+                                    current_epoch:
+                                        first_non_finalized_epoch_inputs,
+                                }
+                            } else {
+                                awaiting_consensus
+                            }
+                        }
+                    }
+                } else {
+                    // AwaitingDispute
+                    PhaseState::AwaitingDispute {
+                        sealed_epoch,
+                        current_epoch: first_non_finalized_epoch_inputs,
+                    }
+                }
             }
 
             // InputAccumulation
@@ -360,79 +425,12 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             }
         };
 
-        // match p.new_phase {
-        //             0 => Ok(PhaseState::InputAccumulation),
-        //             1 => Ok(PhaseState::AwaitingConsensus),
-        //             2 => Ok(PhaseState::AwaitingDispute),
-        // _ => Err(format!(
-        //     "Could not convert new_phase `{}` to PhaseState",
-        //     p.new_phase
-        // )),
-        //         }
-
-        // f:
-        // if system.timestamp > input_accumulation_timestamp + constant.input_duration{
-        //  Phase == expired input
-        //}
-        let current_epoch = {
-            let number = finalized_epochs.len().into();
-
-            let inputs = self
-                .get_inputs_sync(constants.input_address, number, block.hash)
-                .await?;
-
-            let claim_events = contract
-                .claim_filter()
-                .topic1(U256::from(number))
-                .query()
-                .await
-                .context(SyncContractError {
-                    err: "Error querying for descartes phase change",
-                })?;
-
-            let mut claimers: HashMap<H256, _> = HashMap::new();
-            for claim in claim_events {
-                claimers
-                    .entry(claim.epoch_hash.into())
-                    .or_insert(HashSet::new())
-                    .insert(claim.claimer);
-            }
-
-            // f: get last claim timestamp
-            // f: if system.timestamp > last_claim_timestamp + challenge duration
-            // f: && if Phase::AwaitnConsensus
-            // f: phase = expired awaiting consensus
-
-            CurrentEpoch {
-                number,
-                claimers,
-                inputs,
-            }
-        };
-
-        let (current_phase, input_accumulation_start) = {
-            // if phase_change_events.is_empty() {
-            //     PhaseState::InputAccumulation
-            // } else {
-            // }
-
-            if let Some(p) = phase_change_events.last() {
-                PhaseState::try_from(p)
-                    .map_err(|err| SyncDelegateError { err }.build())?
-            } else {
-                (
-                    PhaseState::InputAccumulation,
-                    constants.contract_creation_timestamp,
-                )
-            }
-        };
-
         Ok(DescartesV2State {
             constants,
             initial_epoch: *initial_state,
             current_phase,
             finalized_epochs,
-            current_epoch,
+            input_accumulation_start_timestamp,
         })
     }
 
@@ -452,6 +450,22 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let constants = previous_state.constants.clone();
 
+        let first_non_finalized_epoch_inputs = {
+            // Index of first non finalized epoch
+            let number = finalized_epochs.len().into();
+
+            // Inputs of first non finalized epoch
+            let inputs = self
+                .get_inputs_fold(
+                    constants.input_contract_address,
+                    number,
+                    block.hash,
+                )
+                .await?;
+
+            AccumulatingEpoch { inputs, number }
+        };
+
         let current_phase = {
             if fold_utils::contains_address(
                 &block.logs_bloom,
@@ -465,8 +479,21 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                     )?;
 
                 if let Some(p) = phase_change_events.last() {
-                    PhaseState::try_from(p)
-                        .map_err(|err| FoldDelegateError { err }.build())?
+                    match p.new_phase {
+                        0 => PhaseState::InputAccumulation {
+                            current_epoch: first_non_finalized_epoch_inputs,
+                        },
+                        1 => PhaseState::AwaitingConsensus,
+                        2 => PhaseState::AwaitingDispute,
+                        _ => {
+                            return Err(format!(
+                            "Could not convert new_phase `{}` to PhaseState",
+                            p.new_phase
+                        ))
+                        }
+                    }
+                    // PhaseState::try_from(p)
+                    //     .map_err(|err| FoldDelegateError { err }.build())?
                 } else {
                     previous_state.current_phase.clone()
                 }
