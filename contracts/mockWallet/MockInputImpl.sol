@@ -44,7 +44,7 @@ contract MockInputImpl is MockInput {
         address[] receivers;
         uint256[] amounts;
         address _ERC20;
-        address sender; //compare msg.sender && sender element of InputBlob in the process transaction for Transfer and Withdrawal process
+        address sender;
     }
 
     //ether balance of L2 addresses
@@ -72,7 +72,7 @@ contract MockInputImpl is MockInput {
     /// @dev off-chain code is responsible for making sure
     ///      that input size is power of 2 and multiple of 8 since
     // the off-chain machine has a 8 byte word
-    function addInput(bytes calldata _input, uint _op) //?? Do we need a modifier here to ensure that only the portal contract calls it?
+    function addInput(bytes calldata _input, uint _op)
         public
         override
         noReentrancy()
@@ -154,6 +154,10 @@ contract MockInputImpl is MockInput {
                         }
                     }
                 }
+
+                if(inputBlob.transaction == Transaction.Withdraw){
+
+                }
             }
 
             if(inputBlob.operation == Operation.ERC20Op){
@@ -182,6 +186,10 @@ contract MockInputImpl is MockInput {
                             }
                         }
                     }
+                }
+
+                if(inputBlob.transaction == Transaction.Withdraw){
+
                 }
             }
         }
