@@ -1,4 +1,5 @@
 use super::contracts::input_contract::*;
+use super::types::{Input, InputState};
 
 use dispatcher::state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
@@ -15,46 +16,34 @@ use std::sync::Arc;
 
 use ethers::types::{Address, U256};
 
-#[derive(Clone, Debug)]
-pub struct Input {
-    pub sender: Address,       // TODO: Get from calldata.
-    pub timestamp: U256,       // TODO: Get from calldata.
-    pub payload: Arc<Vec<u8>>, // TODO: Get from calldata.
-}
-
-#[derive(Clone, Debug)]
-pub struct InputState {
-    pub input_contract_address: Address,
-    pub epoch: U256,
-    pub inputs: Vector<Input>,
-}
-
 /// Input StateFold Delegate
-pub struct InputFoldDelegate {}
+pub struct InputFoldDelegate {
+    input_address: Address,
+}
 
 impl InputFoldDelegate {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(input_address: Address) -> Self {
+        Self { input_address }
     }
 }
 
 #[async_trait]
 impl StateFoldDelegate for InputFoldDelegate {
-    type InitialState = (Address, U256);
+    type InitialState = U256;
     type Accumulator = InputState;
     type State = BlockState<Self::Accumulator>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
-        initial_state: &(Address, U256),
+        initial_state: &U256,
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (input_contract_address, epoch) = initial_state.clone();
+        let epoch_number = initial_state.clone();
 
         let contract = access
             .build_sync_contract(
-                input_contract_address,
+                self.input_address,
                 block.number,
                 InputImpl::new,
             )
@@ -62,7 +51,7 @@ impl StateFoldDelegate for InputFoldDelegate {
 
         let events = contract
             .input_added_filter()
-            .topic1(epoch)
+            .topic1(epoch_number)
             .query()
             .await
             .context(SyncContractError {
@@ -75,8 +64,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         }
 
         Ok(InputState {
-            input_contract_address,
-            epoch,
+            epoch_number,
             inputs,
         })
     }
@@ -87,24 +75,18 @@ impl StateFoldDelegate for InputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        if fold_utils::contains_address(
-            &block.logs_bloom,
-            &previous_state.input_contract_address,
-        ) {
+        if fold_utils::contains_address(&block.logs_bloom, &self.input_address)
+        {
             return Ok(previous_state.clone());
         }
 
         let contract = access
-            .build_fold_contract(
-                previous_state.input_contract_address,
-                block.hash,
-                InputImpl::new,
-            )
+            .build_fold_contract(self.input_address, block.hash, InputImpl::new)
             .await;
 
         let events = contract
             .input_added_filter()
-            .topic1(previous_state.epoch)
+            .topic1(previous_state.epoch_number)
             .query()
             .await
             .context(FoldContractError {
@@ -117,8 +99,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         }
 
         Ok(InputState {
-            input_contract_address: previous_state.input_contract_address,
-            epoch: previous_state.epoch,
+            epoch_number: previous_state.epoch_number,
             inputs,
         })
     }

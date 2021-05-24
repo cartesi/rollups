@@ -1,6 +1,23 @@
 use ethers::types::{Address, H256, U256};
 use im::{HashMap, HashSet, Vector};
+use std::sync::Arc;
 
+/// Single input from Input.sol contract
+#[derive(Clone, Debug)]
+pub struct Input {
+    pub sender: Address,       // TODO: Get from calldata.
+    pub timestamp: U256,       // TODO: Get from calldata.
+    pub payload: Arc<Vec<u8>>, // TODO: Get from calldata.
+}
+
+///
+#[derive(Clone, Debug)]
+pub struct InputState {
+    pub epoch_number: U256,
+    pub inputs: Vector<Input>,
+}
+
+///
 #[derive(Clone, Debug)]
 pub struct Claims {
     claims: HashMap<H256, HashSet<Address>>,
@@ -81,5 +98,75 @@ impl IntoIterator for Claims {
 
     fn into_iter(self) -> Self::IntoIter {
         self.claims.into_iter()
+    }
+}
+
+///
+#[derive(Clone, Debug)]
+pub struct FinalizedEpoch {
+    pub hash: H256,
+    pub epoch_number: U256,
+    pub inputs: InputState,
+}
+
+///
+#[derive(Clone, Debug)]
+pub struct SealedEpoch {
+    pub epoch_number: U256,
+    pub claims: Option<Claims>,
+    pub inputs: InputState,
+}
+
+///
+#[derive(Clone, Debug)]
+pub struct AccumulatingEpoch {
+    pub number: U256,
+    pub inputs: InputState,
+}
+
+///
+#[derive(Clone, Debug)]
+pub enum PhaseState {
+    InputAccumulation {
+        current_epoch: AccumulatingEpoch,
+    },
+
+    ExpiredInputAccumulation {
+        sealing_epoch: AccumulatingEpoch,
+    },
+
+    AwaitingConsensus {
+        sealed_epoch: SealedEpoch,
+        current_epoch: AccumulatingEpoch,
+        round_start: U256,
+    },
+
+    ConsensusTimeout {
+        sealed_epoch: SealedEpoch,
+        current_epoch: AccumulatingEpoch,
+    },
+
+    AwaitingDispute {
+        sealed_epoch: SealedEpoch,
+        current_epoch: AccumulatingEpoch,
+    },
+    // TODO: add dispute timeout when disputes are turned on.
+}
+
+impl PhaseState {
+    pub fn consensus_round_start(&self) -> Option<U256> {
+        match self {
+            PhaseState::AwaitingConsensus {
+                round_start,
+                sealed_epoch,
+                ..
+            } => match sealed_epoch.claims {
+                None => None,
+                Some(c) => {
+                    Some(std::cmp::max(*round_start, c.first_claim_timestamp()))
+                }
+            },
+            _ => None,
+        }
     }
 }

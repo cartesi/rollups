@@ -16,11 +16,11 @@ use std::sync::Arc;
 use ethers::providers::Middleware;
 use ethers::types::{Address, U256};
 
-/// Claims StateFold Delegate
+/// Claims accumulator for StateFold Delegate
 #[derive(Clone, Debug)]
-pub struct ClaimsState {
+pub struct ClaimsAccumulator {
     claims: Option<Claims>,
-    epoch: U256,
+    epoch_number: U256,
 }
 
 /// Claims StateFold Delegate
@@ -39,8 +39,8 @@ impl ClaimsFoldDelegate {
 #[async_trait]
 impl StateFoldDelegate for ClaimsFoldDelegate {
     type InitialState = U256;
-    type Accumulator = ClaimsState;
-    type State = BlockState<Self::Accumulator>;
+    type Accumulator = ClaimsAccumulator;
+    type State = BlockState<Option<Claims>>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
@@ -48,7 +48,7 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let epoch = initial_state.clone();
+        let epoch_number = initial_state.clone();
 
         let middleware = access
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
@@ -62,7 +62,7 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
         // Get all claim events of epoch
         let claim_events = contract
             .claim_filter()
-            .topic1(epoch.clone())
+            .topic1(epoch_number.clone())
             .query_with_meta()
             .await
             .context(SyncContractError {
@@ -100,7 +100,10 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
             });
         }
 
-        Ok(ClaimsState { claims, epoch })
+        Ok(ClaimsAccumulator {
+            claims,
+            epoch_number,
+        })
     }
 
     async fn fold<A: FoldAccess + Send + Sync>(
@@ -109,14 +112,13 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let epoch = previous_state.epoch.clone();
+        let epoch_number = previous_state.epoch_number.clone();
 
-        // If bloom doesn't contain the contract's address or the epoch number,
-        // return the previous state.
+        // Check if there was (possibly) some log emited on this block.
         if !(fold_utils::contains_address(
             &block.logs_bloom,
             &self.descartesv2_address,
-        ) && fold_utils::contains_topic(&block.logs_bloom, &epoch))
+        ) && fold_utils::contains_topic(&block.logs_bloom, &epoch_number))
         {
             return Ok(previous_state.clone());
         }
@@ -132,7 +134,7 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
         // Get all claim events of epoch at this block hash
         let claim_events = contract
             .claim_filter()
-            .topic1(epoch.clone())
+            .topic1(epoch_number.clone())
             .query_with_meta()
             .await
             .context(FoldContractError {
@@ -161,13 +163,19 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
             });
         }
 
-        Ok(ClaimsState { claims, epoch })
+        Ok(ClaimsAccumulator {
+            claims,
+            epoch_number,
+        })
     }
 
     fn convert(
         &self,
         accumulator: &BlockState<Self::Accumulator>,
     ) -> Self::State {
-        accumulator.clone()
+        BlockState {
+            block: accumulator.block,
+            state: accumulator.state.claims,
+        }
     }
 }
