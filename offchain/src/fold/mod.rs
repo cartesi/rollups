@@ -1,8 +1,10 @@
 mod contracts;
 
-mod claims_delegate;
 mod descartesv2_delegate;
 mod epoch_delegate;
 mod input_delegate;
+
+mod accumulating_epoch_delegate;
+mod sealed_epoch_delegate;
 
 mod types;

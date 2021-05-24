@@ -120,7 +120,7 @@ pub struct SealedEpoch {
 ///
 #[derive(Clone, Debug)]
 pub struct AccumulatingEpoch {
-    pub number: U256,
+    pub epoch_number: U256,
     pub inputs: InputState,
 }
 

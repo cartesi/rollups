@@ -1,7 +1,7 @@
 use super::contracts::descartesv2_contract::*;
 
-use super::claims_delegate::ClaimsFoldDelegate;
 use super::input_delegate::InputFoldDelegate;
+use super::sealed_epoch_delegate::SealedEpochFoldDelegate;
 use super::types::{
     AccumulatingEpoch, Claims, FinalizedEpoch, InputState, SealedEpoch,
 };

@@ -1,11 +1,13 @@
 use super::contracts::descartesv2_contract::*;
-use super::types::Claims;
+
+use super::input_delegate::InputFoldDelegate;
+use super::types::{Claims, InputState, SealedEpoch};
 
 use dispatcher::state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
     error::*,
     types::*,
-    utils as fold_utils,
+    utils as fold_utils, DelegateAccess, StateFold,
 };
 use dispatcher::types::Block;
 
@@ -14,33 +16,33 @@ use snafu::ResultExt;
 use std::sync::Arc;
 
 use ethers::providers::Middleware;
-use ethers::types::{Address, U256};
+use ethers::types::{Address, H256, U256};
 
-/// Claims accumulator for StateFold Delegate
-#[derive(Clone, Debug)]
-pub struct ClaimsAccumulator {
-    claims: Option<Claims>,
-    epoch_number: U256,
-}
-
-/// Claims StateFold Delegate
-pub struct ClaimsFoldDelegate {
+/// Sealed epoch StateFold Delegate
+pub struct SealedEpochFoldDelegate<DA: DelegateAccess> {
     descartesv2_address: Address,
+    input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
 }
 
-impl ClaimsFoldDelegate {
-    pub fn new(descartesv2_address: Address) -> Self {
+impl<DA: DelegateAccess> SealedEpochFoldDelegate<DA> {
+    pub fn new(
+        descartesv2_address: Address,
+        input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
+    ) -> Self {
         Self {
             descartesv2_address,
+            input_fold,
         }
     }
 }
 
 #[async_trait]
-impl StateFoldDelegate for ClaimsFoldDelegate {
+impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
+    for SealedEpochFoldDelegate<DA>
+{
     type InitialState = U256;
-    type Accumulator = ClaimsAccumulator;
-    type State = BlockState<Option<Claims>>;
+    type Accumulator = SealedEpoch;
+    type State = BlockState<Self::Accumulator>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
@@ -58,6 +60,9 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
             self.descartesv2_address,
             Arc::clone(&middleware),
         );
+
+        // Inputs of epoch
+        let inputs = self.get_inputs_sync(epoch_number, block.hash).await?;
 
         // Get all claim events of epoch
         let claim_events = contract
@@ -100,8 +105,9 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
             });
         }
 
-        Ok(ClaimsAccumulator {
+        Ok(SealedEpoch {
             claims,
+            inputs,
             epoch_number,
         })
     }
@@ -114,13 +120,20 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
     ) -> FoldResult<Self::Accumulator, A> {
         let epoch_number = previous_state.epoch_number.clone();
 
+        // Inputs of epoch
+        let inputs = self.get_inputs_fold(epoch_number, block.hash).await?;
+
         // Check if there was (possibly) some log emited on this block.
         if !(fold_utils::contains_address(
             &block.logs_bloom,
             &self.descartesv2_address,
         ) && fold_utils::contains_topic(&block.logs_bloom, &epoch_number))
         {
-            return Ok(previous_state.clone());
+            return Ok(SealedEpoch {
+                claims: previous_state.claims.clone(),
+                epoch_number: previous_state.epoch_number,
+                inputs,
+            });
         }
 
         let contract = access
@@ -163,9 +176,10 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
             });
         }
 
-        Ok(ClaimsAccumulator {
+        Ok(SealedEpoch {
             claims,
             epoch_number,
+            inputs,
         })
     }
 
@@ -173,9 +187,44 @@ impl StateFoldDelegate for ClaimsFoldDelegate {
         &self,
         accumulator: &BlockState<Self::Accumulator>,
     ) -> Self::State {
-        BlockState {
-            block: accumulator.block,
-            state: accumulator.state.claims,
-        }
+        accumulator.clone()
+    }
+}
+
+impl<DA: DelegateAccess + Send + Sync + 'static> SealedEpochFoldDelegate<DA> {
+    async fn get_inputs_sync<A: SyncAccess + Send + Sync + 'static>(
+        &self,
+        epoch: U256,
+        block_hash: H256,
+    ) -> SyncResult<InputState, A> {
+        Ok(self
+            .input_fold
+            .get_state_for_block(&epoch, block_hash)
+            .await
+            .map_err(|e| {
+                SyncDelegateError {
+                    err: format!("Input state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state)
+    }
+
+    async fn get_inputs_fold<A: FoldAccess + Send + Sync + 'static>(
+        &self,
+        epoch: U256,
+        block_hash: H256,
+    ) -> FoldResult<InputState, A> {
+        Ok(self
+            .input_fold
+            .get_state_for_block(&epoch, block_hash)
+            .await
+            .map_err(|e| {
+                FoldDelegateError {
+                    err: format!("Input state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state)
     }
 }
