@@ -86,6 +86,9 @@ describe("Descartes V2 Implementation", () => {
         await mockOutput.mock.getNumberOfFinalizedEpochs.returns(
             numberOfFinalizedEpochs
         ); //this may be needed when emit events
+
+        // this is needed when a claim forces input box swap
+        await mockInput.mock.onNewInputAccumulation.returns();
     });
 
     /// ***test function currentPhase()*** ///

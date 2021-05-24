@@ -130,6 +130,9 @@ contract DescartesV2Impl is DescartesV2 {
             block.timestamp > inputAccumulationStart + inputDuration
         ) {
             currentPhase = updatePhase(Phase.AwaitingConsensus);
+
+            // warns input of new epoch
+            input.onNewInputAccumulation();
             sealingEpochTimestamp = block.timestamp; // update timestamp of sealing epoch proposal
         }
         require(
