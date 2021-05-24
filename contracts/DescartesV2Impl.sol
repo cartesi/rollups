@@ -59,7 +59,7 @@ contract DescartesV2Impl is DescartesV2 {
     DisputeManager immutable disputeManager; // contract responsible for dispute resolution
 
     uint256 public inputAccumulationStart; // timestamp when current input accumulation phase started
-    uint256 public sealngEpochTimestamp; // timestamp on when a proposed epoch (claim) becomes challengeable
+    uint256 public sealingEpochTimestamp; // timestamp on when a proposed epoch (claim) becomes challengeable
 
     Phase public currentPhase; // current state
 
@@ -130,7 +130,7 @@ contract DescartesV2Impl is DescartesV2 {
             block.timestamp > inputAccumulationStart + inputDuration
         ) {
             currentPhase = updatePhase(Phase.AwaitingConsensus);
-            sealngEpochTimestamp = block.timestamp; // update timestamp of sealing epoch proposal
+            sealingEpochTimestamp = block.timestamp; // update timestamp of sealing epoch proposal
         }
         require(
             currentPhase == Phase.AwaitingConsensus,
@@ -158,7 +158,7 @@ contract DescartesV2Impl is DescartesV2 {
             "Phase != Awaiting Consensus"
         );
         require(
-            block.timestamp > sealngEpochTimestamp + challengePeriod,
+            block.timestamp > sealingEpochTimestamp + challengePeriod,
             "Challenge period is not over"
         );
         require(
@@ -204,7 +204,7 @@ contract DescartesV2Impl is DescartesV2 {
         );
 
         // restart challenge period
-        sealngEpochTimestamp = block.timestamp;
+        sealingEpochTimestamp = block.timestamp;
 
         emit ResolveDispute(_winner, _loser, _winningClaim);
         resolveValidatorResult(result, claims, claimers);
@@ -214,7 +214,7 @@ contract DescartesV2Impl is DescartesV2 {
     function startNewEpoch() internal {
         // reset input accumulation start and deactivate challenge period start
         inputAccumulationStart = block.timestamp;
-        sealngEpochTimestamp = type(uint256).max;
+        sealingEpochTimestamp = type(uint256).max;
 
         bytes32 finalClaim = validatorManager.onNewEpoch();
 
