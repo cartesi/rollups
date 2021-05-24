@@ -125,7 +125,6 @@ contract MockPortalImpl is MockPortal {
             abi.encode(
                 Operation.ERC20Op,
                 Transaction.Deposit,
-                _L1Sender,
                 _L2receivers,
                 _amounts,
                 address(token),

@@ -41,7 +41,6 @@ contract MockInputImpl is MockInput {
     struct InputBlob {
         Operation operation;
         Transaction transaction;
-        address[] senders;
         address[] receivers;
         uint256[] amounts;
         address _ERC20;
@@ -92,7 +91,7 @@ contract MockInputImpl is MockInput {
             ) = abi.decode(_input, (Operation, Transaction, address [], uint256[], bytes));
 
             inputBlobBox.push(
-                InputBlob(_operation, _transaction, new address[](0), _receivers, _amounts, address(0), msg.sender)
+                InputBlob(_operation, _transaction, _receivers, _amounts, address(0), msg.sender)
             );
         }
 
@@ -100,7 +99,6 @@ contract MockInputImpl is MockInput {
             (
                 Operation _operation,
                 Transaction _transaction,
-                address[] memory _senders,
                 address[] memory _receivers,
                 uint256[] memory _amounts,
                 address _ERC20,
@@ -108,7 +106,7 @@ contract MockInputImpl is MockInput {
             ) = abi.decode(_input, (Operation, Transaction, address [], address [], uint256 [], address, bytes));
 
             inputBlobBox.push(
-                InputBlob(_operation, _transaction, _senders , _receivers, _amounts, _ERC20, msg.sender)
+                InputBlob(_operation, _transaction , _receivers, _amounts, _ERC20, msg.sender)
             );
         }
 
@@ -126,41 +124,64 @@ contract MockInputImpl is MockInput {
         return inputHash;
     }
 
-    function processBatchInputs() private returns (bool) {
+    function processBatchInputs() internal returns (bool) {
         for(uint i = 0; i < inputBlobBox.length; i++){
             InputBlob memory inputBlob = inputBlobBox[i];
 
             if(inputBlob.operation == Operation.EtherOp){
                 if(inputBlob.transaction == Transaction.Deposit){
                     for(uint j = 0;j < inputBlob.receivers.length; j++){
-                        address receiver = inputBlob.receivers[i];
+                        address receiver = inputBlob.receivers[j];
                         if(inputBlob.sender == portalContract){
-                            uint amount = inputBlob.amounts[i];
-                            inputBlob.amounts[i] = 0;
+                            uint amount = inputBlob.amounts[j];
+                            inputBlob.amounts[j] = 0;
                             etherBalanceOf[receiver] += amount;
                         }
                     }
                 }
 
                 if(inputBlob.transaction == Transaction.Transfer){
-
+                    for(uint  j = 0; j < inputBlob.receivers.length; j++){
+                        address receiver = inputBlob.receivers[j];
+                        if(msg.sender == inputBlob.sender){
+                            uint amount = inputBlob.amounts[j];
+                            uint senderBalance = etherBalanceOf[msg.sender] - amount; // use safeMath here??
+                            if(senderBalance > 0){ // what happens when user balance reaches 0 and there's still an input to process?
+                                inputBlob.amounts[j] = 0;
+                                etherBalanceOf[msg.sender] -= amount;
+                                etherBalanceOf[receiver] += amount;
+                            }
+                        }
+                    }
                 }
             }
 
             if(inputBlob.operation == Operation.ERC20Op){
                 if(inputBlob.transaction == Transaction.Deposit){
                     for(uint j = 0;j < inputBlob.receivers.length; j++){
-                        address recipient = inputBlob.receivers[i];
+                        address recipient = inputBlob.receivers[j];
                         if(inputBlob.sender == portalContract){
-                            uint amount = inputBlob.amounts[i];
-                            inputBlob.amounts[i] = 0;
+                            uint amount = inputBlob.amounts[j];
+                            inputBlob.amounts[j] = 0;
                             erc20BalanceOf[recipient][inputBlob._ERC20] += amount;
                         }
                     }
                 }
 
                 if(inputBlob.transaction == Transaction.Transfer){
-
+                    for(uint  j = 0; j < inputBlob.receivers.length; j++){
+                        address receiver = inputBlob.receivers[j];
+                        if(msg.sender == inputBlob.sender){
+                            uint amount = inputBlob.amounts[j];
+                            uint senderBalance =
+                                erc20BalanceOf[msg.sender][InputBlob._ERC20] - amount;
+                            if(senderBalance > 0){
+                                inputBlob.amounts[j] = 0;
+                                erc20BalanceOf[msg.sender][InputBlob._ERC20] -= amount;
+                                erc20BalanceOf[receiver][InputBlob._ERC20] += amount;
+                            }
+                        }
+                    }
                 }
             }
         }
