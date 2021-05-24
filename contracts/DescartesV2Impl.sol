@@ -59,7 +59,7 @@ contract DescartesV2Impl is DescartesV2 {
     DisputeManager immutable disputeManager; // contract responsible for dispute resolution
 
     uint256 public inputAccumulationStart; // timestamp when current input accumulation phase started
-    uint256 public firstClaimTS; // timestamp of first claim this epoch
+    uint256 public sealngEpochTimestamp; // timestamp on when a proposed epoch (claim) becomes challengeable
 
     Phase public currentPhase; // current state
 
@@ -130,7 +130,7 @@ contract DescartesV2Impl is DescartesV2 {
             block.timestamp > inputAccumulationStart + inputDuration
         ) {
             currentPhase = updatePhase(Phase.AwaitingConsensus);
-            firstClaimTS = block.timestamp; // update timestamp of first claim
+            sealngEpochTimestamp = block.timestamp; // update timestamp of sealing epoch proposal
         }
         require(
             currentPhase == Phase.AwaitingConsensus,
@@ -158,7 +158,7 @@ contract DescartesV2Impl is DescartesV2 {
             "Phase != Awaiting Consensus"
         );
         require(
-            block.timestamp > firstClaimTS + challengePeriod,
+            block.timestamp > sealngEpochTimestamp + challengePeriod,
             "Challenge period is not over"
         );
         require(
@@ -203,13 +203,18 @@ contract DescartesV2Impl is DescartesV2 {
             _winningClaim
         );
 
+        // restart challenge period
+        sealngEpochTimestamp = block.timestamp;
+
         emit ResolveDispute(_winner, _loser, _winningClaim);
         resolveValidatorResult(result, claims, claimers);
     }
 
     /// @notice starts new epoch
     function startNewEpoch() internal {
+        // reset input accumulation start and deactivate challenge period start
         inputAccumulationStart = block.timestamp;
+        sealngEpochTimestamp = type(uint256).max;
 
         bytes32 finalClaim = validatorManager.onNewEpoch();
 
