@@ -78,7 +78,7 @@ contract MockInputImpl is MockInput {
         noReentrancy()
         returns (bytes32)
     {
-        require(_input.length > 0 && _input.length <= 256, "input length should be between 0 and 256");
+        require(_input.length > 0, "input length should be greater than 0");
         require((inputBlobBox.length + 1) <= 10, "input box size cannot be greater than 10");
 
         if(Operation(_op) == Operation.EtherOp){
@@ -93,6 +93,8 @@ contract MockInputImpl is MockInput {
             inputBlobBox.push(
                 InputBlob(_operation, _transaction, _receivers, _amounts, address(0), msg.sender)
             );
+
+            emit EtherInputAdded(_operation, _transaction, _receivers, _amounts);
         }
 
         if(Operation(_op) == Operation.ERC20Op){

@@ -33,6 +33,14 @@ interface MockInput {
     // Withdraw - withdraw from an L2 address to an L1 address
     enum Transaction {Deposit, Transfer, Withdraw}
 
+    // @notice emitted on adding Ether input
+    event EtherInputAdded(
+        Operation _operation,
+        Transaction _transaction,
+        address[] _receivers,
+        uint256[] _amounts
+    );
+
     /// @notice adds input to correct inbox
     /// @param _input bytes array of input
     /// @return merkle root hash of input
