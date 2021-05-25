@@ -103,7 +103,7 @@ contract MockInputImpl is MockInput {
                 uint256[] memory _amounts,
                 address _ERC20,
                 bytes memory _data
-            ) = abi.decode(_input, (Operation, Transaction, address [], address [], uint256 [], address, bytes));
+            ) = abi.decode(_input, (Operation, Transaction, address [], uint256 [], address, bytes));
 
             inputBlobBox.push(
                 InputBlob(_operation, _transaction , _receivers, _amounts, _ERC20, msg.sender)
@@ -178,11 +178,11 @@ contract MockInputImpl is MockInput {
                         if(msg.sender == inputBlob.sender){
                             uint amount = inputBlob.amounts[j];
                             uint senderBalance =
-                                erc20BalanceOf[msg.sender][InputBlob._ERC20] - amount;
+                                erc20BalanceOf[msg.sender][inputBlob._ERC20] - amount;
                             if(senderBalance > 0){
                                 inputBlob.amounts[j] = 0;
-                                erc20BalanceOf[msg.sender][InputBlob._ERC20] -= amount;
-                                erc20BalanceOf[receiver][InputBlob._ERC20] += amount;
+                                erc20BalanceOf[msg.sender][inputBlob._ERC20] -= amount;
+                                erc20BalanceOf[receiver][inputBlob._ERC20] += amount;
                             }
                         }
                     }
