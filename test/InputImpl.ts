@@ -35,7 +35,7 @@ use(solidity);
 describe("Input Implementation", () => {
     /// for testing DescartesV2 when modifiers are on, set this to true
     /// for testing DescartesV2 when modifiers are off, set this to false
-    let permissionModifiersOn = false;
+    let permissionModifiersOn = true;
 
     let signer: Signer;
     let inputImpl: InputImpl;
