@@ -41,6 +41,14 @@ interface MockInput {
         uint256[] _amounts
     );
 
+    event Erc20InputAdded(
+        Operation _operation,
+        Transaction _transaction,
+        address[] _receivers,
+        uint256[] _amounts,
+        address _ERC20
+    );
+
     /// @notice adds input to correct inbox
     /// @param _input bytes array of input
     /// @return merkle root hash of input

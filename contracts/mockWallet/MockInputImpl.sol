@@ -110,6 +110,8 @@ contract MockInputImpl is MockInput {
             inputBlobBox.push(
                 InputBlob(_operation, _transaction , _receivers, _amounts, _ERC20, msg.sender)
             );
+
+            emit Erc20InputAdded(_operation, _transaction, _receivers, _amounts, _ERC20);
         }
 
 
