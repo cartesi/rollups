@@ -31,7 +31,6 @@ import "./MockInput.sol";
 
 // TODO: this contract seems to be very unsafe, need to think about security implications
 contract MockInputImpl is MockInput {
-
     address immutable portalContract;
 
     bool lock; //reentrancy lock
@@ -48,10 +47,10 @@ contract MockInputImpl is MockInput {
     }
 
     //ether balance of L2 addresses
-    mapping(address =>  uint) etherBalanceOf;
+    mapping(address => uint256) etherBalanceOf;
 
     //token balances of L2 addresses
-    mapping(address => mapping(address => uint)) erc20BalanceOf;
+    mapping(address => mapping(address => uint256)) erc20BalanceOf;
 
     /// @notice functions modified by noReentrancy are not subject to recursion
     /// TODO: up for discussion
@@ -72,32 +71,54 @@ contract MockInputImpl is MockInput {
     /// @dev off-chain code is responsible for making sure
     ///      that input size is power of 2 and multiple of 8 since
     // the off-chain machine has a 8 byte word
-    function addInput(bytes calldata _input, uint _op)
+    function addInput(bytes calldata _input, uint256 _op)
         public
         override
         noReentrancy()
         returns (bytes32)
     {
-        require(_input.length > 0 && _input.length <= 512, "input length should be between 0 and 512");
-        require((inputBlobBox.length + 1) <= 10, "input box size cannot be greater than 10");
+        require(
+            _input.length > 0 && _input.length <= 512,
+            "input length should be between 0 and 512"
+        );
+        require(
+            (inputBlobBox.length + 1) <= 10,
+            "input box size cannot be greater than 10"
+        );
 
-        if(Operation(_op) == Operation.EtherOp){
+        if (Operation(_op) == Operation.EtherOp) {
             (
                 Operation _operation,
                 Transaction _transaction,
                 address[] memory _receivers,
                 uint256[] memory _amounts,
                 bytes memory _data
-            ) = abi.decode(_input, (Operation, Transaction, address [], uint256[], bytes));
+            ) =
+                abi.decode(
+                    _input,
+                    (Operation, Transaction, address[], uint256[], bytes)
+                );
 
             inputBlobBox.push(
-                InputBlob(_operation, _transaction, _receivers, _amounts, address(0), msg.sender)
+                InputBlob(
+                    _operation,
+                    _transaction,
+                    _receivers,
+                    _amounts,
+                    address(0),
+                    msg.sender
+                )
             );
 
-            emit EtherInputAdded(_operation, _transaction, _receivers, _amounts);
+            emit EtherInputAdded(
+                _operation,
+                _transaction,
+                _receivers,
+                _amounts
+            );
         }
 
-        if(Operation(_op) == Operation.ERC20Op){
+        if (Operation(_op) == Operation.ERC20Op) {
             (
                 Operation _operation,
                 Transaction _transaction,
@@ -105,17 +126,40 @@ contract MockInputImpl is MockInput {
                 uint256[] memory _amounts,
                 address _ERC20,
                 bytes memory _data
-            ) = abi.decode(_input, (Operation, Transaction, address [], uint256 [], address, bytes));
+            ) =
+                abi.decode(
+                    _input,
+                    (
+                        Operation,
+                        Transaction,
+                        address[],
+                        uint256[],
+                        address,
+                        bytes
+                    )
+                );
 
             inputBlobBox.push(
-                InputBlob(_operation, _transaction , _receivers, _amounts, _ERC20, msg.sender)
+                InputBlob(
+                    _operation,
+                    _transaction,
+                    _receivers,
+                    _amounts,
+                    _ERC20,
+                    msg.sender
+                )
             );
 
-            emit Erc20InputAdded(_operation, _transaction, _receivers, _amounts, _ERC20);
+            emit Erc20InputAdded(
+                _operation,
+                _transaction,
+                _receivers,
+                _amounts,
+                _ERC20
+            );
         }
 
-
-        if(inputBlobBox.length == 10){
+        if (inputBlobBox.length == 10) {
             processBatchInputs();
         }
         // when input box is 10
@@ -124,30 +168,31 @@ contract MockInputImpl is MockInput {
         // ensure that the sender is the portal when it's deposit
         // But for transfer and withdraws, we should check that the transaction has been sent by the holder.
         bytes memory metadata = abi.encode(msg.sender, block.timestamp);
-        bytes32 inputHash = keccak256(abi.encode(keccak256(metadata), keccak256(_input)));
+        bytes32 inputHash =
+            keccak256(abi.encode(keccak256(metadata), keccak256(_input)));
         return inputHash;
     }
 
     function processBatchInputs() internal returns (bool) {
-        for(uint i = 0; i < inputBlobBox.length; i++){
+        for (uint256 i = 0; i < inputBlobBox.length; i++) {
             InputBlob memory inputBlob = inputBlobBox[i];
 
-            if(inputBlob.operation == Operation.EtherOp){
-                if(inputBlob.transaction == Transaction.Deposit){
-                    for(uint j = 0;j < inputBlob.receivers.length; j++){
+            if (inputBlob.operation == Operation.EtherOp) {
+                if (inputBlob.transaction == Transaction.Deposit) {
+                    for (uint256 j = 0; j < inputBlob.receivers.length; j++) {
                         address receiver = inputBlob.receivers[j];
-                        if(inputBlob.sender == portalContract){
-                            uint amount = inputBlob.amounts[j];
+                        if (inputBlob.sender == portalContract) {
+                            uint256 amount = inputBlob.amounts[j];
                             etherBalanceOf[receiver] += amount;
                         }
                     }
                 }
 
-                if(inputBlob.transaction == Transaction.Transfer){
-                    for(uint  j = 0; j < inputBlob.receivers.length; j++){
+                if (inputBlob.transaction == Transaction.Transfer) {
+                    for (uint256 j = 0; j < inputBlob.receivers.length; j++) {
                         address receiver = inputBlob.receivers[j];
-                        uint amount = inputBlob.amounts[j];
-                        if(etherBalanceOf[inputBlob.sender] >= amount){
+                        uint256 amount = inputBlob.amounts[j];
+                        if (etherBalanceOf[inputBlob.sender] >= amount) {
                             etherBalanceOf[inputBlob.sender] -= amount;
                             etherBalanceOf[receiver] += amount;
                         }
@@ -155,30 +200,42 @@ contract MockInputImpl is MockInput {
                 }
             }
 
-            if(inputBlob.operation == Operation.ERC20Op){
-                if(inputBlob.transaction == Transaction.Deposit){
-                    for(uint j = 0;j < inputBlob.receivers.length; j++){
+            if (inputBlob.operation == Operation.ERC20Op) {
+                if (inputBlob.transaction == Transaction.Deposit) {
+                    for (uint256 j = 0; j < inputBlob.receivers.length; j++) {
                         address recipient = inputBlob.receivers[j];
-                        if(inputBlob.sender == portalContract){
-                            uint amount = inputBlob.amounts[j];
-                            erc20BalanceOf[recipient][inputBlob._ERC20] += amount;
+                        if (inputBlob.sender == portalContract) {
+                            uint256 amount = inputBlob.amounts[j];
+                            erc20BalanceOf[recipient][
+                                inputBlob._ERC20
+                            ] += amount;
                         }
                     }
                 }
 
-                if(inputBlob.transaction == Transaction.Transfer){
-                    for(uint  j = 0; j < inputBlob.receivers.length; j++){
+                if (inputBlob.transaction == Transaction.Transfer) {
+                    for (uint256 j = 0; j < inputBlob.receivers.length; j++) {
                         address receiver = inputBlob.receivers[j];
-                        uint amount = inputBlob.amounts[j];
+                        uint256 amount = inputBlob.amounts[j];
 
-                        if(erc20BalanceOf[inputBlob.sender][inputBlob._ERC20] >= amount){
-                            erc20BalanceOf[inputBlob.sender][inputBlob._ERC20] -= amount;
-                            erc20BalanceOf[receiver][inputBlob._ERC20] += amount;
+                        if (
+                            erc20BalanceOf[inputBlob.sender][
+                                inputBlob._ERC20
+                            ] >= amount
+                        ) {
+                            erc20BalanceOf[inputBlob.sender][
+                                inputBlob._ERC20
+                            ] -= amount;
+                            erc20BalanceOf[receiver][
+                                inputBlob._ERC20
+                            ] += amount;
                         }
                     }
                 }
             }
         }
+
+        //finalize the epoch after processing 10 inputs with the output contract on epoch
 
         return true;
     }
@@ -188,7 +245,12 @@ contract MockInputImpl is MockInput {
     /// @return hash of input at index _index
     /// @dev currentInputBox being zero means that the inputs for
     ///      the claimed epoch are on input box one
-    function getInput(uint256 _index) public view override returns (bytes memory) {
+    function getInput(uint256 _index)
+        public
+        view
+        override
+        returns (bytes memory)
+    {
         InputBlob memory inputBlob = inputBlobBox[_index];
         return abi.encode(inputBlob);
     }

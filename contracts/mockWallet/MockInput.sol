@@ -54,7 +54,9 @@ interface MockInput {
     /// @return merkle root hash of input
     /// @dev  msg.sender and timestamp are preppended log2 size
     ///       has to be calculated offchain taking that into account
-    function addInput(bytes calldata _input, uint _operation) external returns (bytes32);
+    function addInput(bytes calldata _input, uint256 _operation)
+        external
+        returns (bytes32);
 
     /// @notice returns input from correct input inbox
     /// @param _index position of the input on inbox

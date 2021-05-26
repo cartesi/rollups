@@ -75,16 +75,17 @@ contract MockPortalImpl is MockPortal {
         }
         require(msg.value >= totalAmount, "msg.value < totalAmount");
 
-        bytes memory input = abi.encode(
-            Operation.EtherOp,
-            Transaction.Deposit,
-            _L2receivers,
-            _amounts,
-            _data
-        );
+        bytes memory input =
+            abi.encode(
+                Operation.EtherOp,
+                Transaction.Deposit,
+                _L2receivers,
+                _amounts,
+                _data
+            );
 
         emit EtherDeposited(_L2receivers, _amounts, _data);
-        return inputContract.addInput(input, uint(Operation.EtherOp));
+        return inputContract.addInput(input, uint256(Operation.EtherOp));
     }
 
     /// @notice deposits ERC20 in portal contract and create tokens in L2
@@ -120,7 +121,6 @@ contract MockPortalImpl is MockPortal {
             "erc20 transferFrom failed"
         );
 
-
         bytes memory input =
             abi.encode(
                 Operation.ERC20Op,
@@ -132,7 +132,7 @@ contract MockPortalImpl is MockPortal {
             );
 
         emit ERC20Deposited(_ERC20, _L1Sender, _L2receivers, _amounts, _data);
-        return inputContract.addInput(input, uint(Operation.ERC20Op));
+        return inputContract.addInput(input, uint256(Operation.ERC20Op));
     }
 
     /// @notice executes a descartesV2 output

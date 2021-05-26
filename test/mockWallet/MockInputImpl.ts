@@ -34,13 +34,13 @@ use(solidity);
 
 const OPERATION = {
     EtherOp: 0,
-    ERC20Op: 1
+    ERC20Op: 1,
 };
 
 const TRANSACTION = {
     Deposit: 0,
     Transfer: 1,
-    Withdraw: 2
+    Withdraw: 2,
 };
 
 describe("Mock Input Implementation", () => {
@@ -57,22 +57,20 @@ describe("Mock Input Implementation", () => {
 
         const inputFactory = new MockInputImpl__factory(signer);
 
-        inputImpl = await inputFactory.deploy(
-            mockDescartesv2.address
-        );
+        inputImpl = await inputFactory.deploy(mockDescartesv2.address);
     });
 
     it("addInput should revert if input length == 0", async () => {
         await expect(
-            inputImpl.addInput([],0 ),
+            inputImpl.addInput([], 0),
             "empty input should revert"
         ).to.be.revertedWith("input length should be greater than 0");
     });
 
     it("addInput should add input to inbox", async () => {
         const encodedInput = ethers.utils.defaultAbiCoder.encode(
-            [ "uint", "uint", "address[]" ,"uint256[]"],
-            [ 0, 0, ["0xC2d5eBeDe07e556266eba180F537a28EC46b992e"], [50] ]
+            ["uint", "uint", "address[]", "uint256[]"],
+            [0, 0, ["0xC2d5eBeDe07e556266eba180F537a28EC46b992e"], [50]]
         );
 
         await inputImpl.addInput(encodedInput, 0);
@@ -86,8 +84,8 @@ describe("Mock Input Implementation", () => {
 
     it("emit events when input is added", async () => {
         const encodedInput = ethers.utils.defaultAbiCoder.encode(
-            [ "uint", "uint", "address[]" ,"uint256[]"],
-            [ 0, 0, ["0xC2d5eBeDe07e556266eba180F537a28EC46b992e"], [50] ]
+            ["uint", "uint", "address[]", "uint256[]"],
+            [0, 0, ["0xC2d5eBeDe07e556266eba180F537a28EC46b992e"], [50]]
         );
 
         expect(
@@ -105,34 +103,38 @@ describe("Mock Input Implementation", () => {
         const event = await inputImpl.queryFilter(eventFilter);
         let eventArgs = event[0]["args"];
 
-        expect(eventArgs["_operation"], "input operation should be Eth").to.equal(
-            OPERATION.EtherOp
-        );
+        expect(
+            eventArgs["_operation"],
+            "input operation should be Eth"
+        ).to.equal(OPERATION.EtherOp);
 
-        expect(eventArgs["_transaction"], "input transaction should be Deposit").to.equal(
-            TRANSACTION.Deposit
-        );
+        expect(
+            eventArgs["_transaction"],
+            "input transaction should be Deposit"
+        ).to.equal(TRANSACTION.Deposit);
 
-        expect(eventArgs["_receivers"], "input receivers should be an array of receivers").to.contains(
-            "0xC2d5eBeDe07e556266eba180F537a28EC46b992e"
-        );
+        expect(
+            eventArgs["_receivers"],
+            "input receivers should be an array of receivers"
+        ).to.contains("0xC2d5eBeDe07e556266eba180F537a28EC46b992e");
 
-        expect(parseInt(eventArgs["_amounts"].toString()), "input amount should be present").to.equal(
-            50
-        );
+        expect(
+            parseInt(eventArgs["_amounts"].toString()),
+            "input amount should be present"
+        ).to.equal(50);
     });
 
     it("addInput should revert if it input box size is more than 10", async () => {
         const encodedInput = ethers.utils.defaultAbiCoder.encode(
-            [ "uint", "uint", "address[]" ,"uint256[]" , "bytes"],
-            [ 0, 0, ["0xC2d5eBeDe07e556266eba180F537a28EC46b992e"], [50], "0x00" ]
+            ["uint", "uint", "address[]", "uint256[]", "bytes"],
+            [0, 0, ["0xC2d5eBeDe07e556266eba180F537a28EC46b992e"], [50], "0x00"]
         );
         expect(
             await inputImpl.getNumberOfInputs(),
             "current inbox should start as zero"
         ).to.equal(0);
 
-        for (let i = 0; i < 10; i++){
+        for (let i = 0; i < 10; i++) {
             await inputImpl.addInput(encodedInput, 0);
         }
 
