@@ -78,7 +78,7 @@ contract MockInputImpl is MockInput {
         noReentrancy()
         returns (bytes32)
     {
-        require(_input.length > 0, "input length should be greater than 0");
+        require(_input.length > 0 && _input.length <= 512, "input length should be between 0 and 512");
         require((inputBlobBox.length + 1) <= 10, "input box size cannot be greater than 10");
 
         if(Operation(_op) == Operation.EtherOp){
