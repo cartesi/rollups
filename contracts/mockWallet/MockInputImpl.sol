@@ -138,7 +138,6 @@ contract MockInputImpl is MockInput {
                         address receiver = inputBlob.receivers[j];
                         if(inputBlob.sender == portalContract){
                             uint amount = inputBlob.amounts[j];
-                            inputBlob.amounts[j] = 0;
                             etherBalanceOf[receiver] += amount;
                         }
                     }
@@ -151,7 +150,6 @@ contract MockInputImpl is MockInput {
                             uint amount = inputBlob.amounts[j];
                             uint senderBalance = etherBalanceOf[msg.sender] - amount; // use safeMath here??
                             if(senderBalance > 0){ // what happens when user balance reaches 0 and there's still an input to process?
-                                inputBlob.amounts[j] = 0;
                                 etherBalanceOf[msg.sender] -= amount;
                                 etherBalanceOf[receiver] += amount;
                             }
@@ -170,7 +168,6 @@ contract MockInputImpl is MockInput {
                         address recipient = inputBlob.receivers[j];
                         if(inputBlob.sender == portalContract){
                             uint amount = inputBlob.amounts[j];
-                            inputBlob.amounts[j] = 0;
                             erc20BalanceOf[recipient][inputBlob._ERC20] += amount;
                         }
                     }
@@ -184,7 +181,6 @@ contract MockInputImpl is MockInput {
                             uint senderBalance =
                                 erc20BalanceOf[msg.sender][inputBlob._ERC20] - amount;
                             if(senderBalance > 0){
-                                inputBlob.amounts[j] = 0;
                                 erc20BalanceOf[msg.sender][inputBlob._ERC20] -= amount;
                                 erc20BalanceOf[receiver][inputBlob._ERC20] += amount;
                             }
