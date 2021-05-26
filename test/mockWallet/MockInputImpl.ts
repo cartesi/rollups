@@ -64,7 +64,7 @@ describe("Mock Input Implementation", () => {
         await expect(
             inputImpl.addInput([], 0),
             "empty input should revert"
-        ).to.be.revertedWith("input length should be greater than 0");
+        ).to.be.revertedWith("input length should be between 0 and 512");
     });
 
     it("addInput should add input to inbox", async () => {
