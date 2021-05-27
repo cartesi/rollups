@@ -147,18 +147,19 @@ describe("Input Implementation", () => {
 
         // calculate input hash: keccak256(abi.encode(keccak256(metadata), keccak256(_input)))
         // metadata: abi.encode(msg.sender, block.timestamp)
-        // abi.encode() pad each parameter to 32 bytes
-        // substring(2) remove the leading '0x'
-        // padStart(64, '0') adds leading '0' until 64 hex chars, which is equivalent to 32B (256 bits)
-        let metadata =
-            "0x" +
-            (await signer.getAddress()).substring(2).padStart(64, "0") +
-            (await ethers.provider.getBlock("latest")).timestamp
-                .toString(16)
-                .padStart(64, "0");
+        let metadata = ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint"],
+            [
+                await signer.getAddress(),
+                (await ethers.provider.getBlock("latest")).timestamp,
+            ]
+        );
         let keccak_metadata = ethers.utils.keccak256(metadata);
         let keccak_input = ethers.utils.keccak256(input_64_bytes);
-        let abi_metadata_input = keccak_metadata + keccak_input.substring(2);
+        let abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint"],
+            [keccak_metadata, keccak_input]
+        );
         let input_hash = ethers.utils.keccak256(abi_metadata_input);
 
         expect(
@@ -175,16 +176,20 @@ describe("Input Implementation", () => {
         await inputImpl.addInput(input_64_bytes);
 
         // test for input box 0
-        // calculate input hash
-        let metadata =
-            "0x" +
-            (await signer.getAddress()).substring(2).padStart(64, "0") +
-            (await ethers.provider.getBlock("latest")).timestamp
-                .toString(16)
-                .padStart(64, "0");
+        // calculate input hash again
+        let metadata = ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint"],
+            [
+                await signer.getAddress(),
+                (await ethers.provider.getBlock("latest")).timestamp,
+            ]
+        );
         let keccak_metadata = ethers.utils.keccak256(metadata);
         let keccak_input = ethers.utils.keccak256(input_64_bytes);
-        let abi_metadata_input = keccak_metadata + keccak_input.substring(2);
+        let abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint"],
+            [keccak_metadata, keccak_input]
+        );
         let input_hash = ethers.utils.keccak256(abi_metadata_input);
 
         // switch input boxes before testing getInput()
@@ -199,15 +204,19 @@ describe("Input Implementation", () => {
 
         // test for input box 1
         // calculate input hash
-        metadata =
-            "0x" +
-            (await signer.getAddress()).substring(2).padStart(64, "0") +
-            (await ethers.provider.getBlock("latest")).timestamp
-                .toString(16)
-                .padStart(64, "0");
+        metadata = ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint"],
+            [
+                await signer.getAddress(),
+                (await ethers.provider.getBlock("latest")).timestamp,
+            ]
+        );
         keccak_metadata = ethers.utils.keccak256(metadata);
         keccak_input = ethers.utils.keccak256(input_64_bytes);
-        abi_metadata_input = keccak_metadata + keccak_input.substring(2);
+        abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint"],
+            [keccak_metadata, keccak_input]
+        );
         input_hash = ethers.utils.keccak256(abi_metadata_input);
 
         // switch input boxes before testing getInput()
