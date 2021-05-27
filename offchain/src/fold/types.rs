@@ -214,3 +214,28 @@ impl PhaseState {
         }
     }
 }
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ImmutableState {
+    pub input_duration: U256, // duration of input accumulation phase in seconds
+    pub challenge_period: U256, // duration of challenge period in seconds
+    pub contract_creation_timestamp: U256, // timestamp of the contract creation
+
+    pub input_contract_address: Address, // contract responsible for inputs
+    pub output_contract_address: Address, // contract responsible for ouputs
+    pub validator_contract_address: Address, // contract responsible for validators
+    pub dispute_contract_address: Address, // contract responsible for dispute resolution
+}
+
+#[derive(Clone, Debug)]
+pub struct DescartesV2State {
+    // TODO: Add these for frontend.
+    // pub first_claim_timestamp: Option<U256>, // Only used for frontend
+    pub constants: ImmutableState,
+    pub input_accumulation_start_timestamp: U256,
+
+    pub initial_epoch: U256,
+    pub finalized_epochs: Vector<FinalizedEpoch>, // EpochNumber -> Epoch
+
+    pub current_phase: PhaseState,
+}

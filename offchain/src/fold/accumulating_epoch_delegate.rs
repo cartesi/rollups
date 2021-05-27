@@ -1,5 +1,3 @@
-use super::contracts::descartesv2_contract::*;
-
 use super::input_delegate::InputFoldDelegate;
 use super::types::{AccumulatingEpoch, InputState};
 
@@ -7,7 +5,7 @@ use dispatcher::state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
     error::*,
     types::*,
-    utils as fold_utils, DelegateAccess, StateFold,
+    DelegateAccess, StateFold,
 };
 use dispatcher::types::Block;
 
@@ -49,14 +47,6 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
         let epoch_number = initial_state.clone();
-
-        let contract = access
-            .build_sync_contract(
-                self.descartesv2_address,
-                block.number,
-                DescartesV2Impl::new,
-            )
-            .await;
 
         // Inputs of epoch
         let inputs = self.get_inputs_sync(epoch_number, block.hash).await?;
