@@ -1,4 +1,4 @@
-use ethers::types::{Address, H256, U256};
+use ethers::types::{Address, H256, U256, U64};
 use im::{HashMap, HashSet, Vector};
 use std::sync::Arc;
 
@@ -10,14 +10,14 @@ pub struct Input {
     pub payload: Arc<Vec<u8>>, // TODO: Get from calldata.
 }
 
-///
+/// Set of inputs at some epoch
 #[derive(Clone, Debug)]
 pub struct InputState {
     pub epoch_number: U256,
     pub inputs: Vector<Input>,
 }
 
-///
+/// Set of claims
 #[derive(Clone, Debug)]
 pub struct Claims {
     claims: HashMap<H256, HashSet<Address>>,
@@ -107,6 +107,50 @@ pub struct FinalizedEpoch {
     pub hash: H256,
     pub epoch_number: U256,
     pub inputs: InputState,
+
+    /// Hash of block in which epoch was finalized
+    pub finalized_block_hash: H256,
+
+    /// Number of block in which epoch was finalized
+    pub finalized_block_number: U64,
+}
+
+///
+#[derive(Clone, Debug)]
+pub struct FinalizedEpochs {
+    /// Set of `FinalizedEpoch`
+    pub finalized_epochs: Vector<FinalizedEpoch>,
+
+    /// The first epoch that will be included in `finalized_epochs`
+    pub initial_epoch: U256,
+}
+
+impl FinalizedEpochs {
+    pub fn new(initial_epoch: U256) -> Self {
+        Self {
+            finalized_epochs: Vector::new(),
+            initial_epoch,
+        }
+    }
+
+    /// If `finalized_epoch.epoch_number` is not consistent, this method fails
+    /// to insert epoch and returns false.
+    pub fn insert_epoch(&mut self, finalized_epoch: FinalizedEpoch) -> bool {
+        if !self.epoch_number_consistent(&finalized_epoch.epoch_number) {
+            return false;
+        }
+
+        self.finalized_epochs.push_back(finalized_epoch);
+        true
+    }
+
+    pub fn next_epoch(&self) -> U256 {
+        self.initial_epoch + self.finalized_epochs.len()
+    }
+
+    fn epoch_number_consistent(&self, epoch_number: &U256) -> bool {
+        *epoch_number == self.next_epoch()
+    }
 }
 
 ///

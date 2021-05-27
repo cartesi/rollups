@@ -12,12 +12,11 @@ use dispatcher::state_fold::{
 use dispatcher::types::Block;
 
 use async_trait::async_trait;
-use snafu::ResultExt;
 use std::sync::Arc;
 
 use ethers::types::{Address, H256, U256};
 
-/// Sealed epoch StateFold Delegate
+/// Accumulating epoch StateFold Delegate
 pub struct AccumulatingEpochFoldDelegate<DA: DelegateAccess> {
     descartesv2_address: Address,
     input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
@@ -51,14 +50,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     ) -> SyncResult<Self::Accumulator, A> {
         let epoch_number = initial_state.clone();
 
-        let middleware = access
-            .build_sync_contract(Address::zero(), block.number, |_, m| m)
+        let contract = access
+            .build_sync_contract(
+                self.descartesv2_address,
+                block.number,
+                DescartesV2Impl::new,
+            )
             .await;
-
-        let contract = DescartesV2Impl::new(
-            self.descartesv2_address,
-            Arc::clone(&middleware),
-        );
 
         // Inputs of epoch
         let inputs = self.get_inputs_sync(epoch_number, block.hash).await?;
@@ -79,36 +77,6 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         // Inputs of epoch
         let inputs = self.get_inputs_fold(epoch_number, block.hash).await?;
-
-        // Check if there was (possibly) some log emited on this block.
-        if !(fold_utils::contains_address(
-            &block.logs_bloom,
-            &self.descartesv2_address,
-        ) && fold_utils::contains_topic(&block.logs_bloom, &epoch_number))
-        {
-            return Ok(AccumulatingEpoch {
-                epoch_number: previous_state.epoch_number,
-                inputs,
-            });
-        }
-
-        let contract = access
-            .build_fold_contract(
-                self.descartesv2_address,
-                block.hash,
-                DescartesV2Impl::new,
-            )
-            .await;
-
-        // Get all claim events of epoch at this block hash
-        let claim_events = contract
-            .claim_filter()
-            .topic1(epoch_number.clone())
-            .query_with_meta()
-            .await
-            .context(FoldContractError {
-                err: "Error querying for descartes claims",
-            })?;
 
         Ok(AccumulatingEpoch {
             epoch_number,

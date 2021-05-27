@@ -75,6 +75,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
+        // TODO: Also check for event signature in bloom!
         if fold_utils::contains_address(&block.logs_bloom, &self.input_address)
         {
             return Ok(previous_state.clone());
