@@ -48,12 +48,51 @@ contract OutputImpl is Output {
         lock = false;
     }
 
-    // @notice functions modified by onlyDescartesV2 will only be executed if
+    /// @notice functions modified by onlyDescartesV2 will only be executed if
     // they're called by DescartesV2 contract, otherwise it will throw an exception
     modifier onlyDescartesV2 {
         require(
             msg.sender == descartesV2,
             "Only descartesV2 can call this functions"
+        );
+        _;
+    }
+
+    /// @notice functions modified by validProof will only be executed if
+    //  the validity proof is valid
+    modifier validProof(
+        bytes memory _encodedOutput,
+        OutputValidityProof calldata _v
+    ) {
+        bytes32 hashOfOutput = keccak256(_encodedOutput);
+        // prove that the _hashOfOutput is in output keccak drive
+        require(
+            Merkle.getRootWithDrive(
+                uint64(_v.outputIndex * KECCAK_LOG2_SIZE),
+                KECCAK_LOG2_SIZE,
+                hashOfOutput,
+                _v.outputMetadataProof
+            ) == _v.outputMetadataDriveHash,
+            "specific output is not contained in output drive merkle hash"
+        );
+
+        // prove that output keccak drive is in outputs drive
+        require(
+            Merkle.getRootWithDrive(
+                uint64(_v.inputIndex * KECCAK_LOG2_SIZE),
+                KECCAK_LOG2_SIZE,
+                _v.outputMetadataDriveHash,
+                _v.accumulatedOutputsProof
+            ) == _v.outputsHash,
+            "output's metadata drive hash is not contained in accumulated output drive"
+        );
+
+        // prove that outputs hash is represented in a finalized epoch
+        require(
+            keccak256(
+                abi.encode(_v.outputsHash, _v.eventsHash, _v.stateHash)
+            ) == epochHashes[_v.epochIndex],
+            "outputs hash is not represented in the epoch hash"
         );
         _;
     }
@@ -65,62 +104,35 @@ contract OutputImpl is Output {
     }
 
     /// @notice executes output
-    /// @param _destination address that will execute output
-    /// @param _payload payload to be executed by destination
-    /// @param _epochIndex which epoch the output belongs to
-    /// @param _inputIndex which input, inside the epoch, the output belongs to
-    /// @param _outputIndex index of output inside the input
-    /// @param _outputDriveHash hash of the outputs drive where this output is contained
-    /// @param _outputProof bytes that describe the ouput, can encode different things
-    /// @param _epochProof siblings of outputs hash, to prove it is contained on epoch hash
+    /// @param _encodedOutput encoded output mocking the behaviour
+    //          of abi.encode(address _destination, bytes _payload)
+    /// @param _v validity proof for this encoded output
     /// @return true if output was executed successfully
     /// @dev  outputs can only be executed once
     function executeOutput(
-        address _destination,
-        bytes calldata _payload,
-        uint256 _epochIndex,
-        uint256 _inputIndex,
-        uint256 _outputIndex,
-        bytes32 _outputDriveHash,
-        bytes32[] calldata _outputProof,
-        bytes32[] calldata _epochProof
-    ) public override noReentrancy returns (bool) {
+        bytes calldata _encodedOutput,
+        OutputValidityProof calldata _v
+    )
+        public
+        override
+        noReentrancy
+        validProof(_encodedOutput, _v)
+        returns (bool)
+    {
         uint256 bitmaskPosition =
-            getBitMaskPosition(_outputIndex, _inputIndex, _epochIndex);
+            getBitMaskPosition(_v.outputIndex, _v.inputIndex, _v.epochIndex);
 
         require(
             !outputBitmask.getBit(bitmaskPosition),
             "output has already been executed"
         );
 
-        bytes32 hashOfOutput =
-            keccak256(abi.encodePacked(_destination, _payload));
+        // decode for destination and payload
+        (address destination, bytes memory payload) =
+            abi.decode(_encodedOutput, (address, bytes));
 
-        // prove that the epoch contains that outputdrive
-        require(
-            Merkle.getRootWithDrive(
-                uint64(_outputIndex * KECCAK_LOG2_SIZE),
-                KECCAK_LOG2_SIZE,
-                hashOfOutput,
-                _outputProof
-            ) == _outputDriveHash,
-            "specific output is not contained in output drive merkle hash"
-        );
-
-        // prove that epoch hash contains the claimed outputs hash
-        require(
-            Merkle.getRootWithDrive(
-                uint64(_inputIndex * KECCAK_LOG2_SIZE),
-                KECCAK_LOG2_SIZE,
-                _outputDriveHash,
-                _epochProof
-            ) == epochHashes[_epochIndex],
-            "output drive hash not contained in epochHashes"
-        );
-
-        // do we need return data? emit event?
         (bool succ, bytes memory returnData) =
-            address(_destination).call(_payload);
+            address(destination).call(payload);
 
         if (succ) outputBitmask.setBit(bitmaskPosition, true);
 

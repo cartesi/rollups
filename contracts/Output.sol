@@ -24,26 +24,36 @@
 pragma solidity >=0.7.0;
 
 interface Output {
-    /// @notice executes output
-    /// @param _destination address that will execute output
-    /// @param _payload payload to be executed by destination
     /// @param _epochIndex which epoch the output belongs to
     /// @param _inputIndex which input, inside the epoch, the output belongs to
     /// @param _outputIndex index of output inside the input
-    /// @param _outputsHash hash of the outputs drive where this output is contained
-    /// @param _outputProof bytes that describe the ouput, can encode different things
-    /// @param _epochProof siblings of outputs hash, to prove it is contained on epoch hash
+    /// @param _outputMetadataDriveHash hash of the outputs metadata drive where this output is in
+    /// @param _outputsHash merkle root of all epoch's output metadata drive hashes
+    /// @param _stateHash hash of the machine state claimed this epoch
+    /// @param _eventsHash hash of the events emitted by this epoch
+    /// @param _outputMetadataProof proof that this output's metadata is in meta data drive
+    /// @param _accumulatedOutputsProof proof that this output metadata drive is in epoch's Output drive
+    struct OutputValidityProof {
+        uint256 epochIndex;
+        uint256 inputIndex;
+        uint256 outputIndex;
+        bytes32 outputMetadataDriveHash;
+        bytes32 outputsHash;
+        bytes32 stateHash;
+        bytes32 eventsHash;
+        bytes32[] outputMetadataProof;
+        bytes32[] accumulatedOutputsProof;
+    }
+
+    /// @notice executes output
+    /// @param _encodedOutput encoded output mocking the behaviour
+    //          of abi.encode(address _destination, bytes _payload)
+    /// @param _v validity proof for this encoded output
     /// @return true if output was executed successfully
     /// @dev  outputs can only be executed once
     function executeOutput(
-        address _destination,
-        bytes calldata _payload,
-        uint256 _epochIndex,
-        uint256 _inputIndex,
-        uint256 _outputIndex,
-        bytes32 _outputsHash,
-        bytes32[] calldata _outputProof,
-        bytes32[] calldata _epochProof
+        bytes calldata _encodedOutput,
+        OutputValidityProof calldata _v
     ) external returns (bool);
 
     /// @notice called by descartesv2 when an epoch is finalized
