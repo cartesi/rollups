@@ -119,9 +119,13 @@ contract OutputImpl is Output {
         // prove that outputs hash is represented in a finalized epoch
         require(
             keccak256(
-                abi.encode(_v.outputsHash, _v.eventsHash, _v.stateHash)
+                abi.encode(
+                    _v.epochOutputDriveHash,
+                    _v.epochEventDriveHash,
+                    _v.epochMachineFinalState
+                )
             ) == _epochHash,
-            "outputs hash is not represented in the epoch hash"
+            "epoch outputs hash is not represented in the epoch hash"
         );
 
         bytes32 hashOfOutput = keccak256(_encodedOutput);
@@ -133,7 +137,7 @@ contract OutputImpl is Output {
                 hashOfOutput,
                 _v.outputMetadataProof
             ) == _v.outputMetadataDriveHash,
-            "specific output is not contained in output drive merkle hash"
+            "specific output is not contained in output metadata drive hash"
         );
 
         // prove that output keccak drive is in outputs drive
@@ -142,9 +146,9 @@ contract OutputImpl is Output {
                 uint64(_v.inputIndex * KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
                 _v.outputMetadataDriveHash,
-                _v.accumulatedOutputsProof
-            ) == _v.outputsHash,
-            "output's metadata drive hash is not contained in accumulated output drive"
+                _v.epochOutputDriveProof
+            ) == _v.epochOutputDriveHash,
+            "output's metadata drive hash is not contained in epoch output drive"
         );
         return true;
     }

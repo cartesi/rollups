@@ -38,11 +38,11 @@ interface Output {
         uint256 inputIndex;
         uint256 outputIndex;
         bytes32 outputMetadataDriveHash;
-        bytes32 outputsHash;
-        bytes32 stateHash;
-        bytes32 eventsHash;
+        bytes32 epochOutputDriveHash;
+        bytes32 epochEventDriveHash;
+        bytes32 epochMachineFinalState;
         bytes32[] outputMetadataProof;
-        bytes32[] accumulatedOutputsProof;
+        bytes32[] epochOutputDriveProof;
     }
 
     /// @notice executes output
