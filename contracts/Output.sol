@@ -46,13 +46,14 @@ interface Output {
     }
 
     /// @notice executes output
-    /// @param _encodedOutput encoded output mocking the behaviour
-    //          of abi.encode(address _destination, bytes _payload)
+    /// @param _destination address that will execute the payload
+    /// @param _payload payload to be executed by destination
     /// @param _v validity proof for this encoded output
     /// @return true if output was executed successfully
     /// @dev  outputs can only be executed once
     function executeOutput(
-        bytes calldata _encodedOutput,
+        address _destination,
+        bytes calldata _payload,
         OutputValidityProof calldata _v
     ) external returns (bool);
 

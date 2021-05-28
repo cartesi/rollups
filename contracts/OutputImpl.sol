@@ -58,12 +58,72 @@ contract OutputImpl is Output {
         _;
     }
 
+    // @notice creates OutputImpl contract
+    // @params _descartesV2 address of descartes contract
+    constructor(address _descartesV2) {
+        descartesV2 = _descartesV2;
+    }
+
+    /// @notice executes output
+    /// @param _encodedOutput encoded output mocking the behaviour
+    //          of abi.encode(address _destination, bytes _payload)
+    /// @param _v validity proof for this encoded output
+    /// @return true if output was executed successfully
+    /// @dev  outputs can only be executed once
+    function executeOutput(
+        address _destination,
+        bytes calldata _payload,
+        OutputValidityProof calldata _v
+    ) public override noReentrancy returns (bool) {
+        bytes memory encodedOutput = abi.encode(_destination, _payload);
+
+        // check if validity proof matches the output provided
+        require(
+            isValidProof(encodedOutput, epochHashes[_v.epochIndex], _v),
+            "validity proof not accepted"
+        );
+
+        uint256 outputPosition =
+            getBitMaskPosition(_v.outputIndex, _v.inputIndex, _v.epochIndex);
+
+        // check if output has been executed
+        require(
+            !outputBitmask.getBit(outputPosition),
+            "output has already been executed"
+        );
+
+        // execute output
+        (bool succ, bytes memory returnData) =
+            address(_destination).call(_payload);
+
+        // if properly executed, mark it as executed
+        if (succ) outputBitmask.setBit(outputPosition, true);
+
+        return succ;
+    }
+
+    /// @notice called by descartesv2 when an epoch is finalized
+    /// @param _epochHash hash of finalized epoch
+    /// @dev an epoch being finalized means that its outputs can be called
+    function onNewEpoch(bytes32 _epochHash) public override onlyDescartesV2 {
+        epochHashes.push(_epochHash);
+    }
+
     /// @notice functions modified by validProof will only be executed if
     //  the validity proof is valid
-    modifier validProof(
+    function isValidProof(
         bytes memory _encodedOutput,
+        bytes32 _epochHash,
         OutputValidityProof calldata _v
-    ) {
+    ) public pure returns (bool) {
+        // prove that outputs hash is represented in a finalized epoch
+        require(
+            keccak256(
+                abi.encode(_v.outputsHash, _v.eventsHash, _v.stateHash)
+            ) == _epochHash,
+            "outputs hash is not represented in the epoch hash"
+        );
+
         bytes32 hashOfOutput = keccak256(_encodedOutput);
         // prove that the _hashOfOutput is in output keccak drive
         require(
@@ -86,64 +146,7 @@ contract OutputImpl is Output {
             ) == _v.outputsHash,
             "output's metadata drive hash is not contained in accumulated output drive"
         );
-
-        // prove that outputs hash is represented in a finalized epoch
-        require(
-            keccak256(
-                abi.encode(_v.outputsHash, _v.eventsHash, _v.stateHash)
-            ) == epochHashes[_v.epochIndex],
-            "outputs hash is not represented in the epoch hash"
-        );
-        _;
-    }
-
-    // @notice creates OutputImpl contract
-    // @params _descartesV2 address of descartes contract
-    constructor(address _descartesV2) {
-        descartesV2 = _descartesV2;
-    }
-
-    /// @notice executes output
-    /// @param _encodedOutput encoded output mocking the behaviour
-    //          of abi.encode(address _destination, bytes _payload)
-    /// @param _v validity proof for this encoded output
-    /// @return true if output was executed successfully
-    /// @dev  outputs can only be executed once
-    function executeOutput(
-        bytes calldata _encodedOutput,
-        OutputValidityProof calldata _v
-    )
-        public
-        override
-        noReentrancy
-        validProof(_encodedOutput, _v)
-        returns (bool)
-    {
-        uint256 bitmaskPosition =
-            getBitMaskPosition(_v.outputIndex, _v.inputIndex, _v.epochIndex);
-
-        require(
-            !outputBitmask.getBit(bitmaskPosition),
-            "output has already been executed"
-        );
-
-        // decode for destination and payload
-        (address destination, bytes memory payload) =
-            abi.decode(_encodedOutput, (address, bytes));
-
-        (bool succ, bytes memory returnData) =
-            address(destination).call(payload);
-
-        if (succ) outputBitmask.setBit(bitmaskPosition, true);
-
-        return succ;
-    }
-
-    /// @notice called by descartesv2 when an epoch is finalized
-    /// @param _epochHash hash of finalized epoch
-    /// @dev an epoch being finalized means that its outputs can be called
-    function onNewEpoch(bytes32 _epochHash) public override onlyDescartesV2 {
-        epochHashes.push(_epochHash);
+        return true;
     }
 
     /// @notice get output position on bitmask
