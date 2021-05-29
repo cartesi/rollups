@@ -1,9 +1,6 @@
 use super::contracts::descartesv2_contract::*;
 
-use super::input_delegate::InputFoldDelegate;
-use super::types::{
-    AccumulatingEpoch, Claims, FinalizedEpochs, InputState, SealedEpoch,
-};
+use super::types::{AccumulatingEpoch, FinalizedEpochs, SealedEpoch};
 use super::{
     accumulating_epoch_delegate::AccumulatingEpochFoldDelegate,
     finalized_epoch_delegate::FinalizedEpochFoldDelegate,
@@ -19,9 +16,7 @@ use dispatcher::state_fold::{
 use dispatcher::types::Block;
 
 use async_trait::async_trait;
-use im::Vector;
 use snafu::ResultExt;
-use std::convert::TryFrom;
 use std::sync::Arc;
 
 use ethers::providers::Middleware;
@@ -204,7 +199,152 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        todo!()
+        // Check if there was (possibly) some log emited on this block.
+        // TODO: Also check for event signature in bloom!
+        if !fold_utils::contains_address(
+            &block.logs_bloom,
+            &self.descartesv2_address,
+        ) {
+            // Current phase has not changed, but we need to update the
+            // sub-states.
+            let current_phase = match previous_state.current_phase {
+                ContractPhase::InputAccumulation { current_epoch } => {
+                    let current_epoch = self
+                        .get_acc_fold(&current_epoch.epoch_number, block.hash)
+                        .await?;
+
+                    ContractPhase::InputAccumulation { current_epoch }
+                }
+
+                ContractPhase::AwaitingConsensus {
+                    sealed_epoch,
+                    current_epoch,
+                    round_start,
+                } => {
+                    let sealed_epoch = self
+                        .get_sealed_fold(&sealed_epoch.epoch_number, block.hash)
+                        .await?;
+                    let current_epoch = self
+                        .get_acc_fold(&current_epoch.epoch_number, block.hash)
+                        .await?;
+
+                    ContractPhase::AwaitingConsensus {
+                        sealed_epoch,
+                        current_epoch,
+                        round_start,
+                    }
+                }
+
+                ContractPhase::AwaitingDispute {
+                    sealed_epoch,
+                    current_epoch,
+                } => {
+                    let sealed_epoch = self
+                        .get_sealed_fold(&sealed_epoch.epoch_number, block.hash)
+                        .await?;
+                    let current_epoch = self
+                        .get_acc_fold(&current_epoch.epoch_number, block.hash)
+                        .await?;
+
+                    ContractPhase::AwaitingDispute {
+                        sealed_epoch,
+                        current_epoch,
+                    }
+                }
+            };
+
+            return Ok(EpochState {
+                current_phase,
+                initial_epoch: previous_state.initial_epoch,
+                finalized_epochs: previous_state.finalized_epochs.clone(),
+            });
+        }
+
+        let contract = access
+            .build_fold_contract(
+                self.descartesv2_address,
+                block.hash,
+                DescartesV2Impl::new,
+            )
+            .await;
+
+        let finalized_epochs = self
+            .finalized_epoch_fold
+            .get_state_for_block(&previous_state.initial_epoch, block.hash)
+            .await
+            .map_err(|e| {
+                FoldDelegateError {
+                    err: format!("Finalized epoch state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
+        let next_epoch = finalized_epochs.next_epoch();
+
+        let phase_change_events = contract
+            .phase_change_filter()
+            .query_with_meta()
+            .await
+            .context(FoldContractError {
+                err: "Error querying for descartes phase change",
+            })?;
+
+        let current_phase = match phase_change_events.last() {
+            // InputAccumulation
+            Some((PhaseChangeFilter { new_phase: 0 }, _)) | None => {
+                let current_epoch =
+                    self.get_acc_fold(&next_epoch, block.hash).await?;
+                ContractPhase::InputAccumulation { current_epoch }
+            }
+
+            // AwaitingConsensus
+            Some((PhaseChangeFilter { new_phase: 1 }, m)) => {
+                let sealed_epoch =
+                    self.get_sealed_fold(&next_epoch, block.hash).await?;
+                let current_epoch =
+                    self.get_acc_fold(&(next_epoch + 1), block.hash).await?;
+
+                // Timestamp of when we entered this phase.
+                let round_start = block.timestamp;
+
+                ContractPhase::AwaitingConsensus {
+                    sealed_epoch,
+                    current_epoch,
+                    round_start,
+                }
+            }
+
+            // AwaitingDispute
+            Some((PhaseChangeFilter { new_phase: 2 }, m)) => {
+                let sealed_epoch =
+                    self.get_sealed_fold(&next_epoch, block.hash).await?;
+                let current_epoch =
+                    self.get_acc_fold(&(next_epoch + 1), block.hash).await?;
+
+                ContractPhase::AwaitingDispute {
+                    sealed_epoch,
+                    current_epoch,
+                }
+            }
+
+            // Err
+            Some((PhaseChangeFilter { new_phase }, _)) => {
+                return FoldDelegateError {
+                    err: format!(
+                        "Could not convert new_phase `{}` to PhaseState",
+                        new_phase
+                    ),
+                }
+                .fail()
+            }
+        };
+
+        Ok(EpochState {
+            current_phase,
+            initial_epoch: previous_state.initial_epoch,
+            finalized_epochs,
+        })
     }
 
     fn convert(

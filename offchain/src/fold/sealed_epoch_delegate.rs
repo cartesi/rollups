@@ -120,20 +120,16 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     ) -> FoldResult<Self::Accumulator, A> {
         let epoch_number = previous_state.epoch_number.clone();
 
-        // Inputs of epoch
-        let inputs = self.get_inputs_fold(epoch_number, block.hash).await?;
-
         // Check if there was (possibly) some log emited on this block.
+        // As finalized epochs' inputs will not change, we can return early
+        // without querying the input StateFold.
+        // TODO: Also check for event signature in bloom!
         if !(fold_utils::contains_address(
             &block.logs_bloom,
             &self.descartesv2_address,
         ) && fold_utils::contains_topic(&block.logs_bloom, &epoch_number))
         {
-            return Ok(SealedEpoch {
-                claims: previous_state.claims.clone(),
-                epoch_number: previous_state.epoch_number,
-                inputs,
-            });
+            return Ok(previous_state.clone());
         }
 
         let contract = access
@@ -144,7 +140,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             )
             .await;
 
-        // Get all claim events of epoch at this block hash
+        // Get claim events of epoch at this block hash
         let claim_events = contract
             .claim_filter()
             .topic1(epoch_number.clone())
@@ -179,7 +175,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         Ok(SealedEpoch {
             claims,
             epoch_number,
-            inputs,
+            inputs: previous_state.inputs.clone(),
         })
     }
 
