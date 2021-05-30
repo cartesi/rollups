@@ -19,6 +19,7 @@ use async_trait::async_trait;
 use snafu::ResultExt;
 use std::sync::Arc;
 
+use ethers::prelude::EthEvent;
 use ethers::providers::Middleware;
 use ethers::types::{Address, H256, U256};
 
@@ -200,11 +201,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         // Check if there was (possibly) some log emited on this block.
-        // TODO: Also check for event signature in bloom!
-        if !fold_utils::contains_address(
+        if !(fold_utils::contains_address(
             &block.logs_bloom,
             &self.descartesv2_address,
-        ) {
+        ) && fold_utils::contains_topic(
+            &block.logs_bloom,
+            &PhaseChangeFilter::signature(),
+        )) {
             // Current phase has not changed, but we need to update the
             // sub-states.
             let current_phase = match previous_state.current_phase {
@@ -282,24 +285,23 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let next_epoch = finalized_epochs.next_epoch();
 
-        let phase_change_events = contract
-            .phase_change_filter()
-            .query_with_meta()
-            .await
-            .context(FoldContractError {
-                err: "Error querying for descartes phase change",
-            })?;
+        let phase_change_events =
+            contract.phase_change_filter().query().await.context(
+                FoldContractError {
+                    err: "Error querying for descartes phase change",
+                },
+            )?;
 
         let current_phase = match phase_change_events.last() {
             // InputAccumulation
-            Some((PhaseChangeFilter { new_phase: 0 }, _)) | None => {
+            Some(PhaseChangeFilter { new_phase: 0 }) | None => {
                 let current_epoch =
                     self.get_acc_fold(&next_epoch, block.hash).await?;
                 ContractPhase::InputAccumulation { current_epoch }
             }
 
             // AwaitingConsensus
-            Some((PhaseChangeFilter { new_phase: 1 }, m)) => {
+            Some(PhaseChangeFilter { new_phase: 1 }) => {
                 let sealed_epoch =
                     self.get_sealed_fold(&next_epoch, block.hash).await?;
                 let current_epoch =
@@ -316,7 +318,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             }
 
             // AwaitingDispute
-            Some((PhaseChangeFilter { new_phase: 2 }, m)) => {
+            Some(PhaseChangeFilter { new_phase: 2 }) => {
                 let sealed_epoch =
                     self.get_sealed_fold(&next_epoch, block.hash).await?;
                 let current_epoch =
@@ -329,7 +331,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             }
 
             // Err
-            Some((PhaseChangeFilter { new_phase }, _)) => {
+            Some(PhaseChangeFilter { new_phase }) => {
                 return FoldDelegateError {
                     err: format!(
                         "Could not convert new_phase `{}` to PhaseState",

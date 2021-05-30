@@ -15,6 +15,7 @@ use async_trait::async_trait;
 use snafu::ResultExt;
 use std::sync::Arc;
 
+use ethers::prelude::EthEvent;
 use ethers::types::{Address, H256, U256};
 
 /// Finalized epoch StateFold Delegate
@@ -101,13 +102,15 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         // Check if there was (possibly) some log emited on this block.
         // As finalized epochs' inputs will not change, we can return early
         // without querying the input StateFold.
-        // TODO: Also check for event signature in bloom!
         if !(fold_utils::contains_address(
             &block.logs_bloom,
             &self.descartesv2_address,
         ) && fold_utils::contains_topic(
             &block.logs_bloom,
             &previous_state.next_epoch(),
+        ) && fold_utils::contains_topic(
+            &block.logs_bloom,
+            &FinalizeEpochFilter::signature(),
         )) {
             return Ok(previous_state.clone());
         }
@@ -131,7 +134,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let mut finalized_epochs = previous_state.clone();
 
         for (ev, meta) in epoch_finalized_events {
-            if ev.block_number < finalized_epochs.next_epoch() {
+            if ev.epoch_number < finalized_epochs.next_epoch() {
                 continue;
             }
 
@@ -146,7 +149,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 finalized_block_number: meta.block_number,
             };
 
-            assert!(finalized_epochs.insert_epoch(epoch));
+            let inserted = finalized_epochs.insert_epoch(epoch);
+            assert!(inserted);
         }
 
         Ok(finalized_epochs)

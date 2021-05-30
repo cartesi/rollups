@@ -14,6 +14,7 @@ use im::Vector;
 use snafu::ResultExt;
 use std::sync::Arc;
 
+use ethers::prelude::EthEvent;
 use ethers::types::{Address, U256};
 
 /// Input StateFold Delegate
@@ -75,9 +76,13 @@ impl StateFoldDelegate for InputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        // TODO: Also check for event signature in bloom!
-        if fold_utils::contains_address(&block.logs_bloom, &self.input_address)
-        {
+        if !(fold_utils::contains_address(
+            &block.logs_bloom,
+            &self.input_address,
+        ) && fold_utils::contains_topic(
+            &block.logs_bloom,
+            &InputAddedFilter::signature(),
+        )) {
             return Ok(previous_state.clone());
         }
 

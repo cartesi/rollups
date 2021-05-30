@@ -15,6 +15,7 @@ use async_trait::async_trait;
 use snafu::ResultExt;
 use std::sync::Arc;
 
+use ethers::prelude::EthEvent;
 use ethers::providers::Middleware;
 use ethers::types::{Address, H256, U256};
 
@@ -118,20 +119,23 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let epoch_number = previous_state.epoch_number.clone();
-
         // Check if there was (possibly) some log emited on this block.
         // As finalized epochs' inputs will not change, we can return early
         // without querying the input StateFold.
-        // TODO: Also check for event signature in bloom!
         if !(fold_utils::contains_address(
             &block.logs_bloom,
             &self.descartesv2_address,
-        ) && fold_utils::contains_topic(&block.logs_bloom, &epoch_number))
-        {
+        ) && fold_utils::contains_topic(
+            &block.logs_bloom,
+            &previous_state.epoch_number,
+        ) && fold_utils::contains_topic(
+            &block.logs_bloom,
+            &ClaimFilter::signature(),
+        )) {
             return Ok(previous_state.clone());
         }
 
+        let epoch_number = previous_state.epoch_number.clone();
         let contract = access
             .build_fold_contract(
                 self.descartesv2_address,
