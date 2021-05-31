@@ -121,7 +121,7 @@ contract OutputImpl is Output {
             keccak256(
                 abi.encode(
                     _v.epochOutputDriveHash,
-                    _v.epochEventDriveHash,
+                    _v.epochMessageDriveHash,
                     _v.epochMachineFinalState
                 )
             ) == _epochHash,
@@ -136,7 +136,7 @@ contract OutputImpl is Output {
                 KECCAK_LOG2_SIZE,
                 hashOfOutput,
                 _v.outputMetadataProof
-            ) == _v.outputMetadataDriveHash,
+            ) == _v.outputMetadataArrayDriveHash,
             "specific output is not contained in output metadata drive hash"
         );
 
@@ -145,7 +145,7 @@ contract OutputImpl is Output {
             Merkle.getRootWithDrive(
                 uint64(_v.inputIndex * KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
-                _v.outputMetadataDriveHash,
+                _v.outputMetadataArrayDriveHash,
                 _v.epochOutputDriveProof
             ) == _v.epochOutputDriveHash,
             "output's metadata drive hash is not contained in epoch output drive"

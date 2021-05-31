@@ -27,19 +27,19 @@ interface Output {
     /// @param _epochIndex which epoch the output belongs to
     /// @param _inputIndex which input, inside the epoch, the output belongs to
     /// @param _outputIndex index of output inside the input
-    /// @param _outputMetadataDriveHash hash of the outputs metadata drive where this output is in
-    /// @param _outputsHash merkle root of all epoch's output metadata drive hashes
-    /// @param _stateHash hash of the machine state claimed this epoch
-    /// @param _eventsHash hash of the events emitted by this epoch
+    /// @param _outputMetadataArrayDriveHash hash of the outputs metadata drive where this output is in
+    /// @param _epochOutputDriveHash merkle root of all epoch's output metadata drive hashes
+    /// @param _epochMessageDriveHash hash of MessageMetadataArrayDrive
+    /// @param _epochMachineFinalState hash of the machine state claimed this epoch
     /// @param _outputMetadataProof proof that this output's metadata is in meta data drive
-    /// @param _accumulatedOutputsProof proof that this output metadata drive is in epoch's Output drive
+    /// @param _epochOutputDriveProof proof that this output metadata drive is in epoch's Output drive
     struct OutputValidityProof {
         uint256 epochIndex;
         uint256 inputIndex;
         uint256 outputIndex;
-        bytes32 outputMetadataDriveHash;
+        bytes32 outputMetadataArrayDriveHash;
         bytes32 epochOutputDriveHash;
-        bytes32 epochEventDriveHash;
+        bytes32 epochMessageDriveHash;
         bytes32 epochMachineFinalState;
         bytes32[] outputMetadataProof;
         bytes32[] epochOutputDriveProof;
