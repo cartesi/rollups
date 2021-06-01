@@ -43,7 +43,7 @@ contract ValidatorManagerImpl is ValidatorManager {
     modifier onlyDescartesV2 {
         require(
             msg.sender == descartesV2,
-            "Only descartesV2 can call this functions"
+            "Only descartesV2 can call this function"
         );
         _;
     }
