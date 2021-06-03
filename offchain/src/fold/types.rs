@@ -12,7 +12,7 @@ pub struct Input {
 
 /// Set of inputs at some epoch
 #[derive(Clone, Debug)]
-pub struct InputState {
+pub struct EpochInputState {
     pub epoch_number: U256,
     pub inputs: Vector<Input>,
 }
@@ -45,7 +45,7 @@ impl Claims {
         &self.claims
     }
 
-    pub fn update_claims(&self, claim: H256, sender: Address) -> Self {
+    pub fn update_with_new_claim(&self, claim: H256, sender: Address) -> Self {
         let sender_set = self.claims.entry(claim).or_default().update(sender);
         let claims = self.claims.update(claim, sender_set);
         Self {
@@ -69,13 +69,6 @@ impl Claims {
 
     pub fn get_senders_with_claim(&self, claim: &H256) -> HashSet<Address> {
         self.claims.get(claim).cloned().unwrap_or_default()
-    }
-
-    pub fn has_sender_claimed(&self, claim: &H256, sender: &Address) -> bool {
-        match self.claims.get(claim) {
-            Some(m) => m.contains(sender),
-            None => false,
-        }
     }
 
     pub fn iter(&self) -> im::hashmap::Iter<H256, HashSet<Address>> {
@@ -104,9 +97,9 @@ impl IntoIterator for Claims {
 ///
 #[derive(Clone, Debug)]
 pub struct FinalizedEpoch {
-    pub hash: H256,
     pub epoch_number: U256,
-    pub inputs: InputState,
+    pub hash: H256,
+    pub inputs: EpochInputState,
 
     /// Hash of block in which epoch was finalized
     pub finalized_block_hash: H256,
@@ -133,6 +126,14 @@ impl FinalizedEpochs {
         }
     }
 
+    pub fn next_epoch(&self) -> U256 {
+        self.initial_epoch + self.finalized_epochs.len()
+    }
+
+    fn epoch_number_consistent(&self, epoch_number: &U256) -> bool {
+        *epoch_number == self.next_epoch()
+    }
+
     /// If `finalized_epoch.epoch_number` is not consistent, this method fails
     /// to insert epoch and returns false.
     pub fn insert_epoch(&mut self, finalized_epoch: FinalizedEpoch) -> bool {
@@ -143,73 +144,63 @@ impl FinalizedEpochs {
         self.finalized_epochs.push_back(finalized_epoch);
         true
     }
-
-    pub fn next_epoch(&self) -> U256 {
-        self.initial_epoch + self.finalized_epochs.len()
-    }
-
-    fn epoch_number_consistent(&self, epoch_number: &U256) -> bool {
-        *epoch_number == self.next_epoch()
-    }
 }
 
 ///
 #[derive(Clone, Debug)]
-pub struct SealedEpoch {
+pub struct EpochWithClaims {
     pub epoch_number: U256,
-    pub claims: Option<Claims>,
-    pub inputs: InputState,
+    pub claims: Claims,
+    pub inputs: EpochInputState,
 }
 
 ///
 #[derive(Clone, Debug)]
 pub struct AccumulatingEpoch {
     pub epoch_number: U256,
-    pub inputs: InputState,
+    pub inputs: EpochInputState,
 }
 
 ///
 #[derive(Clone, Debug)]
 pub enum PhaseState {
-    InputAccumulation {
-        current_epoch: AccumulatingEpoch,
+    InputAccumulation {},
+
+    EpochSealedAwaitingFirstClaim {
+        sealed_epoch: AccumulatingEpoch,
     },
 
-    ExpiredInputAccumulation {
-        sealing_epoch: AccumulatingEpoch,
+    AwaitingConsensusNoConflict {
+        claimed_epoch: EpochWithClaims,
     },
 
-    AwaitingConsensus {
-        sealed_epoch: SealedEpoch,
-        current_epoch: AccumulatingEpoch,
-        round_start: U256,
+    AwaitingConsensusAfterConflict {
+        claimed_epoch: EpochWithClaims,
+        challenge_period_base_ts: U256,
     },
 
     ConsensusTimeout {
-        sealed_epoch: SealedEpoch,
-        current_epoch: AccumulatingEpoch,
+        claimed_epoch: EpochWithClaims,
     },
 
     AwaitingDispute {
-        sealed_epoch: SealedEpoch,
-        current_epoch: AccumulatingEpoch,
+        claimed_epoch: EpochWithClaims,
     },
     // TODO: add dispute timeout when disputes are turned on.
 }
 
 impl PhaseState {
-    pub fn consensus_round_start(&self) -> Option<U256> {
+    pub fn start_of_challenging_period(&self) -> Option<U256> {
         match self {
-            PhaseState::AwaitingConsensus {
-                round_start,
-                sealed_epoch,
+            PhaseState::AwaitingConsensusNoConflict {
+                claimed_epoch, ..
+            } => Some(claimed_epoch.claims.first_claim_timestamp()),
+
+            PhaseState::AwaitingConsensusAfterConflict {
+                challenge_period_base_ts,
                 ..
-            } => match sealed_epoch.claims {
-                None => None,
-                Some(c) => {
-                    Some(std::cmp::max(*round_start, c.first_claim_timestamp()))
-                }
-            },
+            } => Some(*challenge_period_base_ts),
+
             _ => None,
         }
     }
@@ -236,6 +227,7 @@ pub struct DescartesV2State {
 
     pub initial_epoch: U256,
     pub finalized_epochs: Vector<FinalizedEpoch>, // EpochNumber -> Epoch
+    pub current_epoch: AccumulatingEpoch,
 
     pub current_phase: PhaseState,
 }

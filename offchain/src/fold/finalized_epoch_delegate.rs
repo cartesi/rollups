@@ -1,7 +1,7 @@
 use super::contracts::descartesv2_contract::*;
 
 use super::input_delegate::InputFoldDelegate;
-use super::types::{FinalizedEpoch, FinalizedEpochs, InputState};
+use super::types::{EpochInputState, FinalizedEpoch, FinalizedEpochs};
 
 use dispatcher::state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
@@ -87,7 +87,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 finalized_block_number: meta.block_number,
             };
 
-            assert!(finalized_epochs.insert_epoch(epoch));
+            let inserted = finalized_epochs.insert_epoch(epoch);
+            assert!(inserted);
         }
 
         Ok(finalized_epochs)
@@ -171,7 +172,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
         &self,
         epoch: U256,
         block_hash: H256,
-    ) -> SyncResult<InputState, A> {
+    ) -> SyncResult<EpochInputState, A> {
         Ok(self
             .input_fold
             .get_state_for_block(&epoch, block_hash)
@@ -189,7 +190,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
         &self,
         epoch: U256,
         block_hash: H256,
-    ) -> FoldResult<InputState, A> {
+    ) -> FoldResult<EpochInputState, A> {
         Ok(self
             .input_fold
             .get_state_for_block(&epoch, block_hash)

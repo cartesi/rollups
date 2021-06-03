@@ -1,5 +1,5 @@
 use super::contracts::input_contract::*;
-use super::types::{Input, InputState};
+use super::types::{EpochInputState, Input};
 
 use dispatcher::state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
@@ -31,7 +31,7 @@ impl InputFoldDelegate {
 #[async_trait]
 impl StateFoldDelegate for InputFoldDelegate {
     type InitialState = U256;
-    type Accumulator = InputState;
+    type Accumulator = EpochInputState;
     type State = BlockState<Self::Accumulator>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
@@ -64,7 +64,7 @@ impl StateFoldDelegate for InputFoldDelegate {
             inputs.push_back(ev.into());
         }
 
-        Ok(InputState {
+        Ok(EpochInputState {
             epoch_number,
             inputs,
         })
@@ -104,7 +104,7 @@ impl StateFoldDelegate for InputFoldDelegate {
             inputs.push_back(ev.into());
         }
 
-        Ok(InputState {
+        Ok(EpochInputState {
             epoch_number: previous_state.epoch_number,
             inputs,
         })

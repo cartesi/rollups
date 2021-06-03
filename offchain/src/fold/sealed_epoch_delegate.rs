@@ -1,7 +1,7 @@
 use super::contracts::descartesv2_contract::*;
 
 use super::input_delegate::InputFoldDelegate;
-use super::types::{Claims, InputState, SealedEpoch};
+use super::types::{Claims, EpochInputState, EpochWithClaims};
 
 use dispatcher::state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
@@ -19,13 +19,18 @@ use ethers::prelude::EthEvent;
 use ethers::providers::Middleware;
 use ethers::types::{Address, H256, U256};
 
+pub enum A {
+    B,
+    C,
+}
+
 /// Sealed epoch StateFold Delegate
-pub struct SealedEpochFoldDelegate<DA: DelegateAccess> {
+pub struct EpochWithClaimsFoldDelegate<DA: DelegateAccess> {
     descartesv2_address: Address,
     input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
 }
 
-impl<DA: DelegateAccess> SealedEpochFoldDelegate<DA> {
+impl<DA: DelegateAccess> EpochWithClaimsFoldDelegate<DA> {
     pub fn new(
         descartesv2_address: Address,
         input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
@@ -39,10 +44,10 @@ impl<DA: DelegateAccess> SealedEpochFoldDelegate<DA> {
 
 #[async_trait]
 impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
-    for SealedEpochFoldDelegate<DA>
+    for EpochWithClaimsFoldDelegate<DA>
 {
     type InitialState = U256;
-    type Accumulator = SealedEpoch;
+    type Accumulator = EpochWithClaims;
     type State = BlockState<Self::Accumulator>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
@@ -75,6 +80,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 err: "Error querying for descartes claims",
             })?;
 
+        if claim_events.is_empty() {
+            return SyncDelegateError {
+                err: "Claim events empty",
+            }
+            .fail();
+        }
+
         let mut claims: Option<Claims> = None;
         for (claim_event, meta) in claim_events {
             claims = Some(match claims {
@@ -106,7 +118,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             });
         }
 
-        Ok(SealedEpoch {
+        Ok(EpochWithClaims {
             claims,
             inputs,
             epoch_number,
@@ -176,7 +188,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             });
         }
 
-        Ok(SealedEpoch {
+        Ok(EpochWithClaims {
             claims,
             epoch_number,
             inputs: previous_state.inputs.clone(),
@@ -191,7 +203,9 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     }
 }
 
-impl<DA: DelegateAccess + Send + Sync + 'static> SealedEpochFoldDelegate<DA> {
+impl<DA: DelegateAccess + Send + Sync + 'static>
+    EpochWithClaimsFoldDelegate<DA>
+{
     async fn get_inputs_sync<A: SyncAccess + Send + Sync + 'static>(
         &self,
         epoch: U256,

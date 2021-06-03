@@ -1,6 +1,6 @@
 use super::contracts::descartesv2_contract::*;
 
-use super::types::{AccumulatingEpoch, FinalizedEpochs, SealedEpoch};
+use super::types::{AccumulatingEpoch, EpochWithClaims, FinalizedEpochs};
 use super::{
     accumulating_epoch_delegate::AccumulatingEpochFoldDelegate,
     finalized_epoch_delegate::FinalizedEpochFoldDelegate,
