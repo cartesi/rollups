@@ -57,14 +57,6 @@ contract InputImpl is Input {
         _;
     }
 
-    /// @notice functions modified by noReentrancy are not subject to recursion
-    modifier noReentrancy() {
-        require(!lock, "reentrancy not allowed");
-        lock = true;
-        _;
-        lock = false;
-    }
-
     /// @param _descartesV2 address of descartesV2 contract that will manage inboxes
     /// @param _log2Size size of the input drive of the machine
     constructor(address _descartesV2, uint8 _log2Size) {
@@ -80,12 +72,7 @@ contract InputImpl is Input {
     /// @dev offchain code is responsible for making sure
     ///      that input size is power of 2 and multiple of 8 since
     // the offchain machine has a 8 byte word
-    function addInput(bytes calldata _input)
-        public
-        override
-        noReentrancy()
-        returns (bytes32)
-    {
+    function addInput(bytes calldata _input) public override returns (bytes32) {
         require(_input.length > 0, "input is empty");
 
         // 64 bytes

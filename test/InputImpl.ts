@@ -102,7 +102,7 @@ describe("Input Implementation", () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
         await mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
 
         await inputImpl.addInput(input_64_bytes);
         await inputImpl.addInput(input_64_bytes);
@@ -114,7 +114,7 @@ describe("Input Implementation", () => {
         ).to.equal(0);
 
         await mockDescartesv2.mock.notifyInput.returns(true);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(2);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
 
         await inputImpl.addInput(input_64_bytes);
 
@@ -128,12 +128,12 @@ describe("Input Implementation", () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
         await mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
 
         await expect(inputImpl.addInput(input_64_bytes))
             .to.emit(inputImpl, "InputAdded")
             .withArgs(
-                1,
+                0,
                 await signer.getAddress(),
                 (await ethers.provider.getBlock("latest")).timestamp + 1,
                 "0x" + input_64_bytes.toString("hex")
@@ -143,7 +143,7 @@ describe("Input Implementation", () => {
     it("test return value of addInput()", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
         await mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
 
         // calculate input hash: keccak256(abi.encode(keccak256(metadata), keccak256(_input)))
         // metadata: abi.encode(msg.sender, block.timestamp)
@@ -171,7 +171,7 @@ describe("Input Implementation", () => {
     it("test getInput()", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
         await mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
 
         await inputImpl.addInput(input_64_bytes);
 
@@ -194,7 +194,7 @@ describe("Input Implementation", () => {
 
         // switch input boxes before testing getInput()
         await mockDescartesv2.mock.notifyInput.returns(true);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(2);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
         await inputImpl.addInput(input_64_bytes);
 
         expect(
@@ -220,7 +220,7 @@ describe("Input Implementation", () => {
         input_hash = ethers.utils.keccak256(abi_metadata_input);
 
         // switch input boxes before testing getInput()
-        await mockDescartesv2.mock.getCurrentEpoch.returns(3);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(2);
         await inputImpl.addInput(input_64_bytes);
 
         expect(
@@ -233,7 +233,7 @@ describe("Input Implementation", () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
         await mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
 
         expect(
             await inputImpl.getCurrentInbox(),
@@ -248,7 +248,7 @@ describe("Input Implementation", () => {
         ).to.equal(0);
 
         await mockDescartesv2.mock.notifyInput.returns(true);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(2);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
         await inputImpl.addInput(input_64_bytes);
 
         expect(
@@ -257,7 +257,7 @@ describe("Input Implementation", () => {
         ).to.equal(1);
 
         mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(2);
+        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
         await inputImpl.addInput(input_64_bytes);
 
         expect(
@@ -311,7 +311,7 @@ describe("Input Implementation", () => {
 
             var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
             await mockDescartesv2.mock.notifyInput.returns(true);
-            await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+            await mockDescartesv2.mock.getCurrentEpoch.returns(0);
             // add input to box 1
             await inputImpl.addInput(input_64_bytes);
 
@@ -321,7 +321,7 @@ describe("Input Implementation", () => {
                 "initial box 0 should also be empty"
             ).to.equal(0);
 
-            await mockDescartesv2.mock.getCurrentEpoch.returns(2);
+            await mockDescartesv2.mock.getCurrentEpoch.returns(1);
             // add 3 inputs to box 0
             await inputImpl.addInput(input_64_bytes);
             await mockDescartesv2.mock.notifyInput.returns(false);
@@ -336,6 +336,7 @@ describe("Input Implementation", () => {
 
             // onNewEpoch() deletes box 1 and swap boxes
             await inputImpl.onNewEpoch();
+            await inputImpl.onNewInputAccumulation();
             // currentInputBox: 1
             expect(
                 await inputImpl.getNumberOfInputs(),
@@ -345,6 +346,7 @@ describe("Input Implementation", () => {
             // onNewEpoch() deletes box 0 and swap boxes
             // now both boxes are empty
             await inputImpl.onNewEpoch();
+            await inputImpl.onNewInputAccumulation();
             // currentInputBox: 0
             expect(
                 await inputImpl.getNumberOfInputs(),
@@ -352,6 +354,7 @@ describe("Input Implementation", () => {
             ).to.equal(0);
 
             await inputImpl.onNewEpoch();
+            await inputImpl.onNewInputAccumulation();
             // currentInputBox: 1
             expect(
                 await inputImpl.getNumberOfInputs(),
