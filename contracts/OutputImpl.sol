@@ -33,8 +33,13 @@ contract OutputImpl is Output {
 
     uint8 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
 
-    address immutable descartesV2; // descartes 2 contract using this validator
+    // max size of output metadata drive 32 * (2^16) bytes
+    uint8 constant OUTPUT_METADATA_LOG2_SIZE = 21;
+    // max size of epoch output drive 32 * (2^32) bytes
+    uint8 constant EPOCH_OUTPUT_LOG2_SIZE = 37;
+    uint32 immutable log2OutputMetadataArrayDriveSize;
 
+    address immutable descartesV2; // descartes 2 contract using this validator
     mapping(uint248 => uint256) internal outputBitmask;
     bytes32[] epochHashes;
 
@@ -60,8 +65,9 @@ contract OutputImpl is Output {
 
     // @notice creates OutputImpl contract
     // @params _descartesV2 address of descartes contract
-    constructor(address _descartesV2) {
+    constructor(address _descartesV2, uint32 _log2OutputMetadataArrayDriveSize) {
         descartesV2 = _descartesV2;
+        log2OutputMetadataArrayDriveSize = _log2OutputMetadataArrayDriveSize;
     }
 
     /// @notice executes output
@@ -131,9 +137,10 @@ contract OutputImpl is Output {
         bytes32 hashOfOutput = keccak256(_encodedOutput);
         // prove that the _hashOfOutput is in output keccak drive
         require(
-            Merkle.getRootWithDrive(
+            Merkle.getRootAfterReplacementInDrive(
                 uint64(_v.outputIndex * KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
+                OUTPUT_METADATA_LOG2_SIZE,
                 hashOfOutput,
                 _v.outputMetadataProof
             ) == _v.outputMetadataArrayDriveHash,
@@ -142,9 +149,10 @@ contract OutputImpl is Output {
 
         // prove that output keccak drive is in outputs drive
         require(
-            Merkle.getRootWithDrive(
+            Merkle.getRootAfterReplacementInDrive(
                 uint64(_v.inputIndex * KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
+                EPOCH_OUTPUT_LOG2_SIZE,
                 _v.outputMetadataArrayDriveHash,
                 _v.epochOutputDriveProof
             ) == _v.epochOutputDriveHash,
@@ -177,4 +185,25 @@ contract OutputImpl is Output {
     {
         return epochHashes.length;
     }
+
+    /// @notice get log2 size of output metadata drive
+    function getOutputMetadataLog2Size()
+        public
+        pure
+        override
+        returns (uint256)
+    {
+        return OUTPUT_METADATA_LOG2_SIZE;
+    }
+
+    /// @notice get log2 size of epoch output drive
+    function getEpochOutputLog2Size()
+        public
+        pure
+        override
+        returns (uint256)
+    {
+        return EPOCH_OUTPUT_LOG2_SIZE;
+    }
+
 }

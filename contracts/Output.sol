@@ -64,4 +64,16 @@ interface Output {
 
     /// @notice get number of finalized epochs
     function getNumberOfFinalizedEpochs() external view returns (uint256);
+
+    /// @notice get log2 size of output metadata drive
+    function getOutputMetadataLog2Size()
+        external
+        pure
+        returns (uint256);
+
+    /// @notice get log2 size of epoch output drive
+    function getEpochOutputLog2Size()
+        external
+        pure
+        returns (uint256);
 }
