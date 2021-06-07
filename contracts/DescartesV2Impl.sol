@@ -257,9 +257,13 @@ contract DescartesV2Impl is DescartesV2 {
         return _newPhase;
     }
 
-    /// @notice returns index of current epoch
+    /// @notice returns index of current (accumulating) epoch
     /// @return index of current epoch
+    /// @dev if phase is input accumulation, then the epoch number is length
+    //       of finalized epochs array
     function getCurrentEpoch() public view override returns (uint256) {
-        return output.getNumberOfFinalizedEpochs() + 1;
+        uint256 finalizedEpochs = output.getNumberOfFinalizedEpochs();
+
+        return currentPhase == Phase.InputAccumulation? finalizedEpochs : finalizedEpochs + 1;
     }
 }
