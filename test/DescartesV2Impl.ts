@@ -602,12 +602,18 @@ describe("Descartes V2 Implementation", () => {
             ],
             [address_zero, address_zero]
         );
+
+        // if current phase is Awaiting Consensus or Awaiting Disputes
+        // the claim was for the sealed epoch - therefore, current epoch - 1
+
+        // if current phase is InputAccumulation, then a new epoch just started
+        // from a consensus in the claim, which was also for current epoch - 1
         await expect(
             descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
         )
             .to.emit(descartesV2Impl, "Claim")
             .withArgs(
-                numberOfFinalizedEpochs + 1,
+                numberOfFinalizedEpochs - 1,
                 await signers[0].getAddress(),
                 ethers.utils.formatBytes32String("hello")
             );
@@ -699,12 +705,15 @@ describe("Descartes V2 Implementation", () => {
         );
         await mockOutput.mock.onNewEpoch.returns();
         await mockInput.mock.onNewEpoch.returns();
+
+        // numberOfFinalizedEpochs - 1 because the epoch is finalized
+        // before the event is emitted
         await expect(
             descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
         )
             .to.emit(descartesV2Impl, "FinalizeEpoch")
             .withArgs(
-                numberOfFinalizedEpochs,
+                numberOfFinalizedEpochs - 1,
                 ethers.utils.formatBytes32String("hello")
             );
     });
