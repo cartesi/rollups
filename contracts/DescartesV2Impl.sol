@@ -151,7 +151,7 @@ contract DescartesV2Impl is DescartesV2 {
         // if current phase is InputAccumulation, then a new epoch just started
         // from a consensus in the claim, which was also for current epoch - 1
         emit Claim(
-            output.getNumberOfFinalizedEpochs() - 1,
+            getCurrentEpoch() - 1,
             msg.sender,
             _epochHash
         );
