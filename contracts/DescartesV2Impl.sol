@@ -145,9 +145,13 @@ contract DescartesV2Impl is DescartesV2 {
         );
         resolveValidatorResult(result, claims, claimers);
 
-        // finalized epochs + 1 is the epoch being suggested
+        // if current phase is Awaiting Consensus or Awaiting Disputes
+        // the claim was for the sealed epoch - therefore, current epoch - 1
+
+        // if current phase is InputAccumulation, then a new epoch just started
+        // from a consensus in the claim, which was also for current epoch - 1
         emit Claim(
-            output.getNumberOfFinalizedEpochs() + 1,
+            output.getNumberOfFinalizedEpochs() - 1,
             msg.sender,
             _epochHash
         );
@@ -224,7 +228,10 @@ contract DescartesV2Impl is DescartesV2 {
         output.onNewEpoch(finalClaim);
         input.onNewEpoch();
 
-        emit FinalizeEpoch(output.getNumberOfFinalizedEpochs(), finalClaim);
+        // -1 because the numberOfFinalEpochs increases before this call
+        // in output.onNewEpoch().So, if epoch 0 is finalized, the return
+        // of  getNumberOfFinalizedEpochs is going to be 1.
+        emit FinalizeEpoch(output.getNumberOfFinalizedEpochs() - 1, finalClaim);
     }
 
     /// @notice resolve results returned by validator manager
