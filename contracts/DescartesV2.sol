@@ -63,8 +63,12 @@ interface DescartesV2 {
         bytes32 _winningClaim
     ) external;
 
-    /// @notice returns index of current epoch
+    /// @notice returns index of current (accumulating) epoch
     /// @return index of current epoch
+    /// @dev if phase is input accumulation, then the epoch number is length
+    //       of finalized epochs array, else there are two epochs two non
+    //       finalized epochs, one awaiting consensus/dispute and another
+    //      accumulating input
     function getCurrentEpoch() external view returns (uint256);
 
     // events

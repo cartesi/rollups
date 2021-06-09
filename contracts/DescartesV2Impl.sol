@@ -143,18 +143,18 @@ contract DescartesV2Impl is DescartesV2 {
             payable(msg.sender),
             _epochHash
         );
-        resolveValidatorResult(result, claims, claimers);
 
-        // if current phase is Awaiting Consensus or Awaiting Disputes
-        // the claim was for the sealed epoch - therefore, current epoch - 1
-
-        // if current phase is InputAccumulation, then a new epoch just started
-        // from a consensus in the claim, which was also for current epoch - 1
+        // emit the claim event before processing it
+        // so if the epoch is finalized in this claim (consensus)
+        // the number of final epochs doesnt gets contaminated
         emit Claim(
-            getCurrentEpoch() - 1,
+            output.getNumberOfFinalizedEpochs(),
             msg.sender,
             _epochHash
         );
+
+        resolveValidatorResult(result, claims, claimers);
+
     }
 
     /// @notice finalize epoch after timeout
@@ -267,7 +267,9 @@ contract DescartesV2Impl is DescartesV2 {
     /// @notice returns index of current (accumulating) epoch
     /// @return index of current epoch
     /// @dev if phase is input accumulation, then the epoch number is length
-    //       of finalized epochs array
+    //       of finalized epochs array, else there are two epochs two non
+    //       finalized epochs, one awaiting consensus/dispute and another
+    //      accumulating input
     function getCurrentEpoch() public view override returns (uint256) {
         uint256 finalizedEpochs = output.getNumberOfFinalizedEpochs();
 
