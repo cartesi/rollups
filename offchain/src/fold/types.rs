@@ -223,10 +223,9 @@ pub struct DescartesV2State {
     // TODO: Add these for frontend.
     // pub first_claim_timestamp: Option<U256>, // Only used for frontend
     pub constants: ImmutableState,
-    pub input_accumulation_start_timestamp: U256,
 
     pub initial_epoch: U256,
-    pub finalized_epochs: Vector<FinalizedEpoch>, // EpochNumber -> Epoch
+    pub finalized_epochs: FinalizedEpochs, // EpochNumber -> Epoch
     pub current_epoch: AccumulatingEpoch,
 
     pub current_phase: PhaseState,

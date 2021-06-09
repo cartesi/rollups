@@ -1,8 +1,9 @@
 use super::contracts::descartesv2_contract::*;
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate};
+use super::sealed_epoch_delegate::SealedEpochState;
 use super::types::{
     AccumulatingEpoch, DescartesV2State, EpochWithClaims, FinalizedEpochs,
-    ImmutableState,
+    ImmutableState, PhaseState,
 };
 
 use dispatcher::state_fold::{
@@ -98,7 +99,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             ImmutableState::from(&(create_event, timestamp))
         };
 
-        let contract_phase = self
+        let contract_state = self
             .epoch_fold
             .get_state_for_block(initial_state, block.hash)
             .await
@@ -110,237 +111,92 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
-        let x = match contract_phase {
+        let mut is_current_epoch_empty = false;
+        let phase_state = match contract_state.current_phase {
             ContractPhase::InputAccumulation {} => {
+                // Last phase change timestamp is the timestamp of input
+                // accumulation start if contract in InputAccumulation.
+                // If there were no phase changes, it is the timestamp of
+                // contract creation.
+                let input_accumulation_start_timestamp =
+                    if let Some(ts) = contract_state.phase_change_timestamp {
+                        ts
+                    } else {
+                        constants.contract_creation_timestamp
+                    };
+
                 if block.timestamp
                     > input_accumulation_start_timestamp
                         + constants.input_duration
                 {
+                    is_current_epoch_empty = true;
+                    PhaseState::EpochSealedAwaitingFirstClaim {
+                        sealed_epoch: contract_state.current_epoch,
+                    }
                 } else {
+                    PhaseState::InputAccumulation {}
                 }
-
-                PhaseState::InputAccumulation {}
             }
 
             ContractPhase::AwaitingConsensus {
                 sealed_epoch,
                 round_start,
-            } => {}
+            } => {
+                match sealed_epoch {
+                    SealedEpochState::SealedEpochNoClaims { sealed_epoch } => {
+                        PhaseState::EpochSealedAwaitingFirstClaim {
+                            sealed_epoch,
+                        }
+                    }
 
-            ContractPhase::AwaitingDispute { sealed_epoch } => {}
+                    SealedEpochState::SealedEpochWithClaims {
+                        claimed_epoch,
+                    } => {
+                        let first_claim_timestamp =
+                            claimed_epoch.claims.first_claim_timestamp();
+
+                        // We can safely unwrap because we can be sure
+                        // there was at least one phase change event.
+                        let phase_change_timestamp =
+                            contract_state.phase_change_timestamp.unwrap();
+
+                        let time_of_last_move = std::cmp::max(
+                            first_claim_timestamp,
+                            phase_change_timestamp,
+                        );
+
+                        // Check
+                        if block.timestamp
+                            > time_of_last_move + constants.challenge_period
+                        {
+                            PhaseState::ConsensusTimeout { claimed_epoch }
+                        } else if time_of_last_move == first_claim_timestamp {
+                            PhaseState::AwaitingConsensusNoConflict {
+                                claimed_epoch,
+                            }
+                        } else {
+                            PhaseState::AwaitingConsensusAfterConflict {
+                                claimed_epoch,
+                                challenge_period_base_ts:
+                                    phase_change_timestamp,
+                            }
+                        }
+                    }
+                }
+            }
+
+            ContractPhase::AwaitingDispute { sealed_epoch } => {
+                unreachable!()
+            }
         };
 
         Ok(DescartesV2State {
             constants,
             initial_epoch: *initial_state,
-            current_phase,
-            finalized_epochs,
-            input_accumulation_start_timestamp,
+            current_phase: phase_state,
+            finalized_epochs: contract_state.finalized_epochs,
+            current_epoch: contract_state.current_epoch,
         })
-
-        //         let epoch_finalized_events = contract
-        //             .finalize_epoch_filter()
-        //             .query_with_meta()
-        //             .await
-        //             .context(SyncContractError {
-        //                 err: "Error querying for descartes finalized epochs",
-        //             })?;
-
-        //         let finalized_epochs = {
-        //             let mut finalized_epochs = Vector::new();
-        //             for (epoch, (ev, _)) in epoch_finalized_events.iter().enumerate() {
-        //                 let inputs = self
-        //                     .get_inputs_sync(
-        //                         constants.input_contract_address,
-        //                         epoch.into(),
-        //                         block.hash,
-        //                     )
-        //                     .await?;
-
-        //                 finalized_epochs = finalized_epochs.update(
-        //                     epoch.into(),
-        //                     FinalizedEpoch {
-        //                         hash: ev.epoch_hash.into(),
-        //                         inputs,
-        //                     },
-        //                 )
-        //             }
-
-        //             finalized_epochs
-        //         };
-
-        //         let input_accumulation_start_timestamp = {
-        //             match epoch_finalized_events.last() {
-        //                 None => constants.contract_creation_timestamp,
-        //                 Some((_, meta)) => {
-        //                     middleware
-        //                         .get_block(block.hash)
-        //                         .await
-        //                         .context(SyncAccessError {})?
-        //                         .ok_or(snafu::NoneError)
-        //                         .context(SyncDelegateError {
-        //                             err: "Block not found",
-        //                         })?
-        //                         .timestamp
-        //                 }
-        //             }
-        //         };
-
-        //         let phase_change_events = contract
-        //             .phase_change_filter()
-        //             .query_with_meta()
-        //             .await
-        //             .context(SyncContractError {
-        //                 err: "Error querying for descartes phase change",
-        //             })?;
-
-        //         let first_non_finalized_epoch_inputs = {
-        //             // Index of first non finalized epoch
-        //             let number = finalized_epochs.len().into();
-
-        //             // Inputs of first non finalized epoch
-        //             let inputs = self
-        //                 .get_inputs_sync(
-        //                     constants.input_contract_address,
-        //                     number,
-        //                     block.hash,
-        //                 )
-        //                 .await?;
-
-        //             AccumulatingEpoch { inputs, number }
-        //         };
-
-        //         let current_phase = match phase_change_events.last() {
-        //             // InputAccumulation
-        //             Some((PhaseChangeFilter { new_phase: 0 }, _)) => {
-        //                 if block.timestamp
-        //                     > input_accumulation_start_timestamp
-        //                         + constants.input_duration
-        //                 {
-        //                     PhaseState::ExpiredInputAccumulation {
-        //                         sealing_epoch: first_non_finalized_epoch_inputs,
-        //                     }
-        //                 } else {
-        //                     PhaseState::InputAccumulation {
-        //                         current_epoch: first_non_finalized_epoch_inputs,
-        //                     }
-        //                 }
-        //             }
-
-        //             // AwaitingConsensus | AwaitingDispute
-        //             Some((phase @ PhaseChangeFilter { new_phase: 1 }, m))
-        //             | Some((phase @ PhaseChangeFilter { new_phase: 2 }, m)) => {
-        //                 // Current epoch
-        //                 let number = (finalized_epochs.len() + 1).into();
-
-        //                 // Inputs of current epoch
-        //                 let inputs = self
-        //                     .get_inputs_sync(
-        //                         constants.input_contract_address,
-        //                         number,
-        //                         block.hash,
-        //                     )
-        //                     .await?;
-
-        //                 // Get all claim events of current epoch
-        //                 let claim_events = contract
-        //                     .claim_filter()
-        //                     .topic1(U256::from(number))
-        //                     .query_with_meta()
-        //                     .await
-        //                     .context(SyncContractError {
-        //                         err: "Error querying for descartes phase change",
-        //                     })?;
-
-        //                 let mut claimers: HashMap<H256, _> = HashMap::new();
-        //                 for (claim_event, meta) in claim_events {
-        //                     let x = claimers
-        //                         .entry(claim_event.epoch_hash.into())
-        //                         .or_insert((
-        //                             HashSet::new(),
-        //                             middleware
-        //                                 .get_block(meta.block_hash)
-        //                                 .await
-        //                                 .context(SyncAccessError {})?
-        //                                 .ok_or(snafu::NoneError)
-        //                                 .context(SyncDelegateError {
-        //                                     err: "Block not found",
-        //                                 })?
-        //                                 .timestamp,
-        //                         ));
-
-        //                     x.0.insert(claim_event.claimer);
-        //                 }
-
-        //                 let sealed_epoch = SealedEpoch {
-        //                     claimers,
-        //                     number,
-        //                     inputs,
-        //                 };
-
-        //                 if phase.new_phase == 1 {
-        //                     // AwaitingConsensus
-
-        //                     // Timestamp of when we entered this phase.
-        //                     let round_start = middleware
-        //                         .get_block(m.block_hash)
-        //                         .await
-        //                         .context(SyncAccessError {})?
-        //                         .ok_or(snafu::NoneError)
-        //                         .context(SyncDelegateError {
-        //                             err: "Block not found",
-        //                         })?
-        //                         .timestamp;
-
-        //                     let awaiting_consensus = PhaseState::AwaitingConsensus {
-        //                         sealed_epoch,
-        //                         current_epoch: first_non_finalized_epoch_inputs,
-        //                         round_start,
-        //                     };
-
-        //                     match awaiting_consensus.consensus_round_start() {
-        //                         // No claims
-        //                         None => awaiting_consensus,
-
-        //                         // Some claims
-        //                         Some(ts) => {
-        //                             if block.timestamp > ts + constants.challenge_period
-        //                             {
-        //                                 PhaseState::ConsensusTimeout {
-        //                                     sealed_epoch,
-        //                                     current_epoch:
-        //                                         first_non_finalized_epoch_inputs,
-        //                                 }
-        //                             } else {
-        //                                 awaiting_consensus
-        //                             }
-        //                         }
-        //                     }
-        //                 } else {
-        //                     // AwaitingDispute
-        //                     PhaseState::AwaitingDispute {
-        //                         sealed_epoch,
-        //                         current_epoch: first_non_finalized_epoch_inputs,
-        //                     }
-        //                 }
-        //             }
-
-        //             // InputAccumulation
-        //             None => PhaseState::InputAccumulation {
-        //                 current_epoch: first_non_finalized_epoch_inputs,
-        //             },
-
-        //             // Err
-        //             Some((PhaseChangeFilter { new_phase }, _)) => {
-        //                 return SyncDelegateError {
-        //                     err: format!(
-        //                         "Could not convert new_phase `{}` to PhaseState",
-        //                         new_phase
-        //                     ),
-        //                 }
-        //                 .fail()
-        //             }
-        //         };
     }
 
     async fn fold<A: FoldAccess + Send + Sync>(

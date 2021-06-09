@@ -41,10 +41,14 @@ pub enum ContractPhase {
 
 #[derive(Clone, Debug)]
 pub struct EpochState {
-    pub current_phase: ContractPhase,
     pub initial_epoch: U256,
+
+    pub current_phase: ContractPhase,
     pub finalized_epochs: FinalizedEpochs,
     pub current_epoch: AccumulatingEpoch,
+
+    // Timestamp of last contract phase change
+    pub phase_change_timestamp: Option<U256>,
 }
 
 type AccumulatingEpochStateFold<DA: DelegateAccess> =
@@ -127,6 +131,23 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 err: "Error querying for descartes phase change",
             })?;
 
+        let phase_change_timestamp = {
+            match phase_change_events.last() {
+                None => None,
+                Some((_, meta)) => Some(
+                    middleware
+                        .get_block(block.hash)
+                        .await
+                        .context(SyncAccessError {})?
+                        .ok_or(snafu::NoneError)
+                        .context(SyncDelegateError {
+                            err: "Block not found",
+                        })?
+                        .timestamp,
+                ),
+            }
+        };
+
         let (current_phase, current_epoch) = match phase_change_events.last() {
             // InputAccumulation
             // either accumulating inputs or sealed epoch with no claims/new inputs
@@ -208,6 +229,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         Ok(EpochState {
             current_phase,
+            phase_change_timestamp,
             initial_epoch,
             finalized_epochs,
             current_epoch,
@@ -288,6 +310,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             return Ok(EpochState {
                 current_phase,
                 current_epoch,
+                phase_change_timestamp: previous_state.phase_change_timestamp,
                 initial_epoch: previous_state.initial_epoch,
                 finalized_epochs: previous_state.finalized_epochs.clone(),
             });
@@ -391,9 +414,16 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             }
         };
 
+        let phase_change_timestamp = if phase_change_events.is_empty() {
+            previous_state.phase_change_timestamp
+        } else {
+            Some(block.timestamp)
+        };
+
         Ok(EpochState {
             current_phase,
             current_epoch,
+            phase_change_timestamp,
             initial_epoch: previous_state.initial_epoch,
             finalized_epochs,
         })
