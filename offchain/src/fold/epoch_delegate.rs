@@ -51,13 +51,10 @@ pub struct EpochState {
     pub phase_change_timestamp: Option<U256>,
 }
 
-type AccumulatingEpochStateFold<DA: DelegateAccess> =
+type AccumulatingEpochStateFold<DA> =
     Arc<StateFold<AccumulatingEpochFoldDelegate<DA>, DA>>;
-
-type SealedEpochStateFold<DA: DelegateAccess> =
-    Arc<StateFold<SealedEpochFoldDelegate<DA>, DA>>;
-
-type FinalizedEpochStateFold<DA: DelegateAccess> =
+type SealedEpochStateFold<DA> = Arc<StateFold<SealedEpochFoldDelegate<DA>, DA>>;
+type FinalizedEpochStateFold<DA> =
     Arc<StateFold<FinalizedEpochFoldDelegate<DA>, DA>>;
 
 /// Epoch StateActor Delegate, which implements `sync` and `fold`.
@@ -136,7 +133,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 None => None,
                 Some((_, meta)) => Some(
                     middleware
-                        .get_block(block.hash)
+                        .get_block(meta.block_hash)
                         .await
                         .context(SyncAccessError {})?
                         .ok_or(snafu::NoneError)
@@ -159,13 +156,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
             // AwaitingConsensus
             // can be SealedEpochNoClaims or SealedEpochWithClaims
-            Some((PhaseChangeFilter { new_phase: 1 }, m)) => {
+            Some((PhaseChangeFilter { new_phase: 1 }, _)) => {
                 let sealed_epoch =
                     self.get_sealed_sync(&next_epoch, block.hash).await?;
                 let current_epoch =
                     self.get_acc_sync(&(next_epoch + 1), block.hash).await?;
 
                 // Timestamp of when we entered this phase.
+                /*
                 let round_start = middleware
                     .get_block(m.block_hash)
                     .await
@@ -175,6 +173,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                         err: "Block not found",
                     })?
                     .timestamp;
+                */
+                let round_start = phase_change_timestamp.unwrap();
 
                 (
                     ContractPhase::AwaitingConsensus {
@@ -259,7 +259,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 )
                 .await?;
 
-            let current_phase = match previous_state.current_phase {
+            let current_phase = match &previous_state.current_phase {
                 ContractPhase::InputAccumulation {} => {
                     ContractPhase::InputAccumulation {}
                 }
@@ -277,7 +277,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
                     ContractPhase::AwaitingConsensus {
                         sealed_epoch,
-                        round_start,
+                        round_start: *round_start,
                     }
                 }
 

@@ -17,6 +17,15 @@ pub struct EpochInputState {
     pub inputs: Vector<Input>,
 }
 
+impl EpochInputState {
+    pub fn new(epoch_number: U256) -> Self {
+        Self {
+            epoch_number,
+            inputs: Vector::new(),
+        }
+    }
+}
+
 /// Set of claims
 #[derive(Clone, Debug)]
 pub struct Claims {
@@ -46,7 +55,8 @@ impl Claims {
     }
 
     pub fn update_with_new_claim(&self, claim: H256, sender: Address) -> Self {
-        let sender_set = self.claims.entry(claim).or_default().update(sender);
+        let sender_set =
+            self.claims.clone().entry(claim).or_default().update(sender);
         let claims = self.claims.update(claim, sender_set);
         Self {
             claims,
@@ -59,9 +69,9 @@ impl Claims {
     }
 
     pub fn get_sender_claim(&self, sender: &Address) -> Option<H256> {
-        for (k, v) in self.claims {
+        for (k, v) in self.claims.iter() {
             if v.contains(sender) {
-                return Some(k);
+                return Some(*k);
             }
         }
         None
@@ -159,6 +169,15 @@ pub struct EpochWithClaims {
 pub struct AccumulatingEpoch {
     pub epoch_number: U256,
     pub inputs: EpochInputState,
+}
+
+impl AccumulatingEpoch {
+    pub fn new(epoch_number: U256) -> Self {
+        Self {
+            epoch_number,
+            inputs: EpochInputState::new(epoch_number),
+        }
+    }
 }
 
 ///

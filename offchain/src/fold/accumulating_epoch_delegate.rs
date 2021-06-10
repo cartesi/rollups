@@ -1,5 +1,5 @@
 use super::input_delegate::InputFoldDelegate;
-use super::types::{AccumulatingEpoch, InputState};
+use super::types::{AccumulatingEpoch, EpochInputState};
 
 use dispatcher::state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
@@ -44,7 +44,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         &self,
         initial_state: &U256,
         block: &Block,
-        access: &A,
+        _access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
         let epoch_number = initial_state.clone();
 
@@ -61,7 +61,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         &self,
         previous_state: &Self::Accumulator,
         block: &Block,
-        access: &A,
+        _access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         let epoch_number = previous_state.epoch_number.clone();
 
@@ -89,7 +89,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
         &self,
         epoch: U256,
         block_hash: H256,
-    ) -> SyncResult<InputState, A> {
+    ) -> SyncResult<EpochInputState, A> {
         Ok(self
             .input_fold
             .get_state_for_block(&epoch, block_hash)
@@ -107,7 +107,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
         &self,
         epoch: U256,
         block_hash: H256,
-    ) -> FoldResult<InputState, A> {
+    ) -> FoldResult<EpochInputState, A> {
         Ok(self
             .input_fold
             .get_state_for_block(&epoch, block_hash)
