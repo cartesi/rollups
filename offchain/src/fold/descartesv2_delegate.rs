@@ -1,9 +1,7 @@
 use super::contracts::descartesv2_contract::*;
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
 use super::sealed_epoch_delegate::SealedEpochState;
-use super::types::{
-    AccumulatingEpoch, DescartesV2State, ImmutableState, PhaseState,
-};
+use super::types::{AccumulatingEpoch, DescartesV2State, ImmutableState, PhaseState};
 
 use dispatcher::state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
@@ -39,9 +37,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> DescartesV2FoldDelegate<DA> {
 }
 
 #[async_trait]
-impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
-    for DescartesV2FoldDelegate<DA>
-{
+impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate for DescartesV2FoldDelegate<DA> {
     type InitialState = U256; // Initial epoch
     type Accumulator = DescartesV2State;
     type State = BlockState<Self::Accumulator>;
@@ -56,11 +52,9 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract = DescartesV2Impl::new(
-            self.descartesv2_address,
-            Arc::clone(&middleware),
-        );
+        let contract = DescartesV2Impl::new(self.descartesv2_address, Arc::clone(&middleware));
 
+        // Retrieve constants from contract creation event
         let constants = {
             let (create_event, meta) = {
                 let e = contract
@@ -82,6 +76,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 e[0].clone()
             };
 
+            // retrieve timestamp of creation
             let timestamp = middleware
                 .get_block(meta.block_hash)
                 .await
@@ -95,7 +90,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             ImmutableState::from(&(create_event, timestamp))
         };
 
-        let contract_state = self
+        // get raw state from EpochFoldDelegate
+        let raw_contract_state = self
             .epoch_fold
             .get_state_for_block(initial_state, block.hash)
             .await
@@ -108,7 +104,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .state;
 
         Ok(convert_raw_to_logical(
-            contract_state,
+            raw_contract_state,
             constants,
             block,
             initial_state,
@@ -123,7 +119,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     ) -> FoldResult<Self::Accumulator, A> {
         let constants = previous_state.constants.clone();
 
-        let contract_state = self
+        // get raw state from EpochFoldDelegate
+        let raw_contract_state = self
             .epoch_fold
             .get_state_for_block(&previous_state.initial_epoch, block.hash)
             .await
@@ -136,21 +133,21 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .state;
 
         Ok(convert_raw_to_logical(
-            contract_state,
+            raw_contract_state,
             constants,
             block,
             &previous_state.initial_epoch,
         ))
     }
 
-    fn convert(
-        &self,
-        accumulator: &BlockState<Self::Accumulator>,
-    ) -> Self::State {
+    fn convert(&self, accumulator: &BlockState<Self::Accumulator>) -> Self::State {
         accumulator.clone()
     }
 }
 
+// Convert raw state to logical state. Raw state is the literal interpretation
+// of what is being presented by the blockchain. Logical state is the semantic
+// intepretation of that, which will be used for offchain decision making
 fn convert_raw_to_logical(
     contract_state: EpochState,
     constants: ImmutableState,
@@ -179,11 +176,11 @@ fn convert_raw_to_logical(
                     constants.contract_creation_timestamp
                 };
 
-            if block.timestamp
-                > input_accumulation_start_timestamp + constants.input_duration
-            {
-                current_epoch_no_inputs =
-                    Some(contract_state.current_epoch.epoch_number + 1);
+            // If input duration has passed, the logical state is epoch sealed
+            // awaiting first claim. The raw state can still be InputAccumulation
+            // if there were no new inputs after the phase expired.
+            if block.timestamp > input_accumulation_start_timestamp + constants.input_duration {
+                current_epoch_no_inputs = Some(contract_state.current_epoch.epoch_number + 1);
                 PhaseState::EpochSealedAwaitingFirstClaim {
                     sealed_epoch: contract_state.current_epoch.clone(),
                 }
@@ -196,14 +193,16 @@ fn convert_raw_to_logical(
             sealed_epoch,
             round_start,
         } => {
+            // The raw phase change might have happened because a claim arrived
+            // or because a new input arrived. This determines if the logical
+            // phase is EpochAwaintFirstClaim or SealedEpochNoClaims
             match sealed_epoch {
                 SealedEpochState::SealedEpochNoClaims { sealed_epoch } => {
                     PhaseState::EpochSealedAwaitingFirstClaim { sealed_epoch }
                 }
 
                 SealedEpochState::SealedEpochWithClaims { claimed_epoch } => {
-                    let first_claim_timestamp =
-                        claimed_epoch.claims.first_claim_timestamp();
+                    let first_claim_timestamp = claimed_epoch.claims.first_claim_timestamp();
 
                     // We can safely unwrap because we can be sure
                     // there was at least one phase change event.
@@ -211,20 +210,20 @@ fn convert_raw_to_logical(
                     //     contract_state.phase_change_timestamp.unwrap();
                     let phase_change_timestamp = round_start;
 
-                    let time_of_last_move = std::cmp::max(
-                        first_claim_timestamp,
-                        phase_change_timestamp,
-                    );
+                    // Last move's timestamp is the most recent timestamp between
+                    // the first claim or the phase change. This happens because
+                    // the 'challenge period' starts on first claim but resets
+                    // after a dispute.
+                    let time_of_last_move =
+                        std::cmp::max(first_claim_timestamp, phase_change_timestamp);
 
-                    // Check
-                    if block.timestamp
-                        > time_of_last_move + constants.challenge_period
-                    {
+                    // Check if Consensus timed out or, using the first claim
+                    // timestamp variable, decide if this is the first challenge
+                    // period of this epoch or if it is posterior to a dispute
+                    if block.timestamp > time_of_last_move + constants.challenge_period {
                         PhaseState::ConsensusTimeout { claimed_epoch }
                     } else if time_of_last_move == first_claim_timestamp {
-                        PhaseState::AwaitingConsensusNoConflict {
-                            claimed_epoch,
-                        }
+                        PhaseState::AwaitingConsensusNoConflict { claimed_epoch }
                     } else {
                         PhaseState::AwaitingConsensusAfterConflict {
                             claimed_epoch,
@@ -235,11 +234,16 @@ fn convert_raw_to_logical(
             }
         }
 
+        // This version doesn't have disputes. They're resolved automatically
+        // onchain
         ContractPhase::AwaitingDispute { .. } => {
             unreachable!()
         }
     };
 
+    // Figures out if the current accumulating epoch is empty (new) or if it
+    // was previously created. The distinction comes from the two possible
+    // transitions to AwaitingConsensus, either a new input or a claim
     let current_epoch = if let Some(epoch_number) = current_epoch_no_inputs {
         AccumulatingEpoch::new(epoch_number)
     } else {
@@ -255,6 +259,7 @@ fn convert_raw_to_logical(
     }
 }
 
+// Fetches the DescartesV2 constants from the contract creation event
 impl From<&(DescartesV2CreatedFilter, U256)> for ImmutableState {
     fn from(src: &(DescartesV2CreatedFilter, U256)) -> Self {
         let (ev, ts) = src;
