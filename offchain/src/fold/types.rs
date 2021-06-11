@@ -104,7 +104,8 @@ impl IntoIterator for Claims {
     }
 }
 
-///
+/// Epoch finalized on the blockchain, outputs are executable and messages
+/// are verfiable/provable
 #[derive(Clone, Debug)]
 pub struct FinalizedEpoch {
     pub epoch_number: U256,
@@ -118,7 +119,7 @@ pub struct FinalizedEpoch {
     pub finalized_block_number: U64,
 }
 
-///
+/// Set of finalized epochs
 #[derive(Clone, Debug)]
 pub struct FinalizedEpochs {
     /// Set of `FinalizedEpoch`
@@ -156,7 +157,7 @@ impl FinalizedEpochs {
     }
 }
 
-///
+/// Sealed epoch with one or more claims
 #[derive(Clone, Debug)]
 pub struct EpochWithClaims {
     pub epoch_number: U256,
@@ -164,7 +165,7 @@ pub struct EpochWithClaims {
     pub inputs: EpochInputState,
 }
 
-///
+/// Active epoch currently receiveing inputs
 #[derive(Clone, Debug)]
 pub struct AccumulatingEpoch {
     pub epoch_number: U256,
@@ -183,68 +184,62 @@ impl AccumulatingEpoch {
 ///
 #[derive(Clone, Debug)]
 pub enum PhaseState {
+    /// No claims or disputes going on, the previous epoch was finalized
+    /// successfully and the current epoch is still accumulating inputs
     InputAccumulation {},
 
-    EpochSealedAwaitingFirstClaim {
-        sealed_epoch: AccumulatingEpoch,
-    },
+    /// `current_epoch` is no longer accepting inputs but hasn't yet received
+    /// a claim
+    EpochSealedAwaitingFirstClaim { sealed_epoch: AccumulatingEpoch },
 
-    AwaitingConsensusNoConflict {
-        claimed_epoch: EpochWithClaims,
-    },
+    /// Epoch has been claimed but a dispute has yet to arise
+    AwaitingConsensusNoConflict { claimed_epoch: EpochWithClaims },
 
+    /// Epoch being claimed was previously challenged and there is a standing
+    /// claim that can be challenged
     AwaitingConsensusAfterConflict {
         claimed_epoch: EpochWithClaims,
         challenge_period_base_ts: U256,
     },
+    /// Consensus was not reached but the last 'challenge_period' is over. Epoch
+    /// can be finalized at any time by anyone
+    ConsensusTimeout { claimed_epoch: EpochWithClaims },
 
-    ConsensusTimeout {
-        claimed_epoch: EpochWithClaims,
-    },
-
-    AwaitingDispute {
-        claimed_epoch: EpochWithClaims,
-    },
+    /// Unreacheable
+    AwaitingDispute { claimed_epoch: EpochWithClaims },
     // TODO: add dispute timeout when disputes are turned on.
-}
-
-impl PhaseState {
-    pub fn start_of_challenging_period(&self) -> Option<U256> {
-        match self {
-            PhaseState::AwaitingConsensusNoConflict {
-                claimed_epoch, ..
-            } => Some(claimed_epoch.claims.first_claim_timestamp()),
-
-            PhaseState::AwaitingConsensusAfterConflict {
-                challenge_period_base_ts,
-                ..
-            } => Some(*challenge_period_base_ts),
-
-            _ => None,
-        }
-    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ImmutableState {
-    pub input_duration: U256, // duration of input accumulation phase in seconds
-    pub challenge_period: U256, // duration of challenge period in seconds
-    pub contract_creation_timestamp: U256, // timestamp of the contract creation
+    /// duration of input accumulation phase in seconds
+    pub input_duration: U256,
 
-    pub input_contract_address: Address, // contract responsible for inputs
-    pub output_contract_address: Address, // contract responsible for ouputs
-    pub validator_contract_address: Address, // contract responsible for validators
-    pub dispute_contract_address: Address, // contract responsible for dispute resolution
+    /// duration of challenge period in seconds
+    pub challenge_period: U256,
+
+    /// timestamp of the contract creation
+    pub contract_creation_timestamp: U256,
+
+    /// contract responsible for inputs
+    pub input_contract_address: Address,
+
+    /// contract responsible for ouputs
+    pub output_contract_address: Address,
+
+    /// contract responsible for validators
+    pub validator_contract_address: Address,
+
+    /// contract responsible for dispute resolution
+    pub dispute_contract_address: Address,
 }
 
 #[derive(Clone, Debug)]
 pub struct DescartesV2State {
-    // TODO: Add these for frontend.
-    // pub first_claim_timestamp: Option<U256>, // Only used for frontend
     pub constants: ImmutableState,
 
     pub initial_epoch: U256,
-    pub finalized_epochs: FinalizedEpochs, // EpochNumber -> Epoch
+    pub finalized_epochs: FinalizedEpochs,
     pub current_epoch: AccumulatingEpoch,
 
     pub current_phase: PhaseState,
