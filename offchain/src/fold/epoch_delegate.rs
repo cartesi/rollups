@@ -58,6 +58,8 @@ type FinalizedEpochStateFold<DA> =
     Arc<StateFold<FinalizedEpochFoldDelegate<DA>, DA>>;
 
 /// Epoch StateActor Delegate, which implements `sync` and `fold`.
+/// It uses the subdelegates to extracts the raw state from blockchain
+/// emitted events
 pub struct EpochFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
     descartesv2_address: Address,
     accumulating_epoch_fold: AccumulatingEpochStateFold<DA>,
@@ -81,8 +83,6 @@ impl<DA: DelegateAccess + Send + Sync + 'static> EpochFoldDelegate<DA> {
     }
 }
 
-// The epoch fold delegate, using the subdelegates, extracts the raw state from
-// blockchain emitted events
 #[async_trait]
 impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     for EpochFoldDelegate<DA>
