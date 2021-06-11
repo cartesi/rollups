@@ -1,7 +1,9 @@
 use super::contracts::descartesv2_contract::*;
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
 use super::sealed_epoch_delegate::SealedEpochState;
-use super::types::{AccumulatingEpoch, DescartesV2State, ImmutableState, PhaseState};
+use super::types::{
+    AccumulatingEpoch, DescartesV2State, ImmutableState, PhaseState,
+};
 
 use dispatcher::state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
@@ -37,7 +39,9 @@ impl<DA: DelegateAccess + Send + Sync + 'static> DescartesV2FoldDelegate<DA> {
 }
 
 #[async_trait]
-impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate for DescartesV2FoldDelegate<DA> {
+impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
+    for DescartesV2FoldDelegate<DA>
+{
     type InitialState = U256; // Initial epoch
     type Accumulator = DescartesV2State;
     type State = BlockState<Self::Accumulator>;
@@ -52,7 +56,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate for Descartes
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract = DescartesV2Impl::new(self.descartesv2_address, Arc::clone(&middleware));
+        let contract = DescartesV2Impl::new(
+            self.descartesv2_address,
+            Arc::clone(&middleware),
+        );
 
         // Retrieve constants from contract creation event
         let constants = {
@@ -140,7 +147,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate for Descartes
         ))
     }
 
-    fn convert(&self, accumulator: &BlockState<Self::Accumulator>) -> Self::State {
+    fn convert(
+        &self,
+        accumulator: &BlockState<Self::Accumulator>,
+    ) -> Self::State {
         accumulator.clone()
     }
 }
@@ -179,8 +189,11 @@ fn convert_raw_to_logical(
             // If input duration has passed, the logical state is epoch sealed
             // awaiting first claim. The raw state can still be InputAccumulation
             // if there were no new inputs after the phase expired.
-            if block.timestamp > input_accumulation_start_timestamp + constants.input_duration {
-                current_epoch_no_inputs = Some(contract_state.current_epoch.epoch_number + 1);
+            if block.timestamp
+                > input_accumulation_start_timestamp + constants.input_duration
+            {
+                current_epoch_no_inputs =
+                    Some(contract_state.current_epoch.epoch_number + 1);
                 PhaseState::EpochSealedAwaitingFirstClaim {
                     sealed_epoch: contract_state.current_epoch.clone(),
                 }
@@ -202,7 +215,8 @@ fn convert_raw_to_logical(
                 }
 
                 SealedEpochState::SealedEpochWithClaims { claimed_epoch } => {
-                    let first_claim_timestamp = claimed_epoch.claims.first_claim_timestamp();
+                    let first_claim_timestamp =
+                        claimed_epoch.claims.first_claim_timestamp();
 
                     // We can safely unwrap because we can be sure
                     // there was at least one phase change event.
@@ -214,16 +228,22 @@ fn convert_raw_to_logical(
                     // the first claim or the phase change. This happens because
                     // the 'challenge period' starts on first claim but resets
                     // after a dispute.
-                    let time_of_last_move =
-                        std::cmp::max(first_claim_timestamp, phase_change_timestamp);
+                    let time_of_last_move = std::cmp::max(
+                        first_claim_timestamp,
+                        phase_change_timestamp,
+                    );
 
                     // Check if Consensus timed out or, using the first claim
                     // timestamp variable, decide if this is the first challenge
                     // period of this epoch or if it is posterior to a dispute
-                    if block.timestamp > time_of_last_move + constants.challenge_period {
+                    if block.timestamp
+                        > time_of_last_move + constants.challenge_period
+                    {
                         PhaseState::ConsensusTimeout { claimed_epoch }
                     } else if time_of_last_move == first_claim_timestamp {
-                        PhaseState::AwaitingConsensusNoConflict { claimed_epoch }
+                        PhaseState::AwaitingConsensusNoConflict {
+                            claimed_epoch,
+                        }
                     } else {
                         PhaseState::AwaitingConsensusAfterConflict {
                             claimed_epoch,
