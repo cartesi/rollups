@@ -50,6 +50,7 @@ impl StateFoldDelegate for InputFoldDelegate {
             )
             .await;
 
+        // Retrieve `InputAdded` events
         let events = contract
             .input_added_filter()
             .topic1(epoch_number)
@@ -76,6 +77,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
+        // If not in bloom copy previous state
         if !(fold_utils::contains_address(
             &block.logs_bloom,
             &self.input_address,
