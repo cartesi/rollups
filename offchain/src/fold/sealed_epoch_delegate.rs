@@ -115,6 +115,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 err: "Error querying for descartes claims",
             })?;
 
+        // If there are no claim, state is SealedEpochNoClaims
         if claim_events.is_empty() {
             return Ok(SealedEpochState::SealedEpochNoClaims {
                 sealed_epoch: AccumulatingEpoch {
@@ -128,6 +129,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         for (claim_event, meta) in claim_events {
             claims = Some(match claims {
                 None => {
+                    // If first claim, get timestamp
                     let timestamp = middleware
                         .get_block(meta.block_hash)
                         .await
@@ -205,6 +207,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 err: "Error querying for descartes claims",
             })?;
 
+        // if there are no new claims, return epoch's old claims (might be empty)
         if claim_events.is_empty() {
             return Ok(previous_state.clone());
         }
@@ -213,6 +216,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         for (claim_event, _) in claim_events {
             claims = Some(match claims {
                 None => {
+                    // If this is the first claim in epoch, get block timestamp
+                    // and create new claim
                     let timestamp = block.timestamp;
                     Claims::new(
                         claim_event.epoch_hash.into(),
@@ -222,6 +227,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 }
 
                 Some(mut c) => {
+                    // else there are other claims, timestamp is uninmportant
                     c.insert_claim(
                         claim_event.epoch_hash.into(),
                         claim_event.claimer,
