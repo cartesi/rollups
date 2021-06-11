@@ -12,23 +12,16 @@ use dispatcher::types::Block;
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use ethers::types::{Address, H256, U256};
+use ethers::types::{H256, U256};
 
 /// Accumulating epoch StateFold Delegate
 pub struct AccumulatingEpochFoldDelegate<DA: DelegateAccess> {
-    descartesv2_address: Address,
     input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
 }
 
 impl<DA: DelegateAccess> AccumulatingEpochFoldDelegate<DA> {
-    pub fn new(
-        descartesv2_address: Address,
-        input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
-    ) -> Self {
-        Self {
-            descartesv2_address,
-            input_fold,
-        }
+    pub fn new(input_fold: Arc<StateFold<InputFoldDelegate, DA>>) -> Self {
+        Self { input_fold }
     }
 }
 
