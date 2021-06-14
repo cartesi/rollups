@@ -171,9 +171,9 @@
     "@openzeppelin/contracts" "3.2.1-solc-0.7"
 
 "@cartesi/util@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@cartesi/util/-/util-3.0.0.tgz#ec335c28a2dc1398a763a0a7c64236865229a78e"
-  integrity sha512-TNou4SGGGomakaSFhHYVivtZCkiTQLWgtNqS+7c71cBaZGrtzSNG7f4vMJc9AkIIyH6muBP9yHOk3tHAm6TRcg==
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@cartesi/util/-/util-3.1.0.tgz#fd90c9669a2cd8fb9312f32d329eea5df8ca243d"
+  integrity sha512-a33KX1G7P/rZzQ7awwXxGwepWNEpt7AkX8v9C62WFLZhlIWaE7N54lPwtlpU2U5P1zTC3feWuax3ac8UocjGwA==
 
 "@ensdomains/ens@^0.4.4":
   version "0.4.5"
