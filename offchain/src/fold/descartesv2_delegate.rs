@@ -29,7 +29,7 @@ pub struct DescartesV2FoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
 impl<DA: DelegateAccess + Send + Sync + 'static> DescartesV2FoldDelegate<DA> {
     pub fn new(
         descartesv2_address: Address,
-        epoch_fold: StateFold<EpochFoldDelegate<DA>, DA>,
+        epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
     ) -> Self {
         Self {
             descartesv2_address,
