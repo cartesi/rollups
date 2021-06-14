@@ -267,9 +267,9 @@ contract DescartesV2Impl is DescartesV2 {
     /// @notice returns index of current (accumulating) epoch
     /// @return index of current epoch
     /// @dev if phase is input accumulation, then the epoch number is length
-    //       of finalized epochs array, else there are two epochs two non
-    //       finalized epochs, one awaiting consensus/dispute and another
-    //      accumulating input
+    //       of finalized epochs array, else there are two non finalized epochs,
+    //       one awaiting consensus/dispute and another accumulating input
+
     function getCurrentEpoch() public view override returns (uint256) {
         uint256 finalizedEpochs = output.getNumberOfFinalizedEpochs();
 
