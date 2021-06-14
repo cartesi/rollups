@@ -225,13 +225,11 @@ contract DescartesV2Impl is DescartesV2 {
 
         bytes32 finalClaim = validatorManager.onNewEpoch();
 
+        // emit event before finalized epoch is added to outputs storage
+        emit FinalizeEpoch(output.getNumberOfFinalizedEpochs(), finalClaim);
+
         output.onNewEpoch(finalClaim);
         input.onNewEpoch();
-
-        // -1 because the numberOfFinalEpochs increases before this call
-        // in output.onNewEpoch().So, if epoch 0 is finalized, the return
-        // of  getNumberOfFinalizedEpochs is going to be 1.
-        emit FinalizeEpoch(output.getNumberOfFinalizedEpochs() - 1, finalClaim);
     }
 
     /// @notice resolve results returned by validator manager

@@ -713,7 +713,7 @@ describe("Descartes V2 Implementation", () => {
         )
             .to.emit(descartesV2Impl, "FinalizeEpoch")
             .withArgs(
-                numberOfFinalizedEpochs - 1,
+                numberOfFinalizedEpochs,
                 ethers.utils.formatBytes32String("hello")
             );
     });
