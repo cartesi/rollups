@@ -27,10 +27,13 @@ pub type DescartesTxManager = Arc<
     >,
 >;
 
-pub async fn create_tx_manager(
+pub type DescartesBlockSubscriber = Arc<BlockSubscriber<WsProviderFactory>>;
+
+pub async fn instantiate_tx_manager(
     config: &Config,
 ) -> Result<(
     BlockSubscriberHandle<<WsProviderFactory as MiddlewareFactory>::Middleware>,
+    DescartesBlockSubscriber,
     DescartesTxManager,
 )> {
     let middleware_factory = create_http_factory(config)?;
@@ -38,11 +41,11 @@ pub async fn create_tx_manager(
     let (block_subscriber, handle) = create_block_subscriber(config).await?;
     let transaction_manager = Arc::new(TransactionManager::new(
         factory,
-        block_subscriber,
+        Arc::clone(&block_subscriber),
         config.max_retries,
         config.max_delay,
     ));
-    Ok((handle, transaction_manager))
+    Ok((handle, block_subscriber, transaction_manager))
 }
 
 async fn create_ws_factory(config: &Config) -> Result<Arc<WsProviderFactory>> {

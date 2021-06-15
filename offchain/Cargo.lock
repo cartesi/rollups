@@ -1366,6 +1366,7 @@ dependencies = [
  "im",
  "serde_json",
  "snafu",
+ "tokio",
  "transaction_manager",
  "url",
 ]
