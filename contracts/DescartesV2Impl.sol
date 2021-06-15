@@ -23,7 +23,7 @@
 /// @title Interface DescartesV2 contract
 pragma solidity ^0.8.0;
 
-import "./Input.sol";
+import "./InputImpl.sol";
 import "./Output.sol";
 import "./ValidatorManager.sol";
 import "./DescartesV2.sol";
@@ -53,7 +53,7 @@ contract DescartesV2Impl is DescartesV2 {
     uint256 immutable inputDuration; // duration of input accumulation phase in seconds
     uint256 immutable challengePeriod; // duration of challenge period in seconds
 
-    Input immutable input; // contract responsible for inputs
+    Input public input; // contract responsible for inputs
     Output immutable output; // contract responsible for ouputs
     ValidatorManager immutable validatorManager; // contract responsible for validators
     DisputeManager immutable disputeManager; // contract responsible for dispute resolution
@@ -81,24 +81,25 @@ contract DescartesV2Impl is DescartesV2 {
     }
 
     /// @notice creates contract
-    /// @param _input address of input contract
     /// @param _output address of output contract
     /// @param _validatorManager address of validatorManager contract
     /// @param _disputeManager address of disputeManager contract
     /// @param _inputDuration duration of input accumulation phase in seconds
     /// @param _challengePeriod duration of challenge period in seconds
     constructor(
-        address _input,
         address _output,
         address _validatorManager,
         address _disputeManager,
         uint256 _inputDuration,
-        uint256 _challengePeriod
+        uint256 _challengePeriod,
+        uint8 _inputLog2Size
     ) {
-        input = Input(_input);
         output = Output(_output);
         validatorManager = ValidatorManager(_validatorManager);
         disputeManager = DisputeManager(_disputeManager);
+
+        //
+        input = new InputImpl(address(this), _inputLog2Size);
         inputDuration = _inputDuration;
         challengePeriod = _challengePeriod;
 
@@ -106,7 +107,7 @@ contract DescartesV2Impl is DescartesV2 {
         currentPhase = Phase.InputAccumulation;
 
         emit DescartesV2Created(
-            _input,
+            address(input),
             _output,
             _validatorManager,
             _disputeManager,

@@ -29,6 +29,7 @@ describe("Descartes V2 Implementation", () => {
 
     let descartesV2Impl: DescartesV2Impl;
 
+    const inputLog2Size = 25; // What is a good number for this?
     const inputDuration = 100;
     const challengePeriod = 100;
 
@@ -75,12 +76,13 @@ describe("Descartes V2 Implementation", () => {
         const descartesV2ImplFactory = new DescartesV2Impl__factory(signers[0]);
 
         descartesV2Impl = await descartesV2ImplFactory.deploy(
-            mockInput.address,
             mockOutput.address,
             mockValidatorManager.address,
             mockDisputeManager.address,
             inputDuration,
-            challengePeriod
+            challengePeriod,
+            inputLog2Size
+
         );
 
         await mockOutput.mock.getNumberOfFinalizedEpochs.returns(
@@ -564,7 +566,7 @@ describe("Descartes V2 Implementation", () => {
         let eventArgs = event[0]["args"]; // get 'args' from the first DescartesV2Created event
 
         expect(eventArgs["_input"], "input address").to.equal(
-            mockInput.address
+            await descartesV2Impl.input()
         );
 
         expect(eventArgs["_output"], "output address").to.equal(
