@@ -54,9 +54,9 @@ contract DescartesV2Impl is DescartesV2 {
     uint256 immutable challengePeriod; // duration of challenge period in seconds
 
     Input public input; // contract responsible for inputs
-    Output immutable output; // contract responsible for ouputs
-    ValidatorManager immutable validatorManager; // contract responsible for validators
-    DisputeManager immutable disputeManager; // contract responsible for dispute resolution
+    Output public immutable output; // contract responsible for ouputs
+    ValidatorManager public immutable validatorManager; // contract responsible for validators
+    DisputeManager public immutable disputeManager; // contract responsible for dispute resolution
 
     uint256 public inputAccumulationStart; // timestamp when current input accumulation phase started
     uint256 public sealingEpochTimestamp; // timestamp on when a proposed epoch (claim) becomes challengeable
