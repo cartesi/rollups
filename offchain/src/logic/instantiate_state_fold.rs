@@ -1,20 +1,9 @@
-use super::fold::types::*;
-use super::instantiate_state_fold::*;
-
-use dispatcher::state_fold::types::BlockState;
-
-fn react(state: BlockState<DescartesV2State>) {
-    todo!()
-}
-
-/*
+use super::error::*;
 use super::fold::*;
 use dispatcher::state_fold::Access;
 
 use ethers::core::types::{Address, U64};
 use ethers::providers::{Http, Provider};
-
-use super::error::*;
 
 use snafu::ResultExt;
 use std::convert::TryFrom;
@@ -44,7 +33,7 @@ pub fn instantiate_state_fold(
 
 fn create_provider(url: String) -> Result<Arc<Provider<Http>>> {
     Ok(Arc::new(
-        Provider::<Http>::try_from(url).context(UrlParseError {})?,
+        Provider::<Http>::try_from(url.clone()).context(UrlParseError {})?,
     ))
 }
 
@@ -69,4 +58,3 @@ impl From<&Config> for SetupConfig {
         }
     }
 }
-*/

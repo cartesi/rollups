@@ -1,4 +1,4 @@
-mod fold;
+pub mod fold;
 mod logic;
 
 fn main() {
