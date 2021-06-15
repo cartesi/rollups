@@ -39,6 +39,8 @@ async fn main_loop(config: &Config) -> Result<()> {
         instantiate_tx_manager(&config.into()).await?;
     let state_fold = instantiate_state_fold(&config.into())?;
 
+    // Start MachineManager session request
+
     let mut subscription = block_subscriber
         .subscribe()
         .await
@@ -66,6 +68,40 @@ async fn react(
     state: BlockState<DescartesV2State>,
     tx_manager: &DescartesTxManager,
 ) {
+    // Update MM finalized epochs.
+    // Discover latest MM epoch, compare with finalized epochs, update MM to
+    // finalized epochs.
+
+    match state.state.current_phase {
+        PhaseState::InputAccumulation {} => {
+            // Discover latest MM accumulating input index
+            // Enqueue diff one by one
+            // React idle.
+        }
+
+        PhaseState::EpochSealedAwaitingFirstClaim { sealed_epoch } => {
+            // On EpochSealedAwaitingFirstClaim we have two unfinalized epochs:
+            // sealed and accumulating.
+
+            // If MM is on sealed epoch, discover latest MM input index.
+            // enqueue remaining inputs and SessionFinishEpochRequest.
+            // React claim.
+
+            // Then, enqueue accumulating inputs.
+        }
+
+        PhaseState::AwaitingConsensusNoConflict { claimed_epoch } => {}
+
+        PhaseState::AwaitingConsensusAfterConflict {
+            claimed_epoch,
+            challenge_period_base_ts,
+        } => {}
+
+        PhaseState::ConsensusTimeout { claimed_epoch } => {}
+
+        /// Unreacheable
+        PhaseState::AwaitingDispute { claimed_epoch } => {}
+    }
     todo!()
 }
 
