@@ -82,18 +82,18 @@ describe("Descartes V2 Implementation", () => {
             inputDuration,
             challengePeriod,
             inputLog2Size
-
         );
 
+        //this may be needed when emit events
         await mockOutput.mock.getNumberOfFinalizedEpochs.returns(
             numberOfFinalizedEpochs
-        ); //this may be needed when emit events
+        );
 
         // this is needed when a claim forces input box swap
         await mockInput.mock.onNewInputAccumulation.returns();
     });
 
-    /// ***test function currentPhase()*** ///
+    /// ***test public variable currentPhase*** ///
     it("initial phase should be InputAccumulation", async () => {
         expect(
             await descartesV2Impl.currentPhase(),
@@ -592,10 +592,11 @@ describe("Descartes V2 Implementation", () => {
         );
     });
 
-    it("event Claim", async () => {
+    it("event Claim for NoConflict and Conflict", async () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
+        // first claim
         await mockValidatorManager.mock.onClaim.returns(
             Result.NoConflict,
             [
@@ -604,12 +605,6 @@ describe("Descartes V2 Implementation", () => {
             ],
             [address_zero, address_zero]
         );
-
-        //TODO: Add test case for claims that have a different Result
-        //      like consensus
-        // if the Claim resulted on a new epoch the argument should be
-        // numberOfFinalizedEpochs - 1, because the claim is for the epoch
-        // that was just finished (which is now being counted as finalized)
         await expect(
             descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
         )
@@ -617,6 +612,72 @@ describe("Descartes V2 Implementation", () => {
             .withArgs(
                 numberOfFinalizedEpochs,
                 await signers[0].getAddress(),
+                ethers.utils.formatBytes32String("hello")
+            );
+
+        // second claim, conflict
+        await mockValidatorManager.mock.onClaim.returns(
+            Result.Conflict,
+            [
+                ethers.utils.formatBytes32String("hello"),
+                ethers.utils.formatBytes32String("halo"),
+            ],
+            [await signers[0].getAddress(), await signers[1].getAddress()]
+        );
+        await expect(
+            descartesV2Impl
+                .connect(signers[1])
+                .claim(ethers.utils.formatBytes32String("halo"))
+        )
+            .to.emit(descartesV2Impl, "Claim")
+            .withArgs(
+                numberOfFinalizedEpochs,
+                await signers[1].getAddress(),
+                ethers.utils.formatBytes32String("halo")
+            );
+    });
+
+    it("event Claim for Consensus", async () => {
+        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
+        await network.provider.send("evm_mine");
+
+        // mock returns
+        await mockValidatorManager.mock.onNewEpoch.returns(
+            ethers.utils.formatBytes32String("hello")
+        );
+        await mockOutput.mock.onNewEpoch.returns();
+        await mockInput.mock.onNewEpoch.returns();
+        await mockDisputeManager.mock.initiateDispute.returns();
+
+        // first claim
+        await mockValidatorManager.mock.onClaim.returns(
+            Result.NoConflict,
+            [
+                ethers.utils.formatBytes32String("\0"),
+                ethers.utils.formatBytes32String("\0"),
+            ],
+            [address_zero, address_zero]
+        );
+        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
+
+        // second claim, consensus
+        await mockValidatorManager.mock.onClaim.returns(
+            Result.Consensus,
+            [
+                ethers.utils.formatBytes32String("hello"),
+                ethers.utils.formatBytes32String("\0"),
+            ],
+            [await signers[2].getAddress(), address_zero]
+        );
+        await expect(
+            descartesV2Impl
+                .connect(signers[2])
+                .claim(ethers.utils.formatBytes32String("hello"))
+        )
+            .to.emit(descartesV2Impl, "Claim")
+            .withArgs(
+                numberOfFinalizedEpochs,
+                await signers[2].getAddress(),
                 ethers.utils.formatBytes32String("hello")
             );
     });
@@ -684,7 +745,9 @@ describe("Descartes V2 Implementation", () => {
         );
         await mockDisputeManager.mock.initiateDispute.returns();
         await expect(
-            descartesV2Impl.claim(ethers.utils.formatBytes32String("halo"))
+            descartesV2Impl
+                .connect(signers[1])
+                .claim(ethers.utils.formatBytes32String("halo"))
         )
             .to.emit(descartesV2Impl, "PhaseChange")
             .withArgs(Phase.AwaitingDispute);
@@ -708,8 +771,6 @@ describe("Descartes V2 Implementation", () => {
         await mockOutput.mock.onNewEpoch.returns();
         await mockInput.mock.onNewEpoch.returns();
 
-        // numberOfFinalizedEpochs - 1 because the epoch is finalized
-        // before the event is emitted.
         await expect(
             descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
         )
@@ -756,6 +817,215 @@ describe("Descartes V2 Implementation", () => {
                     await signers[1].getAddress(),
                     ethers.utils.formatBytes32String("hello")
                 );
+        });
+    }
+
+    it("getCurrentEpoch() without conflict", async () => {
+        await mockOutput.mock.getNumberOfFinalizedEpochs.returns(0);
+        // initial epoch number
+        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(0);
+
+        let epochNum = 0;
+
+        // epoch number increases when input accumulation finishes
+        // the length of finalized epochs array increases upon consensus without conflict
+        for (let i = 0; i < 9; i++) {
+            // input accumulation
+            expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+
+            // input accumulation over
+            // ***epoch increases by 1***
+            // but output.getNumberOfFinalizedEpochs() stays the same temporarily
+            await network.provider.send("evm_increaseTime", [
+                inputDuration + 1,
+            ]);
+            await network.provider.send("evm_mine");
+            epochNum++;
+
+            // first 3 claims
+            await mockValidatorManager.mock.onClaim.returns(
+                Result.NoConflict,
+                [
+                    ethers.utils.formatBytes32String("\0"),
+                    ethers.utils.formatBytes32String("\0"),
+                ],
+                [address_zero, address_zero]
+            );
+            await expect(
+                descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
+            )
+                .to.emit(descartesV2Impl, "Claim")
+                .withArgs(
+                    epochNum - 1, // claim for the previous epoch
+                    await signers[0].getAddress(),
+                    ethers.utils.formatBytes32String("hello")
+                );
+            await descartesV2Impl
+                .connect(signers[1])
+                .claim(ethers.utils.formatBytes32String("hello"));
+            await descartesV2Impl
+                .connect(signers[2])
+                .claim(ethers.utils.formatBytes32String("hello"));
+            expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+
+            // 4th claim => Consensus
+            await mockValidatorManager.mock.onClaim.returns(
+                Result.Consensus,
+                [
+                    ethers.utils.formatBytes32String("hello"),
+                    ethers.utils.formatBytes32String("\0"),
+                ],
+                [await signers[3].getAddress(), address_zero]
+            );
+            await mockValidatorManager.mock.onNewEpoch.returns(
+                ethers.utils.formatBytes32String("hello")
+            );
+            await mockOutput.mock.onNewEpoch.returns();
+            await mockInput.mock.onNewEpoch.returns();
+            await expect(
+                descartesV2Impl
+                    .connect(signers[3])
+                    .claim(ethers.utils.formatBytes32String("hello"))
+            )
+                .to.emit(descartesV2Impl, "Claim")
+                .withArgs(
+                    epochNum - 1, // claim for the previous epoch
+                    await signers[3].getAddress(),
+                    ethers.utils.formatBytes32String("hello")
+                );
+            // enter input accumulation again
+            // ***the length of finalized epochs array increases by 1***
+            // now it is the same as the epoch number
+            await mockOutput.mock.getNumberOfFinalizedEpochs.returns(epochNum);
+            expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+        }
+    });
+
+    // modifiers off
+    if (!permissionModifiersOn) {
+        it("getCurrentEpoch() with conflict", async () => {
+            await mockOutput.mock.getNumberOfFinalizedEpochs.returns(0);
+            // initial epoch number
+            expect(await descartesV2Impl.getCurrentEpoch()).to.equal(0);
+
+            let epochNum = 0;
+
+            // epoch number increases when input accumulation finishes
+            // the length of finalized epochs array increases upon consensus after conflicts resolved
+            for (let i = 0; i < 9; i++) {
+                // input accumulation
+                expect(await descartesV2Impl.getCurrentEpoch()).to.equal(
+                    epochNum
+                );
+
+                // input accumulation over
+                // ***epoch increases by 1***
+                // but output.getNumberOfFinalizedEpochs() stays the same temporarily
+                await network.provider.send("evm_increaseTime", [
+                    inputDuration + 1,
+                ]);
+                await network.provider.send("evm_mine");
+                epochNum++;
+
+                // first claim
+                await mockValidatorManager.mock.onClaim.returns(
+                    Result.NoConflict,
+                    [
+                        ethers.utils.formatBytes32String("\0"),
+                        ethers.utils.formatBytes32String("\0"),
+                    ],
+                    [address_zero, address_zero]
+                );
+                await expect(
+                    descartesV2Impl.claim(
+                        ethers.utils.formatBytes32String("hello")
+                    )
+                )
+                    .to.emit(descartesV2Impl, "Claim")
+                    .withArgs(
+                        epochNum - 1, // claim for the previous epoch
+                        await signers[0].getAddress(),
+                        ethers.utils.formatBytes32String("hello")
+                    );
+                expect(await descartesV2Impl.getCurrentEpoch()).to.equal(
+                    epochNum
+                );
+
+                // 2nd claim => conflict
+                await mockValidatorManager.mock.onClaim.returns(
+                    Result.Conflict,
+                    [
+                        ethers.utils.formatBytes32String("hello"),
+                        ethers.utils.formatBytes32String("halo"),
+                    ],
+                    [
+                        await signers[0].getAddress(),
+                        await signers[1].getAddress(),
+                    ]
+                );
+                await mockDisputeManager.mock.initiateDispute.returns();
+                await expect(
+                    descartesV2Impl
+                        .connect(signers[1])
+                        .claim(ethers.utils.formatBytes32String("halo"))
+                )
+                    .to.emit(descartesV2Impl, "Claim")
+                    .withArgs(
+                        epochNum - 1, // claim for the previous epoch
+                        await signers[1].getAddress(),
+                        ethers.utils.formatBytes32String("halo")
+                    );
+
+                // resolve dispute
+                await mockValidatorManager.mock.onDisputeEnd.returns(
+                    Result.NoConflict,
+                    [
+                        ethers.utils.formatBytes32String("\0"),
+                        ethers.utils.formatBytes32String("\0"),
+                    ],
+                    [address_zero, address_zero]
+                );
+                await descartesV2Impl.resolveDispute(
+                    await signers[0].getAddress(),
+                    await signers[1].getAddress(),
+                    ethers.utils.formatBytes32String("hello")
+                );
+
+                // 3rd claim => Consensus
+                await mockValidatorManager.mock.onClaim.returns(
+                    Result.Consensus,
+                    [
+                        ethers.utils.formatBytes32String("hello"),
+                        ethers.utils.formatBytes32String("\0"),
+                    ],
+                    [await signers[2].getAddress(), address_zero]
+                );
+                await mockValidatorManager.mock.onNewEpoch.returns(
+                    ethers.utils.formatBytes32String("hello")
+                );
+                await mockOutput.mock.onNewEpoch.returns();
+                await mockInput.mock.onNewEpoch.returns();
+                await expect(
+                    descartesV2Impl
+                        .connect(signers[2])
+                        .claim(ethers.utils.formatBytes32String("hello"))
+                )
+                    .to.emit(descartesV2Impl, "Claim")
+                    .withArgs(
+                        epochNum - 1, // claim for the previous epoch
+                        await signers[2].getAddress(),
+                        ethers.utils.formatBytes32String("hello")
+                    );
+                // enter input accumulation again
+                // ***the length of finalized epochs array increases by 1***
+                // now it is the same as the epoch number
+                await mockOutput.mock.getNumberOfFinalizedEpochs.returns(
+                    epochNum
+                );
+                expect(await descartesV2Impl.getCurrentEpoch()).to.equal(
+                    epochNum
+                );
+            }
         });
     }
 });
