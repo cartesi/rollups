@@ -624,6 +624,7 @@ describe("Descartes V2 Implementation", () => {
             ],
             [await signers[0].getAddress(), await signers[1].getAddress()]
         );
+        await mockDisputeManager.mock.initiateDispute.returns();
         await expect(
             descartesV2Impl
                 .connect(signers[1])
@@ -647,7 +648,6 @@ describe("Descartes V2 Implementation", () => {
         );
         await mockOutput.mock.onNewEpoch.returns();
         await mockInput.mock.onNewEpoch.returns();
-        await mockDisputeManager.mock.initiateDispute.returns();
 
         // first claim
         await mockValidatorManager.mock.onClaim.returns(
