@@ -10,6 +10,7 @@ edition = "2018"
 dispatcher = { path = "../dispatcher-v2/dispatcher"}
 transaction_manager = { path = "../dispatcher-v2/transaction_manager"}
 
+async-recursion = "0.3.2"
 async-trait = "0.1"
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "28c5c4f" }
 ethabi = { version = "14.0.0", default-features = false }

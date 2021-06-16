@@ -1,3 +1,4 @@
+use ethers::abi::{encode, Token};
 use ethers::types::{Address, H256, U256, U64};
 use im::{HashMap, HashSet, Vector};
 use std::sync::Arc;
@@ -8,6 +9,24 @@ pub struct Input {
     pub sender: Address,       // TODO: Get from calldata.
     pub timestamp: U256,       // TODO: Get from calldata.
     pub payload: Arc<Vec<u8>>, // TODO: Get from calldata.
+}
+
+impl Input {
+    /// Onchain metadata is abi.encode(msg.sender, block.timestamp)
+    pub fn get_metadata(&self) -> Vec<u8> {
+        let bytes = encode(&[
+            Token::Address(self.sender),
+            Token::Uint(self.timestamp.into()),
+        ]);
+
+        // This encoding must have 64 bytes:
+        // 20 bytes plus 12 zero padding for address,
+        // and 32 for timestamp.
+        // This is only the case because we're using `encode`
+        // and not `encodePacked`.
+        assert_eq!(bytes.len(), 64);
+        bytes
+    }
 }
 
 /// Set of inputs at some epoch
@@ -134,6 +153,17 @@ impl FinalizedEpochs {
         Self {
             finalized_epochs: Vector::new(),
             initial_epoch,
+        }
+    }
+
+    pub fn get_epoch(&self, index: usize) -> Option<FinalizedEpoch> {
+        if index >= self.initial_epoch.as_usize()
+            && index < self.next_epoch().as_usize()
+        {
+            let actual_index = index - self.initial_epoch.as_usize();
+            Some(self.finalized_epochs[actual_index])
+        } else {
+            None
         }
     }
 

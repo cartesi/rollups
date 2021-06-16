@@ -4,12 +4,14 @@ use super::instantiate_state_fold::{self, instantiate_state_fold};
 use super::instantiate_tx_manager::{
     self, instantiate_tx_manager, DescartesTxManager,
 };
+use super::machine::{EpochStatus, MachineInterface, MockMachine};
 
 use dispatcher::block_subscriber::{
     BlockSubscriber, BlockSubscriberHandle, NewBlockSubscriber,
 };
 use dispatcher::state_fold::types::BlockState;
 
+use async_recursion::async_recursion;
 use ethers::core::types::{Address, U256, U64};
 use snafu::ResultExt;
 
@@ -54,7 +56,7 @@ async fn main_loop(config: &Config) -> Result<()> {
                     .await
                     .context(StateFoldError {})?;
 
-                react(state, &tx_manager).await;
+                react(state, &tx_manager, &MockMachine {}).await;
             }
 
             Err(e) => return Err(Error::SubscriberReceiveError { source: e }),
@@ -64,15 +66,29 @@ async fn main_loop(config: &Config) -> Result<()> {
     Ok(())
 }
 
-async fn react(
+async fn react<M: MachineInterface + Sync>(
     state: BlockState<DescartesV2State>,
     tx_manager: &DescartesTxManager,
-) {
-    // Update MM finalized epochs.
-    // Discover latest MM epoch, compare with finalized epochs, update MM to
-    // finalized epochs.
+    machine_manager: &M,
+) -> Result<()> {
+    let state = state.state;
 
-    match state.state.current_phase {
+    let current_epoch_status =
+        machine_manager.get_current_epoch_status().await?;
+
+    let (should_continue, current_epoch_status) =
+        enqueue_inputs_of_finalized_epochs(
+            &state,
+            current_epoch_status,
+            machine_manager,
+        )
+        .await?;
+
+    if !should_continue {
+        return Ok(());
+    }
+
+    match state.current_phase {
         PhaseState::InputAccumulation {} => {
             // Discover latest MM accumulating input index
             // Enqueue diff one by one
@@ -148,6 +164,68 @@ async fn react(
         PhaseState::AwaitingDispute { claimed_epoch } => {}
     }
     todo!()
+}
+
+/// Returns true if react can continue, false otherwise, as well as the new
+/// `current_epoch_status`.
+#[async_recursion]
+async fn enqueue_inputs_of_finalized_epochs<M: MachineInterface + Sync>(
+    state: &DescartesV2State,
+    current_epoch_status: EpochStatus,
+    machine_manager: &M,
+) -> Result<(bool, EpochStatus)> {
+    // Checking if there are finalized_epochs beyond the machine manager.
+    // TODO: comment on index compare.
+    if current_epoch_status.epoch_number >= state.finalized_epochs.next_epoch()
+    {
+        return Ok((true, current_epoch_status));
+    }
+
+    let inputs = state
+        .finalized_epochs
+        .get_epoch(current_epoch_status.epoch_number.as_usize())
+        .expect("We should have more `finalized_epochs` than machine manager")
+        .inputs;
+
+    if current_epoch_status.processed_input_count == inputs.inputs.len() {
+        assert_eq!(
+            current_epoch_status.pending_input_count, 0,
+            "Pending input count should be zero"
+        );
+
+        // Call finalize
+        machine_manager
+            .finish_epoch(
+                current_epoch_status.epoch_number,
+                current_epoch_status.processed_input_count.into(),
+            )
+            .await?;
+
+        let current_epoch_status =
+            machine_manager.get_current_epoch_status().await?;
+
+        // recursively call enqueue_inputs_of_finalized_epochs
+        return enqueue_inputs_of_finalized_epochs(
+            &state,
+            current_epoch_status,
+            machine_manager,
+        )
+        .await;
+    }
+
+    let inputs_sent_count = current_epoch_status.processed_input_count
+        + current_epoch_status.pending_input_count;
+
+    let input_slice = inputs.inputs.clone().slice(inputs_sent_count..);
+    machine_manager
+        .enqueue_inputs(
+            current_epoch_status.epoch_number,
+            inputs_sent_count.into(),
+            input_slice,
+        )
+        .await?;
+
+    Ok((false, current_epoch_status))
 }
 
 impl From<&Config> for instantiate_state_fold::Config {
