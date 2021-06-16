@@ -88,16 +88,61 @@ async fn react(
             // React claim.
 
             // Then, enqueue accumulating inputs.
+
+            // If MM is on accumulating epoch, get claim of previous
+            // epoch (sealed) and
+            // React claim
         }
 
-        PhaseState::AwaitingConsensusNoConflict { claimed_epoch } => {}
+        // F: I actually have the feeling that AwaitingConsensusNoConflict
+        //  and AwaitingConsensusAfterConflict should be unified. The decision
+        //  making for them is the same, they only differ for the delegate
+        //  to check if the Consensus has timedout or not.
+        PhaseState::AwaitingConsensusNoConflict { claimed_epoch } => {
+            // On AwaitingConsensusNoConflict we have two unfinalized epochs:
+            // sealed and accumulating.
+            //
+            // If MM is on sealed epoch, discover latest MM input index.
+            // enqueue remaining inputs and SessionFinishEpochRequest.
+            //
+            // Check if validator's address has claimed, if not call
+            // SessionFinishEpochRequest and
+            // React claim.
+            //
+            // Then, enqueue accumulating inputs.
+        }
 
         PhaseState::AwaitingConsensusAfterConflict {
             claimed_epoch,
             challenge_period_base_ts,
-        } => {}
+        } => {
+            // On AwaitingConsensusConflict we have two unfinalized epochs:
+            // claimed and accumulating.
+            //
+            // If MM is on sealed epoch, discover latest MM input index.
+            // enqueue remaining inputs and SessionFinishEpochRequest.
+            //
+            // Check if validator's address has claimed, if not call
+            // SessionFinishEpochRequest and
+            // React claim.
+            //
+            // Then, enqueue accumulating inputs.
+        }
 
-        PhaseState::ConsensusTimeout { claimed_epoch } => {}
+        PhaseState::ConsensusTimeout { claimed_epoch } => {
+            // On ConsensusTimeout we have two unfinalized epochs:
+            // claimed and accumulating.
+            //
+            // If MM is on claimed epoch, discover latest MM input index.
+            // enqueue remaining inputs and SessionFinishEpochRequest.
+            //
+            // Check if validator local claim for claimed epoch matches
+            // the claim currently standing onchain.
+            // If yes, React finalizeEpoch()
+            // If not, React claim()
+            //
+            // Then, enqueue accumulating inputs.
+        }
 
         /// Unreacheable
         PhaseState::AwaitingDispute { claimed_epoch } => {}
