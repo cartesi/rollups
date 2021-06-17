@@ -31,6 +31,7 @@ import "./Output.sol";
 contract OutputImpl is Output {
     using Bitmask for mapping(uint248 => uint256);
 
+    uint8 constant WORD_LOG2_SIZE = 3; // keccak log2 size
     uint8 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
 
     // max size of output metadata drive 32 * (2^16) bytes
@@ -134,7 +135,7 @@ contract OutputImpl is Output {
             "epoch outputs hash is not represented in the epoch hash"
         );
 
-        // prove that output keccak drive is in outputs drive
+        // prove that output metadata drive is contained in epoch's output drive
         require(
             Merkle.getRootAfterReplacementInDrive(
                 uint64(_v.inputIndex * KECCAK_LOG2_SIZE),
@@ -147,13 +148,38 @@ contract OutputImpl is Output {
         );
 
         bytes32 hashOfOutput = keccak256(_encodedOutput);
-        // prove that the _hashOfOutput is in output keccak drive
+
+        // The hash of the output is converted to bytes (abi.encode) and
+        // treated as data. The metadata output drive stores that data while
+        // being indifferent toits contents. This means that to prove the
+        // received output is contained in the metadata output drive we need to
+        // prove that x where:
+        // x = keccak(
+        //          keccak(
+        //              hashOfOutput[0:8],
+        //              hashOfOutput[8:16]
+        //          ),
+        //          keccak(
+        //              hashOfOutput[16:24],
+        //              hashOfOutput[24:23]
+        //          )
+        //     )
+        // is contained in the drive. Not that just hashOfOutput is contained
+        // in the drive. This happens because the log2size of the leaf is three
+        //  not five
+        bytes32 merkleRootOfHashOfOutput = Merkle.getMerkleRootFromBytes(
+                abi.encodePacked(hashOfOutput),
+                KECCAK_LOG2_SIZE
+            );
+
+        // prove that merkle root hash of bytes(hashOfOutput) is contained
+        // in the output metadata array drive
         require(
             Merkle.getRootAfterReplacementInDrive(
                 uint64(_v.outputIndex * KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
                 OUTPUT_METADATA_LOG2_SIZE,
-                hashOfOutput,
+                merkleRootOfHashOfOutput,
                 _v.outputMetadataProof
             ) == _v.outputMetadataArrayDriveHash,
             "specific output is not contained in output metadata drive hash"
