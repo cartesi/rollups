@@ -31,7 +31,6 @@ import "./Output.sol";
 contract OutputImpl is Output {
     using Bitmask for mapping(uint248 => uint256);
 
-    uint8 constant WORD_LOG2_SIZE = 3; // keccak log2 size
     uint8 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
 
     // max size of output metadata drive 32 * (2^16) bytes
