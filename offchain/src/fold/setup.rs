@@ -6,9 +6,9 @@ use ethers::core::types::Address;
 use std::sync::Arc;
 
 pub struct SetupConfig {
-    safety_margin: usize,
-    input_contract_address: Address,
-    descartes_contract_address: Address,
+    pub safety_margin: usize,
+    pub input_contract_address: Address,
+    pub descartes_contract_address: Address,
 }
 
 pub type DescartesStateFold<DA> =
@@ -48,10 +48,7 @@ fn create_accumulating_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SetupConfig,
 ) -> AccumulatingEpochStateFold<DA> {
-    let delegate = AccumulatingEpochFoldDelegate::new(
-        config.descartes_contract_address,
-        input_fold,
-    );
+    let delegate = AccumulatingEpochFoldDelegate::new(input_fold);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }

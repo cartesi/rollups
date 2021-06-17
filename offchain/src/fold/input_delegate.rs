@@ -1,4 +1,5 @@
-use super::contracts::input_contract::*;
+use crate::contracts::input_contract::*;
+
 use super::types::{EpochInputState, Input};
 
 use dispatcher::state_fold::{

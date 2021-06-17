@@ -1,4 +1,4 @@
-use super::contracts::descartesv2_contract::*;
+use crate::contracts::descartesv2_contract::*;
 
 use super::types::{AccumulatingEpoch, EpochWithClaims, FinalizedEpochs};
 

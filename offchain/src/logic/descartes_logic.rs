@@ -1,10 +1,11 @@
-use super::error::*;
-use super::fold::types::*;
 use super::instantiate_state_fold::{self, instantiate_state_fold};
 use super::instantiate_tx_manager::{
     self, instantiate_tx_manager, DescartesTxManager,
 };
-use super::machine::{EpochStatus, MachineInterface, MockMachine};
+
+use crate::error::*;
+use crate::fold::types::*;
+use crate::machine::{EpochStatus, MachineInterface, MockMachine};
 
 use dispatcher::block_subscriber::{
     BlockSubscriber, BlockSubscriberHandle, NewBlockSubscriber,
@@ -17,24 +18,24 @@ use im::Vector;
 use snafu::ResultExt;
 
 pub struct Config {
-    safety_margin: usize,
-    input_contract_address: Address, // TODO: read from contract.
-    descartes_contract_address: Address,
+    pub safety_margin: usize,
+    pub input_contract_address: Address, // TODO: read from contract.
+    pub descartes_contract_address: Address,
 
-    provider_http_url: String,
-    genesis_block: U64,
-    query_limit_error_codes: Vec<i32>,
-    concurrent_events_fetch: usize,
+    pub provider_http_url: String,
+    pub genesis_block: U64,
+    pub query_limit_error_codes: Vec<i32>,
+    pub concurrent_events_fetch: usize,
 
-    http_endpoint: String,
-    ws_endpoint: String,
-    max_retries: usize,
-    max_delay: std::time::Duration,
+    pub http_endpoint: String,
+    pub ws_endpoint: String,
+    pub max_retries: usize,
+    pub max_delay: std::time::Duration,
 
-    call_timeout: std::time::Duration,
-    subscriber_timeout: std::time::Duration,
+    pub call_timeout: std::time::Duration,
+    pub subscriber_timeout: std::time::Duration,
 
-    initial_epoch: U256,
+    pub initial_epoch: U256,
 }
 
 async fn main_loop(config: &Config, sender: Address) -> Result<()> {
@@ -49,8 +50,9 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
         .await
         .ok_or(EmptySubscription {}.build())?;
 
-    while let block_res = subscription.recv().await {
-        match block_res {
+    loop {
+        // TODO: change to n blocks in the past.
+        match subscription.recv().await {
             Ok(block) => {
                 let state = state_fold
                     .get_state_for_block(&config.initial_epoch, block.hash)
@@ -63,8 +65,6 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
             Err(e) => return Err(Error::SubscriberReceiveError { source: e }),
         }
     }
-
-    Ok(())
 }
 
 async fn react<M: MachineInterface + Sync>(
@@ -367,9 +367,9 @@ impl From<&Config> for instantiate_state_fold::Config {
             input_contract_address: config.input_contract_address,
             descartes_contract_address: config.descartes_contract_address,
 
-            provider_http_url: config.provider_http_url,
+            provider_http_url: config.provider_http_url.clone(),
             genesis_block: config.genesis_block,
-            query_limit_error_codes: config.query_limit_error_codes,
+            query_limit_error_codes: config.query_limit_error_codes.clone(),
             concurrent_events_fetch: config.concurrent_events_fetch,
         }
     }
@@ -379,8 +379,8 @@ impl From<&Config> for instantiate_tx_manager::Config {
     fn from(config: &Config) -> Self {
         let config = config.clone();
         Self {
-            http_endpoint: config.http_endpoint,
-            ws_endpoint: config.ws_endpoint,
+            http_endpoint: config.http_endpoint.clone(),
+            ws_endpoint: config.ws_endpoint.clone(),
             max_retries: config.max_retries,
             max_delay: config.max_delay,
 

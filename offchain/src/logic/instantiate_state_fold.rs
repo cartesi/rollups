@@ -1,5 +1,6 @@
-use super::error::*;
-use super::fold::*;
+use crate::error::*;
+use crate::fold::*;
+
 use dispatcher::state_fold::Access;
 
 use ethers::core::types::{Address, U64};
@@ -10,14 +11,14 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 pub struct Config {
-    safety_margin: usize,
-    input_contract_address: Address, // TODO: read from contract.
-    descartes_contract_address: Address,
+    pub safety_margin: usize,
+    pub input_contract_address: Address, // TODO: read from contract.
+    pub descartes_contract_address: Address,
 
-    provider_http_url: String,
-    genesis_block: U64,
-    query_limit_error_codes: Vec<i32>,
-    concurrent_events_fetch: usize,
+    pub provider_http_url: String,
+    pub genesis_block: U64,
+    pub query_limit_error_codes: Vec<i32>,
+    pub concurrent_events_fetch: usize,
 }
 
 pub type DescartesAccess = Access<Provider<Http>>;
@@ -38,12 +39,12 @@ fn create_provider(url: String) -> Result<Arc<Provider<Http>>> {
 }
 
 fn create_access(config: &Config) -> Result<Arc<DescartesAccess>> {
-    let provider = create_provider(config.provider_http_url)?;
+    let provider = create_provider(config.provider_http_url.clone())?;
 
     Ok(Arc::new(Access::new(
         provider,
         config.genesis_block,
-        config.query_limit_error_codes,
+        config.query_limit_error_codes.clone(),
         config.concurrent_events_fetch,
     )))
 }

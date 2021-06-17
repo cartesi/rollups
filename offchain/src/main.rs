@@ -1,7 +1,9 @@
+pub mod contracts;
 pub mod error;
 pub mod fold;
-mod logic;
 pub mod machine;
+
+mod logic;
 
 fn main() {
     println!("Hello, world!");

@@ -1,4 +1,4 @@
-use super::contracts::descartesv2_contract::*;
+use crate::contracts::descartesv2_contract::*;
 
 use super::input_delegate::InputFoldDelegate;
 use super::types::{

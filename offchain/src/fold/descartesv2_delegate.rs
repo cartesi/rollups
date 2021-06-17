@@ -1,4 +1,5 @@
-use super::contracts::descartesv2_contract::*;
+use crate::contracts::descartesv2_contract::*;
+
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
 use super::sealed_epoch_delegate::SealedEpochState;
 use super::types::{
@@ -23,7 +24,7 @@ use ethers::types::{Address, U256};
 /// DescartesV2 StateActor Delegate, which implements `sync` and `fold`.
 pub struct DescartesV2FoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
     descartesv2_address: Address,
-    epoch_fold: StateFold<EpochFoldDelegate<DA>, DA>,
+    epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
 }
 
 impl<DA: DelegateAccess + Send + Sync + 'static> DescartesV2FoldDelegate<DA> {

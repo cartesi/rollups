@@ -1,4 +1,4 @@
-use super::error::*;
+use crate::error::*;
 
 use dispatcher::block_subscriber::{BlockSubscriber, BlockSubscriberHandle};
 use dispatcher::middleware_factory::{
@@ -10,13 +10,13 @@ use snafu::ResultExt;
 use std::sync::Arc;
 
 pub struct Config {
-    http_endpoint: String,
-    ws_endpoint: String,
-    max_retries: usize,
-    max_delay: std::time::Duration,
+    pub http_endpoint: String,
+    pub ws_endpoint: String,
+    pub max_retries: usize,
+    pub max_delay: std::time::Duration,
 
-    call_timeout: std::time::Duration,
-    subscriber_timeout: std::time::Duration,
+    pub call_timeout: std::time::Duration,
+    pub subscriber_timeout: std::time::Duration,
 }
 
 pub type DescartesTxManager = Arc<

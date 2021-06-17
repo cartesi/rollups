@@ -161,7 +161,7 @@ impl FinalizedEpochs {
             && index < self.next_epoch().as_usize()
         {
             let actual_index = index - self.initial_epoch.as_usize();
-            Some(self.finalized_epochs[actual_index])
+            Some(self.finalized_epochs[actual_index].clone())
         } else {
             None
         }
