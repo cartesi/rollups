@@ -150,9 +150,9 @@ contract OutputImpl is Output {
 
         // The hash of the output is converted to bytes (abi.encode) and
         // treated as data. The metadata output drive stores that data while
-        // being indifferent toits contents. This means that to prove the
-        // received output is contained in the metadata output drive we need to
-        // prove that x where:
+        // being indifferent to its contents. To prove that the received
+        // output is contained in the metadata output drive we need to
+        // prove that x, where:
         // x = keccak(
         //          keccak(
         //              hashOfOutput[0:8],
@@ -163,9 +163,8 @@ contract OutputImpl is Output {
         //              hashOfOutput[24:23]
         //          )
         //     )
-        // is contained in the drive. Not that just hashOfOutput is contained
-        // in the drive. This happens because the log2size of the leaf is three
-        //  not five
+        // is contained in it. We can't simply use hashOfOutput because the
+        // log2size of the leaf is three (8 bytes) not  five (32 bytes)
         bytes32 merkleRootOfHashOfOutput = Merkle.getMerkleRootFromBytes(
                 abi.encodePacked(hashOfOutput),
                 KECCAK_LOG2_SIZE
