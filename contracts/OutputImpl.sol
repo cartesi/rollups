@@ -155,12 +155,12 @@ contract OutputImpl is Output {
         // prove that x, where:
         // x = keccak(
         //          keccak(
-        //              hashOfOutput[0:8],
-        //              hashOfOutput[8:16]
+        //              keccak(hashOfOutput[0:7]),
+        //              keccak(hashOfOutput[8:15])
         //          ),
         //          keccak(
-        //              hashOfOutput[16:24],
-        //              hashOfOutput[24:23]
+        //              keccak(hashOfOutput[16:23]),
+        //              keccak(hashOfOutput[24:31])
         //          )
         //     )
         // is contained in it. We can't simply use hashOfOutput because the
