@@ -3,6 +3,7 @@ use super::instantiate_tx_manager::{
     self, instantiate_tx_manager, DescartesTxManager,
 };
 
+use crate::contracts::descartesv2_contract::DescartesV2Impl;
 use crate::error::*;
 use crate::fold::types::*;
 use crate::machine::{EpochStatus, MachineInterface, MockMachine};
@@ -10,10 +11,14 @@ use crate::machine::{EpochStatus, MachineInterface, MockMachine};
 use dispatcher::block_subscriber::{
     BlockSubscriber, BlockSubscriberHandle, NewBlockSubscriber,
 };
+use dispatcher::middleware_factory::{
+    HttpProviderFactory, MiddlewareFactory, WsProviderFactory,
+};
 use dispatcher::state_fold::types::BlockState;
+use transaction_manager::types::ResubmitStrategy;
 
 use async_recursion::async_recursion;
-use ethers::core::types::{Address, U256, U64};
+use ethers::core::types::{Address, H256, U256, U64};
 use im::Vector;
 use snafu::ResultExt;
 
@@ -36,19 +41,35 @@ pub struct Config {
     pub subscriber_timeout: std::time::Duration,
 
     pub initial_epoch: U256,
+
+    pub gas_multiplier: Option<f64>,
+    pub gas_price_multiplier: Option<f64>,
+    pub rate: usize,
+
+    pub confirmations: usize,
+}
+
+pub struct TxConfig {
+    pub gas_multiplier: Option<f64>,
+    pub gas_price_multiplier: Option<f64>,
+    pub rate: usize,
+
+    pub confirmations: usize,
 }
 
 async fn main_loop(config: &Config, sender: Address) -> Result<()> {
-    let (subscriber_handle, block_subscriber, tx_manager) =
+    let (subscriber_handle, block_subscriber, tx_manager, descartesv2_contract) =
         instantiate_tx_manager(&config.into()).await?;
     let state_fold = instantiate_state_fold(&config.into())?;
 
-    // Start MachineManager session request
+    // TODO: Start MachineManager session request
 
     let mut subscription = block_subscriber
         .subscribe()
         .await
         .ok_or(EmptySubscription {}.build())?;
+
+    let tx_config = config.into();
 
     loop {
         // TODO: change to n blocks in the past.
@@ -59,7 +80,15 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
                     .await
                     .context(StateFoldError {})?;
 
-                react(&sender, state, &tx_manager, &MockMachine {}).await;
+                react(
+                    &sender,
+                    &tx_config,
+                    state,
+                    &tx_manager,
+                    &descartesv2_contract,
+                    &MockMachine {},
+                )
+                .await?;
             }
 
             Err(e) => return Err(Error::SubscriberReceiveError { source: e }),
@@ -67,11 +96,15 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
     }
 }
 
-async fn react<M: MachineInterface + Sync>(
+async fn react<MM: MachineInterface + Sync>(
     sender: &Address,
+    config: &TxConfig,
     state: BlockState<DescartesV2State>,
     tx_manager: &DescartesTxManager,
-    machine_manager: &M,
+    descartesv2_contract: &DescartesV2Impl<
+        <HttpProviderFactory as MiddlewareFactory>::Middleware,
+    >,
+    machine_manager: &MM,
 ) -> Result<()> {
     let state = state.state;
 
@@ -120,7 +153,6 @@ async fn react<M: MachineInterface + Sync>(
             let sealed_epoch_number = state.finalized_epochs.next_epoch();
             if mm_epoch_status.epoch_number == sealed_epoch_number {
                 let all_inputs_processed = update_sealed_epoch(
-                    sealed_epoch_number,
                     &sealed_epoch.inputs.inputs,
                     &mm_epoch_status,
                     machine_manager,
@@ -143,14 +175,19 @@ async fn react<M: MachineInterface + Sync>(
 
             let claim =
                 machine_manager.get_epoch_claim(sealed_epoch_number).await?;
+            send_claim_tx(
+                sender.clone(),
+                claim,
+                sealed_epoch_number,
+                config,
+                tx_manager,
+                descartesv2_contract,
+            )
+            .await;
 
-            // TODO: Send claim
+            return Ok(());
         }
 
-        // F: I actually have the feeling that AwaitingConsensusNoConflict
-        //  and AwaitingConsensusAfterConflict should be unified. The decision
-        //  making for them is the same, they only differ for the delegate
-        //  to check if the Consensus has timedout or not.
         PhaseState::AwaitingConsensusNoConflict { claimed_epoch }
         | PhaseState::AwaitingConsensusAfterConflict {
             claimed_epoch, ..
@@ -158,7 +195,6 @@ async fn react<M: MachineInterface + Sync>(
             let sealed_epoch_number = state.finalized_epochs.next_epoch();
             if mm_epoch_status.epoch_number == sealed_epoch_number {
                 let all_inputs_processed = update_sealed_epoch(
-                    sealed_epoch_number,
                     &claimed_epoch.inputs.inputs,
                     &mm_epoch_status,
                     machine_manager,
@@ -185,7 +221,17 @@ async fn react<M: MachineInterface + Sync>(
                     .get_epoch_claim(sealed_epoch_number)
                     .await?;
 
-                // TODO:  Send claim
+                send_claim_tx(
+                    sender.clone(),
+                    claim,
+                    sealed_epoch_number,
+                    config,
+                    tx_manager,
+                    descartesv2_contract,
+                )
+                .await;
+
+                return Ok(());
             }
 
             // On AwaitingConsensusConflict we have two unfinalized epochs:
@@ -205,7 +251,6 @@ async fn react<M: MachineInterface + Sync>(
             let sealed_epoch_number = state.finalized_epochs.next_epoch();
             if mm_epoch_status.epoch_number == sealed_epoch_number {
                 let all_inputs_processed = update_sealed_epoch(
-                    sealed_epoch_number,
                     &claimed_epoch.inputs.inputs,
                     &mm_epoch_status,
                     machine_manager,
@@ -232,9 +277,28 @@ async fn react<M: MachineInterface + Sync>(
                     .get_epoch_claim(sealed_epoch_number)
                     .await?;
 
-                // TODO:  Send claim
+                send_claim_tx(
+                    sender.clone(),
+                    claim,
+                    sealed_epoch_number,
+                    config,
+                    tx_manager,
+                    descartesv2_contract,
+                )
+                .await;
+
+                return Ok(());
             } else {
-                // TODO: Call blockchain finalize epoch
+                send_finalize_tx(
+                    sender.clone(),
+                    sealed_epoch_number,
+                    config,
+                    tx_manager,
+                    descartesv2_contract,
+                )
+                .await;
+
+                return Ok(());
             }
             // On ConsensusTimeout we have two unfinalized epochs:
             // claimed and accumulating.
@@ -251,7 +315,9 @@ async fn react<M: MachineInterface + Sync>(
         }
 
         /// Unreacheable
-        PhaseState::AwaitingDispute { claimed_epoch } => {}
+        PhaseState::AwaitingDispute { claimed_epoch } => {
+            unreachable!()
+        }
     }
     todo!()
 }
@@ -259,10 +325,10 @@ async fn react<M: MachineInterface + Sync>(
 /// Returns true if react can continue, false otherwise, as well as the new
 /// `mm_epoch_status`.
 #[async_recursion]
-async fn enqueue_inputs_of_finalized_epochs<M: MachineInterface + Sync>(
+async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
     state: &DescartesV2State,
     mm_epoch_status: EpochStatus,
-    machine_manager: &M,
+    machine_manager: &MM,
 ) -> Result<(bool, EpochStatus)> {
     // Checking if there are finalized_epochs beyond the machine manager.
     // TODO: comment on index compare.
@@ -308,10 +374,10 @@ async fn enqueue_inputs_of_finalized_epochs<M: MachineInterface + Sync>(
     Ok((false, mm_epoch_status))
 }
 
-async fn enqueue_remaning_inputs<M: MachineInterface>(
+async fn enqueue_remaning_inputs<MM: MachineInterface>(
     mm_epoch_status: &EpochStatus,
     inputs: &Vector<Input>,
-    machine_manager: &M,
+    machine_manager: &MM,
 ) -> Result<bool> {
     if mm_epoch_status.processed_input_count == inputs.len() {
         return Ok(true);
@@ -332,11 +398,10 @@ async fn enqueue_remaning_inputs<M: MachineInterface>(
     Ok(false)
 }
 
-async fn update_sealed_epoch<M: MachineInterface>(
-    sealed_epoch_number: U256,
+async fn update_sealed_epoch<MM: MachineInterface>(
     sealed_inputs: &Vector<Input>,
     mm_epoch_status: &EpochStatus,
-    machine_manager: &M,
+    machine_manager: &MM,
 ) -> Result<bool> {
     let all_inputs_processed = enqueue_remaning_inputs(
         &mm_epoch_status,
@@ -359,6 +424,77 @@ async fn update_sealed_epoch<M: MachineInterface>(
     Ok(true)
 }
 
+async fn send_claim_tx(
+    sender: Address,
+    claim: H256,
+    epoch_number: U256,
+    config: &TxConfig,
+    tx_manager: &DescartesTxManager,
+    descartesv2_contract: &DescartesV2Impl<
+        <HttpProviderFactory as MiddlewareFactory>::Middleware,
+    >,
+) {
+    let claim_tx = descartesv2_contract
+        .claim(claim.to_fixed_bytes())
+        .from(sender);
+
+    let label = format!("claim_for_epoch:{}", epoch_number);
+
+    tx_manager
+        .send_transaction(
+            label,
+            claim_tx,
+            ResubmitStrategy {
+                gas_multiplier: config.gas_multiplier,
+                gas_price_multiplier: config.gas_price_multiplier,
+                rate: config.rate,
+            },
+            config.confirmations,
+        )
+        .await
+        .expect("Transaction conversion should never fail");
+}
+
+async fn send_finalize_tx(
+    sender: Address,
+    epoch_number: U256,
+    config: &TxConfig,
+    tx_manager: &DescartesTxManager,
+    descartesv2_contract: &DescartesV2Impl<
+        <HttpProviderFactory as MiddlewareFactory>::Middleware,
+    >,
+) {
+    let finalize_tx = descartesv2_contract.finalize_epoch().from(sender);
+
+    let label = format!("finalize_epoch:{}", epoch_number);
+
+    tx_manager
+        .send_transaction(
+            label,
+            finalize_tx,
+            ResubmitStrategy {
+                gas_multiplier: config.gas_multiplier,
+                gas_price_multiplier: config.gas_price_multiplier,
+                rate: config.rate,
+            },
+            config.confirmations,
+        )
+        .await
+        .expect("Transaction conversion should never fail");
+}
+
+impl From<&Config> for TxConfig {
+    fn from(config: &Config) -> Self {
+        let config = config.clone();
+        Self {
+            gas_multiplier: config.gas_multiplier,
+            gas_price_multiplier: config.gas_price_multiplier,
+            rate: config.rate,
+            confirmations: config.confirmations,
+        }
+    }
+}
+
 impl From<&Config> for instantiate_state_fold::Config {
     fn from(config: &Config) -> Self {
         let config = config.clone();
@@ -379,6 +515,8 @@ impl From<&Config> for instantiate_tx_manager::Config {
     fn from(config: &Config) -> Self {
         let config = config.clone();
         Self {
+            descartes_contract_address: config.descartes_contract_address,
+
             http_endpoint: config.http_endpoint.clone(),
             ws_endpoint: config.ws_endpoint.clone(),
             max_retries: config.max_retries,

@@ -1,3 +1,4 @@
+use crate::contracts::descartesv2_contract::DescartesV2Impl;
 use crate::error::*;
 
 use dispatcher::block_subscriber::{BlockSubscriber, BlockSubscriberHandle};
@@ -6,6 +7,7 @@ use dispatcher::middleware_factory::{
 };
 use transaction_manager::{provider::Factory, TransactionManager};
 
+use ethers::core::types::Address;
 use snafu::ResultExt;
 use std::sync::Arc;
 
@@ -17,13 +19,15 @@ pub struct Config {
 
     pub call_timeout: std::time::Duration,
     pub subscriber_timeout: std::time::Duration,
+
+    pub descartes_contract_address: Address,
 }
 
 pub type DescartesTxManager = Arc<
     TransactionManager<
         Factory<HttpProviderFactory>,
         BlockSubscriber<WsProviderFactory>,
-        (),
+        String,
     >,
 >;
 
@@ -35,9 +39,15 @@ pub async fn instantiate_tx_manager(
     BlockSubscriberHandle<<WsProviderFactory as MiddlewareFactory>::Middleware>,
     DescartesBlockSubscriber,
     DescartesTxManager,
+    DescartesV2Impl<<HttpProviderFactory as MiddlewareFactory>::Middleware>,
 )> {
     let middleware_factory = create_http_factory(config)?;
-    let factory = Factory::new(middleware_factory, config.call_timeout);
+    let descartesv2_contract = DescartesV2Impl::new(
+        config.descartes_contract_address,
+        middleware_factory.current().await,
+    );
+    let factory =
+        Factory::new(Arc::clone(&middleware_factory), config.call_timeout);
     let (block_subscriber, handle) = create_block_subscriber(config).await?;
     let transaction_manager = Arc::new(TransactionManager::new(
         factory,
@@ -45,7 +55,12 @@ pub async fn instantiate_tx_manager(
         config.max_retries,
         config.max_delay,
     ));
-    Ok((handle, block_subscriber, transaction_manager))
+    Ok((
+        handle,
+        block_subscriber,
+        transaction_manager,
+        descartesv2_contract,
+    ))
 }
 
 async fn create_ws_factory(config: &Config) -> Result<Arc<WsProviderFactory>> {
