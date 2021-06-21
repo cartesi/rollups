@@ -137,7 +137,7 @@ contract OutputImpl is Output {
         // prove that output metadata drive is contained in epoch's output drive
         require(
             Merkle.getRootAfterReplacementInDrive(
-                uint64(_v.inputIndex * KECCAK_LOG2_SIZE),
+                getIntraDrivePosition(_v.inputIndex, KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
                 EPOCH_OUTPUT_LOG2_SIZE,
                 _v.outputMetadataArrayDriveHash,
@@ -174,7 +174,7 @@ contract OutputImpl is Output {
         // in the output metadata array drive
         require(
             Merkle.getRootAfterReplacementInDrive(
-                uint64(_v.outputIndex * KECCAK_LOG2_SIZE),
+                getIntraDrivePosition(_v.outputIndex, KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
                 OUTPUT_METADATA_LOG2_SIZE,
                 merkleRootOfHashOfOutput,
@@ -199,6 +199,17 @@ contract OutputImpl is Output {
         // output * 2 ** 128 + input * 2 ** 64 + epoch
         // this can't overflow because its impossible to have > 2**128 outputs
         return (_output << 128) + (_input << 64) + _epoch;
+    }
+
+    /// @notice returns the position of a intra drive on a drive
+    //          with  contents with the same size
+    /// @param _index index of intra drive
+    /// @param _log2Size of intra drive
+    function getIntraDrivePosition(uint256 _index, uint8 _log2Size)
+    public
+    pure
+    returns (uint64) {
+        return uint64(_index * (1 << _log2Size));
     }
 
     /// @notice get number of finalized epochs
