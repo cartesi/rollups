@@ -24,10 +24,10 @@
 pragma solidity ^0.8.0;
 
 import "./InputImpl.sol";
-import "./Output.sol";
-import "./ValidatorManager.sol";
+import "./OutputImpl.sol";
+import "./ValidatorManagerImpl.sol";
 import "./DescartesV2.sol";
-import "./DisputeManager.sol";
+import "./DisputeManagerImpl.sol";
 
 contract DescartesV2Impl is DescartesV2 {
     ////
@@ -53,10 +53,10 @@ contract DescartesV2Impl is DescartesV2 {
     uint256 immutable inputDuration; // duration of input accumulation phase in seconds
     uint256 immutable challengePeriod; // duration of challenge period in seconds
 
-    Input public input; // contract responsible for inputs
-    Output public immutable output; // contract responsible for ouputs
-    ValidatorManager public immutable validatorManager; // contract responsible for validators
-    DisputeManager public immutable disputeManager; // contract responsible for dispute resolution
+    InputImpl public input; // contract responsible for inputs
+    OutputImpl public output; // contract responsible for ouputs
+    ValidatorManagerImpl public validatorManager; // contract responsible for validators
+    DisputeManagerImpl public disputeManager; // contract responsible for dispute resolution
 
     uint256 public inputAccumulationStart; // timestamp when current input accumulation phase started
     uint256 public sealingEpochTimestamp; // timestamp on when a proposed epoch (claim) becomes challengeable
@@ -81,25 +81,27 @@ contract DescartesV2Impl is DescartesV2 {
     }
 
     /// @notice creates contract
-    /// @param _output address of output contract
-    /// @param _validatorManager address of validatorManager contract
-    /// @param _disputeManager address of disputeManager contract
     /// @param _inputDuration duration of input accumulation phase in seconds
     /// @param _challengePeriod duration of challenge period in seconds
+    /// @param _inputLog2Size size of the input drive in this machine
+    /// @param _log2OutputMetadataArrayDriveSize size of the output metadata array
+    //                                           drive in this machine
+    /// @param _validators initial validator set
     constructor(
-        address _output,
-        address _validatorManager,
-        address _disputeManager,
         uint256 _inputDuration,
         uint256 _challengePeriod,
-        uint8 _inputLog2Size
+        // input constructor variables
+        uint8 _inputLog2Size,
+        // output constructor variables
+        uint8 _log2OutputMetadataArrayDriveSize,
+        // validator manager constructor variables
+        address payable[] memory _validators
     ) {
-        output = Output(_output);
-        validatorManager = ValidatorManager(_validatorManager);
-        disputeManager = DisputeManager(_disputeManager);
-
-        //
         input = new InputImpl(address(this), _inputLog2Size);
+        output = new OutputImpl(address(this), _log2OutputMetadataArrayDriveSize);
+        validatorManager = new ValidatorManagerImpl(address(this), _validators);
+        disputeManager = new DisputeManagerImpl(address(this));
+
         inputDuration = _inputDuration;
         challengePeriod = _challengePeriod;
 
@@ -108,9 +110,9 @@ contract DescartesV2Impl is DescartesV2 {
 
         emit DescartesV2Created(
             address(input),
-            _output,
-            _validatorManager,
-            _disputeManager,
+            address(output),
+            address(validatorManager),
+            address(disputeManager),
             _inputDuration,
             _challengePeriod
         );
