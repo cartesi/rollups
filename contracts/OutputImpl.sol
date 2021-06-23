@@ -140,7 +140,7 @@ contract OutputImpl is Output {
                 getIntraDrivePosition(_v.inputIndex, KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
                 EPOCH_OUTPUT_LOG2_SIZE,
-                _v.outputMetadataArrayDriveHash,
+                keccak256(abi.encodePacked(_v.outputMetadataArrayDriveHash)),
                 _v.epochOutputDriveProof
             ) == _v.epochOutputDriveHash,
             "output's metadata drive hash is not contained in epoch output drive"
