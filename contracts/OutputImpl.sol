@@ -125,7 +125,7 @@ contract OutputImpl is Output {
         // prove that outputs hash is represented in a finalized epoch
         require(
             keccak256(
-                abi.encode(
+                abi.encodePacked(
                     _v.epochOutputDriveHash,
                     _v.epochMessageDriveHash,
                     _v.epochMachineFinalState
