@@ -37,7 +37,7 @@ contract OutputImpl is Output {
     uint8 constant OUTPUT_METADATA_LOG2_SIZE = 21;
     // max size of epoch output drive 32 * (2^32) bytes
     uint8 constant EPOCH_OUTPUT_LOG2_SIZE = 37;
-    uint32 immutable log2OutputMetadataArrayDriveSize;
+    uint8 immutable log2OutputMetadataArrayDriveSize;
 
     address immutable descartesV2; // descartes 2 contract using this validator
     mapping(uint248 => uint256) internal outputBitmask;
@@ -65,7 +65,9 @@ contract OutputImpl is Output {
 
     // @notice creates OutputImpl contract
     // @params _descartesV2 address of descartes contract
-    constructor(address _descartesV2, uint32 _log2OutputMetadataArrayDriveSize) {
+    // @params _log2OutputMetadataArrayDriveSize log2 size
+    //         of output metadata array drive
+    constructor(address _descartesV2, uint8 _log2OutputMetadataArrayDriveSize) {
         descartesV2 = _descartesV2;
         log2OutputMetadataArrayDriveSize = _log2OutputMetadataArrayDriveSize;
     }
