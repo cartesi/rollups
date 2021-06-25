@@ -249,7 +249,7 @@ describe("Output Implementation Testing", () => {
             ).to.be.revertedWith("output has already been executed");
         });
 
-        it("payload to execute DescartesV2.claim()", async () => {
+        it("payload to execute DescartesV2.claim() with failure and then success", async () => {
             let _payload2 = iface.encodeFunctionData("claim(bytes32)", [
                 ethers.utils.formatBytes32String("hello"),
             ]);
@@ -275,6 +275,15 @@ describe("Output Implementation Testing", () => {
             );
             // onNewEpoch() should be called first to push some epochHashes before calling executeOutput()
             await outputImpl.onNewEpoch(epochHash2);
+            // this will fail because claim() is not mocked yet
+            expect(
+                await outputImpl.callStatic.executeOutput(
+                    _destination,
+                    _payload2,
+                    v2
+                )
+            ).to.equal(false);
+
             await firstMockDescartesV2.mock.claim.returns();
             expect(
                 await outputImpl.callStatic.executeOutput(
