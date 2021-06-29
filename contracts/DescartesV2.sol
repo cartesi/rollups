@@ -71,6 +71,18 @@ interface DescartesV2 {
     //      accumulating input
     function getCurrentEpoch() external view returns (uint256);
 
+    /// @notice returns address of input contract
+    function getInputAddress() external view returns (address);
+
+    /// @notice returns address of output contract
+    function getOutputAddress() external view returns (address);
+
+    /// @notice returns address of validator manager contract
+    function getValidatorManagerAddress() external view returns (address);
+
+    /// @notice returns address of dispute manager contract
+    function getDisputeManagerAddress() external view returns (address);
+
     // events
 
     /// @notice contract created

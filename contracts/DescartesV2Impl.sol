@@ -276,4 +276,23 @@ contract DescartesV2Impl is DescartesV2 {
 
         return currentPhase == Phase.InputAccumulation? finalizedEpochs : finalizedEpochs + 1;
     }
+
+    /// @notice returns address of input contract
+    function getInputAddress() public view override returns (address) {
+        return address(input);
+    }
+    /// @notice returns address of output contract
+    function getOutputAddress() public view override returns (address) {
+        return address(output);
+    }
+
+    /// @notice returns address of validator manager contract
+    function getValidatorManagerAddress() public view override returns (address) {
+        return address(validatorManager);
+    }
+
+    /// @notice returns address of dispute manager contract
+    function getDisputeManagerAddress() public view override returns (address) {
+        return address(disputeManager);
+    }
 }
