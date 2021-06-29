@@ -21,25 +21,20 @@
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { deployments, ethers } from 'hardhat'
-import { expect, use } from 'chai'
-import { solidity } from 'ethereum-waffle';
-import { Signer } from 'ethers'
-import {
-    deployMockContract,
-    MockContract,
-} from "@ethereum-waffle/mock-contract";
+import { ethers } from 'hardhat'
 
-//import { DescartesV2Impl }  from "../dist/src/types/DescartesV2Impl";
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-    const { deployments, getNamedAccounts } = hre;
-    const { deploy } = deployments;
-    const { deployer } = await getNamedAccounts();
-    const { CartesiToken } = await deployments.all();
+    const { deployments } = hre;
+    const MINUTE = 60; // seconds in a minute
+    const HOUR = 60 * MINUTE; // seconds in an hour
+    const DAY = 24 * HOUR; // seconds in a day
+
+    const INPUT_DURATION = 1 * DAY;
+    const CHALLENGE_PERIOD = 7 * DAY;
+    const INPUT_LOG2_SIZE = 25;
+    const OUTPUT_METADATA_LOG2_SIZE = 21;
 
     let signers = await ethers.getSigners();
-    //let descartesV2Impl: DescartesV2Impl;
-
 
     // Bitmask
     const bitMaskLibrary = await deployments.deploy(
@@ -58,8 +53,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         }
     );
 
-    let cartesiMath = await cartesiMathFactory.deploy();
-    const cartesiMathAddress = cartesiMath.address;
+    let cartesiMath = (await cartesiMathFactory.deploy()).address;
 
     // Merkle
     const merkleFactory = await ethers.getContractFactory(
@@ -67,13 +61,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         {
             signer: signers[0],
             libraries: {
-                CartesiMath: cartesiMathAddress 
+                CartesiMath: cartesiMath 
             }
         }
     );
 
-    let merkle = await merkleFactory.deploy();
-    const merkleAddress = merkle.address;
+    let merkleAddress = (await merkleFactory.deploy()).address;
 
     const descartesV2Factory = await ethers.getContractFactory(
       "DescartesV2Impl",
@@ -85,10 +78,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         }
       }
     )
-    let descartesV2Impl = await descartesV2Factory.deploy(1,
-          2,
-          5,
-          5,
+    let descartesV2Impl = await descartesV2Factory.deploy(
+          INPUT_DURATION,
+          CHALLENGE_PERIOD,
+          INPUT_LOG2_SIZE,
+          OUTPUT_METADATA_LOG2_SIZE,
           [await signers[0].getAddress()]
     );
 
