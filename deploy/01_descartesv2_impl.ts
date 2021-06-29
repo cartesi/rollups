@@ -29,9 +29,6 @@ import {
     deployMockContract,
     MockContract,
 } from "@ethereum-waffle/mock-contract";
-import { OutputImpl } from '../dist/src/types/OutputImpl'
-import { Merkle } from '../dist/src/types/Merkle'
-import { CartesiMath } from '../dist/src/types/CartesiMath'
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments, getNamedAccounts } = hre;
@@ -40,6 +37,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { CartesiToken } = await deployments.all();
 
     let signers = await ethers.getSigners();
+
 
     // Bitmask
     const bitMaskLibrary = await deployments.deploy(
@@ -74,8 +72,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     let merkle = await merkleFactory.deploy();
     const merkleAddress = merkle.address;
-    
-    const descartesv2Factory = await ethers.getContractFactory(
+
+    const descartesV2Factory = await ethers.getContractFactory(
       "DescartesV2Impl",
       {
         signer: signers[0],
@@ -85,17 +83,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         }
       }
     )
-    await deploy("DescartesV2Impl", {
-        args: [
-          0,
-          0,
+    let descartesV2Impl = await descartesV2Factory.deploy(1,
+          2,
           5,
           5,
           [await signers[0].getAddress()]
-        ],
-        from: deployer,
-        log: true,
-    });
+    );
+    console.log("Descartes V2 Impl address: " + descartesV2Impl.address);
 };
 
 export default func;
