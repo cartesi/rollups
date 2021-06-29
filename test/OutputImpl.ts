@@ -7,6 +7,7 @@ import {
     MockContract,
 } from "@ethereum-waffle/mock-contract";
 import { OutputImpl } from "../src/types/OutputImpl";
+import { OutputImpl__factory } from "../src/types/factories/OutputImpl__factory";
 import { Merkle } from "../src/types/Merkle";
 import { CartesiMath } from "../src/types/CartesiMath";
 import { Bytes, BytesLike } from "@ethersproject/bytes";
@@ -29,13 +30,13 @@ describe("Output Implementation Testing", () => {
     /// for tests when modifiers are on, set this to true
     /// for tests when modifiers are off, set this to false
     let permissionModifiersOn = true;
+    // epoch index only increases when modifiers are off
+    let epochWithModifiersOff = 0;
 
     let signers: Signer[];
     let mockDescartesV2: MockContract;
     let firstMockDescartesV2: MockContract;
     let outputImpl: OutputImpl;
-    let merkle: Merkle;
-    let cartesiMath: CartesiMath;
 
     const log2OutputMetadataArrayDriveSize = 21;
 
@@ -62,48 +63,49 @@ describe("Output Implementation Testing", () => {
         const bitMaskAddress = bitMaskLibrary.address;
 
         // CartesiMath
-        const cartesiMathFactory = await ethers.getContractFactory(
-            "CartesiMath",
-            {
-                signer: signers[0],
-            }
-        );
-        cartesiMath = await cartesiMathFactory.deploy();
+        const cartesiMath = await deployments.deploy("CartesiMath", {
+            from: await signers[0].getAddress(),
+        });
         const cartesiMathAddress = cartesiMath.address;
 
         // Merkle
-        const merkleFactory = await ethers.getContractFactory("Merkle", {
-            signer: signers[0],
+        const merkle = await deployments.deploy("Merkle", {
+            from: await signers[0].getAddress(),
             libraries: {
                 CartesiMath: cartesiMathAddress,
             },
         });
-        merkle = await merkleFactory.deploy();
         const merkleAddress = merkle.address;
 
         // link to libraries and deploy OutputImpl
-        const outputImplFactory = await ethers.getContractFactory(
-            "OutputImpl",
-            {
-                signer: signers[0],
+        // keep outputImpl associated with the first deployed mockDescartesV2
+        if (!firstMockDescartesV2) {
+            const { address } = await deployments.deploy("OutputImpl", {
+                from: await signers[0].getAddress(),
                 libraries: {
                     Bitmask: bitMaskAddress,
                     Merkle: merkleAddress,
                 },
-            }
-        );
-
-        // keep outputImpl associated with the first deployed mockDescartesV2
-        if (!firstMockDescartesV2) {
-            outputImpl = await outputImplFactory.deploy(
-                mockDescartesV2.address,
-                log2OutputMetadataArrayDriveSize
-            );
+                args: [
+                    mockDescartesV2.address,
+                    log2OutputMetadataArrayDriveSize,
+                ],
+            });
+            outputImpl = OutputImpl__factory.connect(address, signers[0]);
         } else {
-            outputImpl = await outputImplFactory.deploy(
-                firstMockDescartesV2.address,
-                log2OutputMetadataArrayDriveSize
-            );
+            const { address } = await deployments.deploy("OutputImpl", {
+                from: await signers[0].getAddress(),
+                libraries: {
+                    Bitmask: bitMaskAddress,
+                    Merkle: merkleAddress,
+                },
+                args: [
+                    firstMockDescartesV2.address,
+                    log2OutputMetadataArrayDriveSize,
+                ],
+            });
+            outputImpl = OutputImpl__factory.connect(address, signers[0]);
+            // !!! outputImpl stays the same !!!
         }
     });
 
@@ -200,10 +202,10 @@ describe("Output Implementation Testing", () => {
 
     const iface = new ethers.utils.Interface([
         "function claim(bytes32) public",
-        "function getCurrentEpoch() view returns (uint256)",
+        "function getCurrentEpoch() public view returns (uint256)",
     ]);
 
-    it("First test", async () => {
+    it("Initialization", async () => {
         // this test should be the first test in order to assign value to firstMockDescartesV2
         // because the address of mockDescartesV2 may keep changing
         firstMockDescartesV2 = mockDescartesV2;
@@ -216,6 +218,11 @@ describe("Output Implementation Testing", () => {
             [_destination, _payload]
         );
         // console.log(encodedOutput);
+
+        expect(
+            await outputImpl.getNumberOfFinalizedEpochs(),
+            "check initial epoch number"
+        ).to.equal(0);
     });
 
     if (!permissionModifiersOn) {
@@ -230,7 +237,10 @@ describe("Output Implementation Testing", () => {
             // onNewEpoch() should be called first to push some epochHashes before calling executeOutput()
             // we need permission modifier off to call onNewEpoch()
             await outputImpl.onNewEpoch(epochHash);
-            await firstMockDescartesV2.mock.getCurrentEpoch.returns(1);
+            epochWithModifiersOff++;
+            await firstMockDescartesV2.mock.getCurrentEpoch.returns(
+                epochWithModifiersOff
+            );
             expect(
                 await outputImpl.callStatic.executeOutput(
                     _destination,
@@ -241,8 +251,11 @@ describe("Output Implementation Testing", () => {
         });
 
         it("executeOutput() should revert if output has already been executed", async () => {
-            await outputImpl.onNewEpoch(epochHash);
-            await firstMockDescartesV2.mock.getCurrentEpoch.returns(1);
+            // since outputImpl stays the same, no need to call onNewEpoch again
+            // await outputImpl.onNewEpoch(epochHash);
+            await firstMockDescartesV2.mock.getCurrentEpoch.returns(
+                epochWithModifiersOff
+            );
             await outputImpl.executeOutput(_destination, _payload, v);
             await expect(
                 outputImpl.executeOutput(_destination, _payload, v)
@@ -275,6 +288,9 @@ describe("Output Implementation Testing", () => {
             );
             // onNewEpoch() should be called first to push some epochHashes before calling executeOutput()
             await outputImpl.onNewEpoch(epochHash2);
+            // since outputImpl stays the same, should increase epochIndex
+            epochWithModifiersOff++;
+            v2.epochIndex = epochWithModifiersOff - 1;
             // this will fail because claim() is not mocked yet
             expect(
                 await outputImpl.callStatic.executeOutput(
@@ -322,6 +338,7 @@ describe("Output Implementation Testing", () => {
         ).to.be.revertedWith(
             "output's metadata drive hash is not contained in epoch output drive"
         );
+        // restore to correct value
         v.inputIndex = tempInputIndex;
     });
 
@@ -333,6 +350,7 @@ describe("Output Implementation Testing", () => {
         ).to.be.revertedWith(
             "specific output is not contained in output metadata drive hash"
         );
+        // restore to correct value
         v.outputIndex = tempOutputIndex;
     });
 
@@ -360,10 +378,6 @@ describe("Output Implementation Testing", () => {
     });
 
     /// ***test function getNumberOfFinalizedEpochs() and onNewEpoch()*** ///
-    it("testing initial return value of getNumberOfFinalizedEpochs()", async () => {
-        expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(0);
-    });
-
     if (permissionModifiersOn) {
         it("only DescartesV2 can call onNewEpoch()", async () => {
             await expect(
@@ -377,17 +391,26 @@ describe("Output Implementation Testing", () => {
             await outputImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello")
             );
-            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(1);
+            epochWithModifiersOff++;
+            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(
+                epochWithModifiersOff
+            );
 
             await outputImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello2")
             );
-            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(2);
+            epochWithModifiersOff++;
+            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(
+                epochWithModifiersOff
+            );
 
             await outputImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello3")
             );
-            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(3);
+            epochWithModifiersOff++;
+            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(
+                epochWithModifiersOff
+            );
         });
     }
 
