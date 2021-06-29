@@ -30,6 +30,7 @@ import {
     MockContract,
 } from "@ethereum-waffle/mock-contract";
 
+//import { DescartesV2Impl }  from "../dist/src/types/DescartesV2Impl";
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
@@ -37,6 +38,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { CartesiToken } = await deployments.all();
 
     let signers = await ethers.getSigners();
+    //let descartesV2Impl: DescartesV2Impl;
 
 
     // Bitmask
@@ -89,8 +91,28 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
           5,
           [await signers[0].getAddress()]
     );
+
+    let inputAddress = await descartesV2Impl.getInputAddress();
+    let outputAddress =  await descartesV2Impl.getOutputAddress();
+
+    let portalFactory = await ethers.getContractFactory(
+        "PortalImpl",
+        {
+            signer: signers[0],
+        }
+    )
+    
+    let portalImpl = await portalFactory.deploy(inputAddress, outputAddress)
+
     console.log("Descartes V2 Impl address: " + descartesV2Impl.address);
+    console.log("Descartes V2 Impl getCurrentEpoch: " + await descartesV2Impl.getCurrentEpoch());
+    console.log("Descartes V2 accumulation start: " + await descartesV2Impl.inputAccumulationStart());
+    console.log("Input address " + inputAddress);
+    console.log("Output address " + outputAddress);
+    console.log("Portal address " + portalImpl.address);
+
+
 };
 
 export default func;
-export const tags = ["DescartesV2Impl"];
+export const tags = ["DescartesV2Impl", "PortalImpl"];
