@@ -73,7 +73,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             CHALLENGE_PERIOD,
             INPUT_LOG2_SIZE,
             OUTPUT_METADATA_LOG2_SIZE,
-            [await signers[0].getAddress()],
+            [
+              await signers[0].getAddress(),
+              await signers[1].getAddress(),
+              await signers[2].getAddress(),
+            ],
         ],
     });
     let descartesV2Impl = DescartesV2Impl__factory.connect(address, signers[0]);
