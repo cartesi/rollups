@@ -29,9 +29,14 @@ describe("Descartes V2 Implementation", () => {
 
     let descartesV2Impl: DescartesV2Impl;
 
+    const MINUTE = 60; // seconds in a minute
+    const HOUR = 60 * MINUTE; // seconds in an hour
+    const DAY = 24 * HOUR; // seconds in a day
+
+    const inputDuration = 1 * DAY;
+    const challengePeriod = 7 * DAY;
+
     const inputLog2Size = 25; // What is a good number for this?
-    const inputDuration = 100;
-    const challengePeriod = 100;
 
     let signers: Signer[];
 
@@ -55,6 +60,10 @@ describe("Descartes V2 Implementation", () => {
     beforeEach(async () => {
         signers = await ethers.getSigners();
 
+        await deployments.fixture();
+        const dAddress = (await deployments.get("DescartesV2Impl")).address;
+        descartesV2Impl = DescartesV2Impl__factory.connect(dAddress, signers[0]);
+
         const Input = await deployments.getArtifact("Input");
         const Output = await deployments.getArtifact("Output");
         const ValidatorManager = await deployments.getArtifact(
@@ -72,18 +81,7 @@ describe("Descartes V2 Implementation", () => {
             signers[0],
             DisputeManager.abi
         );
-
-        const descartesV2ImplFactory = new DescartesV2Impl__factory(signers[0]);
-
-        descartesV2Impl = await descartesV2ImplFactory.deploy(
-            mockOutput.address,
-            mockValidatorManager.address,
-            mockDisputeManager.address,
-            inputDuration,
-            challengePeriod,
-            inputLog2Size
-        );
-
+        
         //this may be needed when emit events
         await mockOutput.mock.getNumberOfFinalizedEpochs.returns(
             numberOfFinalizedEpochs

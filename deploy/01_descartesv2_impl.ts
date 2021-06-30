@@ -21,7 +21,8 @@
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { ethers } from 'hardhat'
+import { ethers } from 'hardhat';
+import { DescartesV2Impl__factory } from "../src/types/factories/DescartesV2Impl__factory";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments } = hre;
@@ -46,57 +47,47 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const bitMaskAddress = bitMaskLibrary.address;
 
     // CartesiMath
-    const cartesiMathFactory = await ethers.getContractFactory(
-        "CartesiMath",
-        {
-            signer: signers[0]
-        }
-    );
-
-    let cartesiMath = (await cartesiMathFactory.deploy()).address;
+    const cartesiMath = await deployments.deploy("CartesiMath", {
+        from: await signers[0].getAddress(),
+    });
+    const cartesiMathAddress = cartesiMath.address;
 
     // Merkle
-    const merkleFactory = await ethers.getContractFactory(
-        "Merkle",
-        {
-            signer: signers[0],
-            libraries: {
-                CartesiMath: cartesiMath 
-            }
-        }
-    );
-
-    let merkleAddress = (await merkleFactory.deploy()).address;
-
-    const descartesV2Factory = await ethers.getContractFactory(
-      "DescartesV2Impl",
-      {
-        signer: signers[0],
+    const merkle = await deployments.deploy("Merkle", {
+        from: await signers[0].getAddress(),
         libraries: {
-          Bitmask: bitMaskAddress,
-          Merkle: merkleAddress
-        }
-      }
-    )
-    let descartesV2Impl = await descartesV2Factory.deploy(
-          INPUT_DURATION,
-          CHALLENGE_PERIOD,
-          INPUT_LOG2_SIZE,
-          OUTPUT_METADATA_LOG2_SIZE,
-          [await signers[0].getAddress()]
-    );
+            CartesiMath: cartesiMathAddress,
+        },
+    });
+    const merkleAddress = merkle.address;
+
+    // DescartesV2Impl
+    const { address } = await deployments.deploy("DescartesV2Impl", {
+        from: await signers[0].getAddress(),
+        libraries: {
+            Bitmask: bitMaskAddress,
+            Merkle: merkleAddress,
+        },
+        args: [
+            INPUT_DURATION,
+            CHALLENGE_PERIOD,
+            INPUT_LOG2_SIZE,
+            OUTPUT_METADATA_LOG2_SIZE,
+            [await signers[0].getAddress()],
+        ],
+    });
+    let descartesV2Impl = DescartesV2Impl__factory.connect(address, signers[0]);
 
     let inputAddress = await descartesV2Impl.getInputAddress();
     let outputAddress =  await descartesV2Impl.getOutputAddress();
 
-    let portalFactory = await ethers.getContractFactory(
-        "PortalImpl",
-        {
-            signer: signers[0],
-        }
-    )
-    
-    let portalImpl = await portalFactory.deploy(inputAddress, outputAddress)
+    let portalImpl = await deployments.deploy("PortalImpl", {
+        from: await signers[0].getAddress(),
+        args: [
+            inputAddress, 
+            outputAddress,
+        ],
+    });
 
     console.log("Descartes V2 Impl address: " + descartesV2Impl.address);
     console.log("Descartes V2 Impl getCurrentEpoch: " + await descartesV2Impl.getCurrentEpoch());
