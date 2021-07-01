@@ -16,12 +16,14 @@ import { keccak256 } from "ethers/lib/utils";
 use(solidity);
 
 // In the test epoch, we have 2 inputs. For Input1, we have only Output0.
-// The payload that we use is to execute functions of DescartesV2.
-// However, the address of DescartesV2 may change on different machines.
-// So you may need to modify the value of `outputMetadataArrayDriveHash` and `epochOutputDriveHash`, for both v and v2
+// The payload that we use is to execute functions of a simple contract.
+// Normally, the address of that contract may change on different machines, resulting in different merkle proofs.
+// That's why we deploy that contract deterministically.
+
+// In case you need to modify proofs, modify the value of `outputMetadataArrayDriveHash` and `epochOutputDriveHash`
 
 // Steps for modification are as follows:
-// 1. uncomment lines `console.log(encodedOutput);`. Same for `console.log(encodedOutput2);`
+// 1. uncomment lines `console.log(encodedOutput);`.
 // 2. keccak256 the value of encodedOutput
 // 3. take the keccak value and replace into the variable `KeccakForOutput0` in "shell.sh"
 // 4. run the script and modify values of `outputMetadataArrayDriveHash` and `epochOutputDriveHash`
@@ -30,16 +32,14 @@ describe("Output Implementation Testing", () => {
     /// for tests when modifiers are on, set this to true
     /// for tests when modifiers are off, set this to false
     let permissionModifiersOn = true;
-    // epoch index only increases when modifiers are off
-    let epochWithModifiersOff = 0;
 
     let signers: Signer[];
     let mockDescartesV2: MockContract;
-    let firstMockDescartesV2: MockContract;
     let outputImpl: OutputImpl;
 
     const log2OutputMetadataArrayDriveSize = 21;
 
+    let simpleContractAddress: string;
     let _destination: string;
     let _payload: string;
     let encodedOutput: string;
@@ -77,36 +77,23 @@ describe("Output Implementation Testing", () => {
         });
         const merkleAddress = merkle.address;
 
-        // link to libraries and deploy OutputImpl
-        // keep outputImpl associated with the first deployed mockDescartesV2
-        if (!firstMockDescartesV2) {
-            const { address } = await deployments.deploy("OutputImpl", {
-                from: await signers[0].getAddress(),
-                libraries: {
-                    Bitmask: bitMaskAddress,
-                    Merkle: merkleAddress,
-                },
-                args: [
-                    mockDescartesV2.address,
-                    log2OutputMetadataArrayDriveSize,
-                ],
-            });
-            outputImpl = OutputImpl__factory.connect(address, signers[0]);
-        } else {
-            const { address } = await deployments.deploy("OutputImpl", {
-                from: await signers[0].getAddress(),
-                libraries: {
-                    Bitmask: bitMaskAddress,
-                    Merkle: merkleAddress,
-                },
-                args: [
-                    firstMockDescartesV2.address,
-                    log2OutputMetadataArrayDriveSize,
-                ],
-            });
-            outputImpl = OutputImpl__factory.connect(address, signers[0]);
-            // !!! outputImpl stays the same !!!
-        }
+        // OutputImpl
+        const { address } = await deployments.deploy("OutputImpl", {
+            from: await signers[0].getAddress(),
+            libraries: {
+                Bitmask: bitMaskAddress,
+                Merkle: merkleAddress,
+            },
+            args: [mockDescartesV2.address, log2OutputMetadataArrayDriveSize],
+        });
+        outputImpl = OutputImpl__factory.connect(address, signers[0]);
+
+        // deploy a simple contract to execute
+        const simpleContract = await deployments.deploy("SimpleContract", {
+            from: await signers[0].getAddress(),
+            deterministicDeployment: true, // fix the address
+        });
+        simpleContractAddress = simpleContract.address;
     });
 
     interface OutputValidityProof {
@@ -178,9 +165,9 @@ describe("Output Implementation Testing", () => {
         inputIndex: 1,
         outputIndex: 0,
         outputMetadataArrayDriveHash:
-            "0xd75942974f7b054c28d5da4fb27898cd4b6b4f08a4ed85763e6c91bc91b01c53",
+            "0x4d5d7f017cfb39a10b02e8800db1380d507fefc25b9efbfcfb81149eeff417a9",
         epochOutputDriveHash:
-            "0x7b508f3a93aac8a034fedc755ed13640cf698898d53160a9b914b8f3c4971a18",
+            "0x29a43b498006128f0fd6026242662f4a6f47412f027954cd3973e3419e531adf",
         epochMessageDriveHash:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d45",
         epochMachineFinalState:
@@ -188,7 +175,6 @@ describe("Output Implementation Testing", () => {
         outputMetadataProof: proof1,
         epochOutputDriveProof: proof2,
     };
-    // let encodedOutput='0xa6eb2a81043a7349b2d066b3433ceadd8dd290343e6c41a4e36e82261e0b25cb';
     let epochHash = keccak256(
         ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint", "uint"],
@@ -201,23 +187,25 @@ describe("Output Implementation Testing", () => {
     );
 
     const iface = new ethers.utils.Interface([
-        "function claim(bytes32) public",
-        "function getCurrentEpoch() public view returns (uint256)",
+        "function simple_function() public pure returns (string memory)",
+        "function simple_function(bytes32) public pure returns (string memory)",
+        "function nonExistent() public",
     ]);
 
     it("Initialization", async () => {
-        // this test should be the first test in order to assign value to firstMockDescartesV2
-        // because the address of mockDescartesV2 may keep changing
-        firstMockDescartesV2 = mockDescartesV2;
-
-        // in the following test cases, we mainly use DescartesV2.getCurrentEpoch() as an example of payload
-        _destination = firstMockDescartesV2.address;
-        _payload = iface.encodeFunctionData("getCurrentEpoch");
+        _destination = simpleContractAddress;
+        _payload = iface.encodeFunctionData("simple_function()");
         encodedOutput = ethers.utils.defaultAbiCoder.encode(
             ["uint", "bytes"],
             [_destination, _payload]
         );
         // console.log(encodedOutput);
+        // example of encodedOutput
+        // 0x
+        // 0000000000000000000000005fbdb2315678afecb367f032d93f642f64180aa3
+        // 0000000000000000000000000000000000000000000000000000000000000040
+        // 0000000000000000000000000000000000000000000000000000000000000004
+        // b97dd9e200000000000000000000000000000000000000000000000000000000
 
         expect(
             await outputImpl.getNumberOfFinalizedEpochs(),
@@ -226,21 +214,10 @@ describe("Output Implementation Testing", () => {
     });
 
     if (!permissionModifiersOn) {
-        it("payload to execute DescartesV2.getCurrentEpoch()", async () => {
-            // example of encodedOutput
-            // 0x
-            // 0000000000000000000000005fbdb2315678afecb367f032d93f642f64180aa3
-            // 0000000000000000000000000000000000000000000000000000000000000040
-            // 0000000000000000000000000000000000000000000000000000000000000004
-            // b97dd9e200000000000000000000000000000000000000000000000000000000
-
+        it("executeOutput(): execute SimpleContract.simple_function()", async () => {
             // onNewEpoch() should be called first to push some epochHashes before calling executeOutput()
             // we need permission modifier off to call onNewEpoch()
             await outputImpl.onNewEpoch(epochHash);
-            epochWithModifiersOff++;
-            await firstMockDescartesV2.mock.getCurrentEpoch.returns(
-                epochWithModifiersOff
-            );
             expect(
                 await outputImpl.callStatic.executeOutput(
                     _destination,
@@ -250,64 +227,95 @@ describe("Output Implementation Testing", () => {
             ).to.equal(true);
         });
 
-        it("executeOutput() should revert if output has already been executed", async () => {
-            // since outputImpl stays the same, no need to call onNewEpoch again
-            // await outputImpl.onNewEpoch(epochHash);
-            await firstMockDescartesV2.mock.getCurrentEpoch.returns(
-                epochWithModifiersOff
+        it("executeOutput(): execute SimpleContract.simple_function(bytes32)", async () => {
+            let _payload_new = iface.encodeFunctionData(
+                "simple_function(bytes32)",
+                [ethers.utils.formatBytes32String("hello")]
             );
+            let encodedOutput_new = ethers.utils.defaultAbiCoder.encode(
+                ["uint", "bytes"],
+                [_destination, _payload_new]
+            );
+            // console.log(encodedOutput_new);
+
+            let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
+            v_new.outputMetadataArrayDriveHash =
+                "0x07d837c5d7889f24b3cda1904586c4cd9d3f7f093bdf4e3cdb621ecf298765d3";
+            v_new.epochOutputDriveHash =
+                "0xf45b6742e6aad5d3da088d4a2611ad1c17b8cc00b3bb370680332caa14dba921";
+            let epochHash_new = keccak256(
+                ethers.utils.defaultAbiCoder.encode(
+                    ["uint", "uint", "uint"],
+                    [
+                        v_new.epochOutputDriveHash,
+                        v_new.epochMessageDriveHash,
+                        v_new.epochMachineFinalState,
+                    ]
+                )
+            );
+
+            await outputImpl.onNewEpoch(epochHash_new);
+            expect(
+                await outputImpl.callStatic.executeOutput(
+                    _destination,
+                    _payload_new,
+                    v_new
+                )
+            ).to.equal(true);
+        });
+
+        it("executeOutput(): should return false if the function to be executed does NOT exist", async () => {
+            let _payload_new = iface.encodeFunctionData("nonExistent()");
+            let encodedOutput_new = ethers.utils.defaultAbiCoder.encode(
+                ["uint", "bytes"],
+                [_destination, _payload_new]
+            );
+            // console.log(encodedOutput_new);
+
+            let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
+            v_new.outputMetadataArrayDriveHash =
+                "0x4fdc837a18b9f8cf7aa1221e09b0776b80fc24f3c18e67650820cffe18baf910";
+            v_new.epochOutputDriveHash =
+                "0x7cce87bf8b778d415d98752a09d552ac4172c35ec438ed86f9e67bab44718593";
+            let epochHash_new = keccak256(
+                ethers.utils.defaultAbiCoder.encode(
+                    ["uint", "uint", "uint"],
+                    [
+                        v_new.epochOutputDriveHash,
+                        v_new.epochMessageDriveHash,
+                        v_new.epochMachineFinalState,
+                    ]
+                )
+            );
+
+            await outputImpl.onNewEpoch(epochHash_new);
+            expect(
+                await outputImpl.callStatic.executeOutput(
+                    _destination,
+                    _payload_new,
+                    v_new
+                )
+            ).to.equal(false);
+        });
+
+        it("executeOutput() should revert if output has already been executed", async () => {
+            await outputImpl.onNewEpoch(epochHash);
             await outputImpl.executeOutput(_destination, _payload, v);
             await expect(
                 outputImpl.executeOutput(_destination, _payload, v)
             ).to.be.revertedWith("output has already been executed");
         });
 
-        it("payload to execute DescartesV2.claim() with failure and then success", async () => {
-            let _payload2 = iface.encodeFunctionData("claim(bytes32)", [
-                ethers.utils.formatBytes32String("hello"),
-            ]);
-            let encodedOutput2 = ethers.utils.defaultAbiCoder.encode(
-                ["uint", "bytes"],
-                [_destination, _payload2]
-            );
-            // console.log(encodedOutput2);
-            let v2 = Object.assign({}, v); // copy object contents from v to v2, rather than just the address
-            v2.outputMetadataArrayDriveHash =
-                "0x280d8252a72ec8495d9a42f001252f05296227ed44c5ee27dc2c3b4a8bf9aee6";
-            v2.epochOutputDriveHash =
-                "0x939e8c5cbb201b94ebd65938869f52eb0a667f92f4bc7517651807db30028a92";
-            let epochHash2 = keccak256(
-                ethers.utils.defaultAbiCoder.encode(
-                    ["uint", "uint", "uint"],
-                    [
-                        v2.epochOutputDriveHash,
-                        v2.epochMessageDriveHash,
-                        v2.epochMachineFinalState,
-                    ]
-                )
-            );
-            // onNewEpoch() should be called first to push some epochHashes before calling executeOutput()
-            await outputImpl.onNewEpoch(epochHash2);
-            // since outputImpl stays the same, should increase epochIndex
-            epochWithModifiersOff++;
-            v2.epochIndex = epochWithModifiersOff - 1;
-            // this will fail because claim() is not mocked yet
-            expect(
-                await outputImpl.callStatic.executeOutput(
+        it("executeOutput() should revert if proof is not valid", async () => {
+            await outputImpl.onNewEpoch(epochHash);
+            let _payload_new = iface.encodeFunctionData("nonExistent()");
+            await expect(
+                outputImpl.callStatic.executeOutput(
                     _destination,
-                    _payload2,
-                    v2
+                    _payload_new,
+                    v
                 )
-            ).to.equal(false);
-
-            await firstMockDescartesV2.mock.claim.returns();
-            expect(
-                await outputImpl.callStatic.executeOutput(
-                    _destination,
-                    _payload2,
-                    v2
-                )
-            ).to.equal(true);
+            ).to.be.reverted;
         });
     }
 
@@ -338,7 +346,7 @@ describe("Output Implementation Testing", () => {
         ).to.be.revertedWith(
             "output's metadata drive hash is not contained in epoch output drive"
         );
-        // restore to correct value
+        // restore v
         v.inputIndex = tempInputIndex;
     });
 
@@ -350,7 +358,7 @@ describe("Output Implementation Testing", () => {
         ).to.be.revertedWith(
             "specific output is not contained in output metadata drive hash"
         );
-        // restore to correct value
+        // restore v
         v.outputIndex = tempOutputIndex;
     });
 
@@ -391,26 +399,17 @@ describe("Output Implementation Testing", () => {
             await outputImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello")
             );
-            epochWithModifiersOff++;
-            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(
-                epochWithModifiersOff
-            );
+            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(1);
 
             await outputImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello2")
             );
-            epochWithModifiersOff++;
-            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(
-                epochWithModifiersOff
-            );
+            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(2);
 
             await outputImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello3")
             );
-            epochWithModifiersOff++;
-            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(
-                epochWithModifiersOff
-            );
+            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(3);
         });
     }
 
