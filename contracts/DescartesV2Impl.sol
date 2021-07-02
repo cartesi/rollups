@@ -50,8 +50,8 @@ contract DescartesV2Impl is DescartesV2 {
     //                                        +--------------------+    conflicting claim
     ///
 
-    uint256 immutable inputDuration; // duration of input accumulation phase in seconds
-    uint256 immutable challengePeriod; // duration of challenge period in seconds
+    uint256 public immutable inputDuration; // duration of input accumulation phase in seconds
+    uint256 public immutable challengePeriod; // duration of challenge period in seconds
 
     InputImpl public input; // contract responsible for inputs
     OutputImpl public output; // contract responsible for ouputs
