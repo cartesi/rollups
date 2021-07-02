@@ -30,3 +30,18 @@ task("dv2:claim", "Send a claim to the current epoch")
         const tx = await dv2.claim(claim);
         console.log(`${signer.address}: ${tx} : ${claim}`);
     });
+
+task(
+    "dv2:finalizeEpoch",
+    "Finalizes epoch, if challenge period has passed",
+    async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
+        const { deployments, ethers } = hre;
+        const [signer] = await ethers.getSigners();
+
+        let dv2Deployed = (await deployments.fixture())["DescartesV2Impl"];
+        let dv2 = await ethers.getContractAt(dv2Deployed.abi, dv2Deployed.address);
+
+        const tx = await dv2.finalizeEpoch();
+        console.log(`${signer.address}: ${tx}`);
+    }
+);
