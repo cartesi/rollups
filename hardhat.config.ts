@@ -28,6 +28,7 @@ import "@typechain/hardhat";
 import "solidity-coverage";
 import "hardhat-deploy";
 import "@tenderly/hardhat-tenderly";
+import "./src/tasks";
 
 // read MNEMONIC from env variable
 let mnemonic = process.env.MNEMONIC;
