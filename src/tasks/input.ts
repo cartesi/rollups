@@ -16,21 +16,24 @@ import { BigNumber } from "ethers";
 import { formatUnits } from "@ethersproject/units";
 
 task("input:addInput", "Send an input to rollups")
-    .addParam(
-        "input",
-        "bytes to processed by the offchain machine"
-    )
+    .addParam("input", "bytes to processed by the offchain machine")
     .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
         const { deployments, ethers } = hre;
         const [signer] = await ethers.getSigners();
         let input = args.input;
         let dv2Deployed = await deployments.get("DescartesV2Impl");
 
-        let dv2 = await ethers.getContractAt(dv2Deployed.abi, dv2Deployed.address);
+        let dv2 = await ethers.getContractAt(
+            dv2Deployed.abi,
+            dv2Deployed.address
+        );
 
         let inputArtifact = await deployments.getArtifact("InputImpl");
 
-        let inputContract = await ethers.getContractAt(inputArtifact.abi, await dv2.getInputAddress());
+        let inputContract = await ethers.getContractAt(
+            inputArtifact.abi,
+            await dv2.getInputAddress()
+        );
 
         const tx = await inputContract.addInput(input);
         console.log(`${signer.address}: ${tx} : ${input}`);

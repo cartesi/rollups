@@ -16,10 +16,7 @@ import { BigNumber } from "ethers";
 import { formatUnits } from "@ethersproject/units";
 
 task("dv2:claim", "Send a claim to the current epoch")
-    .addParam(
-        "claim",
-        "Validator's bytes32 claim for current claimable epoch"
-    )
+    .addParam("claim", "Validator's bytes32 claim for current claimable epoch")
     .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
         const { deployments, ethers } = hre;
         const [signer] = await ethers.getSigners();
@@ -27,7 +24,10 @@ task("dv2:claim", "Send a claim to the current epoch")
 
         let dv2Deployed = await deployments.get("DescartesV2Impl");
 
-        let dv2 = await ethers.getContractAt(dv2Deployed.abi, dv2Deployed.address);
+        let dv2 = await ethers.getContractAt(
+            dv2Deployed.abi,
+            dv2Deployed.address
+        );
 
         const tx = await dv2.claim(claim);
         console.log(`${signer.address}: ${tx} : ${claim}`);
@@ -41,7 +41,10 @@ task(
         const [signer] = await ethers.getSigners();
 
         let dv2Deployed = await deployments.get("DescartesV2Impl");
-        let dv2 = await ethers.getContractAt(dv2Deployed.abi, dv2Deployed.address);
+        let dv2 = await ethers.getContractAt(
+            dv2Deployed.abi,
+            dv2Deployed.address
+        );
 
         const tx = await dv2.finalizeEpoch();
         console.log(`${signer.address}: ${tx}`);
@@ -55,9 +58,16 @@ task(
         const { deployments, ethers } = hre;
         const [signer] = await ethers.getSigners();
 
-        enum Phases {InputAccumulation, AwaitingConsensus, AwaitingDispute};
+        enum Phases {
+            InputAccumulation,
+            AwaitingConsensus,
+            AwaitingDispute,
+        }
         let dv2Deployed = await deployments.get("DescartesV2Impl");
-        let dv2 = await ethers.getContractAt(dv2Deployed.abi, dv2Deployed.address);
+        let dv2 = await ethers.getContractAt(
+            dv2Deployed.abi,
+            dv2Deployed.address
+        );
 
         const inputDuration = await dv2.inputDuration();
         const challengePeriod = await dv2.challengePeriod();
@@ -68,7 +78,9 @@ task(
         const currentPhase = await dv2.currentPhase();
 
         console.log(`
-            current timestamp: ${(await ethers.provider.getBlock("latest")).timestamp}.
+            current timestamp: ${
+                (await ethers.provider.getBlock("latest")).timestamp
+            }.
             input duration: ${inputDuration},
             challenge period: ${challengePeriod},
             current epoch: ${currentEpoch},

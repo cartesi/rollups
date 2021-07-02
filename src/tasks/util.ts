@@ -16,13 +16,12 @@ import { BigNumber } from "ethers";
 import { formatUnits } from "@ethersproject/units";
 
 task("util:advanceTime", "Advances time in private blockchain")
-    .addParam(
-        "seconds",
-        "time to advance in seconds"
-    )
+    .addParam("seconds", "time to advance in seconds")
     .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
         const { deployments, ethers } = hre;
 
-        await hre.network.provider.send("evm_increaseTime", [Number(args.seconds)])
+        await hre.network.provider.send("evm_increaseTime", [
+            Number(args.seconds),
+        ]);
         await hre.network.provider.send("evm_mine");
     });
