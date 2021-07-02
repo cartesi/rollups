@@ -24,7 +24,9 @@ task("dv2:claim", "Send a claim to the current epoch")
         const { deployments, ethers } = hre;
         const [signer] = await ethers.getSigners();
         let claim = args.claim;
-        let dv2Deployed = (await deployments.fixture())["DescartesV2Impl"];
+
+        let dv2Deployed = await deployments.get("DescartesV2Impl");
+
         let dv2 = await ethers.getContractAt(dv2Deployed.abi, dv2Deployed.address);
 
         const tx = await dv2.claim(claim);
@@ -38,7 +40,7 @@ task(
         const { deployments, ethers } = hre;
         const [signer] = await ethers.getSigners();
 
-        let dv2Deployed = (await deployments.fixture())["DescartesV2Impl"];
+        let dv2Deployed = await deployments.get("DescartesV2Impl");
         let dv2 = await ethers.getContractAt(dv2Deployed.abi, dv2Deployed.address);
 
         const tx = await dv2.finalizeEpoch();
@@ -54,7 +56,7 @@ task(
         const [signer] = await ethers.getSigners();
 
         enum Phases {InputAccumulation, AwaitingConsensus, AwaitingDispute};
-        let dv2Deployed = (await deployments.fixture())["DescartesV2Impl"];
+        let dv2Deployed = await deployments.get("DescartesV2Impl");
         let dv2 = await ethers.getContractAt(dv2Deployed.abi, dv2Deployed.address);
 
         const inputDuration = await dv2.inputDuration();
@@ -66,6 +68,7 @@ task(
         const currentPhase = await dv2.currentPhase();
 
         console.log(`
+            current timestamp: ${(await ethers.provider.getBlock("latest")).timestamp}.
             input duration: ${inputDuration},
             challenge period: ${challengePeriod},
             current epoch: ${currentEpoch},

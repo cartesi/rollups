@@ -24,7 +24,8 @@ task("input:addInput", "Send an input to rollups")
         const { deployments, ethers } = hre;
         const [signer] = await ethers.getSigners();
         let input = args.input;
-        let dv2Deployed = (await deployments.fixture())["DescartesV2Impl"];
+        let dv2Deployed = await deployments.get("DescartesV2Impl");
+
         let dv2 = await ethers.getContractAt(dv2Deployed.abi, dv2Deployed.address);
 
         let inputArtifact = await deployments.getArtifact("InputImpl");
