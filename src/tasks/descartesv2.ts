@@ -45,3 +45,33 @@ task(
         console.log(`${signer.address}: ${tx}`);
     }
 );
+
+task(
+    "dv2:getState",
+    "Prints current epoch, current phase, input duration etc",
+    async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
+        const { deployments, ethers } = hre;
+        const [signer] = await ethers.getSigners();
+
+        enum Phases {InputAccumulation, AwaitingConsensus, AwaitingDispute};
+        let dv2Deployed = (await deployments.fixture())["DescartesV2Impl"];
+        let dv2 = await ethers.getContractAt(dv2Deployed.abi, dv2Deployed.address);
+
+        const inputDuration = await dv2.inputDuration();
+        const challengePeriod = await dv2.challengePeriod();
+        const currentEpoch = await dv2.getCurrentEpoch();
+        const accumulationStart = await dv2.inputAccumulationStart();
+        const sealingEpochTimestamp = await dv2.sealingEpochTimestamp();
+
+        const currentPhase = await dv2.currentPhase();
+
+        console.log(`
+            input duration: ${inputDuration},
+            challenge period: ${challengePeriod},
+            current epoch: ${currentEpoch},
+            accumulation start: ${accumulationStart},
+            sealing epoch timestamp: ${sealingEpochTimestamp},
+            current phase: ${Phases[currentPhase]},
+            `);
+    }
+);
