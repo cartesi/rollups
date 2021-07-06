@@ -52,7 +52,10 @@ describe("Descartes V2 Implementation", () => {
 
         await deployments.fixture();
         const dAddress = (await deployments.get("DescartesV2Impl")).address;
-        descartesV2Impl = DescartesV2Impl__factory.connect(dAddress, signers[0]);
+        descartesV2Impl = DescartesV2Impl__factory.connect(
+            dAddress,
+            signers[0]
+        );
 
         const Input = await deployments.getArtifact("Input");
         const Output = await deployments.getArtifact("Output");
@@ -102,9 +105,7 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_mine");
 
         // all validators agree with claim
-        await descartesV2Impl
-            .connect(signers[0])
-            .claim(ethers.utils.formatBytes32String("hello"));
+        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
         await descartesV2Impl
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
@@ -124,10 +125,6 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_mine");
 
         await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
-
-        await descartesV2Impl
-            .connect(signers[0])
-            .claim(ethers.utils.formatBytes32String("hello"));
         await descartesV2Impl
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("not hello"));
@@ -145,9 +142,7 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await descartesV2Impl
-            .connect(signers[0])
-            .claim(ethers.utils.formatBytes32String("hello"));
+        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
 
         await descartesV2Impl
             .connect(signers[1])
@@ -158,12 +153,10 @@ describe("Descartes V2 Implementation", () => {
             .claim(ethers.utils.formatBytes32String("not hello"));
         ///END: make two different claims///
 
-        await expect(
-            descartesV2Impl
-                .connect(signers[2])
-                .claim(ethers.utils.formatBytes32String("claim")),
-            "phase is InputAccumulation. should revert"
-        ).to.be.revertedWith("Phase != AwaitingConsensus");
+        expect(
+            await descartesV2Impl.currentPhase(),
+            "current phase should be updated to InputAccumulation"
+        ).to.equal(Phase.InputAccumulation);
     });
 
     /// ***test function finalizeEpoch()*** ///
@@ -174,7 +167,7 @@ describe("Descartes V2 Implementation", () => {
         ).to.be.revertedWith("Phase != Awaiting Consensus");
     });
 
-    // There phase is never AwaitingDispute in the end of at transaction, in this version
+    // The phase is never AwaitingDispute in the end of at transaction, in this version
     //it("finalizeEpoch(): should revert if currentPhase is AwaitingDispute", async () => {
     //    ///make two different claims///
     //    await network.provider.send("evm_increaseTime", [inputDuration + 1]);
@@ -322,46 +315,48 @@ describe("Descartes V2 Implementation", () => {
             ).to.equal(false);
         });
 
+        // the following 3 tests are unnecessary because they are already tested with claim() function during conflicts
         /// ***test function resolveDispute() without modifier*** ///
-        it("resolveDispute(): if consensus, updated current phase should be InputAccumulation", async () => {
-            await descartesV2Impl.resolveDispute(
-                await signers[0].getAddress(),
-                await signers[1].getAddress(),
-                ethers.utils.formatBytes32String("hello")
-            );
+        // it("resolveDispute(): if consensus, updated current phase should be InputAccumulation", async () => {
+        //     await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
+        //     await descartesV2Impl.connect(signers[2]).claim(ethers.utils.formatBytes32String("hello"));
+        //     await descartesV2Impl.resolveDispute(
+        //         await signers[0].getAddress(),
+        //         await signers[1].getAddress(),
+        //         ethers.utils.formatBytes32String("hello")
+        //     );
+        //     expect(
+        //         await descartesV2Impl.currentPhase(),
+        //         "updated current phase if consensus"
+        //     ).to.equal(Phase.InputAccumulation);
+        // });
 
-            expect(
-                await descartesV2Impl.currentPhase(),
-                "updated current phase if consensus"
-            ).to.equal(Phase.InputAccumulation);
-        });
+        // it("resolveDispute(): if NoConflict, updated current phase should be AwaitingConsensus", async () => {
+        //     await descartesV2Impl.resolveDispute(
+        //         await signers[0].getAddress(),
+        //         await signers[1].getAddress(),
+        //         ethers.utils.formatBytes32String("hello")
+        //     );
+        //     console.log(await descartesV2Impl.currentPhase())
+        //     expect(
+        //         await descartesV2Impl.currentPhase(),
+        //         "updated current phase if consensus"
+        //     ).to.equal(Phase.AwaitingConsensus);
+        // });
 
-        it("resolveDispute(): if NoConflict, updated current phase should be AwaitingConsensus", async () => {
-            await descartesV2Impl.resolveDispute(
-                await signers[0].getAddress(),
-                await signers[1].getAddress(),
-                ethers.utils.formatBytes32String("hello")
-            );
+        // it("resolveDispute(): if Conflict, updated current phase should be AwaitingDispute", async () => {
+        //     await descartesV2Impl.resolveDispute(
+        //         await signers[0].getAddress(),
+        //         await signers[1].getAddress(),
+        //         ethers.utils.formatBytes32String("hello")
+        //     );
 
-            expect(
-                await descartesV2Impl.currentPhase(),
-                "updated current phase if consensus"
-            ).to.equal(Phase.AwaitingConsensus);
-        });
-
-        it("resolveDispute(): if Conflict, updated current phase should be AwaitingDispute", async () => {
-            await descartesV2Impl.resolveDispute(
-                await signers[0].getAddress(),
-                await signers[1].getAddress(),
-                ethers.utils.formatBytes32String("hello")
-            );
-
-            expect(
-                await descartesV2Impl.currentPhase(),
-                "updated current phase if Conflict"
-            ).to.equal(Phase.AwaitingDispute);
-            //then start new dispute all over again
-        });
+        //     expect(
+        //         await descartesV2Impl.currentPhase(),
+        //         "updated current phase if Conflict"
+        //     ).to.equal(Phase.AwaitingDispute);
+        //     //then start new dispute all over again
+        // });
     }
 
     /// ***test emitting events*** ///
@@ -390,16 +385,12 @@ describe("Descartes V2 Implementation", () => {
         expect(
             eventArgs["_validatorManager"],
             "Validator Manager address"
-        ).to.equal(
-            await descartesV2Impl.validatorManager()
-        );
+        ).to.equal(await descartesV2Impl.validatorManager());
 
         expect(
             eventArgs["_disputeManager"],
             "Dispute Manager address"
-        ).to.equal(
-            await descartesV2Impl.disputeManager()
-        );
+        ).to.equal(await descartesV2Impl.disputeManager());
 
         expect(eventArgs["_inputDuration"], "Input Duration").to.equal(
             inputDuration
@@ -441,13 +432,11 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await descartesV2Impl
-                .connect(signers[0])
-                .claim(ethers.utils.formatBytes32String("hello"));
+        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
 
         await descartesV2Impl
-                .connect(signers[1])
-                .claim(ethers.utils.formatBytes32String("hello"))
+            .connect(signers[1])
+            .claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
             descartesV2Impl
@@ -461,19 +450,16 @@ describe("Descartes V2 Implementation", () => {
                 ethers.utils.formatBytes32String("hello")
             );
 
-
         // skip input duration
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
         // claim epoch 1
-        await descartesV2Impl
-                .connect(signers[0])
-                .claim(ethers.utils.formatBytes32String("hello"));
+        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
 
         await descartesV2Impl
-                .connect(signers[1])
-                .claim(ethers.utils.formatBytes32String("hello"))
+            .connect(signers[1])
+            .claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
             descartesV2Impl
@@ -498,24 +484,20 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_mine");
 
         await expect(
-            descartesV2Impl
-                .connect(signers[0])
-                .claim(ethers.utils.formatBytes32String("hello"))
-
+            descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
         )
             .to.emit(descartesV2Impl, "PhaseChange")
             .withArgs(Phase.AwaitingConsensus);
 
         await descartesV2Impl
-                .connect(signers[1])
-                .claim(ethers.utils.formatBytes32String("hello"))
+            .connect(signers[1])
+            .claim(ethers.utils.formatBytes32String("hello"));
 
         //event PhaseChange: InputAccumulation
         await expect(
             descartesV2Impl
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
-
         )
             .to.emit(descartesV2Impl, "PhaseChange")
             .withArgs(Phase.InputAccumulation);
@@ -536,22 +518,18 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_mine");
 
         await descartesV2Impl
-                .connect(signers[2])
-                .claim(ethers.utils.formatBytes32String("hello"))
-
+            .connect(signers[2])
+            .claim(ethers.utils.formatBytes32String("hello"));
 
         await descartesV2Impl
-                .connect(signers[1])
-                .claim(ethers.utils.formatBytes32String("hello"))
+            .connect(signers[1])
+            .claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
             descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
         )
             .to.emit(descartesV2Impl, "FinalizeEpoch")
-            .withArgs(
-                0,
-                ethers.utils.formatBytes32String("hello")
-            );
+            .withArgs(0, ethers.utils.formatBytes32String("hello"));
     });
 
     /// modifiers off
@@ -611,11 +589,9 @@ describe("Descartes V2 Implementation", () => {
                 );
 
             await descartesV2Impl
-                .connect(signers[0])
-                .claim(ethers.utils.formatBytes32String("hello"));
-            await descartesV2Impl
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"));
+
             expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
 
             await expect(
@@ -636,86 +612,101 @@ describe("Descartes V2 Implementation", () => {
         }
     });
 
-    // modifiers off
-    if (!permissionModifiersOn) {
-        it("getCurrentEpoch() with conflict", async () => {
-            // initial epoch number
-            expect(await descartesV2Impl.getCurrentEpoch()).to.equal(0);
+    it("getCurrentEpoch() with conflict", async () => {
+        // initial epoch number
+        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(0);
 
-            let epochNum = 0;
+        let epochNum = 0;
 
-            // epoch number increases when input accumulation finishes
-            // the length of finalized epochs array increases upon consensus after conflicts resolved
-            for (let i = 0; i < 9; i++) {
-                // input accumulation
-                expect(await descartesV2Impl.getCurrentEpoch()).to.equal(
-                    epochNum
-                );
+        // input accumulation
+        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
 
-                // input accumulation over
-                // ***epoch increases by 1***
-                // but output.getNumberOfFinalizedEpochs() stays the same temporarily
-                await network.provider.send("evm_increaseTime", [
-                    inputDuration + 1,
-                ]);
-                await network.provider.send("evm_mine");
-                epochNum++;
+        // input accumulation over
+        // ***epoch increases by 1***
+        // but output.getNumberOfFinalizedEpochs() stays the same temporarily
+        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
+        await network.provider.send("evm_mine");
+        epochNum++;
 
-                // first claim
-                await expect(
-                    descartesV2Impl.claim(
-                        ethers.utils.formatBytes32String("hello")
-                    )
-                )
-                    .to.emit(descartesV2Impl, "Claim")
-                    .withArgs(
-                        epochNum - 1, // claim for the previous epoch
-                        await signers[0].getAddress(),
-                        ethers.utils.formatBytes32String("hello")
-                    );
-                expect(await descartesV2Impl.getCurrentEpoch()).to.equal(
-                    epochNum
-                );
+        // first claim
+        await expect(
+            descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
+        )
+            .to.emit(descartesV2Impl, "Claim")
+            .withArgs(
+                epochNum - 1, // claim for the previous epoch
+                await signers[0].getAddress(),
+                ethers.utils.formatBytes32String("hello")
+            );
+        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
 
-                // 2nd claim => conflict
-                await expect(
-                    descartesV2Impl
-                        .connect(signers[1])
-                        .claim(ethers.utils.formatBytes32String("halo"))
-                )
-                    .to.emit(descartesV2Impl, "Claim")
-                    .withArgs(
-                        epochNum - 1, // claim for the previous epoch
-                        await signers[1].getAddress(),
-                        ethers.utils.formatBytes32String("halo")
-                    );
+        // 2nd claim => conflict
+        await expect(
+            descartesV2Impl
+                .connect(signers[1])
+                .claim(ethers.utils.formatBytes32String("halo"))
+        )
+            .to.emit(descartesV2Impl, "Claim")
+            .withArgs(
+                epochNum - 1, // claim for the previous epoch
+                await signers[1].getAddress(),
+                ethers.utils.formatBytes32String("halo")
+            );
 
-                // resolve dispute
-                await descartesV2Impl.resolveDispute(
-                    await signers[0].getAddress(),
-                    await signers[1].getAddress(),
-                    ethers.utils.formatBytes32String("hello")
-                );
+        // 3rd claim => Consensus
+        await expect(
+            descartesV2Impl
+                .connect(signers[2])
+                .claim(ethers.utils.formatBytes32String("hello"))
+        )
+            .to.emit(descartesV2Impl, "Claim")
+            .withArgs(
+                epochNum - 1, // claim for the previous epoch
+                await signers[2].getAddress(),
+                ethers.utils.formatBytes32String("hello")
+            );
+        // enter input accumulation again
+        // ***the length of finalized epochs array increases by 1***
+        // now it is the same as the epoch number
+        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
 
-                // 3rd claim => Consensus
-                await expect(
-                    descartesV2Impl
-                        .connect(signers[2])
-                        .claim(ethers.utils.formatBytes32String("hello"))
-                )
-                    .to.emit(descartesV2Impl, "Claim")
-                    .withArgs(
-                        epochNum - 1, // claim for the previous epoch
-                        await signers[2].getAddress(),
-                        ethers.utils.formatBytes32String("hello")
-                    );
-                // enter input accumulation again
-                // ***the length of finalized epochs array increases by 1***
-                // now it is the same as the epoch number
-                expect(await descartesV2Impl.getCurrentEpoch()).to.equal(
-                    epochNum
-                );
-            }
-        });
-    }
+        // in this epoch, signers[1] is already deleted
+        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
+        await network.provider.send("evm_mine");
+        epochNum++;
+        // first claim
+        await expect(
+            descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
+        )
+            .to.emit(descartesV2Impl, "Claim")
+            .withArgs(
+                epochNum - 1, // claim for the previous epoch
+                await signers[0].getAddress(),
+                ethers.utils.formatBytes32String("hello")
+            );
+        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+
+        // 2nd claim => revert because claimer lost the dispute before
+        await expect(
+            descartesV2Impl
+                .connect(signers[1])
+                .claim(ethers.utils.formatBytes32String("hello"))
+        ).to.be.revertedWith("_sender was not allowed to claim");
+
+        // 3rd claim => Consensus
+        await expect(
+            descartesV2Impl
+                .connect(signers[2])
+                .claim(ethers.utils.formatBytes32String("hello"))
+        )
+            .to.emit(descartesV2Impl, "Claim")
+            .withArgs(
+                epochNum - 1, // claim for the previous epoch
+                await signers[2].getAddress(),
+                ethers.utils.formatBytes32String("hello")
+            );
+
+        // enter input accumulation again
+        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+    });
 });
