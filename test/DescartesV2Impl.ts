@@ -25,8 +25,8 @@ describe("Descartes V2 Implementation", () => {
 
     const inputDuration = 1 * DAY;
     const challengePeriod = 7 * DAY;
-
-    const inputLog2Size = 25; // What is a good number for this?
+    const INPUT_LOG2_SIZE = 25;
+    const OUTPUT_METADATA_LOG2_SIZE = 21;
 
     let signers: Signer[];
 
@@ -50,19 +50,59 @@ describe("Descartes V2 Implementation", () => {
     beforeEach(async () => {
         signers = await ethers.getSigners();
 
-        await deployments.fixture();
+        /* comment these if we are not using deploy script
+        await deployments.fixture(); 
         const dAddress = (await deployments.get("DescartesV2Impl")).address;
         descartesV2Impl = DescartesV2Impl__factory.connect(
             dAddress,
             signers[0]
         );
+        */
 
-        const Input = await deployments.getArtifact("Input");
-        const Output = await deployments.getArtifact("Output");
-        const ValidatorManager = await deployments.getArtifact(
-            "ValidatorManager"
+        // Bitmask
+        const bitMaskLibrary = await deployments.deploy("Bitmask", {
+            from: await signers[0].getAddress(),
+        });
+        const bitMaskAddress = bitMaskLibrary.address;
+
+        // CartesiMath
+        const cartesiMath = await deployments.deploy("CartesiMath", {
+            from: await signers[0].getAddress(),
+        });
+        const cartesiMathAddress = cartesiMath.address;
+
+        // Merkle
+        const merkle = await deployments.deploy("Merkle", {
+            from: await signers[0].getAddress(),
+            libraries: {
+                CartesiMath: cartesiMathAddress,
+            },
+        });
+        const merkleAddress = merkle.address;
+
+        // DescartesV2Impl
+        const descartesV2Impl_factory = await ethers.getContractFactory(
+            "DescartesV2Impl",
+            {
+                signer: signers[0],
+                libraries: {
+                    Bitmask: bitMaskAddress,
+                    Merkle: merkleAddress,
+                },
+            }
         );
-        const DisputeManager = await deployments.getArtifact("DisputeManager");
+        descartesV2Impl = await descartesV2Impl_factory.deploy(
+            inputDuration,
+            challengePeriod,
+            INPUT_LOG2_SIZE,
+            OUTPUT_METADATA_LOG2_SIZE,
+            [
+                await signers[0].getAddress(),
+                await signers[1].getAddress(),
+                await signers[2].getAddress(),
+            ]
+        );
+        await descartesV2Impl.deployed();
     });
 
     /// ***test public variable currentPhase*** ///
