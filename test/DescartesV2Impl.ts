@@ -50,8 +50,9 @@ describe("Descartes V2 Implementation", () => {
     beforeEach(async () => {
         signers = await ethers.getSigners();
 
+        await deployments.fixture();
+
         /* comment these if we are not using deploy script
-        await deployments.fixture(); 
         const dAddress = (await deployments.get("DescartesV2Impl")).address;
         descartesV2Impl = DescartesV2Impl__factory.connect(
             dAddress,
@@ -80,29 +81,48 @@ describe("Descartes V2 Implementation", () => {
         });
         const merkleAddress = merkle.address;
 
+        // may need to resolve types conflict
         // DescartesV2Impl
-        const descartesV2Impl_factory = await ethers.getContractFactory(
-            "DescartesV2Impl",
-            {
-                signer: signers[0],
-                libraries: {
-                    Bitmask: bitMaskAddress,
-                    Merkle: merkleAddress,
-                },
-            }
-        );
-        descartesV2Impl = await descartesV2Impl_factory.deploy(
-            inputDuration,
-            challengePeriod,
-            INPUT_LOG2_SIZE,
-            OUTPUT_METADATA_LOG2_SIZE,
-            [
-                await signers[0].getAddress(),
-                await signers[1].getAddress(),
-                await signers[2].getAddress(),
-            ]
-        );
-        await descartesV2Impl.deployed();
+        // const descartesV2Impl_factory = await ethers.getContractFactory("DescartesV2Impl",
+        // {
+        //     signer: signers[0],
+        //     libraries:{
+        //         Bitmask: bitMaskAddress,
+        //         Merkle: merkleAddress,
+        //     }
+        // } )
+        // descartesV2Impl = await descartesV2Impl_factory.deploy(
+        //     inputDuration,
+        //     challengePeriod,
+        //     INPUT_LOG2_SIZE,
+        //     OUTPUT_METADATA_LOG2_SIZE,
+        //     [
+        //         await signers[0].getAddress(),
+        //         await signers[1].getAddress(),
+        //         await signers[2].getAddress(),
+        //     ]
+        // );
+        // await descartesV2Impl.deployed();
+
+        const { address } = await deployments.deploy("DescartesV2Impl", {
+            from: await signers[0].getAddress(),
+            libraries: {
+                Bitmask: bitMaskAddress,
+                Merkle: merkleAddress,
+            },
+            args: [
+                inputDuration,
+                challengePeriod,
+                INPUT_LOG2_SIZE,
+                OUTPUT_METADATA_LOG2_SIZE,
+                [
+                    await signers[0].getAddress(),
+                    await signers[1].getAddress(),
+                    await signers[2].getAddress(),
+                ],
+            ],
+        });
+        descartesV2Impl = DescartesV2Impl__factory.connect(address, signers[0]);
     });
 
     /// ***test public variable currentPhase*** ///
