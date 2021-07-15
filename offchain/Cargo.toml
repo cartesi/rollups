@@ -10,17 +10,21 @@ edition = "2018"
 dispatcher = { path = "../dispatcher-v2/dispatcher"}
 transaction_manager = { path = "../dispatcher-v2/transaction_manager"}
 
-async-recursion = "0.3.2"
-async-trait = "0.1"
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "28c5c4f" }
 ethabi = { version = "14.0.0", default-features = false }
+
+async-recursion = "0.3.2"
+async-trait = "0.1"
 futures = "0.3"
 im = "15.0.0"
+prost = "0.8"
 serde_json = "1.0"
 snafu = "0.6"
-tokio = { version = "^1.5", features = ["sync", "macros"] }
+tokio = { version = "^1.5", features = ["sync", "macros", "rt-multi-thread"] }
+tonic = "0.5.0"
 url = { version = "2.2.1", default-features = false }
 
 [build-dependencies]
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "28c5c4f" }
 serde_json = "1.0"
+tonic-build = "0.5"

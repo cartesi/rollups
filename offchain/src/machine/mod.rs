@@ -1,9 +1,12 @@
 use super::error;
+use super::fold;
 
-use super::fold::types::*;
+pub mod rollup_mm;
+
 use async_trait::async_trait;
 use error::*;
 use ethers::types::{H256, U256};
+use fold::types::*;
 use im::Vector;
 
 pub struct EpochStatus {
