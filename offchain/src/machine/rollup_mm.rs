@@ -7,17 +7,17 @@ use async_trait::async_trait;
 use ethers::types::{H256, U256};
 use im::Vector;
 
-// pub mod versioning_proto {
-//     tonic::include_proto!("versioning");
-// }
+pub mod versioning {
+    tonic::include_proto!("versioning");
+}
 
-pub mod cartesi_machine_proto {
+pub mod cartesi_machine {
     tonic::include_proto!("cartesi_machine");
 }
 
-// pub mod rollup_proto {
-//     tonic::include_proto!("cartesi_rollup_machine_manager");
-// }
+pub mod cartesi_rollup_machine_manager {
+    tonic::include_proto!("cartesi_rollup_machine_manager");
+}
 
 pub struct MachineManager {}
 

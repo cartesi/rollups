@@ -37,21 +37,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         write_contract(name, &path, &destination)?;
     }
 
-    // tonic_build::compile_protos("../grpc-interfaces/versioning.proto")?;
-    // tonic_build::compile_protos("../grpc-interfaces/cartesi-machine.proto")?;
     tonic_build::configure().build_server(false).compile(
-        &["../grpc-interfaces/cartesi-machine.proto"],
+        &[
+            "../grpc-interfaces/versioning.proto",
+            "../grpc-interfaces/cartesi-machine.proto",
+            "../grpc-interfaces/rollup-machine-manager.proto",
+        ],
         &["../grpc-interfaces"],
     )?;
 
-    // tonic_build::compile_protos(
-    //     "../grpc-interfaces/rollup-machine-manager.proto",
-    // )?;
-
-    // tonic_build::configure().build_server(false).compile(
-    //     &["../grpc-interfaces/rollup-machine-manager.proto"],
-    //     &["../grpc-interfaces"],
-    // )?;
+    println!("cargo:rerun-if-changed=../grpc-interfaces/versioning.proto");
     println!("cargo:rerun-if-changed=../grpc-interfaces/cartesi-machine.proto");
     println!("cargo:rerun-if-changed=../grpc-interfaces/rollup-machine-manager.proto");
 
