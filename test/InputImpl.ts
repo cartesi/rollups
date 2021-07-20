@@ -65,20 +65,20 @@ describe("Input Implementation", () => {
         await expect(
             inputFactory.deploy(mockDescartesv2.address, wrongLog2Size),
             "log2Size < 3"
-        ).to.be.revertedWith("log2Size smaller than a word");
+        ).to.be.revertedWith("log size: [3,64]");
 
         wrongLog2Size = 65;
         await expect(
             inputFactory.deploy(mockDescartesv2.address, wrongLog2Size),
             "log2Size > 64"
-        ).to.be.revertedWith("log2Size bigger than machine");
+        ).to.be.revertedWith("log size: [3,64]");
     });
 
     it("addInput should revert if input length == 0", async () => {
         await expect(
             inputImpl.addInput([]),
             "empty input should revert"
-        ).to.be.revertedWith("input is empty");
+        ).to.be.revertedWith("input len: (0,driveSize]");
     });
 
     it("addInput should revert if input is larger than drive (log2Size)", async () => {
@@ -89,13 +89,13 @@ describe("Input Implementation", () => {
         await expect(
             inputImpl.addInput(input_150_bytes),
             "input cant be bigger than drive"
-        ).to.be.revertedWith("input is larger than drive");
+        ).to.be.revertedWith("input len: (0,driveSize]");
 
         // input shouldnt fit because of one byte
         await expect(
             inputImpl.addInput(input_129_bytes),
             "input should still revert because metadata doesnt fit"
-        ).to.be.revertedWith("input is larger than drive");
+        ).to.be.revertedWith("input len: (0,driveSize]");
     });
 
     it("addInput should add input to inbox", async () => {
@@ -271,14 +271,14 @@ describe("Input Implementation", () => {
             await expect(
                 inputImpl.onNewEpoch(),
                 "function can only be called by descartesv2"
-            ).to.be.revertedWith("Only descartesV2 can call this function");
+            ).to.be.revertedWith("Only descartesV2");
         });
 
         it("onNewInputAccumulation() can only be called by descartesv2", async () => {
             await expect(
                 inputImpl.onNewInputAccumulation(),
                 "function can only be called by descartesv2"
-            ).to.be.revertedWith("Only descartesV2 can call this function");
+            ).to.be.revertedWith("Only descartesV2");
         });
     }
 

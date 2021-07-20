@@ -23,19 +23,12 @@
 /// @title Input Implementation
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-import "@cartesi/util/contracts/Merkle.sol";
-
 import "./Input.sol";
 import "./DescartesV2.sol";
 
 // TODO: this contract seems to be very unsafe, need to think about security implications
 contract InputImpl is Input {
-    uint256 constant L_WORD_SIZE = 3; // word = 8 bytes, log = 3
-
     DescartesV2 immutable descartesV2; // descartes 2 contract using this input contract
-    uint8 immutable log2Size; // log2size of input flashdrive
 
     // always needs to keep track of two input boxes:
     // 1 for the input accumulation of next epoch
@@ -44,27 +37,16 @@ contract InputImpl is Input {
     bytes32[] inputBox0;
     bytes32[] inputBox1;
 
-    bool lock; //reentrancy lock
-
+    uint256 immutable inputDriveSize; // size of input flashdrive
     uint256 currentInputBox;
-    /// @notice functions modified by onlyDescartesV2 will only be executed if
-    /// they're called by DescartesV2 contract, otherwise it will throw an exception
-    modifier onlyDescartesV2 {
-        require(
-            msg.sender == address(descartesV2),
-            "Only descartesV2 can call this function"
-        );
-        _;
-    }
 
     /// @param _descartesV2 address of descartesV2 contract that will manage inboxes
     /// @param _log2Size size of the input drive of the machine
-    constructor(address _descartesV2, uint8 _log2Size) {
-        require(_log2Size >= 3, "log2Size smaller than a word");
-        require(_log2Size <= 64, "log2Size bigger than machine");
+    constructor(address _descartesV2, uint256 _log2Size) {
+        require(_log2Size >= 3 && _log2Size <= 64, "log size: [3,64]");
 
         descartesV2 = DescartesV2(_descartesV2);
-        log2Size = _log2Size;
+        inputDriveSize = (1 << _log2Size);
     }
 
     /// @notice add input to processed by next epoch
@@ -73,20 +55,18 @@ contract InputImpl is Input {
     ///      that input size is power of 2 and multiple of 8 since
     // the offchain machine has a 8 byte word
     function addInput(bytes calldata _input) public override returns (bytes32) {
-        require(_input.length > 0, "input is empty");
-
-        // 64 bytes
-        bytes memory metadata = abi.encode(msg.sender, block.timestamp);
-        // total size of the drive in words
-        uint256 size = 1 << uint256(log2Size - 3);
-
         require(
-            _input.length <= (size << L_WORD_SIZE),
-            "input is larger than drive"
+            _input.length > 0 && _input.length <= inputDriveSize,
+            "input len: (0,driveSize]"
         );
 
-        bytes32 inputHash =
-            keccak256(abi.encode(keccak256(metadata), keccak256(_input)));
+        // keccak 64 bytes into 32 bytes
+        bytes32 keccakMetadata =
+            keccak256(abi.encode(msg.sender, block.timestamp));
+        bytes32 keccakInput = keccak256(_input);
+
+        bytes32 inputHash = keccak256(abi.encode(keccakMetadata, keccakInput));
+
         // notifyInput returns true if that input
         // belongs to a new epoch
         if (descartesV2.notifyInput()) {
@@ -134,17 +114,24 @@ contract InputImpl is Input {
     /// @notice called when a new input accumulation phase begins
     ///         swap inbox to receive inputs for upcoming epoch
     /// @dev can only be called by DescartesV2 contract
-    function onNewInputAccumulation() public override onlyDescartesV2 {
+    function onNewInputAccumulation() public override {
+        onlyDescartesV2();
         swapInputBox();
     }
 
     /// @notice called when a new epoch begins, clears deprecated inputs
     /// @dev can only be called by DescartesV2 contract
-    function onNewEpoch() public override onlyDescartesV2 {
+    function onNewEpoch() public override {
         // clear input box for new inputs
         // the current input box should be accumulating inputs
         // for the new epoch already. So we clear the other one.
+        onlyDescartesV2();
         currentInputBox == 0 ? delete inputBox1 : delete inputBox0;
+    }
+
+    /// @notice check if message sender is DescartesV2
+    function onlyDescartesV2() internal view {
+        require(msg.sender == address(descartesV2), "Only descartesV2");
     }
 
     /// @notice changes current input box
