@@ -31,20 +31,10 @@ import "./Input.sol";
 contract PortalImpl is Portal {
     address immutable outputContract;
     Input immutable inputContract;
-    bool lock;
 
     modifier onlyOutputContract {
-        require(msg.sender == outputContract, "msg.sender != outputContract");
+        require(msg.sender == outputContract, "only outputContract");
         _;
-    }
-
-    /// TODO: this is also defined on InputImpl
-    /// @notice functions modified by noReentrancy are not subject to recursion
-    modifier noReentrancy() {
-        require(!lock, "reentrancy not allowed");
-        lock = true;
-        _;
-        lock = false;
     }
 
     constructor(address _inputContract, address _outputContract) {
@@ -62,18 +52,18 @@ contract PortalImpl is Portal {
         address[] calldata _L2receivers,
         uint256[] calldata _amounts,
         bytes calldata _data
-    ) public payable override noReentrancy() returns (bytes32) {
+    ) public payable override returns (bytes32) {
         require(
             _L2receivers.length == _amounts.length,
-            "receivers array length != amounts array length"
+            "receivers.len != amounts.len"
         );
 
         uint256 totalAmount;
-
-        for (uint256 i = 0; i < _amounts.length; i++) {
+        uint256 i;
+        for (; i < _amounts.length; i++) {
             totalAmount = totalAmount + _amounts[i];
         }
-        require(msg.value >= totalAmount, "msg.value < totalAmount)");
+        require(msg.value >= totalAmount, "not enough value");
 
         bytes memory input =
             abi.encode(operation.EtherOp, _L2receivers, _amounts, _data);
@@ -96,15 +86,15 @@ contract PortalImpl is Portal {
         address[] calldata _L2receivers,
         uint256[] calldata _amounts,
         bytes calldata _data
-    ) public override noReentrancy() returns (bytes32) {
+    ) public override returns (bytes32) {
         require(
             _L2receivers.length == _amounts.length,
-            "receivers array length != amounts array length"
+            "receivers.len != amounts.len"
         );
 
         uint256 totalAmount;
-
-        for (uint256 i = 0; i < _amounts.length; i++) {
+        uint256 i;
+        for (; i < _amounts.length; i++) {
             totalAmount = totalAmount + _amounts[i];
         }
 
@@ -167,7 +157,6 @@ contract PortalImpl is Portal {
     /// @return status of withdrawal
     function etherWithdrawal(address payable _receiver, uint256 _amount)
         internal
-        onlyOutputContract
         returns (bool)
     {
         // transfer reverts on failure
@@ -186,7 +175,7 @@ contract PortalImpl is Portal {
         address _ERC20,
         address payable _receiver,
         uint256 _amount
-    ) internal onlyOutputContract returns (bool) {
+    ) internal returns (bool) {
         IERC20 token = IERC20(_ERC20);
 
         // transfer reverts on failure

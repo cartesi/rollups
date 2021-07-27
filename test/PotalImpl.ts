@@ -75,7 +75,7 @@ describe("Portal Implementation", async () => {
                 }
             ),
             "ether deposit should revert if amount.length > addresses.length"
-        ).to.be.revertedWith("receivers array length != amounts array length");
+        ).to.be.revertedWith("receivers.len != amounts.len");
 
         expect(
             portalImpl.etherDeposit(
@@ -85,7 +85,7 @@ describe("Portal Implementation", async () => {
                 { value: ethers.utils.parseEther("50") }
             ),
             "ether deposit should revert if amount.length < addresses.length"
-        ).to.be.revertedWith("receivers array length != amounts array length");
+        ).to.be.revertedWith("receivers.len != amounts.len");
     });
 
     it("etherDeposit should revert if msg.value is too low", async () => {
@@ -100,7 +100,7 @@ describe("Portal Implementation", async () => {
                 { value: ethers.utils.parseEther("100") }
             ),
             "ether deposit should revert if not enough ether was sent"
-        ).to.be.revertedWith("msg.value < totalAmount");
+        ).to.be.revertedWith("not enough value");
 
         expect(
             portalImpl.etherDeposit(
@@ -113,7 +113,7 @@ describe("Portal Implementation", async () => {
                 { value: ethers.utils.parseEther("199") }
             ),
             "ether deposit should revert if not enough ether was sent"
-        ).to.be.revertedWith("msg.value < totalAmount");
+        ).to.be.revertedWith("not enough value");
     });
 
     it("etherDeposit should emit events", async () => {
@@ -201,7 +201,7 @@ describe("Portal Implementation", async () => {
                 "0x00"
             ),
             "ether deposit should revert if amount.length > addresses.length"
-        ).to.be.revertedWith("receivers array length != amounts array length");
+        ).to.be.revertedWith("receivers.len != amounts.len");
 
         await expect(
             portalImpl.erc20Deposit(
@@ -212,7 +212,7 @@ describe("Portal Implementation", async () => {
                 "0x00"
             ),
             "ether deposit should revert if amount.length < addresses.length"
-        ).to.be.revertedWith("receivers array length != amounts array length");
+        ).to.be.revertedWith("receivers.len != amounts.len");
     });
 
     it("erc20Deposit should revert if transfer from returns false", async () => {
@@ -311,7 +311,7 @@ describe("Portal Implementation", async () => {
         );
         await expect(
             portalImpl.connect(signer2).executeDescartesV2Output(data)
-        ).to.be.revertedWith("msg.sender != outputContract");
+        ).to.be.revertedWith("only outputContract");
     });
 
     it("etherWithdrawal should emit EtherWithdrawn and return true if operation is EtherOp", async () => {
