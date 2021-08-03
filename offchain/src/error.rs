@@ -24,6 +24,12 @@ pub enum Error {
     StateFoldError {
         source: state_fold::error::Error<DescartesAccess>,
     },
+
+    #[snafu(display("Tonic status error"))]
+    TonicStatusError { source: tonic::Status },
+
+    #[snafu(display("Tonic transport error"))]
+    TonicTransportError { source: tonic::transport::Error },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
