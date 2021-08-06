@@ -4,10 +4,13 @@ use error::*;
 use super::fold::types::*;
 use super::{EpochStatus, MachineInterface};
 use async_trait::async_trait;
-use ethers::types::{H256, U256};
 use im::Vector;
 use snafu::ResultExt;
+use std::convert::TryInto;
 use tokio::sync::Mutex;
+
+use ethers::types::{H256, U256};
+use ethers::utils::keccak256;
 
 use tonic::transport::Channel;
 
@@ -16,8 +19,7 @@ use cartesi_rollup_machine_manager::rollup_machine_manager_client::RollupMachine
 use cartesi_rollup_machine_manager::{
     DeadlineConfig, EnqueueInputRequest, FinishEpochRequest,
     GetEpochStatusRequest, GetEpochStatusResponse, GetSessionStatusRequest,
-    PayloadAndMetadata, PayloadAndMetadataArray, ProcessedInput,
-    StartSessionRequest,
+    PayloadAndMetadata, PayloadAndMetadataArray, StartSessionRequest,
 };
 
 pub mod versioning {
@@ -197,27 +199,71 @@ impl MachineInterface for MachineManager {
         let epoch_response = client
             .get_epoch_status(get_epoch_request)
             .await
-            .context(TonicStatusError)?;
+            .context(TonicStatusError)?
+            .into_inner();
 
-        // Ok(())
+        let outputs_metadata_hash = epoch_response
+            .outputs_metadata_flash_drive_in_epoch
+            .expect("Should contain output metadata hash")
+            .root_hash
+            .expect("Should contain output root hash")
+            .data;
 
-        todo!()
+        let messages_metadata_hash = epoch_response
+            .messages_metadata_flash_drive_in_epoch
+            .expect("Should contain message metadata hash")
+            .root_hash
+            .expect("Should contain message root hash")
+            .data;
+
+        let machine_state_hash = epoch_response
+            .machine_hash_after_epoch
+            .expect("Machine Manager should return machine_hash_after_epoch")
+            .data;
+
+        assert_eq!(outputs_metadata_hash.len(), 32);
+        assert_eq!(messages_metadata_hash.len(), 32);
+        assert_eq!(machine_state_hash.len(), 32);
+
+        let claim = compute_claim_hash(
+            outputs_metadata_hash.as_slice().try_into().unwrap(),
+            messages_metadata_hash.as_slice().try_into().unwrap(),
+            machine_state_hash.as_slice().try_into().unwrap(),
+        );
+
+        Ok(claim)
     }
 }
 
-/*
-// TODO: drop (async issues)
-impl Drop for MachineManager {
-    fn drop(&mut self) {
-            let end_session_request = tonic::Request::new(EndSessionRequest {
-                session_id: self.session_id,
-            });
+fn compute_claim_hash(
+    machine_state_hash: [u8; 32],
+    outputs_metadata_hash: [u8; 32],
+    messages_metadata_hash: [u8; 32],
+) -> H256 {
+    let concat = [
+        machine_state_hash,
+        outputs_metadata_hash,
+        messages_metadata_hash,
+    ]
+    .concat();
 
-            let _response = self
-                .client
-                .end_session(end_session_request)
-                .await
-                .expect("Couldn't end session");
+    keccak256(&concat).into()
+}
+
+#[cfg(test)]
+mod tests {
+    use ethers::types::H256;
+    use std::str::FromStr;
+
+    use super::compute_claim_hash;
+
+    #[test]
+    fn test_claim_hash() {
+        let hash: H256 = H256::from_str("0x973ec1026786d31f9980a949b9fc89726278ea9306aa6e15602ecd43f5174b94").unwrap();
+        let claim = compute_claim_hash(hash.into(), hash.into(), hash.into());
+        assert_eq!(
+            H256::from_str("0xb19b8a98b4dc1a45afadecf00e4482b06e071f40409c866fa32b2e60f5cb3c45").unwrap(),
+            claim
+        );
     }
 }
-*/
