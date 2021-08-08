@@ -303,7 +303,7 @@ describe("Output Implementation Testing", () => {
             await outputImpl.executeOutput(_destination, _payload, v);
             await expect(
                 outputImpl.executeOutput(_destination, _payload, v)
-            ).to.be.revertedWith("output has already been executed");
+            ).to.be.revertedWith("re-execution not allowed");
         });
 
         it("executeOutput() should revert if proof is not valid", async () => {
@@ -333,9 +333,7 @@ describe("Output Implementation Testing", () => {
                 ethers.utils.formatBytes32String("hello"),
                 v
             )
-        ).to.be.revertedWith(
-            "epoch outputs hash is not represented in the epoch hash"
-        );
+        ).to.be.revertedWith("epochHash incorrect");
     });
 
     it("isValidProof() should revert when epochOutputDriveHash doesn't match", async () => {
@@ -343,9 +341,7 @@ describe("Output Implementation Testing", () => {
         v.inputIndex = 10;
         await expect(
             outputImpl.isValidProof(encodedOutput, epochHash, v)
-        ).to.be.revertedWith(
-            "output's metadata drive hash is not contained in epoch output drive"
-        );
+        ).to.be.revertedWith("epochOutputDriveHash incorrect");
         // restore v
         v.inputIndex = tempInputIndex;
     });
@@ -355,9 +351,7 @@ describe("Output Implementation Testing", () => {
         v.outputIndex = 10;
         await expect(
             outputImpl.isValidProof(encodedOutput, epochHash, v)
-        ).to.be.revertedWith(
-            "specific output is not contained in output metadata drive hash"
-        );
+        ).to.be.revertedWith("outputMetadataArrayDriveHash incorrect");
         // restore v
         v.outputIndex = tempOutputIndex;
     });
@@ -390,7 +384,7 @@ describe("Output Implementation Testing", () => {
         it("only DescartesV2 can call onNewEpoch()", async () => {
             await expect(
                 outputImpl.onNewEpoch(ethers.utils.formatBytes32String("hello"))
-            ).to.be.revertedWith("Only descartesV2 can call this function");
+            ).to.be.revertedWith("Only descartesV2");
         });
     }
 

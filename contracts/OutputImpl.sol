@@ -20,18 +20,18 @@ import "@cartesi/util/contracts/Merkle.sol";
 import "./Output.sol";
 
 contract OutputImpl is Output {
-    using Bitmask for mapping(uint248 => uint256);
+    using Bitmask for mapping(uint256 => uint256);
 
-    uint8 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
+    uint256 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
 
     // max size of output metadata drive 32 * (2^16) bytes
-    uint8 constant OUTPUT_METADATA_LOG2_SIZE = 21;
+    uint256 constant OUTPUT_METADATA_LOG2_SIZE = 21;
     // max size of epoch output drive 32 * (2^32) bytes
-    uint8 constant EPOCH_OUTPUT_LOG2_SIZE = 37;
-    uint8 immutable log2OutputMetadataArrayDriveSize;
+    uint256 constant EPOCH_OUTPUT_LOG2_SIZE = 37;
+    uint256 immutable log2OutputMetadataArrayDriveSize;
 
     address immutable descartesV2; // descartes 2 contract using this validator
-    mapping(uint248 => uint256) internal outputBitmask;
+    mapping(uint256 => uint256) internal outputBitmask;
     bytes32[] epochHashes;
 
     bool lock; //reentrancy lock
@@ -47,10 +47,7 @@ contract OutputImpl is Output {
     /// @notice functions modified by onlyDescartesV2 will only be executed if
     // they're called by DescartesV2 contract, otherwise it will throw an exception
     modifier onlyDescartesV2 {
-        require(
-            msg.sender == descartesV2,
-            "Only descartesV2 can call this functions"
-        );
+        require(msg.sender == descartesV2, "Only descartesV2");
         _;
     }
 
@@ -58,7 +55,8 @@ contract OutputImpl is Output {
     // @params _descartesV2 address of descartes contract
     // @params _log2OutputMetadataArrayDriveSize log2 size
     //         of output metadata array drive
-    constructor(address _descartesV2, uint8 _log2OutputMetadataArrayDriveSize) {
+    constructor(address _descartesV2, uint256 _log2OutputMetadataArrayDriveSize)
+    {
         descartesV2 = _descartesV2;
         log2OutputMetadataArrayDriveSize = _log2OutputMetadataArrayDriveSize;
     }
@@ -77,10 +75,7 @@ contract OutputImpl is Output {
         bytes memory encodedOutput = abi.encode(_destination, _payload);
 
         // check if validity proof matches the output provided
-        require(
-            isValidProof(encodedOutput, epochHashes[_v.epochIndex], _v),
-            "validity proof not accepted"
-        );
+        isValidProof(encodedOutput, epochHashes[_v.epochIndex], _v);
 
         uint256 outputPosition =
             getBitMaskPosition(_v.outputIndex, _v.inputIndex, _v.epochIndex);
@@ -88,12 +83,11 @@ contract OutputImpl is Output {
         // check if output has been executed
         require(
             !outputBitmask.getBit(outputPosition),
-            "output has already been executed"
+            "re-execution not allowed"
         );
 
         // execute output
-        (bool succ, bytes memory returnData) =
-            address(_destination).call(_payload);
+        (bool succ, ) = address(_destination).call(_payload);
 
         emit OutputExecuted(outputPosition);
 
@@ -126,7 +120,7 @@ contract OutputImpl is Output {
                     _v.epochMachineFinalState
                 )
             ) == _epochHash,
-            "epoch outputs hash is not represented in the epoch hash"
+            "epochHash incorrect"
         );
 
         // prove that output metadata drive is contained in epoch's output drive
@@ -138,10 +132,8 @@ contract OutputImpl is Output {
                 keccak256(abi.encodePacked(_v.outputMetadataArrayDriveHash)),
                 _v.epochOutputDriveProof
             ) == _v.epochOutputDriveHash,
-            "output's metadata drive hash is not contained in epoch output drive"
+            "epochOutputDriveHash incorrect"
         );
-
-        bytes32 hashOfOutput = keccak256(_encodedOutput);
 
         // The hash of the output is converted to bytes (abi.encode) and
         // treated as data. The metadata output drive stores that data while
@@ -160,8 +152,9 @@ contract OutputImpl is Output {
         //     )
         // is contained in it. We can't simply use hashOfOutput because the
         // log2size of the leaf is three (8 bytes) not  five (32 bytes)
-        bytes32 merkleRootOfHashOfOutput = Merkle.getMerkleRootFromBytes(
-                abi.encodePacked(hashOfOutput),
+        bytes32 merkleRootOfHashOfOutput =
+            Merkle.getMerkleRootFromBytes(
+                abi.encodePacked(keccak256(_encodedOutput)),
                 KECCAK_LOG2_SIZE
             );
 
@@ -175,7 +168,7 @@ contract OutputImpl is Output {
                 merkleRootOfHashOfOutput,
                 _v.outputMetadataProof
             ) == _v.outputMetadataArrayDriveHash,
-            "specific output is not contained in output metadata drive hash"
+            "outputMetadataArrayDriveHash incorrect"
         );
 
         return true;
@@ -193,18 +186,19 @@ contract OutputImpl is Output {
     ) public pure returns (uint256) {
         // output * 2 ** 128 + input * 2 ** 64 + epoch
         // this can't overflow because its impossible to have > 2**128 outputs
-        return (_output << 128) + (_input << 64) + _epoch;
+        return (((_output << 128) | (_input << 64)) | _epoch);
     }
 
     /// @notice returns the position of a intra drive on a drive
     //          with  contents with the same size
     /// @param _index index of intra drive
     /// @param _log2Size of intra drive
-    function getIntraDrivePosition(uint256 _index, uint8 _log2Size)
-    public
-    pure
-    returns (uint64) {
-        return uint64(_index * (1 << _log2Size));
+    function getIntraDrivePosition(uint256 _index, uint256 _log2Size)
+        public
+        pure
+        returns (uint256)
+    {
+        return (_index << _log2Size);
     }
 
     /// @notice get number of finalized epochs
@@ -228,13 +222,7 @@ contract OutputImpl is Output {
     }
 
     /// @notice get log2 size of epoch output drive
-    function getEpochOutputLog2Size()
-        public
-        pure
-        override
-        returns (uint256)
-    {
+    function getEpochOutputLog2Size() public pure override returns (uint256) {
         return EPOCH_OUTPUT_LOG2_SIZE;
     }
-
 }
