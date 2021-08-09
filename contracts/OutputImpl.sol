@@ -20,6 +20,7 @@ import "@cartesi/util/contracts/Merkle.sol";
 import "./Output.sol";
 
 contract OutputImpl is Output {
+    // Here we only need 248 bits as keys in the mapping, but we use 256 bits for gas optimization
     using Bitmask for mapping(uint256 => uint256);
 
     uint256 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
