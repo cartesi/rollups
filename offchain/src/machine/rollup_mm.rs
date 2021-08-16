@@ -203,22 +203,18 @@ impl MachineInterface for MachineManager {
             .into_inner();
 
         let outputs_metadata_hash = epoch_response
-            .outputs_metadata_flash_drive_in_epoch
-            .expect("Should contain output metadata hash")
-            .root_hash
-            .expect("Should contain output root hash")
+            .most_recent_outputs_epoch_root_hash
+            .expect("Machine Manager should return most_recent_outputs_epoch_root_hash")
             .data;
 
         let messages_metadata_hash = epoch_response
-            .messages_metadata_flash_drive_in_epoch
-            .expect("Should contain message metadata hash")
-            .root_hash
-            .expect("Should contain message root hash")
+            .most_recent_messages_epoch_root_hash
+            .expect("Machine Manager should return most_recent_outputs_epoch_root_hash")
             .data;
 
         let machine_state_hash = epoch_response
-            .machine_hash_after_epoch
-            .expect("Machine Manager should return machine_hash_after_epoch")
+            .most_recent_machine_hash
+            .expect("Machine Manager should return most_recent_machine_hash")
             .data;
 
         assert_eq!(outputs_metadata_hash.len(), 32);
