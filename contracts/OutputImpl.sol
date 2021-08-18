@@ -95,6 +95,8 @@ contract OutputImpl is Output {
         (bool succ, bytes memory returnData) =
             address(_destination).call(_payload);
 
+        emit OutputExecuted(outputPosition);
+
         // if properly executed, mark it as executed
         if (succ) outputBitmask.setBit(outputPosition, true);
 

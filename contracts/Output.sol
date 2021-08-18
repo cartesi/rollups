@@ -66,4 +66,6 @@ interface Output {
         external
         pure
         returns (uint256);
+
+    event OutputExecuted(uint256 outputPosition);
 }
