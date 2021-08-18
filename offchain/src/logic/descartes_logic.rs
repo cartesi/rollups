@@ -27,6 +27,7 @@ use snafu::ResultExt;
 pub struct Config {
     pub safety_margin: usize,
     pub input_contract_address: Address, // TODO: read from contract.
+    pub output_contract_address: Address,
     pub descartes_contract_address: Address,
 
     pub provider_http_url: String,
@@ -503,6 +504,7 @@ impl From<&Config> for instantiate_state_fold::Config {
         Self {
             safety_margin: config.safety_margin,
             input_contract_address: config.input_contract_address,
+            output_contract_address: config.output_contract_address,
             descartes_contract_address: config.descartes_contract_address,
 
             provider_http_url: config.provider_http_url.clone(),

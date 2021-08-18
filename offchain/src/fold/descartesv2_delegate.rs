@@ -3,9 +3,10 @@ use offchain_core::ethers;
 use crate::contracts::descartesv2_contract::*;
 
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
+use super::output_delegate::OutputFoldDelegate;
 use super::sealed_epoch_delegate::SealedEpochState;
 use super::types::{
-    AccumulatingEpoch, DescartesV2State, ImmutableState, PhaseState,
+    AccumulatingEpoch, DescartesV2State, ImmutableState, PhaseState, OutputState,
 };
 
 use offchain_core::types::Block;
@@ -27,16 +28,19 @@ use ethers::types::{Address, U256};
 pub struct DescartesV2FoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
     descartesv2_address: Address,
     epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
+    output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
 }
 
 impl<DA: DelegateAccess + Send + Sync + 'static> DescartesV2FoldDelegate<DA> {
     pub fn new(
         descartesv2_address: Address,
         epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
+        output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
     ) -> Self {
         Self {
             descartesv2_address,
             epoch_fold,
+            output_fold,
         }
     }
 }
@@ -113,11 +117,24 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
+        let output_state = self
+            .output_fold
+            .get_state_for_block(&(), block.hash)
+            .await
+            .map_err(|e| {
+                SyncDelegateError {
+                    err: format!("Output state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
         Ok(convert_raw_to_logical(
             raw_contract_state,
             constants,
             block,
             initial_state,
+            output_state,
         ))
     }
 
@@ -142,11 +159,24 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
+        let output_state = self
+            .output_fold
+            .get_state_for_block(&(), block.hash)
+            .await
+            .map_err(|e| {
+                FoldDelegateError {
+                    err: format!("Output state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
         Ok(convert_raw_to_logical(
             raw_contract_state,
             constants,
             block,
             &previous_state.initial_epoch,
+            output_state,
         ))
     }
 
@@ -166,6 +196,7 @@ fn convert_raw_to_logical(
     constants: ImmutableState,
     block: &Block,
     initial_epoch: &U256,
+    output_state: OutputState,
 ) -> DescartesV2State {
     // If the raw state is InputAccumulation but it has expired, then the raw
     // state's `current_epoch` becomes the sealed epoch, and the logic state's
@@ -279,6 +310,7 @@ fn convert_raw_to_logical(
         current_phase: phase_state,
         finalized_epochs: contract_state.finalized_epochs,
         current_epoch,
+        output_state,
     }
 }
 

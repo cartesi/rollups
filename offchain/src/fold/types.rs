@@ -3,6 +3,7 @@ use offchain_core::ethers;
 use ethers::abi::{encode, Token};
 use ethers::types::{Address, H256, U256, U64};
 use im::{HashMap, HashSet, Vector};
+use rpds::VectorSync;
 use std::sync::Arc;
 
 /// Single input from Input.sol contract
@@ -45,6 +46,11 @@ impl EpochInputState {
             inputs: Vector::new(),
         }
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct OutputState {
+    pub outputs: VectorSync<VectorSync<VectorSync<bool>>>,
 }
 
 /// Set of claims
@@ -275,4 +281,6 @@ pub struct DescartesV2State {
     pub current_epoch: AccumulatingEpoch,
 
     pub current_phase: PhaseState,
+
+    pub output_state: OutputState,
 }

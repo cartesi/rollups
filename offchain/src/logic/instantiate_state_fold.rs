@@ -15,6 +15,7 @@ use std::sync::Arc;
 pub struct Config {
     pub safety_margin: usize,
     pub input_contract_address: Address, // TODO: read from contract.
+    pub output_contract_address: Address,
     pub descartes_contract_address: Address,
 
     pub provider_http_url: String,
@@ -57,6 +58,7 @@ impl From<&Config> for SetupConfig {
         SetupConfig {
             safety_margin: config.safety_margin,
             input_contract_address: config.input_contract_address,
+            output_contract_address: config.output_contract_address,
             descartes_contract_address: config.descartes_contract_address,
         }
     }

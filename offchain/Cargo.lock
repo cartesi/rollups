@@ -68,6 +68,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28b2cd92db5cbd74e8e5028f7e27dd7aa3090e89e4f2a197cc7c8dfb69c7063b"
 
 [[package]]
+name = "archery"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a8da9bc4c4053ee067669762bcaeea6e241841295a2b6c948312dad6ef4cc02"
+dependencies = [
+ "static_assertions",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1493,6 +1502,7 @@ dependencies = [
  "middleware-factory",
  "offchain-core",
  "prost",
+ "rpds",
  "serde_json",
  "snafu",
  "state-fold",
@@ -2007,6 +2017,15 @@ checksum = "e54369147e3e7796c9b885c7304db87ca3d09a0a98f72843d532868675bbfba8"
 dependencies = [
  "bytes",
  "rustc-hex",
+]
+
+[[package]]
+name = "rpds"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "387f58b714cda2b5042ef9e91819445f60189900b618475186b11d7876f6adb4"
+dependencies = [
+ "archery",
 ]
 
 [[package]]

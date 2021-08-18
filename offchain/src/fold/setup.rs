@@ -10,6 +10,7 @@ use std::sync::Arc;
 pub struct SetupConfig {
     pub safety_margin: usize,
     pub input_contract_address: Address,
+    pub output_contract_address: Address,
     pub descartes_contract_address: Address,
 }
 
@@ -24,10 +25,12 @@ pub fn create_descartes_state_fold<
     config: &SetupConfig,
 ) -> DescartesStateFold<DA> {
     let epoch_fold = create_epoch(Arc::clone(&access), config);
+    let output_fold = create_output(Arc::clone(&access), config);
 
     let delegate = DescartesV2FoldDelegate::new(
         config.descartes_contract_address,
         epoch_fold,
+        output_fold,
     );
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
@@ -39,6 +42,16 @@ fn create_input<DA: DelegateAccess + Send + Sync + 'static>(
     config: &SetupConfig,
 ) -> InputStateFold<DA> {
     let delegate = InputFoldDelegate::new(config.input_contract_address);
+    let state_fold = StateFold::new(delegate, access, config.safety_margin);
+    Arc::new(state_fold)
+}
+
+type OutputStateFold<DA> = Arc<StateFold<OutputFoldDelegate, DA>>;
+fn create_output<DA: DelegateAccess + Send + Sync + 'static>(
+    access: Arc<DA>,
+    config: &SetupConfig,
+) -> OutputStateFold<DA> {
+    let delegate = OutputFoldDelegate::new(config.output_contract_address);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
