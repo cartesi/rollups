@@ -1,6 +1,3 @@
-[submodule "dispatcher-v2"]
-	path = dispatcher-v2
-	url = git@github.com:cartesi-corp/dispatcher-v2.git
 [submodule "grpc-interfaces"]
 	path = grpc-interfaces
 	url = https://github.com/cartesi-corp/grpc-interfaces.git
