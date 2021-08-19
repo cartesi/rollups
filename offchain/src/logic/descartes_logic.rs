@@ -1,3 +1,5 @@
+use offchain_core::ethers;
+
 use super::instantiate_state_fold::{self, instantiate_state_fold};
 use super::instantiate_tx_manager::{
     self, instantiate_tx_manager, DescartesTxManager,
@@ -8,14 +10,14 @@ use crate::error::*;
 use crate::fold::types::*;
 use crate::machine::{EpochStatus, MachineInterface, MockMachine};
 
-use dispatcher::block_subscriber::{
+use block_subscriber::{
     BlockSubscriber, BlockSubscriberHandle, NewBlockSubscriber,
 };
-use dispatcher::middleware_factory::{
+use middleware_factory::{
     HttpProviderFactory, MiddlewareFactory, WsProviderFactory,
 };
-use dispatcher::state_fold::types::BlockState;
-use transaction_manager::types::ResubmitStrategy;
+use state_fold::types::BlockState;
+use tx_manager::types::ResubmitStrategy;
 
 use async_recursion::async_recursion;
 use ethers::core::types::{Address, H256, U256, U64};

@@ -1,13 +1,15 @@
+use offchain_core::ethers;
+
 use super::input_delegate::InputFoldDelegate;
 use super::types::{AccumulatingEpoch, EpochInputState};
 
-use dispatcher::state_fold::{
+use offchain_core::types::Block;
+use state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
     error::*,
     types::*,
     DelegateAccess, StateFold,
 };
-use dispatcher::types::Block;
 
 use async_trait::async_trait;
 use std::sync::Arc;

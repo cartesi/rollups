@@ -1,3 +1,5 @@
+use offchain_core::ethers;
+
 use crate::contracts::descartesv2_contract::*;
 
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
@@ -6,13 +8,13 @@ use super::types::{
     AccumulatingEpoch, DescartesV2State, ImmutableState, PhaseState,
 };
 
-use dispatcher::state_fold::{
+use offchain_core::types::Block;
+use state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
     error::*,
     types::*,
     DelegateAccess, StateFold,
 };
-use dispatcher::types::Block;
 
 use async_trait::async_trait;
 use snafu::ResultExt;

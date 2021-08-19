@@ -1,3 +1,5 @@
+use offchain_core::ethers;
+
 use ethers::abi::{encode, Token};
 use ethers::types::{Address, H256, U256, U64};
 use im::{HashMap, HashSet, Vector};

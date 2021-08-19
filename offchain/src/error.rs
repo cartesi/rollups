@@ -1,8 +1,8 @@
 use snafu::Snafu;
 
 use crate::logic::instantiate_state_fold::DescartesAccess;
-use dispatcher::middleware_factory;
-use dispatcher::state_fold;
+use middleware_factory;
+use state_fold;
 use tokio::sync::broadcast::error::RecvError;
 
 #[derive(Debug, Snafu)]

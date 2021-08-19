@@ -1,7 +1,9 @@
+use offchain_core::ethers;
+
 use crate::error::*;
 use crate::fold::*;
 
-use dispatcher::state_fold::Access;
+use state_fold::Access;
 
 use ethers::core::types::{Address, U64};
 use ethers::providers::{Http, Provider};

@@ -1,3 +1,5 @@
+use offchain_core::ethers;
+
 use super::error;
 use error::*;
 

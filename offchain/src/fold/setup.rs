@@ -1,5 +1,7 @@
+use offchain_core::ethers;
+
 use super::*;
-use dispatcher::state_fold::{DelegateAccess, StateFold};
+use state_fold::{DelegateAccess, StateFold};
 
 use ethers::core::types::Address;
 

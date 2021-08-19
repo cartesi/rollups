@@ -1,11 +1,13 @@
+use offchain_core::ethers;
+
 use crate::contracts::descartesv2_contract::DescartesV2Impl;
 use crate::error::*;
 
-use dispatcher::block_subscriber::{BlockSubscriber, BlockSubscriberHandle};
-use dispatcher::middleware_factory::{
+use block_subscriber::{BlockSubscriber, BlockSubscriberHandle};
+use middleware_factory::{
     HttpProviderFactory, MiddlewareFactory, WsProviderFactory,
 };
-use transaction_manager::{provider::Factory, TransactionManager};
+use tx_manager::{provider::Factory, TransactionManager};
 
 use ethers::core::types::Address;
 use snafu::ResultExt;

@@ -1,14 +1,16 @@
+use offchain_core::ethers;
+
 use crate::contracts::input_contract::*;
 
 use super::types::{EpochInputState, Input};
 
-use dispatcher::state_fold::{
+use offchain_core::types::Block;
+use state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
     error::*,
     types::*,
     utils as fold_utils,
 };
-use dispatcher::types::Block;
 
 use async_trait::async_trait;
 use im::Vector;
