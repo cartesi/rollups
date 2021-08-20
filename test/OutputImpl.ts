@@ -91,7 +91,7 @@ describe("Output Implementation Testing", () => {
         // deploy a simple contract to execute
         const simpleContract = await deployments.deploy("SimpleContract", {
             from: await signers[0].getAddress(),
-            deterministicDeployment: true, // fix the address
+            deterministicDeployment: true, // deployed address is calculated based on contract bytecode and constructor arguments
         });
         simpleContractAddress = simpleContract.address;
     });
@@ -165,9 +165,9 @@ describe("Output Implementation Testing", () => {
         inputIndex: 1,
         outputIndex: 0,
         outputMetadataArrayDriveHash:
-            "0x4d5d7f017cfb39a10b02e8800db1380d507fefc25b9efbfcfb81149eeff417a9",
+            "0x84842b18ffa0a3ca497e8eb68fc326792d9141482b3cefdeee05b6c7639ccdfb",
         epochOutputDriveHash:
-            "0x29a43b498006128f0fd6026242662f4a6f47412f027954cd3973e3419e531adf",
+            "0x2157a942123603e60e93a226bf1cad66c4258675632697359d6845c186ff47d4",
         epochMessageDriveHash:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d45",
         epochMachineFinalState:
@@ -240,9 +240,9 @@ describe("Output Implementation Testing", () => {
 
             let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
             v_new.outputMetadataArrayDriveHash =
-                "0x07d837c5d7889f24b3cda1904586c4cd9d3f7f093bdf4e3cdb621ecf298765d3";
+                "0xc26ccca0f2995d3584e183ff7d8e2cd9f6ac01e263a3beb8f1a2345638d2bc9c";
             v_new.epochOutputDriveHash =
-                "0xf45b6742e6aad5d3da088d4a2611ad1c17b8cc00b3bb370680332caa14dba921";
+                "0x4ddc5a9a0f46871a08135296b981b86a8bca580c7f7d7de7c473089f234abab1";
             let epochHash_new = keccak256(
                 ethers.utils.defaultAbiCoder.encode(
                     ["uint", "uint", "uint"],
@@ -274,9 +274,9 @@ describe("Output Implementation Testing", () => {
 
             let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
             v_new.outputMetadataArrayDriveHash =
-                "0x4fdc837a18b9f8cf7aa1221e09b0776b80fc24f3c18e67650820cffe18baf910";
+                "0x9bfa174d480e37b808e0bf8ac3f2c5e4e25113c435dec2e353370fe956c3cb10";
             v_new.epochOutputDriveHash =
-                "0x7cce87bf8b778d415d98752a09d552ac4172c35ec438ed86f9e67bab44718593";
+                "0x5b0d4f6b91fdfe5eebe393a19ee03426def24e061f78b6cb57dd19ac9e5404e8";
             let epochHash_new = keccak256(
                 ethers.utils.defaultAbiCoder.encode(
                     ["uint", "uint", "uint"],
@@ -319,13 +319,12 @@ describe("Output Implementation Testing", () => {
         });
     }
 
-    // TODO: This test gets broken everytime we redeploy the simple contract code
     /// ***test function isValidProof()///
-    //it("testing function isValidProof()", async () => {
-    //    expect(
-    //        await outputImpl.isValidProof(encodedOutput, epochHash, v)
-    //    ).to.equal(true);
-    //});
+    it("testing function isValidProof()", async () => {
+       expect(
+           await outputImpl.isValidProof(encodedOutput, epochHash, v)
+       ).to.equal(true);
+    });
 
     it("isValidProof() should revert when _epochHash doesn't match", async () => {
         await expect(
