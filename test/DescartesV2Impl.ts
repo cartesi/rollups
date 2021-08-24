@@ -128,7 +128,7 @@ describe("Descartes V2 Implementation", () => {
     /// ***test public variable currentPhase*** ///
     it("initial phase should be InputAccumulation", async () => {
         expect(
-            await descartesV2Impl.currentPhase(),
+            await descartesV2Impl.getCurrentPhase(),
             "initial phase check"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -155,7 +155,7 @@ describe("Descartes V2 Implementation", () => {
 
         await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
         expect(
-            await descartesV2Impl.currentPhase(),
+            await descartesV2Impl.getCurrentPhase(),
             "current phase should be updated to AwaitingConsensus"
         ).to.equal(Phase.AwaitingConsensus);
     });
@@ -175,7 +175,7 @@ describe("Descartes V2 Implementation", () => {
             .claim(ethers.utils.formatBytes32String("hello"));
 
         expect(
-            await descartesV2Impl.currentPhase(),
+            await descartesV2Impl.getCurrentPhase(),
             "current phase should be updated to InputAccumulation"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -192,7 +192,7 @@ describe("Descartes V2 Implementation", () => {
         // In this version disputes get solved immediately
         // so the phase should be awaiting consensus after a disagreement
         expect(
-            await descartesV2Impl.currentPhase(),
+            await descartesV2Impl.getCurrentPhase(),
             "current phase should be updated to AwaitingConsensus"
         ).to.equal(Phase.AwaitingConsensus);
     });
@@ -214,7 +214,7 @@ describe("Descartes V2 Implementation", () => {
         ///END: make two different claims///
 
         expect(
-            await descartesV2Impl.currentPhase(),
+            await descartesV2Impl.getCurrentPhase(),
             "current phase should be updated to InputAccumulation"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -282,7 +282,7 @@ describe("Descartes V2 Implementation", () => {
         await descartesV2Impl.finalizeEpoch();
 
         expect(
-            await descartesV2Impl.currentPhase(),
+            await descartesV2Impl.getCurrentPhase(),
             "final phase check"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -334,7 +334,7 @@ describe("Descartes V2 Implementation", () => {
 
             await descartesV2Impl.notifyInput(); //actually change states before getting current phase
             expect(
-                await descartesV2Impl.currentPhase(),
+                await descartesV2Impl.getCurrentPhase(),
                 "the updated current phase"
             ).to.equal(Phase.AwaitingConsensus);
         });
@@ -386,7 +386,7 @@ describe("Descartes V2 Implementation", () => {
         //         ethers.utils.formatBytes32String("hello")
         //     );
         //     expect(
-        //         await descartesV2Impl.currentPhase(),
+        //         await descartesV2Impl.getCurrentPhase(),
         //         "updated current phase if consensus"
         //     ).to.equal(Phase.InputAccumulation);
         // });
@@ -397,9 +397,9 @@ describe("Descartes V2 Implementation", () => {
         //         await signers[1].getAddress(),
         //         ethers.utils.formatBytes32String("hello")
         //     );
-        //     console.log(await descartesV2Impl.currentPhase())
+        //     console.log(await descartesV2Impl.getCurrentPhase())
         //     expect(
-        //         await descartesV2Impl.currentPhase(),
+        //         await descartesV2Impl.getCurrentPhase(),
         //         "updated current phase if consensus"
         //     ).to.equal(Phase.AwaitingConsensus);
         // });
@@ -412,7 +412,7 @@ describe("Descartes V2 Implementation", () => {
         //     );
 
         //     expect(
-        //         await descartesV2Impl.currentPhase(),
+        //         await descartesV2Impl.getCurrentPhase(),
         //         "updated current phase if Conflict"
         //     ).to.equal(Phase.AwaitingDispute);
         //     //then start new dispute all over again
@@ -537,7 +537,7 @@ describe("Descartes V2 Implementation", () => {
     it("event PhaseChange", async () => {
         //advance input duration from input accumulation start
         await network.provider.send("evm_increaseTime", [
-            (await descartesV2Impl.inputAccumulationStart()).toNumber() +
+            (await descartesV2Impl.getInputAccumulationStart()).toNumber() +
                 inputDuration +
                 1,
         ]);

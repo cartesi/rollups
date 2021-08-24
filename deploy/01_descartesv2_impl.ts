@@ -21,7 +21,7 @@
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { ethers } from 'hardhat';
+import { ethers } from "hardhat";
 import { DescartesV2Impl__factory } from "../src/types/factories/DescartesV2Impl__factory";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
@@ -38,12 +38,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let signers = await ethers.getSigners();
 
     // Bitmask
-    const bitMaskLibrary = await deployments.deploy(
-        "Bitmask", 
-        {
-            from: await signers[0].getAddress()
-        }
-    );
+    const bitMaskLibrary = await deployments.deploy("Bitmask", {
+        from: await signers[0].getAddress(),
+    });
     const bitMaskAddress = bitMaskLibrary.address;
 
     // CartesiMath
@@ -74,33 +71,31 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             INPUT_LOG2_SIZE,
             OUTPUT_METADATA_LOG2_SIZE,
             [
-              await signers[0].getAddress(),
-              await signers[1].getAddress(),
-              await signers[2].getAddress(),
+                await signers[0].getAddress(),
+                await signers[1].getAddress(),
+                await signers[2].getAddress(),
             ],
         ],
     });
     let descartesV2Impl = DescartesV2Impl__factory.connect(address, signers[0]);
 
     let inputAddress = await descartesV2Impl.getInputAddress();
-    let outputAddress =  await descartesV2Impl.getOutputAddress();
+    let outputAddress = await descartesV2Impl.getOutputAddress();
 
     let portalImpl = await deployments.deploy("PortalImpl", {
         from: await signers[0].getAddress(),
-        args: [
-            inputAddress, 
-            outputAddress,
-        ],
+        args: [inputAddress, outputAddress],
     });
 
     console.log("Descartes V2 Impl address: " + descartesV2Impl.address);
-    console.log("Descartes V2 Impl getCurrentEpoch: " + await descartesV2Impl.getCurrentEpoch());
-    console.log("Descartes V2 accumulation start: " + await descartesV2Impl.inputAccumulationStart());
+    console.log(
+        "Descartes V2 Impl getCurrentEpoch: " +
+            (await descartesV2Impl.getCurrentEpoch())
+    );
+    // console.log("Descartes V2 accumulation start: " + await descartesV2Impl.inputAccumulationStart());
     console.log("Input address " + inputAddress);
     console.log("Output address " + outputAddress);
     console.log("Portal address " + portalImpl.address);
-
-
 };
 
 export default func;
