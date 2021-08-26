@@ -46,72 +46,25 @@ contract DescartesV2Impl is DescartesV2 {
     DisputeManagerImpl public disputeManager; // contract responsible for dispute resolution
 
     struct StorageVar {
-        uint56 inputDuration; // duration of input accumulation phase in seconds
-        uint56 challengePeriod; // duration of challenge period in seconds
-        uint56 inputAccumulationStart; // timestamp when current input accumulation phase started
-        uint56 sealingEpochTimestamp; // timestamp on when a proposed epoch (claim) becomes challengeable
+        uint32 inputDuration; // duration of input accumulation phase in seconds
+        uint32 challengePeriod; // duration of challenge period in seconds
+        uint32 inputAccumulationStart; // timestamp when current input accumulation phase started
+        uint32 sealingEpochTimestamp; // timestamp on when a proposed epoch (claim) becomes challengeable
         uint32 currentPhase_int; // current phase in integer form
     }
     StorageVar storageVar;
 
-    enum Storage_index {
-        inputDuration,
-        challengePeriod,
-        inputAccumulationStart,
-        sealingEpochTimestamp,
-        currentPhase_int
+    /// @notice this function reads struct from storage to memory
+    /// Call this function to avoid multiple reads/writes to storage
+    function readToMemory() internal view returns (StorageVar memory) {
+        StorageVar memory memoryContext = storageVar;
+        return memoryContext;
     }
 
-    /// @notice this function reads a property from memory struct
-    function readStruct(StorageVar memory storageVar_mem, Storage_index index)
-        internal
-        pure
-        returns (uint256)
-    {
-        if (index == Storage_index.inputDuration) {
-            return uint256(storageVar_mem.inputDuration);
-        } else if (index == Storage_index.challengePeriod) {
-            return uint256(storageVar_mem.challengePeriod);
-        } else if (index == Storage_index.inputAccumulationStart) {
-            return uint256(storageVar_mem.inputAccumulationStart);
-        } else if (index == Storage_index.sealingEpochTimestamp) {
-            return uint256(storageVar_mem.sealingEpochTimestamp);
-        } else {
-            // Phase in integer form
-            return uint256(storageVar_mem.currentPhase_int);
-        }
-    }
-
-    // @notice this function updates struct in memory
-    // this function does NOT write back to storage automatically,
-    // because there can be multiple updates before writing back to storage
-    function updateStruct(
-        StorageVar memory storageVar_mem,
-        Storage_index index,
-        uint256 value
-    ) internal pure returns (StorageVar memory) {
-        if (index == Storage_index.inputDuration) {
-            storageVar_mem.inputDuration = uint56(value);
-            return storageVar_mem;
-        } else if (index == Storage_index.challengePeriod) {
-            storageVar_mem.challengePeriod = uint56(value);
-            return storageVar_mem;
-        } else if (index == Storage_index.inputAccumulationStart) {
-            storageVar_mem.inputAccumulationStart = uint56(value);
-            return storageVar_mem;
-        } else if (index == Storage_index.sealingEpochTimestamp) {
-            storageVar_mem.sealingEpochTimestamp = uint56(value);
-            return storageVar_mem;
-        } else {
-            // Phase in integer form
-            storageVar_mem.currentPhase_int = uint32(value);
-            return storageVar_mem;
-        }
-    }
-
-    // @notice this function writes struct from memory back to storage
-    function writeStruct(StorageVar memory storageVar_mem) internal {
-        storageVar = storageVar_mem;
+    /// @notice this function writes struct from memory back to storage
+    /// Only call this function when all modifications are done
+    function writeToStorage(StorageVar memory memoryContext) internal {
+        storageVar = memoryContext;
     }
 
     /// @notice functions modified by onlyInputContract can only be called
@@ -156,28 +109,13 @@ contract DescartesV2Impl is DescartesV2 {
         validatorManager = new ValidatorManagerImpl(address(this), _validators);
         disputeManager = new DisputeManagerImpl(address(this));
 
-        StorageVar memory storageVar_mem;
-        updateStruct(
-            storageVar_mem,
-            Storage_index.inputDuration,
-            _inputDuration
+        storageVar = StorageVar(
+            uint32(_inputDuration),
+            uint32(_challengePeriod),
+            uint32(block.timestamp),
+            0,
+            uint32(Phase.InputAccumulation)
         );
-        updateStruct(
-            storageVar_mem,
-            Storage_index.challengePeriod,
-            _challengePeriod
-        );
-        updateStruct(
-            storageVar_mem,
-            Storage_index.inputAccumulationStart,
-            block.timestamp
-        );
-        updateStruct(
-            storageVar_mem,
-            Storage_index.currentPhase_int,
-            uint256(Phase.InputAccumulation)
-        );
-        writeStruct(storageVar_mem);
 
         emit DescartesV2Created(
             address(input),
@@ -199,36 +137,26 @@ contract DescartesV2Impl is DescartesV2 {
         bytes32[2] memory claims;
         address payable[2] memory claimers;
 
-        StorageVar memory storageVar_mem = storageVar;
-        Phase currentPhase =
-            Phase(readStruct(storageVar_mem, Storage_index.currentPhase_int));
+        StorageVar memory memoryContext = readToMemory();
+        Phase currentPhase = Phase(memoryContext.currentPhase_int);
 
         if (currentPhase == Phase.InputAccumulation) {
             uint256 inputAccumulationStart =
-                readStruct(
-                    storageVar_mem,
-                    Storage_index.inputAccumulationStart
-                );
-            uint256 inputDuration =
-                readStruct(storageVar_mem, Storage_index.inputDuration);
+                memoryContext.inputAccumulationStart;
+            uint256 inputDuration = memoryContext.inputDuration;
 
             if (block.timestamp > inputAccumulationStart + inputDuration) {
                 currentPhase = Phase.AwaitingConsensus;
-                updateStruct(
-                    storageVar_mem,
-                    Storage_index.currentPhase_int,
-                    uint256(updatePhase(Phase.AwaitingConsensus))
+                memoryContext.currentPhase_int = uint32(
+                    updatePhase(Phase.AwaitingConsensus)
                 );
 
                 // warns input of new epoch
                 input.onNewInputAccumulation();
                 // update timestamp of sealing epoch proposal
-                updateStruct(
-                    storageVar_mem,
-                    Storage_index.sealingEpochTimestamp,
-                    block.timestamp
-                );
-                writeStruct(storageVar_mem);
+                memoryContext.sealingEpochTimestamp = uint32(block.timestamp);
+
+                writeToStorage(memoryContext);
             }
         }
 
@@ -252,21 +180,16 @@ contract DescartesV2Impl is DescartesV2 {
     /// @notice finalize epoch after timeout
     /// @dev can only be called if challenge period is over
     function finalizeEpoch() public override {
-        StorageVar memory storageVar_mem = storageVar;
+        StorageVar memory memoryContext = readToMemory();
 
-        Phase currentPhase =
-            Phase(readStruct(storageVar_mem, Storage_index.currentPhase_int));
+        Phase currentPhase = Phase(memoryContext.currentPhase_int);
         require(
             currentPhase == Phase.AwaitingConsensus,
             "Phase != Awaiting Consensus"
         );
 
-        uint256 sealingEpochTimestamp =
-            uint256(
-                readStruct(storageVar_mem, Storage_index.sealingEpochTimestamp)
-            );
-        uint256 challengePeriod =
-            uint256(readStruct(storageVar_mem, Storage_index.challengePeriod));
+        uint256 sealingEpochTimestamp = memoryContext.sealingEpochTimestamp;
+        uint256 challengePeriod = memoryContext.challengePeriod;
         require(
             block.timestamp > sealingEpochTimestamp + challengePeriod,
             "Challenge period is not over"
@@ -277,39 +200,24 @@ contract DescartesV2Impl is DescartesV2 {
             "No Claim to be finalized"
         );
 
-        updateStruct(
-            storageVar_mem,
-            Storage_index.currentPhase_int,
-            uint256(updatePhase(Phase.InputAccumulation))
-        );
-        writeStruct(storageVar_mem);
-
         startNewEpoch();
     }
 
     /// @notice called when new input arrives, manages the phase changes
     /// @dev can only be called by input contract
     function notifyInput() public override onlyInputContract returns (bool) {
-        StorageVar memory storageVar_mem = storageVar;
-        Phase currentPhase =
-            Phase(readStruct(storageVar_mem, Storage_index.currentPhase_int));
-        uint256 inputAccumulationStart =
-            uint256(
-                readStruct(storageVar_mem, Storage_index.inputAccumulationStart)
-            );
-        uint256 inputDuration =
-            uint256(readStruct(storageVar_mem, Storage_index.inputDuration));
+        StorageVar memory memoryContext = readToMemory();
+        Phase currentPhase = Phase(memoryContext.currentPhase_int);
+        uint256 inputAccumulationStart = memoryContext.inputAccumulationStart;
+        uint256 inputDuration = memoryContext.inputDuration;
 
         if (
             currentPhase == Phase.InputAccumulation &&
             block.timestamp > inputAccumulationStart + inputDuration
         ) {
-            updateStruct(
-                storageVar_mem,
-                Storage_index.currentPhase_int,
-                uint256(updatePhase(Phase.AwaitingConsensus))
+            storageVar.currentPhase_int = uint32(
+                updatePhase(Phase.AwaitingConsensus)
             );
-            writeStruct(storageVar_mem);
             return true;
         }
         return false;
@@ -336,7 +244,7 @@ contract DescartesV2Impl is DescartesV2 {
         );
 
         // restart challenge period
-        storageVar.sealingEpochTimestamp = uint56(block.timestamp);
+        storageVar.sealingEpochTimestamp = uint32(block.timestamp);
 
         emit ResolveDispute(_winner, _loser, _winningClaim);
         resolveValidatorResult(result, claims, claimers);
@@ -345,18 +253,13 @@ contract DescartesV2Impl is DescartesV2 {
     /// @notice starts new epoch
     function startNewEpoch() internal {
         // reset input accumulation start and deactivate challenge period start
-        StorageVar memory storageVar_mem = storageVar;
-        updateStruct(
-            storageVar_mem,
-            Storage_index.inputAccumulationStart,
-            block.timestamp
+        StorageVar memory memoryContext = readToMemory();
+        memoryContext.currentPhase_int = uint32(
+            updatePhase(Phase.InputAccumulation)
         );
-        updateStruct(
-            storageVar_mem,
-            Storage_index.sealingEpochTimestamp,
-            type(uint256).max
-        );
-        writeStruct(storageVar_mem);
+        memoryContext.inputAccumulationStart = uint32(block.timestamp);
+        memoryContext.sealingEpochTimestamp = type(uint32).max;
+        writeToStorage(memoryContext);
 
         bytes32 finalClaim = validatorManager.onNewEpoch();
 
@@ -381,9 +284,6 @@ contract DescartesV2Impl is DescartesV2 {
                 updatePhase(Phase.AwaitingConsensus)
             );
         } else if (_result == ValidatorManager.Result.Consensus) {
-            storageVar.currentPhase_int = uint32(
-                updatePhase(Phase.InputAccumulation)
-            );
             startNewEpoch();
         } else {
             // for the case when _result == ValidatorManager.Result.Conflict
@@ -397,6 +297,7 @@ contract DescartesV2Impl is DescartesV2 {
     /// @notice returns phase and emits events
     /// @param _newPhase phase to be returned and emitted
     function updatePhase(Phase _newPhase) internal returns (Phase) {
+        // one storage read. This function should be removed
         if (_newPhase != Phase(storageVar.currentPhase_int)) {
             emit PhaseChange(_newPhase);
         }
