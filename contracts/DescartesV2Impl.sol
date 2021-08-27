@@ -70,17 +70,14 @@ contract DescartesV2Impl is DescartesV2 {
     /// @notice functions modified by onlyInputContract can only be called
     // by input contract
     modifier onlyInputContract {
-        require(msg.sender == address(input), "msg.sender != input contract");
+        require(msg.sender == address(input), "only Input Contract");
         _;
     }
 
     /// @notice functions modified by onlyDisputeContract can only be called
     // by dispute contract
     modifier onlyDisputeContract {
-        require(
-            msg.sender == address(disputeManager),
-            "msg.sender != dispute manager contract"
-        );
+        require(msg.sender == address(disputeManager), "only Dispute Contract");
         _;
     }
 
@@ -95,9 +92,9 @@ contract DescartesV2Impl is DescartesV2 {
         uint256 _inputDuration,
         uint256 _challengePeriod,
         // input constructor variables
-        uint8 _inputLog2Size,
+        uint256 _inputLog2Size,
         // output constructor variables
-        uint8 _log2OutputMetadataArrayDriveSize,
+        uint256 _log2OutputMetadataArrayDriveSize,
         // validator manager constructor variables
         address payable[] memory _validators
     ) {
@@ -148,8 +145,9 @@ contract DescartesV2Impl is DescartesV2 {
             if (block.timestamp > inputAccumulationStart + inputDuration) {
                 currentPhase = Phase.AwaitingConsensus;
                 memoryContext.currentPhase_int = uint32(
-                    updatePhase(Phase.AwaitingConsensus)
+                    Phase.AwaitingConsensus
                 );
+                emit PhaseChange(Phase.AwaitingConsensus);
 
                 // warns input of new epoch
                 input.onNewInputAccumulation();
@@ -192,7 +190,7 @@ contract DescartesV2Impl is DescartesV2 {
         uint256 challengePeriod = memoryContext.challengePeriod;
         require(
             block.timestamp > sealingEpochTimestamp + challengePeriod,
-            "Challenge period is not over"
+            "Challenge period not over"
         );
 
         require(
@@ -215,9 +213,8 @@ contract DescartesV2Impl is DescartesV2 {
             currentPhase == Phase.InputAccumulation &&
             block.timestamp > inputAccumulationStart + inputDuration
         ) {
-            storageVar.currentPhase_int = uint32(
-                updatePhase(Phase.AwaitingConsensus)
-            );
+            storageVar.currentPhase_int = uint32(Phase.AwaitingConsensus);
+            emit PhaseChange(Phase.AwaitingConsensus);
             return true;
         }
         return false;
@@ -254,9 +251,8 @@ contract DescartesV2Impl is DescartesV2 {
     function startNewEpoch() internal {
         // reset input accumulation start and deactivate challenge period start
         StorageVar memory memoryContext = readToMemory();
-        memoryContext.currentPhase_int = uint32(
-            updatePhase(Phase.InputAccumulation)
-        );
+        memoryContext.currentPhase_int = uint32(Phase.InputAccumulation);
+        emit PhaseChange(Phase.InputAccumulation);
         memoryContext.inputAccumulationStart = uint32(block.timestamp);
         memoryContext.sealingEpochTimestamp = type(uint32).max;
         writeToStorage(memoryContext);
@@ -280,28 +276,22 @@ contract DescartesV2Impl is DescartesV2 {
         address payable[2] memory _claimers
     ) internal {
         if (_result == ValidatorManager.Result.NoConflict) {
-            storageVar.currentPhase_int = uint32(
-                updatePhase(Phase.AwaitingConsensus)
-            );
+            if (
+                storageVar.currentPhase_int != uint32(Phase.AwaitingConsensus)
+            ) {
+                storageVar.currentPhase_int = uint32(Phase.AwaitingConsensus);
+                emit PhaseChange(Phase.AwaitingConsensus);
+            }
         } else if (_result == ValidatorManager.Result.Consensus) {
             startNewEpoch();
         } else {
             // for the case when _result == ValidatorManager.Result.Conflict
-            storageVar.currentPhase_int = uint32(
-                updatePhase(Phase.AwaitingDispute)
-            );
+            if (storageVar.currentPhase_int != uint32(Phase.AwaitingDispute)) {
+                storageVar.currentPhase_int = uint32(Phase.AwaitingDispute);
+                emit PhaseChange(Phase.AwaitingDispute);
+            }
             disputeManager.initiateDispute(_claims, _claimers);
         }
-    }
-
-    /// @notice returns phase and emits events
-    /// @param _newPhase phase to be returned and emitted
-    function updatePhase(Phase _newPhase) internal returns (Phase) {
-        // one storage read. This function should be removed
-        if (_newPhase != Phase(storageVar.currentPhase_int)) {
-            emit PhaseChange(_newPhase);
-        }
-        return _newPhase;
     }
 
     /// @notice returns index of current (accumulating) epoch
@@ -354,8 +344,7 @@ contract DescartesV2Impl is DescartesV2 {
 
     /// @notice returns the input accumulation start timestamp
     function getInputAccumulationStart() public view returns (uint256) {
-        uint256 inputAccumulationStart =
-            uint256(storageVar.inputAccumulationStart);
+        uint256 inputAccumulationStart = storageVar.inputAccumulationStart;
         return inputAccumulationStart;
     }
 }

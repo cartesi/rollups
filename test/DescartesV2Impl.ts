@@ -255,7 +255,7 @@ describe("Descartes V2 Implementation", () => {
         await expect(
             descartesV2Impl.finalizeEpoch(),
             "Challenge period is not over"
-        ).to.be.revertedWith("Challenge period is not over");
+        ).to.be.revertedWith("Challenge period not over");
     });
 
     it("claim(): should revert if the current claim is null", async () => {
@@ -294,7 +294,7 @@ describe("Descartes V2 Implementation", () => {
             await expect(
                 descartesV2Impl.notifyInput(),
                 "msg.sender != input contract"
-            ).to.be.revertedWith("msg.sender != input contract");
+            ).to.be.revertedWith("only Input Contract");
         });
 
         /// ***test function resolveDispute() with modifier*** ///
@@ -306,7 +306,7 @@ describe("Descartes V2 Implementation", () => {
                     ethers.utils.formatBytes32String("hello")
                 ),
                 "msg.sender != dispute manager contract"
-            ).to.be.revertedWith("msg.sender != dispute manager contract");
+            ).to.be.revertedWith("only Dispute Contract");
         });
     }
 
