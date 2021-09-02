@@ -16,7 +16,7 @@ use snafu::ResultExt;
 use ethers::prelude::EthEvent;
 use ethers::types::{Address, U256};
 
-use rpds::{Vector, VectorSync};
+use im::HashMap;
 
 /// Output StateFold Delegate
 pub struct OutputFoldDelegate {
@@ -80,11 +80,18 @@ impl StateFoldDelegate for OutputFoldDelegate {
                 err: "Error querying for output executed events",
             })?;
 
-        let mut outputs: VectorSync<VectorSync<VectorSync<bool>>> = Vector::new_sync();
+        let mut outputs: HashMap<usize, HashMap<usize, HashMap<usize, bool>>> =
+            HashMap::new();
         for ev in events {
             let (output_index, input_index, epoch) =
                 convert_output_position_to_indices(ev.output_position);
-            outputs[output_index][input_index][epoch] = true;
+            outputs
+                .entry(output_index)
+                .or_insert_with(|| HashMap::new())
+                .entry(input_index)
+                .or_insert_with(|| HashMap::new())
+                .entry(epoch)
+                .or_insert_with(|| true);
         }
 
         Ok(OutputState {
@@ -129,7 +136,13 @@ impl StateFoldDelegate for OutputFoldDelegate {
         for ev in events {
             let (output_index, input_index, epoch_index) =
                 convert_output_position_to_indices(ev.output_position);
-            outputs[output_index][input_index][epoch_index] = true;
+            outputs
+                .entry(output_index)
+                .or_insert_with(|| HashMap::new())
+                .entry(input_index)
+                .or_insert_with(|| HashMap::new())
+                .entry(epoch_index)
+                .or_insert_with(|| true);
         }
 
         Ok(OutputState {
