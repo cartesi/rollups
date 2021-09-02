@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@cartesi/logger": "^0.7.0",
-    "@cartesi/util": "^3.0.0",
+    "@cartesi/util": "^3.1.2",
     "@openzeppelin/contracts": "^4.1.0",
     "solidity-bytes-utils": "^0.8.0"
   },

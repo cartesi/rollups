@@ -19,13 +19,13 @@ import "@cartesi/util/contracts/Merkle.sol";
 import "./MockOutput.sol";
 
 contract MockOutputImpl is MockOutput {
-    using Bitmask for mapping(uint248 => uint256);
+    using Bitmask for mapping(uint256 => uint256);
 
     uint8 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
 
     address immutable descartesV2; // descartes 2 contract using this validator
 
-    mapping(uint248 => uint256) internal outputBitmask;
+    mapping(uint256 => uint256) internal outputBitmask;
     bytes32[] epochHashes;
 
     bool lock; //reentrancy lock
@@ -88,9 +88,10 @@ contract MockOutputImpl is MockOutput {
 
         // prove that the epoch contains that outputdrive
         require(
-            Merkle.getRootWithDrive(
+            Merkle.getRootAfterReplacementInDrive(
                 uint64(_outputIndex * KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
+                64,
                 hashOfOutput,
                 _outputProof
             ) == _outputDriveHash,
@@ -99,9 +100,10 @@ contract MockOutputImpl is MockOutput {
 
         // prove that epoch hash contains the claimed outputs hash
         require(
-            Merkle.getRootWithDrive(
+            Merkle.getRootAfterReplacementInDrive(
                 uint64(_inputIndex * KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
+                64,
                 _outputDriveHash,
                 _epochProof
             ) == epochHashes[_epochIndex],
