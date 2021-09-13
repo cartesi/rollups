@@ -30,12 +30,8 @@ contract ValidatorManagerImpl is ValidatorManager {
 
     // @notice functions modified by onlyDescartesV2 will only be executed if
     // they're called by DescartesV2 contract, otherwise it will throw an exception
-    modifier onlyDescartesV2 {
-        require(
-            msg.sender == descartesV2,
-            "Only descartesV2 can call this function"
-        );
-        _;
+    function onlyDescartesV2() internal view {
+        require(msg.sender == descartesV2, "Only descartesV2");
     }
 
     // @notice populates validators array and creates a consensus mask
@@ -65,15 +61,15 @@ contract ValidatorManagerImpl is ValidatorManager {
     function onClaim(address payable _sender, bytes32 _claim)
         public
         override
-        onlyDescartesV2
         returns (
             Result,
             bytes32[2] memory,
             address payable[2] memory
         )
     {
-        require(_claim != bytes32(0), "claim cannot be 0x00");
-        require(isAllowed(_sender), "_sender was not allowed to claim");
+        onlyDescartesV2();
+        require(_claim != bytes32(0), "empty claim");
+        require(isAllowed(_sender), "sender not allowed");
 
         // cant return because a single claim might mean consensus
         if (currentClaim == bytes32(0)) {
@@ -115,18 +111,16 @@ contract ValidatorManagerImpl is ValidatorManager {
     )
         public
         override
-        onlyDescartesV2
         returns (
             Result,
             bytes32[2] memory,
             address payable[2] memory
         )
     {
+        onlyDescartesV2();
+
         // remove validator also removes validator from both bitmask
-        (
-            claimAgreementMask,
-            consensusGoalMask
-        ) = removeFromValidatorSetAndBothBitmasks(_loser);
+        removeFromValidatorSetAndBothBitmasks(_loser);
 
         if (_winningClaim == currentClaim) {
             // first claim stood, dont need to update the bitmask
@@ -175,7 +169,9 @@ contract ValidatorManagerImpl is ValidatorManager {
 
     // @notice called when a new epoch starts
     // @return current claim
-    function onNewEpoch() public override onlyDescartesV2 returns (bytes32) {
+    function onNewEpoch() public override returns (bytes32) {
+        onlyDescartesV2();
+
         bytes32 tmpClaim = currentClaim;
 
         // clear current claim
@@ -256,16 +252,11 @@ contract ValidatorManagerImpl is ValidatorManager {
         view
         returns (address payable)
     {
-        require(
-            claimAgreementMask != 0,
-            "No validators agree with current claim"
-        );
-
         // TODO: we are always getting the first validator
         // on the array that agrees with the current claim to enter a dispute
         // should this be random?
-        for (uint256 i = 0; i < validators.length; i++) {
-            if (claimAgreementMask & (1 << i) == (2**i)) {
+        for (uint256 i; i < validators.length; i++) {
+            if (claimAgreementMask & (1 << i) != 0) {
                 return validators[i];
             }
         }
@@ -277,19 +268,18 @@ contract ValidatorManagerImpl is ValidatorManager {
     function updateConsensusGoalMask() internal view returns (uint32) {
         // consensus goal is a number where
         // all bits related to validators are turned on
-        uint32 consensusMask =
-            (uint32(2)**uint32(validators.length)) - uint32(1);
+        uint256 consensusMask = (1 << validators.length) - 1;
 
         // the optimistc assumption is that validators getting kicked out
         // a rare event. So we save gas by starting with the optimistic scenario
         // and turning the bits off for removed validators
-        for (uint32 i = 0; i < validators.length; i++) {
+        for (uint256 i; i < validators.length; i++) {
             if (validators[i] == address(0)) {
-                uint32 zeroMask = ~(uint32(1) << i);
+                uint256 zeroMask = ~(1 << i);
                 consensusMask = consensusMask & zeroMask;
             }
         }
-        return consensusMask;
+        return uint32(consensusMask);
     }
 
     // @notice updates mask of validators that agreed with current claim
@@ -300,15 +290,15 @@ contract ValidatorManagerImpl is ValidatorManager {
         view
         returns (uint32)
     {
-        uint32 tmpClaimAgreement = claimAgreementMask;
-        for (uint32 i = 0; i < validators.length; i++) {
+        uint256 tmpClaimAgreement = claimAgreementMask;
+        for (uint256 i; i < validators.length; i++) {
             if (_sender == validators[i]) {
-                tmpClaimAgreement = (tmpClaimAgreement | (uint32(1) << i));
+                tmpClaimAgreement = (tmpClaimAgreement | (1 << i));
                 break;
             }
         }
 
-        return tmpClaimAgreement;
+        return uint32(tmpClaimAgreement);
     }
 
     // @notice removes a validator
@@ -317,37 +307,32 @@ contract ValidatorManagerImpl is ValidatorManager {
     // @returns new consensus goal bitmask
     function removeFromValidatorSetAndBothBitmasks(address _validator)
         internal
-        returns (uint32, uint32)
     {
-        uint32 newClaimAgreementMask;
-        uint32 newConsensusGoalMask;
         // put address(0) in validators position
         // removes validator from claim agreement bitmask
         // removes validator from consensus goal mask
-        for (uint32 i = 0; i < validators.length; i++) {
+        for (uint256 i; i < validators.length; i++) {
             if (_validator == validators[i]) {
                 validators[i] = payable(0);
                 uint32 zeroMask = ~(uint32(1) << i);
-                newClaimAgreementMask = claimAgreementMask & zeroMask;
-                newConsensusGoalMask = consensusGoalMask & zeroMask;
+                claimAgreementMask = claimAgreementMask & zeroMask;
+                consensusGoalMask = consensusGoalMask & zeroMask;
                 break;
             }
         }
-        return (newClaimAgreementMask, newConsensusGoalMask);
     }
 
     function isAllowed(address _sender) internal view returns (bool) {
-        for (uint256 i = 0; i < validators.length; i++) {
+        for (uint256 i; i < validators.length; i++) {
             if (_sender == validators[i]) return true;
         }
         return false;
     }
 
-    function isConsensus(uint32 _claimAgreementMask, uint32 _consensusGoalMask)
-        internal
-        pure
-        returns (bool)
-    {
+    function isConsensus(
+        uint256 _claimAgreementMask,
+        uint256 _consensusGoalMask
+    ) internal pure returns (bool) {
         return _claimAgreementMask == _consensusGoalMask;
     }
 }

@@ -90,7 +90,7 @@ describe("Validator Manager Implementation", async () => {
         await expect(
             VMI.connect(signer).onClaim(validators[0], hash_zero),
             "should revert if not called from DescartesV2"
-        ).to.be.revertedWith("Only descartesV2 can call this function");
+        ).to.be.revertedWith("Only descartesV2");
 
         await expect(
             VMI.connect(signer).onDisputeEnd(
@@ -99,14 +99,14 @@ describe("Validator Manager Implementation", async () => {
                 hash_zero
             ),
             "should revert if not called from DescartesV2"
-        ).to.be.revertedWith("Only descartesV2 can call this function");
+        ).to.be.revertedWith("Only descartesV2");
     });
 
     it("onClaim should revert if claim is 0x00", async () => {
         await expect(
             VMI.onClaim(validators[0], hash_zero),
             "should revert if claim == 0x00"
-        ).to.be.revertedWith("claim cannot be 0x00");
+        ).to.be.revertedWith("empty claim");
     });
 
     it("onClaim should revert if sender is not allowed", async () => {
@@ -114,7 +114,7 @@ describe("Validator Manager Implementation", async () => {
         await expect(
             VMI.onClaim(address_zero, claim),
             "should revert if sender is not in validators array"
-        ).to.be.revertedWith("_sender was not allowed to claim");
+        ).to.be.revertedWith("sender not allowed");
     });
 
     it("onClaim NoConflict and Consensus", async () => {
