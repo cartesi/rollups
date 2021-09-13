@@ -265,8 +265,8 @@ describe("Descartes V2 Implementation", () => {
 
         await expect(
             descartesV2Impl.claim(currentClaim),
-            "cannot claim 0x00"
-        ).to.be.revertedWith("claim cannot be 0x00");
+            "empty claim"
+        ).to.be.revertedWith("empty claim");
     });
 
     it("after finalizeEpoch(), current phase should be InputAccumulation", async () => {
@@ -751,7 +751,7 @@ describe("Descartes V2 Implementation", () => {
             descartesV2Impl
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"))
-        ).to.be.revertedWith("_sender was not allowed to claim");
+        ).to.be.revertedWith("sender not allowed");
 
         // 3rd claim => Consensus
         await expect(
