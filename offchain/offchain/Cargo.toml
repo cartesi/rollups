@@ -1,0 +1,38 @@
+[package]
+name = "offchain"
+license = "Apache-2.0"
+version = "0.1.0"
+authors = ["felipeargento <felipe@cartesi.io>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+block-subscriber = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
+middleware-factory = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
+offchain-core = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
+configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
+tx-manager = { git = "https://github.com/cartesi/tx-manager", rev = "a6a2d1f" }
+state-fold = { git = "https://github.com/cartesi/state-fold", rev = "ace5480" }
+
+ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "4690f8e" }
+ethabi = { version = "14.0.0", default-features = false }
+
+async-recursion = "0.3.2"
+async-trait = "0.1"
+futures = "0.3"
+im = { version = "15.0.0", features = ["serde"] }
+prost = "0.8"
+serde_json = "1.0"
+snafu = "0.6"
+tokio = { version = "^1.5", features = ["sync", "macros", "rt-multi-thread"] }
+tonic = "0.5.0"
+url = { version = "2.2.1", default-features = false }
+rpds = "0.9.0"
+serde = "1.0.0"
+serde_yaml = "0.8"
+
+[build-dependencies]
+ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "4690f8e" }
+serde_json = "1.0"
+tonic-build = "0.5"

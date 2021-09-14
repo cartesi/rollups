@@ -33,23 +33,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (name, file, rs) in contracts {
-        let path = format!("../artifacts/contracts/{}.sol/{}.json", file, name);
+        let path =
+            format!("../../artifacts/contracts/{}.sol/{}.json", file, name);
         let destination = format!("./src/contracts/{}", rs);
         write_contract(name, &path, &destination)?;
     }
 
     tonic_build::configure().build_server(false).compile(
         &[
-            "../grpc-interfaces/versioning.proto",
-            "../grpc-interfaces/cartesi-machine.proto",
-            "../grpc-interfaces/rollup-machine-manager.proto",
+            "../../grpc-interfaces/versioning.proto",
+            "../../grpc-interfaces/cartesi-machine.proto",
+            "../../grpc-interfaces/rollup-machine-manager.proto",
         ],
-        &["../grpc-interfaces"],
+        &["../../grpc-interfaces"],
     )?;
 
-    println!("cargo:rerun-if-changed=../grpc-interfaces/versioning.proto");
-    println!("cargo:rerun-if-changed=../grpc-interfaces/cartesi-machine.proto");
-    println!("cargo:rerun-if-changed=../grpc-interfaces/rollup-machine-manager.proto");
+    println!("cargo:rerun-if-changed=../../grpc-interfaces/versioning.proto");
+    println!(
+        "cargo:rerun-if-changed=../../grpc-interfaces/cartesi-machine.proto"
+    );
+    println!("cargo:rerun-if-changed=../../grpc-interfaces/rollup-machine-manager.proto");
 
     println!("cargo:rerun-if-changed=build.rs");
 

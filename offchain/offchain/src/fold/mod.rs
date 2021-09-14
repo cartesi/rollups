@@ -4,13 +4,13 @@ pub use setup::{create_descartes_state_fold, DescartesStateFold, SetupConfig};
 mod descartesv2_delegate;
 mod epoch_delegate;
 mod input_delegate;
-mod output_delegate;
+pub mod output_delegate;
 
 mod accumulating_epoch_delegate;
 mod finalized_epoch_delegate;
 mod sealed_epoch_delegate;
 
-mod setup;
+pub mod setup;
 
 use accumulating_epoch_delegate::AccumulatingEpochFoldDelegate;
 use descartesv2_delegate::DescartesV2FoldDelegate;
