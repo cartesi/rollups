@@ -29,7 +29,9 @@ impl OutputFoldDelegate {
 
 /// output_position = output_index * 2 ** 128 + input_index * 2 ** 64 + epoch
 /// We always assume indices have at most 8 bytes, as does rust
-fn convert_output_position_to_indices(output_position: U256) -> (usize, usize, usize) {
+fn convert_output_position_to_indices(
+    output_position: U256,
+) -> (usize, usize, usize) {
     let mut pos_bytes = [0u8; 32];
     output_position.to_big_endian(&mut pos_bytes);
 
@@ -62,33 +64,27 @@ impl StateFoldDelegate for OutputFoldDelegate {
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
         let contract = access
-            .build_sync_contract(
-                *output_address,
-                block.number,
-                OutputImpl::new,
-            )
+            .build_sync_contract(*output_address, block.number, OutputImpl::new)
             .await;
 
         // Retrieve `OutputExecuted` events
-        let events = contract
-            .output_executed_filter()
-            .query()
-            .await
-            .context(SyncContractError {
+        let events = contract.output_executed_filter().query().await.context(
+            SyncContractError {
                 err: "Error querying for output executed events",
-            })?;
+            },
+        )?;
 
         let mut outputs: HashMap<usize, HashMap<usize, HashMap<usize, bool>>> =
             HashMap::new();
         for ev in events {
-            let (output_index, input_index, epoch) =
+            let (output_index, input_index, epoch_index) =
                 convert_output_position_to_indices(ev.output_position);
             outputs
                 .entry(output_index)
                 .or_insert_with(|| HashMap::new())
                 .entry(input_index)
                 .or_insert_with(|| HashMap::new())
-                .entry(epoch)
+                .entry(epoch_index)
                 .or_insert_with(|| true);
         }
 
@@ -107,31 +103,24 @@ impl StateFoldDelegate for OutputFoldDelegate {
         let output_address = previous_state.output_address;
 
         // If not in bloom copy previous state
-        if !(fold_utils::contains_address(
-            &block.logs_bloom,
-            &output_address,
-        ) && fold_utils::contains_topic(
-            &block.logs_bloom,
-            &OutputExecutedFilter::signature(),
-        )) {
+        if !(fold_utils::contains_address(&block.logs_bloom, &output_address)
+            && fold_utils::contains_topic(
+                &block.logs_bloom,
+                &OutputExecutedFilter::signature(),
+            ))
+        {
             return Ok(previous_state.clone());
         }
 
         let contract = access
-            .build_fold_contract(
-                output_address,
-                block.hash,
-                OutputImpl::new,
-            )
+            .build_fold_contract(output_address, block.hash, OutputImpl::new)
             .await;
 
-        let events = contract
-            .output_executed_filter()
-            .query()
-            .await
-            .context(FoldContractError {
+        let events = contract.output_executed_filter().query().await.context(
+            FoldContractError {
                 err: "Error querying for output executed events",
-            })?;
+            },
+        )?;
 
         let mut outputs = previous_state.outputs.clone();
         for ev in events {

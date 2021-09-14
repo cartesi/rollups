@@ -6,7 +6,8 @@ use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
 use super::output_delegate::OutputFoldDelegate;
 use super::sealed_epoch_delegate::SealedEpochState;
 use super::types::{
-    AccumulatingEpoch, DescartesV2State, ImmutableState, PhaseState, OutputState,
+    AccumulatingEpoch, DescartesV2State, ImmutableState, OutputState,
+    PhaseState,
 };
 
 use offchain_core::types::Block;
