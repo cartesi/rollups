@@ -3,6 +3,7 @@ use offchain_core::ethers;
 use ethers::abi::{encode, Token};
 use ethers::types::{Address, H256, U256, U64};
 use im::{HashMap, HashSet, Vector};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 /// Single input from Input.sol contract
@@ -47,7 +48,7 @@ impl EpochInputState {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OutputState {
     pub outputs: HashMap<usize, HashMap<usize, HashMap<usize, bool>>>,
 }
