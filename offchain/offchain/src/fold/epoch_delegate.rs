@@ -327,7 +327,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let finalized_epochs = self
             .finalized_epoch_fold
-            .get_state_for_block(&previous_state.initial_epoch, Some(block.hash))
+            .get_state_for_block(
+                &previous_state.initial_epoch,
+                Some(block.hash),
+            )
             .await
             .map_err(|e| {
                 FoldDelegateError {

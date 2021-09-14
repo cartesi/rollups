@@ -50,6 +50,7 @@ impl EpochInputState {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OutputState {
+    pub output_address: Address,
     pub outputs: HashMap<usize, HashMap<usize, HashMap<usize, bool>>>,
 }
 

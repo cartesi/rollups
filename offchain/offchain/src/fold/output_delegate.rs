@@ -19,13 +19,11 @@ use ethers::types::{Address, U256};
 use im::HashMap;
 
 /// Output StateFold Delegate
-pub struct OutputFoldDelegate {
-    output_address: Address,
-}
+pub struct OutputFoldDelegate {}
 
 impl OutputFoldDelegate {
-    pub fn new(output_address: Address) -> Self {
-        Self { output_address }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -53,19 +51,19 @@ fn convert_output_position_to_indices(output_position: U256) -> (usize, usize, u
 
 #[async_trait]
 impl StateFoldDelegate for OutputFoldDelegate {
-    type InitialState = ();
+    type InitialState = Address;
     type Accumulator = OutputState;
     type State = BlockState<Self::Accumulator>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
-        _initial_state: &(),
+        output_address: &Address,
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
         let contract = access
             .build_sync_contract(
-                self.output_address,
+                *output_address,
                 block.number,
                 OutputImpl::new,
             )
@@ -96,6 +94,7 @@ impl StateFoldDelegate for OutputFoldDelegate {
 
         Ok(OutputState {
             outputs,
+            output_address: *output_address,
         })
     }
 
@@ -105,10 +104,12 @@ impl StateFoldDelegate for OutputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
+        let output_address = previous_state.output_address;
+
         // If not in bloom copy previous state
         if !(fold_utils::contains_address(
             &block.logs_bloom,
-            &self.output_address,
+            &output_address,
         ) && fold_utils::contains_topic(
             &block.logs_bloom,
             &OutputExecutedFilter::signature(),
@@ -118,7 +119,7 @@ impl StateFoldDelegate for OutputFoldDelegate {
 
         let contract = access
             .build_fold_contract(
-                self.output_address,
+                output_address,
                 block.hash,
                 OutputImpl::new,
             )
@@ -147,6 +148,7 @@ impl StateFoldDelegate for OutputFoldDelegate {
 
         Ok(OutputState {
             outputs,
+            output_address: output_address,
         })
     }
 

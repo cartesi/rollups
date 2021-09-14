@@ -117,9 +117,11 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
+        let output_address =
+            contract.get_output_address().call().await.ok().unwrap();
         let output_state = self
             .output_fold
-            .get_state_for_block(&(), Some(block.hash))
+            .get_state_for_block(&output_address, Some(block.hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -145,11 +147,15 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         _access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         let constants = previous_state.constants.clone();
+        let output_address = previous_state.output_state.output_address;
 
         // get raw state from EpochFoldDelegate
         let raw_contract_state = self
             .epoch_fold
-            .get_state_for_block(&previous_state.initial_epoch, Some(block.hash))
+            .get_state_for_block(
+                &previous_state.initial_epoch,
+                Some(block.hash),
+            )
             .await
             .map_err(|e| {
                 FoldDelegateError {
@@ -161,7 +167,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let output_state = self
             .output_fold
-            .get_state_for_block(&(), Some(block.hash))
+            .get_state_for_block(&output_address, Some(block.hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {

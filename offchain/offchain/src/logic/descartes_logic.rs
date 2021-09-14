@@ -79,7 +79,10 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
         match subscription.recv().await {
             Ok(block) => {
                 let state = state_fold
-                    .get_state_for_block(&config.initial_epoch, Some(block.hash))
+                    .get_state_for_block(
+                        &config.initial_epoch,
+                        Some(block.hash),
+                    )
                     .await
                     .context(StateFoldError {})?;
 

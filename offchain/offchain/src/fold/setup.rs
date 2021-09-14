@@ -51,7 +51,7 @@ fn create_output<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SetupConfig,
 ) -> OutputStateFold<DA> {
-    let delegate = OutputFoldDelegate::new(config.output_contract_address);
+    let delegate = OutputFoldDelegate::new();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
