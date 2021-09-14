@@ -46,8 +46,8 @@ fn create_input<DA: DelegateAccess + Send + Sync + 'static>(
     Arc::new(state_fold)
 }
 
-type OutputStateFold<DA> = Arc<StateFold<OutputFoldDelegate, DA>>;
-fn create_output<DA: DelegateAccess + Send + Sync + 'static>(
+pub type OutputStateFold<DA> = Arc<StateFold<OutputFoldDelegate, DA>>;
+pub fn create_output<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SetupConfig,
 ) -> OutputStateFold<DA> {

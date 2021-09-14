@@ -41,7 +41,7 @@ fn create_provider(url: String) -> Result<Arc<Provider<Http>>> {
     ))
 }
 
-fn create_access(config: &Config) -> Result<Arc<DescartesAccess>> {
+pub fn create_access(config: &Config) -> Result<Arc<DescartesAccess>> {
     let provider = create_provider(config.provider_http_url.clone())?;
 
     Ok(Arc::new(Access::new(
