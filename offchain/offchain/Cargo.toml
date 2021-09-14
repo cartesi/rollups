@@ -10,10 +10,10 @@ edition = "2018"
 [dependencies]
 block-subscriber = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
 middleware-factory = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
-offchain-core = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
+offchain-core = { git = "https://github.com/cartesi/offchain-utils", rev = "f43b889" }
 configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
 tx-manager = { git = "https://github.com/cartesi/tx-manager", rev = "a6a2d1f" }
-state-fold = { git = "https://github.com/cartesi/state-fold", rev = "ace5480" }
+state-fold = { git = "https://github.com/cartesi/state-fold", rev = "f6f06a1" }
 
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "4690f8e" }
 ethabi = { version = "14.0.0", default-features = false }

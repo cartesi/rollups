@@ -264,7 +264,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> SealedEpochFoldDelegate<DA> {
     ) -> SyncResult<EpochInputState, A> {
         Ok(self
             .input_fold
-            .get_state_for_block(&epoch, block_hash)
+            .get_state_for_block(&epoch, Some(block_hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {

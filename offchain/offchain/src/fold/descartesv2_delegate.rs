@@ -107,7 +107,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         // get raw state from EpochFoldDelegate
         let raw_contract_state = self
             .epoch_fold
-            .get_state_for_block(initial_state, block.hash)
+            .get_state_for_block(initial_state, Some(block.hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -119,7 +119,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let output_state = self
             .output_fold
-            .get_state_for_block(&(), block.hash)
+            .get_state_for_block(&(), Some(block.hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -149,7 +149,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         // get raw state from EpochFoldDelegate
         let raw_contract_state = self
             .epoch_fold
-            .get_state_for_block(&previous_state.initial_epoch, block.hash)
+            .get_state_for_block(&previous_state.initial_epoch, Some(block.hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {
@@ -161,7 +161,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let output_state = self
             .output_fold
-            .get_state_for_block(&(), block.hash)
+            .get_state_for_block(&(), Some(block.hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {

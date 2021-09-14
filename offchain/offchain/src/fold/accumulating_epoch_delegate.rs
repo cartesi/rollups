@@ -87,7 +87,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
     ) -> SyncResult<EpochInputState, A> {
         Ok(self
             .input_fold
-            .get_state_for_block(&epoch, block_hash)
+            .get_state_for_block(&epoch, Some(block_hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -105,7 +105,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
     ) -> FoldResult<EpochInputState, A> {
         Ok(self
             .input_fold
-            .get_state_for_block(&epoch, block_hash)
+            .get_state_for_block(&epoch, Some(block_hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {

@@ -113,7 +113,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         // retrieve list of finalized epochs from FinalizedEpochFoldDelegate
         let finalized_epochs = self
             .finalized_epoch_fold
-            .get_state_for_block(&initial_epoch, block.hash)
+            .get_state_for_block(&initial_epoch, Some(block.hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -327,7 +327,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let finalized_epochs = self
             .finalized_epoch_fold
-            .get_state_for_block(&previous_state.initial_epoch, block.hash)
+            .get_state_for_block(&previous_state.initial_epoch, Some(block.hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {
@@ -453,7 +453,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> EpochFoldDelegate<DA> {
     ) -> SyncResult<AccumulatingEpoch, A> {
         Ok(self
             .accumulating_epoch_fold
-            .get_state_for_block(epoch, block_hash)
+            .get_state_for_block(epoch, Some(block_hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -475,7 +475,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> EpochFoldDelegate<DA> {
     ) -> FoldResult<AccumulatingEpoch, A> {
         Ok(self
             .accumulating_epoch_fold
-            .get_state_for_block(epoch, block_hash)
+            .get_state_for_block(epoch, Some(block_hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {
@@ -497,7 +497,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> EpochFoldDelegate<DA> {
     ) -> SyncResult<SealedEpochState, A> {
         Ok(self
             .sealed_epoch_fold
-            .get_state_for_block(epoch, block_hash)
+            .get_state_for_block(epoch, Some(block_hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -516,7 +516,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> EpochFoldDelegate<DA> {
     ) -> FoldResult<SealedEpochState, A> {
         Ok(self
             .sealed_epoch_fold
-            .get_state_for_block(epoch, block_hash)
+            .get_state_for_block(epoch, Some(block_hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {
