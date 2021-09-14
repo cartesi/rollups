@@ -45,8 +45,8 @@ fn convert_output_position_to_indices(
     epoch_bytes.copy_from_slice(&pos_bytes[24..32]);
 
     (
-        usize::from_be_bytes(input_index_bytes),
         usize::from_be_bytes(output_index_bytes),
+        usize::from_be_bytes(input_index_bytes),
         usize::from_be_bytes(epoch_bytes),
     )
 }
