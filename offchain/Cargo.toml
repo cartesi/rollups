@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "delegate_server",
   "offchain",
   "outputserver",
   "rollups-server",

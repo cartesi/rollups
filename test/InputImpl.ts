@@ -29,10 +29,13 @@ import { solidity } from "ethereum-waffle";
 import { InputImpl__factory } from "../src/types/factories/InputImpl__factory";
 import { Signer } from "ethers";
 import { InputImpl } from "../src/types/InputImpl";
+import { getState } from "./getState";
 
 use(solidity);
 
 describe("Input Implementation", () => {
+    let enableDelegate = process.env["DELEGATE_TEST"];
+
     /// for testing DescartesV2 when modifiers are on, set this to true
     /// for testing DescartesV2 when modifiers are off, set this to false
     let permissionModifiersOn = true;
@@ -112,6 +115,17 @@ describe("Input Implementation", () => {
             await inputImpl.getNumberOfInputs(),
             "Number of inputs should be zero, because non active inbox is empty"
         ).to.equal(0);
+
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputImpl.address,
+                epoch_number: "0x0",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            console.log(state);
+        }
 
         await mockDescartesv2.mock.notifyInput.returns(true);
         await mockDescartesv2.mock.getCurrentEpoch.returns(1);

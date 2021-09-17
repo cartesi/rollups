@@ -8,5 +8,9 @@
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "outDir": "dist"
-    }
+    },
+    "exclude" : [
+        "dist",
+        "node_modules"
+    ]
 }

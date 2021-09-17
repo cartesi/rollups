@@ -6,6 +6,7 @@ deployments/localhost
 deployments/*/solcInputs/*.json
 dist
 node_modules
+src/proto/stateserver*
 src/types
 test/*/
 .vscode
@@ -16,5 +17,5 @@ test/*/
 build
 .env
 .venv
-offchain/target
+offchain/**/target
 .DS_Store
