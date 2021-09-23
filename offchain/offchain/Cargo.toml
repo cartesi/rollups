@@ -28,7 +28,7 @@ snafu = "0.6"
 tokio = { version = "^1.5", features = ["sync", "macros", "rt-multi-thread"] }
 tonic = "0.5.0"
 url = { version = "2.2.1", default-features = false }
-serde = "1.0.0"
+serde = { version = "1.0.0", features = ["rc"] }
 serde_yaml = "0.8"
 
 [build-dependencies]

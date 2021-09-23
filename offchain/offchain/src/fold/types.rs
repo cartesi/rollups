@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 /// Single input from Input.sol contract
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Input {
     pub sender: Address,       // TODO: Get from calldata.
     pub timestamp: U256,       // TODO: Get from calldata.
@@ -33,7 +33,7 @@ impl Input {
 }
 
 /// Set of inputs at some epoch
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct EpochInputState {
     pub epoch_number: U256,
     pub inputs: Vector<Input>,
@@ -55,7 +55,7 @@ pub struct OutputState {
 }
 
 /// Set of claims
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Claims {
     claims: HashMap<H256, HashSet<Address>>,
     first_claim_timestamp: U256,
@@ -134,7 +134,7 @@ impl IntoIterator for Claims {
 
 /// Epoch finalized on the blockchain, outputs are executable and messages
 /// are verfiable/provable
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FinalizedEpoch {
     pub epoch_number: U256,
     pub hash: H256,
@@ -148,7 +148,7 @@ pub struct FinalizedEpoch {
 }
 
 /// Set of finalized epochs
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FinalizedEpochs {
     /// Set of `FinalizedEpoch`
     pub finalized_epochs: Vector<FinalizedEpoch>,
@@ -197,7 +197,7 @@ impl FinalizedEpochs {
 }
 
 /// Sealed epoch with one or more claims
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct EpochWithClaims {
     pub epoch_number: U256,
     pub claims: Claims,
@@ -205,7 +205,7 @@ pub struct EpochWithClaims {
 }
 
 /// Active epoch currently receiveing inputs
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AccumulatingEpoch {
     pub epoch_number: U256,
     pub inputs: EpochInputState,
@@ -221,7 +221,7 @@ impl AccumulatingEpoch {
 }
 
 ///
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum PhaseState {
     /// No claims or disputes going on, the previous epoch was finalized
     /// successfully and the current epoch is still accumulating inputs
@@ -249,7 +249,7 @@ pub enum PhaseState {
     // TODO: add dispute timeout when disputes are turned on.
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ImmutableState {
     /// duration of input accumulation phase in seconds
     pub input_duration: U256,
@@ -273,7 +273,7 @@ pub struct ImmutableState {
     pub dispute_contract_address: Address,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DescartesV2State {
     pub constants: ImmutableState,
 
