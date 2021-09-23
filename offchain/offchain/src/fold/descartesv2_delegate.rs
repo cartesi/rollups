@@ -27,19 +27,16 @@ use ethers::types::{Address, U256};
 
 /// DescartesV2 StateActor Delegate, which implements `sync` and `fold`.
 pub struct DescartesV2FoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
-    descartesv2_address: Address,
     epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
     output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
 }
 
 impl<DA: DelegateAccess + Send + Sync + 'static> DescartesV2FoldDelegate<DA> {
     pub fn new(
-        descartesv2_address: Address,
         epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
         output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
     ) -> Self {
         Self {
-            descartesv2_address,
             epoch_fold,
             output_fold,
         }
@@ -50,13 +47,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> DescartesV2FoldDelegate<DA> {
 impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     for DescartesV2FoldDelegate<DA>
 {
-    type InitialState = U256; // Initial epoch
+    type InitialState = (Address, U256);
     type Accumulator = DescartesV2State;
     type State = BlockState<Self::Accumulator>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
-        initial_state: &U256,
+        initial_state: &(Address, U256),
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
@@ -64,8 +61,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
+        let (descartesv2_contract_address, epoch_number) = *initial_state;
+
         let contract = DescartesV2Impl::new(
-            self.descartesv2_address,
+            descartesv2_contract_address,
             Arc::clone(&middleware),
         );
 
@@ -102,13 +101,20 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 })?
                 .timestamp;
 
-            ImmutableState::from(&(create_event, timestamp))
+            ImmutableState::from(&(
+                create_event,
+                timestamp,
+                descartesv2_contract_address,
+            ))
         };
 
         // get raw state from EpochFoldDelegate
         let raw_contract_state = self
             .epoch_fold
-            .get_state_for_block(initial_state, Some(block.hash))
+            .get_state_for_block(
+                &(descartesv2_contract_address, epoch_number),
+                Some(block.hash),
+            )
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -118,11 +124,12 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
-        let output_address =
-            contract.get_output_address().call().await.ok().unwrap();
         let output_state = self
             .output_fold
-            .get_state_for_block(&output_address, Some(block.hash))
+            .get_state_for_block(
+                &constants.output_contract_address,
+                Some(block.hash),
+            )
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -136,7 +143,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             raw_contract_state,
             constants,
             block,
-            initial_state,
+            &epoch_number,
             output_state,
         ))
     }
@@ -148,13 +155,16 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         _access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         let constants = previous_state.constants.clone();
-        let output_address = previous_state.output_state.output_address;
+        let output_address = constants.output_contract_address;
 
         // get raw state from EpochFoldDelegate
         let raw_contract_state = self
             .epoch_fold
             .get_state_for_block(
-                &previous_state.initial_epoch,
+                &(
+                    constants.descartesv2_contract_address,
+                    previous_state.initial_epoch,
+                ),
                 Some(block.hash),
             )
             .await
@@ -306,7 +316,11 @@ fn convert_raw_to_logical(
     // was previously created. The distinction comes from the two possible
     // transitions to AwaitingConsensus, either a new input or a claim
     let current_epoch = if let Some(epoch_number) = current_epoch_no_inputs {
-        AccumulatingEpoch::new(epoch_number)
+        AccumulatingEpoch::new(
+            constants.descartesv2_contract_address,
+            constants.input_contract_address,
+            epoch_number,
+        )
     } else {
         contract_state.current_epoch
     };
@@ -322,9 +336,9 @@ fn convert_raw_to_logical(
 }
 
 // Fetches the DescartesV2 constants from the contract creation event
-impl From<&(DescartesV2CreatedFilter, U256)> for ImmutableState {
-    fn from(src: &(DescartesV2CreatedFilter, U256)) -> Self {
-        let (ev, ts) = src;
+impl From<&(DescartesV2CreatedFilter, U256, Address)> for ImmutableState {
+    fn from(src: &(DescartesV2CreatedFilter, U256, Address)) -> Self {
+        let (ev, ts, descartesv2_contract_address) = src;
         Self {
             input_duration: ev.input_duration,
             challenge_period: ev.challenge_period,
@@ -333,6 +347,7 @@ impl From<&(DescartesV2CreatedFilter, U256)> for ImmutableState {
             output_contract_address: ev.output,
             validator_contract_address: ev.validator_manager,
             dispute_contract_address: ev.dispute_manager,
+            descartesv2_contract_address: *descartesv2_contract_address,
         }
     }
 }

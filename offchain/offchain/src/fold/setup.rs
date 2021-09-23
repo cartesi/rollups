@@ -1,17 +1,10 @@
-use offchain_core::ethers;
-
 use super::*;
 use state_fold::{DelegateAccess, StateFold};
-
-use ethers::core::types::Address;
 
 use std::sync::Arc;
 
 pub struct SetupConfig {
     pub safety_margin: usize,
-    pub input_contract_address: Address,
-    pub output_contract_address: Address,
-    pub descartes_contract_address: Address,
 }
 
 pub type DescartesStateFold<DA> =
@@ -28,7 +21,6 @@ pub fn create_descartes_state_fold<
     let output_fold = create_output(Arc::clone(&access), config);
 
     let delegate = DescartesV2FoldDelegate::new(
-        config.descartes_contract_address,
         epoch_fold,
         output_fold,
     );
@@ -41,7 +33,18 @@ fn create_input<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SetupConfig,
 ) -> InputStateFold<DA> {
-    let delegate = InputFoldDelegate::new(config.input_contract_address);
+    let delegate = InputFoldDelegate::new();
+    let state_fold = StateFold::new(delegate, access, config.safety_margin);
+    Arc::new(state_fold)
+}
+
+type InputContractAddressStateFold<DA> =
+    Arc<StateFold<InputContractAddressFoldDelegate, DA>>;
+fn create_input_contract_address<DA: DelegateAccess + Send + Sync + 'static>(
+    access: Arc<DA>,
+    config: &SetupConfig,
+) -> InputContractAddressStateFold<DA> {
+    let delegate = InputContractAddressFoldDelegate::new();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
@@ -61,9 +64,11 @@ type AccumulatingEpochStateFold<DA> =
 fn create_accumulating_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     input_fold: InputStateFold<DA>,
     access: Arc<DA>,
+    input_contract_address: InputContractAddressStateFold<DA>,
     config: &SetupConfig,
 ) -> AccumulatingEpochStateFold<DA> {
-    let delegate = AccumulatingEpochFoldDelegate::new(input_fold);
+    let delegate =
+        AccumulatingEpochFoldDelegate::new(input_fold, input_contract_address);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
@@ -72,12 +77,11 @@ type SealedEpochStateFold<DA> = Arc<StateFold<SealedEpochFoldDelegate<DA>, DA>>;
 fn create_sealed_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     input_fold: InputStateFold<DA>,
     access: Arc<DA>,
+    input_contract_address: InputContractAddressStateFold<DA>,
     config: &SetupConfig,
 ) -> SealedEpochStateFold<DA> {
-    let delegate = SealedEpochFoldDelegate::new(
-        config.descartes_contract_address,
-        input_fold,
-    );
+    let delegate =
+        SealedEpochFoldDelegate::new(input_fold, input_contract_address);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
@@ -87,12 +91,11 @@ type FinalizedEpochStateFold<DA> =
 fn create_finalized_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     input_fold: InputStateFold<DA>,
     access: Arc<DA>,
+    input_contract_address: InputContractAddressStateFold<DA>,
     config: &SetupConfig,
 ) -> FinalizedEpochStateFold<DA> {
-    let delegate = FinalizedEpochFoldDelegate::new(
-        config.descartes_contract_address,
-        input_fold,
-    );
+    let delegate =
+        FinalizedEpochFoldDelegate::new(input_fold, input_contract_address);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
@@ -103,28 +106,29 @@ fn create_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     config: &SetupConfig,
 ) -> EpochStateFold<DA> {
     let input_fold = create_input(Arc::clone(&access), config);
+    let input_contract_address =
+        create_input_contract_address(Arc::clone(&access), config);
     let accumulating_fold = create_accumulating_epoch(
         Arc::clone(&input_fold),
         Arc::clone(&access),
+        Arc::clone(&input_contract_address),
         config,
     );
     let sealed_fold = create_sealed_epoch(
         Arc::clone(&input_fold),
         Arc::clone(&access),
+        Arc::clone(&input_contract_address),
         config,
     );
     let finalized_fold = create_finalized_epoch(
         Arc::clone(&input_fold),
         Arc::clone(&access),
+        Arc::clone(&input_contract_address),
         config,
     );
 
-    let delegate = EpochFoldDelegate::new(
-        config.descartes_contract_address,
-        accumulating_fold,
-        sealed_fold,
-        finalized_fold,
-    );
+    let delegate =
+        EpochFoldDelegate::new(accumulating_fold, sealed_fold, finalized_fold);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }

@@ -80,7 +80,10 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
             Ok(block) => {
                 let state = state_fold
                     .get_state_for_block(
-                        &config.initial_epoch,
+                        &(
+                            config.descartes_contract_address,
+                            config.initial_epoch,
+                        ),
                         Some(block.hash),
                     )
                     .await
@@ -592,8 +595,6 @@ impl From<&Config> for SetupConfig {
         let config = config.clone();
         SetupConfig {
             safety_margin: config.safety_margin,
-            input_contract_address: config.input_contract_address,
-            descartes_contract_address: config.descartes_contract_address,
         }
     }
 }

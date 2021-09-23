@@ -26,8 +26,7 @@ pub fn initialize_config() -> Config {
         safety_margin: config.sf_config.safety_margin,
         input_contract_address: Address::zero(), /* Won't be used */
         output_contract_address: Address::zero(), /* Won't be used */
-        descartes_contract_address: config.basic_config.contracts
-            ["DescartesV2Impl"],
+        descartes_contract_address: Address::zero(), /* Won't be used */
         provider_http_url: config.basic_config.url,
         genesis_block: config.sf_config.genesis_block,
         query_limit_error_codes: config.sf_config.query_limit_error_codes,
@@ -40,9 +39,6 @@ pub fn instantiate_output_fold_delegate() -> OutputStateFold<DescartesAccess> {
     let access = create_access(&config).unwrap();
     let setup_config = SetupConfig {
         safety_margin: config.safety_margin,
-        input_contract_address: config.input_contract_address,
-        output_contract_address: config.output_contract_address,
-        descartes_contract_address: config.descartes_contract_address,
     };
 
     create_output(access, &setup_config)

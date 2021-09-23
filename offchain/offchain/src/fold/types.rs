@@ -37,13 +37,15 @@ impl Input {
 pub struct EpochInputState {
     pub epoch_number: U256,
     pub inputs: Vector<Input>,
+    pub input_contract_address: Address,
 }
 
 impl EpochInputState {
-    pub fn new(epoch_number: U256) -> Self {
+    pub fn new(epoch_number: U256, input_contract_address: Address) -> Self {
         Self {
             epoch_number,
             inputs: Vector::new(),
+            input_contract_address,
         }
     }
 }
@@ -155,13 +157,22 @@ pub struct FinalizedEpochs {
 
     /// The first epoch that will be included in `finalized_epochs`
     pub initial_epoch: U256,
+
+    pub descartesv2_contract_address: Address,
+    pub input_contract_address: Address,
 }
 
 impl FinalizedEpochs {
-    pub fn new(initial_epoch: U256) -> Self {
+    pub fn new(
+        initial_epoch: U256,
+        descartesv2_contract_address: Address,
+        input_contract_address: Address,
+    ) -> Self {
         Self {
             finalized_epochs: Vector::new(),
             initial_epoch,
+            descartesv2_contract_address,
+            input_contract_address,
         }
     }
 
@@ -202,6 +213,8 @@ pub struct EpochWithClaims {
     pub epoch_number: U256,
     pub claims: Claims,
     pub inputs: EpochInputState,
+    pub descartesv2_contract_address: Address,
+    pub input_contract_address: Address,
 }
 
 /// Active epoch currently receiveing inputs
@@ -209,13 +222,24 @@ pub struct EpochWithClaims {
 pub struct AccumulatingEpoch {
     pub epoch_number: U256,
     pub inputs: EpochInputState,
+    pub descartesv2_contract_address: Address,
+    pub input_contract_address: Address,
 }
 
 impl AccumulatingEpoch {
-    pub fn new(epoch_number: U256) -> Self {
+    pub fn new(
+        descartesv2_contract_address: Address,
+        input_contract_address: Address,
+        epoch_number: U256,
+    ) -> Self {
         Self {
             epoch_number,
-            inputs: EpochInputState::new(epoch_number),
+            inputs: EpochInputState::new(
+                epoch_number,
+                descartesv2_contract_address,
+            ),
+            descartesv2_contract_address,
+            input_contract_address,
         }
     }
 }
@@ -271,6 +295,9 @@ pub struct ImmutableState {
 
     /// contract responsible for dispute resolution
     pub dispute_contract_address: Address,
+
+    /// descartes contract address
+    pub descartesv2_contract_address: Address,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

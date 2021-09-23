@@ -21,33 +21,31 @@ use ethers::prelude::EthEvent;
 use ethers::types::{Address, U256};
 
 /// Input StateFold Delegate
-pub struct InputFoldDelegate {
-    input_address: Address,
-}
+pub struct InputFoldDelegate {}
 
 impl InputFoldDelegate {
-    pub fn new(input_address: Address) -> Self {
-        Self { input_address }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
 #[async_trait]
 impl StateFoldDelegate for InputFoldDelegate {
-    type InitialState = U256;
+    type InitialState = (Address, U256);
     type Accumulator = EpochInputState;
     type State = BlockState<Self::Accumulator>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
-        initial_state: &U256,
+        initial_state: &(Address, U256),
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let epoch_number = initial_state.clone();
+        let (input_contract_address, epoch_number) = initial_state.clone();
 
         let contract = access
             .build_sync_contract(
-                self.input_address,
+                input_contract_address,
                 block.number,
                 InputImpl::new,
             )
@@ -71,6 +69,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         Ok(EpochInputState {
             epoch_number,
             inputs,
+            input_contract_address,
         })
     }
 
@@ -80,10 +79,11 @@ impl StateFoldDelegate for InputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
+        let input_contract_address = previous_state.input_contract_address;
         // If not in bloom copy previous state
         if !(fold_utils::contains_address(
             &block.logs_bloom,
-            &self.input_address,
+            &input_contract_address,
         ) && fold_utils::contains_topic(
             &block.logs_bloom,
             &InputAddedFilter::signature(),
@@ -92,7 +92,11 @@ impl StateFoldDelegate for InputFoldDelegate {
         }
 
         let contract = access
-            .build_fold_contract(self.input_address, block.hash, InputImpl::new)
+            .build_fold_contract(
+                input_contract_address,
+                block.hash,
+                InputImpl::new,
+            )
             .await;
 
         let events = contract
@@ -112,6 +116,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         Ok(EpochInputState {
             epoch_number: previous_state.epoch_number,
             inputs,
+            input_contract_address,
         })
     }
 

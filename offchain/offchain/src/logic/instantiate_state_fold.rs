@@ -57,9 +57,6 @@ impl From<&Config> for SetupConfig {
         let config = config.clone();
         SetupConfig {
             safety_margin: config.safety_margin,
-            input_contract_address: config.input_contract_address,
-            output_contract_address: config.output_contract_address,
-            descartes_contract_address: config.descartes_contract_address,
         }
     }
 }
