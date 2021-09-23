@@ -7,9 +7,14 @@ use ethers::core::types::Address;
 use snafu::Snafu;
 
 use offchain::logic::instantiate_state_fold::create_access;
-use offchain::logic::instantiate_state_fold::{Config, DescartesAccess};
+use offchain::logic::instantiate_state_fold::{
+    instantiate_state_fold, Config, DescartesAccess,
+};
 
-use offchain::fold::setup::{create_output, OutputStateFold, SetupConfig};
+use offchain::error::Result;
+use offchain::fold::setup::{
+    create_output, DescartesStateFold, OutputStateFold, SetupConfig,
+};
 
 use config::ApplicationConfig;
 
@@ -42,4 +47,11 @@ pub fn instantiate_output_fold_delegate() -> OutputStateFold<DescartesAccess> {
     };
 
     create_output(access, &setup_config)
+}
+
+pub fn instantiate_descartes_fold_delegate(
+) -> Result<DescartesStateFold<DescartesAccess>> {
+    let config = initialize_config();
+
+    instantiate_state_fold(&config)
 }

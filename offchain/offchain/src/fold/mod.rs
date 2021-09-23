@@ -1,7 +1,7 @@
 pub mod types;
 pub use setup::{create_descartes_state_fold, DescartesStateFold, SetupConfig};
 
-mod descartesv2_delegate;
+pub mod descartesv2_delegate;
 mod epoch_delegate;
 mod input_contract_address_delegate;
 mod input_delegate;

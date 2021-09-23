@@ -2206,6 +2206,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "rollups-server"
+version = "0.1.0"
+dependencies = [
+ "block-subscriber 0.1.0 (git+https://github.com/cartesi/offchain-utils?rev=f43b889)",
+ "configuration 0.1.0 (git+https://github.com/cartesi/offchain-utils?rev=f43b889)",
+ "ethers",
+ "offchain",
+ "outputserver",
+ "serde",
+ "serde_json",
+ "snafu",
+ "state-fold",
+ "state-server-grpc",
+ "tokio",
+ "tonic 0.4.3",
+]
+
+[[package]]
 name = "rustc-hex"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
