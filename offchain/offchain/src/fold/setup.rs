@@ -20,10 +20,7 @@ pub fn create_descartes_state_fold<
     let epoch_fold = create_epoch(Arc::clone(&access), config);
     let output_fold = create_output(Arc::clone(&access), config);
 
-    let delegate = DescartesV2FoldDelegate::new(
-        epoch_fold,
-        output_fold,
-    );
+    let delegate = DescartesV2FoldDelegate::new(epoch_fold, output_fold);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
