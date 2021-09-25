@@ -75,6 +75,21 @@ describe("Input Implementation", () => {
             inputFactory.deploy(mockDescartesv2.address, wrongLog2Size),
             "log2Size > 64"
         ).to.be.revertedWith("log size: [3,64]");
+
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputImpl.address,
+                epoch_number: "0x0",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            expect(
+                state.inputs.length,
+                "shouldn't have any inputs yet"
+            ).to.equal(0);
+        }
     });
 
     it("addInput should revert if input length == 0", async () => {
@@ -82,6 +97,21 @@ describe("Input Implementation", () => {
             inputImpl.addInput([]),
             "empty input should revert"
         ).to.be.revertedWith("input len: (0,driveSize]");
+
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputImpl.address,
+                epoch_number: "0x0",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            expect(
+                state.inputs.length,
+                "shouldn't have any inputs yet"
+            ).to.equal(0);
+        }
     });
 
     it("addInput should revert if input is larger than drive (log2Size)", async () => {
@@ -94,11 +124,26 @@ describe("Input Implementation", () => {
             "input cant be bigger than drive"
         ).to.be.revertedWith("input len: (0,driveSize]");
 
-        // input shouldnt fit because of one byte
+        // input shouldnt fit because of one extra byte
         await expect(
             inputImpl.addInput(input_129_bytes),
             "input should still revert because metadata doesnt fit"
         ).to.be.revertedWith("input len: (0,driveSize]");
+
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputImpl.address,
+                epoch_number: "0x0",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            expect(
+                state.inputs.length,
+                "shouldn't have any inputs yet"
+            ).to.equal(0);
+        }
     });
 
     it("addInput should add input to inbox", async () => {
@@ -116,17 +161,6 @@ describe("Input Implementation", () => {
             "Number of inputs should be zero, because non active inbox is empty"
         ).to.equal(0);
 
-        if (enableDelegate) {
-            let initialState = JSON.stringify({
-                input_address: inputImpl.address,
-                epoch_number: "0x0",
-            });
-
-            let state = JSON.parse(await getState(initialState));
-
-            console.log(state);
-        }
-
         await mockDescartesv2.mock.notifyInput.returns(true);
         await mockDescartesv2.mock.getCurrentEpoch.returns(1);
 
@@ -136,6 +170,29 @@ describe("Input Implementation", () => {
             await inputImpl.getNumberOfInputs(),
             "Number of inputs should be 3, because last addition changes the inbox"
         ).to.equal(3);
+
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputImpl.address,
+                epoch_number: "0x0",
+            });
+            let state = JSON.parse(await getState(initialState));
+            expect(
+                state.inputs.length,
+                "now receiving inputs for epoch 1, getNumberOfInputs() reflects epoch 0"
+            ).to.equal(3);
+
+            initialState = JSON.stringify({
+                input_address: inputImpl.address,
+                epoch_number: "0x1",
+            });
+            state = JSON.parse(await getState(initialState));
+            expect(
+                state.inputs.length,
+                "only 1 input for epoch 1"
+            ).to.equal(1);
+        }
     });
 
     it("emit event InputAdded", async () => {
@@ -152,6 +209,18 @@ describe("Input Implementation", () => {
                 (await ethers.provider.getBlock("latest")).timestamp + 1,
                 "0x" + input_64_bytes.toString("hex")
             );
+
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputImpl.address,
+                epoch_number: "0x0",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            expect(state.inputs.length, "only one input").to.equal(1);
+        }
     });
 
     it("test return value of addInput()", async () => {
@@ -180,6 +249,34 @@ describe("Input Implementation", () => {
             await inputImpl.callStatic.addInput(input_64_bytes),
             "use callStatic to view the return value"
         ).to.equal(input_hash);
+
+        // test delegate
+        if (enableDelegate) {
+            await inputImpl.addInput(input_64_bytes);
+
+            let initialState = JSON.stringify({
+                input_address: inputImpl.address,
+                epoch_number: "0x0",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            // checking the input hash is essentially checking the
+            // sender address, block timestamp, and payload
+            // otherwise if hash is needed, follow the calculations above
+            expect(
+                state.inputs[0].sender,
+                "check the recorded sender address"
+            ).to.equal((await signer.getAddress()).toLowerCase());
+            expect(
+                parseInt(state.inputs[0].timestamp, 16), // from hex to dec
+                "check the recorded timestamp"
+            ).to.equal((await ethers.provider.getBlock("latest")).timestamp);
+            expect(
+                Buffer.from(state.inputs[0].payload, "utf-8").toString(),
+                "check the recorded payload"
+            ).to.equal(input_64_bytes.toString());
+        }
     });
 
     it("test getInput()", async () => {
@@ -210,6 +307,7 @@ describe("Input Implementation", () => {
         await mockDescartesv2.mock.notifyInput.returns(true);
         await mockDescartesv2.mock.getCurrentEpoch.returns(1);
         await inputImpl.addInput(input_64_bytes);
+        let block_epoch1 = await ethers.provider.getBlock("latest");
 
         expect(
             await inputImpl.getInput(0),
@@ -241,6 +339,28 @@ describe("Input Implementation", () => {
             await inputImpl.getInput(0),
             "get the first value in input box 1"
         ).to.equal(input_hash);
+
+        // test delegate for epoch 1
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputImpl.address,
+                epoch_number: "0x1",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+            expect(
+                state.inputs[0].sender,
+                "check the recorded sender address"
+            ).to.equal((await signer.getAddress()).toLowerCase());
+            expect(
+                parseInt(state.inputs[0].timestamp, 16), // from hex to dec
+                "check the recorded timestamp"
+            ).to.equal(block_epoch1.timestamp);
+            expect(
+                Buffer.from(state.inputs[0].payload, "utf-8").toString(),
+                "check the recorded payload"
+            ).to.equal(input_64_bytes.toString());
+        }
     });
 
     it("getCurrentInbox should return correct inbox", async () => {
@@ -278,6 +398,8 @@ describe("Input Implementation", () => {
             await inputImpl.getCurrentInbox(),
             "inbox shouldnt change if notifyInput returns false (2)"
         ).to.equal(1);
+
+        // there isn't a concept of input box in the delegate
     });
 
     if (permissionModifiersOn) {
