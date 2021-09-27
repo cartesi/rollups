@@ -15,7 +15,7 @@ pragma solidity ^0.8.0;
 
 import "./ValidatorManager.sol";
 
-contract ValidatorManagerImplCountable is ValidatorManager {
+contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     address immutable descartesV2; // descartes 2 contract using this validator
     bytes32 currentClaim; // current claim - first claim of this epoch
     address payable[] validators; // up to 8 validators
@@ -27,6 +27,7 @@ contract ValidatorManagerImplCountable is ValidatorManager {
     // | claim mask | consensus mask | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |
     // |   8 bits   |     8 bits     |      30 bits       |      30 bits       | ... |      30 bits       |
     uint256 claimMask;
+    uint256 constant NUM_CLAIMS_SIZE = 30; // we use 30 bits for #claims for each validator
 
     // @notice functions modified by onlyDescartesV2 will only be executed if
     // they're called by DescartesV2 contract, otherwise it will throw an exception
@@ -47,7 +48,7 @@ contract ValidatorManagerImplCountable is ValidatorManager {
 
         // create consensus goal, represents the scenario where
         // all validators claimed and agreed
-        updateConsensusGoalMask();
+        createConsensusMask();
     }
 
     // @notice called when a claim is received by descartesv2
@@ -174,14 +175,14 @@ contract ValidatorManagerImplCountable is ValidatorManager {
         onlyDescartesV2();
 
         // reward validators who has made the correct claim by increasing their #claims
-        increaseCounts();
+        claimFinalizedIncreaseCounts();
 
         bytes32 tmpClaim = currentClaim;
 
         // clear current claim
         currentClaim = bytes32(0);
         // clear validator agreement bit mask
-        claimMask = claimMask & ((1 << 248) - 1);
+        claimMask = claimMask & ((1 << 248) - 1);  // 256 - 8 = 248
 
         emit NewEpoch(tmpClaim);
         return tmpClaim;
@@ -215,7 +216,8 @@ contract ValidatorManagerImplCountable is ValidatorManager {
     {
         for (uint256 i; i < validators.length; i++) {
             if (_sender == validators[i]) {
-                return ((claimMask >> (30 * i)) & ((1 << 30) - 1));
+                return ((claimMask >> (NUM_CLAIMS_SIZE * i)) &
+                    ((1 << NUM_CLAIMS_SIZE) - 1));
             }
         }
         // if validator not found
@@ -224,9 +226,21 @@ contract ValidatorManagerImplCountable is ValidatorManager {
 
     // INTERNAL FUNCTIONS
 
-    // @notice only call this function when consensus has been reached
-    // and it's time to reward validators
-    function increaseCounts() internal {
+    // @notice get number of claims by the index in the validator set
+    // @params the index in validator set
+    // @return #claims
+    function getNumberOfClaimsByIndex(uint256 index)
+        internal
+        view
+        returns (uint256)
+    {
+        return ((claimMask >> (NUM_CLAIMS_SIZE * index)) &
+            ((1 << NUM_CLAIMS_SIZE) - 1));
+    }
+
+    // @notice only call this function when a claim has been finalized
+    // Either a consensus has been reached or challenge period has past
+    function claimFinalizedIncreaseCounts() internal {
         uint256 agreementMask = getCurrentAgreementMask();
         for (uint256 i; i < validators.length; i++) {
             // if a validator agrees with the current claim
@@ -237,20 +251,9 @@ contract ValidatorManagerImplCountable is ValidatorManager {
                 // remove that #claims on claimMask
                 clearNumClaimsByIndex(i);
                 // reset #claims on claimMask
-                claimMask = (claimMask | (claims << (30 * i)));
+                claimMask = (claimMask | (claims << (NUM_CLAIMS_SIZE * i)));
             }
         }
-    }
-
-    // @notice get number of claims by the index in the validator set
-    // @params the index in validator set
-    // @return #claims
-    function getNumberOfClaimsByIndex(uint256 index)
-        internal
-        view
-        returns (uint256)
-    {
-        return ((claimMask >> (30 * index)) & ((1 << 30) - 1));
     }
 
     // @notice emits dispute ended event and then return
@@ -315,21 +318,11 @@ contract ValidatorManagerImplCountable is ValidatorManager {
     }
 
     // @notice updates the consensus goal mask
-    function updateConsensusGoalMask() internal {
+    function createConsensusMask() internal {
         // consensus goal is a number where
         // all bits related to validators are turned on
         uint256 num = validators.length;
         uint256 consensusMask = (1 << num) - 1;
-
-        // the optimistic assumption is that validators getting kicked out
-        // a rare event. So we save gas by starting with the optimistic scenario
-        // and turning the bits off for removed validators
-        for (uint256 i; i < num; i++) {
-            if (validators[i] == address(0)) {
-                uint256 zeroMask = ~(1 << i);
-                consensusMask = consensusMask & zeroMask;
-            }
-        }
         claimMask = (claimMask | (consensusMask << 240)); // 256 - 8 - 8 = 240
     }
 
@@ -339,7 +332,7 @@ contract ValidatorManagerImplCountable is ValidatorManager {
         for (uint256 i; i < validators.length; i++) {
             if (_sender == validators[i]) {
                 // update claim mask
-                claimMask = (claimMask | (1 << (248 + i)));
+                claimMask = (claimMask | (1 << (248 + i))); // 256 - 8 = 248
                 break;
             }
         }
@@ -368,7 +361,8 @@ contract ValidatorManagerImplCountable is ValidatorManager {
     // @notice removes #claims for the validator
     // @params the index in validator set
     function clearNumClaimsByIndex(uint256 index) internal {
-        uint256 clearingBitMask = ~(((1 << 30) - 1) << (30 * index));
+        uint256 clearingBitMask =
+            ~(((1 << NUM_CLAIMS_SIZE) - 1) << (NUM_CLAIMS_SIZE * index));
         claimMask = (claimMask & clearingBitMask);
     }
 

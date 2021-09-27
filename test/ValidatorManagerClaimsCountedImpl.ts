@@ -22,16 +22,16 @@
 import { expect, use } from "chai";
 import { ethers } from "hardhat";
 import { solidity, MockProvider } from "ethereum-waffle";
-import { ValidatorManagerImplCountable__factory } from "../src/types/factories/ValidatorManagerImplCountable__factory";
+import { ValidatorManagerClaimsCountedImpl__factory } from "../src/types/factories/ValidatorManagerClaimsCountedImpl__factory";
 import { Signer } from "ethers";
-import { ValidatorManagerImplCountable } from "../src/types/ValidatorManagerImplCountable";
+import { ValidatorManagerClaimsCountedImpl } from "../src/types/ValidatorManagerClaimsCountedImpl";
 
 use(solidity);
 
-describe("Validator Manager Implementation Countable", async () => {
+describe("Validator Manager With Claims Counted Implementation", async () => {
     var descartesV2: Signer;
     var signer: Signer;
-    var VMIC: ValidatorManagerImplCountable;
+    var VMCC: ValidatorManagerClaimsCountedImpl;
     const provider = new MockProvider();
     var validators: string[] = [];
 
@@ -46,7 +46,7 @@ describe("Validator Manager Implementation Countable", async () => {
 
     beforeEach(async () => {
         [descartesV2, signer] = await ethers.getSigners();
-        const vmicFactory = new ValidatorManagerImplCountable__factory(
+        const vmccFactory = new ValidatorManagerClaimsCountedImpl__factory(
             descartesV2
         );
         var address: any;
@@ -60,7 +60,7 @@ describe("Validator Manager Implementation Countable", async () => {
             validators.push(address);
         }
 
-        VMIC = await vmicFactory.deploy(
+        VMCC = await vmccFactory.deploy(
             await descartesV2.getAddress(),
             validators
         );
@@ -73,44 +73,44 @@ describe("Validator Manager Implementation Countable", async () => {
             var address = await wallets[i].getAddress();
             wrongValidators.push(address);
         }
-        const vmicFactory = new ValidatorManagerImplCountable__factory(
+        const vmccFactory = new ValidatorManagerClaimsCountedImpl__factory(
             descartesV2
         );
         await expect(
-            vmicFactory.deploy(await descartesV2.getAddress(), wrongValidators)
+            vmccFactory.deploy(await descartesV2.getAddress(), wrongValidators)
         ).to.be.revertedWith("up to 8 validators");
     });
 
     it("check initial consensusGoalMask", async () => {
         let initConsensusGoalMask = (1 << validators.length) - 1;
         expect(
-            await VMIC.getConsensusGoalMask(),
+            await VMCC.getConsensusGoalMask(),
             "get initial consensusGoalMask"
         ).to.equal(initConsensusGoalMask);
     });
 
     it("check initial claimAgreementMask", async () => {
         expect(
-            await VMIC.getCurrentAgreementMask(),
+            await VMCC.getCurrentAgreementMask(),
             "get initial claimAgreementMask"
         ).to.equal(0);
     });
 
     it("check initial currentClaim", async () => {
         expect(
-            await VMIC.getCurrentClaim(),
+            await VMCC.getCurrentClaim(),
             "get initial currentClaim"
         ).to.equal(hash_zero);
     });
 
     it("onClaim and onDisputeEnd should revert if not called from DescartesV2", async () => {
         await expect(
-            VMIC.connect(signer).onClaim(validators[0], hash_zero),
+            VMCC.connect(signer).onClaim(validators[0], hash_zero),
             "should revert if not called from DescartesV2"
         ).to.be.revertedWith("Only descartesV2");
 
         await expect(
-            VMIC.connect(signer).onDisputeEnd(
+            VMCC.connect(signer).onDisputeEnd(
                 address_zero,
                 address_zero,
                 hash_zero
@@ -121,7 +121,7 @@ describe("Validator Manager Implementation Countable", async () => {
 
     it("onClaim should revert if claim is 0x00", async () => {
         await expect(
-            VMIC.onClaim(validators[0], hash_zero),
+            VMCC.onClaim(validators[0], hash_zero),
             "should revert if claim == 0x00"
         ).to.be.revertedWith("empty claim");
     });
@@ -129,7 +129,7 @@ describe("Validator Manager Implementation Countable", async () => {
     it("onClaim should revert if sender is not allowed", async () => {
         var claim = "0x" + "1".repeat(64);
         await expect(
-            VMIC.onClaim(address_zero, claim),
+            VMCC.onClaim(address_zero, claim),
             "should revert if sender is not in validators array"
         ).to.be.revertedWith("sender not allowed");
     });
@@ -143,7 +143,7 @@ describe("Validator Manager Implementation Countable", async () => {
             // callStatic: check return value
             expect(
                 JSON.stringify(
-                    await VMIC.callStatic.onClaim(validators[i], claim)
+                    await VMCC.callStatic.onClaim(validators[i], claim)
                 ),
                 "use callStatic to check return value of onClaim() when NoConflict"
             ).to.equal(
@@ -156,10 +156,10 @@ describe("Validator Manager Implementation Countable", async () => {
 
             // check emitted event
             await expect(
-                VMIC.onClaim(validators[i], claim),
+                VMCC.onClaim(validators[i], claim),
                 "equal claims should not generate conflict nor consensus, if not all validators have agreed"
             )
-                .to.emit(VMIC, "ClaimReceived")
+                .to.emit(VMCC, "ClaimReceived")
                 .withArgs(
                     Result.NoConflict,
                     [hash_zero, hash_zero],
@@ -169,13 +169,13 @@ describe("Validator Manager Implementation Countable", async () => {
             // check updated currentAgreementMask
             currentAgreementMask = currentAgreementMask | (1 << i);
             expect(
-                await VMIC.getCurrentAgreementMask(),
+                await VMCC.getCurrentAgreementMask(),
                 "check currentAgreementMask"
             ).to.equal(currentAgreementMask);
 
             // check updated currentClaim
             expect(
-                await VMIC.getCurrentClaim(),
+                await VMCC.getCurrentClaim(),
                 "get updated currentClaim"
             ).to.equal(claim);
         }
@@ -184,7 +184,7 @@ describe("Validator Manager Implementation Countable", async () => {
         // callStatic: check return value
         var lastValidator = validators[validators.length - 1];
         expect(
-            JSON.stringify(await VMIC.callStatic.onClaim(lastValidator, claim)),
+            JSON.stringify(await VMCC.callStatic.onClaim(lastValidator, claim)),
             "use callStatic to check return value of onClaim() when Consensus"
         ).to.equal(
             JSON.stringify([
@@ -196,10 +196,10 @@ describe("Validator Manager Implementation Countable", async () => {
 
         // check emitted event
         await expect(
-            VMIC.onClaim(lastValidator, claim),
+            VMCC.onClaim(lastValidator, claim),
             "after all validators claim should be consensus"
         )
-            .to.emit(VMIC, "ClaimReceived")
+            .to.emit(VMCC, "ClaimReceived")
             .withArgs(
                 Result.Consensus,
                 [claim, hash_zero],
@@ -210,7 +210,7 @@ describe("Validator Manager Implementation Countable", async () => {
         currentAgreementMask =
             currentAgreementMask | (1 << (validators.length - 1));
         expect(
-            await VMIC.getCurrentAgreementMask(),
+            await VMCC.getCurrentAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
     });
@@ -220,10 +220,10 @@ describe("Validator Manager Implementation Countable", async () => {
         var claim2 = "0x" + "2".repeat(64);
 
         await expect(
-            VMIC.onClaim(validators[0], claim),
+            VMCC.onClaim(validators[0], claim),
             "first claim should not generate conflict"
         )
-            .to.emit(VMIC, "ClaimReceived")
+            .to.emit(VMCC, "ClaimReceived")
             .withArgs(
                 Result.NoConflict,
                 [hash_zero, hash_zero],
@@ -233,7 +233,7 @@ describe("Validator Manager Implementation Countable", async () => {
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await VMIC.callStatic.onClaim(validators[1], claim2)
+                await VMCC.callStatic.onClaim(validators[1], claim2)
             ),
             "use callStatic to check return value of onClaim() when conflict"
         ).to.equal(
@@ -246,10 +246,10 @@ describe("Validator Manager Implementation Countable", async () => {
 
         // check emitted event
         await expect(
-            VMIC.onClaim(validators[1], claim2),
+            VMCC.onClaim(validators[1], claim2),
             "different claim should generate conflict"
         )
-            .to.emit(VMIC, "ClaimReceived")
+            .to.emit(VMCC, "ClaimReceived")
             .withArgs(
                 Result.Conflict,
                 [claim, claim2],
@@ -259,7 +259,7 @@ describe("Validator Manager Implementation Countable", async () => {
         // check currentAgreementMask
         var currentAgreementMask = 1;
         expect(
-            await VMIC.getCurrentAgreementMask(),
+            await VMCC.getCurrentAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
     });
@@ -269,12 +269,12 @@ describe("Validator Manager Implementation Countable", async () => {
 
         // start with no conflict claim to populate
         // variables
-        await VMIC.onClaim(validators[0], claim);
+        await VMCC.onClaim(validators[0], claim);
 
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await VMIC.callStatic.onDisputeEnd(
+                await VMCC.callStatic.onDisputeEnd(
                     validators[0],
                     validators[1],
                     claim
@@ -291,10 +291,10 @@ describe("Validator Manager Implementation Countable", async () => {
 
         // check emitted event
         await expect(
-            VMIC.onDisputeEnd(validators[0], validators[1], claim),
+            VMCC.onDisputeEnd(validators[0], validators[1], claim),
             "if winning claim is current claim and there is no consensus, should return NoConflict"
         )
-            .to.emit(VMIC, "DisputeEnded")
+            .to.emit(VMCC, "DisputeEnded")
             .withArgs(
                 Result.NoConflict,
                 [hash_zero, hash_zero],
@@ -304,7 +304,7 @@ describe("Validator Manager Implementation Countable", async () => {
         // check currentAgreementMask
         var currentAgreementMask = 1;
         expect(
-            await VMIC.getCurrentAgreementMask(),
+            await VMCC.getCurrentAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
 
@@ -312,7 +312,7 @@ describe("Validator Manager Implementation Countable", async () => {
         // consensusGoalMask should remove loser validators[1]
         var consensusGoalMask = (1 << validators.length) - 1 - (1 << 1);
         expect(
-            await VMIC.getConsensusGoalMask(),
+            await VMCC.getConsensusGoalMask(),
             "check consensusGoalMask"
         ).to.equal(consensusGoalMask);
     });
@@ -323,14 +323,14 @@ describe("Validator Manager Implementation Countable", async () => {
 
         // all validators agree but last one
         for (var i = 0; i < validators.length - 1; i++) {
-            await VMIC.onClaim(validators[i], claim);
+            await VMCC.onClaim(validators[i], claim);
         }
 
         // last validator lost dispute, the only one that disagreed
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await VMIC.callStatic.onDisputeEnd(
+                await VMCC.callStatic.onDisputeEnd(
                     validators[0],
                     lastValidator,
                     claim
@@ -347,10 +347,10 @@ describe("Validator Manager Implementation Countable", async () => {
 
         // check emitted event
         await expect(
-            VMIC.onDisputeEnd(validators[0], lastValidator, claim),
+            VMCC.onDisputeEnd(validators[0], lastValidator, claim),
             "if losing claim was the only one not agreeing, should return consensus"
         )
-            .to.emit(VMIC, "DisputeEnded")
+            .to.emit(VMCC, "DisputeEnded")
             .withArgs(
                 Result.Consensus,
                 [claim, hash_zero],
@@ -365,14 +365,14 @@ describe("Validator Manager Implementation Countable", async () => {
 
         // all validators agree but last one
         for (var i = 0; i < validators.length - 1; i++) {
-            await VMIC.onClaim(validators[i], claim);
+            await VMCC.onClaim(validators[i], claim);
         }
         // first validator lost dispute
         // next defender should be validators[1]
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await VMIC.callStatic.onDisputeEnd(
+                await VMCC.callStatic.onDisputeEnd(
                     lastValidator,
                     validators[0],
                     claim2
@@ -388,10 +388,10 @@ describe("Validator Manager Implementation Countable", async () => {
         );
         // check emitted event
         await expect(
-            VMIC.onDisputeEnd(lastValidator, validators[0], claim2),
+            VMCC.onDisputeEnd(lastValidator, validators[0], claim2),
             "conflict should continue if there are validators still defending claim that lost"
         )
-            .to.emit(VMIC, "DisputeEnded")
+            .to.emit(VMCC, "DisputeEnded")
             .withArgs(
                 Result.Conflict,
                 [claim, claim2],
@@ -400,7 +400,7 @@ describe("Validator Manager Implementation Countable", async () => {
 
         // make all other validators but last defending the losing dispute
         for (var i = 1; i < validators.length - 2; i++) {
-            await VMIC.onDisputeEnd(lastValidator, validators[i], claim2);
+            await VMCC.onDisputeEnd(lastValidator, validators[i], claim2);
         }
 
         // honest validator by himself can generate consensus
@@ -408,7 +408,7 @@ describe("Validator Manager Implementation Countable", async () => {
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await VMIC.callStatic.onDisputeEnd(
+                await VMCC.callStatic.onDisputeEnd(
                     lastValidator,
                     validators[validators.length - 2],
                     claim2
@@ -424,14 +424,14 @@ describe("Validator Manager Implementation Countable", async () => {
         );
         // check emitted event
         await expect(
-            VMIC.onDisputeEnd(
+            VMCC.onDisputeEnd(
                 lastValidator,
                 validators[validators.length - 2],
                 claim2
             ),
             "lastValidator should be the last one in the validator set"
         )
-            .to.emit(VMIC, "DisputeEnded")
+            .to.emit(VMCC, "DisputeEnded")
             .withArgs(
                 Result.Consensus,
                 [claim2, hash_zero],
@@ -447,18 +447,18 @@ describe("Validator Manager Implementation Countable", async () => {
 
         // all validators agree but the last two
         for (var i = 0; i < validators.length - 2; i++) {
-            await VMIC.onClaim(validators[i], claim);
+            await VMCC.onClaim(validators[i], claim);
         }
 
         // make all other validators but the last two defending the losing dispute
         for (var i = 0; i < validators.length - 3; i++) {
-            await VMIC.onDisputeEnd(lastValidator, validators[i], claim2);
+            await VMCC.onDisputeEnd(lastValidator, validators[i], claim2);
         }
         // honest validator winning the last dispute
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await VMIC.callStatic.onDisputeEnd(
+                await VMCC.callStatic.onDisputeEnd(
                     lastValidator,
                     validators[validators.length - 3],
                     claim2
@@ -474,14 +474,14 @@ describe("Validator Manager Implementation Countable", async () => {
         );
         // check emitted event
         await expect(
-            VMIC.onDisputeEnd(
+            VMCC.onDisputeEnd(
                 lastValidator,
                 validators[validators.length - 3],
                 claim2
             ),
             "check emitted event for the last dispute"
         )
-            .to.emit(VMIC, "DisputeEnded")
+            .to.emit(VMCC, "DisputeEnded")
             .withArgs(
                 Result.NoConflict,
                 [hash_zero, hash_zero],
@@ -492,7 +492,7 @@ describe("Validator Manager Implementation Countable", async () => {
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await VMIC.callStatic.onClaim(secondLastValidator, claim2)
+                await VMCC.callStatic.onClaim(secondLastValidator, claim2)
             ),
             "use callStatic to check return value of onClaim() to finalize consensus"
         ).to.equal(
@@ -504,10 +504,10 @@ describe("Validator Manager Implementation Countable", async () => {
         );
         // check emitted event
         await expect(
-            VMIC.onClaim(secondLastValidator, claim2),
+            VMCC.onClaim(secondLastValidator, claim2),
             "finalize the consensus"
         )
-            .to.emit(VMIC, "ClaimReceived")
+            .to.emit(VMCC, "ClaimReceived")
             .withArgs(
                 Result.Consensus,
                 [claim2, hash_zero],
@@ -519,29 +519,29 @@ describe("Validator Manager Implementation Countable", async () => {
         var claim = "0x" + "1".repeat(64);
 
         // one validator claims
-        await VMIC.onClaim(validators[0], claim);
+        await VMCC.onClaim(validators[0], claim);
 
         // epoch ends without consensus
         // callStatic: check return value
         expect(
-            await VMIC.callStatic.onNewEpoch(),
+            await VMCC.callStatic.onNewEpoch(),
             "onNewEpoch() should return current claim"
         ).to.equal(claim);
         // check emitted event
         await expect(
-            VMIC.onNewEpoch(),
+            VMCC.onNewEpoch(),
             "new epoch should emit event NewEpoch with current claim"
         )
-            .to.emit(VMIC, "NewEpoch")
+            .to.emit(VMCC, "NewEpoch")
             .withArgs(claim);
 
         expect(
-            await VMIC.getCurrentAgreementMask(),
+            await VMCC.getCurrentAgreementMask(),
             "current agreement mask should reset"
         ).to.equal(0);
 
         expect(
-            await VMIC.getCurrentClaim(),
+            await VMCC.getCurrentClaim(),
             "current claim should reset"
         ).to.equal(hash_zero);
     });
@@ -550,7 +550,7 @@ describe("Validator Manager Implementation Countable", async () => {
         // check initial #claims
         for (var i = 0; i < validators.length; i++) {
             expect(
-                await VMIC.getNumberOfClaimsByAddress(validators[i]),
+                await VMCC.getNumberOfClaimsByAddress(validators[i]),
                 "initial #claims"
             ).to.equal(0);
         }
@@ -558,17 +558,17 @@ describe("Validator Manager Implementation Countable", async () => {
         // all validators make the same claim
         var claim = "0x" + "1".repeat(64);
         for (var i = 0; i < validators.length; i++) {
-            await VMIC.onClaim(validators[i], claim);
+            await VMCC.onClaim(validators[i], claim);
             expect(
-                await VMIC.getNumberOfClaimsByAddress(validators[i]),
+                await VMCC.getNumberOfClaimsByAddress(validators[i]),
                 "still 0 because consensus hasn't reached"
             ).to.equal(0);
         }
         // once consensus, #claims increases
-        await VMIC.onNewEpoch();
+        await VMCC.onNewEpoch();
         for (var i = 0; i < validators.length; i++) {
             expect(
-                await VMIC.getNumberOfClaimsByAddress(validators[i]),
+                await VMCC.getNumberOfClaimsByAddress(validators[i]),
                 "now #claims increased"
             ).to.equal(1);
         }
@@ -576,28 +576,28 @@ describe("Validator Manager Implementation Countable", async () => {
         // keep skipping to new epoches
         for (let epoch = 1; epoch < 20; epoch++) {
             // 1st validator keeps making claims
-            await VMIC.onClaim(validators[0], claim);
-            await VMIC.onNewEpoch();
+            await VMCC.onClaim(validators[0], claim);
+            await VMCC.onNewEpoch();
             // check how #claims is increasing
             expect(
-                await VMIC.getNumberOfClaimsByAddress(validators[0]),
+                await VMCC.getNumberOfClaimsByAddress(validators[0]),
                 "check increasing #claims"
             ).to.equal(epoch + 1);
         }
 
         // currently, #claims gets cleared once a validator makes a wrong claim
-        await VMIC.onClaim(validators[0], claim);
+        await VMCC.onClaim(validators[0], claim);
         var claim2 = "0x" + "2".repeat(64);
-        await VMIC.onClaim(validators[1], claim2);
+        await VMCC.onClaim(validators[1], claim2);
         // let the 2nd validator win the dispute
-        await VMIC.onDisputeEnd(validators[1], validators[0], claim2);
-        await VMIC.onNewEpoch();
+        await VMCC.onDisputeEnd(validators[1], validators[0], claim2);
+        await VMCC.onNewEpoch();
         expect(
-            await VMIC.getNumberOfClaimsByAddress(validators[0]),
+            await VMCC.getNumberOfClaimsByAddress(validators[0]),
             "now the #claims for validator0 should get cleared"
         ).to.equal(0);
         expect(
-            await VMIC.getNumberOfClaimsByAddress(validators[1]),
+            await VMCC.getNumberOfClaimsByAddress(validators[1]),
             "#claims for validator1 should increase by 1"
         ).to.equal(2);
     });
