@@ -268,8 +268,7 @@ contract ValidatorManagerImpl is ValidatorManager {
     function updateConsensusGoalMask() internal view returns (uint32) {
         // consensus goal is a number where
         // all bits related to validators are turned on
-        uint256 l = validators.length;
-        uint256 consensusMask = (1 << l) - 1;
+        uint256 consensusMask = (1 << validators.length) - 1;
         return uint32(consensusMask);
     }
 
