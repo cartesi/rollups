@@ -30,6 +30,9 @@ pub enum Error {
 
     #[snafu(display("Tonic transport error"))]
     TonicTransportError { source: tonic::transport::Error },
+
+    #[snafu(display("Deserialize error"))]
+    DeserializeError { source: serde_json::Error },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

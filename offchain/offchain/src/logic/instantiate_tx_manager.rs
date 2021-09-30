@@ -1,12 +1,11 @@
 use offchain_core::ethers;
 
-use crate::contracts::descartesv2_contract::DescartesV2Impl;
+use super::instantiate_block_subscriber::DescartesBlockSubscriber;
 use crate::error::*;
 
-use block_subscriber::{BlockSubscriber, BlockSubscriberHandle};
-use middleware_factory::{
-    HttpProviderFactory, MiddlewareFactory, WsProviderFactory,
-};
+use block_subscriber::BlockSubscriber;
+use middleware_factory::{HttpProviderFactory, WsProviderFactory};
+use tx_manager::config::TMConfig;
 use tx_manager::{provider::Factory, TransactionManager};
 
 use ethers::core::types::Address;
@@ -21,9 +20,8 @@ pub type DescartesTxManager = Arc<
     >,
 >;
 
-pub type DescartesBlockSubscriber = Arc<BlockSubscriber<WsProviderFactory>>;
-
 pub async fn instantiate_tx_manager(
+<<<<<<< HEAD
     config: &crate::config::DescartesConfig,
 ) -> Result<(
     BlockSubscriberHandle<<WsProviderFactory as MiddlewareFactory>::Middleware>,
@@ -51,15 +49,26 @@ pub async fn instantiate_tx_manager(
         Arc::clone(&block_subscriber),
         config.tm_config.max_retries,
         config.tm_config.max_delay,
-    ));
-    Ok((
-        handle,
-        block_subscriber,
-        transaction_manager,
-        descartesv2_contract,
-    ))
-}
+=======
+    http_endpoint: String,
+    block_subscriber: DescartesBlockSubscriber,
+    config: &TMConfig,
+) -> Result<DescartesTxManager> {
+    let middleware_factory = create_http_factory(http_endpoint)?;
+    let factory = Factory::new(
+        Arc::clone(&middleware_factory),
+        config.transaction_timeout,
+    );
 
+    let transaction_manager = Arc::new(TransactionManager::new(
+        factory,
+        block_subscriber,
+        config.max_retries,
+        config.max_delay,
+>>>>>>> b423880 (Connect rollups logic to state fold server)
+    ));
+
+<<<<<<< HEAD
 async fn create_ws_factory(
     config: &crate::config::DescartesConfig,
 ) -> Result<Arc<WsProviderFactory>> {
@@ -93,3 +102,14 @@ async fn create_block_subscriber(
         config.bs_config.max_delay,
     ))
 }
+=======
+    Ok(transaction_manager)
+}
+
+fn create_http_factory(
+    http_endpoint: String,
+) -> Result<Arc<HttpProviderFactory>> {
+    HttpProviderFactory::new(http_endpoint.clone())
+        .context(MiddlewareFactoryError {})
+}
+>>>>>>> b423880 (Connect rollups logic to state fold server)

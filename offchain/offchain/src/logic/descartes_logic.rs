@@ -1,5 +1,8 @@
 use offchain_core::ethers;
 
+use super::instantiate_block_subscriber::{
+    self, instantiate_block_subscriber, DescartesBlockSubscriber,
+};
 use super::instantiate_state_fold::{self, instantiate_state_fold};
 use super::instantiate_tx_manager::{
     self, instantiate_tx_manager, DescartesTxManager,
@@ -9,20 +12,44 @@ use crate::contracts::descartesv2_contract::DescartesV2Impl;
 use crate::error::*;
 use crate::fold::types::*;
 use crate::machine::{EpochStatus, MachineInterface, MockMachine};
+use crate::rollups_state_fold::RollupsStateFold;
 
 use block_subscriber::{
-    BlockSubscriber, BlockSubscriberHandle, NewBlockSubscriber,
+    config::BSConfig, BlockSubscriber, BlockSubscriberHandle,
+    NewBlockSubscriber,
 };
 use middleware_factory::{
     HttpProviderFactory, MiddlewareFactory, WsProviderFactory,
 };
 use state_fold::types::BlockState;
+use tx_manager::config::TMConfig;
 use tx_manager::types::ResubmitStrategy;
 
 use async_recursion::async_recursion;
 use ethers::core::types::{Address, H256, U256, U64};
+use ethers::providers::{MockProvider, Provider};
 use im::Vector;
 use snafu::ResultExt;
+use std::sync::Arc;
+
+pub struct Config {
+    pub descartes_contract_address: Address,
+    pub signer_http_endpoint: String,
+    pub ws_endpoint: String,
+    pub state_fold_grpc_endpoint: String,
+
+    pub tx_manager_config: TMConfig,
+    pub block_subscriber_config: BSConfig,
+
+    pub initial_epoch: U256,
+
+    // pub call_timeout: std::time::Duration,
+    // pub subscriber_timeout: std::time::Duration,
+    pub gas_multiplier: Option<f64>,
+    pub gas_price_multiplier: Option<f64>,
+    pub rate: usize,
+    pub confirmations: usize,
+}
 
 pub struct TxConfig {
     pub gas_multiplier: Option<f64>,
@@ -32,24 +59,29 @@ pub struct TxConfig {
     pub confirmations: usize,
 }
 
-async fn main_loop(
-    config: &crate::config::DescartesConfig,
-    sender: Address,
-) -> Result<()> {
-    // WARNING: this should be revisited when being actually used!
-    let (initial_epoch, tx_config) = (
-        U256::from(0),
-        TxConfig {
-            gas_multiplier: None,
-            gas_price_multiplier: None,
-            rate: 1,
-            confirmations: 1,
-        },
+async fn main_loop(config: &Config, sender: Address) -> Result<()> {
+    let (block_subscriber, subscriber_handle) = instantiate_block_subscriber(
+        config.ws_endpoint.clone(),
+        &config.block_subscriber_config,
+    )
+    .await?;
+
+    let tx_manager = instantiate_tx_manager(
+        config.signer_http_endpoint.clone(),
+        Arc::clone(&block_subscriber),
+        &config.tx_manager_config,
+    )
+    .await?;
+
+    let (provider, mock) = Provider::mocked();
+    let descartesv2_contract = DescartesV2Impl::new(
+        config.descartes_contract_address,
+        Arc::new(provider),
     );
 
-    let (subscriber_handle, block_subscriber, tx_manager, descartesv2_contract) =
-        instantiate_tx_manager(config).await?;
-    let state_fold = instantiate_state_fold(config)?;
+    let rollups_state_fold =
+        RollupsStateFold::new(config.state_fold_grpc_endpoint.clone()).await?;
+    // let state_fold = instantiate_state_fold(&config.into())?;
 
     // TODO: Start MachineManager session request
 
@@ -58,25 +90,34 @@ async fn main_loop(
         .await
         .ok_or(EmptySubscription {}.build())?;
 
+    let tx_config = config.into();
+
     loop {
         // TODO: change to n blocks in the past.
         match subscription.recv().await {
             Ok(block) => {
+                /*
                 let state = state_fold
                     .get_state_for_block(
                         &(
-                            config
-                                .basic_config
-                                .contracts
-                                .get("DescartesV2Impl")
-                                .unwrap()
-                                .clone(),
-                            initial_epoch,
+                            config.descartes_contract_address,
+                            config.initial_epoch,
                         ),
                         Some(block.hash),
                     )
                     .await
                     .context(StateFoldError {})?;
+                */
+
+                let state = rollups_state_fold
+                    .get_state(
+                        &block.hash,
+                        &(
+                            config.initial_epoch,
+                            config.descartes_contract_address,
+                        ),
+                    )
+                    .await?;
 
                 react(
                     &sender,
@@ -97,14 +138,12 @@ async fn main_loop(
 async fn react<MM: MachineInterface + Sync>(
     sender: &Address,
     config: &TxConfig,
-    state: BlockState<DescartesV2State>,
+    state: DescartesV2State,
     tx_manager: &DescartesTxManager,
-    descartesv2_contract: &DescartesV2Impl<
-        <HttpProviderFactory as MiddlewareFactory>::Middleware,
-    >,
+    descartesv2_contract: &DescartesV2Impl<Provider<MockProvider>>,
     machine_manager: &MM,
 ) -> Result<()> {
-    let state = state.state;
+    let state = state;
 
     let mm_epoch_status = machine_manager.get_current_epoch_status().await?;
 
@@ -428,9 +467,7 @@ async fn send_claim_tx(
     epoch_number: U256,
     config: &TxConfig,
     tx_manager: &DescartesTxManager,
-    descartesv2_contract: &DescartesV2Impl<
-        <HttpProviderFactory as MiddlewareFactory>::Middleware,
-    >,
+    descartesv2_contract: &DescartesV2Impl<Provider<MockProvider>>,
 ) {
     let claim_tx = descartesv2_contract
         .claim(claim.to_fixed_bytes())
@@ -458,9 +495,7 @@ async fn send_finalize_tx(
     epoch_number: U256,
     config: &TxConfig,
     tx_manager: &DescartesTxManager,
-    descartesv2_contract: &DescartesV2Impl<
-        <HttpProviderFactory as MiddlewareFactory>::Middleware,
-    >,
+    descartesv2_contract: &DescartesV2Impl<Provider<MockProvider>>,
 ) {
     let finalize_tx = descartesv2_contract.finalize_epoch().from(sender);
 
@@ -480,6 +515,52 @@ async fn send_finalize_tx(
         .await
         .expect("Transaction conversion should never fail");
 }
+
+impl From<&Config> for TxConfig {
+    fn from(config: &Config) -> Self {
+        let config = config.clone();
+        Self {
+            gas_multiplier: config.gas_multiplier,
+            gas_price_multiplier: config.gas_price_multiplier,
+            rate: config.rate,
+            confirmations: config.confirmations,
+        }
+    }
+}
+
+// impl From<&Config> for instantiate_state_fold::Config {
+//     fn from(config: &Config) -> Self {
+//         let config = config.clone();
+//         Self {
+//             safety_margin: config.safety_margin,
+//             input_contract_address: config.input_contract_address,
+//             output_contract_address: config.output_contract_address,
+//             descartes_contract_address: config.descartes_contract_address,
+
+//             provider_http_url: config.provider_http_url.clone(),
+//             genesis_block: config.genesis_block,
+//             query_limit_error_codes: config.query_limit_error_codes.clone(),
+//             concurrent_events_fetch: config.concurrent_events_fetch,
+//         }
+//     }
+// }
+
+// impl From<&Config> for instantiate_tx_manager::Config {
+//     fn from(config: &Config) -> Self {
+//         let config = config.clone();
+//         Self {
+//             descartes_contract_address: config.descartes_contract_address,
+
+//             http_endpoint: config.signer_http_endpoint.clone(),
+//             ws_endpoint: config.ws_endpoint.clone(),
+//             max_retries: config.max_retries,
+//             max_delay: config.max_delay,
+
+//             call_timeout: config.call_timeout,
+//             subscriber_timeout: config.subscriber_timeout,
+//         }
+//     }
+// }
 
 /*
 use super::fold::*;

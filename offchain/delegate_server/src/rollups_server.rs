@@ -53,7 +53,7 @@ impl DelegateManager for RollupsDelegateManager {
             .get_state_for_block(&(descartes_address, initial_epoch), None)
             .await
             .map_err(|e| Status::new(Code::Unavailable, format!("{}", e)))?
-            .state;
+            .state; // TODO return BlockState<DescartesV2State>
 
         let reply = GetStateResponse {
             json_state: serde_json::to_string(&contract_state)
