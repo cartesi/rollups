@@ -24,34 +24,6 @@ use ethers::core::types::{Address, H256, U256, U64};
 use im::Vector;
 use snafu::ResultExt;
 
-pub struct Config {
-    pub safety_margin: usize,
-    pub input_contract_address: Address, // TODO: read from contract.
-    pub output_contract_address: Address,
-    pub descartes_contract_address: Address,
-
-    pub provider_http_url: String,
-    pub genesis_block: U64,
-    pub query_limit_error_codes: Vec<i32>,
-    pub concurrent_events_fetch: usize,
-
-    pub http_endpoint: String,
-    pub ws_endpoint: String,
-    pub max_retries: usize,
-    pub max_delay: std::time::Duration,
-
-    pub call_timeout: std::time::Duration,
-    pub subscriber_timeout: std::time::Duration,
-
-    pub initial_epoch: U256,
-
-    pub gas_multiplier: Option<f64>,
-    pub gas_price_multiplier: Option<f64>,
-    pub rate: usize,
-
-    pub confirmations: usize,
-}
-
 pub struct TxConfig {
     pub gas_multiplier: Option<f64>,
     pub gas_price_multiplier: Option<f64>,
@@ -60,10 +32,24 @@ pub struct TxConfig {
     pub confirmations: usize,
 }
 
-async fn main_loop(config: &Config, sender: Address) -> Result<()> {
+async fn main_loop(
+    config: &crate::config::ApplicationConfig,
+    sender: Address,
+) -> Result<()> {
+    // WARNING: this should be revisited when be actually used!
+    let (initial_epoch, tx_config) = (
+        U256::from(0),
+        TxConfig {
+            gas_multiplier: None,
+            gas_price_multiplier: None,
+            rate: 1,
+            confirmations: 1,
+        },
+    );
+
     let (subscriber_handle, block_subscriber, tx_manager, descartesv2_contract) =
-        instantiate_tx_manager(&config.into()).await?;
-    let state_fold = instantiate_state_fold(&config.into())?;
+        instantiate_tx_manager(config).await?;
+    let state_fold = instantiate_state_fold(config)?;
 
     // TODO: Start MachineManager session request
 
@@ -72,8 +58,6 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
         .await
         .ok_or(EmptySubscription {}.build())?;
 
-    let tx_config = config.into();
-
     loop {
         // TODO: change to n blocks in the past.
         match subscription.recv().await {
@@ -81,8 +65,13 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
                 let state = state_fold
                     .get_state_for_block(
                         &(
-                            config.descartes_contract_address,
-                            config.initial_epoch,
+                            config
+                                .basic_config
+                                .contracts
+                                .get("DescartesV2Impl")
+                                .unwrap()
+                                .clone(),
+                            initial_epoch,
                         ),
                         Some(block.hash),
                     )
@@ -490,52 +479,6 @@ async fn send_finalize_tx(
         )
         .await
         .expect("Transaction conversion should never fail");
-}
-
-impl From<&Config> for TxConfig {
-    fn from(config: &Config) -> Self {
-        let config = config.clone();
-        Self {
-            gas_multiplier: config.gas_multiplier,
-            gas_price_multiplier: config.gas_price_multiplier,
-            rate: config.rate,
-            confirmations: config.confirmations,
-        }
-    }
-}
-
-impl From<&Config> for instantiate_state_fold::Config {
-    fn from(config: &Config) -> Self {
-        let config = config.clone();
-        Self {
-            safety_margin: config.safety_margin,
-            input_contract_address: config.input_contract_address,
-            output_contract_address: config.output_contract_address,
-            descartes_contract_address: config.descartes_contract_address,
-
-            provider_http_url: config.provider_http_url.clone(),
-            genesis_block: config.genesis_block,
-            query_limit_error_codes: config.query_limit_error_codes.clone(),
-            concurrent_events_fetch: config.concurrent_events_fetch,
-        }
-    }
-}
-
-impl From<&Config> for instantiate_tx_manager::Config {
-    fn from(config: &Config) -> Self {
-        let config = config.clone();
-        Self {
-            descartes_contract_address: config.descartes_contract_address,
-
-            http_endpoint: config.http_endpoint.clone(),
-            ws_endpoint: config.ws_endpoint.clone(),
-            max_retries: config.max_retries,
-            max_delay: config.max_delay,
-
-            call_timeout: config.call_timeout,
-            subscriber_timeout: config.subscriber_timeout,
-        }
-    }
 }
 
 /*

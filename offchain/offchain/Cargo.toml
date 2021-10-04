@@ -8,11 +8,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-block-subscriber = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
-middleware-factory = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
+block-subscriber = { git = "https://github.com/cartesi/offchain-utils", rev = "f43b889" }
+middleware-factory = { git = "https://github.com/cartesi/offchain-utils", rev = "f43b889" }
 offchain-core = { git = "https://github.com/cartesi/offchain-utils", rev = "f43b889" }
-configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "bcab565" }
-tx-manager = { git = "https://github.com/cartesi/tx-manager", rev = "a6a2d1f" }
+configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "f43b889" }
+tx-manager = { git = "https://github.com/cartesi/tx-manager", rev = "fc3712f" }
 state-fold = { git = "https://github.com/cartesi/state-fold", rev = "f6f06a1" }
 
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "4690f8e" }
@@ -24,6 +24,7 @@ futures = "0.3"
 im = { version = "15.0.0", features = ["serde"] }
 prost = "0.8"
 serde_json = "1.0"
+structopt = "0.3"
 snafu = "0.6"
 tokio = { version = "^1.5", features = ["sync", "macros", "rt-multi-thread"] }
 tonic = "0.5.0"

@@ -1,11 +1,7 @@
 use super::*;
-use state_fold::{DelegateAccess, StateFold};
+use state_fold::{config::SFConfig, DelegateAccess, StateFold};
 
 use std::sync::Arc;
-
-pub struct SetupConfig {
-    pub safety_margin: usize,
-}
 
 pub type DescartesStateFold<DA> =
     Arc<StateFold<DescartesV2FoldDelegate<DA>, DA>>;
@@ -15,7 +11,7 @@ pub fn create_descartes_state_fold<
     DA: DelegateAccess + Send + Sync + 'static,
 >(
     access: Arc<DA>,
-    config: &SetupConfig,
+    config: &SFConfig,
 ) -> DescartesStateFold<DA> {
     let epoch_fold = create_epoch(Arc::clone(&access), config);
     let output_fold = create_output(Arc::clone(&access), config);
@@ -25,10 +21,10 @@ pub fn create_descartes_state_fold<
     Arc::new(state_fold)
 }
 
-type InputStateFold<DA> = Arc<StateFold<InputFoldDelegate, DA>>;
-fn create_input<DA: DelegateAccess + Send + Sync + 'static>(
+pub type InputStateFold<DA> = Arc<StateFold<InputFoldDelegate, DA>>;
+pub fn create_input<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
-    config: &SetupConfig,
+    config: &SFConfig,
 ) -> InputStateFold<DA> {
     let delegate = InputFoldDelegate::default();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
@@ -39,7 +35,7 @@ type InputContractAddressStateFold<DA> =
     Arc<StateFold<InputContractAddressFoldDelegate, DA>>;
 fn create_input_contract_address<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
-    config: &SetupConfig,
+    config: &SFConfig,
 ) -> InputContractAddressStateFold<DA> {
     let delegate = InputContractAddressFoldDelegate::default();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
@@ -49,7 +45,7 @@ fn create_input_contract_address<DA: DelegateAccess + Send + Sync + 'static>(
 pub type OutputStateFold<DA> = Arc<StateFold<OutputFoldDelegate, DA>>;
 pub fn create_output<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
-    config: &SetupConfig,
+    config: &SFConfig,
 ) -> OutputStateFold<DA> {
     let delegate = OutputFoldDelegate::default();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
@@ -62,7 +58,7 @@ fn create_accumulating_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     input_fold: InputStateFold<DA>,
     access: Arc<DA>,
     input_contract_address: InputContractAddressStateFold<DA>,
-    config: &SetupConfig,
+    config: &SFConfig,
 ) -> AccumulatingEpochStateFold<DA> {
     let delegate =
         AccumulatingEpochFoldDelegate::new(input_fold, input_contract_address);
@@ -75,7 +71,7 @@ fn create_sealed_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     input_fold: InputStateFold<DA>,
     access: Arc<DA>,
     input_contract_address: InputContractAddressStateFold<DA>,
-    config: &SetupConfig,
+    config: &SFConfig,
 ) -> SealedEpochStateFold<DA> {
     let delegate =
         SealedEpochFoldDelegate::new(input_fold, input_contract_address);
@@ -89,7 +85,7 @@ fn create_finalized_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     input_fold: InputStateFold<DA>,
     access: Arc<DA>,
     input_contract_address: InputContractAddressStateFold<DA>,
-    config: &SetupConfig,
+    config: &SFConfig,
 ) -> FinalizedEpochStateFold<DA> {
     let delegate =
         FinalizedEpochFoldDelegate::new(input_fold, input_contract_address);
@@ -100,7 +96,7 @@ fn create_finalized_epoch<DA: DelegateAccess + Send + Sync + 'static>(
 type EpochStateFold<DA> = Arc<StateFold<EpochFoldDelegate<DA>, DA>>;
 fn create_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
-    config: &SetupConfig,
+    config: &SFConfig,
 ) -> EpochStateFold<DA> {
     let input_fold = create_input(Arc::clone(&access), config);
     let input_contract_address =
