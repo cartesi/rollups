@@ -2,34 +2,30 @@ use state_fold::{Access, StateFold};
 use state_server_grpc::state_server::delegate_manager_server::DelegateManager;
 use state_server_grpc::state_server::{GetStateRequest, GetStateResponse};
 
-use ethers::core::types::{Address, U256};
+use ethers::core::types::Address;
 use ethers::providers::{Http, Provider};
 use tonic::{Code, Request, Response, Status};
 
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use serde_json;
 
 #[derive(Serialize, Deserialize)]
 struct InitialState {
-    initial_epoch: U256,
-    descartes_address: Address,
+    output_address: Address,
 }
 
-pub struct RollupsDelegateManager {
+pub struct OutputDelegateManager {
     pub fold: Arc<
         StateFold<
-            offchain::fold::descartesv2_delegate::DescartesV2FoldDelegate<
-                Access<Provider<Http>>,
-            >,
+            offchain::fold::output_delegate::OutputFoldDelegate,
             Access<Provider<Http>>,
         >,
     >,
 }
 
 #[tonic::async_trait]
-impl DelegateManager for RollupsDelegateManager {
+impl DelegateManager for OutputDelegateManager {
     async fn get_state(
         &self,
         request: Request<GetStateRequest>,
@@ -46,12 +42,10 @@ impl DelegateManager for RollupsDelegateManager {
             .map_err(|e| {
                 Status::new(Code::InvalidArgument, format!("{}", e))
             })?;
-        let descartes_address = initial_state.descartes_address;
-        let initial_epoch = initial_state.initial_epoch;
 
         let contract_state = self
             .fold
-            .get_state_for_block(&(descartes_address, initial_epoch), None)
+            .get_state_for_block(&initial_state.output_address, None)
             .await
             .map_err(|e| Status::new(Code::Unavailable, format!("{}", e)))?
             .state;

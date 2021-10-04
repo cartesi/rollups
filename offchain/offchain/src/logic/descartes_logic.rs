@@ -36,7 +36,7 @@ async fn main_loop(
     config: &crate::config::ApplicationConfig,
     sender: Address,
 ) -> Result<()> {
-    // WARNING: this should be revisited when be actually used!
+    // WARNING: this should be revisited when being actually used!
     let (initial_epoch, tx_config) = (
         U256::from(0),
         TxConfig {

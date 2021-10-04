@@ -5,12 +5,15 @@ use state_server_grpc::state_server::{GetStateRequest, GetStateResponse};
 use ethers::core::types::{Address, U256};
 use ethers::providers::{Http, Provider};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
 
 pub struct InputDelegateManager {
-    pub fold: StateFold<
-        offchain::fold::input_delegate::InputFoldDelegate,
-        Access<Provider<Http>>,
+    pub fold: Arc<
+        StateFold<
+            offchain::fold::input_delegate::InputFoldDelegate,
+            Access<Provider<Http>>,
+        >,
     >,
 }
 

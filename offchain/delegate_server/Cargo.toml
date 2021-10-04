@@ -5,10 +5,6 @@ version = "0.1.0"
 authors = ["victornogueira <victor.nogueira@cartesi.io>"]
 edition = "2018"
 
-[[bin]]
-name = "delegate_server_main"
-path = "src/delegate_server_main.rs"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -23,6 +19,7 @@ snafu = "0.6"
 tokio = { version = "^1.5", features = ["sync", "macros", "rt-multi-thread"] }
 tonic = "0.4"
 serde = "1.0.0"
+structopt = "0.3"
 
 [build-dependencies]
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "4690f8e" }

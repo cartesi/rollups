@@ -6,7 +6,7 @@ sleep 3
 
 ## testing input delegate
 
-./offchain/target/debug/delegate_server_main >> /dev/null 2>&1 &
+./offchain/target/debug/delegate_server input >> /dev/null 2>&1 &
 delegate_server_pid=$!
 sleep 3
 
