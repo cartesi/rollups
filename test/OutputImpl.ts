@@ -45,6 +45,7 @@ describe("Output Implementation Testing", () => {
     let encodedOutput: string;
 
     beforeEach(async () => {
+        await deployments.fixture();
         // get signers
         signers = await ethers.getSigners();
 

@@ -20,7 +20,7 @@
 // rewritten, the entire component will be released under the Apache v2 license.
 
 import { expect, use } from "chai";
-import { ethers } from "hardhat";
+import { deployments, ethers } from "hardhat";
 import { solidity, MockProvider } from "ethereum-waffle";
 import { ValidatorManagerImpl__factory } from "../src/types/factories/ValidatorManagerImpl__factory";
 import { Signer } from "ethers";
@@ -45,6 +45,7 @@ describe("Validator Manager Implementation", async () => {
     }
 
     beforeEach(async () => {
+        await deployments.fixture();
         [descartesV2, signer] = await ethers.getSigners();
         const vmiFactory = new ValidatorManagerImpl__factory(descartesV2);
         var address: any;

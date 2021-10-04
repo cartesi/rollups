@@ -47,6 +47,7 @@ describe("Input Implementation", () => {
     const log2Size = 7;
 
     beforeEach(async () => {
+        await deployments.fixture();
         [signer] = await ethers.getSigners();
 
         const DescartesV2 = await deployments.getArtifact("DescartesV2");

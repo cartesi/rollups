@@ -48,6 +48,7 @@ describe("Portal Implementation", async () => {
     }
 
     beforeEach(async () => {
+        await deployments.fixture();
         [signer, signer2] = await ethers.getSigners();
 
         const Input = await deployments.getArtifact("InputImpl");
