@@ -14,13 +14,8 @@ use ethers::types::Address;
 use std::sync::Arc;
 
 /// Input Contract Address Delegate, which implements `sync` and `fold`.
+#[derive(Default)]
 pub struct InputContractAddressFoldDelegate {}
-
-impl InputContractAddressFoldDelegate {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct InputContractAddressState {

@@ -19,13 +19,8 @@ use ethers::types::{Address, U256};
 use im::HashMap;
 
 /// Output StateFold Delegate
+#[derive(Default)]
 pub struct OutputFoldDelegate {}
-
-impl OutputFoldDelegate {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 /// output_position = output_index * 2 ** 128 + input_index * 2 ** 64 + epoch
 /// We always assume indices have at most 8 bytes, as does rust

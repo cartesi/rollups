@@ -21,13 +21,8 @@ use ethers::prelude::EthEvent;
 use ethers::types::{Address, U256};
 
 /// Input StateFold Delegate
+#[derive(Default)]
 pub struct InputFoldDelegate {}
-
-impl InputFoldDelegate {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 #[async_trait]
 impl StateFoldDelegate for InputFoldDelegate {

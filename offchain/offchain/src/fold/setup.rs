@@ -30,7 +30,7 @@ fn create_input<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SetupConfig,
 ) -> InputStateFold<DA> {
-    let delegate = InputFoldDelegate::new();
+    let delegate = InputFoldDelegate::default();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
@@ -41,7 +41,7 @@ fn create_input_contract_address<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SetupConfig,
 ) -> InputContractAddressStateFold<DA> {
-    let delegate = InputContractAddressFoldDelegate::new();
+    let delegate = InputContractAddressFoldDelegate::default();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
@@ -51,7 +51,7 @@ pub fn create_output<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SetupConfig,
 ) -> OutputStateFold<DA> {
-    let delegate = OutputFoldDelegate::new();
+    let delegate = OutputFoldDelegate::default();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
