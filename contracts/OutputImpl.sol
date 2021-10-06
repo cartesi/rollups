@@ -89,10 +89,11 @@ contract OutputImpl is Output {
         // execute output
         (bool succ, ) = address(_destination).call(_payload);
 
-        emit OutputExecuted(outputPosition);
-
-        // if properly executed, mark it as executed
-        if (succ) outputBitmask.setBit(outputPosition, true);
+        // if properly executed, mark it as executed and emit event
+        if (succ) {
+            outputBitmask.setBit(outputPosition, true);
+            emit OutputExecuted(outputPosition);
+        }
 
         return succ;
     }
