@@ -33,7 +33,7 @@ pub struct TxConfig {
 }
 
 async fn main_loop(
-    config: &crate::config::ApplicationConfig,
+    config: &crate::config::DescartesConfig,
     sender: Address,
 ) -> Result<()> {
     // WARNING: this should be revisited when being actually used!

@@ -24,7 +24,7 @@ pub type DescartesTxManager = Arc<
 pub type DescartesBlockSubscriber = Arc<BlockSubscriber<WsProviderFactory>>;
 
 pub async fn instantiate_tx_manager(
-    config: &crate::config::ApplicationConfig,
+    config: &crate::config::DescartesConfig,
 ) -> Result<(
     BlockSubscriberHandle<<WsProviderFactory as MiddlewareFactory>::Middleware>,
     DescartesBlockSubscriber,
@@ -61,7 +61,7 @@ pub async fn instantiate_tx_manager(
 }
 
 async fn create_ws_factory(
-    config: &crate::config::ApplicationConfig,
+    config: &crate::config::DescartesConfig,
 ) -> Result<Arc<WsProviderFactory>> {
     WsProviderFactory::new(
         config.basic_config.ws_url.clone().unwrap().clone(),
@@ -73,14 +73,14 @@ async fn create_ws_factory(
 }
 
 fn create_http_factory(
-    config: &crate::config::ApplicationConfig,
+    config: &crate::config::DescartesConfig,
 ) -> Result<Arc<HttpProviderFactory>> {
     HttpProviderFactory::new(config.basic_config.url.clone())
         .context(MiddlewareFactoryError {})
 }
 
 async fn create_block_subscriber(
-    config: &crate::config::ApplicationConfig,
+    config: &crate::config::DescartesConfig,
 ) -> Result<(
     Arc<BlockSubscriber<WsProviderFactory>>,
     BlockSubscriberHandle<<WsProviderFactory as MiddlewareFactory>::Middleware>,

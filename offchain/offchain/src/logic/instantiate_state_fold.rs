@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::config::ApplicationConfig;
+use crate::config::DescartesConfig;
 use crate::error::*;
 use crate::fold::*;
 
@@ -16,7 +16,7 @@ use std::sync::Arc;
 pub type DescartesAccess = Access<Provider<Http>>;
 
 pub fn instantiate_state_fold(
-    config: &ApplicationConfig,
+    config: &DescartesConfig,
 ) -> Result<DescartesStateFold<DescartesAccess>> {
     let access = create_access(config)?;
     let state_fold = create_descartes_state_fold(access, &config.sf_config);
@@ -29,9 +29,7 @@ fn create_provider(url: String) -> Result<Arc<Provider<Http>>> {
     ))
 }
 
-pub fn create_access(
-    config: &ApplicationConfig,
-) -> Result<Arc<DescartesAccess>> {
+pub fn create_access(config: &DescartesConfig) -> Result<Arc<DescartesAccess>> {
     let provider = create_provider(config.basic_config.url.clone())?;
 
     Ok(Arc::new(Access::new(

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-npx hardhat node --no-deploy >> /dev/null 2>&1 &
+npx hardhat node --export localhost.json >> /dev/null 2>&1 &
 hardhat_pid=$!
-sleep 3
+sleep 10
 
 ## testing input delegate
 
-./offchain/target/debug/delegate_server input >> /dev/null 2>&1 &
+./offchain/target/debug/delegate_server --sf-safety-margin 0 input>> /dev/null 2>&1 &
 delegate_server_pid=$!
 sleep 3
 
