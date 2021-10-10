@@ -182,7 +182,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         // clear current claim
         currentClaim = bytes32(0);
         // clear validator agreement bit mask
-        claimMask = claimMask & ((1 << 248) - 1);  // 256 - 8 = 248
+        claimMask = claimMask & ((1 << 248) - 1); // 256 - 8 = 248
 
         emit NewEpoch(tmpClaim);
         return tmpClaim;
@@ -224,19 +224,29 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         return 0;
     }
 
-    // INTERNAL FUNCTIONS
+    // @notice find the validator and return the index or revert
+    // @params validator address
+    // @return validator index or revert
+    function getValidatorIndex(address _sender) public view returns (uint256) {
+        for (uint256 i; i < validators.length; i++) {
+            if (_sender == validators[i]) return i;
+        }
+        revert("validator not found.");
+    }
 
     // @notice get number of claims by the index in the validator set
     // @params the index in validator set
     // @return #claims
     function getNumberOfClaimsByIndex(uint256 index)
-        internal
+        public
         view
         returns (uint256)
     {
         return ((claimMask >> (NUM_CLAIMS_SIZE * index)) &
             ((1 << NUM_CLAIMS_SIZE) - 1));
     }
+
+    // BELOW ARE INTERNAL FUNCTIONS
 
     // @notice only call this function when a claim has been finalized
     // Either a consensus has been reached or challenge period has past

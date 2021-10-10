@@ -304,7 +304,7 @@ contract ValidatorManagerImpl is ValidatorManager {
         for (uint256 i; i < validators.length; i++) {
             if (_validator == validators[i]) {
                 validators[i] = payable(0);
-                uint32 zeroMask = ~(uint32(1) << i);
+                uint32 zeroMask = ~(uint32(1) << uint32(i));
                 claimAgreementMask = claimAgreementMask & zeroMask;
                 consensusGoalMask = consensusGoalMask & zeroMask;
                 break;
