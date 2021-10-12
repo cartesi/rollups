@@ -6,7 +6,7 @@ sleep 10
 
 ## testing input delegate
 
-./offchain/target/debug/delegate_server --sf-safety-margin 0 input>> /dev/null 2>&1 &
+./scripts/run_input_server.sh --sf-safety-margin 0 >> /dev/null 2>&1 &
 delegate_server_pid=$!
 sleep 3
 
