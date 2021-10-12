@@ -1,0 +1,28 @@
+version: '3.3'
+# This compose file is for development environment. For production use only Dockerfile
+
+services:
+  app:
+    env_file:
+      - .env
+    build: .
+    command: bash -c "yarn start"
+    volumes:
+      - .:/code
+    ports:
+      - '4000:4000'
+    links:
+      - database
+    depends_on:
+      - database
+  database:
+    image: postgres:12
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+
+    volumes:
+      - database-data:/var/lib/postgresql/data
+volumes:
+  database-data: {}

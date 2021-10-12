@@ -1,0 +1,268 @@
+# Query types
+type ImmutableState {
+	id: ID!
+	input_duration: Int!
+	challenge_period: Int!
+	contract_creation_timestamp: String!
+	input_contract_address: String!
+	voucher_contract_address: String!
+	validator_contract_address: String!
+	dispute_contract_address: String!
+	descartesv2_contract_address: String!
+}
+
+type Input {
+	id: ID!
+	sender: String!
+	timestamp: String!
+	payload: [String]!
+}
+
+type EpochInputState {
+	id: ID!
+	epoch_number: String!
+	inputs: [Input]!
+	input_contract_address: String!
+}
+
+type FinalizedEpoch {
+	id: ID!
+	epoch_number: String!
+	hash: String!
+	inputs: EpochInputState!
+	finalized_block_hash: String!
+	finalized_block_number: String!
+}
+
+type FinalizedEpochs {
+	id: ID!
+	finalized_epochs: [FinalizedEpoch]!
+	initial_epoch: String!
+	descartesv2_contract_address: String!
+	input_contract_address: String!
+}
+
+type AccumulatingEpoch {
+	id: ID!
+	epoch_number: String!
+	inputs: EpochInputState!
+	descartesv2_contract_address: String!
+	input_contract_address: String!
+}
+
+enum PhaseState {
+	InputAccumulation
+	EpochSealedAwaitingFirstClaim
+	AwaitingConsensusNoConflict
+	AwaitingConsensusAfterConflict
+	ConsensusTimeout
+	AwaitingDispute
+}
+
+type IntegerBool {
+	integer: Boolean!
+}
+
+type IntegerInnerObject {
+	integer: IntegerBool
+}
+
+type IntegerObject {
+	integer: IntegerInnerObject
+}
+
+type VoucherState {
+	id: ID!
+	voucher_address: String!
+	vouchers: IntegerObject
+}
+
+type DescartesV2State {
+	id: ID!
+	block_hash: String!
+	constants: [ImmutableState]!
+	initial_epoch: String!
+	current_epoch: AccumulatingEpoch!
+	current_phase: PhaseState!
+	voucher_state: VoucherState!
+}
+
+type GetStatusResponse {
+	session_id: [String]!
+}
+
+type TaintStatus {
+	error_code: Int!
+	error_message: String!
+}
+
+type GetSessionStatusResponse {
+	session_id: ID!
+	active_epoch_index: Int!
+	epoch_index: [Int]!
+	taint_status: TaintStatus!
+}
+
+enum EpochState {
+	ACTIVE
+	FINISHED
+}
+
+type Report {
+	payload: String!
+}
+
+type Voucher {
+	keccak: String!
+	address: String!
+	payload: String!
+	keccak_in_voucher_hashes: String!
+}
+
+type Notice {
+	keccak: String!
+	payload: String!
+	keccak_in_notice_hashes: String!
+}
+
+type InputResult {
+	voucher_hashes_in_machine: String!
+	vouchers: [Voucher]!
+	notice_hashes_in_machine: String!
+	notices: [Notice]!
+}
+
+enum CompletionStatus {
+	ACCEPTED
+	CYCLE_LIMIT_EXCEEDED
+	REJECTED_BY_MACHINE
+	MACHINE_HALTED
+	TIME_LIMIT_EXCEEDED
+}
+
+type ProcessedInput {
+	input_index: Int!
+	most_recent_machine_hash: String!
+	voucher_hashes_in_epoch: String!
+	notice_hashes_in_epoch: String!
+	reports: [Report]!
+	# is supposed to be "oneof"
+	result: InputResult
+	skip_reason: CompletionStatus
+}
+
+type GetEpochStatusResponse {
+	session_id: ID!
+	epoch_index: Int!
+	state: EpochState!
+	most_recent_machine_hash: String!
+	most_recent_vouchers_epoch_root_hash: String!
+	most_recent_notices_epoch_root_hash: String!
+	processed_inputs: [ProcessedInput]!
+	pending_input_count: Int!
+	taint_status: TaintStatus!
+}
+
+# Mutation Inputs
+input ImmutableStateInput {
+	input_duration: Int!
+	challenge_period: Int!
+	# contract_creation_timestamp: String!
+	input_contract_address: String!
+	voucher_contract_address: String!
+	validator_contract_address: String!
+	dispute_contract_address: String!
+	descartesv2_contract_address: String!
+}
+
+input InputData {
+	sender: String!
+	timestamp: String!
+	payload: [String]!
+}
+
+input EpochInputStateInput {
+	epoch_number: String!
+	inputs: [InputData]!
+	input_contract_address: String!
+}
+
+input FinalizedEpochInput {
+	epoch_number: String!
+	hash: String!
+	inputs: EpochInputStateInput!
+	finalized_block_hash: String!
+	finalized_block_number: String!
+}
+
+input FinalizedEpochsInput {
+	initial_epoch: String!
+	descartesv2_contract_address: String!
+	input_contract_address: String!
+	finalized_epochs: [FinalizedEpochInput]!
+}
+input AccumulatingEpochInput {
+	epoch_number: String!
+	descartesv2_contract_address: String!
+	input_contract_address: String!
+	inputs: EpochInputStateInput!
+}
+
+input IntegerBoolInput {
+	integer: Boolean!
+}
+
+input IntegerInnerObjectInput {
+	integer: IntegerBoolInput!
+}
+
+input IntegerObjectInput {
+	integer: IntegerInnerObjectInput!
+}
+
+input VoucherStateInput {
+	voucher_address: String!
+	vouchers: IntegerObjectInput!
+}
+
+input DescartesInput {
+	block_hash: String!
+	constants: [ImmutableStateInput]!
+	initial_epoch: String!
+	current_epoch: AccumulatingEpochInput!
+	current_phase: PhaseState!
+	voucher_state: VoucherStateInput!
+}
+
+input GetSessionStatusRequest {
+	session_id: ID!
+}
+
+input GetEpochStatusRequest {
+	session_id: ID!
+	epoch_index: Int!
+}
+
+type Query {
+	constants: [ImmutableState]!
+	initial_epoch: String!
+	finalized_epochs: [FinalizedEpochs]!
+	current_epoch: [AccumulatingEpoch]!
+	current_phase: [PhaseState]!
+	voucher_state: [VoucherState]!
+	DescartesState: [DescartesV2State]!
+	GetVersion: String!
+	GetStatus: GetStatusResponse!
+	GetSessionStatus(query: GetSessionStatusRequest!): GetSessionStatusResponse!
+	GetEpochStatus(query: GetEpochStatusRequest!): GetEpochStatusResponse!
+}
+
+type Mutation {
+	constants(input: [ImmutableStateInput]!): [ImmutableState]!
+	initial_epoch(input: String!): String!
+	finalized_epochs(input: [FinalizedEpochsInput]!): [FinalizedEpochs]!
+	current_epoch(input: AccumulatingEpochInput!): AccumulatingEpoch!
+	current_phase(input: PhaseState!): PhaseState!
+	voucher_state(input: VoucherStateInput!): VoucherState!
+	DescartesState(input: DescartesInput!): DescartesV2State!
+}

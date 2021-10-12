@@ -1,0 +1,192 @@
+# Write your query or mutation here
+query constants {
+  constants {
+    id
+    input_duration
+    challenge_period
+    input_contract_address
+    contract_creation_timestamp
+    voucher_contract_address
+    validator_contract_address
+    dispute_contract_address
+    descartesv2_contract_address
+  }
+}
+
+query finalized_epochs {
+  finalized_epochs {
+    id
+    finalized_epochs {
+      id
+      epoch_number
+      hash
+      inputs {
+        id
+        epoch_number
+        inputs {
+          id
+          sender
+          timestamp
+          payload
+        }
+        input_contract_address
+      }
+      finalized_block_hash
+      finalized_block_number
+    }
+    initial_epoch
+    descartesv2_contract_address
+    input_contract_address
+  }
+}
+
+query current_epoch {
+  current_epoch {
+    id
+    epoch_number
+    inputs {
+      id
+      epoch_number
+      inputs {
+        id
+        sender
+        timestamp
+        payload
+      }
+      input_contract_address
+    }
+    descartesv2_contract_address
+    input_contract_address
+  }
+}
+
+query voucher_state {
+  voucher_state {
+    id
+    voucher_address
+    vouchers {
+      integer {
+        integer {
+          integer
+        }
+      }
+    }
+  }
+}
+
+query descartes {
+  DescartesState {
+    id
+    block_hash
+    constants {
+      id
+      input_duration
+      challenge_period
+      input_contract_address
+      contract_creation_timestamp
+      voucher_contract_address
+      validator_contract_address
+      dispute_contract_address
+      descartesv2_contract_address
+    }
+    initial_epoch
+    current_epoch {
+      id
+      epoch_number
+      inputs {
+        id
+        epoch_number
+        inputs {
+          id
+          sender
+          timestamp
+          payload
+        }
+        input_contract_address
+      }
+      descartesv2_contract_address
+      input_contract_address
+    }
+    voucher_state {
+      id
+      voucher_address
+      vouchers {
+        integer {
+          integer {
+            integer
+          }
+        }
+      }
+    }
+  }
+}
+
+query getVersionNumber {
+  GetVersion
+}
+
+query getStatus {
+  GetStatus {
+    session_id
+  }
+}
+
+query getSessionStatus {
+  GetSessionStatus(
+    query: { session_id: "6027956b-30c5-4e9c-a156-88cfa4da48e1" }
+  ) {
+    session_id
+    active_epoch_index
+    epoch_index
+    taint_status {
+      error_code
+      error_message
+    }
+  }
+}
+
+query getEpochStatus {
+  GetEpochStatus(
+    query: {
+      session_id: "42b22569-118b-4232-8cad-8957baecf507"
+      epoch_index: 1
+    }
+  ) {
+    session_id
+    epoch_index
+    state
+    most_recent_machine_hash
+    most_recent_vouchers_epoch_root_hash
+    most_recent_notices_epoch_root_hash
+    processed_inputs {
+      input_index
+      most_recent_machine_hash
+      voucher_hashes_in_epoch
+      notice_hashes_in_epoch
+      reports {
+        payload
+      }
+      result {
+        voucher_hashes_in_machine
+        vouchers {
+          keccak
+          address
+          payload
+          keccak_in_voucher_hashes
+        }
+        notice_hashes_in_machine
+        notices {
+          keccak
+          payload
+          keccak_in_notice_hashes
+        }
+      }
+      skip_reason
+    }
+    pending_input_count
+    taint_status {
+      error_code
+      error_message
+    }
+  }
+}

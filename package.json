@@ -27,6 +27,7 @@
         "@cartesi/logger": "^0.7.0",
         "@cartesi/util": "^3.1.2",
         "@openzeppelin/contracts": "^4.1.0",
+        "graphql-tag": "^2.12.5",
         "solidity-bytes-utils": "^0.8.0"
     },
     "devDependencies": {
