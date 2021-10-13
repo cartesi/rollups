@@ -16,6 +16,7 @@ pragma solidity >=0.8.8;
 import "./FeeManager.sol";
 import "./ClaimsMaskImpl.sol";
 import "./ValidatorManagerClaimsCountedImpl.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // this FeeManagerImpl manages for up to 8 validators
 contract FeeManagerImpl is FeeManager, ClaimsMaskImpl {
@@ -47,11 +48,21 @@ contract FeeManagerImpl is FeeManager, ClaimsMaskImpl {
         );
     }
 
-    /// @notice receive ethers when msg.data is empty
-    receive() external payable {}
-
-    /// @notice receive ethers when msg.data is NOT empty
-    fallback() external payable {}
+    /// @notice this function can only be called by owner to deposit funds as rewards(fees) for validators
+    /// @param _ERC20 address of ERC20 token to be deposited
+    /// @param _amount amount of tokens to be deposited
+    function erc20fund(address _ERC20, uint256 _amount)
+        public
+        override
+        onlyOwner
+    {
+        IERC20 token = IERC20(_ERC20);
+        require(
+            token.transferFrom(owner, address(this), _amount),
+            "erc20 fund deposit failed"
+        );
+        emit ERC20FundDeposited(_ERC20, _amount);
+    }
 
     /// @notice contract owner can set/reset the value of fee per claim
     /// @param  _value the new value of fee per claim
@@ -60,8 +71,13 @@ contract FeeManagerImpl is FeeManager, ClaimsMaskImpl {
     }
 
     /// @notice this function can be called to redeem fees for validators
+    /// @param _ERC20 address of ERC20 token
     /// @param  _validator address of the validator that is redeeming
-    function claimFee(address _validator) public override noReentrancy {
+    function claimFee(address _ERC20, address _validator)
+        public
+        override
+        noReentrancy
+    {
         // follow the Checks-Effects-Interactions pattern for security
 
         // ** checks **
@@ -77,8 +93,10 @@ contract FeeManagerImpl is FeeManager, ClaimsMaskImpl {
         increaseNumClaimed(valIndex, nowRedeemingClaims);
 
         // ** interactions **
-        uint256 feesToSend = nowRedeemingClaims * feePerClaim; // default unit Wei
-        (bool sent, ) = _validator.call{value: feesToSend}("");
-        require(sent, "Failed to send fees");
+        IERC20 token = IERC20(_ERC20);
+        uint256 feesToSend = nowRedeemingClaims * feePerClaim; // number of erc20 tokens to send
+        require(token.transfer(_validator, feesToSend), "Failed to claim fees");
+
+        emit FeeClaimed(_ERC20, _validator, feesToSend);
     }
 }
