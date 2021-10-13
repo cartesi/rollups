@@ -14,7 +14,7 @@ DELEGATE_TEST=1 npx hardhat test test/InputImpl.ts --network localhost
 
 # kill input server
 
-kill "$delegate_server_pid"
+pkill -P "$delegate_server_pid"
 
 ## end testing delegates
 
