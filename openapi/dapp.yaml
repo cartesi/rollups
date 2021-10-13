@@ -1,0 +1,301 @@
+openapi: 3.0.0
+
+info:
+  title: Cartesi HTTP DApp API
+  version: 1.0.0
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  description: |
+    This document describes the API between the Cartesi Rollups DApp and the Cartesi Rollups Target-Proxy.
+    The DApp section presents the API that should be implemented by the Cartesi DApp.
+    The Target-Proxy section presents the API that the Cartesi Target-Proxy implements.
+
+paths:
+  /advance:
+    post:
+      operationId: advance
+      tags: [DApp]
+      summary: Advance state request
+      description: |
+        The Target-Proxy requests the DApp to process an input for the given epoch.
+        This is an asynchrounos call; the DApp should immediately respond and then start processing the input.
+        After the DApp receives this call, it can generate vouchers, notices, and reports by calling the Target-Proxy API.
+        When the DApp finishes processing the input, it should call the finish method from the Target-Proxy API.
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  $ref: '#/components/schemas/Metadata'
+                payload:
+                  $ref: '#/components/schemas/Payload'
+
+      responses:
+        '202':
+          description: Accepted the request
+
+        default:
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /inspect/{payload}:
+    get:
+      tags: [DApp]
+      operationId: inspect
+      summary: query the DApp
+      description: |
+        The Target-Proxy sends a query to the DApp.
+        This is a synchrounos call; the DApp responds immediately with the list of reports for the given query.
+
+      parameters:
+        - in: path
+          name: payload
+          description: String defined by the DApp developer.
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                description: List of reports
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Report'
+
+        default:
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /voucher:
+    post:
+      tags: [Target-Proxy]
+      operationId: addVoucher
+      summary: Add a new voucher
+      description: |
+        The DApp can call this method to add a new voucher for the given input.
+        A voucher is a collateral effects actionable in the blockchain.
+        This method can only be called after the DApp received an advance state request.
+        Until the DApp calls the finish method, this method can be called any number of times.
+        Calling this method after finishing is undefined behavior.
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Voucher'
+
+      responses:
+        '201':
+          description: Created the voucher.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/Id'
+
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /notice:
+    post:
+      tags: [Target-Proxy]
+      operationId: addNotice
+      summary: Add a new notice
+      description: |
+        The DApp can call this method to add a new notice for the given input.
+        A notice describes any relevant changes to the internal state of the DApp.
+        This method can only be called after the DApp received an advance state request.
+        Until the DApp calls the finish method, this method can be called any number of times.
+        Calling this method after finishing is undefined behavior.
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notice'
+
+      responses:
+        '201':
+          description: Created the notice.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    $ref: '#/components/schemas/Id'
+
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /report:
+    post:
+      tags: [Target-Proxy]
+      operationId: addReport
+      summary: Add a new report
+      description: |
+        The DApp can call this method to add a new report for the given input.
+        A report can be a diagnostic or a log; reports are not discarted when a input is rejected.
+        This method can only be called after the DApp received an advance state request.
+        Until the DApp calls the finish method, this method can be called any number of times.
+        Calling this method after finishing is undefined behavior.
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Report'
+
+      responses:
+        '201':
+          description: Create the report.
+
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /finish:
+    post:
+      tags: [Target-Proxy]
+      operationId: finish
+      summary: Finish the advance state request
+      description: |
+        This method must be called to finish the advance state request received by the DApp backend.
+        The property status in the request body should be either 'accept' or 'reject';
+        otherwise, the method will fail and there will be no effect.
+
+        When running inside a Cartesi machine, the Host-Proxy will revert the machine,
+        discarting all the vouchers and notices for the current input.
+        When running with the Mock, the Mock will discard the vouchers and notices.
+        Reports are not discarted in case of reject.
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [accept, reject]
+                  example: 'accept'
+
+      responses:
+        '202':
+          description: Accepted the request.
+
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Id:
+      type: integer
+      format: uint64
+      description: Identifier encoded as integer.
+      example: 123
+
+    Payload:
+      type: string
+      description: |
+        Payload in the Ethereum hex binary format.
+        The first two characters are '0x' followed by pairs of hexadecimal numbers that correspond to one byte.
+        For instance, '0xdeadbeef' corresponds to a payload with length 4 and bytes 222, 173, 190, 175.
+      example: '0xdeadbeef'
+
+    Timestamp:
+      type: integer
+      format: uint64
+      description: Unix timestamp in milliseconds.
+      example: 1609459200000
+
+    Address:
+      type: string
+      description: Ethereum address.
+      example: '0x1111111111111111111111111111111111111111'
+
+    Metadata:
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/Address'
+        epoch_number:
+          $ref: '#/components/schemas/Id'
+        input_number:
+          $ref: '#/components/schemas/Id'
+        block_number:
+          $ref: '#/components/schemas/Id'
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+
+    Voucher:
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/Address'
+        payload:
+          $ref: '#/components/schemas/Payload'
+
+    Notice:
+      type: object
+      properties:
+        payload:
+          $ref: '#/components/schemas/Payload'
+
+    Report:
+      type: object
+      properties:
+        payload:
+          $ref: '#/components/schemas/Payload'
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: HTTP status code.
+              example: 400
+            reason:
+              type: string
+              description: String representation of the HTTP status code.
+              example: "Bad Request"
+            description:
+              type: string
+              description: Detailed description of the error.
+              example: "The request could not be understood by the server due to malformed syntax."
