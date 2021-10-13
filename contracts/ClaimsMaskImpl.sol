@@ -57,5 +57,4 @@ contract ClaimsMaskImpl{
     function resetNumClaimsRedeemed(uint256 _value) internal{
         numClaimsRedeemed=ClaimMask.wrap(_value);
     }
-
 }
