@@ -16,12 +16,15 @@ use ethers::utils::keccak256;
 
 use tonic::transport::Channel;
 
-use cartesi_machine::{MachineRequest, Void};
+use cartesi_machine::{
+    machine_request::MachineOneof, ConcurrencyConfig, DhdRuntimeConfig,
+    MachineRequest, MachineRuntimeConfig, Void,
+};
 use cartesi_rollup_machine_manager::rollup_machine_manager_client::RollupMachineManagerClient;
 use cartesi_rollup_machine_manager::{
     DeadlineConfig, EnqueueInputRequest, FinishEpochRequest,
     GetEpochStatusRequest, GetEpochStatusResponse, GetSessionStatusRequest,
-    PayloadAndMetadata, PayloadAndMetadataArray, StartSessionRequest,
+    StartSessionRequest,
 };
 
 pub mod versioning {
@@ -50,14 +53,63 @@ impl From<GetEpochStatusResponse> for EpochStatus {
 pub struct Config {
     endpoint: String,
     session_id: String,
+
     storage_directory: String,
     machine: MachineRequest,
     max_cycles_per_input: u64,
     cycles_per_input_chunk: u64,
-    input_description: PayloadAndMetadata,
-    outputs_description: PayloadAndMetadataArray,
-    messages_description: PayloadAndMetadataArray,
+    rx_flash_drive_index: u64,
+    tx_flash_drive_index: u64,
+    input_metadata_flash_drive_index: u64,
+    outputs_metadata_flash_drive_index: u64,
+    messages_metadata_flash_drive_index: u64,
     server_deadline: DeadlineConfig,
+}
+
+impl Config {
+    // TODO
+    pub fn new_with_default(endpoint: String, session_id: String) -> Self {
+        let machine = MachineRequest {
+            runtime: Some(MachineRuntimeConfig {
+                dhd: Some(DhdRuntimeConfig {
+                    source_address: "".to_owned(),
+                }),
+                concurrency: Some(ConcurrencyConfig {
+                    update_merkle_tree: 1000 * 60 * 2,
+                }),
+            }),
+
+            machine_oneof: Some(MachineOneof::Directory(
+                "machine_config_directory".to_owned(),
+            )),
+        };
+
+        let server_deadline = DeadlineConfig {
+            checkin: 1000 * 5,
+            update_merkle_tree: 1000 * 60 * 2,
+            run_input: 1000 * 60 * 3,
+            run_input_chunk: 1000 * 10,
+            machine: 1000 * 60,
+            store: 1000 * 60 * 3,
+            fast: 1000 * 5,
+        };
+
+        Self {
+            endpoint,
+            session_id,
+            storage_directory: "default_storage_directory".to_owned(), // TODO
+            machine,
+            max_cycles_per_input: u64::MAX >> 2,
+            cycles_per_input_chunk: 1 << 22,
+
+            rx_flash_drive_index: 0,               // TODO
+            tx_flash_drive_index: 1,               // TODO
+            input_metadata_flash_drive_index: 2,   // TODO
+            outputs_metadata_flash_drive_index: 3, // TODO
+            messages_metadata_flash_drive_index: 4, // TODO
+            server_deadline,
+        }
+    }
 }
 
 pub struct MachineManager {
@@ -88,12 +140,17 @@ impl MachineManager {
                 tonic::Request::new(StartSessionRequest {
                     session_id: config.session_id.clone(),
                     active_epoch_index: 0,
-                    machine: Some(config.machine), // TODO: Why optionals?
+                    machine: Some(config.machine),
                     max_cycles_per_input: config.max_cycles_per_input,
                     cycles_per_input_chunk: config.cycles_per_input_chunk,
-                    input_description: Some(config.input_description),
-                    outputs_description: Some(config.outputs_description),
-                    messages_description: Some(config.messages_description),
+                    rx_flash_drive_index: config.rx_flash_drive_index,
+                    tx_flash_drive_index: config.tx_flash_drive_index,
+                    input_metadata_flash_drive_index: config
+                        .input_metadata_flash_drive_index,
+                    outputs_metadata_flash_drive_index: config
+                        .outputs_metadata_flash_drive_index,
+                    messages_metadata_flash_drive_index: config
+                        .messages_metadata_flash_drive_index,
                     server_deadline: Some(config.server_deadline),
                 });
             let _response = client

@@ -1,38 +1,29 @@
 use offchain_core::ethers;
 
-use super::instantiate_block_subscriber::{
-    self, instantiate_block_subscriber, DescartesBlockSubscriber,
-};
-use super::instantiate_state_fold::{self, instantiate_state_fold};
+use super::instantiate_block_subscriber::instantiate_block_subscriber;
 use super::instantiate_tx_manager::{
-    self, instantiate_tx_manager, DescartesTxManager,
+    instantiate_tx_manager, DescartesTxManager,
 };
 
 use crate::contracts::descartesv2_contract::DescartesV2Impl;
 use crate::error::*;
 use crate::fold::types::*;
-use crate::machine::{EpochStatus, MachineInterface, MockMachine};
+use crate::machine::{rollup_mm, EpochStatus, MachineInterface};
 use crate::rollups_state_fold::RollupsStateFold;
 
-use block_subscriber::{
-    config::BSConfig, BlockSubscriber, BlockSubscriberHandle,
-    NewBlockSubscriber,
-};
-use middleware_factory::{
-    HttpProviderFactory, MiddlewareFactory, WsProviderFactory,
-};
-use state_fold::types::BlockState;
+use block_subscriber::{config::BSConfig, NewBlockSubscriber};
 use tx_manager::config::TMConfig;
 use tx_manager::types::ResubmitStrategy;
 
 use async_recursion::async_recursion;
-use ethers::core::types::{Address, H256, U256, U64};
+use ethers::core::types::{Address, H256, U256};
 use ethers::providers::{MockProvider, Provider};
 use im::Vector;
-use snafu::ResultExt;
 use std::sync::Arc;
 
 pub struct Config {
+    pub sender: Address,
+
     pub descartes_contract_address: Address,
     pub signer_http_endpoint: String,
     pub ws_endpoint: String,
@@ -49,6 +40,9 @@ pub struct Config {
     pub gas_price_multiplier: Option<f64>,
     pub rate: usize,
     pub confirmations: usize,
+
+    pub mm_endpoint: String,
+    pub session_id: String,
 }
 
 pub struct TxConfig {
@@ -59,8 +53,8 @@ pub struct TxConfig {
     pub confirmations: usize,
 }
 
-async fn main_loop(config: &Config, sender: Address) -> Result<()> {
-    let (block_subscriber, subscriber_handle) = instantiate_block_subscriber(
+pub async fn main_loop(config: &Config) -> Result<()> {
+    let (block_subscriber, _subscriber_handle) = instantiate_block_subscriber(
         config.ws_endpoint.clone(),
         &config.block_subscriber_config,
     )
@@ -73,7 +67,7 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
     )
     .await?;
 
-    let (provider, mock) = Provider::mocked();
+    let (provider, _mock) = Provider::mocked();
     let descartesv2_contract = DescartesV2Impl::new(
         config.descartes_contract_address,
         Arc::new(provider),
@@ -83,7 +77,14 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
         RollupsStateFold::new(config.state_fold_grpc_endpoint.clone()).await?;
     // let state_fold = instantiate_state_fold(&config.into())?;
 
-    // TODO: Start MachineManager session request
+    let machine_manager = {
+        let mm_config = rollup_mm::Config::new_with_default(
+            config.mm_endpoint.clone(),
+            config.session_id.clone(),
+        );
+
+        rollup_mm::MachineManager::new(mm_config).await?
+    };
 
     let mut subscription = block_subscriber
         .subscribe()
@@ -96,19 +97,6 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
         // TODO: change to n blocks in the past.
         match subscription.recv().await {
             Ok(block) => {
-                /*
-                let state = state_fold
-                    .get_state_for_block(
-                        &(
-                            config.descartes_contract_address,
-                            config.initial_epoch,
-                        ),
-                        Some(block.hash),
-                    )
-                    .await
-                    .context(StateFoldError {})?;
-                */
-
                 let state = rollups_state_fold
                     .get_state(
                         &block.hash,
@@ -120,12 +108,12 @@ async fn main_loop(config: &Config, sender: Address) -> Result<()> {
                     .await?;
 
                 react(
-                    &sender,
+                    &config.sender,
                     &tx_config,
                     state,
                     &tx_manager,
                     &descartesv2_contract,
-                    &MockMachine {},
+                    &machine_manager,
                 )
                 .await?;
             }
@@ -351,8 +339,8 @@ async fn react<MM: MachineInterface + Sync>(
             // Then, enqueue accumulating inputs.
         }
 
-        /// Unreacheable
-        PhaseState::AwaitingDispute { claimed_epoch } => {
+        // Unreacheable
+        PhaseState::AwaitingDispute { .. } => {
             unreachable!()
         }
     }
@@ -527,99 +515,3 @@ impl From<&Config> for TxConfig {
         }
     }
 }
-
-// impl From<&Config> for instantiate_state_fold::Config {
-//     fn from(config: &Config) -> Self {
-//         let config = config.clone();
-//         Self {
-//             safety_margin: config.safety_margin,
-//             input_contract_address: config.input_contract_address,
-//             output_contract_address: config.output_contract_address,
-//             descartes_contract_address: config.descartes_contract_address,
-
-//             provider_http_url: config.provider_http_url.clone(),
-//             genesis_block: config.genesis_block,
-//             query_limit_error_codes: config.query_limit_error_codes.clone(),
-//             concurrent_events_fetch: config.concurrent_events_fetch,
-//         }
-//     }
-// }
-
-// impl From<&Config> for instantiate_tx_manager::Config {
-//     fn from(config: &Config) -> Self {
-//         let config = config.clone();
-//         Self {
-//             descartes_contract_address: config.descartes_contract_address,
-
-//             http_endpoint: config.signer_http_endpoint.clone(),
-//             ws_endpoint: config.ws_endpoint.clone(),
-//             max_retries: config.max_retries,
-//             max_delay: config.max_delay,
-
-//             call_timeout: config.call_timeout,
-//             subscriber_timeout: config.subscriber_timeout,
-//         }
-//     }
-// }
-
-/*
-use super::fold::*;
-use dispatcher::state_fold::Access;
-
-use ethers::core::types::{Address, U64};
-use ethers::providers::{Http, Provider};
-
-use super::error::*;
-
-use snafu::ResultExt;
-use std::convert::TryFrom;
-use std::sync::Arc;
-
-pub struct Config {
-    safety_margin: usize,
-    input_contract_address: Address, // TODO: read from contract.
-    descartes_contract_address: Address,
-
-    provider_http_url: String,
-    genesis_block: U64,
-    query_limit_error_codes: Vec<i32>,
-    concurrent_events_fetch: usize,
-}
-
-pub type DescartesAccess = Access<Provider<Http>>;
-
-pub fn instantiate_state_fold(
-    config: &Config,
-) -> Result<DescartesStateFold<DescartesAccess>> {
-    let access = create_access(config)?;
-    let setup_config = SetupConfig::from(config);
-    let state_fold = create_descartes_state_fold(access, &setup_config);
-    Ok(state_fold)
-}
-
-fn create_provider(url: String) -> Result<Arc<Provider<Http>>> {
-    Ok(Arc::new(
-        Provider::<Http>::try_from(url).context(UrlParseError {})?,
-    ))
-}
-
-fn create_access(config: &Config) -> Result<Arc<DescartesAccess>> {
-    let provider = create_provider(config.provider_http_url)?;
-
-    Ok(Arc::new(Access::new(
-        provider,
-        config.genesis_block,
-        config.query_limit_error_codes,
-        config.concurrent_events_fetch,
-    )))
-}
-
-impl From<&Config> for SetupConfig {
-    fn from(config: &Config) -> Self {
-        let config = config.clone();
-        SetupConfig {
-            safety_margin: config.safety_margin,
-        }
-    }
-}
-*/

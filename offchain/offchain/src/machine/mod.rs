@@ -51,22 +51,22 @@ impl MachineInterface for MockMachine {
 
     async fn enqueue_inputs(
         &self,
-        epoch_number: U256,
-        first_input_index: U256,
-        inputs: Vector<Input>,
+        _epoch_number: U256,
+        _first_input_index: U256,
+        _inputs: Vector<Input>,
     ) -> Result<()> {
         todo!()
     }
 
     async fn finish_epoch(
         &self,
-        epoch_number: U256,
-        input_count: U256,
+        _epoch_number: U256,
+        _input_count: U256,
     ) -> Result<()> {
         todo!()
     }
 
-    async fn get_epoch_claim(&self, epoch_number: U256) -> Result<H256> {
+    async fn get_epoch_claim(&self, _epoch_number: U256) -> Result<H256> {
         todo!()
     }
 }

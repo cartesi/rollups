@@ -1,5 +1,3 @@
-use offchain_core::ethers;
-
 use super::instantiate_block_subscriber::DescartesBlockSubscriber;
 use crate::error::*;
 
@@ -8,7 +6,6 @@ use middleware_factory::{HttpProviderFactory, WsProviderFactory};
 use tx_manager::config::TMConfig;
 use tx_manager::{provider::Factory, TransactionManager};
 
-use ethers::core::types::Address;
 use snafu::ResultExt;
 use std::sync::Arc;
 

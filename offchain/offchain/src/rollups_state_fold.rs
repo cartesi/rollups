@@ -1,5 +1,4 @@
 use offchain_core::ethers;
-use state_fold::types::BlockState;
 
 use crate::error::*;
 use crate::fold::types::DescartesV2State;
