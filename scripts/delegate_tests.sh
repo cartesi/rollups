@@ -1,8 +1,8 @@
 #!/bin/bash
 
-npx hardhat node --export localhost.json >> /dev/null 2>&1 &
+npx hardhat node --no-deploy >> /dev/null 2>&1 &
 hardhat_pid=$!
-sleep 10
+sleep 3
 
 ## testing input delegate
 
