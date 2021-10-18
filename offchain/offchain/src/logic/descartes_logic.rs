@@ -21,29 +21,26 @@ use ethers::providers::{MockProvider, Provider};
 use im::Vector;
 use std::sync::Arc;
 
-pub struct Config {
-    pub sender: Address,
+// pub struct Config {
+//     pub sender: Address,
 
-    pub descartes_contract_address: Address,
-    pub signer_http_endpoint: String,
-    pub ws_endpoint: String,
-    pub state_fold_grpc_endpoint: String,
+//     pub descartes_contract_address: Address,
+//     pub signer_http_endpoint: String,
+//     pub ws_endpoint: String,
+//     pub state_fold_grpc_endpoint: String,
 
-    pub tx_manager_config: TMConfig,
-    pub block_subscriber_config: BSConfig,
+//     pub initial_epoch: U256,
 
-    pub initial_epoch: U256,
+//     // pub call_timeout: std::time::Duration,
+//     // pub subscriber_timeout: std::time::Duration,
+//     pub gas_multiplier: Option<f64>,
+//     pub gas_price_multiplier: Option<f64>,
+//     pub rate: usize,
+//     pub confirmations: usize,
 
-    // pub call_timeout: std::time::Duration,
-    // pub subscriber_timeout: std::time::Duration,
-    pub gas_multiplier: Option<f64>,
-    pub gas_price_multiplier: Option<f64>,
-    pub rate: usize,
-    pub confirmations: usize,
-
-    pub mm_endpoint: String,
-    pub session_id: String,
-}
+//     pub mm_endpoint: String,
+//     pub session_id: String,
+// }
 
 pub struct TxConfig {
     pub gas_multiplier: Option<f64>,
@@ -53,17 +50,21 @@ pub struct TxConfig {
     pub confirmations: usize,
 }
 
-pub async fn main_loop(config: &Config) -> Result<()> {
+pub async fn main_loop(
+    config: &Config,
+    tx_manager_config: &TMConfig,
+    block_subscriber_config: &BSConfig,
+) -> Result<()> {
     let (block_subscriber, _subscriber_handle) = instantiate_block_subscriber(
         config.ws_endpoint.clone(),
-        &config.block_subscriber_config,
+        block_subscriber_config,
     )
     .await?;
 
     let tx_manager = instantiate_tx_manager(
         config.signer_http_endpoint.clone(),
         Arc::clone(&block_subscriber),
-        &config.tx_manager_config,
+        tx_manager_config,
     )
     .await?;
 

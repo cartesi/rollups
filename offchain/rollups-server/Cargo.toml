@@ -1,12 +1,12 @@
 [package]
-name = "outputserver"
+name = "rollups-server"
 license = "Apache-2.0"
 version = "0.1.0"
 authors = ["victornogueira <victor.nogueira@cartesi.io>"]
 edition = "2018"
 
 [[bin]]
-name = "output_server_main"
+name = "rollups-server-main"
 path = "src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -17,10 +17,9 @@ configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "3834
 state-fold = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
 state-server-grpc = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
 offchain = { path = "../offchain" }
+outputserver = { path = "../outputserver" }
 
 ethers = { version = "0.5.3" }
-
-structopt = "0.3"
 
 serde_json = "1.0"
 snafu = "0.6"
