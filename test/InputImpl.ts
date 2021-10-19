@@ -88,7 +88,7 @@ describe("Input Implementation", () => {
 
             expect(
                 state.inputs.length,
-                "shouldn't have any inputs yet"
+                "shouldn't have any inputs right after constructor"
             ).to.equal(0);
         }
     });
@@ -110,7 +110,7 @@ describe("Input Implementation", () => {
 
             expect(
                 state.inputs.length,
-                "shouldn't have any inputs yet"
+                "shouldn't have any inputs when adding empty inputs"
             ).to.equal(0);
         }
     });
@@ -142,7 +142,7 @@ describe("Input Implementation", () => {
 
             expect(
                 state.inputs.length,
-                "shouldn't have any inputs yet"
+                "shouldn't have any inputs when adding inputs larger than the drive"
             ).to.equal(0);
         }
     });
@@ -189,10 +189,7 @@ describe("Input Implementation", () => {
                 epoch_number: "0x1",
             });
             state = JSON.parse(await getState(initialState));
-            expect(
-                state.inputs.length,
-                "only 1 input for epoch 1"
-            ).to.equal(1);
+            expect(state.inputs.length, "only 1 input for epoch 1").to.equal(1);
         }
     });
 
@@ -202,7 +199,10 @@ describe("Input Implementation", () => {
         await mockDescartesv2.mock.notifyInput.returns(false);
         await mockDescartesv2.mock.getCurrentEpoch.returns(0);
 
-        await expect(inputImpl.addInput(input_64_bytes))
+        await expect(
+            inputImpl.addInput(input_64_bytes),
+            "should emit event InputAdded"
+        )
             .to.emit(inputImpl, "InputAdded")
             .withArgs(
                 0,
@@ -351,15 +351,15 @@ describe("Input Implementation", () => {
             let state = JSON.parse(await getState(initialState));
             expect(
                 state.inputs[0].sender,
-                "check the recorded sender address"
+                "check the recorded sender address for epoch 1"
             ).to.equal((await signer.getAddress()).toLowerCase());
             expect(
                 parseInt(state.inputs[0].timestamp, 16), // from hex to dec
-                "check the recorded timestamp"
+                "check the recorded timestamp for epoch 1"
             ).to.equal(block_epoch1.timestamp);
             expect(
                 Buffer.from(state.inputs[0].payload, "utf-8").toString(),
-                "check the recorded payload"
+                "check the recorded payload for epoch 1"
             ).to.equal(input_64_bytes.toString());
         }
     });
@@ -407,14 +407,14 @@ describe("Input Implementation", () => {
         it("onNewEpoch() can only be called by descartesv2", async () => {
             await expect(
                 inputImpl.onNewEpoch(),
-                "function can only be called by descartesv2"
+                "onNewEpoch() can only be called by descartesv2"
             ).to.be.revertedWith("Only descartesV2");
         });
 
         it("onNewInputAccumulation() can only be called by descartesv2", async () => {
             await expect(
                 inputImpl.onNewInputAccumulation(),
-                "function can only be called by descartesv2"
+                "onNewInputAccumulation() can only be called by descartesv2"
             ).to.be.revertedWith("Only descartesV2");
         });
     }
