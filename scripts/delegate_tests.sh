@@ -19,7 +19,7 @@ pkill -P "$delegate_server_pid"
 
 ## testing output delegate
 
-./offchain/target/debug/delegate_server output >> /dev/null 2>&1 &
+./scripts/run_output_server.sh --sf-safety-margin 0 >> /dev/null 2>&1 &
 delegate_server_pid=$!
 sleep 3
 
@@ -28,7 +28,7 @@ DELEGATE_TEST=1 npx hardhat test test/OutputImpl.ts --network localhost
 
 # kill output server
 
-kill "$delegate_server_pid"
+pkill -P "$delegate_server_pid"
 
 
 ## end testing delegates
