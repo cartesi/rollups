@@ -228,10 +228,11 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     // @params validator address
     // @return validator index or revert
     function getValidatorIndex(address _sender) public view returns (uint256) {
+        require(_sender != address(0), "address 0");
         for (uint256 i; i < validators.length; i++) {
             if (_sender == validators[i]) return i;
         }
-        revert("validator not found.");
+        revert("validator not found");
     }
 
     // @notice get number of claims by the index in the validator set
@@ -379,6 +380,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     // @notice check if the sender is a validator
     // @params sender address
     function isAllowed(address _sender) internal view returns (bool) {
+        require(_sender != address(0), "address 0");
         for (uint256 i; i < validators.length; i++) {
             if (_sender == validators[i]) return true;
         }

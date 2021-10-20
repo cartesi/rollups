@@ -131,6 +131,10 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         var claim = "0x" + "1".repeat(64);
         await expect(
             VMCC.onClaim(address_zero, claim),
+            "should revert if sender is adddress 0"
+        ).to.be.revertedWith("address 0");
+        await expect(
+            VMCC.onClaim(await provider.getWallets()[8].getAddress(), claim),
             "should revert if sender is not in validators array"
         ).to.be.revertedWith("sender not allowed");
     });
@@ -645,8 +649,12 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         // now test for an outsider
         await expect(
             VMCC.getValidatorIndex(address_zero),
-            "not in the validators set, should revert"
-        ).to.be.revertedWith("validator not found.");
+            "address 0, should revert"
+        ).to.be.revertedWith("address 0");
+        await expect(
+            VMCC.getValidatorIndex(await provider.getWallets()[8].getAddress()),
+            "address not in the validator set"
+        ).to.be.revertedWith("validator not found");
 
         // now test when some validator gets kicked out
         var claim = "0x" + "1".repeat(64);
@@ -658,7 +666,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         await expect(
             VMCC.getValidatorIndex(validators[1]),
             "nvalidators[1] gets kicked out, should revert"
-        ).to.be.revertedWith("validator not found.");
+        ).to.be.revertedWith("validator not found");
         for (let i = 0; i < 8 && i != 1; i++) {
             expect(
                 await VMCC.getValidatorIndex(validators[i]),
