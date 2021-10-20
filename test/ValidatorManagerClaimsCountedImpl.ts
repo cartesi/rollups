@@ -554,6 +554,11 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
                 await VMCC.getNumberOfClaimsByAddress(validators[i]),
                 "initial #claims"
             ).to.equal(0);
+
+            expect(
+                await VMCC.getNumberOfClaimsByIndex(i),
+                "initial #claims (for index)"
+            ).to.equal(0);
         }
 
         // all validators make the same claim
@@ -562,15 +567,26 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             await VMCC.onClaim(validators[i], claim);
             expect(
                 await VMCC.getNumberOfClaimsByAddress(validators[i]),
-                "still 0 because consensus hasn't reached"
+                "still 0 because claim hasn't finalized"
+            ).to.equal(0);
+
+            expect(
+                await VMCC.getNumberOfClaimsByIndex(i),
+                "still 0 because claim hasn't finalized (for index)"
             ).to.equal(0);
         }
-        // once consensus, #claims increases
+        // wait until claim finalized (either consensus or timeout)
+        // new epoch begins and #claims increases
         await VMCC.onNewEpoch();
         for (var i = 0; i < validators.length; i++) {
             expect(
                 await VMCC.getNumberOfClaimsByAddress(validators[i]),
                 "now #claims increased"
+            ).to.equal(1);
+
+            expect(
+                await VMCC.getNumberOfClaimsByIndex(i),
+                "now #claims increased (for index)"
             ).to.equal(1);
         }
 
@@ -583,6 +599,11 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             expect(
                 await VMCC.getNumberOfClaimsByAddress(validators[0]),
                 "check increasing #claims"
+            ).to.equal(epoch + 1);
+
+            expect(
+                await VMCC.getNumberOfClaimsByIndex(0),
+                "check increasing #claims (for index)"
             ).to.equal(epoch + 1);
         }
 
@@ -601,5 +622,48 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             await VMCC.getNumberOfClaimsByAddress(validators[1]),
             "#claims for validator1 should increase by 1"
         ).to.equal(2);
+
+        // same for index methods
+        expect(
+            await VMCC.getNumberOfClaimsByIndex(0),
+            "now the #claims for validator0 should get cleared (for index)"
+        ).to.equal(0);
+        expect(
+            await VMCC.getNumberOfClaimsByIndex(1),
+            "#claims for validator1 should increase by 1 (for index)"
+        ).to.equal(2);
+    });
+
+    it("test getValidatorIndex() and its revert behavior", async () => {
+        for (let i = 0; i < 8; i++) {
+            expect(
+                await VMCC.getValidatorIndex(validators[i]),
+                "check the return value of getValidatorIndex()"
+            ).to.equal(i);
+        }
+
+        // now test for an outsider
+        await expect(
+            VMCC.getValidatorIndex(address_zero),
+            "not in the validators set, should revert"
+        ).to.be.revertedWith("validator not found.");
+
+        // now test when some validator gets kicked out
+        var claim = "0x" + "1".repeat(64);
+        var claim2 = "0x" + "2".repeat(64);
+        await VMCC.onClaim(validators[0], claim);
+        await VMCC.onClaim(validators[1], claim2);
+        // let the 2nd validator lose the dispute
+        await VMCC.onDisputeEnd(validators[0], validators[1], claim);
+        await expect(
+            VMCC.getValidatorIndex(validators[1]),
+            "nvalidators[1] gets kicked out, should revert"
+        ).to.be.revertedWith("validator not found.");
+        for (let i = 0; i < 8 && i != 1; i++) {
+            expect(
+                await VMCC.getValidatorIndex(validators[i]),
+                "other validators should still work fine"
+            ).to.equal(i);
+        }
     });
 });

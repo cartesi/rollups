@@ -18,7 +18,7 @@ import "./ValidatorManager.sol";
 contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     address immutable rollups; // rollups contract using this validator
     bytes32 currentClaim; // current claim - first claim of this epoch
-    address payable[] validators; // up to 8 validators
+    address payable[] public validators; // up to 8 validators
 
     // A bit set used for up to 8 validators.
     // The first 8 bits are used to indicate whom supports the current claim
