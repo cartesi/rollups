@@ -19,6 +19,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     address immutable rollups; // rollups contract using this validator
     bytes32 currentClaim; // current claim - first claim of this epoch
     address payable[] public validators; // up to 8 validators
+    uint256 public maxNumValidators; // the maximum number of validators, set in the constructor
 
     // A bit set used for up to 8 validators.
     // The first 8 bits are used to indicate whom supports the current claim
@@ -45,6 +46,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
 
         require(_validators.length <= 8, "up to 8 validators");
         validators = _validators;
+        maxNumValidators = _validators.length;
 
         // create consensus goal, represents the scenario where
         // all validators claimed and agreed

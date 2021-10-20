@@ -14,16 +14,18 @@
 pragma solidity >=0.8.8;
 
 import "./FeeManager.sol";
-import "./ClaimsMaskImpl.sol";
+import "./ClaimsMaskLibrary.sol";
 import "./ValidatorManagerClaimsCountedImpl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // this FeeManagerImpl manages for up to 8 validators
-contract FeeManagerImpl is FeeManager, ClaimsMaskImpl {
+contract FeeManagerImpl is FeeManager {
     ValidatorManagerClaimsCountedImpl ValidatorManagerCCI;
+    ClaimMask numClaimsRedeemed;
     uint256 feePerClaim;
+    IERC20 token; // the token that is used for paying fees to validators
     address owner;
-    bool lock; //reentrancy lock
+    bool lock; // reentrancy lock
 
     /// @notice functions modified by onlyowner can only be accessed by contract owner
     modifier onlyOwner {
@@ -41,62 +43,72 @@ contract FeeManagerImpl is FeeManager, ClaimsMaskImpl {
 
     /// @notice creates FeeManagerImpl contract
     /// @param _ValidatorManagerCCI address of ValidatorManagerClaimsCountedImpl
-    constructor(address _ValidatorManagerCCI) {
+    /// @param _ERC20 address of erc20 token
+    /// @param _feePerClaim set the value of feePerClaim during construction
+    constructor(
+        address _ValidatorManagerCCI,
+        address _ERC20,
+        uint256 _feePerClaim
+    ) {
         owner = msg.sender;
         ValidatorManagerCCI = ValidatorManagerClaimsCountedImpl(
             _ValidatorManagerCCI
         );
+        token = IERC20(_ERC20);
+        feePerClaim = _feePerClaim;
+        emit FeeManagerCreated(_ValidatorManagerCCI, _ERC20, _feePerClaim);
     }
 
     /// @notice this function can only be called by owner to deposit funds as rewards(fees) for validators
-    /// @param _ERC20 address of ERC20 token to be deposited
     /// @param _amount amount of tokens to be deposited
-    function erc20fund(address _ERC20, uint256 _amount)
-        public
-        override
-        onlyOwner
-    {
-        IERC20 token = IERC20(_ERC20);
+    function erc20fund(uint256 _amount) public override onlyOwner {
         require(
             token.transferFrom(owner, address(this), _amount),
             "erc20 fund deposit failed"
         );
-        emit ERC20FundDeposited(_ERC20, _amount);
+        emit ERC20FundDeposited(_amount);
     }
 
-    /// @notice contract owner can set/reset the value of fee per claim
+    /// @notice contract owner can reset the value of fee per claim
+    ///         validators should be paid for the past unpaid claims before setting the new fee value
     /// @param  _value the new value of fee per claim
-    function setFeePerClaim(uint256 _value) public override onlyOwner {
+    function resetFeePerClaim(uint256 _value) public override onlyOwner {
+        // before resetting the feePerClaim, pay fees for all validators as per current rates
+        for (uint256 i; i < ValidatorManagerCCI.maxNumValidators(); i++) {
+            if (ValidatorManagerCCI.validators(i) != address(0)) {
+                claimFee(ValidatorManagerCCI.validators(i));
+            }
+        }
         feePerClaim = _value;
+        emit FeePerClaimReset(_value);
     }
 
     /// @notice this function can be called to redeem fees for validators
-    /// @param _ERC20 address of ERC20 token
     /// @param  _validator address of the validator that is redeeming
-    function claimFee(address _ERC20, address _validator)
-        public
-        override
-        noReentrancy
-    {
+    function claimFee(address _validator) public override noReentrancy {
         // follow the Checks-Effects-Interactions pattern for security
 
         // ** checks **
         uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
         uint256 totalClaims =
             ValidatorManagerCCI.getNumberOfClaimsByIndex(valIndex);
-        uint256 redeemedClaims = getNumClaimsRedeemed(valIndex);
+        uint256 redeemedClaims =
+            ClaimsMaskLibrary.getNumClaimsRedeemed(numClaimsRedeemed, valIndex);
 
         require(totalClaims > redeemedClaims, "nothing to redeem yet");
 
         // ** effects **
         uint256 nowRedeemingClaims = totalClaims - redeemedClaims;
-        increaseNumClaimed(valIndex, nowRedeemingClaims);
+        numClaimsRedeemed = ClaimsMaskLibrary.increaseNumClaimed(
+            numClaimsRedeemed,
+            valIndex,
+            nowRedeemingClaims
+        );
 
         // ** interactions **
-        IERC20 token = IERC20(_ERC20);
         uint256 feesToSend = nowRedeemingClaims * feePerClaim; // number of erc20 tokens to send
         require(token.transfer(_validator, feesToSend), "Failed to claim fees");
 
-        emit FeeClaimed(_ERC20, _validator, feesToSend);
+        emit FeeClaimed(_validator, feesToSend);
     }
 }

@@ -15,22 +15,30 @@ pragma solidity >=0.7.0;
 
 interface FeeManager {
     /// @notice this function can only be called by owner to deposit funds as rewards(fees) for validators
-    /// @param _ERC20 address of ERC20 token to be deposited
     /// @param _amount amount of tokens to be deposited
-    function erc20fund(address _ERC20, uint256 _amount) external;
+    function erc20fund(uint256 _amount) external;
 
     /// @notice contract owner can set/reset the value of fee per claim
     /// @param  _value the new value of fee per claim
-    function setFeePerClaim(uint256 _value) external;
+    function resetFeePerClaim(uint256 _value) external;
 
     /// @notice this function can be called to redeem fees for validators
-    /// @param _ERC20 address of ERC20 token
     /// @param  _validator address of the validator that is redeeming
-    function claimFee(address _ERC20, address _validator) external;
+    function claimFee(address _validator) external;
 
-    // @notice emitted on ERC20 funds deposited
-    event ERC20FundDeposited(address _ERC20, uint256 _amount);
+    /// @notice emitted when FeeManagerImpl is created
+    event FeeManagerCreated(
+        address _ValidatorManagerCCI,
+        address _ERC20,
+        uint256 _feePerClaim
+    );
 
-    // @notice emitted on ERC20 funds claimed by validator
-    event FeeClaimed(address _ERC20, address _validator, uint256 _amount);
+    /// @notice emitted on ERC20 funds deposited
+    event ERC20FundDeposited(uint256 _amount);
+
+    /// @notice emitted on resetting feePerClaim
+    event FeePerClaimReset(uint256 _value);
+
+    /// @notice emitted on ERC20 funds claimed by validator
+    event FeeClaimed(address _validator, uint256 _amount);
 }

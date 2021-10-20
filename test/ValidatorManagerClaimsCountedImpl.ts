@@ -104,6 +104,22 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         ).to.equal(hash_zero);
     });
 
+    it("check initial currentClaim", async () => {
+        expect(
+            await VMCC.maxNumValidators(),
+            "get initial maxNumValidators"
+        ).to.equal(validators.length);
+    });
+
+    it("check validators addresses", async () => {
+        for (let i = 0; i < validators.length; i++) {
+            expect(
+                await VMCC.validators(i),
+                "get validator's address"
+            ).to.equal(await provider.getWallets()[i].getAddress());
+        }
+    });
+
     it("onClaim and onDisputeEnd should revert if not called from Rollups", async () => {
         await expect(
             VMCC.connect(signer).onClaim(validators[0], hash_zero),
