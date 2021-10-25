@@ -97,7 +97,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         "Descartes V2 Impl getCurrentEpoch: " +
             (await descartesV2Impl.getCurrentEpoch())
     );
-    // console.log("Descartes V2 accumulation start: " + await descartesV2Impl.inputAccumulationStart());
+    console.log("Descartes V2 accumulation start: " + await descartesV2Impl.getInputAccumulationStart());
     console.log("Input address " + inputAddress);
     console.log("Output address " + outputAddress);
     console.log("Ether Portal address " + etherPortalImpl.address);
