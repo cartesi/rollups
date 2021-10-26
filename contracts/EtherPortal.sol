@@ -29,7 +29,9 @@ interface EtherPortal {
     /// @notice executes a descartesV2 output
     /// @param _data data with information necessary to execute output
     /// @dev can only be called by Output contract
-    function executeDescartesV2Output(bytes calldata _data) external;
+    function executeDescartesV2Output(bytes calldata _data)
+        external
+        returns (bool);
 
     // @notice emitted on Ether deposited
     event EtherDeposited(

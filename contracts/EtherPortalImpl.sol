@@ -69,6 +69,7 @@ contract EtherPortalImpl is EtherPortal {
         public
         override
         onlyOutputContract
+        returns (bool)
     {
         (
             address payable receiver,
@@ -78,5 +79,7 @@ contract EtherPortalImpl is EtherPortal {
         receiver.transfer(value);
 
         emit EtherWithdrawn(receiver, value);
+
+        return true;
     }
 }

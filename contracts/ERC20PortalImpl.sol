@@ -84,6 +84,7 @@ contract ERC20PortalImpl is ERC20Portal {
         public
         override
         onlyOutputContract
+        returns (bool)
     {
         (
             address tokenAddr,
@@ -97,5 +98,7 @@ contract ERC20PortalImpl is ERC20Portal {
         token.transfer(receiver, value);
 
         emit ERC20Withdrawn(tokenAddr, receiver, value);
+
+        return true;
     }
 }
