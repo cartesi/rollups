@@ -22,7 +22,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract FeeManagerImpl is FeeManager {
     ValidatorManagerClaimsCountedImpl ValidatorManagerCCI;
     ClaimMask numClaimsRedeemed;
-    uint256 feePerClaim;
+    uint256 public feePerClaim;
     IERC20 token; // the token that is used for paying fees to validators
     address owner;
     bool lock; // reentrancy lock
@@ -59,14 +59,31 @@ contract FeeManagerImpl is FeeManager {
         emit FeeManagerCreated(_ValidatorManagerCCI, _ERC20, _feePerClaim);
     }
 
-    /// @notice this function can only be called by owner to deposit funds as rewards(fees) for validators
+    /// @notice this function can only be called to deposit funds as rewards(fees) for validators
     /// @param _amount amount of tokens to be deposited
-    function erc20fund(uint256 _amount) public override onlyOwner {
+    function erc20fund(uint256 _amount) public override {
         require(
             token.transferFrom(owner, address(this), _amount),
             "erc20 fund deposit failed"
         );
         emit ERC20FundDeposited(_amount);
+    }
+
+    /// @notice this function can be called to check the number of claims that's redeemable for the validator
+    /// @param  _validator address of the validator
+    function numClaimsRedeemable(address _validator)
+        public
+        override
+        returns (uint256)
+    {
+        require(_validator != address(0), "address should not be 0");
+        uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
+        uint256 totalClaims =
+            ValidatorManagerCCI.getNumberOfClaimsByIndex(valIndex);
+        uint256 redeemedClaims =
+            ClaimsMaskLibrary.getNumClaimsRedeemed(numClaimsRedeemed, valIndex);
+
+        return totalClaims - redeemedClaims; // underflow checked by default with sol0.8
     }
 
     /// @notice contract owner can reset the value of fee per claim
@@ -75,8 +92,9 @@ contract FeeManagerImpl is FeeManager {
     function resetFeePerClaim(uint256 _value) public override onlyOwner {
         // before resetting the feePerClaim, pay fees for all validators as per current rates
         for (uint256 i; i < ValidatorManagerCCI.maxNumValidators(); i++) {
-            if (ValidatorManagerCCI.validators(i) != address(0)) {
-                claimFee(ValidatorManagerCCI.validators(i));
+            address validator = ValidatorManagerCCI.validators(i);
+            if (validator != address(0) && numClaimsRedeemable(validator) > 0) {
+                claimFee(validator);
             }
         }
         feePerClaim = _value;
@@ -89,16 +107,11 @@ contract FeeManagerImpl is FeeManager {
         // follow the Checks-Effects-Interactions pattern for security
 
         // ** checks **
-        uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
-        uint256 totalClaims =
-            ValidatorManagerCCI.getNumberOfClaimsByIndex(valIndex);
-        uint256 redeemedClaims =
-            ClaimsMaskLibrary.getNumClaimsRedeemed(numClaimsRedeemed, valIndex);
-
-        require(totalClaims > redeemedClaims, "nothing to redeem yet");
+        uint256 nowRedeemingClaims = numClaimsRedeemable(_validator);
+        require(nowRedeemingClaims > 0, "nothing to redeem yet");
 
         // ** effects **
-        uint256 nowRedeemingClaims = totalClaims - redeemedClaims;
+        uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
         numClaimsRedeemed = ClaimsMaskLibrary.increaseNumClaimed(
             numClaimsRedeemed,
             valIndex,

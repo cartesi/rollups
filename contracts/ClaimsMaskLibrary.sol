@@ -24,8 +24,8 @@ library ClaimsMaskLibrary{
     /// @param  _validatorIndex index of the validator in the validator array
     ///     this index can be obtained though `getNumberOfClaimsByIndex` function in Validator Manager
     function getNumClaimsRedeemed(ClaimMask _numClaimsRedeemed, uint256 _validatorIndex) public pure returns(uint256){
-        uint256 bitmask = (((1<<32)-1) << (32*_validatorIndex));
-        return ClaimMask.unwrap(_numClaimsRedeemed) & bitmask;
+        uint256 bitmask = (1<<32)-1;
+        return (ClaimMask.unwrap(_numClaimsRedeemed) >> (32*_validatorIndex)) & bitmask;
     }
 
     /// @notice this function increases the #claims that the validator has redeemed
@@ -33,8 +33,7 @@ library ClaimsMaskLibrary{
     /// @param  _validatorIndex index of the validator in the validator array
     /// @param  _value the increase value
     function increaseNumClaimed(ClaimMask _numClaimsRedeemed, uint256 _validatorIndex, uint256 _value) internal pure returns(ClaimMask){
-        uint256 bitmask = (((1<<32)-1) << (32*_validatorIndex));
-        uint256 currentNum = ClaimMask.unwrap(_numClaimsRedeemed) & bitmask;
+        uint256 currentNum = getNumClaimsRedeemed(_numClaimsRedeemed, _validatorIndex);
         uint256 newNum = currentNum + _value;
         return setNumClaimsRedeemed(_numClaimsRedeemed, _validatorIndex, newNum);
     }
@@ -46,7 +45,7 @@ library ClaimsMaskLibrary{
     function setNumClaimsRedeemed(ClaimMask _numClaimsRedeemed, uint256 _validatorIndex, uint256 _value) internal pure returns(ClaimMask){
         uint256 bitmask = ~(((1<<32)-1) << (32*_validatorIndex));
         uint256 clearedClaimMask = ClaimMask.unwrap(_numClaimsRedeemed) & bitmask;
-        _numClaimsRedeemed = ClaimMask.wrap(clearedClaimMask | _value);
+        _numClaimsRedeemed = ClaimMask.wrap(clearedClaimMask | (_value << (32*_validatorIndex)));
         return _numClaimsRedeemed;
     }
 

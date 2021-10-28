@@ -14,9 +14,13 @@
 pragma solidity >=0.7.0;
 
 interface FeeManager {
-    /// @notice this function can only be called by owner to deposit funds as rewards(fees) for validators
+    /// @notice this function can only be called to deposit funds as rewards(fees) for validators
     /// @param _amount amount of tokens to be deposited
     function erc20fund(uint256 _amount) external;
+
+    /// @notice this function can be called to check the number of claims that's redeemable for the validator
+    /// @param  _validator address of the validator
+    function numClaimsRedeemable(address _validator) external returns (uint256);
 
     /// @notice contract owner can set/reset the value of fee per claim
     /// @param  _value the new value of fee per claim
