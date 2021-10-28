@@ -73,6 +73,7 @@ contract FeeManagerImpl is FeeManager {
     /// @param  _validator address of the validator
     function numClaimsRedeemable(address _validator)
         public
+        view
         override
         returns (uint256)
     {
