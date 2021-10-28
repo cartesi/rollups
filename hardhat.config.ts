@@ -25,7 +25,6 @@ import { HttpNetworkUserConfig } from "hardhat/types";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
-import "solidity-coverage";
 import "hardhat-deploy";
 import "@tenderly/hardhat-tenderly";
 import "./src/tasks";
@@ -82,7 +81,7 @@ const config: HardhatUserConfig = {
         deployments: "deployments"
     },
     typechain: {
-        outDir: "src/types",
+        outDir: "dist/src/types",
         target: "ethers-v5",
     },
     namedAccounts: {

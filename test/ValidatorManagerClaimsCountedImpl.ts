@@ -22,9 +22,9 @@
 import { expect, use } from "chai";
 import { deployments, ethers } from "hardhat";
 import { solidity, MockProvider } from "ethereum-waffle";
-import { ValidatorManagerClaimsCountedImpl__factory } from "../src/types/factories/ValidatorManagerClaimsCountedImpl__factory";
+import { ValidatorManagerClaimsCountedImpl__factory } from "../dist/src/types/factories/ValidatorManagerClaimsCountedImpl__factory";
 import { Signer } from "ethers";
-import { ValidatorManagerClaimsCountedImpl } from "../src/types/ValidatorManagerClaimsCountedImpl";
+import { ValidatorManagerClaimsCountedImpl } from "../dist/src/types/ValidatorManagerClaimsCountedImpl";
 
 use(solidity);
 

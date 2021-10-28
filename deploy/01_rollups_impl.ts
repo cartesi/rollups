@@ -22,7 +22,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
-import { RollupsImpl__factory } from "../src/types/factories/RollupsImpl__factory";
+import { RollupsImpl__factory } from "../dist/src/types/factories/RollupsImpl__factory";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments } = hre;
