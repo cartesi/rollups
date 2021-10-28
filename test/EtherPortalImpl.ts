@@ -30,7 +30,6 @@ import { EtherPortalImpl__factory } from "../src/types/factories/EtherPortalImpl
 import { Signer } from "ethers";
 import { EtherPortalImpl } from "../src/types/EtherPortalImpl";
 import { keccak256 } from "ethers/lib/utils";
-import { IERC20 } from "../src/types/IERC20";
 
 use(solidity);
 
@@ -46,7 +45,6 @@ describe("EtherPortal Implementation", async () => {
         [signer, signer2] = await ethers.getSigners();
 
         const Input = await deployments.getArtifact("InputImpl");
-        const CTSI = await deployments.getArtifact("IERC20");
 
         mockInput = await deployMockContract(signer, Input.abi);
 
@@ -58,79 +56,11 @@ describe("EtherPortal Implementation", async () => {
         );
     });
 
-    it("etherDeposit should revert if parameters are inconsistent", async () => {
-        expect(
-            portalImpl.etherDeposit(
-                [await signer.getAddress()],
-                [50, 30],
-                "0x00",
-                {
-                    value: ethers.utils.parseEther("50"),
-                }
-            ),
-            "ether deposit should revert if amount.length > addresses.length"
-        ).to.be.revertedWith("receivers.len != amounts.len");
-
-        expect(
-            portalImpl.etherDeposit(
-                [await signer.getAddress(), mockInput.address],
-                [50],
-                "0x00",
-                { value: ethers.utils.parseEther("50") }
-            ),
-            "ether deposit should revert if amount.length < addresses.length"
-        ).to.be.revertedWith("receivers.len != amounts.len");
-    });
-
-    it("etherDeposit should revert if msg.value is too low", async () => {
-        expect(
-            portalImpl.etherDeposit(
-                [await signer.getAddress(), mockInput.address],
-                [
-                    ethers.utils.parseEther("100"),
-                    ethers.utils.parseEther("100"),
-                ],
-                "0x00",
-                { value: ethers.utils.parseEther("100") }
-            ),
-            "ether deposit should revert if not enough ether was sent"
-        ).to.be.revertedWith("not enough value");
-
-        expect(
-            portalImpl.etherDeposit(
-                [await signer.getAddress(), mockInput.address],
-                [
-                    ethers.utils.parseEther("100"),
-                    ethers.utils.parseEther("100"),
-                ],
-                "0x00",
-                { value: ethers.utils.parseEther("199") }
-            ),
-            "ether deposit should revert if not enough ether was sent"
-        ).to.be.revertedWith("not enough value");
-    });
-
     it("etherDeposit should emit events", async () => {
         await mockInput.mock.addInput.returns(keccak256("0x00"));
 
         expect(
             await portalImpl.etherDeposit(
-                [await signer.getAddress()],
-                [50],
-                "0x00",
-                {
-                    value: ethers.utils.parseEther("50"),
-                }
-            ),
-            "expect etherDeposit function to emit EtherDeposited event"
-        )
-            .to.emit(portalImpl, "EtherDeposited")
-            .withArgs([await signer.getAddress()], [50], "0x00");
-
-        expect(
-            await portalImpl.etherDeposit(
-                [await signer.getAddress(), mockInput.address],
-                [15, 45],
                 "0x00",
                 { value: ethers.utils.parseEther("60") }
             ),
@@ -138,34 +68,10 @@ describe("EtherPortal Implementation", async () => {
         )
             .to.emit(portalImpl, "EtherDeposited")
             .withArgs(
-                [await signer.getAddress(), mockInput.address],
-                [15, 45],
+                ethers.utils.parseEther("60"),
                 "0x00"
             );
 
-        expect(
-            await portalImpl.etherDeposit(
-                [
-                    await signer.getAddress(),
-                    mockInput.address,
-                    mockInput.address,
-                ],
-                [15, 45, 30],
-                "0x00",
-                { value: ethers.utils.parseEther("90") }
-            ),
-            "expect etherDeposit function to emit EtherDeposited event"
-        )
-            .to.emit(portalImpl, "EtherDeposited")
-            .withArgs(
-                [
-                    await signer.getAddress(),
-                    mockInput.address,
-                    mockInput.address,
-                ],
-                [15, 45, 30],
-                "0x00"
-            );
     });
 
     it("executeDescartesV2Output should revert if not called from output", async () => {
@@ -185,8 +91,6 @@ describe("EtherPortal Implementation", async () => {
         // deposit ethers to portalImpl for enough balance to call function transfer() in etherWithdrawal()
         await mockInput.mock.addInput.returns(keccak256("0x00"));
         await portalImpl.etherDeposit(
-            [await signer.getAddress()],
-            [10],
             "0x00",
             {
                 value: ethers.utils.parseEther("10"),
@@ -217,8 +121,6 @@ describe("EtherPortal Implementation", async () => {
 
         expect(
             await portalImpl.callStatic.etherDeposit(
-                [await signer.getAddress()],
-                [50],
                 "0x00",
                 {
                     value: ethers.utils.parseEther("50"),

@@ -60,43 +60,17 @@ describe("ERC20Portal Implementation", async () => {
         );
     });
 
-    it("erc20Deposit should revert if parameters are inconsistent", async () => {
-        await expect(
-            portalImpl.erc20Deposit(
-                mockERC20.address,
-                mockERC20.address,
-                [await signer.getAddress()],
-                [50, 30],
-                "0x00"
-            ),
-            "ether deposit should revert if amount.length > addresses.length"
-        ).to.be.revertedWith("receivers.len != amounts.len");
-
-        await expect(
-            portalImpl.erc20Deposit(
-                mockERC20.address,
-                mockERC20.address,
-                [await signer.getAddress()],
-                [],
-                "0x00"
-            ),
-            "ether deposit should revert if amount.length < addresses.length"
-        ).to.be.revertedWith("receivers.len != amounts.len");
-    });
-
     it("erc20Deposit should revert if transfer from returns false", async () => {
         await mockERC20.mock.transferFrom.returns(false);
 
         await expect(
             portalImpl.erc20Deposit(
                 mockERC20.address,
-                mockERC20.address,
-                [await signer.getAddress()],
-                [50],
+                50,
                 "0x00"
             ),
-            "ether deposit should revert if erc20 transferFrom fails"
-        ).to.be.revertedWith("erc20 transferFrom failed");
+            "ether deposit should revert if ERC20 transferFrom fails"
+        ).to.be.revertedWith("ERC20 transferFrom failed");
     });
 
     it("erc20Deposit should emit events", async () => {
@@ -107,46 +81,30 @@ describe("ERC20Portal Implementation", async () => {
         expect(
             await portalImpl.erc20Deposit(
                 mockERC20.address,
-                await signer.getAddress(),
-                [await signer.getAddress(), mockInput.address],
-                [15, 45],
+                15,
                 "0x00"
             ),
-            "expect erc20Deposit function to emit EtherDeposited event"
+            "expect erc20Deposit function to emit ERC20Deposited event"
         )
             .to.emit(portalImpl, "ERC20Deposited")
             .withArgs(
                 mockERC20.address,
-                await signer.getAddress(),
-                [await signer.getAddress(), mockInput.address],
-                [15, 45],
+                15,
                 "0x00"
             );
 
         expect(
             await portalImpl.erc20Deposit(
                 mockERC20.address,
-                await signer.getAddress(),
-                [
-                    await signer.getAddress(),
-                    mockInput.address,
-                    mockInput.address,
-                ],
-                [1000000, 15, 45],
+                1000000,
                 "0x00"
             ),
-            "expect erc20Deposit function to emit EtherDeposited event"
+            "expect erc20Deposit function to emit ERC20Deposited event"
         )
             .to.emit(portalImpl, "ERC20Deposited")
             .withArgs(
                 mockERC20.address,
-                await signer.getAddress(),
-                [
-                    await signer.getAddress(),
-                    mockInput.address,
-                    mockInput.address,
-                ],
-                [1000000, 15, 45],
+                1000000,
                 "0x00"
             );
     });
@@ -159,9 +117,7 @@ describe("ERC20Portal Implementation", async () => {
         expect(
             await portalImpl.callStatic.erc20Deposit(
                 mockERC20.address,
-                await signer.getAddress(),
-                [await signer.getAddress(), mockInput.address],
-                [15, 45],
+                15,
                 "0x00"
             ),
             "callStatic to check return value"
