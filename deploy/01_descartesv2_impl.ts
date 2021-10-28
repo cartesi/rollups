@@ -82,7 +82,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let inputAddress = await descartesV2Impl.getInputAddress();
     let outputAddress = await descartesV2Impl.getOutputAddress();
 
-    let portalImpl = await deployments.deploy("PortalImpl", {
+    let erc20PortalImpl = await deployments.deploy("ERC20PortalImpl", {
+        from: await signers[0].getAddress(),
+        args: [inputAddress, outputAddress],
+    });
+
+    let etherPortalImpl = await deployments.deploy("EtherPortalImpl", {
         from: await signers[0].getAddress(),
         args: [inputAddress, outputAddress],
     });
@@ -95,7 +100,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // console.log("Descartes V2 accumulation start: " + await descartesV2Impl.inputAccumulationStart());
     console.log("Input address " + inputAddress);
     console.log("Output address " + outputAddress);
-    console.log("Portal address " + portalImpl.address);
+    console.log("Ether Portal address " + etherPortalImpl.address);
+    console.log("ERC20 Portal address " + erc20PortalImpl.address);
 };
 
 export default func;
