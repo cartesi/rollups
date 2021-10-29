@@ -33,6 +33,9 @@ pub enum Error {
 
     #[snafu(display("Deserialize error"))]
     DeserializeError { source: serde_json::Error },
+
+    #[snafu(display("Bad configuration: {}", err))]
+    BadConfiguration { err: String },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

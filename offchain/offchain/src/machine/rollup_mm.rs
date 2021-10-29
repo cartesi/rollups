@@ -22,7 +22,7 @@ use cartesi_machine::{
 };
 use cartesi_rollup_machine_manager::rollup_machine_manager_client::RollupMachineManagerClient;
 use cartesi_rollup_machine_manager::{
-    DeadlineConfig, EnqueueInputRequest, FinishEpochRequest,
+    AdvanceStateRequest, CyclesConfig, DeadlineConfig, FinishEpochRequest,
     GetEpochStatusRequest, GetEpochStatusResponse, GetSessionStatusRequest,
     StartSessionRequest,
 };
@@ -56,14 +56,9 @@ pub struct Config {
 
     storage_directory: String,
     machine: MachineRequest,
-    max_cycles_per_input: u64,
-    cycles_per_input_chunk: u64,
-    rx_flash_drive_index: u64,
-    tx_flash_drive_index: u64,
-    input_metadata_flash_drive_index: u64,
-    outputs_metadata_flash_drive_index: u64,
-    messages_metadata_flash_drive_index: u64,
+    active_epoch_index: u64,
     server_deadline: DeadlineConfig,
+    server_cycles: CyclesConfig,
 }
 
 impl Config {
@@ -87,26 +82,29 @@ impl Config {
         let server_deadline = DeadlineConfig {
             checkin: 1000 * 5,
             update_merkle_tree: 1000 * 60 * 2,
-            run_input: 1000 * 60 * 3,
-            run_input_chunk: 1000 * 10,
+            advance_state: 1000 * 60 * 3,
+            advance_state_increment: 1000 * 10,
+            inspect_state: 0,           // TODO
+            inspect_state_increment: 0, // TODO
             machine: 1000 * 60,
             store: 1000 * 60 * 3,
             fast: 1000 * 5,
+        };
+
+        let server_cycles = CyclesConfig {
+            max_advance_state: u64::MAX >> 2,
+            advance_state_increment: 1 << 22,
+            max_inspect_state: 0,       // TODO
+            inspect_state_increment: 0, // TODO
         };
 
         Self {
             endpoint,
             session_id,
             storage_directory: "default_storage_directory".to_owned(), // TODO
+            active_epoch_index: 0,
             machine,
-            max_cycles_per_input: u64::MAX >> 2,
-            cycles_per_input_chunk: 1 << 22,
-
-            rx_flash_drive_index: 0,               // TODO
-            tx_flash_drive_index: 1,               // TODO
-            input_metadata_flash_drive_index: 2,   // TODO
-            outputs_metadata_flash_drive_index: 3, // TODO
-            messages_metadata_flash_drive_index: 4, // TODO
+            server_cycles,
             server_deadline,
         }
     }
@@ -139,18 +137,9 @@ impl MachineManager {
             let new_session_request =
                 tonic::Request::new(StartSessionRequest {
                     session_id: config.session_id.clone(),
-                    active_epoch_index: 0,
                     machine: Some(config.machine),
-                    max_cycles_per_input: config.max_cycles_per_input,
-                    cycles_per_input_chunk: config.cycles_per_input_chunk,
-                    rx_flash_drive_index: config.rx_flash_drive_index,
-                    tx_flash_drive_index: config.tx_flash_drive_index,
-                    input_metadata_flash_drive_index: config
-                        .input_metadata_flash_drive_index,
-                    outputs_metadata_flash_drive_index: config
-                        .outputs_metadata_flash_drive_index,
-                    messages_metadata_flash_drive_index: config
-                        .messages_metadata_flash_drive_index,
+                    active_epoch_index: config.active_epoch_index,
+                    server_cycles: Some(config.server_cycles),
                     server_deadline: Some(config.server_deadline),
                 });
             let _response = client
@@ -206,8 +195,8 @@ impl MachineInterface for MachineManager {
         let mut client = self.client.lock().await;
 
         for (i, input) in inputs.iter().enumerate() {
-            let enqueue_input_request =
-                tonic::Request::new(EnqueueInputRequest {
+            let advance_state_request =
+                tonic::Request::new(AdvanceStateRequest {
                     session_id: self.session_id.clone(),
                     active_epoch_index: epoch_number.as_u64(),
                     current_input_index: first_input_index.as_u64() + i as u64,
@@ -215,8 +204,8 @@ impl MachineInterface for MachineManager {
                     input_payload: (*input.payload).clone(),
                 });
 
-            let _enqueue_response = client
-                .enqueue_input(enqueue_input_request)
+            let _advance_response = client
+                .advance_state(advance_state_request)
                 .await
                 .context(TonicStatusError)?;
         }
@@ -262,12 +251,12 @@ impl MachineInterface for MachineManager {
             .into_inner();
 
         let outputs_metadata_hash = epoch_response
-            .most_recent_outputs_epoch_root_hash
+            .most_recent_vouchers_epoch_root_hash
             .expect("Machine Manager should return most_recent_outputs_epoch_root_hash")
             .data;
 
         let messages_metadata_hash = epoch_response
-            .most_recent_messages_epoch_root_hash
+            .most_recent_notices_epoch_root_hash
             .expect("Machine Manager should return most_recent_outputs_epoch_root_hash")
             .data;
 

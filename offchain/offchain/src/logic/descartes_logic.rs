@@ -5,14 +5,15 @@ use super::instantiate_tx_manager::{
     instantiate_tx_manager, DescartesTxManager,
 };
 
+use super::config::LogicConfig;
+use crate::config::ApplicationConfig;
 use crate::contracts::descartesv2_contract::DescartesV2Impl;
 use crate::error::*;
 use crate::fold::types::*;
 use crate::machine::{rollup_mm, EpochStatus, MachineInterface};
 use crate::rollups_state_fold::RollupsStateFold;
 
-use block_subscriber::{config::BSConfig, NewBlockSubscriber};
-use tx_manager::config::TMConfig;
+use block_subscriber::NewBlockSubscriber;
 use tx_manager::types::ResubmitStrategy;
 
 use async_recursion::async_recursion;
@@ -50,38 +51,36 @@ pub struct TxConfig {
     pub confirmations: usize,
 }
 
-pub async fn main_loop(
-    config: &Config,
-    tx_manager_config: &TMConfig,
-    block_subscriber_config: &BSConfig,
-) -> Result<()> {
+pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     let (block_subscriber, _subscriber_handle) = instantiate_block_subscriber(
-        config.ws_endpoint.clone(),
-        block_subscriber_config,
+        config.logic_config.ws_endpoint.clone(),
+        &config.bs_config,
     )
     .await?;
 
     let tx_manager = instantiate_tx_manager(
-        config.signer_http_endpoint.clone(),
+        config.logic_config.signer_http_endpoint.clone(),
         Arc::clone(&block_subscriber),
-        tx_manager_config,
+        &config.tm_config,
     )
     .await?;
 
     let (provider, _mock) = Provider::mocked();
     let descartesv2_contract = DescartesV2Impl::new(
-        config.descartes_contract_address,
+        config.logic_config.descartes_contract_address,
         Arc::new(provider),
     );
 
-    let rollups_state_fold =
-        RollupsStateFold::new(config.state_fold_grpc_endpoint.clone()).await?;
+    let rollups_state_fold = RollupsStateFold::new(
+        config.logic_config.state_fold_grpc_endpoint.clone(),
+    )
+    .await?;
     // let state_fold = instantiate_state_fold(&config.into())?;
 
     let machine_manager = {
         let mm_config = rollup_mm::Config::new_with_default(
-            config.mm_endpoint.clone(),
-            config.session_id.clone(),
+            config.logic_config.mm_endpoint.clone(),
+            config.logic_config.session_id.clone(),
         );
 
         rollup_mm::MachineManager::new(mm_config).await?
@@ -92,7 +91,7 @@ pub async fn main_loop(
         .await
         .ok_or(EmptySubscription {}.build())?;
 
-    let tx_config = config.into();
+    let tx_config = (&config.logic_config).into();
 
     loop {
         // TODO: change to n blocks in the past.
@@ -102,14 +101,14 @@ pub async fn main_loop(
                     .get_state(
                         &block.hash,
                         &(
-                            config.initial_epoch,
-                            config.descartes_contract_address,
+                            config.logic_config.initial_epoch,
+                            config.logic_config.descartes_contract_address,
                         ),
                     )
                     .await?;
 
                 react(
-                    &config.sender,
+                    &config.logic_config.sender,
                     &tx_config,
                     state,
                     &tx_manager,
@@ -505,9 +504,14 @@ async fn send_finalize_tx(
         .expect("Transaction conversion should never fail");
 }
 
-impl From<&Config> for TxConfig {
-    fn from(config: &Config) -> Self {
-        let config = config.clone();
+impl From<&LogicConfig> for TxConfig {
+    fn from(config: &LogicConfig) -> Self {
+        config.clone().into()
+    }
+}
+
+impl From<LogicConfig> for TxConfig {
+    fn from(config: LogicConfig) -> Self {
         Self {
             gas_multiplier: config.gas_multiplier,
             gas_price_multiplier: config.gas_price_multiplier,

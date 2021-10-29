@@ -5,7 +5,7 @@ use ethers::core::types::{Address, U256};
 use offchain_core::ethers;
 
 use serde::Deserialize;
-use std::time::Duration;
+use std::str::FromStr;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Clone, Debug)]
@@ -23,6 +23,9 @@ pub struct LogicEnvCLIConfig {
     /// URL of transaction signer http endpoint
     #[structopt(long, env)]
     pub signer_http_endpoint: Option<String>,
+    /// URL of websocket provider endpoint
+    #[structopt(long, env)]
+    pub ws_endpoint: Option<String>,
     /// URL of state fold server gRPC endpoint
     #[structopt(long, env)]
     pub state_fold_grpc_endpoint: Option<String>,
@@ -54,6 +57,7 @@ pub struct LogicFileConfig {
     pub sender: Option<String>,
     pub descartes_contract_address: Option<String>,
     pub signer_http_endpoint: Option<String>,
+    pub ws_endpoint: Option<String>,
     pub state_fold_grpc_endpoint: Option<String>,
     pub initial_epoch: Option<u64>,
     pub gas_multiplier: Option<f64>,
@@ -89,7 +93,7 @@ pub struct LogicConfig {
 }
 
 // default values
-const DEFAULT_INITIAL_EPOCH: U256 = U256::zero();
+const DEFAULT_INITIAL_EPOCH: u64 = 0;
 
 const DEFAULT_PROVIDER_HTTP_ENDPOINT: &str = "http://localhost:8545";
 const DEFAULT_PROVIDER_WS_ENDPOINT: &str = "ws://localhost:8546";
@@ -98,8 +102,6 @@ const DEFAULT_FOLD_SERVER_ENPOINT: &str = "http://localhost:50051";
 const DEFAULT_MACHINE_MANAGER_ENPOINT: &str = "http://localhost:8000";
 const DEFAULT_SESSION_ID: &str = "DEFAULT_SESSION_ID";
 
-// const DEFAULT_GAS_MULTIPLIER: f64 = 1.0;
-// const DEFAULT_GAS_PRICE_MULTIPLIER: f64 = 1.0;
 const DEFAULT_RATE: usize = 20;
 const DEFAULT_CONFIRMATIONS: usize = 10;
 
@@ -107,119 +109,94 @@ impl LogicConfig {
     pub fn initialize(
         env_cli_config: LogicEnvCLIConfig,
     ) -> config_error::Result<Self> {
-        let file_config: FileConfig = configuration::config::load_config_file(
-            env_cli_config.logic_config_path,
-        )?;
+        let file_config: LogicFileConfig = {
+            let c: FileConfig = configuration::config::load_config_file(
+                env_cli_config.logic_config_path,
+            )?;
+            c.logic_config
+        };
 
-        let max_delay = Duration::from_secs(
+        let sender: Address = Address::from_str(
+            &env_cli_config
+                .sender
+                .or(file_config.sender)
+                .expect("Must specify sender address"),
+        )
+        .expect("Sender address string ill-formed");
+
+        let descartes_contract_address: Address = Address::from_str(
+            &env_cli_config
+                .descartes_contract_address
+                .or(file_config.descartes_contract_address)
+                .expect("Must specify rollups contract address"),
+        )
+        .expect("Rollups contract address string ill-formed");
+
+        let initial_epoch: U256 = U256::from(
             env_cli_config
-                .tm_max_delay
-                .or(file_config.tx_manager.max_delay)
-                .unwrap_or(DEFAULT_MAX_DELAY),
+                .initial_epoch
+                .or(file_config.initial_epoch)
+                .unwrap_or(DEFAULT_INITIAL_EPOCH),
         );
 
-        let max_retries = env_cli_config
-            .tm_max_retries
-            .or(file_config.tx_manager.max_retries)
-            .unwrap_or(DEFAULT_MAX_RETRIES);
+        let signer_http_endpoint: String = env_cli_config
+            .signer_http_endpoint
+            .or(file_config.signer_http_endpoint)
+            .unwrap_or(DEFAULT_PROVIDER_HTTP_ENDPOINT.to_owned());
 
-        let transaction_timeout = Duration::from_secs(
-            env_cli_config
-                .tm_timeout
-                .or(file_config.tx_manager.timeout)
-                .unwrap_or(DEFAULT_TIMEOUT),
-        );
+        let ws_endpoint: String = env_cli_config
+            .ws_endpoint
+            .or(file_config.ws_endpoint)
+            .unwrap_or(DEFAULT_PROVIDER_WS_ENDPOINT.to_owned());
 
-        Ok(TMConfig {
-            max_delay,
-            max_retries,
-            transaction_timeout,
+        let state_fold_grpc_endpoint: String = env_cli_config
+            .state_fold_grpc_endpoint
+            .or(file_config.state_fold_grpc_endpoint)
+            .unwrap_or(DEFAULT_FOLD_SERVER_ENPOINT.to_owned());
+
+        let mm_endpoint: String = env_cli_config
+            .mm_endpoint
+            .or(file_config.mm_endpoint)
+            .unwrap_or(DEFAULT_MACHINE_MANAGER_ENPOINT.to_owned());
+
+        let session_id: String = env_cli_config
+            .session_id
+            .or(file_config.session_id)
+            .unwrap_or(DEFAULT_SESSION_ID.to_owned());
+
+        let gas_multiplier: Option<f64> =
+            env_cli_config.gas_multiplier.or(file_config.gas_multiplier);
+
+        let gas_price_multiplier: Option<f64> = env_cli_config
+            .gas_price_multiplier
+            .or(file_config.gas_price_multiplier);
+
+        let rate: usize = env_cli_config
+            .rate
+            .or(file_config.rate)
+            .unwrap_or(DEFAULT_RATE);
+
+        let confirmations: usize = env_cli_config
+            .confirmations
+            .or(file_config.confirmations)
+            .unwrap_or(DEFAULT_CONFIRMATIONS);
+
+        Ok(LogicConfig {
+            sender,
+            descartes_contract_address,
+            initial_epoch,
+
+            signer_http_endpoint,
+            ws_endpoint,
+            state_fold_grpc_endpoint,
+
+            mm_endpoint,
+            session_id,
+
+            gas_multiplier,
+            gas_price_multiplier,
+            rate,
+            confirmations,
         })
     }
 }
-
-/*
-use configuration::error as config_error;
-
-use serde::Deserialize;
-use std::time::Duration;
-use structopt::StructOpt;
-
-#[derive(StructOpt, Clone, Debug)]
-#[structopt(
-    name = "tm_config",
-    about = "Configuration for transaction manager"
-)]
-pub struct TMEnvCLIConfig {
-    /// Path to transaction manager .toml config
-    #[structopt(long, env)]
-    pub tm_config: Option<String>,
-    /// Max delay (secs) between retries
-    #[structopt(long, env)]
-    pub tm_max_delay: Option<u64>,
-    /// Max retries for a transaction
-    #[structopt(long, env)]
-    pub tm_max_retries: Option<usize>,
-    /// Timeout value (secs) for a transaction
-    #[structopt(long, env)]
-    pub tm_timeout: Option<u64>,
-}
-
-#[derive(Clone, Debug, Deserialize, Default)]
-pub struct TMFileConfig {
-    pub max_delay: Option<u64>,
-    pub max_retries: Option<usize>,
-    pub timeout: Option<u64>,
-}
-
-#[derive(Clone, Debug, Deserialize, Default)]
-pub struct FileConfig {
-    pub tx_manager: TMFileConfig,
-}
-
-#[derive(Clone, Debug)]
-pub struct TMConfig {
-    pub max_delay: Duration,
-    pub max_retries: usize,
-    pub transaction_timeout: Duration,
-}
-
-// default values
-const DEFAULT_MAX_DELAY: u64 = 1;
-const DEFAULT_MAX_RETRIES: usize = 5;
-const DEFAULT_TIMEOUT: u64 = 5;
-
-impl TMConfig {
-    pub fn initialize(
-        env_cli_config: TMEnvCLIConfig,
-    ) -> config_error::Result<Self> {
-        let file_config: FileConfig =
-            configuration::config::load_config_file(env_cli_config.tm_config)?;
-
-        let max_delay = Duration::from_secs(
-            env_cli_config
-                .tm_max_delay
-                .or(file_config.tx_manager.max_delay)
-                .unwrap_or(DEFAULT_MAX_DELAY),
-        );
-
-        let max_retries = env_cli_config
-            .tm_max_retries
-            .or(file_config.tx_manager.max_retries)
-            .unwrap_or(DEFAULT_MAX_RETRIES);
-
-        let transaction_timeout = Duration::from_secs(
-            env_cli_config
-                .tm_timeout
-                .or(file_config.tx_manager.timeout)
-                .unwrap_or(DEFAULT_TIMEOUT),
-        );
-
-        Ok(TMConfig {
-            max_delay,
-            max_retries,
-            transaction_timeout,
-        })
-    }
-}
-*/
