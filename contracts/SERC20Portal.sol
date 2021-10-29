@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title Specific ERC20 Portal Implementation
-pragma solidity ^0.8.0;
+pragma solidity >=0.7.0;
 
 interface SERC20Portal {
     /// @notice deposit an amount of a specific ERC20 token in the portal contract and create tokens in L2

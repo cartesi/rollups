@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title Ether Portal
-pragma solidity ^0.8.0;
+pragma solidity >=0.7.0;
 
 interface EtherPortal {
     /// @notice deposit an amount of Ether in the portal contract and create Ether in L2

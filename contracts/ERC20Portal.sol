@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title Generic ERC20 Portal
-pragma solidity ^0.8.0;
+pragma solidity >=0.7.0;
 
 interface ERC20Portal {
     /// @notice deposit an amount of a generic ERC20 in the portal contract and create tokens in L2
