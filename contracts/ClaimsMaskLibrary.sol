@@ -32,9 +32,10 @@ library ClaimsMaskLibrary{
     /// @param  _numClaimsRedeemed the ClaimMask for the number of claims redeemed
     /// @param  _validatorIndex index of the validator in the validator array
     /// @param  _value the increase value
-    function increaseNumClaimed(ClaimMask _numClaimsRedeemed, uint256 _validatorIndex, uint256 _value) internal pure returns(ClaimMask){
+    function increaseNumClaimed(ClaimMask _numClaimsRedeemed, uint256 _validatorIndex, uint256 _value) public pure returns(ClaimMask){
         uint256 currentNum = getNumClaimsRedeemed(_numClaimsRedeemed, _validatorIndex);
-        uint256 newNum = currentNum + _value;
+        uint256 newNum = currentNum + _value; // by default, solc checks if this line overflows
+        require(newNum <= ((1<<32)-1),"ClaimMask Overflow");
         return setNumClaimsRedeemed(_numClaimsRedeemed, _validatorIndex, newNum);
     }
 
@@ -42,7 +43,8 @@ library ClaimsMaskLibrary{
     /// @param  _numClaimsRedeemed the ClaimMask for the number of claims redeemed
     /// @param  _validatorIndex index of the validator in the validator array
     /// @param  _value the set value
-    function setNumClaimsRedeemed(ClaimMask _numClaimsRedeemed, uint256 _validatorIndex, uint256 _value) internal pure returns(ClaimMask){
+    function setNumClaimsRedeemed(ClaimMask _numClaimsRedeemed, uint256 _validatorIndex, uint256 _value) public pure returns(ClaimMask){
+        require(_value <= ((1<<32)-1),"ClaimMask Overflow");
         uint256 bitmask = ~(((1<<32)-1) << (32*_validatorIndex));
         uint256 clearedClaimMask = ClaimMask.unwrap(_numClaimsRedeemed) & bitmask;
         _numClaimsRedeemed = ClaimMask.wrap(clearedClaimMask | (_value << (32*_validatorIndex)));
@@ -51,7 +53,7 @@ library ClaimsMaskLibrary{
 
     /// @notice this function creates a new ClaimMask variable with certain value
     /// @param  _value the set value
-    function newNumClaimsRedeemed(uint256 _value) internal pure returns(ClaimMask){
+    function newNumClaimsRedeemed(uint256 _value) public pure returns(ClaimMask){
         ClaimMask numClaimsRedeemed=ClaimMask.wrap(_value);
         return numClaimsRedeemed;
     }
