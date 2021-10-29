@@ -51,6 +51,7 @@ contract ERC20PortalImpl is ERC20Portal {
 
         bytes memory input =
             abi.encode(
+                _ERC20,
                 _amount,
                 _data
             );
