@@ -30,6 +30,7 @@ interface EtherPortal {
 
     // @notice emitted on Ether deposited
     event EtherDeposited(
+        address _sender,
         uint256 _amount,
         bytes _data
     );

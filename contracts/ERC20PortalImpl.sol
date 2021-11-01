@@ -51,12 +51,13 @@ contract ERC20PortalImpl is ERC20Portal {
 
         bytes memory input =
             abi.encode(
+                msg.sender,
                 _ERC20,
                 _amount,
                 _data
             );
 
-        emit ERC20Deposited(_ERC20, _amount, _data);
+        emit ERC20Deposited(_ERC20, msg.sender, _amount, _data);
         return inputContract.addInput(input);
     }
 

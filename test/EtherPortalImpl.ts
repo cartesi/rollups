@@ -68,6 +68,7 @@ describe("EtherPortal Implementation", async () => {
         )
             .to.emit(portalImpl, "EtherDeposited")
             .withArgs(
+                await signer.getAddress(),
                 ethers.utils.parseEther("60"),
                 "0x00"
             );

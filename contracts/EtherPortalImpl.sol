@@ -37,9 +37,9 @@ contract EtherPortalImpl is EtherPortal {
         bytes calldata _data
     ) public payable override returns (bytes32) {
         bytes memory input =
-            abi.encode(msg.value, _data);
+            abi.encode(msg.sender, msg.value, _data);
 
-        emit EtherDeposited(msg.value, _data);
+        emit EtherDeposited(msg.sender, msg.value, _data);
         return inputContract.addInput(input);
     }
 

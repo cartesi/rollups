@@ -35,6 +35,7 @@ interface ERC20Portal {
     // @notice emitted on ERC20 deposited
     event ERC20Deposited(
         address _ERC20,
+        address _sender,
         uint256 _amount,
         bytes _data
     );

@@ -89,6 +89,7 @@ describe("ERC20Portal Implementation", async () => {
             .to.emit(portalImpl, "ERC20Deposited")
             .withArgs(
                 mockERC20.address,
+                await signer.getAddress(),
                 15,
                 "0x00"
             );
@@ -104,6 +105,7 @@ describe("ERC20Portal Implementation", async () => {
             .to.emit(portalImpl, "ERC20Deposited")
             .withArgs(
                 mockERC20.address,
+                await signer.getAddress(),
                 1000000,
                 "0x00"
             );

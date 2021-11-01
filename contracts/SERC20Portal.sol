@@ -32,7 +32,7 @@ interface SERC20Portal {
 
     // @notice emitted on ERC20 deposited
     event SERC20Deposited(
-        address _L1Sender,
+        address _sender,
         uint256 _amount,
         bytes _data
     );
