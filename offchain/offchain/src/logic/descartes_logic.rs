@@ -22,27 +22,6 @@ use ethers::providers::{MockProvider, Provider};
 use im::Vector;
 use std::sync::Arc;
 
-// pub struct Config {
-//     pub sender: Address,
-
-//     pub descartes_contract_address: Address,
-//     pub signer_http_endpoint: String,
-//     pub ws_endpoint: String,
-//     pub state_fold_grpc_endpoint: String,
-
-//     pub initial_epoch: U256,
-
-//     // pub call_timeout: std::time::Duration,
-//     // pub subscriber_timeout: std::time::Duration,
-//     pub gas_multiplier: Option<f64>,
-//     pub gas_price_multiplier: Option<f64>,
-//     pub rate: usize,
-//     pub confirmations: usize,
-
-//     pub mm_endpoint: String,
-//     pub session_id: String,
-// }
-
 pub struct TxConfig {
     pub gas_multiplier: Option<f64>,
     pub gas_price_multiplier: Option<f64>,

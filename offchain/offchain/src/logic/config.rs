@@ -5,6 +5,7 @@ use ethers::core::types::{Address, U256};
 use offchain_core::ethers;
 
 use serde::Deserialize;
+use snafu::ResultExt;
 use std::str::FromStr;
 use structopt::StructOpt;
 
@@ -120,17 +121,36 @@ impl LogicConfig {
             &env_cli_config
                 .sender
                 .or(file_config.sender)
-                .expect("Must specify sender address"),
+                .ok_or(snafu::NoneError)
+                .context(config_error::FileError {
+                    err: "Must specify sender address",
+                })?,
         )
-        .expect("Sender address string ill-formed");
+        .map_err(|e| {
+            config_error::FileError {
+                err: format!("Sender address string ill-formed: {}", e),
+            }
+            .build()
+        })?;
 
         let descartes_contract_address: Address = Address::from_str(
             &env_cli_config
                 .descartes_contract_address
                 .or(file_config.descartes_contract_address)
-                .expect("Must specify rollups contract address"),
+                .ok_or(snafu::NoneError)
+                .context(config_error::FileError {
+                    err: "Must specify rollups contract address",
+                })?,
         )
-        .expect("Rollups contract address string ill-formed");
+        .map_err(|e| {
+            config_error::FileError {
+                err: format!(
+                    "Rollups contract address string ill-formed: {}",
+                    e
+                ),
+            }
+            .build()
+        })?;
 
         let initial_epoch: U256 = U256::from(
             env_cli_config
