@@ -9,7 +9,7 @@ edition = "2018"
 
 [dependencies]
 state-fold = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
-state-server-grpc = { git = "https://github.com/cartesi/state-fold", rev = "f6f06a1" }
+state-server-grpc = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
 offchain = { path = "../offchain" }
 
 ethers = { version = "0.5.3", features = [ "legacy", "ws" ] }

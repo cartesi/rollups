@@ -16,6 +16,9 @@ tx-manager = { git = "https://github.com/cartesi/tx-manager", rev = "29a1abf" }
 state-fold = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
 
 ethers = { version = "0.5.3", features = [ "legacy", "ws" ] }
+ethers-core = { version = "^0.5.0", features = [ "legacy" ] }
+ethers-contract = { version = "^0.5.0", features = [ "legacy" ] }
+ethers-providers = { version = "^0.5.0", features = [ "ws" ] }
 ethabi = { version = "14.0.0", default-features = false }
 
 async-recursion = "0.3.2"
