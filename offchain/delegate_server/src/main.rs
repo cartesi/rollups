@@ -1,14 +1,21 @@
 #![warn(unused_extern_crates)]
 use state_server_grpc::{serve_delegate_manager, wait_for_signal};
 
-use offchain::config::{DescartesCLIConfig, DescartesConfig};
+use offchain::config::{ApplicationCLIConfig, ApplicationConfig};
 use structopt::StructOpt;
 use tokio::sync::oneshot;
+
+use configuration::config::{
+    Config as BasicConfig, EnvCLIConfig as BasicEnvCLIConfig,
+};
+use state_fold::config::{SFConfig, SFEnvCLIConfig};
 
 #[derive(StructOpt)]
 struct ServerConfig {
     #[structopt(flatten)]
-    descartes_cli_config: DescartesCLIConfig,
+    sf_cli_config: SFEnvCLIConfig,
+    #[structopt(flatten)]
+    basic_cli_config: BasicEnvCLIConfig,
     #[structopt(flatten)]
     server_type: DelegateServerType,
 }
@@ -27,13 +34,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = tokio::spawn(wait_for_signal(shutdown_tx));
 
     let server_config = ServerConfig::from_args();
-    let descartes_config =
-        DescartesConfig::initialize(server_config.descartes_cli_config)
-            .unwrap();
+    let sf_config = SFConfig::initialize(server_config.sf_cli_config).unwrap();
+    let basic_config =
+        BasicConfig::initialize(server_config.basic_cli_config).unwrap();
 
     match server_config.server_type {
         DelegateServerType::Input => {
-            let input_fold = delegate_server::instantiate_input_fold_delegate(&descartes_config);
+            let input_fold = delegate_server::instantiate_input_fold_delegate(
+                &sf_config,
+                basic_config.url.clone(),
+            );
 
             serve_delegate_manager(
                 "[::1]:50051",
@@ -45,8 +55,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await
         }
         DelegateServerType::Output => {
-            let output_fold =
-                delegate_server::instantiate_output_fold_delegate(&descartes_config);
+            let output_fold = delegate_server::instantiate_output_fold_delegate(
+                &sf_config,
+                basic_config.url.clone(),
+            );
 
             serve_delegate_manager(
                 "[::1]:50051",
@@ -59,7 +71,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         DelegateServerType::Rollups => {
             let descartes_fold =
-                delegate_server::instantiate_descartes_fold_delegate(&descartes_config);
+                delegate_server::instantiate_descartes_fold_delegate(
+                    &sf_config,
+                    basic_config.url.clone(),
+                );
 
             serve_delegate_manager(
                 "[::1]:50051",

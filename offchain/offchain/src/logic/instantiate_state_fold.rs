@@ -1,9 +1,9 @@
 use offchain_core::ethers;
 
-use crate::config::DescartesConfig;
 use crate::error::*;
 use crate::fold::*;
 
+use state_fold::config::SFConfig;
 use state_fold::Access;
 
 use ethers::core::types::{Address, U64};
@@ -16,10 +16,11 @@ use std::sync::Arc;
 pub type DescartesAccess = Access<Provider<Http>>;
 
 pub fn instantiate_state_fold(
-    config: &DescartesConfig,
+    config: &SFConfig,
+    url: String,
 ) -> Result<DescartesStateFold<DescartesAccess>> {
-    let access = create_access(config)?;
-    let state_fold = create_descartes_state_fold(access, &config.sf_config);
+    let access = create_access(config, url)?;
+    let state_fold = create_descartes_state_fold(access, &config);
     Ok(state_fold)
 }
 
@@ -29,13 +30,16 @@ fn create_provider(url: String) -> Result<Arc<Provider<Http>>> {
     ))
 }
 
-pub fn create_access(config: &DescartesConfig) -> Result<Arc<DescartesAccess>> {
-    let provider = create_provider(config.basic_config.url.clone())?;
+pub fn create_access(
+    config: &SFConfig,
+    url: String,
+) -> Result<Arc<DescartesAccess>> {
+    let provider = create_provider(url)?;
 
     Ok(Arc::new(Access::new(
         provider,
-        config.sf_config.genesis_block,
-        config.sf_config.query_limit_error_codes.clone(),
-        config.sf_config.concurrent_events_fetch,
+        config.genesis_block,
+        config.query_limit_error_codes.clone(),
+        config.concurrent_events_fetch,
     )))
 }

@@ -1,6 +1,5 @@
 use snafu::Snafu;
 
-use crate::logic::instantiate_state_fold::DescartesAccess;
 use middleware_factory;
 use state_fold;
 use tokio::sync::broadcast::error::RecvError;
@@ -20,11 +19,10 @@ pub enum Error {
     #[snafu(display("Failed to receive"))]
     SubscriberReceiveError { source: RecvError },
 
-    #[snafu(display("State fold error"))]
-    StateFoldError {
-        source: state_fold::error::Error<DescartesAccess>,
-    },
-
+    // #[snafu(display("State fold error"))]
+    // StateFoldError {
+    //     source: state_fold::error::Error<DescartesAccess>,
+    // },
     #[snafu(display("Tonic status error"))]
     TonicStatusError { source: tonic::Status },
 

@@ -8,7 +8,7 @@ use tx_manager::config::TMConfig;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Clone, Debug)]
-struct ApplicationCLIConfig {
+pub struct ApplicationCLIConfig {
     #[structopt(long, env)]
     pub app_config: Option<String>,
     #[structopt(flatten)]
