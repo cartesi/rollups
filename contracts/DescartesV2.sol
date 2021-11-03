@@ -16,7 +16,6 @@ pragma solidity >=0.7.0;
 import "./Input.sol";
 import "./Output.sol";
 import "./ValidatorManager.sol";
-import "./DescartesV2.sol";
 
 interface DescartesV2 {
     // InputAccumulation - Inputs being accumulated for currrent epoch
