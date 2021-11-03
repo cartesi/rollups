@@ -21,7 +21,7 @@ interface MockOutput {
     /// @param _inputIndex which input, inside the epoch, the output belongs to
     /// @param _outputIndex index of output inside the input
     /// @param _outputsHash hash of the outputs drive where this output is contained
-    /// @param _outputProof bytes that describe the ouput, can encode different things
+    /// @param _outputProof bytes that describe the output, can encode different things
     /// @param _epochProof siblings of outputs hash, to prove it is contained on epoch hash
     /// @return true if output was executed successfully
     /// @dev  outputs can only be executed once

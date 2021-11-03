@@ -41,7 +41,7 @@ contract DescartesV2Impl is DescartesV2 {
     ///
 
     InputImpl public input; // contract responsible for inputs
-    OutputImpl public output; // contract responsible for ouputs
+    OutputImpl public output; // contract responsible for outputs
     ValidatorManagerImpl public validatorManager; // contract responsible for validators
     DisputeManagerImpl public disputeManager; // contract responsible for dispute resolution
 

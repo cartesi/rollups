@@ -287,7 +287,7 @@ pub struct ImmutableState {
     /// contract responsible for inputs
     pub input_contract_address: Address,
 
-    /// contract responsible for ouputs
+    /// contract responsible for outputs
     pub output_contract_address: Address,
 
     /// contract responsible for validators
