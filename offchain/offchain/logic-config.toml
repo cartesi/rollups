@@ -1,0 +1,25 @@
+## CLI provided
+# descartes_contract_address
+# sender
+
+# unique session identifier for machine manager
+session_id = "default_rollups_id"
+
+# node starts syncing from inital epoch
+initial_epoch = 0
+
+# gas estimation/price multiplier
+gas_multiplier = 1
+gas_price_multiplier = 1
+
+# number of blocks before resubmting tx
+rate = 20
+
+# depth of blocks before considering tx finalized
+confirmations = 10
+
+# end points
+signer_http_endpoint = "http://signer:8555"
+ws_endpoint = "ws://ws_endpoint:8556"
+state_fold_grpc_endpoint = "http://state_fold:8557"
+mm_endpoint = "http://state_fold:8557"
