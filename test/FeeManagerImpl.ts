@@ -69,9 +69,6 @@ describe("FeeManager Implementation", () => {
             deployedFeeManager.address,
             signers[0]
         );
-
-        // set allowance for the feeManager
-        await token.approve(feeManager.address, tokenSupply);
     });
 
     it("test initial feePerClaim", async () => {
@@ -109,9 +106,13 @@ describe("FeeManager Implementation", () => {
 
         // fund 10000 tokens
         let amount = 10000;
-        expect(await feeManager.erc20fund(amount))
-            .to.emit(feeManager, "ERC20FundDeposited")
-            .withArgs(amount);
+        expect(await token.transfer(feeManager.address, amount))
+            .to.emit(token, "Transfer")
+            .withArgs(
+                await signers[0].getAddress(),
+                feeManager.address,
+                amount
+            );
 
         expect(
             await token.balanceOf(feeManager.address),
@@ -123,9 +124,13 @@ describe("FeeManager Implementation", () => {
         ).to.equal(tokenSupply - amount);
 
         // again, fund 10000 tokens
-        expect(await feeManager.erc20fund(amount))
-            .to.emit(feeManager, "ERC20FundDeposited")
-            .withArgs(amount);
+        expect(await token.transfer(feeManager.address, amount))
+            .to.emit(token, "Transfer")
+            .withArgs(
+                await signers[0].getAddress(),
+                feeManager.address,
+                amount
+            );
 
         expect(
             await token.balanceOf(feeManager.address),
@@ -139,13 +144,14 @@ describe("FeeManager Implementation", () => {
 
     // test numClaimsRedeemable
     it("test numClaimsRedeemable()", async () => {
+        // revert on address 0
         let address_zero = "0x0000000000000000000000000000000000000000";
         await expect(
             feeManager.numClaimsRedeemable(address_zero),
             "should revert on address 0"
         ).to.be.revertedWith("address should not be 0");
 
-        // assume signers[1] is a validator
+        // assume signers[1] is a validator with 0 redeemable claims
         await mockValidatorManager.mock.getValidatorIndex.returns(0);
         await mockValidatorManager.mock.getNumberOfClaimsByIndex.returns(0);
         expect(
@@ -167,8 +173,8 @@ describe("FeeManager Implementation", () => {
         // if signers[1] has claimed fees, then there's no redeemable claims again
         // first, owner should fund the FeeManager
         let amount = 10000;
-        await feeManager.erc20fund(amount);
-        await feeManager.claimFee(await signers[1].getAddress());
+        await token.transfer(feeManager.address, amount);
+        await feeManager.redeemFee(await signers[1].getAddress());
 
         expect(
             await feeManager.callStatic.numClaimsRedeemable(
@@ -185,22 +191,54 @@ describe("FeeManager Implementation", () => {
         ).to.be.reverted;
     });
 
-    // claim fees
-    it("test claimFee() when no claims have been made", async () => {
+    // test getNumClaimsRedeemed
+    it("test getNumClaimsRedeemed()", async () => {
+        // revert on address 0
+        let address_zero = "0x0000000000000000000000000000000000000000";
+        await expect(
+            feeManager.getNumClaimsRedeemed(address_zero),
+            "getNumClaimsRedeemed() should revert on address 0"
+        ).to.be.revertedWith("address should not be 0");
+
+        // assume signers[1] is a validator with 0 redeemed claims
+        await mockValidatorManager.mock.getValidatorIndex.returns(0);
+        expect(
+            await feeManager.callStatic.getNumClaimsRedeemed(
+                await signers[1].getAddress()
+            ),
+            "initially, no redeemed claims"
+        ).to.equal(0);
+
+        // assume signers[1] redeems 10 claims
+        await mockValidatorManager.mock.getNumberOfClaimsByIndex.returns(10);
+        let amount = 10000;
+        await token.transfer(feeManager.address, amount);
+        await feeManager.redeemFee(await signers[1].getAddress());
+
+        expect(
+            await feeManager.callStatic.getNumClaimsRedeemed(
+                await signers[1].getAddress()
+            ),
+            "now #redeemed should be 10"
+        ).to.equal(10);
+    });
+
+    // redeem fees
+    it("test redeemFee() when no claims have been made", async () => {
         // assume signers[1] is a validator
         await mockValidatorManager.mock.getValidatorIndex.returns(0);
         await mockValidatorManager.mock.getNumberOfClaimsByIndex.returns(0);
 
         await expect(
-            feeManager.claimFee(await signers[1].getAddress()),
+            feeManager.redeemFee(await signers[1].getAddress()),
             "no claims made"
         ).to.be.revertedWith("nothing to redeem yet");
     });
 
-    it("claimFee on his/her own", async () => {
+    it("redeemFee on his/her own", async () => {
         //owner fund FeeManager
         let amount = 10000;
-        await feeManager.erc20fund(amount);
+        await token.transfer(feeManager.address, amount);
 
         // assume signers[1] is a validator
         await mockValidatorManager.mock.getValidatorIndex.returns(0);
@@ -209,10 +247,10 @@ describe("FeeManager Implementation", () => {
         await expect(
             feeManager
                 .connect(signers[1])
-                .claimFee(await signers[1].getAddress()),
-            "claim fee for 10 claims"
+                .redeemFee(await signers[1].getAddress()),
+            "redeem fee for 10 claims"
         )
-            .to.emit(feeManager, "FeeClaimed")
+            .to.emit(feeManager, "FeeRedeemed")
             .withArgs(await signers[1].getAddress(), 10 * initialFeePerClaim);
 
         // check balances
@@ -225,23 +263,23 @@ describe("FeeManager Implementation", () => {
             "validator now has 10*initialFeePerClaim tokens"
         ).to.equal(10 * initialFeePerClaim);
 
-        // claimFee again
+        // redeemFee again
         await expect(
             feeManager
                 .connect(signers[1])
-                .claimFee(await signers[1].getAddress()),
+                .redeemFee(await signers[1].getAddress()),
             "no additional claims made"
         ).to.be.revertedWith("nothing to redeem yet");
 
-        // make more claims and then claimFee
+        // make more claims and then redeemFee
         await mockValidatorManager.mock.getNumberOfClaimsByIndex.returns(30);
         await expect(
             feeManager
                 .connect(signers[1])
-                .claimFee(await signers[1].getAddress()),
-            "claim fee for 20 more claims"
+                .redeemFee(await signers[1].getAddress()),
+            "redeem fee for 20 more claims"
         )
-            .to.emit(feeManager, "FeeClaimed")
+            .to.emit(feeManager, "FeeRedeemed")
             .withArgs(await signers[1].getAddress(), 20 * initialFeePerClaim);
         // check balances
         expect(
@@ -254,21 +292,21 @@ describe("FeeManager Implementation", () => {
         ).to.equal(30 * initialFeePerClaim);
     });
 
-    it("claimFee on other's behalf", async () => {
+    it("redeemFee on other's behalf", async () => {
         //owner fund FeeManager
         let amount = 10000;
-        await feeManager.erc20fund(amount);
+        await token.transfer(feeManager.address, amount);
 
         // assume signers[1] is a validator
         await mockValidatorManager.mock.getValidatorIndex.returns(0);
         await mockValidatorManager.mock.getNumberOfClaimsByIndex.returns(10);
 
-        // let signers[0] help signers[1] claimFee
+        // let signers[0] help signers[1] redeemFee
         await expect(
-            feeManager.claimFee(await signers[1].getAddress()),
-            "signers[0] helps signers[1] claimFee"
+            feeManager.redeemFee(await signers[1].getAddress()),
+            "signers[0] helps signers[1] redeemFee"
         )
-            .to.emit(feeManager, "FeeClaimed")
+            .to.emit(feeManager, "FeeRedeemed")
             .withArgs(await signers[1].getAddress(), 10 * initialFeePerClaim);
 
         // check balances
@@ -291,14 +329,14 @@ describe("FeeManager Implementation", () => {
         await expect(
             feeManager.connect(signers[1]).resetFeePerClaim(30),
             "only owner"
-        ).to.be.revertedWith("only owner");
+        ).to.be.reverted;
     });
 
     // reset fee per claim
     it("reset feePerClaim", async () => {
         //owner fund FeeManager
         let amount = 10000;
-        await feeManager.erc20fund(amount);
+        await token.transfer(feeManager.address, amount);
 
         // assume signers[1], signers[2], signers[3] are the validator set
         await mockValidatorManager.mock.maxNumValidators.returns(3);
@@ -335,7 +373,7 @@ describe("FeeManager Implementation", () => {
         // assume the signers[1] has already claimed
         await feeManager
             .connect(signers[1])
-            .claimFee(await signers[1].getAddress());
+            .redeemFee(await signers[1].getAddress());
 
         // get validators' balances before resetting fees
         let balance0_before = await token.balanceOf(
@@ -390,7 +428,7 @@ describe("FeeManager Implementation", () => {
             .returns(10);
         await feeManager
             .connect(signers[3])
-            .claimFee(await signers[3].getAddress());
+            .redeemFee(await signers[3].getAddress());
         expect(
             await token.balanceOf(await signers[3].getAddress()),
             "balance of signers[3] after resetting fees and making claims"

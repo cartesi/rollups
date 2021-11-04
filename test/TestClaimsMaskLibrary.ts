@@ -38,27 +38,72 @@ describe("Test ClaimsMaskLibrary", () => {
     });
 
     it("create a numClaimsRedeemed", async () => {
-        let numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed(
-            100
-        );
+        // case 1
+        let numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed([
+            100, 0, 0, 0, 0, 0, 0, 0,
+        ]);
         expect(numClaimsRedeemed, "new numClaimsRedeemed").to.equal(100);
 
+        // case 2
         let hexValue =
             "0x0000000700000006000000050000000400000003000000020000000100000000";
-        numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed(
-            hexValue
-        );
+        numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed([
+            0, 1, 2, 3, 4, 5, 6, 7,
+        ]);
         expect(numClaimsRedeemed, "another new numClaimsRedeemed").to.equal(
             hexValue
         );
+
+        // case 3,4,5 - revert
+        await expect(
+            claimsMaskLibrary.newNumClaimsRedeemed([
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                parseInt("0x100000000", 16),
+            ]),
+            "0x100000000 is out of range (rear)"
+        ).to.be.revertedWith("value out of range");
+
+        await expect(
+            claimsMaskLibrary.newNumClaimsRedeemed([
+                parseInt("0x100000000", 16),
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+            ]),
+            "0x100000000 is out of range (front)"
+        ).to.be.revertedWith("value out of range");
+
+        await expect(
+            claimsMaskLibrary.newNumClaimsRedeemed([
+                0,
+                1,
+                2,
+                parseInt("0x100000000", 16),
+                4,
+                5,
+                6,
+                7,
+            ]),
+            "0x100000000 is out of range (middle)"
+        ).to.be.revertedWith("value out of range");
     });
 
     it("test getNumClaimsRedeemed", async () => {
-        let hexValue =
-            "0x0000000700000006000000050000000400000003000000020000000100000000";
-        let numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed(
-            hexValue
-        ); // numClaimsRedeemed is basically the same as hexValue
+        // create a claimsMask with the following value
+        // "0x0000000700000006000000050000000400000003000000020000000100000000"
+        let numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed([
+            0, 1, 2, 3, 4, 5, 6, 7,
+        ]);
         for (let i = 0; i < 8; i++) {
             expect(
                 await claimsMaskLibrary.getNumClaimsRedeemed(
@@ -71,11 +116,13 @@ describe("Test ClaimsMaskLibrary", () => {
     });
 
     it("test setNumClaimsRedeemed", async () => {
+        // create a claimsMask with the following value
+        // "0x0000000700000006000000050000000400000003000000020000000100000000"
         let hexValue =
             "0x0000000700000006000000050000000400000003000000020000000100000000";
-        let numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed(
-            hexValue
-        );
+        let numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed([
+            0, 1, 2, 3, 4, 5, 6, 7,
+        ]);
 
         // set #ClaimsRedeemed to the same as it is
         for (let i = 0; i < 8; i++) {
@@ -88,9 +135,6 @@ describe("Test ClaimsMaskLibrary", () => {
         expect(numClaimsRedeemed, "still the same").to.equal(hexValue);
 
         // set #ClaimsRedeemed all to 0
-        numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed(
-            hexValue
-        );
         for (let i = 0; i < 8; i++) {
             numClaimsRedeemed = await claimsMaskLibrary.setNumClaimsRedeemed(
                 numClaimsRedeemed,
@@ -101,9 +145,6 @@ describe("Test ClaimsMaskLibrary", () => {
         expect(numClaimsRedeemed, "set all to 0").to.equal(0);
 
         // set all to the max value
-        numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed(
-            hexValue
-        );
         for (let i = 0; i < 8; i++) {
             numClaimsRedeemed = await claimsMaskLibrary.setNumClaimsRedeemed(
                 numClaimsRedeemed,
@@ -129,11 +170,13 @@ describe("Test ClaimsMaskLibrary", () => {
     });
 
     it("test increaseNumClaimed", async () => {
+        // create a claimsMask with the following value
+        // "0x0000000700000006000000050000000400000003000000020000000100000000"
         let hexValue =
             "0x0000000700000006000000050000000400000003000000020000000100000000";
-        let numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed(
-            hexValue
-        );
+        let numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed([
+            0, 1, 2, 3, 4, 5, 6, 7,
+        ]);
 
         // increase #ClaimsRedeemed to the same as it is
         for (let i = 0; i < 8; i++) {
@@ -148,9 +191,6 @@ describe("Test ClaimsMaskLibrary", () => {
         );
 
         // increase each entry by 16, or 0x10
-        numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed(
-            hexValue
-        );
         for (let i = 0; i < 8; i++) {
             numClaimsRedeemed = await claimsMaskLibrary.increaseNumClaimed(
                 numClaimsRedeemed,
@@ -158,7 +198,7 @@ describe("Test ClaimsMaskLibrary", () => {
                 16
             );
         }
-        expect(numClaimsRedeemed, "all increase by 0x10").to.equal(
+        expect(numClaimsRedeemed, "all increased by 0x10").to.equal(
             "0x0000001700000016000000150000001400000013000000120000001100000010"
         );
 
@@ -173,5 +213,31 @@ describe("Test ClaimsMaskLibrary", () => {
                 "increase to overflow"
             ).to.be.revertedWith("ClaimMask Overflow");
         }
+    });
+
+    it("index out of range test", async () => {
+        // create a claimsMask with the following value
+        // "0x0000000700000006000000050000000400000003000000020000000100000000"
+        let numClaimsRedeemed = await claimsMaskLibrary.newNumClaimsRedeemed([
+            0, 1, 2, 3, 4, 5, 6, 7,
+        ]);
+
+        // getNumClaimsRedeemed
+        await expect(
+            claimsMaskLibrary.getNumClaimsRedeemed(numClaimsRedeemed, 8),
+            "get #ClaimsRedeemed on index 8 - revert"
+        ).to.be.revertedWith("index out of range");
+
+        // increaseNumClaimed
+        await expect(
+            claimsMaskLibrary.increaseNumClaimed(numClaimsRedeemed, 8, 0),
+            "increase #ClaimsRedeemed on index 8 - revert"
+        ).to.be.revertedWith("index out of range");
+
+        // setNumClaimsRedeemed
+        await expect(
+            claimsMaskLibrary.setNumClaimsRedeemed(numClaimsRedeemed, 8, 0),
+            "set #ClaimsRedeemed on index 8 - revert"
+        ).to.be.revertedWith("index out of range");
     });
 });

@@ -74,7 +74,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     {
         onlyRollups();
         require(_claim != bytes32(0), "empty claim");
-        require(isAllowed(_sender), "sender not allowed");
+        require(isValidator(_sender), "sender not allowed");
 
         // cant return because a single claim might mean consensus
         if (currentClaim == bytes32(0)) {
@@ -381,7 +381,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
 
     // @notice check if the sender is a validator
     // @params sender address
-    function isAllowed(address _sender) internal view returns (bool) {
+    function isValidator(address _sender) internal view returns (bool) {
         require(_sender != address(0), "address 0");
         for (uint256 i; i < validators.length; i++) {
             if (_sender == validators[i]) return true;

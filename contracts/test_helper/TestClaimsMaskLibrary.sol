@@ -53,7 +53,7 @@ contract TestClaimsMaskLibrary {
             );
     }
 
-    function newNumClaimsRedeemed(uint256 _value)
+    function newNumClaimsRedeemed(uint256[8] calldata _value)
         public
         pure
         returns (ClaimMask)

@@ -17,21 +17,15 @@ import "./FeeManager.sol";
 import "./ClaimsMaskLibrary.sol";
 import "./ValidatorManagerClaimsCountedImpl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 // this FeeManagerImpl manages for up to 8 validators
-contract FeeManagerImpl is FeeManager {
+contract FeeManagerImpl is FeeManager, Ownable {
     ValidatorManagerClaimsCountedImpl ValidatorManagerCCI;
     ClaimMask numClaimsRedeemed;
     uint256 public feePerClaim;
     IERC20 token; // the token that is used for paying fees to validators
-    address owner;
     bool lock; // reentrancy lock
-
-    /// @notice functions modified by onlyowner can only be accessed by contract owner
-    modifier onlyOwner {
-        require(owner == msg.sender, "only owner");
-        _;
-    }
 
     /// @notice functions modified by noReentrancy are not subject to recursion
     modifier noReentrancy() {
@@ -50,23 +44,12 @@ contract FeeManagerImpl is FeeManager {
         address _ERC20,
         uint256 _feePerClaim
     ) {
-        owner = msg.sender;
         ValidatorManagerCCI = ValidatorManagerClaimsCountedImpl(
             _ValidatorManagerCCI
         );
         token = IERC20(_ERC20);
         feePerClaim = _feePerClaim;
         emit FeeManagerCreated(_ValidatorManagerCCI, _ERC20, _feePerClaim);
-    }
-
-    /// @notice this function can only be called to deposit funds as rewards(fees) for validators
-    /// @param _amount amount of tokens to be deposited
-    function erc20fund(uint256 _amount) public override {
-        require(
-            token.transferFrom(owner, address(this), _amount),
-            "erc20 fund deposit failed"
-        );
-        emit ERC20FundDeposited(_amount);
     }
 
     /// @notice this function can be called to check the number of claims that's redeemable for the validator
@@ -87,6 +70,22 @@ contract FeeManagerImpl is FeeManager {
         return totalClaims - redeemedClaims; // underflow checked by default with sol0.8
     }
 
+    /// @notice this function can be called to check the number of claims that has been redeemed for the validator
+    /// @param  _validator address of the validator
+    function getNumClaimsRedeemed(address _validator)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        require(_validator != address(0), "address should not be 0");
+        uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
+        uint256 redeemedClaims =
+            ClaimsMaskLibrary.getNumClaimsRedeemed(numClaimsRedeemed, valIndex);
+
+        return redeemedClaims;
+    }
+
     /// @notice contract owner can reset the value of fee per claim
     ///         validators should be paid for the past unpaid claims before setting the new fee value
     /// @param  _value the new value of fee per claim
@@ -95,7 +94,7 @@ contract FeeManagerImpl is FeeManager {
         for (uint256 i; i < ValidatorManagerCCI.maxNumValidators(); i++) {
             address validator = ValidatorManagerCCI.validators(i);
             if (validator != address(0) && numClaimsRedeemable(validator) > 0) {
-                claimFee(validator);
+                redeemFee(validator);
             }
         }
         feePerClaim = _value;
@@ -104,7 +103,7 @@ contract FeeManagerImpl is FeeManager {
 
     /// @notice this function can be called to redeem fees for validators
     /// @param  _validator address of the validator that is redeeming
-    function claimFee(address _validator) public override noReentrancy {
+    function redeemFee(address _validator) public override noReentrancy {
         // follow the Checks-Effects-Interactions pattern for security
 
         // ** checks **
@@ -121,8 +120,11 @@ contract FeeManagerImpl is FeeManager {
 
         // ** interactions **
         uint256 feesToSend = nowRedeemingClaims * feePerClaim; // number of erc20 tokens to send
-        require(token.transfer(_validator, feesToSend), "Failed to claim fees");
+        require(
+            token.transfer(_validator, feesToSend),
+            "Failed to redeem fees"
+        );
 
-        emit FeeClaimed(_validator, feesToSend);
+        emit FeeRedeemed(_validator, feesToSend);
     }
 }
