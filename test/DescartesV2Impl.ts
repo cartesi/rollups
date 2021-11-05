@@ -12,7 +12,6 @@ describe("Descartes V2 Implementation", () => {
     /// for testing DescartesV2 when modifiers are on, set this to true
     /// for testing DescartesV2 when modifiers are off, set this to false
     let permissionModifiersOn = true;
-    let runWithDeployScript = true;
 
     let enableDelegate = process.env["DELEGATE_TEST"];
 
@@ -56,64 +55,15 @@ describe("Descartes V2 Implementation", () => {
     beforeEach(async () => {
         signers = await ethers.getSigners();
 
-        if (runWithDeployScript) {
-            await deployments.fixture();
-            const dAddress = (await deployments.get("DescartesV2Impl")).address;
-            descartesV2Impl = DescartesV2Impl__factory.connect(
-                dAddress,
-                signers[0]
-            );
-            // get the timestamp of the second last block, because after deploying descartesV2, portalImpl was deployed
-            contract_creation_time =
-                (await ethers.provider.getBlock("latest")).timestamp - 1;
-        } else {
-            // Bitmask
-            const bitMaskLibrary = await deployments.deploy("Bitmask", {
-                from: await signers[0].getAddress(),
-            });
-            const bitMaskAddress = bitMaskLibrary.address;
-
-            // CartesiMath
-            const cartesiMath = await deployments.deploy("CartesiMath", {
-                from: await signers[0].getAddress(),
-            });
-            const cartesiMathAddress = cartesiMath.address;
-
-            // Merkle
-            const merkle = await deployments.deploy("Merkle", {
-                from: await signers[0].getAddress(),
-                libraries: {
-                    CartesiMath: cartesiMathAddress,
-                },
-            });
-            const merkleAddress = merkle.address;
-
-            // DescartesV2Impl
-            const descartesV2Impl_factory = await ethers.getContractFactory(
-                "DescartesV2Impl",
-                {
-                    signer: signers[0],
-                    libraries: {
-                        Bitmask: bitMaskAddress,
-                        Merkle: merkleAddress,
-                    },
-                }
-            );
-            descartesV2Impl = await descartesV2Impl_factory.deploy(
-                inputDuration,
-                challengePeriod,
-                INPUT_LOG2_SIZE,
-                OUTPUT_METADATA_LOG2_SIZE,
-                [
-                    await signers[0].getAddress(),
-                    await signers[1].getAddress(),
-                    await signers[2].getAddress(),
-                ]
-            );
-            await descartesV2Impl.deployed();
-            contract_creation_time = (await ethers.provider.getBlock("latest"))
-                .timestamp;
-        }
+        await deployments.fixture();
+        const dAddress = (await deployments.get("DescartesV2Impl")).address;
+        descartesV2Impl = DescartesV2Impl__factory.connect(
+            dAddress,
+            signers[0]
+        );
+        // get the timestamp of the second last block, because after deploying descartesV2, portalImpl was deployed
+        contract_creation_time =
+            (await ethers.provider.getBlock("latest")).timestamp - 1;
 
         initialEpoch = "0x0";
         initialState = JSON.stringify({
@@ -814,29 +764,29 @@ describe("Descartes V2 Implementation", () => {
             // test constants
             expect(
                 parseInt(state.constants.input_duration, 16),
-                "check input duration"
+                "input duration does not match"
             ).to.equal(inputDuration);
             expect(
                 parseInt(state.constants.challenge_period, 16),
-                "check challenge period"
+                "challenge period does not match"
             ).to.equal(challengePeriod);
             expect(
                 parseInt(state.constants.contract_creation_timestamp, 16),
-                "check contract creation timestamp"
+                "contract creation timestamp does not match"
             ).to.equal(contract_creation_time);
             expect(
                 state.constants.input_contract_address,
-                "check input contract address"
+                "input contract address does not match"
             ).to.equal((await descartesV2Impl.getInputAddress()).toLowerCase());
             expect(
                 state.constants.output_contract_address,
-                "check output contract address"
+                "output contract address does not match"
             ).to.equal(
                 (await descartesV2Impl.getOutputAddress()).toLowerCase()
             );
             expect(
                 state.constants.validator_contract_address,
-                "check validator manager contract address"
+                "validator manager contract address does not match"
             ).to.equal(
                 (
                     await descartesV2Impl.getValidatorManagerAddress()
@@ -844,46 +794,44 @@ describe("Descartes V2 Implementation", () => {
             );
             expect(
                 state.constants.dispute_contract_address,
-                "check dispute manager contract address"
+                "dispute manager contract address does not match"
             ).to.equal(
                 (await descartesV2Impl.getDisputeManagerAddress()).toLowerCase()
             );
             expect(
                 state.constants.descartesv2_contract_address,
-                "check descartesV2 contract address"
+                "descartesV2 contract address does not match"
             ).to.equal(descartesV2Impl.address.toLowerCase());
 
             // test initial_epoch
-            expect(state.initial_epoch, "check initial epoch").to.equal(
-                initialEpoch
-            );
+            expect(
+                state.initial_epoch,
+                "initial epoch does not match"
+            ).to.equal(initialEpoch);
 
             // test initial finalized_epochs
             expect(
                 state.finalized_epochs.finalized_epochs.length,
-                "check initial finalized_epochs.finalized_epochs"
+                "initial finalized_epochs.finalized_epochs does not match"
             ).to.equal(0);
             expect(
                 state.finalized_epochs.initial_epoch,
-                "check finalized_epochs.initial_epoch"
+                "finalized_epochs.initial_epoch does not match"
             ).to.equal(initialEpoch);
             expect(
                 state.finalized_epochs.descartesv2_contract_address,
-                "check finalized_epochs.descartesv2_contract_address"
+                "finalized_epochs.descartesv2_contract_address does not match"
             ).to.equal(descartesV2Impl.address.toLowerCase());
             expect(
                 state.finalized_epochs.input_contract_address,
-                "check finalized_epochs.input_contract_address"
+                "finalized_epochs.input_contract_address does not match"
             ).to.equal((await descartesV2Impl.getInputAddress()).toLowerCase());
 
             // test initial current_epoch
-            expect(
-                state.current_epoch.epoch_number,
-                "check initial current_epoch.epoch_number"
-            ).to.equal(initialEpoch);
+            checkCurrentEpochNum(state, initialEpoch);
             expect(
                 state.current_epoch.inputs.epoch_number,
-                "check initial current_epoch.inputs.epoch_number"
+                "initial current_epoch.inputs.epoch_number does not match"
             ).to.equal(initialEpoch);
             expect(
                 state.current_epoch.inputs.inputs.length,
@@ -891,15 +839,15 @@ describe("Descartes V2 Implementation", () => {
             ).to.equal(0);
             expect(
                 state.current_epoch.inputs.input_contract_address,
-                "check current_epoch.inputs.input_contract_address"
+                "current_epoch.inputs.input_contract_address does not match"
             ).to.equal((await descartesV2Impl.getInputAddress()).toLowerCase());
             expect(
                 state.current_epoch.descartesv2_contract_address,
-                "check current_epoch.descartesv2_contract_address"
+                "current_epoch.descartesv2_contract_address does not match"
             ).to.equal(descartesV2Impl.address.toLowerCase());
             expect(
                 state.current_epoch.input_contract_address,
-                "check current_epoch.input_contract_address"
+                "current_epoch.input_contract_address does not match"
             ).to.equal((await descartesV2Impl.getInputAddress()).toLowerCase());
             expect(
                 JSON.stringify(state.current_phase.InputAccumulation) == "{}",
@@ -907,7 +855,7 @@ describe("Descartes V2 Implementation", () => {
             ).to.equal(true);
             expect(
                 state.output_state.output_address,
-                "check output_state.output_address"
+                "output_state.output_address does not match"
             ).to.equal(
                 (await descartesV2Impl.getOutputAddress()).toLowerCase()
             );
@@ -935,10 +883,7 @@ describe("Descartes V2 Implementation", () => {
             ).to.be.revertedWith("Phase != AwaitingConsensus");
 
             state = JSON.parse(await getState(initialState)); // update state
-            expect(
-                "InputAccumulation" in state.current_phase,
-                "current phase should still be InputAccumulation"
-            ).to.equal(true);
+            checkCurrentPhase(state, "InputAccumulation");
 
             // *** EPOCH 0: input duration has past, now make a claim ***
             await network.provider.send("evm_increaseTime", [
@@ -950,14 +895,8 @@ describe("Descartes V2 Implementation", () => {
             );
 
             state = JSON.parse(await getState(initialState)); // update state
-            expect(
-                parseInt(state.current_epoch.epoch_number, 16),
-                "inputDuration for epoch 0 has past, now accumulating inputs for epoch 1"
-            ).to.equal(1);
-            expect(
-                "AwaitingConsensusNoConflict" in state.current_phase,
-                "someone has claimed, now the phase should be AwaitingConsensusNoConflict"
-            ).to.equal(true);
+            checkCurrentEpochNum(state, "0x1");
+            checkCurrentPhase(state, "AwaitingConsensusNoConflict");
             expect(
                 parseInt(
                     state.current_phase.AwaitingConsensusNoConflict
@@ -970,14 +909,14 @@ describe("Descartes V2 Implementation", () => {
                 ethers.utils.formatBytes32String("hello") in
                     state.current_phase.AwaitingConsensusNoConflict
                         .claimed_epoch.claims.claims,
-                "check the value of the claim"
+                "the value of the claim does not match"
             ).to.equal(true);
             expect(
                 state.current_phase.AwaitingConsensusNoConflict.claimed_epoch
                     .claims.claims[
                     ethers.utils.formatBytes32String("hello")
                 ][0],
-                "check the sender address of the claim"
+                "the sender address of the claim does not match"
             ).to.equal((await signers[0].getAddress()).toLowerCase());
             expect(
                 parseInt(
@@ -985,7 +924,7 @@ describe("Descartes V2 Implementation", () => {
                         .claimed_epoch.claims.first_claim_timestamp,
                     16
                 ),
-                "check the timestamp of the first claim"
+                "the timestamp of the first claim does not match"
             ).to.equal((await ethers.provider.getBlock("latest")).timestamp);
             // inputs are tested in the input delegate tests
 
@@ -1019,36 +958,13 @@ describe("Descartes V2 Implementation", () => {
                 .claim(ethers.utils.formatBytes32String("hello"));
 
             state = JSON.parse(await getState(initialState)); // update state
-            expect(
-                state.finalized_epochs.finalized_epochs[0].epoch_number,
-                "finalized epoch number"
-            ).to.equal("0x0");
-            expect(
-                state.finalized_epochs.finalized_epochs[0].hash,
-                "finalized hash"
-            ).to.equal(ethers.utils.formatBytes32String("hello"));
-            // inputs are tested in the input delegate tests
-            expect(
-                state.finalized_epochs.finalized_epochs[0].finalized_block_hash,
-                "check finalized_block_hash"
-            ).to.equal((await ethers.provider.getBlock("latest")).hash);
-            expect(
-                parseInt(
-                    state.finalized_epochs.finalized_epochs[0]
-                        .finalized_block_number,
-                    16
-                ),
-                "check finalized_block_number"
-            ).to.equal((await ethers.provider.getBlock("latest")).number);
-
-            expect(
-                state.current_epoch.epoch_number,
-                "since epoch 0 just finalized, the current epoch should still be 1"
-            ).to.equal("0x1");
-            expect(
-                "InputAccumulation" in state.current_phase,
-                "same reason as above, current phase should be InputAccumulation"
-            ).to.equal(true);
+            await checkFinalizedEpoch(
+                state,
+                0,
+                ethers.utils.formatBytes32String("hello")
+            );
+            checkCurrentEpochNum(state, "0x1");
+            checkCurrentPhase(state, "InputAccumulation");
 
             // *** EPOCH 1: sealed epoch ***
             await network.provider.send("evm_increaseTime", [
@@ -1057,18 +973,12 @@ describe("Descartes V2 Implementation", () => {
             await network.provider.send("evm_mine");
 
             state = JSON.parse(await getState(initialState)); // update state
-            expect(
-                state.current_epoch.epoch_number,
-                "input duration for epoch 1 has past, now accumulating inputs for epoch 2"
-            ).to.equal("0x2");
-            expect(
-                "EpochSealedAwaitingFirstClaim" in state.current_phase,
-                "now the Epoch 1 is sealed"
-            ).to.equal(true);
+            checkCurrentEpochNum(state, "0x2");
+            checkCurrentPhase(state, "EpochSealedAwaitingFirstClaim");
             expect(
                 state.current_phase.EpochSealedAwaitingFirstClaim.sealed_epoch
                     .epoch_number,
-                "check the sealed epoch number"
+                "the sealed epoch number does not match"
             ).to.equal("0x1");
 
             // *** EPOCH 1: conflicting claims ***
@@ -1093,14 +1003,14 @@ describe("Descartes V2 Implementation", () => {
                     .claims.claims[
                     ethers.utils.formatBytes32String("hello1")
                 ][0],
-                "check address of the first claim"
+                "address of the first claim does not match"
             ).to.equal((await signers[0].getAddress()).toLowerCase());
             expect(
                 state.current_phase.AwaitingConsensusAfterConflict.claimed_epoch
                     .claims.claims[
                     ethers.utils.formatBytes32String("not hello1")
                 ][0],
-                "check address of the challenging claim"
+                "address of the challenging claim does not match"
             ).to.equal((await signers[1].getAddress()).toLowerCase());
             expect(
                 parseInt(
@@ -1108,7 +1018,7 @@ describe("Descartes V2 Implementation", () => {
                         .claimed_epoch.claims.first_claim_timestamp,
                     16
                 ),
-                "check timestamp of the first claim"
+                "timestamp of the first claim does not match"
             ).to.equal(first_claim_timestamp);
             expect(
                 parseInt(
@@ -1116,7 +1026,7 @@ describe("Descartes V2 Implementation", () => {
                         .challenge_period_base_ts,
                     16
                 ),
-                "check timestamp of the challenging claim"
+                "timestamp of the challenging claim does not match"
             ).to.equal((await ethers.provider.getBlock("latest")).timestamp);
 
             // *** EPOCH 1: consensus waiting period times out ***
@@ -1126,10 +1036,7 @@ describe("Descartes V2 Implementation", () => {
             await network.provider.send("evm_mine");
 
             state = JSON.parse(await getState(initialState)); // update state
-            expect(
-                "ConsensusTimeout" in state.current_phase,
-                "current phase should be ConsensusTimeout"
-            ).to.equal(true);
+            checkCurrentPhase(state, "ConsensusTimeout");
             expect(
                 state.current_phase.ConsensusTimeout.claimed_epoch.epoch_number,
                 "epoch number when ConsensusTimeout"
@@ -1140,31 +1047,13 @@ describe("Descartes V2 Implementation", () => {
 
             state = JSON.parse(await getState(initialState)); // update state
             // now can test the finalized epoch 1
-            expect(
-                state.finalized_epochs.finalized_epochs[1].epoch_number,
-                "finalized epoch number 1"
-            ).to.equal("0x1");
-            expect(
-                state.finalized_epochs.finalized_epochs[1].hash,
-                "finalized hash for epoch 1"
-            ).to.equal(ethers.utils.formatBytes32String("hello1"));
-            expect(
-                state.finalized_epochs.finalized_epochs[1].finalized_block_hash,
-                "check finalized_block_hash for epoch 1"
-            ).to.equal((await ethers.provider.getBlock("latest")).hash);
-            expect(
-                parseInt(
-                    state.finalized_epochs.finalized_epochs[1]
-                        .finalized_block_number,
-                    16
-                ),
-                "check finalized_block_number"
-            ).to.equal((await ethers.provider.getBlock("latest")).number);
+            await checkFinalizedEpoch(
+                state,
+                1,
+                ethers.utils.formatBytes32String("hello1")
+            );
 
-            expect(
-                "InputAccumulation" in state.current_phase,
-                "current phase should be InputAccumulation for epoch 2"
-            ).to.equal(true);
+            checkCurrentPhase(state, "InputAccumulation");
 
             // *** EPOCH 2 -> 3: conflicting claims but reach consensus once conflict is resolved ***
             await network.provider.send("evm_increaseTime", [
@@ -1180,35 +1069,58 @@ describe("Descartes V2 Implementation", () => {
                 .claim(ethers.utils.formatBytes32String("not hello2"));
 
             state = JSON.parse(await getState(initialState)); // update state
-            expect(
-                state.current_epoch.epoch_number,
-                "input duration for epoch 2 has past, now accumulating inputs for epoch 3"
-            ).to.equal("0x3");
-            expect(
-                "InputAccumulation" in state.current_phase,
-                "InputAccumulation of epoch 3"
-            ).to.equal(true);
-
-            expect(
-                state.finalized_epochs.finalized_epochs[2].epoch_number,
-                "finalized epoch number 2"
-            ).to.equal("0x2");
-            expect(
-                state.finalized_epochs.finalized_epochs[2].hash,
-                "finalized hash for epoch 2"
-            ).to.equal(ethers.utils.formatBytes32String("hello2"));
-            expect(
-                state.finalized_epochs.finalized_epochs[2].finalized_block_hash,
-                "check finalized_block_hash for epoch 2"
-            ).to.equal((await ethers.provider.getBlock("latest")).hash);
-            expect(
-                parseInt(
-                    state.finalized_epochs.finalized_epochs[2]
-                        .finalized_block_number,
-                    16
-                ),
-                "check finalized_block_number"
-            ).to.equal((await ethers.provider.getBlock("latest")).number);
+            checkCurrentEpochNum(state, "0x3");
+            checkCurrentPhase(state, "InputAccumulation");
+            await checkFinalizedEpoch(
+                state,
+                2,
+                ethers.utils.formatBytes32String("hello2")
+            );
         });
     }
 });
+
+function checkCurrentPhase(state: any, phase: string) {
+    expect(
+        phase in state.current_phase,
+        "current phase does not match"
+    ).to.equal(true);
+}
+
+function checkCurrentEpochNum(state: any, epoch: string) {
+    expect(
+        state.current_epoch.epoch_number,
+        "current epoch number does not match"
+    ).to.equal(epoch);
+}
+
+// should await for this function
+async function checkFinalizedEpoch(
+    state: any,
+    epoch: number,
+    epochHash: string
+) {
+    expect(
+        parseInt(
+            state.finalized_epochs.finalized_epochs[epoch].epoch_number,
+            16
+        ),
+        "finalized epoch number does not match"
+    ).to.equal(epoch);
+    expect(
+        state.finalized_epochs.finalized_epochs[epoch].hash,
+        "finalized hash does not match"
+    ).to.equal(epochHash);
+    expect(
+        state.finalized_epochs.finalized_epochs[epoch].finalized_block_hash,
+        "finalized_block_hash does not match"
+    ).to.equal((await ethers.provider.getBlock("latest")).hash);
+    expect(
+        parseInt(
+            state.finalized_epochs.finalized_epochs[epoch]
+                .finalized_block_number,
+            16
+        ),
+        "finalized_block_number does not match"
+    ).to.equal((await ethers.provider.getBlock("latest")).number);
+}
