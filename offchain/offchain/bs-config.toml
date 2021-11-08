@@ -1,3 +1,5 @@
+[block_subscriber]
+
 # max delay between retries in seconds
 max_delay = 64
 

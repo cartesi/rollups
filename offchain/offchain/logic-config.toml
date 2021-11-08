@@ -1,6 +1,4 @@
-## CLI provided
-# descartes_contract_address
-# sender
+[logic_config]
 
 # unique session identifier for machine manager
 session_id = "default_rollups_id"
