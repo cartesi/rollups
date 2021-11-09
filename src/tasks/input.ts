@@ -12,15 +12,29 @@
 
 import { HardhatRuntimeEnvironment, TaskArguments } from "hardhat/types";
 import { task, types } from "hardhat/config";
-import { BigNumber } from "ethers";
-import { formatUnits } from "@ethersproject/units";
+import { getEvent } from "./eventUtil";
 
 task("input:addInput", "Send an input to rollups")
     .addParam("input", "bytes to processed by the offchain machine")
+    .addOptionalParam(
+        "signer",
+        "account index of the signer adding the input",
+        0,
+        types.int
+    )
     .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
         const { deployments, ethers } = hre;
-        const [signer] = await ethers.getSigners();
         let input = args.input;
+        let signerIndex = args.signer;
+        const signers = await ethers.getSigners();
+        if (signerIndex < 0 || signerIndex >= signers.length) {
+            console.error(
+                `Invalid signer account index ${signerIndex}: must be between 0 and ${signers.length}`
+            );
+            return;
+        }
+        const signer = signers[signerIndex];
+
         let dv2Deployed = await deployments.get("DescartesV2Impl");
 
         let dv2 = await ethers.getContractAt(
@@ -36,5 +50,18 @@ task("input:addInput", "Send an input to rollups")
         );
 
         const tx = await inputContract.addInput(input);
-        console.log(`${signer.address}: ${tx} : ${input}`);
+
+        const events = (await tx.wait()).events;
+        const inputAddedEvent = getEvent("InputAdded", inputContract, events);
+        if (!inputAddedEvent) {
+            console.log(
+                `Failed to add input '${input}' (signer: ${signer.address}, tx: ${tx.hash})\n`
+            );
+        } else {
+            const epochNumber = inputAddedEvent.args._epochNumber.toString();
+            const timestamp = inputAddedEvent.args._timestamp.toString();
+            console.log(
+                `Added input '${input}' to epoch '${epochNumber}' (timestamp: ${timestamp}, signer: ${signer.address}, tx: ${tx.hash})`
+            );
+        }
     });
