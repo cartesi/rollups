@@ -75,7 +75,7 @@ describe("EtherPortal Implementation", async () => {
 
     });
 
-    it("executeRollupsOutput should revert if not called from output", async () => {
+    it("executeRollupsVoucher should revert if not called from voucher", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint"],
             [
@@ -84,11 +84,11 @@ describe("EtherPortal Implementation", async () => {
             ]
         );
         await expect(
-            portalImpl.connect(signer2).executeRollupsOutput(data)
-        ).to.be.revertedWith("only outputContract");
+            portalImpl.connect(signer2).executeRollupsVoucher(data)
+        ).to.be.revertedWith("only voucherContract");
     });
 
-    it("executeRollupsOutput should emit EtherWithdrawn and return true", async () => {
+    it("executeRollupsVoucher should emit EtherWithdrawn and return true", async () => {
         // deposit ethers to portalImpl for enough balance to call function transfer() in etherWithdrawal()
         await mockInput.mock.addInput.returns(keccak256("0x00"));
         await portalImpl.etherDeposit(
@@ -108,10 +108,10 @@ describe("EtherPortal Implementation", async () => {
 
         // callStatic check return value
         expect(
-            await portalImpl.callStatic.executeRollupsOutput(data)
+            await portalImpl.callStatic.executeRollupsVoucher(data)
         ).to.equal(true);
         // check emitted event
-        await expect(portalImpl.executeRollupsOutput(data))
+        await expect(portalImpl.executeRollupsVoucher(data))
             .to.emit(portalImpl, "EtherWithdrawn")
             .withArgs(await signer.getAddress(), 10);
     });

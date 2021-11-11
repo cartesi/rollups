@@ -18,7 +18,7 @@ The Cartesi Rollups Manager is responsible for synchronicity between the modules
 - Receive and forward claims to the validator manager.
 - Forward disputes to the dispute resolution module.
 - Forward the result of disputes to the validator manager.
-- Forward the summary of finalized outputs to the output module.
+- Forward the summary of finalized vouchers to the voucher module.
 - Notify other modules of phase changes.
 
 ## Input
@@ -28,12 +28,12 @@ The on-chain contracts often have two concurrent epochs: a sealed but unfinalize
 ## Portal
 
 Portal, as the name suggests, is used to teleport assets from the Ethereum blockchain to DApps running on Cartesi Rollups. Once deposited, those Layer-1 assets gain a representation in Layer-2 and are owned, there, by whomever the depositor assigned them to. After being teleported, Layer-2 assets can be moved around in a significantly cheaper way, using simple inputs that are understood by the Linux logic. When an asset is deposited, the Portal contract sends an input to the DApp’s inbox, describing the type of asset, amount, receivers, and some data the depositor might want the DApp to read. This allows deposits and instructions to be sent as a single Layer-1 interaction.
-One could think of the Portal as a bank account, owned by the off-chain machine. Anyone can deposit assets there but only the DApp — through its output contract — can decide on withdrawals. The withdrawal process is quite simple from a user perspective. They send an input requesting a withdrawal, which gets processed and interpreted off-chain. If everything is correct, the machine creates an output destined to the Portal contract, ordering and finalizing that withdrawal request.
+One could think of the Portal as a bank account, owned by the off-chain machine. Anyone can deposit assets there but only the DApp — through its voucher contract — can decide on withdrawals. The withdrawal process is quite simple from a user perspective. They send an input requesting a withdrawal, which gets processed and interpreted off-chain. If everything is correct, the machine creates a voucher destined to the Portal contract, ordering and finalizing that withdrawal request.
 
-## Output
+## Voucher
 
-An output is a combination of a target address and a payload in bytes. It is used by the off-chain machine to respond and interact with Layer-1 smart contracts. When outputs get executed they’ll simply send a message to the target address with the payload as a parameter. Therefore, outputs can be anything ranging from providing liquidity in a DeFi protocol to withdrawing funds from the Portal. Each input can generate a number of outputs that will be available for execution once the epoch containing them is finalized.
-While the output contract is also indifferent to the content of the output being executed, it enforces some sanity checks before allowing its execution: Outputs are unique and can only be successfully executed once. Outputs are executed asynchronously and don’t require an access check. The order of execution is not enforced — as long as outputs are contained in a finalized epoch and were not executed before, the contract will allow their execution by anyone. The Output module ensures, however, that only outputs suggested by the off-chain machine and finalized on-chain can be executed. It does so by requiring a validity proof to be sent with the execute call.
+A voucher is a combination of a target address and a payload in bytes. It is used by the off-chain machine to respond and interact with Layer-1 smart contracts. When vouchers get executed they’ll simply send a message to the target address with the payload as a parameter. Therefore, vouchers can be anything ranging from providing liquidity in a DeFi protocol to withdrawing funds from the Portal. Each input can generate a number of vouchers that will be available for execution once the epoch containing them is finalized.
+While the voucher contract is also indifferent to the content of the voucher being executed, it enforces some sanity checks before allowing its execution: Vouchers are unique and can only be successfully executed once. Vouchers are executed asynchronously and don’t require an access check. The order of execution is not enforced — as long as vouchers are contained in a finalized epoch and were not executed before, the contract will allow their execution by anyone. The Voucher module ensures, however, that only vouchers suggested by the off-chain machine and finalized on-chain can be executed. It does so by requiring a validity proof to be sent with the execute call.
 
 ## Validator Manager
 
@@ -41,7 +41,7 @@ The Validator Manager module was created to help DApps manage their claims, clai
 - If the sender is not a validator or the claim is invalid, the transaction reverts.
 - If the claim is valid, doesn’t disagree with any of the other claims in the epoch, and does not generate consensus, it returns a “No Conflict” response.
 - If the claim is valid but disagrees with another claim for that epoch, it warns Cartesi Rollups Manager that a conflict is happening and what are the conflicting claims and claimants involved. When that dispute is resolved the validator manager module gets notified so it can deal however it likes with the validators involved. In our initially suggested implementation, the loser of a dispute gets removed from the validator set.
-- If the claim is valid, agrees with all other claims in that epoch, and is the last claim to be received, it lets Cartesi Rollups know that consensus was reached. This allows the rollups DApp to finalize the epoch and allow for the execution of its outputs.
+- If the claim is valid, agrees with all other claims in that epoch, and is the last claim to be received, it lets Cartesi Rollups know that consensus was reached. This allows the rollups DApp to finalize the epoch and allow for the execution of its vouchers.
 Regardless of what the name might suggest, validators do not interact with this module at all.
 
 ## Dispute Resolution

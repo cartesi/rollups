@@ -6,8 +6,8 @@ import {
     deployMockContract,
     MockContract,
 } from "@ethereum-waffle/mock-contract";
-import { OutputImpl } from "../src/types/OutputImpl";
-import { OutputImpl__factory } from "../src/types/factories/OutputImpl__factory";
+import { VoucherImpl } from "../src/types/VoucherImpl";
+import { VoucherImpl__factory } from "../src/types/factories/VoucherImpl__factory";
 import { Merkle } from "../src/types/Merkle";
 import { CartesiMath } from "../src/types/CartesiMath";
 import { Bytes, BytesLike } from "@ethersproject/bytes";
@@ -16,20 +16,20 @@ import { getState } from "./getState";
 
 use(solidity);
 
-// In the test epoch, we have 2 inputs. For Input1, we have only Output0.
+// In the test epoch, we have 2 inputs. For Input1, we have only Voucher0.
 // The payload that we use is to execute functions of a simple contract.
 // Normally, the address of that contract may change on different machines, resulting in different merkle proofs.
 // That's why we deploy that contract deterministically.
 
-// In case you need to modify proofs, modify the value of `outputMetadataArrayDriveHash` and `epochOutputDriveHash`
+// In case you need to modify proofs, modify the value of `voucherMetadataArrayDriveHash` and `epochVoucherDriveHash`
 
 // Steps for modification are as follows:
-// 1. uncomment lines `console.log(encodedOutput);`.
-// 2. keccak256 the value of encodedOutput
-// 3. take the keccak value and replace into the variable `KeccakForOutput0` in "shell.sh"
-// 4. run the script and modify values of `outputMetadataArrayDriveHash` and `epochOutputDriveHash`
+// 1. uncomment lines `console.log(encodedVoucher);`.
+// 2. keccak256 the value of encodedVoucher
+// 3. take the keccak value and replace into the variable `KeccakForVoucher0` in "shell.sh"
+// 4. run the script and modify values of `voucherMetadataArrayDriveHash` and `epochVoucherDriveHash`
 
-describe("Output Implementation Testing", () => {
+describe("Voucher Implementation Testing", () => {
     let enableDelegate = process.env["DELEGATE_TEST"];
 
     /// for tests when modifiers are on, set this to true
@@ -38,14 +38,14 @@ describe("Output Implementation Testing", () => {
 
     let signers: Signer[];
     let mockRollups: MockContract;
-    let outputImpl: OutputImpl;
+    let voucherImpl: VoucherImpl;
 
-    const log2OutputMetadataArrayDriveSize = 21;
+    const log2VoucherMetadataArrayDriveSize = 21;
 
     let simpleContractAddress: string;
     let _destination: string;
     let _payload: string;
-    let encodedOutput: string;
+    let encodedVoucher: string;
 
     beforeEach(async () => {
         await deployments.fixture();
@@ -57,7 +57,7 @@ describe("Output Implementation Testing", () => {
         mockRollups = await deployMockContract(signers[0], Rollups.abi);
 
         // deploy libraries and get addresses. Depedencies are as follows:
-        // OutputImpl <= Bitmask, Merkle
+        // VoucherImpl <= Bitmask, Merkle
         // Merkle <= CartesiMath
 
         // Bitmask
@@ -81,16 +81,16 @@ describe("Output Implementation Testing", () => {
         });
         const merkleAddress = merkle.address;
 
-        // OutputImpl
-        const { address } = await deployments.deploy("OutputImpl", {
+        // VoucherImpl
+        const { address } = await deployments.deploy("VoucherImpl", {
             from: await signers[0].getAddress(),
             libraries: {
                 Bitmask: bitMaskAddress,
                 Merkle: merkleAddress,
             },
-            args: [mockRollups.address, log2OutputMetadataArrayDriveSize],
+            args: [mockRollups.address, log2VoucherMetadataArrayDriveSize],
         });
-        outputImpl = OutputImpl__factory.connect(address, signers[0]);
+        voucherImpl = VoucherImpl__factory.connect(address, signers[0]);
 
         // deploy a simple contract to execute
         const simpleContract = await deployments.deploy("SimpleContract", {
@@ -100,16 +100,16 @@ describe("Output Implementation Testing", () => {
         simpleContractAddress = simpleContract.address;
     });
 
-    interface OutputValidityProof {
+    interface VoucherValidityProof {
         epochIndex: number;
         inputIndex: number;
-        outputIndex: number;
-        outputMetadataArrayDriveHash: BytesLike;
-        epochOutputDriveHash: BytesLike;
+        voucherIndex: number;
+        voucherMetadataArrayDriveHash: BytesLike;
+        epochVoucherDriveHash: BytesLike;
         epochMessageDriveHash: BytesLike;
         epochMachineFinalState: BytesLike;
-        outputMetadataProof: BytesLike[];
-        epochOutputDriveProof: BytesLike[];
+        voucherMetadataProof: BytesLike[];
+        epochVoucherDriveProof: BytesLike[];
     }
     // proofs are from bottom to top
     let proof1 = [
@@ -164,26 +164,26 @@ describe("Output Implementation Testing", () => {
         "0x8f6162fa308d2b3a15dc33cffac85f13ab349173121645aedf00f471663108be",
         "0x78ccaaab73373552f207a63599de54d7d8d0c1805f86ce7da15818d09f4cff62",
     ];
-    let v: OutputValidityProof = {
+    let v: VoucherValidityProof = {
         epochIndex: 0,
         inputIndex: 1,
-        outputIndex: 0,
-        outputMetadataArrayDriveHash:
+        voucherIndex: 0,
+        voucherMetadataArrayDriveHash:
             "0x84842b18ffa0a3ca497e8eb68fc326792d9141482b3cefdeee05b6c7639ccdfb",
-        epochOutputDriveHash:
+        epochVoucherDriveHash:
             "0x2157a942123603e60e93a226bf1cad66c4258675632697359d6845c186ff47d4",
         epochMessageDriveHash:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d45",
         epochMachineFinalState:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d46",
-        outputMetadataProof: proof1,
-        epochOutputDriveProof: proof2,
+        voucherMetadataProof: proof1,
+        epochVoucherDriveProof: proof2,
     };
     let epochHash = keccak256(
         ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint", "uint"],
             [
-                v.epochOutputDriveHash,
+                v.epochVoucherDriveHash,
                 v.epochMessageDriveHash,
                 v.epochMachineFinalState,
             ]
@@ -199,12 +199,12 @@ describe("Output Implementation Testing", () => {
     it("Initialization", async () => {
         _destination = simpleContractAddress;
         _payload = iface.encodeFunctionData("simple_function()");
-        encodedOutput = ethers.utils.defaultAbiCoder.encode(
+        encodedVoucher = ethers.utils.defaultAbiCoder.encode(
             ["uint", "bytes"],
             [_destination, _payload]
         );
-        // console.log(encodedOutput);
-        // example of encodedOutput
+        // console.log(encodedVoucher);
+        // example of encodedVoucher
         // 0x
         // 0000000000000000000000005fbdb2315678afecb367f032d93f642f64180aa3
         // 0000000000000000000000000000000000000000000000000000000000000040
@@ -212,19 +212,19 @@ describe("Output Implementation Testing", () => {
         // b97dd9e200000000000000000000000000000000000000000000000000000000
 
         expect(
-            await outputImpl.getNumberOfFinalizedEpochs(),
+            await voucherImpl.getNumberOfFinalizedEpochs(),
             "check initial epoch number"
         ).to.equal(0);
     });
 
     if (!permissionModifiersOn) {
         // disable modifiers to call onNewEpoch()
-        it("executeOutput(): execute SimpleContract.simple_function()", async () => {
-            // onNewEpoch() should be called first to push some epochHashes before calling executeOutput()
+        it("executeVoucher(): execute SimpleContract.simple_function()", async () => {
+            // onNewEpoch() should be called first to push some epochHashes before calling executeVoucher()
             // we need permission modifier off to call onNewEpoch()
-            await outputImpl.onNewEpoch(epochHash);
+            await voucherImpl.onNewEpoch(epochHash);
             expect(
-                await outputImpl.callStatic.executeOutput(
+                await voucherImpl.callStatic.executeVoucher(
                     _destination,
                     _payload,
                     v
@@ -232,36 +232,36 @@ describe("Output Implementation Testing", () => {
             ).to.equal(true);
         });
 
-        it("executeOutput(): execute SimpleContract.simple_function(bytes32)", async () => {
+        it("executeVoucher(): execute SimpleContract.simple_function(bytes32)", async () => {
             let _payload_new = iface.encodeFunctionData(
                 "simple_function(bytes32)",
                 [ethers.utils.formatBytes32String("hello")]
             );
-            let encodedOutput_new = ethers.utils.defaultAbiCoder.encode(
+            let encodedVoucher_new = ethers.utils.defaultAbiCoder.encode(
                 ["uint", "bytes"],
                 [_destination, _payload_new]
             );
-            // console.log(encodedOutput_new);
+            // console.log(encodedVoucher_new);
 
             let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-            v_new.outputMetadataArrayDriveHash =
+            v_new.voucherMetadataArrayDriveHash =
                 "0xc26ccca0f2995d3584e183ff7d8e2cd9f6ac01e263a3beb8f1a2345638d2bc9c";
-            v_new.epochOutputDriveHash =
+            v_new.epochVoucherDriveHash =
                 "0x4ddc5a9a0f46871a08135296b981b86a8bca580c7f7d7de7c473089f234abab1";
             let epochHash_new = keccak256(
                 ethers.utils.defaultAbiCoder.encode(
                     ["uint", "uint", "uint"],
                     [
-                        v_new.epochOutputDriveHash,
+                        v_new.epochVoucherDriveHash,
                         v_new.epochMessageDriveHash,
                         v_new.epochMachineFinalState,
                     ]
                 )
             );
 
-            await outputImpl.onNewEpoch(epochHash_new);
+            await voucherImpl.onNewEpoch(epochHash_new);
             expect(
-                await outputImpl.callStatic.executeOutput(
+                await voucherImpl.callStatic.executeVoucher(
                     _destination,
                     _payload_new,
                     v_new
@@ -269,33 +269,33 @@ describe("Output Implementation Testing", () => {
             ).to.equal(true);
         });
 
-        it("executeOutput(): should return false if the function to be executed failed (in this case the function does NOT exist)", async () => {
+        it("executeVoucher(): should return false if the function to be executed failed (in this case the function does NOT exist)", async () => {
             let _payload_new = iface.encodeFunctionData("nonExistent()");
-            let encodedOutput_new = ethers.utils.defaultAbiCoder.encode(
+            let encodedVoucher_new = ethers.utils.defaultAbiCoder.encode(
                 ["uint", "bytes"],
                 [_destination, _payload_new]
             );
-            // console.log(encodedOutput_new);
+            // console.log(encodedVoucher_new);
 
             let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-            v_new.outputMetadataArrayDriveHash =
+            v_new.voucherMetadataArrayDriveHash =
                 "0x9bfa174d480e37b808e0bf8ac3f2c5e4e25113c435dec2e353370fe956c3cb10";
-            v_new.epochOutputDriveHash =
+            v_new.epochVoucherDriveHash =
                 "0x5b0d4f6b91fdfe5eebe393a19ee03426def24e061f78b6cb57dd19ac9e5404e8";
             let epochHash_new = keccak256(
                 ethers.utils.defaultAbiCoder.encode(
                     ["uint", "uint", "uint"],
                     [
-                        v_new.epochOutputDriveHash,
+                        v_new.epochVoucherDriveHash,
                         v_new.epochMessageDriveHash,
                         v_new.epochMachineFinalState,
                     ]
                 )
             );
 
-            await outputImpl.onNewEpoch(epochHash_new);
+            await voucherImpl.onNewEpoch(epochHash_new);
             expect(
-                await outputImpl.callStatic.executeOutput(
+                await voucherImpl.callStatic.executeVoucher(
                     _destination,
                     _payload_new,
                     v_new
@@ -303,19 +303,19 @@ describe("Output Implementation Testing", () => {
             ).to.equal(false);
         });
 
-        it("executeOutput() should revert if output has already been executed", async () => {
-            await outputImpl.onNewEpoch(epochHash);
-            await outputImpl.executeOutput(_destination, _payload, v);
+        it("executeVoucher() should revert if voucher has already been executed", async () => {
+            await voucherImpl.onNewEpoch(epochHash);
+            await voucherImpl.executeVoucher(_destination, _payload, v);
             await expect(
-                outputImpl.executeOutput(_destination, _payload, v)
+                voucherImpl.executeVoucher(_destination, _payload, v)
             ).to.be.revertedWith("re-execution not allowed");
         });
 
-        it("executeOutput() should revert if proof is not valid", async () => {
-            await outputImpl.onNewEpoch(epochHash);
+        it("executeVoucher() should revert if proof is not valid", async () => {
+            await voucherImpl.onNewEpoch(epochHash);
             let _payload_new = iface.encodeFunctionData("nonExistent()");
             await expect(
-                outputImpl.executeOutput(_destination, _payload_new, v)
+                voucherImpl.executeVoucher(_destination, _payload_new, v)
             ).to.be.reverted;
         });
     }
@@ -323,49 +323,49 @@ describe("Output Implementation Testing", () => {
     /// ***test function isValidProof()///
     it("testing function isValidProof()", async () => {
         expect(
-            await outputImpl.isValidProof(encodedOutput, epochHash, v)
+            await voucherImpl.isValidProof(encodedVoucher, epochHash, v)
         ).to.equal(true);
     });
 
     it("isValidProof() should revert when _epochHash doesn't match", async () => {
         await expect(
-            outputImpl.isValidProof(
-                encodedOutput,
+            voucherImpl.isValidProof(
+                encodedVoucher,
                 ethers.utils.formatBytes32String("hello"),
                 v
             )
         ).to.be.revertedWith("epochHash incorrect");
     });
 
-    it("isValidProof() should revert when epochOutputDriveHash doesn't match", async () => {
+    it("isValidProof() should revert when epochVoucherDriveHash doesn't match", async () => {
         let tempInputIndex = v.inputIndex;
         v.inputIndex = 10;
         await expect(
-            outputImpl.isValidProof(encodedOutput, epochHash, v)
-        ).to.be.revertedWith("epochOutputDriveHash incorrect");
+            voucherImpl.isValidProof(encodedVoucher, epochHash, v)
+        ).to.be.revertedWith("epochVoucherDriveHash incorrect");
         // restore v
         v.inputIndex = tempInputIndex;
     });
 
-    it("isValidProof() should revert when outputMetadataArrayDriveHash doesn't match", async () => {
-        let tempOutputIndex = v.outputIndex;
-        v.outputIndex = 10;
+    it("isValidProof() should revert when voucherMetadataArrayDriveHash doesn't match", async () => {
+        let tempVoucherIndex = v.voucherIndex;
+        v.voucherIndex = 10;
         await expect(
-            outputImpl.isValidProof(encodedOutput, epochHash, v)
-        ).to.be.revertedWith("outputMetadataArrayDriveHash incorrect");
+            voucherImpl.isValidProof(encodedVoucher, epochHash, v)
+        ).to.be.revertedWith("voucherMetadataArrayDriveHash incorrect");
         // restore v
-        v.outputIndex = tempOutputIndex;
+        v.voucherIndex = tempVoucherIndex;
     });
 
     /// ***test function getBitMaskPosition()*** ///
     it("testing function getBitMaskPosition()", async () => {
-        const _output = 123;
+        const _voucher = 123;
         const _input = 456;
         const _epoch = 789;
         expect(
-            await outputImpl.getBitMaskPosition(_output, _input, _epoch)
+            await voucherImpl.getBitMaskPosition(_voucher, _input, _epoch)
         ).to.equal(
-            BigInt(_output) * BigInt(2 ** 128) +
+            BigInt(_voucher) * BigInt(2 ** 128) +
                 BigInt(_input) * BigInt(2 ** 64) +
                 BigInt(_epoch)
         );
@@ -376,7 +376,7 @@ describe("Output Implementation Testing", () => {
         const _index = 10;
         const _log2Size = 4;
         expect(
-            await outputImpl.getIntraDrivePosition(_index, _log2Size)
+            await voucherImpl.getIntraDrivePosition(_index, _log2Size)
         ).to.equal(_index * 2 ** _log2Size);
     });
 
@@ -384,102 +384,102 @@ describe("Output Implementation Testing", () => {
     if (permissionModifiersOn) {
         it("only Rollups can call onNewEpoch()", async () => {
             await expect(
-                outputImpl.onNewEpoch(ethers.utils.formatBytes32String("hello"))
+                voucherImpl.onNewEpoch(ethers.utils.formatBytes32String("hello"))
             ).to.be.revertedWith("Only rollups");
         });
     }
 
     if (!permissionModifiersOn) {
         it("fake onNewEpoch() to test if getNumberOfFinalizedEpochs() increases", async () => {
-            await outputImpl.onNewEpoch(
+            await voucherImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello")
             );
-            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(1);
+            expect(await voucherImpl.getNumberOfFinalizedEpochs()).to.equal(1);
 
-            await outputImpl.onNewEpoch(
+            await voucherImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello2")
             );
-            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(2);
+            expect(await voucherImpl.getNumberOfFinalizedEpochs()).to.equal(2);
 
-            await outputImpl.onNewEpoch(
+            await voucherImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello3")
             );
-            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(3);
+            expect(await voucherImpl.getNumberOfFinalizedEpochs()).to.equal(3);
         });
     }
 
-    /// ***test function getOutputMetadataLog2Size()*** ///
-    it("testing function getOutputMetadataLog2Size()", async () => {
-        expect(await outputImpl.getOutputMetadataLog2Size()).to.equal(21);
+    /// ***test function getVoucherMetadataLog2Size()*** ///
+    it("testing function getVoucherMetadataLog2Size()", async () => {
+        expect(await voucherImpl.getVoucherMetadataLog2Size()).to.equal(21);
     });
 
-    /// ***test function getEpochOutputLog2Size()*** ///
-    it("testing function getEpochOutputLog2Size()", async () => {
-        expect(await outputImpl.getEpochOutputLog2Size()).to.equal(37);
+    /// ***test function getEpochVoucherLog2Size()*** ///
+    it("testing function getEpochVoucherLog2Size()", async () => {
+        expect(await voucherImpl.getEpochVoucherLog2Size()).to.equal(37);
     });
 
     /// ***test delegate*** ///
     if (enableDelegate) {
-        it("testing output delegate", async () => {
+        it("testing voucher delegate", async () => {
             /// ***test case 1 - initial check
             let initialState = JSON.stringify({
-                output_address: outputImpl.address,
+                voucher_address: voucherImpl.address,
             });
             let state = JSON.parse(await getState(initialState));
 
-            // initial check, executed outputs should be empty
+            // initial check, executed vouchers should be empty
             expect(
-                JSON.stringify(state.outputs) == "{}",
+                JSON.stringify(state.vouchers) == "{}",
                 "initial check"
             ).to.equal(true);
 
             if (!permissionModifiersOn) {
                 // disable modifiers to call onNewEpoch()
-                /// ***test case 2 - only one output executed
-                // outputIndex: 0;
+                /// ***test case 2 - only one voucher executed
+                // voucherIndex: 0;
                 //  inputIndex: 1;
                 //  epochIndex: 0;
-                await outputImpl.onNewEpoch(epochHash);
-                await outputImpl.executeOutput(_destination, _payload, v);
+                await voucherImpl.onNewEpoch(epochHash);
+                await voucherImpl.executeVoucher(_destination, _payload, v);
 
                 state = JSON.parse(await getState(initialState));
 
-                // outputs look like { '0': { '1': { '0': true } } }
+                // vouchers look like { '0': { '1': { '0': true } } }
                 expect(
-                    Object.keys(state.outputs).length,
-                    "should have 1 executed output"
+                    Object.keys(state.vouchers).length,
+                    "should have 1 executed voucher"
                 ).to.equal(1);
                 expect(
-                    state.outputs[0][1][0],
-                    "the first output is executed successfully"
+                    state.vouchers[0][1][0],
+                    "the first voucher is executed successfully"
                 ).to.equal(true);
 
-                /// ***test case 3 - execute another output
-                // execute another output for epoch 1
+                /// ***test case 3 - execute another voucher
+                // execute another voucher for epoch 1
                 let _payload_new = iface.encodeFunctionData(
                     "simple_function(bytes32)",
                     [ethers.utils.formatBytes32String("hello")]
                 );
 
                 let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-                v_new.epochIndex = 1; // we use the same outputIndex and inputIndex
-                v_new.outputMetadataArrayDriveHash =
+                v_new.epochIndex = 1; // we use the same voucherIndex and inputIndex
+                v_new.voucherMetadataArrayDriveHash =
                     "0xc26ccca0f2995d3584e183ff7d8e2cd9f6ac01e263a3beb8f1a2345638d2bc9c";
-                v_new.epochOutputDriveHash =
+                v_new.epochVoucherDriveHash =
                     "0x4ddc5a9a0f46871a08135296b981b86a8bca580c7f7d7de7c473089f234abab1";
                 let epochHash_new = keccak256(
                     ethers.utils.defaultAbiCoder.encode(
                         ["uint", "uint", "uint"],
                         [
-                            v_new.epochOutputDriveHash,
+                            v_new.epochVoucherDriveHash,
                             v_new.epochMessageDriveHash,
                             v_new.epochMachineFinalState,
                         ]
                     )
                 );
 
-                await outputImpl.onNewEpoch(epochHash_new);
-                await outputImpl.executeOutput(
+                await voucherImpl.onNewEpoch(epochHash_new);
+                await voucherImpl.executeVoucher(
                     _destination,
                     _payload_new,
                     v_new
@@ -487,37 +487,37 @@ describe("Output Implementation Testing", () => {
 
                 state = JSON.parse(await getState(initialState));
 
-                // outputs look like { '0': { '1': { '0': true, '1': true } } }
+                // vouchers look like { '0': { '1': { '0': true, '1': true } } }
                 expect(
-                    Object.keys(state.outputs[0][1]).length,
-                    "should have 2 executed output"
+                    Object.keys(state.vouchers[0][1]).length,
+                    "should have 2 executed voucher"
                 ).to.equal(2);
                 expect(
-                    state.outputs[0][1][1],
-                    "execute the second output"
+                    state.vouchers[0][1][1],
+                    "execute the second voucher"
                 ).to.equal(true);
 
                 /// ***test case 4 - execute a non-existent function
                 _payload_new = iface.encodeFunctionData("nonExistent()");
                 v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
                 v_new.epochIndex = 2;
-                v_new.outputMetadataArrayDriveHash =
+                v_new.voucherMetadataArrayDriveHash =
                     "0x9bfa174d480e37b808e0bf8ac3f2c5e4e25113c435dec2e353370fe956c3cb10";
-                v_new.epochOutputDriveHash =
+                v_new.epochVoucherDriveHash =
                     "0x5b0d4f6b91fdfe5eebe393a19ee03426def24e061f78b6cb57dd19ac9e5404e8";
                 epochHash_new = keccak256(
                     ethers.utils.defaultAbiCoder.encode(
                         ["uint", "uint", "uint"],
                         [
-                            v_new.epochOutputDriveHash,
+                            v_new.epochVoucherDriveHash,
                             v_new.epochMessageDriveHash,
                             v_new.epochMachineFinalState,
                         ]
                     )
                 );
 
-                await outputImpl.onNewEpoch(epochHash_new);
-                await outputImpl.executeOutput(
+                await voucherImpl.onNewEpoch(epochHash_new);
+                await voucherImpl.executeVoucher(
                     _destination,
                     _payload_new,
                     v_new
@@ -527,43 +527,43 @@ describe("Output Implementation Testing", () => {
 
                 // since the execution was failed, everything should remain the same
                 expect(
-                    Object.keys(state.outputs).length,
-                    "only 1 outputIndex"
+                    Object.keys(state.vouchers).length,
+                    "only 1 voucherIndex"
                 ).to.equal(1);
                 expect(
-                    Object.keys(state.outputs[0]).length,
+                    Object.keys(state.vouchers[0]).length,
                     "1 inputIndex"
                 ).to.equal(1);
                 expect(
-                    Object.keys(state.outputs[0][1]).length,
+                    Object.keys(state.vouchers[0][1]).length,
                     "2 epochIndex"
                 ).to.equal(2);
 
-                /// ***test case 5 - re-execute an already executed output
+                /// ***test case 5 - re-execute an already executed voucher
                 /// ***and test case 6 - proof not valid
-                /// after these 2 failure cases, the executed outputs should remain the same
+                /// after these 2 failure cases, the executed vouchers should remain the same
                 await expect(
-                    outputImpl.executeOutput(_destination, _payload, v),
+                    voucherImpl.executeVoucher(_destination, _payload, v),
                     "already executed, should revert"
                 ).to.be.revertedWith("re-execution not allowed");
 
                 _payload_new = iface.encodeFunctionData("nonExistent()");
                 await expect(
-                    outputImpl.executeOutput(_destination, _payload_new, v),
+                    voucherImpl.executeVoucher(_destination, _payload_new, v),
                     "proof not valid, should revert"
                 ).to.be.reverted;
 
                 state = JSON.parse(await getState(initialState));
                 expect(
-                    Object.keys(state.outputs).length,
-                    "still only 1 outputIndex"
+                    Object.keys(state.vouchers).length,
+                    "still only 1 voucherIndex"
                 ).to.equal(1);
                 expect(
-                    Object.keys(state.outputs[0]).length,
+                    Object.keys(state.vouchers[0]).length,
                     "still 1 inputIndex"
                 ).to.equal(1);
                 expect(
-                    Object.keys(state.outputs[0][1]).length,
+                    Object.keys(state.vouchers[0][1]).length,
                     "still 2 epochIndex"
                 ).to.equal(2);
             }

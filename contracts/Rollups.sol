@@ -14,7 +14,7 @@
 pragma solidity >=0.7.0;
 
 import "./Input.sol";
-import "./Output.sol";
+import "./Voucher.sol";
 import "./ValidatorManager.sol";
 
 interface Rollups {
@@ -63,8 +63,8 @@ interface Rollups {
     /// @notice returns address of input contract
     function getInputAddress() external view returns (address);
 
-    /// @notice returns address of output contract
-    function getOutputAddress() external view returns (address);
+    /// @notice returns address of voucher contract
+    function getVoucherAddress() external view returns (address);
 
     /// @notice returns address of validator manager contract
     function getValidatorManagerAddress() external view returns (address);
@@ -76,14 +76,14 @@ interface Rollups {
 
     /// @notice contract created
     /// @param _input address of input contract
-    /// @param _output address of output contract
+    /// @param _voucher address of voucher contract
     /// @param _validatorManager address of validatorManager contract
     /// @param _disputeManager address of disputeManager contract
     /// @param _inputDuration duration of input accumulation phase in seconds
     /// @param _challengePeriod duration of challenge period in seconds
     event RollupsCreated(
         address _input,
-        address _output,
+        address _voucher,
         address _validatorManager,
         address _disputeManager,
         uint256 _inputDuration,

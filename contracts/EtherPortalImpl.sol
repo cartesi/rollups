@@ -17,17 +17,17 @@ import "./EtherPortal.sol";
 import "./Input.sol";
 
 contract EtherPortalImpl is EtherPortal {
-    address immutable outputContract;
+    address immutable voucherContract;
     Input immutable inputContract;
 
-    modifier onlyOutputContract {
-        require(msg.sender == outputContract, "only outputContract");
+    modifier onlyVoucherContract {
+        require(msg.sender == voucherContract, "only voucherContract");
         _;
     }
 
-    constructor(address _inputContract, address _outputContract) {
+    constructor(address _inputContract, address _voucherContract) {
         inputContract = Input(_inputContract);
-        outputContract = _outputContract;
+        voucherContract = _voucherContract;
     }
 
     /// @notice deposit an amount of Ether in the portal contract and create Ether in L2
@@ -43,13 +43,13 @@ contract EtherPortalImpl is EtherPortal {
         return inputContract.addInput(input);
     }
 
-    /// @notice executes a rollups output
-    /// @param _data data with information necessary to execute output
-    /// @dev can only be called by Output contract
-    function executeRollupsOutput(bytes calldata _data)
+    /// @notice executes a rollups voucher
+    /// @param _data data with information necessary to execute voucher
+    /// @dev can only be called by Voucher contract
+    function executeRollupsVoucher(bytes calldata _data)
         public
         override
-        onlyOutputContract
+        onlyVoucherContract
         returns (bool)
     {
         (

@@ -250,14 +250,14 @@ impl MachineInterface for MachineManager {
             .context(TonicStatusError)?
             .into_inner();
 
-        let outputs_metadata_hash = epoch_response
+        let vouchers_metadata_hash = epoch_response
             .most_recent_vouchers_epoch_root_hash
-            .expect("Machine Manager should return most_recent_outputs_epoch_root_hash")
+            .expect("Machine Manager should return most_recent_vouchers_epoch_root_hash")
             .data;
 
         let messages_metadata_hash = epoch_response
             .most_recent_notices_epoch_root_hash
-            .expect("Machine Manager should return most_recent_outputs_epoch_root_hash")
+            .expect("Machine Manager should return most_recent_vouchers_epoch_root_hash")
             .data;
 
         let machine_state_hash = epoch_response
@@ -265,12 +265,12 @@ impl MachineInterface for MachineManager {
             .expect("Machine Manager should return most_recent_machine_hash")
             .data;
 
-        assert_eq!(outputs_metadata_hash.len(), 32);
+        assert_eq!(vouchers_metadata_hash.len(), 32);
         assert_eq!(messages_metadata_hash.len(), 32);
         assert_eq!(machine_state_hash.len(), 32);
 
         let claim = compute_claim_hash(
-            outputs_metadata_hash.as_slice().try_into().unwrap(),
+            vouchers_metadata_hash.as_slice().try_into().unwrap(),
             messages_metadata_hash.as_slice().try_into().unwrap(),
             machine_state_hash.as_slice().try_into().unwrap(),
         );
@@ -281,12 +281,12 @@ impl MachineInterface for MachineManager {
 
 fn compute_claim_hash(
     machine_state_hash: [u8; 32],
-    outputs_metadata_hash: [u8; 32],
+    vouchers_metadata_hash: [u8; 32],
     messages_metadata_hash: [u8; 32],
 ) -> H256 {
     let concat = [
         machine_state_hash,
-        outputs_metadata_hash,
+        vouchers_metadata_hash,
         messages_metadata_hash,
     ]
     .concat();

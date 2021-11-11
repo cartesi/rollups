@@ -24,7 +24,7 @@ describe("Rollups Implementation", () => {
     const inputDuration = 1 * DAY;
     const challengePeriod = 7 * DAY;
     const INPUT_LOG2_SIZE = 25;
-    const OUTPUT_METADATA_LOG2_SIZE = 21;
+    const VOUCHER_METADATA_LOG2_SIZE = 21;
 
     let signers: Signer[];
 
@@ -385,8 +385,8 @@ describe("Rollups Implementation", () => {
             await rollupsImpl.input()
         );
 
-        expect(eventArgs["_output"], "output address").to.equal(
-            await rollupsImpl.output()
+        expect(eventArgs["_voucher"], "voucher address").to.equal(
+            await rollupsImpl.voucher()
         );
 
         expect(
@@ -578,7 +578,7 @@ describe("Rollups Implementation", () => {
 
             // input accumulation over
             // ***epoch increases by 1***
-            // but output.getNumberOfFinalizedEpochs() stays the same temporarily
+            // but voucher.getNumberOfFinalizedEpochs() stays the same temporarily
             await network.provider.send("evm_increaseTime", [
                 inputDuration + 1,
             ]);
@@ -630,7 +630,7 @@ describe("Rollups Implementation", () => {
 
         // input accumulation over
         // ***epoch increases by 1***
-        // but output.getNumberOfFinalizedEpochs() stays the same temporarily
+        // but voucher.getNumberOfFinalizedEpochs() stays the same temporarily
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
         epochNum++;
@@ -719,14 +719,14 @@ describe("Rollups Implementation", () => {
 
     // test delegate
     if (enableDelegate) {
-        /* example Rollups delegate output looks like 
+        /* example Rollups delegate voucher looks like 
         {
             constants: {
                 input_duration: '0x15180',
                 challenge_period: '0x93a80',
                 contract_creation_timestamp: '0x616e3ac3',
                 input_contract_address: '0xd8058efe0198ae9dd7d563e1b4938dcbc86a1f81',
-                output_contract_address: '0x6d544390eb535d61e196c87d6b9c80dcd8628acd',
+                voucher_contract_address: '0x6d544390eb535d61e196c87d6b9c80dcd8628acd',
                 validator_contract_address: '0xb1ede3f5ac8654124cb5124adf0fd3885cbdd1f7',
                 dispute_contract_address: '0xa6d6d7c556ce6ada136ba32dbe530993f128ca44',
                 rollups_contract_address: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9'
@@ -749,9 +749,9 @@ describe("Rollups Implementation", () => {
                 input_contract_address: '0xd8058efe0198ae9dd7d563e1b4938dcbc86a1f81'
             },
             current_phase: { InputAccumulation: {} },
-            output_state: {
-                output_address: '0x6d544390eb535d61e196c87d6b9c80dcd8628acd',
-                outputs: {}
+            voucher_state: {
+                voucher_address: '0x6d544390eb535d61e196c87d6b9c80dcd8628acd',
+                vouchers: {}
             }
         }
         */
@@ -779,10 +779,10 @@ describe("Rollups Implementation", () => {
                 "input contract address does not match"
             ).to.equal((await rollupsImpl.getInputAddress()).toLowerCase());
             expect(
-                state.constants.output_contract_address,
-                "output contract address does not match"
+                state.constants.voucher_contract_address,
+                "voucher contract address does not match"
             ).to.equal(
-                (await rollupsImpl.getOutputAddress()).toLowerCase()
+                (await rollupsImpl.getVoucherAddress()).toLowerCase()
             );
             expect(
                 state.constants.validator_contract_address,
@@ -854,14 +854,14 @@ describe("Rollups Implementation", () => {
                 "initial phase"
             ).to.equal(true);
             expect(
-                state.output_state.output_address,
-                "output_state.output_address does not match"
+                state.voucher_state.voucher_address,
+                "voucher_state.voucher_address does not match"
             ).to.equal(
-                (await rollupsImpl.getOutputAddress()).toLowerCase()
+                (await rollupsImpl.getVoucherAddress()).toLowerCase()
             );
             expect(
-                JSON.stringify(state.output_state.outputs) == "{}",
-                "initially there's no outputs"
+                JSON.stringify(state.voucher_state.vouchers) == "{}",
+                "initially there's no vouchers"
             ).to.equal(true);
 
             // *** EPOCH 0: claim when the input duration has not past ***

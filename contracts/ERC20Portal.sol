@@ -25,10 +25,10 @@ interface ERC20Portal {
         bytes calldata _data
     ) external returns (bytes32);
 
-    /// @notice execute a rollups output
-    /// @param _data data with information necessary to execute output
-    /// @dev can only be called by Output contract
-    function executeRollupsOutput(bytes calldata _data)
+    /// @notice execute a rollups voucher
+    /// @param _data data with information necessary to execute voucher
+    /// @dev can only be called by Voucher contract
+    function executeRollupsVoucher(bytes calldata _data)
         external
         returns (bool);
 

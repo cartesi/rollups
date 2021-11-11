@@ -14,7 +14,7 @@
 pragma solidity ^0.8.0;
 
 import "./InputImpl.sol";
-import "./OutputImpl.sol";
+import "./VoucherImpl.sol";
 import "./ValidatorManagerImpl.sol";
 import "./Rollups.sol";
 import "./DisputeManagerImpl.sol";
@@ -41,7 +41,7 @@ contract RollupsImpl is Rollups {
     ///
 
     InputImpl public input; // contract responsible for inputs
-    OutputImpl public output; // contract responsible for outputs
+    VoucherImpl public voucher; // contract responsible for vouchers
     ValidatorManagerImpl public validatorManager; // contract responsible for validators
     DisputeManagerImpl public disputeManager; // contract responsible for dispute resolution
 
@@ -72,7 +72,7 @@ contract RollupsImpl is Rollups {
     /// @param _inputDuration duration of input accumulation phase in seconds
     /// @param _challengePeriod duration of challenge period in seconds
     /// @param _inputLog2Size size of the input drive in this machine
-    /// @param _log2OutputMetadataArrayDriveSize size of the output metadata array
+    /// @param _log2VoucherMetadataArrayDriveSize size of the voucher metadata array
     //                                           drive in this machine
     /// @param _validators initial validator set
     constructor(
@@ -80,15 +80,15 @@ contract RollupsImpl is Rollups {
         uint256 _challengePeriod,
         // input constructor variables
         uint256 _inputLog2Size,
-        // output constructor variables
-        uint256 _log2OutputMetadataArrayDriveSize,
+        // voucher constructor variables
+        uint256 _log2VoucherMetadataArrayDriveSize,
         // validator manager constructor variables
         address payable[] memory _validators
     ) {
         input = new InputImpl(address(this), _inputLog2Size);
-        output = new OutputImpl(
+        voucher = new VoucherImpl(
             address(this),
-            _log2OutputMetadataArrayDriveSize
+            _log2VoucherMetadataArrayDriveSize
         );
         validatorManager = new ValidatorManagerImpl(address(this), _validators);
         disputeManager = new DisputeManagerImpl(address(this));
@@ -103,7 +103,7 @@ contract RollupsImpl is Rollups {
 
         emit RollupsCreated(
             address(input),
-            address(output),
+            address(voucher),
             address(validatorManager),
             address(disputeManager),
             _inputDuration,
@@ -151,7 +151,7 @@ contract RollupsImpl is Rollups {
         // emit the claim event before processing it
         // so if the epoch is finalized in this claim (consensus)
         // the number of final epochs doesnt gets contaminated
-        emit Claim(output.getNumberOfFinalizedEpochs(), msg.sender, _epochHash);
+        emit Claim(voucher.getNumberOfFinalizedEpochs(), msg.sender, _epochHash);
 
         resolveValidatorResult(result, claims, claimers);
     }
@@ -235,10 +235,10 @@ contract RollupsImpl is Rollups {
 
         bytes32 finalClaim = validatorManager.onNewEpoch();
 
-        // emit event before finalized epoch is added to outputs storage
-        emit FinalizeEpoch(output.getNumberOfFinalizedEpochs(), finalClaim);
+        // emit event before finalized epoch is added to vouchers storage
+        emit FinalizeEpoch(voucher.getNumberOfFinalizedEpochs(), finalClaim);
 
-        output.onNewEpoch(finalClaim);
+        voucher.onNewEpoch(finalClaim);
         input.onNewEpoch();
     }
 
@@ -277,7 +277,7 @@ contract RollupsImpl is Rollups {
     //       one awaiting consensus/dispute and another accumulating input
 
     function getCurrentEpoch() public view override returns (uint256) {
-        uint256 finalizedEpochs = output.getNumberOfFinalizedEpochs();
+        uint256 finalizedEpochs = voucher.getNumberOfFinalizedEpochs();
 
         Phase currentPhase = Phase(storageVar.currentPhase_int);
 
@@ -292,9 +292,9 @@ contract RollupsImpl is Rollups {
         return address(input);
     }
 
-    /// @notice returns address of output contract
-    function getOutputAddress() public view override returns (address) {
-        return address(output);
+    /// @notice returns address of voucher contract
+    function getVoucherAddress() public view override returns (address) {
+        return address(voucher);
     }
 
     /// @notice returns address of validator manager contract

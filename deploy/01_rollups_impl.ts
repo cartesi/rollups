@@ -33,7 +33,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const INPUT_DURATION = 1 * DAY;
     const CHALLENGE_PERIOD = 7 * DAY;
     const INPUT_LOG2_SIZE = 25;
-    const OUTPUT_METADATA_LOG2_SIZE = 21;
+    const VOUCHER_METADATA_LOG2_SIZE = 21;
 
     let signers = await ethers.getSigners();
 
@@ -69,7 +69,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             INPUT_DURATION,
             CHALLENGE_PERIOD,
             INPUT_LOG2_SIZE,
-            OUTPUT_METADATA_LOG2_SIZE,
+            VOUCHER_METADATA_LOG2_SIZE,
             [
                 await signers[0].getAddress(),
                 await signers[1].getAddress(),
@@ -80,16 +80,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let rollupsImpl = RollupsImpl__factory.connect(address, signers[0]);
 
     let inputAddress = await rollupsImpl.getInputAddress();
-    let outputAddress = await rollupsImpl.getOutputAddress();
+    let voucherAddress = await rollupsImpl.getVoucherAddress();
 
     let erc20PortalImpl = await deployments.deploy("ERC20PortalImpl", {
         from: await signers[0].getAddress(),
-        args: [inputAddress, outputAddress],
+        args: [inputAddress, voucherAddress],
     });
 
     let etherPortalImpl = await deployments.deploy("EtherPortalImpl", {
         from: await signers[0].getAddress(),
-        args: [inputAddress, outputAddress],
+        args: [inputAddress, voucherAddress],
     });
 
     console.log("Rollups Impl address: " + rollupsImpl.address);
@@ -99,7 +99,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     );
     console.log("Rollups accumulation start: " + await rollupsImpl.getInputAccumulationStart());
     console.log("Input address " + inputAddress);
-    console.log("Output address " + outputAddress);
+    console.log("Voucher address " + voucherAddress);
     console.log("Ether Portal address " + etherPortalImpl.address);
     console.log("ERC20 Portal address " + erc20PortalImpl.address);
 };

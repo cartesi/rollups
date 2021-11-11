@@ -107,7 +107,7 @@ describe("SERC20Portal Implementation", async () => {
         ).to.equal(B32str);
     });
 
-    it("executeRollupsOutput should revert if not called from output", async () => {
+    it("executeRollupsVoucher should revert if not called from voucher", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint"],
             [
@@ -116,11 +116,11 @@ describe("SERC20Portal Implementation", async () => {
             ]
         );
         await expect(
-            portalImpl.connect(signer2).executeRollupsOutput(data)
-        ).to.be.revertedWith("only outputContract");
+            portalImpl.connect(signer2).executeRollupsVoucher(data)
+        ).to.be.revertedWith("only voucherContract");
     });
 
-    it("executeRollupsOutput should emit SERC20Withdrawn and return true", async () => {
+    it("executeRollupsVoucher should emit SERC20Withdrawn and return true", async () => {
         await mockERC20.mock.transfer.returns(true);
 
         let data = ethers.utils.defaultAbiCoder.encode(
@@ -133,10 +133,10 @@ describe("SERC20Portal Implementation", async () => {
 
         // callStatic check return value
         expect(
-            await portalImpl.callStatic.executeRollupsOutput(data)
+            await portalImpl.callStatic.executeRollupsVoucher(data)
         ).to.equal(true);
         // check emitted event
-        await expect(portalImpl.executeRollupsOutput(data))
+        await expect(portalImpl.executeRollupsVoucher(data))
             .to.emit(portalImpl, "SERC20Withdrawn")
             .withArgs(await signer.getAddress(), 10);
     });

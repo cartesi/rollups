@@ -19,18 +19,18 @@ import "./SERC20Portal.sol";
 import "./Input.sol";
 
 contract SERC20PortalImpl is SERC20Portal {
-    address immutable outputContract;
+    address immutable voucherContract;
     Input immutable inputContract;
     IERC20 immutable erc20Contract;
 
-    modifier onlyOutputContract {
-        require(msg.sender == outputContract, "only outputContract");
+    modifier onlyVoucherContract {
+        require(msg.sender == voucherContract, "only voucherContract");
         _;
     }
 
-    constructor(address _inputContract, address _outputContract, address _erc20Contract) {
+    constructor(address _inputContract, address _voucherContract, address _erc20Contract) {
         inputContract = Input(_inputContract);
-        outputContract = _outputContract;
+        voucherContract = _voucherContract;
         erc20Contract = IERC20(_erc20Contract);
     }
 
@@ -58,13 +58,13 @@ contract SERC20PortalImpl is SERC20Portal {
         return inputContract.addInput(input);
     }
 
-    /// @notice executes a rollups output
-    /// @param _data data with information necessary to execute output
-    /// @dev can only be called by Output contract
-    function executeRollupsOutput(bytes calldata _data)
+    /// @notice executes a rollups voucher
+    /// @param _data data with information necessary to execute voucher
+    /// @dev can only be called by Voucher contract
+    function executeRollupsVoucher(bytes calldata _data)
         public
         override
-        onlyOutputContract
+        onlyVoucherContract
         returns (bool)
     {
         (

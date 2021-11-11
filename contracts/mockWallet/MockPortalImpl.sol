@@ -19,12 +19,12 @@ import "./MockPortal.sol";
 import "./MockInput.sol";
 
 contract MockPortalImpl is MockPortal {
-    address immutable outputContract;
+    address immutable voucherContract;
     MockInput immutable inputContract;
     bool lock;
 
-    modifier onlyOutputContract {
-        require(msg.sender == outputContract, "msg.sender != outputContract");
+    modifier onlyVoucherContract {
+        require(msg.sender == voucherContract, "msg.sender != voucherContract");
         _;
     }
 
@@ -37,9 +37,9 @@ contract MockPortalImpl is MockPortal {
         lock = false;
     }
 
-    constructor(address _inputContract, address _outputContract) {
+    constructor(address _inputContract, address _voucherContract) {
         inputContract = MockInput(_inputContract);
-        outputContract = _outputContract;
+        voucherContract = _voucherContract;
     }
 
     /// @notice deposits ether in portal contract and create ether in L2
@@ -125,14 +125,14 @@ contract MockPortalImpl is MockPortal {
         return inputContract.addInput(input, uint256(Operation.ERC20Op));
     }
 
-    /// @notice executes a rollups output
-    /// @param _data data with information necessary to execute output
-    /// @return status of output execution
-    /// @dev can only be called by Output contract
-    function executeRollupsOutput(bytes calldata _data)
+    /// @notice executes a rollups voucher
+    /// @param _data data with information necessary to execute voucher
+    /// @return status of voucher execution
+    /// @dev can only be called by Voucher contract
+    function executeRollupsVoucher(bytes calldata _data)
         public
         override
-        onlyOutputContract
+        onlyVoucherContract
         returns (bool)
     {
         // TODO: should use assembly to figure out where the first
@@ -164,7 +164,7 @@ contract MockPortalImpl is MockPortal {
     /// @return status of withdrawal
     function etherWithdrawal(address payable _receiver, uint256 _amount)
         internal
-        onlyOutputContract
+        onlyVoucherContract
         returns (bool)
     {
         // transfer reverts on failure
@@ -183,7 +183,7 @@ contract MockPortalImpl is MockPortal {
         address _ERC20,
         address payable _receiver,
         uint256 _amount
-    ) internal onlyOutputContract returns (bool) {
+    ) internal onlyVoucherContract returns (bool) {
         IERC20 token = IERC20(_ERC20);
 
         // transfer reverts on failure

@@ -51,11 +51,13 @@ interface MockPortal {
         bytes calldata _data
     ) external returns (bytes32);
 
-    /// @notice executes a rollups output
-    /// @param _data data with information necessary to execute output
-    /// @return status of output execution
-    /// @dev can only be called by Output contract
-    function executeRollupsOutput(bytes calldata _data) external returns (bool);
+    /// @notice executes a rollups voucher
+    /// @param _data data with information necessary to execute voucher
+    /// @return status of voucher execution
+    /// @dev can only be called by Voucher contract
+    function executeRollupsVoucher(bytes calldata _data)
+        external
+        returns (bool);
 
     // @notice emitted on Ether deposited
     event EtherDeposited(

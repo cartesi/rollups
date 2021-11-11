@@ -12,20 +12,20 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 struct InitialState {
-    output_address: Address,
+    voucher_address: Address,
 }
 
-pub struct OutputDelegateManager {
+pub struct VoucherDelegateManager {
     pub fold: Arc<
         StateFold<
-            offchain::fold::output_delegate::OutputFoldDelegate,
+            offchain::fold::voucher_delegate::VoucherFoldDelegate,
             Access<Provider<Http>>,
         >,
     >,
 }
 
 #[tonic::async_trait]
-impl DelegateManager for OutputDelegateManager {
+impl DelegateManager for VoucherDelegateManager {
     async fn get_state(
         &self,
         request: Request<GetStateRequest>,
@@ -45,7 +45,7 @@ impl DelegateManager for OutputDelegateManager {
 
         let contract_state = self
             .fold
-            .get_state_for_block(&initial_state.output_address, None)
+            .get_state_for_block(&initial_state.voucher_address, None)
             .await
             .map_err(|e| Status::new(Code::Unavailable, format!("{}", e)))?
             .state;
