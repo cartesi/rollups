@@ -117,7 +117,7 @@ contract VoucherImpl is Voucher {
             keccak256(
                 abi.encodePacked(
                     _v.epochVoucherDriveHash,
-                    _v.epochMessageDriveHash,
+                    _v.epochNoticeDriveHash,
                     _v.epochMachineFinalState
                 )
             ) == _epochHash,

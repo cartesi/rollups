@@ -19,7 +19,7 @@ interface Voucher {
     /// @param _voucherIndex index of voucher inside the input
     /// @param _voucherMetadataArrayDriveHash hash of the vouchers metadata drive where this voucher is in
     /// @param _epochVoucherDriveHash merkle root of all epoch's voucher metadata drive hashes
-    /// @param _epochMessageDriveHash hash of MessageMetadataArrayDrive
+    /// @param _epochNoticeDriveHash hash of NoticeMetadataArrayDrive
     /// @param _epochMachineFinalState hash of the machine state claimed this epoch
     /// @param _voucherMetadataProof proof that this voucher's metadata is in meta data drive
     /// @param _epochVoucherDriveProof proof that this voucher metadata drive is in epoch's Voucher drive
@@ -29,7 +29,7 @@ interface Voucher {
         uint256 voucherIndex;
         bytes32 voucherMetadataArrayDriveHash;
         bytes32 epochVoucherDriveHash;
-        bytes32 epochMessageDriveHash;
+        bytes32 epochNoticeDriveHash;
         bytes32 epochMachineFinalState;
         bytes32[] voucherMetadataProof;
         bytes32[] epochVoucherDriveProof;

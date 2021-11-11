@@ -106,7 +106,7 @@ describe("Voucher Implementation Testing", () => {
         voucherIndex: number;
         voucherMetadataArrayDriveHash: BytesLike;
         epochVoucherDriveHash: BytesLike;
-        epochMessageDriveHash: BytesLike;
+        epochNoticeDriveHash: BytesLike;
         epochMachineFinalState: BytesLike;
         voucherMetadataProof: BytesLike[];
         epochVoucherDriveProof: BytesLike[];
@@ -172,7 +172,7 @@ describe("Voucher Implementation Testing", () => {
             "0x84842b18ffa0a3ca497e8eb68fc326792d9141482b3cefdeee05b6c7639ccdfb",
         epochVoucherDriveHash:
             "0x2157a942123603e60e93a226bf1cad66c4258675632697359d6845c186ff47d4",
-        epochMessageDriveHash:
+        epochNoticeDriveHash:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d45",
         epochMachineFinalState:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d46",
@@ -184,7 +184,7 @@ describe("Voucher Implementation Testing", () => {
             ["uint", "uint", "uint"],
             [
                 v.epochVoucherDriveHash,
-                v.epochMessageDriveHash,
+                v.epochNoticeDriveHash,
                 v.epochMachineFinalState,
             ]
         )
@@ -253,7 +253,7 @@ describe("Voucher Implementation Testing", () => {
                     ["uint", "uint", "uint"],
                     [
                         v_new.epochVoucherDriveHash,
-                        v_new.epochMessageDriveHash,
+                        v_new.epochNoticeDriveHash,
                         v_new.epochMachineFinalState,
                     ]
                 )
@@ -287,7 +287,7 @@ describe("Voucher Implementation Testing", () => {
                     ["uint", "uint", "uint"],
                     [
                         v_new.epochVoucherDriveHash,
-                        v_new.epochMessageDriveHash,
+                        v_new.epochNoticeDriveHash,
                         v_new.epochMachineFinalState,
                     ]
                 )
@@ -472,7 +472,7 @@ describe("Voucher Implementation Testing", () => {
                         ["uint", "uint", "uint"],
                         [
                             v_new.epochVoucherDriveHash,
-                            v_new.epochMessageDriveHash,
+                            v_new.epochNoticeDriveHash,
                             v_new.epochMachineFinalState,
                         ]
                     )
@@ -510,7 +510,7 @@ describe("Voucher Implementation Testing", () => {
                         ["uint", "uint", "uint"],
                         [
                             v_new.epochVoucherDriveHash,
-                            v_new.epochMessageDriveHash,
+                            v_new.epochNoticeDriveHash,
                             v_new.epochMachineFinalState,
                         ]
                     )

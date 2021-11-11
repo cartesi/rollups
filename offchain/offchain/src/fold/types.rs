@@ -134,7 +134,7 @@ impl IntoIterator for Claims {
     }
 }
 
-/// Epoch finalized on the blockchain, vouchers are executable and messages
+/// Epoch finalized on the blockchain, vouchers are executable and notices
 /// are verfiable/provable
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FinalizedEpoch {
