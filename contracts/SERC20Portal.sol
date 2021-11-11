@@ -23,10 +23,10 @@ interface SERC20Portal {
         bytes calldata _data
     ) external returns (bytes32);
 
-    /// @notice execute a descartesV2 output
+    /// @notice execute a rollups output
     /// @param _data data with information necessary to execute output
     /// @dev can only be called by Output contract
-    function executeDescartesV2Output(bytes calldata _data)
+    function executeRollupsOutput(bytes calldata _data)
         external
         returns (bool);
 

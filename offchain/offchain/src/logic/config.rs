@@ -18,9 +18,9 @@ pub struct LogicEnvCLIConfig {
     /// Signer address
     #[structopt(long, env)]
     pub sender: Option<String>,
-    /// Address of deployed descartes contract
+    /// Address of deployed rollups contract
     #[structopt(long, env)]
-    pub descartes_contract_address: Option<String>,
+    pub rollups_contract_address: Option<String>,
     /// URL of transaction signer http endpoint
     #[structopt(long, env)]
     pub signer_http_endpoint: Option<String>,
@@ -56,7 +56,7 @@ pub struct LogicEnvCLIConfig {
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct LogicFileConfig {
     pub sender: Option<String>,
-    pub descartes_contract_address: Option<String>,
+    pub rollups_contract_address: Option<String>,
     pub signer_http_endpoint: Option<String>,
     pub ws_endpoint: Option<String>,
     pub state_fold_grpc_endpoint: Option<String>,
@@ -77,7 +77,7 @@ pub struct FileConfig {
 #[derive(Clone, Debug)]
 pub struct LogicConfig {
     pub sender: Address,
-    pub descartes_contract_address: Address,
+    pub rollups_contract_address: Address,
     pub initial_epoch: U256,
 
     pub signer_http_endpoint: String,
@@ -133,10 +133,10 @@ impl LogicConfig {
             .build()
         })?;
 
-        let descartes_contract_address: Address = Address::from_str(
+        let rollups_contract_address: Address = Address::from_str(
             &env_cli_config
-                .descartes_contract_address
-                .or(file_config.descartes_contract_address)
+                .rollups_contract_address
+                .or(file_config.rollups_contract_address)
                 .ok_or(snafu::NoneError)
                 .context(config_error::FileError {
                     err: "Must specify rollups contract address",
@@ -203,7 +203,7 @@ impl LogicConfig {
 
         Ok(LogicConfig {
             sender,
-            descartes_contract_address,
+            rollups_contract_address,
             initial_epoch,
 
             signer_http_endpoint,

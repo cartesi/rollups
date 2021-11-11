@@ -20,9 +20,9 @@ interface ValidatorManager {
     // Conflict - Claim is conflicting with previous one
     enum Result {NoConflict, Consensus, Conflict}
 
-    // @notice called when a claim is received by descartesv2
+    // @notice called when a claim is received by rollups
     // @params _sender address of sender of that claim
-    // @params _claim claim received by descartesv2
+    // @params _claim claim received by rollups
     // @returns result of claim, signaling current state of claims
     function onClaim(address payable _sender, bytes32 _claim)
         external
@@ -32,7 +32,7 @@ interface ValidatorManager {
             address payable[2] memory claimers
         );
 
-    // @notice called when a dispute ends in descartesv2
+    // @notice called when a dispute ends in rollups
     // @params _winner address of dispute winner
     // @params _loser address of dispute loser
     // @returns result of dispute being finished

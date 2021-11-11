@@ -36,7 +36,7 @@ interface MockOutput {
         bytes32[] calldata _epochProof
     ) external returns (bool);
 
-    /// @notice called by descartesv2 when an epoch is finalized
+    /// @notice called by rollups when an epoch is finalized
     /// @param _epochHash hash of finalized epoch
     /// @dev an epoch being finalized means that its outputs can be called
     function onNewEpoch(bytes32 _epochHash) external;

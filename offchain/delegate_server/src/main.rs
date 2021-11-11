@@ -70,8 +70,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await
         }
         DelegateServerType::Rollups => {
-            let descartes_fold =
-                delegate_server::instantiate_descartes_fold_delegate(
+            let rollups_fold =
+                delegate_server::instantiate_rollups_fold_delegate(
                     &sf_config,
                     basic_config.url.clone(),
                 );
@@ -79,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             serve_delegate_manager(
                 "[::1]:50051",
                 delegate_server::rollups_server::RollupsDelegateManager {
-                    fold: descartes_fold,
+                    fold: rollups_fold,
                 },
                 shutdown_rx,
             )

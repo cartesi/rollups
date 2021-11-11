@@ -1,4 +1,4 @@
-use super::instantiate_block_subscriber::DescartesBlockSubscriber;
+use super::instantiate_block_subscriber::RollupsBlockSubscriber;
 use crate::error::*;
 
 use block_subscriber::BlockSubscriber;
@@ -9,7 +9,7 @@ use tx_manager::{provider::Factory, TransactionManager};
 use snafu::ResultExt;
 use std::sync::Arc;
 
-pub type DescartesTxManager = Arc<
+pub type RollupsTxManager = Arc<
     TransactionManager<
         Factory<HttpProviderFactory>,
         BlockSubscriber<WsProviderFactory>,
@@ -19,9 +19,9 @@ pub type DescartesTxManager = Arc<
 
 pub async fn instantiate_tx_manager(
     http_endpoint: String,
-    block_subscriber: DescartesBlockSubscriber,
+    block_subscriber: RollupsBlockSubscriber,
     config: &TMConfig,
-) -> Result<DescartesTxManager> {
+) -> Result<RollupsTxManager> {
     let middleware_factory = create_http_factory(http_endpoint)?;
     let factory = Factory::new(
         Arc::clone(&middleware_factory),

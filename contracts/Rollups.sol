@@ -10,14 +10,14 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Interface DescartesV2 contract
+/// @title Interface Rollups contract
 pragma solidity >=0.7.0;
 
 import "./Input.sol";
 import "./Output.sol";
 import "./ValidatorManager.sol";
 
-interface DescartesV2 {
+interface Rollups {
     // InputAccumulation - Inputs being accumulated for currrent epoch
     // AwaitingConsensus - No disagreeing claims (or no claims)
     // AwaitingDispute - Waiting for dispute to be over
@@ -81,7 +81,7 @@ interface DescartesV2 {
     /// @param _disputeManager address of disputeManager contract
     /// @param _inputDuration duration of input accumulation phase in seconds
     /// @param _challengePeriod duration of challenge period in seconds
-    event DescartesV2Created(
+    event RollupsCreated(
         address _input,
         address _output,
         address _validatorManager,

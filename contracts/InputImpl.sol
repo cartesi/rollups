@@ -14,11 +14,11 @@
 pragma solidity ^0.8.0;
 
 import "./Input.sol";
-import "./DescartesV2.sol";
+import "./Rollups.sol";
 
 // TODO: this contract seems to be very unsafe, need to think about security implications
 contract InputImpl is Input {
-    DescartesV2 immutable descartesV2; // descartes 2 contract using this input contract
+    Rollups immutable rollups; // rollups contract using this input contract
 
     // always needs to keep track of two input boxes:
     // 1 for the input accumulation of next epoch
@@ -30,12 +30,12 @@ contract InputImpl is Input {
     uint256 immutable inputDriveSize; // size of input flashdrive
     uint256 currentInputBox;
 
-    /// @param _descartesV2 address of descartesV2 contract that will manage inboxes
+    /// @param _rollups address of rollups contract that will manage inboxes
     /// @param _log2Size size of the input drive of the machine
-    constructor(address _descartesV2, uint256 _log2Size) {
+    constructor(address _rollups, uint256 _log2Size) {
         require(_log2Size >= 3 && _log2Size <= 64, "log size: [3,64]");
 
-        descartesV2 = DescartesV2(_descartesV2);
+        rollups = Rollups(_rollups);
         inputDriveSize = (1 << _log2Size);
     }
 
@@ -59,7 +59,7 @@ contract InputImpl is Input {
 
         // notifyInput returns true if that input
         // belongs to a new epoch
-        if (descartesV2.notifyInput()) {
+        if (rollups.notifyInput()) {
             swapInputBox();
         }
 
@@ -69,7 +69,7 @@ contract InputImpl is Input {
             : inputBox1.push(inputHash);
 
         emit InputAdded(
-            descartesV2.getCurrentEpoch(),
+            rollups.getCurrentEpoch(),
             msg.sender,
             block.timestamp,
             _input
@@ -103,25 +103,25 @@ contract InputImpl is Input {
 
     /// @notice called when a new input accumulation phase begins
     ///         swap inbox to receive inputs for upcoming epoch
-    /// @dev can only be called by DescartesV2 contract
+    /// @dev can only be called by Rollups contract
     function onNewInputAccumulation() public override {
-        onlyDescartesV2();
+        onlyRollups();
         swapInputBox();
     }
 
     /// @notice called when a new epoch begins, clears deprecated inputs
-    /// @dev can only be called by DescartesV2 contract
+    /// @dev can only be called by Rollups contract
     function onNewEpoch() public override {
         // clear input box for new inputs
         // the current input box should be accumulating inputs
         // for the new epoch already. So we clear the other one.
-        onlyDescartesV2();
+        onlyRollups();
         currentInputBox == 0 ? delete inputBox1 : delete inputBox0;
     }
 
-    /// @notice check if message sender is DescartesV2
-    function onlyDescartesV2() internal view {
-        require(msg.sender == address(descartesV2), "Only descartesV2");
+    /// @notice check if message sender is Rollups
+    function onlyRollups() internal view {
+        require(msg.sender == address(rollups), "Only rollups");
     }
 
     /// @notice changes current input box

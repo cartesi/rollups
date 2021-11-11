@@ -36,13 +36,13 @@ use(solidity);
 describe("Input Implementation", () => {
     let enableDelegate = process.env["DELEGATE_TEST"];
 
-    /// for testing DescartesV2 when modifiers are on, set this to true
-    /// for testing DescartesV2 when modifiers are off, set this to false
+    /// for testing Rollups when modifiers are on, set this to true
+    /// for testing Rollups when modifiers are off, set this to false
     let permissionModifiersOn = true;
 
     let signer: Signer;
     let inputImpl: InputImpl;
-    let mockDescartesv2: MockContract; //mock descartesv2 implementation
+    let mockRollups: MockContract; //mock rollups implementation
 
     const log2Size = 7;
 
@@ -50,14 +50,14 @@ describe("Input Implementation", () => {
         await deployments.fixture();
         [signer] = await ethers.getSigners();
 
-        const DescartesV2 = await deployments.getArtifact("DescartesV2");
+        const Rollups = await deployments.getArtifact("Rollups");
 
-        mockDescartesv2 = await deployMockContract(signer, DescartesV2.abi);
+        mockRollups = await deployMockContract(signer, Rollups.abi);
 
         const inputFactory = new InputImpl__factory(signer);
 
         inputImpl = await inputFactory.deploy(
-            mockDescartesv2.address,
+            mockRollups.address,
             log2Size
         );
     });
@@ -67,13 +67,13 @@ describe("Input Implementation", () => {
 
         let wrongLog2Size = 2;
         await expect(
-            inputFactory.deploy(mockDescartesv2.address, wrongLog2Size),
+            inputFactory.deploy(mockRollups.address, wrongLog2Size),
             "log2Size < 3"
         ).to.be.revertedWith("log size: [3,64]");
 
         wrongLog2Size = 65;
         await expect(
-            inputFactory.deploy(mockDescartesv2.address, wrongLog2Size),
+            inputFactory.deploy(mockRollups.address, wrongLog2Size),
             "log2Size > 64"
         ).to.be.revertedWith("log size: [3,64]");
 
@@ -150,8 +150,8 @@ describe("Input Implementation", () => {
     it("addInput should add input to inbox", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
-        await mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
+        await mockRollups.mock.notifyInput.returns(false);
+        await mockRollups.mock.getCurrentEpoch.returns(0);
 
         await inputImpl.addInput(input_64_bytes);
         await inputImpl.addInput(input_64_bytes);
@@ -162,8 +162,8 @@ describe("Input Implementation", () => {
             "Number of inputs should be zero, because non active inbox is empty"
         ).to.equal(0);
 
-        await mockDescartesv2.mock.notifyInput.returns(true);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+        await mockRollups.mock.notifyInput.returns(true);
+        await mockRollups.mock.getCurrentEpoch.returns(1);
 
         await inputImpl.addInput(input_64_bytes);
 
@@ -196,8 +196,8 @@ describe("Input Implementation", () => {
     it("emit event InputAdded", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
-        await mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
+        await mockRollups.mock.notifyInput.returns(false);
+        await mockRollups.mock.getCurrentEpoch.returns(0);
 
         await expect(
             inputImpl.addInput(input_64_bytes),
@@ -226,8 +226,8 @@ describe("Input Implementation", () => {
 
     it("test return value of addInput()", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
-        await mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
+        await mockRollups.mock.notifyInput.returns(false);
+        await mockRollups.mock.getCurrentEpoch.returns(0);
 
         // calculate input hash: keccak256(abi.encode(keccak256(metadata), keccak256(_input)))
         // metadata: abi.encode(msg.sender, block.timestamp)
@@ -282,8 +282,8 @@ describe("Input Implementation", () => {
 
     it("test getInput()", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
-        await mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
+        await mockRollups.mock.notifyInput.returns(false);
+        await mockRollups.mock.getCurrentEpoch.returns(0);
 
         await inputImpl.addInput(input_64_bytes);
 
@@ -305,8 +305,8 @@ describe("Input Implementation", () => {
         let input_hash = ethers.utils.keccak256(abi_metadata_input);
 
         // switch input boxes before testing getInput()
-        await mockDescartesv2.mock.notifyInput.returns(true);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+        await mockRollups.mock.notifyInput.returns(true);
+        await mockRollups.mock.getCurrentEpoch.returns(1);
         await inputImpl.addInput(input_64_bytes);
         let block_epoch1 = await ethers.provider.getBlock("latest");
 
@@ -333,7 +333,7 @@ describe("Input Implementation", () => {
         input_hash = ethers.utils.keccak256(abi_metadata_input);
 
         // switch input boxes before testing getInput()
-        await mockDescartesv2.mock.getCurrentEpoch.returns(2);
+        await mockRollups.mock.getCurrentEpoch.returns(2);
         await inputImpl.addInput(input_64_bytes);
 
         expect(
@@ -367,8 +367,8 @@ describe("Input Implementation", () => {
     it("getCurrentInbox should return correct inbox", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
-        await mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(0);
+        await mockRollups.mock.notifyInput.returns(false);
+        await mockRollups.mock.getCurrentEpoch.returns(0);
 
         expect(
             await inputImpl.getCurrentInbox(),
@@ -382,8 +382,8 @@ describe("Input Implementation", () => {
             "inbox shouldnt change if notifyInput returns false"
         ).to.equal(0);
 
-        await mockDescartesv2.mock.notifyInput.returns(true);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+        await mockRollups.mock.notifyInput.returns(true);
+        await mockRollups.mock.getCurrentEpoch.returns(1);
         await inputImpl.addInput(input_64_bytes);
 
         expect(
@@ -391,8 +391,8 @@ describe("Input Implementation", () => {
             "inbox should change if notifyInput returns true"
         ).to.equal(1);
 
-        mockDescartesv2.mock.notifyInput.returns(false);
-        await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+        mockRollups.mock.notifyInput.returns(false);
+        await mockRollups.mock.getCurrentEpoch.returns(1);
         await inputImpl.addInput(input_64_bytes);
 
         expect(
@@ -404,18 +404,18 @@ describe("Input Implementation", () => {
     });
 
     if (permissionModifiersOn) {
-        it("onNewEpoch() can only be called by descartesv2", async () => {
+        it("onNewEpoch() can only be called by rollups", async () => {
             await expect(
                 inputImpl.onNewEpoch(),
-                "onNewEpoch() can only be called by descartesv2"
-            ).to.be.revertedWith("Only descartesV2");
+                "onNewEpoch() can only be called by rollups"
+            ).to.be.revertedWith("Only rollups");
         });
 
-        it("onNewInputAccumulation() can only be called by descartesv2", async () => {
+        it("onNewInputAccumulation() can only be called by rollups", async () => {
             await expect(
                 inputImpl.onNewInputAccumulation(),
-                "onNewInputAccumulation() can only be called by descartesv2"
-            ).to.be.revertedWith("Only descartesV2");
+                "onNewInputAccumulation() can only be called by rollups"
+            ).to.be.revertedWith("Only rollups");
         });
     }
 
@@ -447,8 +447,8 @@ describe("Input Implementation", () => {
             ).to.equal(0);
 
             var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
-            await mockDescartesv2.mock.notifyInput.returns(true);
-            await mockDescartesv2.mock.getCurrentEpoch.returns(0);
+            await mockRollups.mock.notifyInput.returns(true);
+            await mockRollups.mock.getCurrentEpoch.returns(0);
             // add input to box 1
             await inputImpl.addInput(input_64_bytes);
 
@@ -458,10 +458,10 @@ describe("Input Implementation", () => {
                 "initial box 0 should also be empty"
             ).to.equal(0);
 
-            await mockDescartesv2.mock.getCurrentEpoch.returns(1);
+            await mockRollups.mock.getCurrentEpoch.returns(1);
             // add 3 inputs to box 0
             await inputImpl.addInput(input_64_bytes);
-            await mockDescartesv2.mock.notifyInput.returns(false);
+            await mockRollups.mock.notifyInput.returns(false);
             await inputImpl.addInput(input_64_bytes);
             await inputImpl.addInput(input_64_bytes);
 

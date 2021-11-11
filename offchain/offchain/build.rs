@@ -24,9 +24,9 @@ fn write_contract(
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contracts = vec![
         (
-            "DescartesV2Impl",
-            "DescartesV2Impl",
-            "descartesv2_contract.rs",
+            "RollupsImpl",
+            "RollupsImpl",
+            "rollups_contract.rs",
         ),
         ("InputImpl", "InputImpl", "input_contract.rs"),
         ("OutputImpl", "OutputImpl", "output_contract.rs"),

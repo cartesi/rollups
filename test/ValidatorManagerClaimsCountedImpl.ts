@@ -29,7 +29,7 @@ import { ValidatorManagerClaimsCountedImpl } from "../src/types/ValidatorManager
 use(solidity);
 
 describe("Validator Manager With Claims Counted Implementation", async () => {
-    var descartesV2: Signer;
+    var rollups: Signer;
     var signer: Signer;
     var VMCC: ValidatorManagerClaimsCountedImpl;
     const provider = new MockProvider();
@@ -46,9 +46,9 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
 
     beforeEach(async () => {
         await deployments.fixture();
-        [descartesV2, signer] = await ethers.getSigners();
+        [rollups, signer] = await ethers.getSigners();
         const vmccFactory = new ValidatorManagerClaimsCountedImpl__factory(
-            descartesV2
+            rollups
         );
         var address: any;
 
@@ -62,7 +62,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         }
 
         VMCC = await vmccFactory.deploy(
-            await descartesV2.getAddress(),
+            await rollups.getAddress(),
             validators
         );
     });
@@ -75,10 +75,10 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             wrongValidators.push(address);
         }
         const vmccFactory = new ValidatorManagerClaimsCountedImpl__factory(
-            descartesV2
+            rollups
         );
         await expect(
-            vmccFactory.deploy(await descartesV2.getAddress(), wrongValidators)
+            vmccFactory.deploy(await rollups.getAddress(), wrongValidators)
         ).to.be.revertedWith("up to 8 validators");
     });
 
@@ -104,11 +104,11 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         ).to.equal(hash_zero);
     });
 
-    it("onClaim and onDisputeEnd should revert if not called from DescartesV2", async () => {
+    it("onClaim and onDisputeEnd should revert if not called from Rollups", async () => {
         await expect(
             VMCC.connect(signer).onClaim(validators[0], hash_zero),
-            "should revert if not called from DescartesV2"
-        ).to.be.revertedWith("Only descartesV2");
+            "should revert if not called from Rollups"
+        ).to.be.revertedWith("Only rollups");
 
         await expect(
             VMCC.connect(signer).onDisputeEnd(
@@ -116,8 +116,8 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
                 address_zero,
                 hash_zero
             ),
-            "should revert if not called from DescartesV2"
-        ).to.be.revertedWith("Only descartesV2");
+            "should revert if not called from Rollups"
+        ).to.be.revertedWith("Only rollups");
     });
 
     it("onClaim should revert if claim is 0x00", async () => {

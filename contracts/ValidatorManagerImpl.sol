@@ -16,7 +16,7 @@ pragma solidity ^0.8.0;
 import "./ValidatorManager.sol";
 
 contract ValidatorManagerImpl is ValidatorManager {
-    address immutable descartesV2; // descartes 2 contract using this validator
+    address immutable rollups; // rollups contract using this validator
     bytes32 currentClaim; // current claim - first claim of this epoch
     address payable[] validators; // current validators
 
@@ -28,19 +28,19 @@ contract ValidatorManagerImpl is ValidatorManager {
     // This mask is updated if a validator is added or removed
     uint32 consensusGoalMask;
 
-    // @notice functions modified by onlyDescartesV2 will only be executed if
-    // they're called by DescartesV2 contract, otherwise it will throw an exception
-    function onlyDescartesV2() internal view {
-        require(msg.sender == descartesV2, "Only descartesV2");
+    // @notice functions modified by onlyRollups will only be executed if
+    // they're called by Rollups contract, otherwise it will throw an exception
+    function onlyRollups() internal view {
+        require(msg.sender == rollups, "Only rollups");
     }
 
     // @notice populates validators array and creates a consensus mask
-    // @params _descartesV2 address of descartes contract
+    // @params _rollups address of rollupscontract
     // @params _validators initial validator set
     // @dev validators have to be unique, if the same validator is added twice
     //      consensus will never be reached
-    constructor(address _descartesV2, address payable[] memory _validators) {
-        descartesV2 = _descartesV2;
+    constructor(address _rollups, address payable[] memory _validators) {
+        rollups = _rollups;
         validators = _validators;
 
         // create consensus goal, represents the scenario where all
@@ -48,9 +48,9 @@ contract ValidatorManagerImpl is ValidatorManager {
         consensusGoalMask = updateConsensusGoalMask();
     }
 
-    // @notice called when a claim is received by descartesv2
+    // @notice called when a claim is received by rollups
     // @params _sender address of sender of that claim
-    // @params _claim claim received by descartesv2
+    // @params _claim claim received by rollups
     // @return result of claim, Consensus | NoConflict | Conflict
     // @return [currentClaim, conflicting claim] if there is Conflict
     //         [currentClaim, bytes32(0)] if there is Consensus
@@ -67,7 +67,7 @@ contract ValidatorManagerImpl is ValidatorManager {
             address payable[2] memory
         )
     {
-        onlyDescartesV2();
+        onlyRollups();
         require(_claim != bytes32(0), "empty claim");
         require(isAllowed(_sender), "sender not allowed");
 
@@ -100,7 +100,7 @@ contract ValidatorManagerImpl is ValidatorManager {
                 );
     }
 
-    // @notice called when a dispute ends in descartesv2
+    // @notice called when a dispute ends in rollups
     // @params _winner address of dispute winner
     // @params _loser address of dispute loser
     // @returns result of dispute being finished
@@ -117,7 +117,7 @@ contract ValidatorManagerImpl is ValidatorManager {
             address payable[2] memory
         )
     {
-        onlyDescartesV2();
+        onlyRollups();
 
         // remove validator also removes validator from both bitmask
         removeFromValidatorSetAndBothBitmasks(_loser);
@@ -170,7 +170,7 @@ contract ValidatorManagerImpl is ValidatorManager {
     // @notice called when a new epoch starts
     // @return current claim
     function onNewEpoch() public override returns (bytes32) {
-        onlyDescartesV2();
+        onlyRollups();
 
         bytes32 tmpClaim = currentClaim;
 

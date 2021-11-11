@@ -37,7 +37,7 @@ describe("Output Implementation Testing", () => {
     let permissionModifiersOn = true;
 
     let signers: Signer[];
-    let mockDescartesV2: MockContract;
+    let mockRollups: MockContract;
     let outputImpl: OutputImpl;
 
     const log2OutputMetadataArrayDriveSize = 21;
@@ -52,9 +52,9 @@ describe("Output Implementation Testing", () => {
         // get signers
         signers = await ethers.getSigners();
 
-        // mock DescartesV2
-        const DescartesV2 = await deployments.getArtifact("DescartesV2");
-        mockDescartesV2 = await deployMockContract(signers[0], DescartesV2.abi);
+        // mock Rollups
+        const Rollups = await deployments.getArtifact("Rollups");
+        mockRollups = await deployMockContract(signers[0], Rollups.abi);
 
         // deploy libraries and get addresses. Depedencies are as follows:
         // OutputImpl <= Bitmask, Merkle
@@ -88,7 +88,7 @@ describe("Output Implementation Testing", () => {
                 Bitmask: bitMaskAddress,
                 Merkle: merkleAddress,
             },
-            args: [mockDescartesV2.address, log2OutputMetadataArrayDriveSize],
+            args: [mockRollups.address, log2OutputMetadataArrayDriveSize],
         });
         outputImpl = OutputImpl__factory.connect(address, signers[0]);
 
@@ -382,10 +382,10 @@ describe("Output Implementation Testing", () => {
 
     /// ***test function getNumberOfFinalizedEpochs() and onNewEpoch()*** ///
     if (permissionModifiersOn) {
-        it("only DescartesV2 can call onNewEpoch()", async () => {
+        it("only Rollups can call onNewEpoch()", async () => {
             await expect(
                 outputImpl.onNewEpoch(ethers.utils.formatBytes32String("hello"))
-            ).to.be.revertedWith("Only descartesV2");
+            ).to.be.revertedWith("Only rollups");
         });
     }
 

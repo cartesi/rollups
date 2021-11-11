@@ -8,13 +8,13 @@ use middleware_factory::{MiddlewareFactory, WsProviderFactory};
 use snafu::ResultExt;
 use std::sync::Arc;
 
-pub type DescartesBlockSubscriber = Arc<BlockSubscriber<WsProviderFactory>>;
+pub type RollupsBlockSubscriber = Arc<BlockSubscriber<WsProviderFactory>>;
 
 pub async fn instantiate_block_subscriber(
     ws_endpoint: String,
     config: &BSConfig,
 ) -> Result<(
-    DescartesBlockSubscriber,
+    RollupsBlockSubscriber,
     BlockSubscriberHandle<<WsProviderFactory as MiddlewareFactory>::Middleware>,
 )> {
     let factory = create_ws_factory(ws_endpoint, config).await?;

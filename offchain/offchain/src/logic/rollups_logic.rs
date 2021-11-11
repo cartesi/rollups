@@ -2,12 +2,12 @@ use offchain_core::ethers;
 
 use super::instantiate_block_subscriber::instantiate_block_subscriber;
 use super::instantiate_tx_manager::{
-    instantiate_tx_manager, DescartesTxManager,
+    instantiate_tx_manager, RollupsTxManager,
 };
 
 use super::config::LogicConfig;
 use crate::config::ApplicationConfig;
-use crate::contracts::descartesv2_contract::DescartesV2Impl;
+use crate::contracts::rollups_contract::RollupsImpl;
 use crate::error::*;
 use crate::fold::types::*;
 use crate::machine::{rollup_mm, EpochStatus, MachineInterface};
@@ -45,8 +45,8 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     .await?;
 
     let (provider, _mock) = Provider::mocked();
-    let descartesv2_contract = DescartesV2Impl::new(
-        config.logic_config.descartes_contract_address,
+    let rollups_contract = RollupsImpl::new(
+        config.logic_config.rollups_contract_address,
         Arc::new(provider),
     );
 
@@ -81,7 +81,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
                         &block.hash,
                         &(
                             config.logic_config.initial_epoch,
-                            config.logic_config.descartes_contract_address,
+                            config.logic_config.rollups_contract_address,
                         ),
                     )
                     .await?;
@@ -91,7 +91,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
                     &tx_config,
                     state,
                     &tx_manager,
-                    &descartesv2_contract,
+                    &rollups_contract,
                     &machine_manager,
                 )
                 .await?;
@@ -105,9 +105,9 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
 async fn react<MM: MachineInterface + Sync>(
     sender: &Address,
     config: &TxConfig,
-    state: DescartesV2State,
-    tx_manager: &DescartesTxManager,
-    descartesv2_contract: &DescartesV2Impl<Provider<MockProvider>>,
+    state: RollupsState,
+    tx_manager: &RollupsTxManager,
+    rollups_contract: &RollupsImpl<Provider<MockProvider>>,
     machine_manager: &MM,
 ) -> Result<()> {
     let state = state;
@@ -185,7 +185,7 @@ async fn react<MM: MachineInterface + Sync>(
                 sealed_epoch_number,
                 config,
                 tx_manager,
-                descartesv2_contract,
+                rollups_contract,
             )
             .await;
 
@@ -231,7 +231,7 @@ async fn react<MM: MachineInterface + Sync>(
                     sealed_epoch_number,
                     config,
                     tx_manager,
-                    descartesv2_contract,
+                    rollups_contract,
                 )
                 .await;
 
@@ -287,7 +287,7 @@ async fn react<MM: MachineInterface + Sync>(
                     sealed_epoch_number,
                     config,
                     tx_manager,
-                    descartesv2_contract,
+                    rollups_contract,
                 )
                 .await;
 
@@ -298,7 +298,7 @@ async fn react<MM: MachineInterface + Sync>(
                     sealed_epoch_number,
                     config,
                     tx_manager,
-                    descartesv2_contract,
+                    rollups_contract,
                 )
                 .await;
 
@@ -330,7 +330,7 @@ async fn react<MM: MachineInterface + Sync>(
 /// `mm_epoch_status`.
 #[async_recursion]
 async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
-    state: &DescartesV2State,
+    state: &RollupsState,
     mm_epoch_status: EpochStatus,
     machine_manager: &MM,
 ) -> Result<(bool, EpochStatus)> {
@@ -433,10 +433,10 @@ async fn send_claim_tx(
     claim: H256,
     epoch_number: U256,
     config: &TxConfig,
-    tx_manager: &DescartesTxManager,
-    descartesv2_contract: &DescartesV2Impl<Provider<MockProvider>>,
+    tx_manager: &RollupsTxManager,
+    rollups_contract: &RollupsImpl<Provider<MockProvider>>,
 ) {
-    let claim_tx = descartesv2_contract
+    let claim_tx = rollups_contract
         .claim(claim.to_fixed_bytes())
         .from(sender);
 
@@ -461,10 +461,10 @@ async fn send_finalize_tx(
     sender: Address,
     epoch_number: U256,
     config: &TxConfig,
-    tx_manager: &DescartesTxManager,
-    descartesv2_contract: &DescartesV2Impl<Provider<MockProvider>>,
+    tx_manager: &RollupsTxManager,
+    rollups_contract: &RollupsImpl<Provider<MockProvider>>,
 ) {
-    let finalize_tx = descartesv2_contract.finalize_epoch().from(sender);
+    let finalize_tx = rollups_contract.finalize_epoch().from(sender);
 
     let label = format!("finalize_epoch:{}", epoch_number);
 

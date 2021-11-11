@@ -1,7 +1,7 @@
 use offchain_core::ethers;
 
 use crate::error::*;
-use crate::fold::types::DescartesV2State;
+use crate::fold::types::RollupsState;
 
 use serde_json;
 use snafu::ResultExt;
@@ -36,7 +36,7 @@ impl RollupsStateFold {
         &self,
         _block_hash: &H256,
         initial_state: &(U256, Address),
-    ) -> Result<DescartesV2State> {
+    ) -> Result<RollupsState> {
         let mut client = self.client.lock().await;
 
         let req = tonic::Request::new(GetStateRequest {

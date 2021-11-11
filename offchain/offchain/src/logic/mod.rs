@@ -1,5 +1,5 @@
 pub mod config;
-pub mod descartes_logic;
+pub mod rollups_logic;
 pub mod instantiate_state_fold;
 
 // pub use super::error;

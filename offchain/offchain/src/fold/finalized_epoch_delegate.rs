@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::descartesv2_contract::*;
+use crate::contracts::rollups_contract::*;
 
 use super::input_contract_address_delegate::InputContractAddressFoldDelegate;
 use super::input_delegate::InputFoldDelegate;
@@ -56,13 +56,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (descartesv2_contract_address, initial_epoch) = *initial_state;
+        let (rollups_contract_address, initial_epoch) = *initial_state;
 
         let contract = access
             .build_sync_contract(
-                descartesv2_contract_address,
+                rollups_contract_address,
                 block.number,
-                DescartesV2Impl::new,
+                RollupsImpl::new,
             )
             .await;
 
@@ -72,19 +72,19 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .query_with_meta()
             .await
             .context(SyncContractError {
-                err: "Error querying for descartes finalized epochs",
+                err: "Error querying for rollups finalized epochs",
             })?;
 
         let input_contract_address = self
             .get_input_contract_address_sync(
-                descartesv2_contract_address,
+                rollups_contract_address,
                 block.hash,
             )
             .await?;
 
         let mut finalized_epochs = FinalizedEpochs::new(
             initial_epoch,
-            descartesv2_contract_address,
+            rollups_contract_address,
             input_contract_address,
         );
 
@@ -127,15 +127,15 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let descartesv2_contract_address =
-            previous_state.descartesv2_contract_address;
+        let rollups_contract_address =
+            previous_state.rollups_contract_address;
 
         // Check if there was (possibly) some log emited on this block.
         // As finalized epochs' inputs will not change, we can return early
         // without querying the input StateFold.
         if !(fold_utils::contains_address(
             &block.logs_bloom,
-            &descartesv2_contract_address,
+            &rollups_contract_address,
         ) && fold_utils::contains_topic(
             &block.logs_bloom,
             &previous_state.next_epoch(),
@@ -148,9 +148,9 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let contract = access
             .build_fold_contract(
-                descartesv2_contract_address,
+                rollups_contract_address,
                 block.hash,
-                DescartesV2Impl::new,
+                RollupsImpl::new,
             )
             .await;
 
@@ -160,7 +160,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .query_with_meta()
             .await
             .context(FoldContractError {
-                err: "Error querying for descartes finalized epochs",
+                err: "Error querying for rollups finalized epochs",
             })?;
 
         let input_contract_address = previous_state.input_contract_address;
@@ -213,13 +213,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
         A: SyncAccess + Send + Sync + 'static,
     >(
         &self,
-        descartesv2_contract_address: Address,
+        rollups_contract_address: Address,
         block_hash: H256,
     ) -> SyncResult<Address, A> {
         Ok(self
             .input_contract_address_fold
             .get_state_for_block(
-                &descartesv2_contract_address,
+                &rollups_contract_address,
                 Some(block_hash),
             )
             .await

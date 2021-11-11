@@ -58,10 +58,10 @@ contract SERC20PortalImpl is SERC20Portal {
         return inputContract.addInput(input);
     }
 
-    /// @notice executes a descartesV2 output
+    /// @notice executes a rollups output
     /// @param _data data with information necessary to execute output
     /// @dev can only be called by Output contract
-    function executeDescartesV2Output(bytes calldata _data)
+    function executeRollupsOutput(bytes calldata _data)
         public
         override
         onlyOutputContract

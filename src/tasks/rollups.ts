@@ -15,44 +15,44 @@ import { task, types } from "hardhat/config";
 import { BigNumber } from "ethers";
 import { formatUnits } from "@ethersproject/units";
 
-task("dv2:claim", "Send a claim to the current epoch")
+task("rollups:claim", "Send a claim to the current epoch")
     .addParam("claim", "Validator's bytes32 claim for current claimable epoch")
     .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
         const { deployments, ethers } = hre;
         const [signer] = await ethers.getSigners();
         let claim = args.claim;
 
-        let dv2Deployed = await deployments.get("DescartesV2Impl");
+        let rollupsDeployed = await deployments.get("RollupsImpl");
 
-        let dv2 = await ethers.getContractAt(
-            dv2Deployed.abi,
-            dv2Deployed.address
+        let rollups = await ethers.getContractAt(
+            rollupsDeployed.abi,
+            rollupsDeployed.address
         );
 
-        const tx = await dv2.claim(claim);
+        const tx = await rollups.claim(claim);
         console.log(`${signer.address}: ${tx} : ${claim}`);
     });
 
 task(
-    "dv2:finalizeEpoch",
+    "rollups:finalizeEpoch",
     "Finalizes epoch, if challenge period has passed",
     async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
         const { deployments, ethers } = hre;
         const [signer] = await ethers.getSigners();
 
-        let dv2Deployed = await deployments.get("DescartesV2Impl");
-        let dv2 = await ethers.getContractAt(
-            dv2Deployed.abi,
-            dv2Deployed.address
+        let rollupsDeployed = await deployments.get("RollupsImpl");
+        let rollups = await ethers.getContractAt(
+            rollupsDeployed.abi,
+            rollupsDeployed.address
         );
 
-        const tx = await dv2.finalizeEpoch();
+        const tx = await rollups.finalizeEpoch();
         console.log(`${signer.address}: ${tx}`);
     }
 );
 
 task(
-    "dv2:getState",
+    "rollups:getState",
     "Prints current epoch, current phase, input duration etc",
     async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
         const { deployments, ethers } = hre;
@@ -63,19 +63,19 @@ task(
             AwaitingConsensus,
             AwaitingDispute,
         }
-        let dv2Deployed = await deployments.get("DescartesV2Impl");
-        let dv2 = await ethers.getContractAt(
-            dv2Deployed.abi,
-            dv2Deployed.address
+        let rollupsDeployed = await deployments.get("RollupsImpl");
+        let rollups = await ethers.getContractAt(
+            rollupsDeployed.abi,
+            rollupsDeployed.address
         );
 
-        const inputDuration = await dv2.inputDuration();
-        const challengePeriod = await dv2.challengePeriod();
-        const currentEpoch = await dv2.getCurrentEpoch();
-        const accumulationStart = await dv2.inputAccumulationStart();
-        const sealingEpochTimestamp = await dv2.sealingEpochTimestamp();
+        const inputDuration = await rollups.inputDuration();
+        const challengePeriod = await rollups.challengePeriod();
+        const currentEpoch = await rollups.getCurrentEpoch();
+        const accumulationStart = await rollups.inputAccumulationStart();
+        const sealingEpochTimestamp = await rollups.sealingEpochTimestamp();
 
-        const currentPhase = await dv2.currentPhase();
+        const currentPhase = await rollups.currentPhase();
 
         console.log(`
             current timestamp: ${

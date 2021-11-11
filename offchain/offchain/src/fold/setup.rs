@@ -3,20 +3,20 @@ use state_fold::{config::SFConfig, DelegateAccess, StateFold};
 
 use std::sync::Arc;
 
-pub type DescartesStateFold<DA> =
-    Arc<StateFold<DescartesV2FoldDelegate<DA>, DA>>;
+pub type RollupsStateFold<DA> =
+    Arc<StateFold<RollupsFoldDelegate<DA>, DA>>;
 
-/// Creates DescartesV2 State Fold
-pub fn create_descartes_state_fold<
+/// Creates Rollups State Fold
+pub fn create_rollups_state_fold<
     DA: DelegateAccess + Send + Sync + 'static,
 >(
     access: Arc<DA>,
     config: &SFConfig,
-) -> DescartesStateFold<DA> {
+) -> RollupsStateFold<DA> {
     let epoch_fold = create_epoch(Arc::clone(&access), config);
     let output_fold = create_output(Arc::clone(&access), config);
 
-    let delegate = DescartesV2FoldDelegate::new(epoch_fold, output_fold);
+    let delegate = RollupsFoldDelegate::new(epoch_fold, output_fold);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }

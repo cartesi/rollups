@@ -52,11 +52,11 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         _access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (descartesv2_contract_address, epoch_number) = *initial_state;
+        let (rollups_contract_address, epoch_number) = *initial_state;
 
         let input_contract_address = self
             .get_input_contract_address_sync(
-                descartesv2_contract_address,
+                rollups_contract_address,
                 block.hash,
             )
             .await?;
@@ -69,7 +69,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         Ok(AccumulatingEpoch {
             inputs,
             epoch_number,
-            descartesv2_contract_address,
+            rollups_contract_address,
             input_contract_address,
         })
     }
@@ -81,8 +81,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         _access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         let epoch_number = previous_state.epoch_number.clone();
-        let descartesv2_contract_address =
-            previous_state.descartesv2_contract_address.clone();
+        let rollups_contract_address =
+            previous_state.rollups_contract_address.clone();
         let input_contract_address =
             previous_state.input_contract_address.clone();
 
@@ -94,7 +94,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         Ok(AccumulatingEpoch {
             epoch_number,
             inputs,
-            descartesv2_contract_address,
+            rollups_contract_address,
             input_contract_address,
         })
     }
@@ -114,13 +114,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
         A: SyncAccess + Send + Sync + 'static,
     >(
         &self,
-        descartesv2_contract_address: Address,
+        rollups_contract_address: Address,
         block_hash: H256,
     ) -> SyncResult<Address, A> {
         Ok(self
             .input_contract_address_fold
             .get_state_for_block(
-                &descartesv2_contract_address,
+                &rollups_contract_address,
                 Some(block_hash),
             )
             .await

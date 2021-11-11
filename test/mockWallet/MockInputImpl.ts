@@ -46,18 +46,18 @@ const TRANSACTION = {
 describe("Mock Input Implementation", () => {
     let signer: Signer;
     let inputImpl: MockInputImpl;
-    let mockDescartesv2: MockContract; //mock descartesv2 implementation
+    let mockRollups: MockContract; //mock rollups implementation
 
     beforeEach(async () => {
         [signer] = await ethers.getSigners();
 
-        const DescartesV2 = await deployments.getArtifact("DescartesV2");
+        const Rollups = await deployments.getArtifact("Rollups");
 
-        mockDescartesv2 = await deployMockContract(signer, DescartesV2.abi);
+        mockRollups = await deployMockContract(signer, Rollups.abi);
 
         const inputFactory = new MockInputImpl__factory(signer);
 
-        inputImpl = await inputFactory.deploy(mockDescartesv2.address);
+        inputImpl = await inputFactory.deploy(mockRollups.address);
     });
 
     it("addInput should revert if input length == 0", async () => {

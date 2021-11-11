@@ -1,4 +1,4 @@
- # Descartes v2 - Cartesi Rollups
+ # Cartesi Rollups
 
  This repository contains the on-chain and off-chain pieces that are used to deploy, launch and interact with Cartesi Rollups DApps. The code presented here is work in progress, continuously being improved and updated.
 
@@ -11,9 +11,9 @@ Several articles were written about the code presented here:
 # On-chain Rollups:
 Designed to mediate the relationship between the off-chain components with other smart contracts and externally owned accounts. It is composed by several modules, each with clear responsibilities and well-defined interfaces. The modules are the following:
 
-## DescartesV2 Manager
+## Cartesi Rollups Manager
 
-The DescartesV2 Manager is responsible for synchronicity between the modules. It defines the duration of the different phases and notifies the other modules of any phase change. Among others, the responsibilities of this module are:
+The Cartesi Rollups Manager is responsible for synchronicity between the modules. It defines the duration of the different phases and notifies the other modules of any phase change. Among others, the responsibilities of this module are:
 - Define for which epoch, depending on the current state and deadlines, an input is destined to.
 - Receive and forward claims to the validator manager.
 - Forward disputes to the dispute resolution module.
@@ -23,7 +23,7 @@ The DescartesV2 Manager is responsible for synchronicity between the modules. It
 
 ## Input
 
-The on-chain contracts often have two concurrent epochs: a sealed but unfinalized epoch and an accumulating epoch. The input contract keeps one inbox for each of those epochs, switching between them depending on the DescartesV2 Manager's notifications. For anyone to be able to synchronize the machine from its beginning without needing to trust a data provider, the full content of inputs is always present in calldata. In storage, which needs to be used in a more parsimonious way, we keep a single hash for each input of an active epoch. This input hash summarizes both the input itself and its metadata — sender’s address and time of reception. Notice that this input implementation is permissionless, the permission layer is delegated to the off-chain machine which will, for example, judge if a sender is allowed to do what their input wants to do.
+The on-chain contracts often have two concurrent epochs: a sealed but unfinalized epoch and an accumulating epoch. The input contract keeps one inbox for each of those epochs, switching between them depending on the Cartesi Rollups Manager's notifications. For anyone to be able to synchronize the machine from its beginning without needing to trust a data provider, the full content of inputs is always present in calldata. In storage, which needs to be used in a more parsimonious way, we keep a single hash for each input of an active epoch. This input hash summarizes both the input itself and its metadata — sender’s address and time of reception. Notice that this input implementation is permissionless, the permission layer is delegated to the off-chain machine which will, for example, judge if a sender is allowed to do what their input wants to do.
 
 ## Portal
 
@@ -37,17 +37,17 @@ While the output contract is also indifferent to the content of the output being
 
 ## Validator Manager
 
-The Validator Manager module was created to help DApps manage their claims, claim permissions, and punishments for bad behavior. Initially, our suggested implementation for this module includes the following characteristics: the set of payable validators is defined in construction time, validators send a claim for every epoch and those that lose a dispute are kicked off the validators set. DescartesV2 manager receives claims and redirects them to the Validator Manager. When receiving a claim, the validator manager checks which other claims have arrived at that epoch and returns the information DescartesV2 Manager needs to continue. The module can respond to received claims in one of the following ways:
+The Validator Manager module was created to help DApps manage their claims, claim permissions, and punishments for bad behavior. Initially, our suggested implementation for this module includes the following characteristics: the set of payable validators is defined in construction time, validators send a claim for every epoch and those that lose a dispute are kicked off the validators set. Cartesi Rollups manager receives claims and redirects them to the Validator Manager. When receiving a claim, the validator manager checks which other claims have arrived at that epoch and returns the information Cartesi Rollups Manager needs to continue. The module can respond to received claims in one of the following ways:
 - If the sender is not a validator or the claim is invalid, the transaction reverts.
 - If the claim is valid, doesn’t disagree with any of the other claims in the epoch, and does not generate consensus, it returns a “No Conflict” response.
-- If the claim is valid but disagrees with another claim for that epoch, it warns DescartesV2 Manager that a conflict is happening and what are the conflicting claims and claimants involved. When that dispute is resolved the validator manager module gets notified so it can deal however it likes with the validators involved. In our initially suggested implementation, the loser of a dispute gets removed from the validator set.
-- If the claim is valid, agrees with all other claims in that epoch, and is the last claim to be received, it lets DescartesV2 know that consensus was reached. This allows the rollups DApp to finalize the epoch and allow for the execution of its outputs.
+- If the claim is valid but disagrees with another claim for that epoch, it warns Cartesi Rollups Manager that a conflict is happening and what are the conflicting claims and claimants involved. When that dispute is resolved the validator manager module gets notified so it can deal however it likes with the validators involved. In our initially suggested implementation, the loser of a dispute gets removed from the validator set.
+- If the claim is valid, agrees with all other claims in that epoch, and is the last claim to be received, it lets Cartesi Rollups know that consensus was reached. This allows the rollups DApp to finalize the epoch and allow for the execution of its outputs.
 Regardless of what the name might suggest, validators do not interact with this module at all.
 
 ## Dispute Resolution
 
 Disputes occur when two validators claim different state updates to the same epoch. Because of the deterministic nature of our virtual machine and the fact that the inputs that constitute an epoch are agreed upon beforehand, conflicting claims imply dishonest behavior. When a conflict occurs, the module that mediates the interactions between both validators is the dispute resolution.
-The code for rollups dispute resolution is not being published yet - but a big part of it is available on the Descartes SDK, using the [Arbitration dlib] (https://github.com/cartesi/arbitration-dlib/)
+The code for rollups dispute resolution is not being published yet - but a big part of it is available on the Cartesi Rollups SDK, using the [Arbitration dlib] (https://github.com/cartesi/arbitration-dlib/)
 
 # Off-chain Rollups
 The Rollups machine and the smart contracts live in fundamentally different environments. This creates the need for a middleware that manages and controls the communication between the blockchain and the machine.

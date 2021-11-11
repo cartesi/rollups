@@ -125,11 +125,11 @@ contract MockPortalImpl is MockPortal {
         return inputContract.addInput(input, uint256(Operation.ERC20Op));
     }
 
-    /// @notice executes a descartesV2 output
+    /// @notice executes a rollups output
     /// @param _data data with information necessary to execute output
     /// @return status of output execution
     /// @dev can only be called by Output contract
-    function executeDescartesV2Output(bytes calldata _data)
+    function executeRollupsOutput(bytes calldata _data)
         public
         override
         onlyOutputContract

@@ -10,16 +10,16 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title DescartesV2 Impl
+/// @title Rollups Impl
 pragma solidity ^0.8.0;
 
 import "./InputImpl.sol";
 import "./OutputImpl.sol";
 import "./ValidatorManagerImpl.sol";
-import "./DescartesV2.sol";
+import "./Rollups.sol";
 import "./DisputeManagerImpl.sol";
 
-contract DescartesV2Impl is DescartesV2 {
+contract RollupsImpl is Rollups {
     ////
     //                             All claims agreed OR challenge period ended
     //                              functions: claim() or finalizeEpoch()
@@ -101,7 +101,7 @@ contract DescartesV2Impl is DescartesV2 {
             uint32(Phase.InputAccumulation)
         );
 
-        emit DescartesV2Created(
+        emit RollupsCreated(
             address(input),
             address(output),
             address(validatorManager),

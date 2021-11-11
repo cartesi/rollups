@@ -23,7 +23,7 @@ contract MockOutputImpl is MockOutput {
 
     uint8 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
 
-    address immutable descartesV2; // descartes 2 contract using this validator
+    address immutable rollups; // rollups contract using this validator
 
     mapping(uint256 => uint256) internal outputBitmask;
     bytes32[] epochHashes;
@@ -38,20 +38,17 @@ contract MockOutputImpl is MockOutput {
         lock = false;
     }
 
-    // @notice functions modified by onlyDescartesV2 will only be executed if
-    // they're called by DescartesV2 contract, otherwise it will throw an exception
-    modifier onlyDescartesV2 {
-        require(
-            msg.sender == descartesV2,
-            "Only descartesV2 can call this functions"
-        );
+    // @notice functions modified by onlyRollups will only be executed if
+    // they're called by Rollups contract, otherwise it will throw an exception
+    modifier onlyRollups {
+        require(msg.sender == rollups, "Only rollups can call this functions");
         _;
     }
 
     // @notice creates OutputImpl contract
-    // @params _descartesV2 address of descartes contract
-    constructor(address _descartesV2) {
-        descartesV2 = _descartesV2;
+    // @params _rollups address of rollupscontract
+    constructor(address _rollups) {
+        rollups = _rollups;
     }
 
     /// @notice executes output
@@ -119,10 +116,10 @@ contract MockOutputImpl is MockOutput {
         return succ;
     }
 
-    /// @notice called by descartesv2 when an epoch is finalized
+    /// @notice called by rollups when an epoch is finalized
     /// @param _epochHash hash of finalized epoch
     /// @dev an epoch being finalized means that its outputs can be called
-    function onNewEpoch(bytes32 _epochHash) public override onlyDescartesV2 {
+    function onNewEpoch(bytes32 _epochHash) public override onlyRollups {
         epochHashes.push(_epochHash);
     }
 

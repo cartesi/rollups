@@ -14,23 +14,23 @@
 pragma solidity ^0.8.0;
 
 import "./DisputeManager.sol";
-import "./DescartesV2.sol";
+import "./Rollups.sol";
 
 contract DisputeManagerImpl is DisputeManager {
-    DescartesV2 immutable descartesV2; // descartes 2 contract
+    Rollups immutable rollups; // rollups contract
 
-    /// @notice functions modified by onlyDescartesV2 will only be executed if
-    //  they're called by DescartesV2 contract, otherwise it will throw an exception
-    modifier onlyDescartesV2 {
+    /// @notice functions modified by onlyRollups will only be executed if
+    //  they're called by Rollups contract, otherwise it will throw an exception
+    modifier onlyRollups {
         require(
-            msg.sender == address(descartesV2),
-            "Only descartesV2 can call this functions"
+            msg.sender == address(rollups),
+            "Only rollups can call this functions"
         );
         _;
     }
 
-    constructor(address _descartesV2) {
-        descartesV2 = DescartesV2(_descartesV2);
+    constructor(address _rollups) {
+        rollups = Rollups(_rollups);
     }
 
     /// @notice initiates a dispute betweent two players
@@ -41,7 +41,7 @@ contract DisputeManagerImpl is DisputeManager {
     function initiateDispute(
         bytes32[2] memory _claims,
         address payable[2] memory _claimers
-    ) public override onlyDescartesV2 {
-        descartesV2.resolveDispute(_claimers[0], _claimers[1], _claims[0]);
+    ) public override onlyRollups {
+        rollups.resolveDispute(_claimers[0], _claimers[1], _claims[0]);
     }
 }

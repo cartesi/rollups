@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::descartesv2_contract::*;
+use crate::contracts::rollups_contract::*;
 
 use super::input_contract_address_delegate::InputContractAddressFoldDelegate;
 use super::input_delegate::InputFoldDelegate;
@@ -42,13 +42,13 @@ impl SealedEpochState {
         }
     }
 
-    pub fn descartesv2_contract_address(&self) -> Address {
+    pub fn rollups_contract_address(&self) -> Address {
         match self {
             SealedEpochState::SealedEpochNoClaims { sealed_epoch } => {
-                sealed_epoch.descartesv2_contract_address
+                sealed_epoch.rollups_contract_address
             }
             SealedEpochState::SealedEpochWithClaims { claimed_epoch } => {
-                claimed_epoch.descartesv2_contract_address
+                claimed_epoch.rollups_contract_address
             }
         }
     }
@@ -119,21 +119,21 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (descartesv2_contract_address, epoch_number) =
+        let (rollups_contract_address, epoch_number) =
             initial_state.clone();
 
         let middleware = access
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract = DescartesV2Impl::new(
-            descartesv2_contract_address,
+        let contract = RollupsImpl::new(
+            rollups_contract_address,
             Arc::clone(&middleware),
         );
 
         let input_contract_address = self
             .get_input_contract_address_sync(
-                descartesv2_contract_address,
+                rollups_contract_address,
                 block.hash,
             )
             .await?;
@@ -150,7 +150,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .query_with_meta()
             .await
             .context(SyncContractError {
-                err: "Error querying for descartes claims",
+                err: "Error querying for rollups claims",
             })?;
 
         // If there are no claim, state is SealedEpochNoClaims
@@ -159,7 +159,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 sealed_epoch: AccumulatingEpoch {
                     epoch_number,
                     inputs,
-                    descartesv2_contract_address,
+                    rollups_contract_address,
                     input_contract_address,
                 },
             });
@@ -202,7 +202,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 epoch_number,
                 inputs,
                 claims: claims.unwrap(),
-                descartesv2_contract_address,
+                rollups_contract_address,
                 input_contract_address,
             },
         })
@@ -217,11 +217,11 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         // Check if there was (possibly) some log emited on this block.
         // As finalized epochs' inputs will not change, we can return early
         // without querying the input StateFold.
-        let descartesv2_contract_address =
-            previous_state.descartesv2_contract_address().clone();
+        let rollups_contract_address =
+            previous_state.rollups_contract_address().clone();
         if !(fold_utils::contains_address(
             &block.logs_bloom,
-            &descartesv2_contract_address,
+            &rollups_contract_address,
         ) && fold_utils::contains_topic(
             &block.logs_bloom,
             &previous_state.epoch_number(),
@@ -235,9 +235,9 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let epoch_number = previous_state.epoch_number().clone();
         let contract = access
             .build_fold_contract(
-                descartesv2_contract_address,
+                rollups_contract_address,
                 block.hash,
-                DescartesV2Impl::new,
+                RollupsImpl::new,
             )
             .await;
 
@@ -250,7 +250,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .query_with_meta()
             .await
             .context(FoldContractError {
-                err: "Error querying for descartes claims",
+                err: "Error querying for rollups claims",
             })?;
 
         // if there are no new claims, return epoch's old claims (might be empty)
@@ -288,7 +288,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 epoch_number,
                 inputs: previous_state.inputs(),
                 claims: claims.unwrap(),
-                descartesv2_contract_address,
+                rollups_contract_address,
                 input_contract_address,
             },
         })
@@ -307,13 +307,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> SealedEpochFoldDelegate<DA> {
         A: SyncAccess + Send + Sync + 'static,
     >(
         &self,
-        descartesv2_contract_address: Address,
+        rollups_contract_address: Address,
         block_hash: H256,
     ) -> SyncResult<Address, A> {
         Ok(self
             .input_contract_address_fold
             .get_state_for_block(
-                &descartesv2_contract_address,
+                &rollups_contract_address,
                 Some(block_hash),
             )
             .await

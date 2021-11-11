@@ -29,7 +29,7 @@ import { ValidatorManagerImpl } from "../src/types/ValidatorManagerImpl";
 use(solidity);
 
 describe("Validator Manager Implementation", async () => {
-    var descartesV2: Signer;
+    var rollups: Signer;
     var signer: Signer;
     var VMI: ValidatorManagerImpl;
     const provider = new MockProvider();
@@ -46,8 +46,8 @@ describe("Validator Manager Implementation", async () => {
 
     beforeEach(async () => {
         await deployments.fixture();
-        [descartesV2, signer] = await ethers.getSigners();
-        const vmiFactory = new ValidatorManagerImpl__factory(descartesV2);
+        [rollups, signer] = await ethers.getSigners();
+        const vmiFactory = new ValidatorManagerImpl__factory(rollups);
         var address: any;
 
         var wallets = provider.getWallets();
@@ -60,7 +60,7 @@ describe("Validator Manager Implementation", async () => {
         }
 
         VMI = await vmiFactory.deploy(
-            await descartesV2.getAddress(),
+            await rollups.getAddress(),
             validators
         );
     });
@@ -87,11 +87,11 @@ describe("Validator Manager Implementation", async () => {
         ).to.equal(hash_zero);
     });
 
-    it("onClaim and onDisputeEnd should revert if not called from DescartesV2", async () => {
+    it("onClaim and onDisputeEnd should revert if not called from Rollups", async () => {
         await expect(
             VMI.connect(signer).onClaim(validators[0], hash_zero),
-            "should revert if not called from DescartesV2"
-        ).to.be.revertedWith("Only descartesV2");
+            "should revert if not called from Rollups"
+        ).to.be.revertedWith("Only rollups");
 
         await expect(
             VMI.connect(signer).onDisputeEnd(
@@ -99,8 +99,8 @@ describe("Validator Manager Implementation", async () => {
                 address_zero,
                 hash_zero
             ),
-            "should revert if not called from DescartesV2"
-        ).to.be.revertedWith("Only descartesV2");
+            "should revert if not called from Rollups"
+        ).to.be.revertedWith("Only rollups");
     });
 
     it("onClaim should revert if claim is 0x00", async () => {

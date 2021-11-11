@@ -1,4 +1,4 @@
-use crate::contracts::descartesv2_contract::*;
+use crate::contracts::rollups_contract::*;
 
 use state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
@@ -34,14 +34,14 @@ impl StateFoldDelegate for InputContractAddressFoldDelegate {
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let descartesv2_contract_address = *initial_state;
+        let rollups_contract_address = *initial_state;
 
         let middleware = access
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract = DescartesV2Impl::new(
-            descartesv2_contract_address,
+        let contract = RollupsImpl::new(
+            rollups_contract_address,
             Arc::clone(&middleware),
         );
 

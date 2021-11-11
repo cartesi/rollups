@@ -21,7 +21,7 @@ pub enum Error {
 
     // #[snafu(display("State fold error"))]
     // StateFoldError {
-    //     source: state_fold::error::Error<DescartesAccess>,
+    //     source: state_fold::error::Error<RollupsAccess>,
     // },
     #[snafu(display("Tonic status error"))]
     TonicStatusError { source: tonic::Status },

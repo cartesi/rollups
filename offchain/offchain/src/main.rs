@@ -1,6 +1,6 @@
 use offchain::config::ApplicationConfig;
 use offchain::error::*;
-use offchain::logic::descartes_logic::main_loop;
+use offchain::logic::rollups_logic::main_loop;
 
 #[tokio::main]
 async fn main() -> Result<()> {

@@ -22,7 +22,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
-import { DescartesV2Impl__factory } from "../src/types/factories/DescartesV2Impl__factory";
+import { RollupsImpl__factory } from "../src/types/factories/RollupsImpl__factory";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments } = hre;
@@ -58,8 +58,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
     const merkleAddress = merkle.address;
 
-    // DescartesV2Impl
-    const { address } = await deployments.deploy("DescartesV2Impl", {
+    // RollupsImpl
+    const { address } = await deployments.deploy("RollupsImpl", {
         from: await signers[0].getAddress(),
         libraries: {
             Bitmask: bitMaskAddress,
@@ -77,10 +77,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             ],
         ],
     });
-    let descartesV2Impl = DescartesV2Impl__factory.connect(address, signers[0]);
+    let rollupsImpl = RollupsImpl__factory.connect(address, signers[0]);
 
-    let inputAddress = await descartesV2Impl.getInputAddress();
-    let outputAddress = await descartesV2Impl.getOutputAddress();
+    let inputAddress = await rollupsImpl.getInputAddress();
+    let outputAddress = await rollupsImpl.getOutputAddress();
 
     let erc20PortalImpl = await deployments.deploy("ERC20PortalImpl", {
         from: await signers[0].getAddress(),
@@ -92,12 +92,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         args: [inputAddress, outputAddress],
     });
 
-    console.log("Descartes V2 Impl address: " + descartesV2Impl.address);
+    console.log("Rollups Impl address: " + rollupsImpl.address);
     console.log(
-        "Descartes V2 Impl getCurrentEpoch: " +
-            (await descartesV2Impl.getCurrentEpoch())
+        "Rollups Impl getCurrentEpoch: " +
+            (await rollupsImpl.getCurrentEpoch())
     );
-    console.log("Descartes V2 accumulation start: " + await descartesV2Impl.getInputAccumulationStart());
+    console.log("Rollups accumulation start: " + await rollupsImpl.getInputAccumulationStart());
     console.log("Input address " + inputAddress);
     console.log("Output address " + outputAddress);
     console.log("Ether Portal address " + etherPortalImpl.address);
@@ -105,4 +105,4 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 export default func;
-export const tags = ["DescartesV2Impl", "PortalImpl"];
+export const tags = ["RollupsImpl", "PortalImpl"];

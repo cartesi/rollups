@@ -13,14 +13,14 @@ use snafu::ResultExt;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
-pub type DescartesAccess = Access<Provider<Http>>;
+pub type RollupsAccess = Access<Provider<Http>>;
 
 pub fn instantiate_state_fold(
     config: &SFConfig,
     url: String,
-) -> Result<DescartesStateFold<DescartesAccess>> {
+) -> Result<RollupsStateFold<RollupsAccess>> {
     let access = create_access(config, url)?;
-    let state_fold = create_descartes_state_fold(access, &config);
+    let state_fold = create_rollups_state_fold(access, &config);
     Ok(state_fold)
 }
 
@@ -33,7 +33,7 @@ fn create_provider(url: String) -> Result<Arc<Provider<Http>>> {
 pub fn create_access(
     config: &SFConfig,
     url: String,
-) -> Result<Arc<DescartesAccess>> {
+) -> Result<Arc<RollupsAccess>> {
     let provider = create_provider(url)?;
 
     Ok(Arc::new(Access::new(

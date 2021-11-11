@@ -1,5 +1,5 @@
 {
-    "name": "@cartesi/descartes-v2",
+    "name": "@cartesi/rollups",
     "version": "0.0.1",
     "scripts": {
         "build": "hardhat compile && tsc",

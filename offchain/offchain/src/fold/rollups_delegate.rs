@@ -1,12 +1,12 @@
 use offchain_core::ethers;
 
-use crate::contracts::descartesv2_contract::*;
+use crate::contracts::rollups_contract::*;
 
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
 use super::output_delegate::OutputFoldDelegate;
 use super::sealed_epoch_delegate::SealedEpochState;
 use super::types::{
-    AccumulatingEpoch, DescartesV2State, ImmutableState, OutputState,
+    AccumulatingEpoch, RollupsState, ImmutableState, OutputState,
     PhaseState,
 };
 
@@ -25,13 +25,13 @@ use std::sync::Arc;
 use ethers::providers::Middleware;
 use ethers::types::{Address, U256};
 
-/// DescartesV2 StateActor Delegate, which implements `sync` and `fold`.
-pub struct DescartesV2FoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
+/// Rollups StateActor Delegate, which implements `sync` and `fold`.
+pub struct RollupsFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
     epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
     output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
 }
 
-impl<DA: DelegateAccess + Send + Sync + 'static> DescartesV2FoldDelegate<DA> {
+impl<DA: DelegateAccess + Send + Sync + 'static> RollupsFoldDelegate<DA> {
     pub fn new(
         epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
         output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
@@ -45,10 +45,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> DescartesV2FoldDelegate<DA> {
 
 #[async_trait]
 impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
-    for DescartesV2FoldDelegate<DA>
+    for RollupsFoldDelegate<DA>
 {
     type InitialState = (Address, U256);
-    type Accumulator = DescartesV2State;
+    type Accumulator = RollupsState;
     type State = BlockState<Self::Accumulator>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
@@ -61,10 +61,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let (descartesv2_contract_address, epoch_number) = *initial_state;
+        let (rollups_contract_address, epoch_number) = *initial_state;
 
-        let contract = DescartesV2Impl::new(
-            descartesv2_contract_address,
+        let contract = RollupsImpl::new(
+            rollups_contract_address,
             Arc::clone(&middleware),
         );
 
@@ -72,16 +72,16 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let constants = {
             let (create_event, meta) = {
                 let e = contract
-                    .descartes_v2_created_filter()
+                    .rollups_created_filter()
                     .query_with_meta()
                     .await
                     .context(SyncContractError {
-                        err: "Error querying for descartes created",
+                        err: "Error querying for rollups created",
                     })?;
 
                 if e.is_empty() {
                     return SyncDelegateError {
-                        err: "Descartes create event not found",
+                        err: "Rollups create event not found",
                     }
                     .fail();
                 }
@@ -104,7 +104,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             ImmutableState::from(&(
                 create_event,
                 timestamp,
-                descartesv2_contract_address,
+                rollups_contract_address,
             ))
         };
 
@@ -112,7 +112,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let raw_contract_state = self
             .epoch_fold
             .get_state_for_block(
-                &(descartesv2_contract_address, epoch_number),
+                &(rollups_contract_address, epoch_number),
                 Some(block.hash),
             )
             .await
@@ -162,7 +162,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .epoch_fold
             .get_state_for_block(
                 &(
-                    constants.descartesv2_contract_address,
+                    constants.rollups_contract_address,
                     previous_state.initial_epoch,
                 ),
                 Some(block.hash),
@@ -214,7 +214,7 @@ fn convert_raw_to_logical(
     block: &Block,
     initial_epoch: &U256,
     output_state: OutputState,
-) -> DescartesV2State {
+) -> RollupsState {
     // If the raw state is InputAccumulation but it has expired, then the raw
     // state's `current_epoch` becomes the sealed epoch, and the logic state's
     // `current_epoch` is empty.
@@ -317,7 +317,7 @@ fn convert_raw_to_logical(
     // transitions to AwaitingConsensus, either a new input or a claim
     let current_epoch = if let Some(epoch_number) = current_epoch_no_inputs {
         AccumulatingEpoch::new(
-            constants.descartesv2_contract_address,
+            constants.rollups_contract_address,
             constants.input_contract_address,
             epoch_number,
         )
@@ -325,7 +325,7 @@ fn convert_raw_to_logical(
         contract_state.current_epoch
     };
 
-    DescartesV2State {
+    RollupsState {
         constants,
         initial_epoch: *initial_epoch,
         current_phase: phase_state,
@@ -335,10 +335,10 @@ fn convert_raw_to_logical(
     }
 }
 
-// Fetches the DescartesV2 constants from the contract creation event
-impl From<&(DescartesV2CreatedFilter, U256, Address)> for ImmutableState {
-    fn from(src: &(DescartesV2CreatedFilter, U256, Address)) -> Self {
-        let (ev, ts, descartesv2_contract_address) = src;
+// Fetches the Rollups constants from the contract creation event
+impl From<&(RollupsCreatedFilter, U256, Address)> for ImmutableState {
+    fn from(src: &(RollupsCreatedFilter, U256, Address)) -> Self {
+        let (ev, ts, rollups_contract_address) = src;
         Self {
             input_duration: ev.input_duration,
             challenge_period: ev.challenge_period,
@@ -347,7 +347,7 @@ impl From<&(DescartesV2CreatedFilter, U256, Address)> for ImmutableState {
             output_contract_address: ev.output,
             validator_contract_address: ev.validator_manager,
             dispute_contract_address: ev.dispute_manager,
-            descartesv2_contract_address: *descartesv2_contract_address,
+            rollups_contract_address: *rollups_contract_address,
         }
     }
 }

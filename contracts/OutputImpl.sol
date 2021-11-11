@@ -30,7 +30,7 @@ contract OutputImpl is Output {
     uint256 constant EPOCH_OUTPUT_LOG2_SIZE = 37;
     uint256 immutable log2OutputMetadataArrayDriveSize;
 
-    address immutable descartesV2; // descartes 2 contract using this validator
+    address immutable rollups; // rollups contract using this validator
     mapping(uint256 => uint256) internal outputBitmask;
     bytes32[] epochHashes;
 
@@ -44,20 +44,20 @@ contract OutputImpl is Output {
         lock = false;
     }
 
-    /// @notice functions modified by onlyDescartesV2 will only be executed if
-    // they're called by DescartesV2 contract, otherwise it will throw an exception
-    modifier onlyDescartesV2 {
-        require(msg.sender == descartesV2, "Only descartesV2");
+    /// @notice functions modified by onlyRollups will only be executed if
+    // they're called by Rollups contract, otherwise it will throw an exception
+    modifier onlyRollups {
+        require(msg.sender == rollups, "Only rollups");
         _;
     }
 
     // @notice creates OutputImpl contract
-    // @params _descartesV2 address of descartes contract
+    // @params _rollups address of rollupscontract
     // @params _log2OutputMetadataArrayDriveSize log2 size
     //         of output metadata array drive
-    constructor(address _descartesV2, uint256 _log2OutputMetadataArrayDriveSize)
+    constructor(address _rollups, uint256 _log2OutputMetadataArrayDriveSize)
     {
-        descartesV2 = _descartesV2;
+        rollups = _rollups;
         log2OutputMetadataArrayDriveSize = _log2OutputMetadataArrayDriveSize;
     }
 
@@ -98,10 +98,10 @@ contract OutputImpl is Output {
         return succ;
     }
 
-    /// @notice called by descartesv2 when an epoch is finalized
+    /// @notice called by rollups when an epoch is finalized
     /// @param _epochHash hash of finalized epoch
     /// @dev an epoch being finalized means that its outputs can be called
-    function onNewEpoch(bytes32 _epochHash) public override onlyDescartesV2 {
+    function onNewEpoch(bytes32 _epochHash) public override onlyRollups {
         epochHashes.push(_epochHash);
     }
 

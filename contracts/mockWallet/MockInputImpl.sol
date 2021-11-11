@@ -254,7 +254,7 @@ contract MockInputImpl is MockInput {
     }
 
     /// @notice called when a new epoch begins, clears deprecated inputs
-    /// @dev can only be called by DescartesV2 contract
+    /// @dev can only be called by Rollups contract
     function onNewEpoch() public override {
         // clear input box for new inputs
         // the current input box should be accumulating inputs

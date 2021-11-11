@@ -2,20 +2,20 @@ import { deployments, ethers, network } from "hardhat";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { DescartesV2Impl } from "../src/types/DescartesV2Impl";
-import { DescartesV2Impl__factory } from "../src/types/factories/DescartesV2Impl__factory";
+import { RollupsImpl } from "../src/types/RollupsImpl";
+import { RollupsImpl__factory } from "../src/types/factories/RollupsImpl__factory";
 import { getState } from "./getState";
 
 use(solidity);
 
-describe("Descartes V2 Implementation", () => {
-    /// for testing DescartesV2 when modifiers are on, set this to true
-    /// for testing DescartesV2 when modifiers are off, set this to false
+describe("Rollups Implementation", () => {
+    /// for testing Rollups when modifiers are on, set this to true
+    /// for testing Rollups when modifiers are off, set this to false
     let permissionModifiersOn = true;
 
     let enableDelegate = process.env["DELEGATE_TEST"];
 
-    let descartesV2Impl: DescartesV2Impl;
+    let rollupsImpl: RollupsImpl;
 
     const MINUTE = 60; // seconds in a minute
     const HOUR = 60 * MINUTE; // seconds in an hour
@@ -45,7 +45,7 @@ describe("Descartes V2 Implementation", () => {
         Conflict = 2,
     }
 
-    // creation timestamp for descartesV2
+    // creation timestamp for rollups
     let contract_creation_time: any;
 
     // initial var for delegate
@@ -56,26 +56,26 @@ describe("Descartes V2 Implementation", () => {
         signers = await ethers.getSigners();
 
         await deployments.fixture();
-        const dAddress = (await deployments.get("DescartesV2Impl")).address;
-        descartesV2Impl = DescartesV2Impl__factory.connect(
+        const dAddress = (await deployments.get("RollupsImpl")).address;
+        rollupsImpl = RollupsImpl__factory.connect(
             dAddress,
             signers[0]
         );
-        // get the timestamp of the second last block, because after deploying descartesV2, portalImpl was deployed
+        // get the timestamp of the second last block, because after deploying rollups, portalImpl was deployed
         contract_creation_time =
             (await ethers.provider.getBlock("latest")).timestamp - 1;
 
         initialEpoch = "0x0";
         initialState = JSON.stringify({
             initial_epoch: initialEpoch,
-            descartes_address: descartesV2Impl.address,
+            rollups_address: rollupsImpl.address,
         });
     });
 
     /// ***test public variable currentPhase*** ///
     it("initial phase should be InputAccumulation", async () => {
         expect(
-            await descartesV2Impl.getCurrentPhase(),
+            await rollupsImpl.getCurrentPhase(),
             "initial phase check"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -83,7 +83,7 @@ describe("Descartes V2 Implementation", () => {
     /// ***test function claim()*** ///
     it("calling claim() should revert if input duration has not yet past", async () => {
         await expect(
-            descartesV2Impl.claim(ethers.utils.formatBytes32String("hello")),
+            rollupsImpl.claim(ethers.utils.formatBytes32String("hello")),
             "phase incorrect because inputDuration not over"
         ).to.be.revertedWith("Phase != AwaitingConsensus");
 
@@ -91,7 +91,7 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_mine");
 
         await expect(
-            descartesV2Impl.claim(ethers.utils.formatBytes32String("hello")),
+            rollupsImpl.claim(ethers.utils.formatBytes32String("hello")),
             "phase incorrect because inputDuration not over"
         ).to.be.revertedWith("Phase != AwaitingConsensus");
     });
@@ -100,9 +100,9 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
         expect(
-            await descartesV2Impl.getCurrentPhase(),
+            await rollupsImpl.getCurrentPhase(),
             "current phase should be updated to AwaitingConsensus"
         ).to.equal(Phase.AwaitingConsensus);
     });
@@ -112,17 +112,17 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_mine");
 
         // all validators agree with claim
-        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
-        await descartesV2Impl
+        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsImpl
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
-        await descartesV2Impl
+        await rollupsImpl
             .connect(signers[2])
             .claim(ethers.utils.formatBytes32String("hello"));
 
         expect(
-            await descartesV2Impl.getCurrentPhase(),
+            await rollupsImpl.getCurrentPhase(),
             "current phase should be updated to InputAccumulation"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -131,15 +131,15 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
-        await descartesV2Impl
+        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsImpl
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("not hello"));
 
         // In this version disputes get solved immediately
         // so the phase should be awaiting consensus after a disagreement
         expect(
-            await descartesV2Impl.getCurrentPhase(),
+            await rollupsImpl.getCurrentPhase(),
             "current phase should be updated to AwaitingConsensus"
         ).to.equal(Phase.AwaitingConsensus);
     });
@@ -149,19 +149,19 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
 
-        await descartesV2Impl
+        await rollupsImpl
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
-        await descartesV2Impl
+        await rollupsImpl
             .connect(signers[2])
             .claim(ethers.utils.formatBytes32String("not hello"));
         ///END: make two different claims///
 
         expect(
-            await descartesV2Impl.getCurrentPhase(),
+            await rollupsImpl.getCurrentPhase(),
             "current phase should be updated to InputAccumulation"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -169,7 +169,7 @@ describe("Descartes V2 Implementation", () => {
     /// ***test function finalizeEpoch()*** ///
     it("finalizeEpoch(): should revert if currentPhase is InputAccumulation", async () => {
         await expect(
-            descartesV2Impl.finalizeEpoch(),
+            rollupsImpl.finalizeEpoch(),
             "phase incorrect"
         ).to.be.revertedWith("Phase != Awaiting Consensus");
     });
@@ -180,15 +180,15 @@ describe("Descartes V2 Implementation", () => {
     //    await network.provider.send("evm_increaseTime", [inputDuration + 1]);
     //    await network.provider.send("evm_mine");
 
-    //    await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
+    //    await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
 
-    //    await descartesV2Impl
+    //    await rollupsImpl
     //        .connect(signers[1])
     //        .claim(ethers.utils.formatBytes32String("halo"));
     //    ///END: make two different claims///
 
     //    await expect(
-    //        descartesV2Impl.finalizeEpoch(),
+    //        rollupsImpl.finalizeEpoch(),
     //        "phase incorrect"
     //    ).to.be.revertedWith("Phase != Awaiting Consensus");
     //});
@@ -197,10 +197,10 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
-            descartesV2Impl.finalizeEpoch(),
+            rollupsImpl.finalizeEpoch(),
             "Challenge period is not over"
         ).to.be.revertedWith("Challenge period not over");
     });
@@ -211,7 +211,7 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_mine");
 
         await expect(
-            descartesV2Impl.claim(currentClaim),
+            rollupsImpl.claim(currentClaim),
             "empty claim"
         ).to.be.revertedWith("empty claim");
     });
@@ -221,15 +221,15 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await descartesV2Impl.claim(currentClaim);
+        await rollupsImpl.claim(currentClaim);
 
         await network.provider.send("evm_increaseTime", [challengePeriod + 1]);
         await network.provider.send("evm_mine");
 
-        await descartesV2Impl.finalizeEpoch();
+        await rollupsImpl.finalizeEpoch();
 
         expect(
-            await descartesV2Impl.getCurrentPhase(),
+            await rollupsImpl.getCurrentPhase(),
             "final phase check"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -239,7 +239,7 @@ describe("Descartes V2 Implementation", () => {
         /// ***test function notifyInput() with modifier*** ///
         it("only input contract can call notifyInput()", async () => {
             await expect(
-                descartesV2Impl.notifyInput(),
+                rollupsImpl.notifyInput(),
                 "msg.sender != input contract"
             ).to.be.revertedWith("only Input Contract");
         });
@@ -247,7 +247,7 @@ describe("Descartes V2 Implementation", () => {
         /// ***test function resolveDispute() with modifier*** ///
         it("only DisputeManager contract can call resolveDispute()", async () => {
             await expect(
-                descartesV2Impl.resolveDispute(
+                rollupsImpl.resolveDispute(
                     await signers[0].getAddress(),
                     await signers[1].getAddress(),
                     ethers.utils.formatBytes32String("hello")
@@ -263,7 +263,7 @@ describe("Descartes V2 Implementation", () => {
         it("notifyInput(): should return false if inputDuration has not past yet", async () => {
             expect(
                 //callStatic is from ethers.js, used to call a state changing function without acutally changing the states. Use callStatic in order to check the return value.
-                await descartesV2Impl.callStatic.notifyInput(),
+                await rollupsImpl.callStatic.notifyInput(),
                 "inputDuration has not past yet"
             ).to.equal(false);
         });
@@ -275,13 +275,13 @@ describe("Descartes V2 Implementation", () => {
             await network.provider.send("evm_mine");
 
             expect(
-                await descartesV2Impl.callStatic.notifyInput(),
+                await rollupsImpl.callStatic.notifyInput(),
                 "should return true"
             ).to.equal(true);
 
-            await descartesV2Impl.notifyInput(); //actually change states before getting current phase
+            await rollupsImpl.notifyInput(); //actually change states before getting current phase
             expect(
-                await descartesV2Impl.getCurrentPhase(),
+                await rollupsImpl.getCurrentPhase(),
                 "the updated current phase"
             ).to.equal(Phase.AwaitingConsensus);
         });
@@ -293,17 +293,17 @@ describe("Descartes V2 Implementation", () => {
             ]);
             await network.provider.send("evm_mine");
 
-            await descartesV2Impl.claim(
+            await rollupsImpl.claim(
                 ethers.utils.formatBytes32String("hello")
             );
 
-            await descartesV2Impl
+            await rollupsImpl
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("halo"));
             ///END: make two different claims///
 
             expect(
-                await descartesV2Impl.callStatic.notifyInput(),
+                await rollupsImpl.callStatic.notifyInput(),
                 "phase incorrect"
             ).to.equal(false);
         });
@@ -314,10 +314,10 @@ describe("Descartes V2 Implementation", () => {
             ]);
             await network.provider.send("evm_mine");
 
-            await descartesV2Impl.notifyInput();
+            await rollupsImpl.notifyInput();
             //Now the current phase is AwaitingConsensus
             expect(
-                await descartesV2Impl.callStatic.notifyInput(),
+                await rollupsImpl.callStatic.notifyInput(),
                 "repeated calling"
             ).to.equal(false);
         });
@@ -325,41 +325,41 @@ describe("Descartes V2 Implementation", () => {
         // the following 3 tests are unnecessary because they are already tested with claim() function during conflicts
         /// ***test function resolveDispute() without modifier*** ///
         // it("resolveDispute(): if consensus, updated current phase should be InputAccumulation", async () => {
-        //     await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
-        //     await descartesV2Impl.connect(signers[2]).claim(ethers.utils.formatBytes32String("hello"));
-        //     await descartesV2Impl.resolveDispute(
+        //     await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
+        //     await rollupsImpl.connect(signers[2]).claim(ethers.utils.formatBytes32String("hello"));
+        //     await rollupsImpl.resolveDispute(
         //         await signers[0].getAddress(),
         //         await signers[1].getAddress(),
         //         ethers.utils.formatBytes32String("hello")
         //     );
         //     expect(
-        //         await descartesV2Impl.getCurrentPhase(),
+        //         await rollupsImpl.getCurrentPhase(),
         //         "updated current phase if consensus"
         //     ).to.equal(Phase.InputAccumulation);
         // });
 
         // it("resolveDispute(): if NoConflict, updated current phase should be AwaitingConsensus", async () => {
-        //     await descartesV2Impl.resolveDispute(
+        //     await rollupsImpl.resolveDispute(
         //         await signers[0].getAddress(),
         //         await signers[1].getAddress(),
         //         ethers.utils.formatBytes32String("hello")
         //     );
-        //     console.log(await descartesV2Impl.getCurrentPhase())
+        //     console.log(await rollupsImpl.getCurrentPhase())
         //     expect(
-        //         await descartesV2Impl.getCurrentPhase(),
+        //         await rollupsImpl.getCurrentPhase(),
         //         "updated current phase if consensus"
         //     ).to.equal(Phase.AwaitingConsensus);
         // });
 
         // it("resolveDispute(): if Conflict, updated current phase should be AwaitingDispute", async () => {
-        //     await descartesV2Impl.resolveDispute(
+        //     await rollupsImpl.resolveDispute(
         //         await signers[0].getAddress(),
         //         await signers[1].getAddress(),
         //         ethers.utils.formatBytes32String("hello")
         //     );
 
         //     expect(
-        //         await descartesV2Impl.getCurrentPhase(),
+        //         await rollupsImpl.getCurrentPhase(),
         //         "updated current phase if Conflict"
         //     ).to.equal(Phase.AwaitingDispute);
         //     //then start new dispute all over again
@@ -367,10 +367,10 @@ describe("Descartes V2 Implementation", () => {
     }
 
     /// ***test emitting events*** ///
-    it("event DescartesV2Created", async () => {
+    it("event RollupsCreated", async () => {
         // we use ethers.js to query historic events
         // ref: https://docs.ethers.io/v5/single-page/#/v5/getting-started/-%23-getting-started--history
-        let eventFilter = descartesV2Impl.filters.DescartesV2Created(
+        let eventFilter = rollupsImpl.filters.RollupsCreated(
             null,
             null,
             null,
@@ -378,26 +378,26 @@ describe("Descartes V2 Implementation", () => {
             null,
             null
         );
-        let event = await descartesV2Impl.queryFilter(eventFilter);
-        let eventArgs = event[0]["args"]; // get 'args' from the first DescartesV2Created event
+        let event = await rollupsImpl.queryFilter(eventFilter);
+        let eventArgs = event[0]["args"]; // get 'args' from the first RollupsCreated event
 
         expect(eventArgs["_input"], "input address").to.equal(
-            await descartesV2Impl.input()
+            await rollupsImpl.input()
         );
 
         expect(eventArgs["_output"], "output address").to.equal(
-            await descartesV2Impl.output()
+            await rollupsImpl.output()
         );
 
         expect(
             eventArgs["_validatorManager"],
             "Validator Manager address"
-        ).to.equal(await descartesV2Impl.validatorManager());
+        ).to.equal(await rollupsImpl.validatorManager());
 
         expect(
             eventArgs["_disputeManager"],
             "Dispute Manager address"
-        ).to.equal(await descartesV2Impl.disputeManager());
+        ).to.equal(await rollupsImpl.disputeManager());
 
         expect(eventArgs["_inputDuration"], "Input Duration").to.equal(
             inputDuration
@@ -413,9 +413,9 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_mine");
 
         await expect(
-            descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
+            rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(descartesV2Impl, "Claim")
+            .to.emit(rollupsImpl, "Claim")
             .withArgs(
                 0,
                 await signers[0].getAddress(),
@@ -423,11 +423,11 @@ describe("Descartes V2 Implementation", () => {
             );
 
         await expect(
-            descartesV2Impl
+            rollupsImpl
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("not hello"))
         )
-            .to.emit(descartesV2Impl, "Claim")
+            .to.emit(rollupsImpl, "Claim")
             .withArgs(
                 0,
                 await signers[1].getAddress(),
@@ -439,18 +439,18 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
 
-        await descartesV2Impl
+        await rollupsImpl
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
-            descartesV2Impl
+            rollupsImpl
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(descartesV2Impl, "Claim")
+            .to.emit(rollupsImpl, "Claim")
             .withArgs(
                 0,
                 await signers[2].getAddress(),
@@ -462,18 +462,18 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_mine");
 
         // claim epoch 1
-        await descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
 
-        await descartesV2Impl
+        await rollupsImpl
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
-            descartesV2Impl
+            rollupsImpl
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(descartesV2Impl, "Claim")
+            .to.emit(rollupsImpl, "Claim")
             .withArgs(
                 1,
                 await signers[2].getAddress(),
@@ -484,39 +484,39 @@ describe("Descartes V2 Implementation", () => {
     it("event PhaseChange", async () => {
         //advance input duration from input accumulation start
         await network.provider.send("evm_increaseTime", [
-            (await descartesV2Impl.getInputAccumulationStart()).toNumber() +
+            (await rollupsImpl.getInputAccumulationStart()).toNumber() +
                 inputDuration +
                 1,
         ]);
         await network.provider.send("evm_mine");
 
         await expect(
-            descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
+            rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(descartesV2Impl, "PhaseChange")
+            .to.emit(rollupsImpl, "PhaseChange")
             .withArgs(Phase.AwaitingConsensus);
 
-        await descartesV2Impl
+        await rollupsImpl
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
         //event PhaseChange: InputAccumulation
         await expect(
-            descartesV2Impl
+            rollupsImpl
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(descartesV2Impl, "PhaseChange")
+            .to.emit(rollupsImpl, "PhaseChange")
             .withArgs(Phase.InputAccumulation);
 
         // @dev this version doesnt include Awaiting Dispute phase
         //event PhaseChange: AwaitingDispute
         //await expect(
-        //    descartesV2Impl
+        //    rollupsImpl
         //        .connect(signers[1])
         //        .claim(ethers.utils.formatBytes32String("halo"))
         //)
-        //    .to.emit(descartesV2Impl, "PhaseChange")
+        //    .to.emit(rollupsImpl, "PhaseChange")
         //    .withArgs(Phase.AwaitingDispute);
     });
 
@@ -524,18 +524,18 @@ describe("Descartes V2 Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await descartesV2Impl
+        await rollupsImpl
             .connect(signers[2])
             .claim(ethers.utils.formatBytes32String("hello"));
 
-        await descartesV2Impl
+        await rollupsImpl
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
-            descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
+            rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(descartesV2Impl, "FinalizeEpoch")
+            .to.emit(rollupsImpl, "FinalizeEpoch")
             .withArgs(0, ethers.utils.formatBytes32String("hello"));
     });
 
@@ -549,13 +549,13 @@ describe("Descartes V2 Implementation", () => {
             await network.provider.send("evm_mine");
 
             await expect(
-                descartesV2Impl.resolveDispute(
+                rollupsImpl.resolveDispute(
                     await signers[0].getAddress(),
                     await signers[1].getAddress(),
                     ethers.utils.formatBytes32String("hello")
                 )
             )
-                .to.emit(descartesV2Impl, "ResolveDispute")
+                .to.emit(rollupsImpl, "ResolveDispute")
                 .withArgs(
                     await signers[0].getAddress(),
                     await signers[1].getAddress(),
@@ -566,7 +566,7 @@ describe("Descartes V2 Implementation", () => {
 
     it("getCurrentEpoch() without conflict", async () => {
         // initial epoch number
-        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(0);
+        expect(await rollupsImpl.getCurrentEpoch()).to.equal(0);
 
         let epochNum = 0;
 
@@ -574,7 +574,7 @@ describe("Descartes V2 Implementation", () => {
         // the length of finalized epochs array increases upon consensus without conflict
         for (let i = 0; i < 9; i++) {
             // input accumulation
-            expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+            expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
 
             // input accumulation over
             // ***epoch increases by 1***
@@ -586,27 +586,27 @@ describe("Descartes V2 Implementation", () => {
             epochNum++;
 
             await expect(
-                descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
+                rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
             )
-                .to.emit(descartesV2Impl, "Claim")
+                .to.emit(rollupsImpl, "Claim")
                 .withArgs(
                     epochNum - 1, // claim for the previous epoch
                     await signers[0].getAddress(),
                     ethers.utils.formatBytes32String("hello")
                 );
 
-            await descartesV2Impl
+            await rollupsImpl
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
-            expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+            expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
 
             await expect(
-                descartesV2Impl
+                rollupsImpl
                     .connect(signers[2])
                     .claim(ethers.utils.formatBytes32String("hello"))
             )
-                .to.emit(descartesV2Impl, "Claim")
+                .to.emit(rollupsImpl, "Claim")
                 .withArgs(
                     epochNum - 1, // claim for the previous epoch
                     await signers[2].getAddress(),
@@ -615,18 +615,18 @@ describe("Descartes V2 Implementation", () => {
             // enter input accumulation again
             // ***the length of finalized epochs array increases by 1***
             // now it is the same as the epoch number
-            expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+            expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
         }
     });
 
     it("getCurrentEpoch() with conflict", async () => {
         // initial epoch number
-        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(0);
+        expect(await rollupsImpl.getCurrentEpoch()).to.equal(0);
 
         let epochNum = 0;
 
         // input accumulation
-        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+        expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
 
         // input accumulation over
         // ***epoch increases by 1***
@@ -637,23 +637,23 @@ describe("Descartes V2 Implementation", () => {
 
         // first claim
         await expect(
-            descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
+            rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(descartesV2Impl, "Claim")
+            .to.emit(rollupsImpl, "Claim")
             .withArgs(
                 epochNum - 1, // claim for the previous epoch
                 await signers[0].getAddress(),
                 ethers.utils.formatBytes32String("hello")
             );
-        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+        expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
 
         // 2nd claim => conflict
         await expect(
-            descartesV2Impl
+            rollupsImpl
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("halo"))
         )
-            .to.emit(descartesV2Impl, "Claim")
+            .to.emit(rollupsImpl, "Claim")
             .withArgs(
                 epochNum - 1, // claim for the previous epoch
                 await signers[1].getAddress(),
@@ -662,11 +662,11 @@ describe("Descartes V2 Implementation", () => {
 
         // 3rd claim => Consensus
         await expect(
-            descartesV2Impl
+            rollupsImpl
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(descartesV2Impl, "Claim")
+            .to.emit(rollupsImpl, "Claim")
             .withArgs(
                 epochNum - 1, // claim for the previous epoch
                 await signers[2].getAddress(),
@@ -675,7 +675,7 @@ describe("Descartes V2 Implementation", () => {
         // enter input accumulation again
         // ***the length of finalized epochs array increases by 1***
         // now it is the same as the epoch number
-        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+        expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
 
         // in this epoch, signers[1] is already deleted
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
@@ -683,30 +683,30 @@ describe("Descartes V2 Implementation", () => {
         epochNum++;
         // first claim
         await expect(
-            descartesV2Impl.claim(ethers.utils.formatBytes32String("hello"))
+            rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(descartesV2Impl, "Claim")
+            .to.emit(rollupsImpl, "Claim")
             .withArgs(
                 epochNum - 1, // claim for the previous epoch
                 await signers[0].getAddress(),
                 ethers.utils.formatBytes32String("hello")
             );
-        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+        expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
 
         // 2nd claim => revert because claimer lost the dispute before
         await expect(
-            descartesV2Impl
+            rollupsImpl
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"))
         ).to.be.revertedWith("sender not allowed");
 
         // 3rd claim => Consensus
         await expect(
-            descartesV2Impl
+            rollupsImpl
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(descartesV2Impl, "Claim")
+            .to.emit(rollupsImpl, "Claim")
             .withArgs(
                 epochNum - 1, // claim for the previous epoch
                 await signers[2].getAddress(),
@@ -714,12 +714,12 @@ describe("Descartes V2 Implementation", () => {
             );
 
         // enter input accumulation again
-        expect(await descartesV2Impl.getCurrentEpoch()).to.equal(epochNum);
+        expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
     });
 
     // test delegate
     if (enableDelegate) {
-        /* example DescartesV2 delegate output looks like 
+        /* example Rollups delegate output looks like 
         {
             constants: {
                 input_duration: '0x15180',
@@ -729,13 +729,13 @@ describe("Descartes V2 Implementation", () => {
                 output_contract_address: '0x6d544390eb535d61e196c87d6b9c80dcd8628acd',
                 validator_contract_address: '0xb1ede3f5ac8654124cb5124adf0fd3885cbdd1f7',
                 dispute_contract_address: '0xa6d6d7c556ce6ada136ba32dbe530993f128ca44',
-                descartesv2_contract_address: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9'
+                rollups_contract_address: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9'
             },
             initial_epoch: '0x0',
             finalized_epochs: {
                 finalized_epochs: [],
                 initial_epoch: '0x0',
-                descartesv2_contract_address: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9',
+                rollups_contract_address: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9',
                 input_contract_address: '0xd8058efe0198ae9dd7d563e1b4938dcbc86a1f81'
             },
             current_epoch: {
@@ -745,7 +745,7 @@ describe("Descartes V2 Implementation", () => {
                 inputs: [],
                 input_contract_address: '0xd8058efe0198ae9dd7d563e1b4938dcbc86a1f81'
                 },
-                descartesv2_contract_address: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9',
+                rollups_contract_address: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9',
                 input_contract_address: '0xd8058efe0198ae9dd7d563e1b4938dcbc86a1f81'
             },
             current_phase: { InputAccumulation: {} },
@@ -777,31 +777,31 @@ describe("Descartes V2 Implementation", () => {
             expect(
                 state.constants.input_contract_address,
                 "input contract address does not match"
-            ).to.equal((await descartesV2Impl.getInputAddress()).toLowerCase());
+            ).to.equal((await rollupsImpl.getInputAddress()).toLowerCase());
             expect(
                 state.constants.output_contract_address,
                 "output contract address does not match"
             ).to.equal(
-                (await descartesV2Impl.getOutputAddress()).toLowerCase()
+                (await rollupsImpl.getOutputAddress()).toLowerCase()
             );
             expect(
                 state.constants.validator_contract_address,
                 "validator manager contract address does not match"
             ).to.equal(
                 (
-                    await descartesV2Impl.getValidatorManagerAddress()
+                    await rollupsImpl.getValidatorManagerAddress()
                 ).toLowerCase()
             );
             expect(
                 state.constants.dispute_contract_address,
                 "dispute manager contract address does not match"
             ).to.equal(
-                (await descartesV2Impl.getDisputeManagerAddress()).toLowerCase()
+                (await rollupsImpl.getDisputeManagerAddress()).toLowerCase()
             );
             expect(
-                state.constants.descartesv2_contract_address,
-                "descartesV2 contract address does not match"
-            ).to.equal(descartesV2Impl.address.toLowerCase());
+                state.constants.rollups_contract_address,
+                "rollups contract address does not match"
+            ).to.equal(rollupsImpl.address.toLowerCase());
 
             // test initial_epoch
             expect(
@@ -819,13 +819,13 @@ describe("Descartes V2 Implementation", () => {
                 "finalized_epochs.initial_epoch does not match"
             ).to.equal(initialEpoch);
             expect(
-                state.finalized_epochs.descartesv2_contract_address,
-                "finalized_epochs.descartesv2_contract_address does not match"
-            ).to.equal(descartesV2Impl.address.toLowerCase());
+                state.finalized_epochs.rollups_contract_address,
+                "finalized_epochs.rollups_contract_address does not match"
+            ).to.equal(rollupsImpl.address.toLowerCase());
             expect(
                 state.finalized_epochs.input_contract_address,
                 "finalized_epochs.input_contract_address does not match"
-            ).to.equal((await descartesV2Impl.getInputAddress()).toLowerCase());
+            ).to.equal((await rollupsImpl.getInputAddress()).toLowerCase());
 
             // test initial current_epoch
             checkCurrentEpochNum(state, initialEpoch);
@@ -840,15 +840,15 @@ describe("Descartes V2 Implementation", () => {
             expect(
                 state.current_epoch.inputs.input_contract_address,
                 "current_epoch.inputs.input_contract_address does not match"
-            ).to.equal((await descartesV2Impl.getInputAddress()).toLowerCase());
+            ).to.equal((await rollupsImpl.getInputAddress()).toLowerCase());
             expect(
-                state.current_epoch.descartesv2_contract_address,
-                "current_epoch.descartesv2_contract_address does not match"
-            ).to.equal(descartesV2Impl.address.toLowerCase());
+                state.current_epoch.rollups_contract_address,
+                "current_epoch.rollups_contract_address does not match"
+            ).to.equal(rollupsImpl.address.toLowerCase());
             expect(
                 state.current_epoch.input_contract_address,
                 "current_epoch.input_contract_address does not match"
-            ).to.equal((await descartesV2Impl.getInputAddress()).toLowerCase());
+            ).to.equal((await rollupsImpl.getInputAddress()).toLowerCase());
             expect(
                 JSON.stringify(state.current_phase.InputAccumulation) == "{}",
                 "initial phase"
@@ -857,7 +857,7 @@ describe("Descartes V2 Implementation", () => {
                 state.output_state.output_address,
                 "output_state.output_address does not match"
             ).to.equal(
-                (await descartesV2Impl.getOutputAddress()).toLowerCase()
+                (await rollupsImpl.getOutputAddress()).toLowerCase()
             );
             expect(
                 JSON.stringify(state.output_state.outputs) == "{}",
@@ -866,7 +866,7 @@ describe("Descartes V2 Implementation", () => {
 
             // *** EPOCH 0: claim when the input duration has not past ***
             await expect(
-                descartesV2Impl.claim(
+                rollupsImpl.claim(
                     ethers.utils.formatBytes32String("hello")
                 ),
                 "phase incorrect because inputDuration not over"
@@ -876,7 +876,7 @@ describe("Descartes V2 Implementation", () => {
             ]);
             await network.provider.send("evm_mine");
             await expect(
-                descartesV2Impl.claim(
+                rollupsImpl.claim(
                     ethers.utils.formatBytes32String("hello")
                 ),
                 "phase incorrect because inputDuration not over"
@@ -890,7 +890,7 @@ describe("Descartes V2 Implementation", () => {
                 inputDuration / 2 + 1,
             ]);
             await network.provider.send("evm_mine");
-            await descartesV2Impl.claim(
+            await rollupsImpl.claim(
                 ethers.utils.formatBytes32String("hello")
             );
 
@@ -929,7 +929,7 @@ describe("Descartes V2 Implementation", () => {
             // inputs are tested in the input delegate tests
 
             // *** EPOCH 0: claim to reach consensus ***
-            await descartesV2Impl
+            await rollupsImpl
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
@@ -953,7 +953,7 @@ describe("Descartes V2 Implementation", () => {
                 "signers[1] should be in the claimers list"
             ).to.equal(true);
 
-            await descartesV2Impl
+            await rollupsImpl
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
@@ -982,13 +982,13 @@ describe("Descartes V2 Implementation", () => {
             ).to.equal("0x1");
 
             // *** EPOCH 1: conflicting claims ***
-            await descartesV2Impl.claim(
+            await rollupsImpl.claim(
                 ethers.utils.formatBytes32String("hello1")
             );
             let first_claim_timestamp = (
                 await ethers.provider.getBlock("latest")
             ).timestamp;
-            await descartesV2Impl
+            await rollupsImpl
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("not hello1"));
 
@@ -1043,7 +1043,7 @@ describe("Descartes V2 Implementation", () => {
             ).to.equal("0x1");
 
             // *** EPOCH 1 -> 2: finalize after consensus times out ***
-            await descartesV2Impl.finalizeEpoch();
+            await rollupsImpl.finalizeEpoch();
 
             state = JSON.parse(await getState(initialState)); // update state
             // now can test the finalized epoch 1
@@ -1061,10 +1061,10 @@ describe("Descartes V2 Implementation", () => {
             ]);
             await network.provider.send("evm_mine");
 
-            await descartesV2Impl.claim(
+            await rollupsImpl.claim(
                 ethers.utils.formatBytes32String("hello2")
             );
-            await descartesV2Impl
+            await rollupsImpl
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("not hello2"));
 

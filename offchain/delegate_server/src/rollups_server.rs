@@ -13,13 +13,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 struct InitialState {
     initial_epoch: U256,
-    descartes_address: Address,
+    rollups_address: Address,
 }
 
 pub struct RollupsDelegateManager {
     pub fold: Arc<
         StateFold<
-            offchain::fold::descartesv2_delegate::DescartesV2FoldDelegate<
+            offchain::fold::rollups_delegate::RollupsFoldDelegate<
                 Access<Provider<Http>>,
             >,
             Access<Provider<Http>>,
@@ -45,15 +45,15 @@ impl DelegateManager for RollupsDelegateManager {
             .map_err(|e| {
                 Status::new(Code::InvalidArgument, format!("{}", e))
             })?;
-        let descartes_address = initial_state.descartes_address;
+        let rollups_address = initial_state.rollups_address;
         let initial_epoch = initial_state.initial_epoch;
 
         let contract_state = self
             .fold
-            .get_state_for_block(&(descartes_address, initial_epoch), None)
+            .get_state_for_block(&(rollups_address, initial_epoch), None)
             .await
             .map_err(|e| Status::new(Code::Unavailable, format!("{}", e)))?
-            .state; // TODO return BlockState<DescartesV2State>
+            .state; // TODO return BlockState<RollupsState>
 
         let reply = GetStateResponse {
             json_state: serde_json::to_string(&contract_state)

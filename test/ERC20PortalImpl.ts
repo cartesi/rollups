@@ -126,7 +126,7 @@ describe("ERC20Portal Implementation", async () => {
         ).to.equal(B32str);
     });
 
-    it("executeDescartesV2Output should revert if not called from output", async () => {
+    it("executeRollupsOutput should revert if not called from output", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint", "uint"],
             [
@@ -136,11 +136,11 @@ describe("ERC20Portal Implementation", async () => {
             ]
         );
         await expect(
-            portalImpl.connect(signer2).executeDescartesV2Output(data)
+            portalImpl.connect(signer2).executeRollupsOutput(data)
         ).to.be.revertedWith("only outputContract");
     });
 
-    it("executeDescartesV2Output should emit ERC20Withdrawn and return true", async () => {
+    it("executeRollupsOutput should emit ERC20Withdrawn and return true", async () => {
         await mockERC20.mock.transfer.returns(true);
 
         let data = ethers.utils.defaultAbiCoder.encode(
@@ -154,10 +154,10 @@ describe("ERC20Portal Implementation", async () => {
 
         // callStatic check return value
         expect(
-            await portalImpl.callStatic.executeDescartesV2Output(data)
+            await portalImpl.callStatic.executeRollupsOutput(data)
         ).to.equal(true);
         // check emitted event
-        await expect(portalImpl.executeDescartesV2Output(data))
+        await expect(portalImpl.executeRollupsOutput(data))
             .to.emit(portalImpl, "ERC20Withdrawn")
             .withArgs(mockERC20.address, await signer.getAddress(), 10);
     });

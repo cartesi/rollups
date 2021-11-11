@@ -158,20 +158,20 @@ pub struct FinalizedEpochs {
     /// The first epoch that will be included in `finalized_epochs`
     pub initial_epoch: U256,
 
-    pub descartesv2_contract_address: Address,
+    pub rollups_contract_address: Address,
     pub input_contract_address: Address,
 }
 
 impl FinalizedEpochs {
     pub fn new(
         initial_epoch: U256,
-        descartesv2_contract_address: Address,
+        rollups_contract_address: Address,
         input_contract_address: Address,
     ) -> Self {
         Self {
             finalized_epochs: Vector::new(),
             initial_epoch,
-            descartesv2_contract_address,
+            rollups_contract_address,
             input_contract_address,
         }
     }
@@ -213,7 +213,7 @@ pub struct EpochWithClaims {
     pub epoch_number: U256,
     pub claims: Claims,
     pub inputs: EpochInputState,
-    pub descartesv2_contract_address: Address,
+    pub rollups_contract_address: Address,
     pub input_contract_address: Address,
 }
 
@@ -222,13 +222,13 @@ pub struct EpochWithClaims {
 pub struct AccumulatingEpoch {
     pub epoch_number: U256,
     pub inputs: EpochInputState,
-    pub descartesv2_contract_address: Address,
+    pub rollups_contract_address: Address,
     pub input_contract_address: Address,
 }
 
 impl AccumulatingEpoch {
     pub fn new(
-        descartesv2_contract_address: Address,
+        rollups_contract_address: Address,
         input_contract_address: Address,
         epoch_number: U256,
     ) -> Self {
@@ -236,9 +236,9 @@ impl AccumulatingEpoch {
             epoch_number,
             inputs: EpochInputState::new(
                 epoch_number,
-                descartesv2_contract_address,
+                rollups_contract_address,
             ),
-            descartesv2_contract_address,
+            rollups_contract_address,
             input_contract_address,
         }
     }
@@ -296,12 +296,12 @@ pub struct ImmutableState {
     /// contract responsible for dispute resolution
     pub dispute_contract_address: Address,
 
-    /// descartes contract address
-    pub descartesv2_contract_address: Address,
+    /// rollups contract address
+    pub rollups_contract_address: Address,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DescartesV2State {
+pub struct RollupsState {
     pub constants: ImmutableState,
 
     pub initial_epoch: U256,

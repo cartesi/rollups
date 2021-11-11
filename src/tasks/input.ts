@@ -35,18 +35,18 @@ task("input:addInput", "Send an input to rollups")
         }
         const signer = signers[signerIndex];
 
-        let dv2Deployed = await deployments.get("DescartesV2Impl");
+        let rollupsDeployed = await deployments.get("RollupsImpl");
 
-        let dv2 = await ethers.getContractAt(
-            dv2Deployed.abi,
-            dv2Deployed.address
+        let rollups = await ethers.getContractAt(
+            rollupsDeployed.abi,
+            rollupsDeployed.address
         );
 
         let inputArtifact = await deployments.getArtifact("InputImpl");
 
         let inputContract = await ethers.getContractAt(
             inputArtifact.abi,
-            await dv2.getInputAddress()
+            await rollups.getInputAddress()
         );
 
         const tx = await inputContract.addInput(input);
