@@ -24,7 +24,7 @@ contract FeeManagerImpl is FeeManager, Ownable {
     ValidatorManagerClaimsCountedImpl ValidatorManagerCCI;
     ClaimMask numClaimsRedeemed;
     uint256 public feePerClaim;
-    IERC20 token; // the token that is used for paying fees to validators
+    IERC20 immutable token; // the token that is used for paying fees to validators
     bool lock; // reentrancy lock
 
     /// @notice functions modified by noReentrancy are not subject to recursion
