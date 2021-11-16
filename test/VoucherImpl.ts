@@ -49,6 +49,7 @@ describe("Voucher Implementation Testing", () => {
     let _destination: string;
     let _payload: string;
     let encodedVoucher: string;
+    let encodedNotice: string;
 
     beforeEach(async () => {
         // get signers
@@ -170,6 +171,8 @@ describe("Voucher Implementation Testing", () => {
         "0x8f6162fa308d2b3a15dc33cffac85f13ab349173121645aedf00f471663108be",
         "0x78ccaaab73373552f207a63599de54d7d8d0c1805f86ce7da15818d09f4cff62",
     ];
+
+    // Voucher validity proof
     let v: VoucherValidityProof = {
         epochIndex: 0,
         inputIndex: 1,
@@ -185,13 +188,51 @@ describe("Voucher Implementation Testing", () => {
         voucherMetadataProof: proof1,
         epochVoucherDriveProof: proof2,
     };
-    let epochHash = keccak256(
+    let epochHashForVoucher = keccak256(
         ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint", "uint"],
             [
                 v.epochVoucherDriveHash,
                 v.epochNoticeDriveHash,
                 v.epochMachineFinalState,
+            ]
+        )
+    );
+
+    // Notice validity proof
+    interface NoticeValidityProof {
+        epochIndex: number;
+        inputIndex: number;
+        noticeIndex: number;
+        noticeMetadataArrayDriveHash: BytesLike;
+        epochVoucherDriveHash: BytesLike;
+        epochNoticeDriveHash: BytesLike;
+        epochMachineFinalState: BytesLike;
+        noticeMetadataProof: BytesLike[];
+        epochNoticeDriveProof: BytesLike[];
+    }
+    let n: NoticeValidityProof = {
+        epochIndex: 0,
+        inputIndex: 1,
+        noticeIndex: 0,
+        noticeMetadataArrayDriveHash:
+            "0x8317104bc611f3bf9f3a7dfcdef769ef1e9191acdaa1fe2b175c9d8ccfb67741",
+        epochVoucherDriveHash:
+            "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d45",
+        epochNoticeDriveHash:
+            "0xdf15833cade8d548eff4bb66990489efd2fd2f07ebec1968e521a78a191d5c62",
+        epochMachineFinalState:
+            "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d46",
+        noticeMetadataProof: proof1,
+        epochNoticeDriveProof: proof2,
+    };
+    let epochHashForNotice = keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint", "uint"],
+            [
+                n.epochVoucherDriveHash,
+                n.epochNoticeDriveHash,
+                n.epochMachineFinalState,
             ]
         )
     );
@@ -217,6 +258,9 @@ describe("Voucher Implementation Testing", () => {
         // 0000000000000000000000000000000000000000000000000000000000000004
         // b97dd9e200000000000000000000000000000000000000000000000000000000
 
+        // Use the same hash for testing isValidNoticeProof
+        encodedNotice = encodedVoucher;
+
         expect(
             await voucherImpl.getNumberOfFinalizedEpochs(),
             "check initial epoch number"
@@ -228,7 +272,7 @@ describe("Voucher Implementation Testing", () => {
         it("executeVoucher(): execute SimpleContract.simple_function()", async () => {
             // onNewEpoch() should be called first to push some epochHashes before calling executeVoucher()
             // we need permission modifier off to call onNewEpoch()
-            await voucherImpl.onNewEpoch(epochHash);
+            await voucherImpl.onNewEpoch(epochHashForVoucher);
             expect(
                 await voucherImpl.callStatic.executeVoucher(
                     _destination,
@@ -310,7 +354,7 @@ describe("Voucher Implementation Testing", () => {
         });
 
         it("executeVoucher() should revert if voucher has already been executed", async () => {
-            await voucherImpl.onNewEpoch(epochHash);
+            await voucherImpl.onNewEpoch(epochHashForVoucher);
             await voucherImpl.executeVoucher(_destination, _payload, v);
             await expect(
                 voucherImpl.executeVoucher(_destination, _payload, v)
@@ -318,7 +362,7 @@ describe("Voucher Implementation Testing", () => {
         });
 
         it("executeVoucher() should revert if proof is not valid", async () => {
-            await voucherImpl.onNewEpoch(epochHash);
+            await voucherImpl.onNewEpoch(epochHashForVoucher);
             let _payload_new = iface.encodeFunctionData("nonExistent()");
             await expect(
                 voucherImpl.executeVoucher(_destination, _payload_new, v)
@@ -329,7 +373,7 @@ describe("Voucher Implementation Testing", () => {
     /// ***test function isValidVoucherProof()///
     it("testing function isValidVoucherProof()", async () => {
         expect(
-            await voucherImpl.isValidVoucherProof(encodedVoucher, epochHash, v)
+            await voucherImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
         ).to.equal(true);
     });
 
@@ -347,7 +391,7 @@ describe("Voucher Implementation Testing", () => {
         let tempInputIndex = v.inputIndex;
         v.inputIndex = 10;
         await expect(
-            voucherImpl.isValidVoucherProof(encodedVoucher, epochHash, v)
+            voucherImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
         ).to.be.revertedWith("epochVoucherDriveHash incorrect");
         // restore v
         v.inputIndex = tempInputIndex;
@@ -357,11 +401,49 @@ describe("Voucher Implementation Testing", () => {
         let tempVoucherIndex = v.voucherIndex;
         v.voucherIndex = 10;
         await expect(
-            voucherImpl.isValidVoucherProof(encodedVoucher, epochHash, v)
+            voucherImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
         ).to.be.revertedWith("voucherMetadataArrayDriveHash incorrect");
         // restore v
         v.voucherIndex = tempVoucherIndex;
     });
+
+    /// ***test function isValidNoticeProof()///
+    it("testing function isValidNoticeProof()", async () => {
+        expect(
+            await voucherImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
+        ).to.equal(true);
+    });
+
+    it("isValidNoticeProof() should revert when _epochHash doesn't match", async () => {
+        await expect(
+            voucherImpl.isValidNoticeProof(
+                encodedNotice,
+                ethers.utils.formatBytes32String("hello"),
+                n
+            )
+        ).to.be.revertedWith("epochHash incorrect");
+    });
+
+    it("isValidNoticeProof() should revert when epochNoticeDriveHash doesn't match", async () => {
+        let tempInputIndex = n.inputIndex;
+        n.inputIndex = 10;
+        await expect(
+            voucherImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
+        ).to.be.revertedWith("epochNoticeDriveHash incorrect");
+        // restore n
+        n.inputIndex = tempInputIndex;
+    });
+
+    it("isValidNoticeProof() should revert when noticeMetadataArrayDriveHash doesn't match", async () => {
+        let tempNoticeIndex = n.noticeIndex;
+        n.noticeIndex = 10;
+        await expect(
+            voucherImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
+        ).to.be.revertedWith("noticeMetadataArrayDriveHash incorrect");
+        // restore n
+        n.noticeIndex = tempNoticeIndex;
+    });
+
 
     /// ***test function getBitMaskPosition()*** ///
     it("testing function getBitMaskPosition()", async () => {
@@ -447,7 +529,7 @@ describe("Voucher Implementation Testing", () => {
                 // voucherIndex: 0;
                 //  inputIndex: 1;
                 //  epochIndex: 0;
-                await voucherImpl.onNewEpoch(epochHash);
+                await voucherImpl.onNewEpoch(epochHashForVoucher);
                 await voucherImpl.executeVoucher(_destination, _payload, v);
 
                 state = JSON.parse(await getState(initialState));
