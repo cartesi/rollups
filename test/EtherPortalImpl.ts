@@ -26,9 +26,9 @@ import {
     MockContract,
 } from "@ethereum-waffle/mock-contract";
 import { solidity, MockProvider, deployContract } from "ethereum-waffle";
-import { EtherPortalImpl__factory } from "../src/types/factories/EtherPortalImpl__factory";
+import { EtherPortalImpl__factory } from "../dist/src/types/factories/EtherPortalImpl__factory";
 import { Signer } from "ethers";
-import { EtherPortalImpl } from "../src/types/EtherPortalImpl";
+import { EtherPortalImpl } from "../dist/src/types/EtherPortalImpl";
 import { keccak256 } from "ethers/lib/utils";
 
 use(solidity);
@@ -41,7 +41,6 @@ describe("EtherPortal Implementation", async () => {
     let portalFactory: EtherPortalImpl__factory;
 
     beforeEach(async () => {
-        await deployments.fixture();
         [signer, signer2] = await ethers.getSigners();
 
         const Input = await deployments.getArtifact("InputImpl");

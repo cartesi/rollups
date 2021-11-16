@@ -2,8 +2,8 @@ import { deployments, ethers, network } from "hardhat";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { RollupsImpl } from "../src/types/RollupsImpl";
-import { RollupsImpl__factory } from "../src/types/factories/RollupsImpl__factory";
+import { RollupsImpl } from "../dist/src/types/RollupsImpl";
+import { RollupsImpl__factory } from "../dist/src/types/factories/RollupsImpl__factory";
 import { getState } from "./getState";
 
 use(solidity);

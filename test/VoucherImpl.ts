@@ -6,10 +6,10 @@ import {
     deployMockContract,
     MockContract,
 } from "@ethereum-waffle/mock-contract";
-import { VoucherImpl } from "../src/types/VoucherImpl";
-import { VoucherImpl__factory } from "../src/types/factories/VoucherImpl__factory";
-import { Merkle } from "../src/types/Merkle";
-import { CartesiMath } from "../src/types/CartesiMath";
+import { VoucherImpl } from "../dist/src/types/VoucherImpl";
+import { VoucherImpl__factory } from "../dist/src/types/factories/VoucherImpl__factory";
+import { Merkle } from "../dist/src/types/Merkle";
+import { CartesiMath } from "../dist/src/types/CartesiMath";
 import { Bytes, BytesLike } from "@ethersproject/bytes";
 import { keccak256 } from "ethers/lib/utils";
 import { getState } from "./getState";
@@ -27,6 +27,8 @@ use(solidity);
 // 1. uncomment lines `console.log(encodedVoucher);`.
 // 2. keccak256 the value of encodedVoucher
 // 3. take the keccak value and replace into the variable `KeccakForVoucher0` in "shell.sh"
+//    run the shell in the Cartesi machine as we need to use `merkle-tree-hash`
+//    (the shell script can be found here: https://github.com/cartesi-corp/descartes-v2/pull/120)
 // 4. run the script and modify values of `voucherMetadataArrayDriveHash` and `epochVoucherDriveHash`
 
 describe("Voucher Implementation Testing", () => {
@@ -48,7 +50,6 @@ describe("Voucher Implementation Testing", () => {
     let encodedVoucher: string;
 
     beforeEach(async () => {
-        await deployments.fixture();
         // get signers
         signers = await ethers.getSigners();
 
@@ -169,9 +170,9 @@ describe("Voucher Implementation Testing", () => {
         inputIndex: 1,
         voucherIndex: 0,
         voucherMetadataArrayDriveHash:
-            "0x84842b18ffa0a3ca497e8eb68fc326792d9141482b3cefdeee05b6c7639ccdfb",
+            "0x8317104bc611f3bf9f3a7dfcdef769ef1e9191acdaa1fe2b175c9d8ccfb67741",
         epochVoucherDriveHash:
-            "0x2157a942123603e60e93a226bf1cad66c4258675632697359d6845c186ff47d4",
+            "0xdf15833cade8d548eff4bb66990489efd2fd2f07ebec1968e521a78a191d5c62",
         epochNoticeDriveHash:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d45",
         epochMachineFinalState:
@@ -245,9 +246,9 @@ describe("Voucher Implementation Testing", () => {
 
             let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
             v_new.voucherMetadataArrayDriveHash =
-                "0xc26ccca0f2995d3584e183ff7d8e2cd9f6ac01e263a3beb8f1a2345638d2bc9c";
+                "0xe5be80823befc1f1a95536be35387f028135c20f994b55f4d7f8c5d03b93f79b";
             v_new.epochVoucherDriveHash =
-                "0x4ddc5a9a0f46871a08135296b981b86a8bca580c7f7d7de7c473089f234abab1";
+                "0xab6efb5e6cdc2a7e23180afe47e47e0eb2b410359f27e55dbd0945d368aaa25e";
             let epochHash_new = keccak256(
                 ethers.utils.defaultAbiCoder.encode(
                     ["uint", "uint", "uint"],
@@ -279,9 +280,9 @@ describe("Voucher Implementation Testing", () => {
 
             let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
             v_new.voucherMetadataArrayDriveHash =
-                "0x9bfa174d480e37b808e0bf8ac3f2c5e4e25113c435dec2e353370fe956c3cb10";
+                "0x3baf948555a6992a67b094e5139eeb80747c554edbe32e97b10bbc8fc27f6506";
             v_new.epochVoucherDriveHash =
-                "0x5b0d4f6b91fdfe5eebe393a19ee03426def24e061f78b6cb57dd19ac9e5404e8";
+                "0xefc144b11a003dbd9858588cb72309fae9b2556dc29a654624153a2f4fcabb61";
             let epochHash_new = keccak256(
                 ethers.utils.defaultAbiCoder.encode(
                     ["uint", "uint", "uint"],
@@ -384,7 +385,9 @@ describe("Voucher Implementation Testing", () => {
     if (permissionModifiersOn) {
         it("only Rollups can call onNewEpoch()", async () => {
             await expect(
-                voucherImpl.onNewEpoch(ethers.utils.formatBytes32String("hello"))
+                voucherImpl.onNewEpoch(
+                    ethers.utils.formatBytes32String("hello")
+                )
             ).to.be.revertedWith("Only rollups");
         });
     }

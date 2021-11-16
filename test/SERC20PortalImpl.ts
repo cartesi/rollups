@@ -26,11 +26,11 @@ import {
     MockContract,
 } from "@ethereum-waffle/mock-contract";
 import { solidity, MockProvider, deployContract } from "ethereum-waffle";
-import { SERC20PortalImpl__factory } from "../src/types/factories/SERC20PortalImpl__factory";
+import { SERC20PortalImpl__factory } from "../dist/src/types/factories/SERC20PortalImpl__factory";
 import { Signer } from "ethers";
-import { SERC20PortalImpl } from "../src/types/SERC20PortalImpl";
+import { SERC20PortalImpl } from "../dist/src/types/SERC20PortalImpl";
 import { keccak256 } from "ethers/lib/utils";
-import { IERC20 } from "../src/types/IERC20";
+import { IERC20 } from "../dist/src/types/IERC20";
 
 use(solidity);
 
@@ -43,7 +43,6 @@ describe("SERC20Portal Implementation", async () => {
     let portalFactory: SERC20PortalImpl__factory;
 
     beforeEach(async () => {
-        await deployments.fixture();
         [signer, signer2] = await ethers.getSigners();
 
         const Input = await deployments.getArtifact("InputImpl");
