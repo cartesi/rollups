@@ -28,7 +28,7 @@ use(solidity);
 // 2. keccak256 the value of encodedVoucher
 // 3. take the keccak value and replace into the variable `KeccakForVoucher0` in "shell.sh"
 //    run the shell in the Cartesi machine as we need to use `merkle-tree-hash`
-//    (the shell script can be found here: https://github.com/cartesi-corp/descartes-v2/pull/120)
+//    (the shell script can be found here: https://github.com/cartesi-corp/rollups/pull/120)
 // 4. run the script and modify values of `voucherMetadataArrayDriveHash` and `epochVoucherDriveHash`
 
 describe("Voucher Implementation Testing", () => {
