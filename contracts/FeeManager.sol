@@ -43,9 +43,6 @@ interface FeeManager {
         uint256 _feePerClaim
     );
 
-    /// @notice emitted on ERC20 funds deposited
-    event ERC20FundDeposited(uint256 _amount);
-
     /// @notice emitted on resetting feePerClaim
     event FeePerClaimReset(uint256 _value);
 
