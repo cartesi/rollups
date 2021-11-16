@@ -34,6 +34,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const CHALLENGE_PERIOD = 7 * DAY;
     const INPUT_LOG2_SIZE = 25;
     const VOUCHER_METADATA_LOG2_SIZE = 21;
+    const NOTICE_METADATA_LOG2_SIZE = 21;
 
     let signers = await ethers.getSigners();
 
@@ -70,6 +71,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             CHALLENGE_PERIOD,
             INPUT_LOG2_SIZE,
             VOUCHER_METADATA_LOG2_SIZE,
+            NOTICE_METADATA_LOG2_SIZE,
             [
                 await signers[0].getAddress(),
                 await signers[1].getAddress(),

@@ -74,6 +74,8 @@ contract RollupsImpl is Rollups {
     /// @param _inputLog2Size size of the input drive in this machine
     /// @param _log2VoucherMetadataArrayDriveSize size of the voucher metadata array
     //                                           drive in this machine
+    /// @param _log2NoticeMetadataArrayDriveSize size of the notice metadata array
+    //                                           drive in this machine
     /// @param _validators initial validator set
     constructor(
         uint256 _inputDuration,
@@ -82,13 +84,15 @@ contract RollupsImpl is Rollups {
         uint256 _inputLog2Size,
         // voucher constructor variables
         uint256 _log2VoucherMetadataArrayDriveSize,
+        uint256 _log2NoticeMetadataArrayDriveSize,
         // validator manager constructor variables
         address payable[] memory _validators
     ) {
         input = new InputImpl(address(this), _inputLog2Size);
         voucher = new VoucherImpl(
             address(this),
-            _log2VoucherMetadataArrayDriveSize
+            _log2VoucherMetadataArrayDriveSize,
+            _log2NoticeMetadataArrayDriveSize
         );
         validatorManager = new ValidatorManagerImpl(address(this), _validators);
         disputeManager = new DisputeManagerImpl(address(this));

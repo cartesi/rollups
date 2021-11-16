@@ -43,6 +43,7 @@ describe("Voucher Implementation Testing", () => {
     let voucherImpl: VoucherImpl;
 
     const log2VoucherMetadataArrayDriveSize = 21;
+    const log2NoticeMetadataArrayDriveSize = 21;
 
     let simpleContractAddress: string;
     let _destination: string;
@@ -89,7 +90,11 @@ describe("Voucher Implementation Testing", () => {
                 Bitmask: bitMaskAddress,
                 Merkle: merkleAddress,
             },
-            args: [mockRollups.address, log2VoucherMetadataArrayDriveSize],
+            args: [
+                mockRollups.address,
+                log2VoucherMetadataArrayDriveSize,
+                log2NoticeMetadataArrayDriveSize,
+            ],
         });
         voucherImpl = VoucherImpl__factory.connect(address, signers[0]);
 
@@ -321,16 +326,16 @@ describe("Voucher Implementation Testing", () => {
         });
     }
 
-    /// ***test function isValidProof()///
-    it("testing function isValidProof()", async () => {
+    /// ***test function isValidVoucherProof()///
+    it("testing function isValidVoucherProof()", async () => {
         expect(
-            await voucherImpl.isValidProof(encodedVoucher, epochHash, v)
+            await voucherImpl.isValidVoucherProof(encodedVoucher, epochHash, v)
         ).to.equal(true);
     });
 
-    it("isValidProof() should revert when _epochHash doesn't match", async () => {
+    it("isValidVoucherProof() should revert when _epochHash doesn't match", async () => {
         await expect(
-            voucherImpl.isValidProof(
+            voucherImpl.isValidVoucherProof(
                 encodedVoucher,
                 ethers.utils.formatBytes32String("hello"),
                 v
@@ -338,21 +343,21 @@ describe("Voucher Implementation Testing", () => {
         ).to.be.revertedWith("epochHash incorrect");
     });
 
-    it("isValidProof() should revert when epochVoucherDriveHash doesn't match", async () => {
+    it("isValidVoucherProof() should revert when epochVoucherDriveHash doesn't match", async () => {
         let tempInputIndex = v.inputIndex;
         v.inputIndex = 10;
         await expect(
-            voucherImpl.isValidProof(encodedVoucher, epochHash, v)
+            voucherImpl.isValidVoucherProof(encodedVoucher, epochHash, v)
         ).to.be.revertedWith("epochVoucherDriveHash incorrect");
         // restore v
         v.inputIndex = tempInputIndex;
     });
 
-    it("isValidProof() should revert when voucherMetadataArrayDriveHash doesn't match", async () => {
+    it("isValidVoucherProof() should revert when voucherMetadataArrayDriveHash doesn't match", async () => {
         let tempVoucherIndex = v.voucherIndex;
         v.voucherIndex = 10;
         await expect(
-            voucherImpl.isValidProof(encodedVoucher, epochHash, v)
+            voucherImpl.isValidVoucherProof(encodedVoucher, epochHash, v)
         ).to.be.revertedWith("voucherMetadataArrayDriveHash incorrect");
         // restore v
         v.voucherIndex = tempVoucherIndex;

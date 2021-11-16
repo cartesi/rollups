@@ -35,6 +35,27 @@ interface Voucher {
         bytes32[] epochVoucherDriveProof;
     }
 
+    /// @param _epochIndex which epoch the notice belongs to
+    /// @param _inputIndex which input, inside the epoch, the notice belongs to
+    /// @param _noticeIndex index of notice inside the input
+    /// @param _noticeMetadataArrayDriveHash hash of the notices metadata drive where this notice is in
+    /// @param _epochNoticeDriveHash merkle root of all epoch's notice metadata drive hashes
+    /// @param _epochNoticeDriveHash hash of NoticeMetadataArrayDrive
+    /// @param _epochMachineFinalState hash of the machine state claimed this epoch
+    /// @param _noticeMetadataProof proof that this notice's metadata is in meta data drive
+    /// @param _epochNoticeDriveProof proof that this notice metadata drive is in epoch's Notice drive
+    struct NoticeValidityProof {
+        uint256 epochIndex;
+        uint256 inputIndex;
+        uint256 noticeIndex;
+        bytes32 noticeMetadataArrayDriveHash;
+        bytes32 epochVoucherDriveHash;
+        bytes32 epochNoticeDriveHash;
+        bytes32 epochMachineFinalState;
+        bytes32[] noticeMetadataProof;
+        bytes32[] epochNoticeDriveProof;
+    }
+
     /// @notice executes voucher
     /// @param _destination address that will execute the payload
     /// @param _payload payload to be executed by destination
