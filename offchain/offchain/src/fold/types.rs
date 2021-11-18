@@ -236,7 +236,7 @@ impl AccumulatingEpoch {
             epoch_number,
             inputs: EpochInputState::new(
                 epoch_number,
-                rollups_contract_address,
+                input_contract_address,
             ),
             rollups_contract_address,
             input_contract_address,
