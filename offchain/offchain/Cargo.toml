@@ -12,7 +12,7 @@ block-subscriber = { git = "https://github.com/cartesi/offchain-utils", rev = "3
 middleware-factory = { git = "https://github.com/cartesi/offchain-utils", rev = "38342b0" }
 offchain-core = { git = "https://github.com/cartesi/offchain-utils", rev = "38342b0" }
 configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "38342b0" }
-tx-manager = { git = "https://github.com/cartesi/tx-manager", rev = "29a1abf" }
+tx-manager = { git = "https://github.com/cartesi/tx-manager", rev = "61b4d85" }
 state-fold = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
 
 ethers = { version = "0.5.3", features = [ "legacy", "ws" ] }

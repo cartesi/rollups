@@ -2561,7 +2561,6 @@ dependencies = [
 [[package]]
 name = "state-fold"
 version = "0.1.0"
-source = "git+https://github.com/cartesi/state-fold?rev=64f9c0e#64f9c0ee893438d8cdfe86783d71bfd599e81efa"
 dependencies = [
  "async-trait",
  "futures",
@@ -2575,7 +2574,6 @@ dependencies = [
 [[package]]
 name = "state-server-grpc"
 version = "0.1.0"
-source = "git+https://github.com/cartesi/state-fold?rev=64f9c0e#64f9c0ee893438d8cdfe86783d71bfd599e81efa"
 dependencies = [
  "prost 0.7.0",
  "tokio",
@@ -3028,11 +3026,10 @@ dependencies = [
 [[package]]
 name = "tx-manager"
 version = "0.1.0"
-source = "git+https://github.com/cartesi/tx-manager?rev=29a1abf#29a1abf545c57e0c50fc405954475e4a33454d8d"
+source = "git+https://github.com/cartesi/tx-manager?rev=61b4d85#61b4d85c16ee55112b512e9e2f4ae013042edf23"
 dependencies = [
  "async-trait",
  "futures",
- "offchain-core",
  "offchain-utils",
  "serde",
  "snafu",

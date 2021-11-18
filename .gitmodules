@@ -1,3 +1,6 @@
 [submodule "grpc-interfaces"]
 	path = grpc-interfaces
 	url = ../grpc-interfaces.git
+[submodule "offchain/state-fold"]
+	path = offchain/state-fold
+	url = ../state-fold.git
