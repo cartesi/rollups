@@ -42,9 +42,6 @@ describe("Voucher Implementation Testing", () => {
     let mockRollups: MockContract;
     let voucherImpl: VoucherImpl;
 
-    const log2VoucherMetadataArrayDriveSize = 21;
-    const log2NoticeMetadataArrayDriveSize = 21;
-
     let simpleContractAddress: string;
     let _destination: string;
     let _payload: string;
@@ -91,11 +88,7 @@ describe("Voucher Implementation Testing", () => {
                 Bitmask: bitMaskAddress,
                 Merkle: merkleAddress,
             },
-            args: [
-                mockRollups.address,
-                log2VoucherMetadataArrayDriveSize,
-                log2NoticeMetadataArrayDriveSize,
-            ],
+            args: [mockRollups.address],
         });
         voucherImpl = VoucherImpl__factory.connect(address, signers[0]);
 

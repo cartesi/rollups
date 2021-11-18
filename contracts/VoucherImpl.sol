@@ -28,13 +28,11 @@ contract VoucherImpl is Voucher {
     uint256 constant VOUCHER_METADATA_LOG2_SIZE = 21;
     // max size of epoch voucher drive 32 * (2^32) bytes
     uint256 constant EPOCH_VOUCHER_LOG2_SIZE = 37;
-    uint256 immutable log2VoucherMetadataArrayDriveSize;
 
     // max size of notice metadata drive 32 * (2^16) bytes
     uint256 constant NOTICE_METADATA_LOG2_SIZE = 21;
     // max size of epoch notice drive 32 * (2^32) bytes
     uint256 constant EPOCH_NOTICE_LOG2_SIZE = 37;
-    uint256 immutable log2NoticeMetadataArrayDriveSize;
 
     address immutable rollups; // rollups contract using this validator
     mapping(uint256 => uint256) internal voucherBitmask;
@@ -59,20 +57,9 @@ contract VoucherImpl is Voucher {
 
     // @notice creates VoucherImpl contract
     // @params _rollups address of rollupscontract
-    // @params _log2VoucherMetadataArrayDriveSize log2 size
-    //         of voucher metadata array drive
-    // @params _log2NoticeMetadataArrayDriveSize log2 size
-    //         of notice metadata array drive
-    constructor
-    (
-        address _rollups,
-        uint256 _log2VoucherMetadataArrayDriveSize,
-        uint256 _log2NoticeMetadataArrayDriveSize
-    )
+    constructor(address _rollups)
     {
         rollups = _rollups;
-        log2VoucherMetadataArrayDriveSize = _log2VoucherMetadataArrayDriveSize;
-        log2NoticeMetadataArrayDriveSize = _log2NoticeMetadataArrayDriveSize;
     }
 
     /// @notice executes voucher
