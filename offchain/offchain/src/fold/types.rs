@@ -305,6 +305,16 @@ pub struct ImmutableState {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct FeeManagerState {
+    pub validator_manager_address: Address,
+    pub validator_manager_balance: U256,
+    pub erc20_address: Address,
+    pub fee_per_claim: U256, // only the current value
+    // validator -> (#claimsMade, #claimsRedeemed)
+    pub validator_redeemed: HashMap<Address, (U256, U256)>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RollupsState {
     pub constants: ImmutableState,
 
@@ -314,5 +324,7 @@ pub struct RollupsState {
 
     pub current_phase: PhaseState,
 
-    pub output_state: OutputState,
+    pub voucher_state: VoucherState,
+
+    pub fee_manager_state: FeeManagerState,
 }
