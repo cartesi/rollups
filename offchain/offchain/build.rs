@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("RollupsImpl", "RollupsImpl", "rollups_contract.rs"),
         ("InputImpl", "InputImpl", "input_contract.rs"),
         ("VoucherImpl", "VoucherImpl", "voucher_contract.rs"),
-        ("FeeManagerImpl", "FeeManagerImpl", "FeeManager_contract.rs"),
+        ("FeeManagerImpl", "FeeManagerImpl", "fee_manager_contract.rs"),
     ];
 
     for (name, file, rs) in contracts {
