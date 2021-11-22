@@ -71,7 +71,7 @@ contract VoucherImpl is Voucher {
     function executeVoucher(
         address _destination,
         bytes calldata _payload,
-        VoucherValidityProof calldata _v
+        OutputValidityProof calldata _v
     ) public override noReentrancy returns (bool) {
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
 
@@ -79,7 +79,7 @@ contract VoucherImpl is Voucher {
         isValidVoucherProof(encodedVoucher, epochHashes[_v.epochIndex], _v);
 
         uint256 voucherPosition =
-            getBitMaskPosition(_v.voucherIndex, _v.inputIndex, _v.epochIndex);
+            getBitMaskPosition(_v.outputIndex, _v.inputIndex, _v.epochIndex);
 
         // check if voucher has been executed
         require(
@@ -106,14 +106,19 @@ contract VoucherImpl is Voucher {
         epochHashes.push(_epochHash);
     }
 
-    /// @notice functions modified by validProof will only be executed if
+    /// @notice functions modified by isValidProof will only be executed if
     //  the validity proof is valid
-    function isValidVoucherProof(
-        bytes memory _encodedVoucher,
+    //  @dev _epochOutputDriveHash must be _v.epochVoucherDriveHash or
+    //                                  or _v.epochNoticeDriveHash
+    function isValidProof(
+        bytes memory _encodedOutput,
         bytes32 _epochHash,
-        VoucherValidityProof calldata _v
-    ) public pure returns (bool) {
-        // prove that vouchers hash is represented in a finalized epoch
+        bytes32 _epochOutputDriveHash,
+        uint256 _epochOutputLog2Size,
+        uint256 _outputMetadataLog2Size,
+        OutputValidityProof calldata _v
+    ) internal pure returns (bool) {
+        // prove that outputs hash is represented in a finalized epoch
         require(
             keccak256(
                 abi.encodePacked(
@@ -125,125 +130,97 @@ contract VoucherImpl is Voucher {
             "epochHash incorrect"
         );
 
-        // prove that voucher metadata drive is contained in epoch's voucher drive
+        // prove that output metadata drive is contained in epoch's output drive
         require(
             Merkle.getRootAfterReplacementInDrive(
                 getIntraDrivePosition(_v.inputIndex, KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
-                EPOCH_VOUCHER_LOG2_SIZE,
-                keccak256(abi.encodePacked(_v.voucherMetadataArrayDriveHash)),
-                _v.epochVoucherDriveProof
-            ) == _v.epochVoucherDriveHash,
-            "epochVoucherDriveHash incorrect"
+                _epochOutputLog2Size,
+                keccak256(abi.encodePacked(_v.outputMetadataArrayDriveHash)),
+                _v.epochOutputDriveProof
+            ) == _epochOutputDriveHash,
+            "epochOutputDriveHash incorrect"
         );
 
-        // The hash of the voucher is converted to bytes (abi.encode) and
-        // treated as data. The metadata voucher drive stores that data while
+        // The hash of the output is converted to bytes (abi.encode) and
+        // treated as data. The metadata output drive stores that data while
         // being indifferent to its contents. To prove that the received
-        // voucher is contained in the metadata voucher drive we need to
+        // output is contained in the metadata output drive we need to
         // prove that x, where:
         // x = keccak(
         //          keccak(
-        //              keccak(hashOfVoucher[0:7]),
-        //              keccak(hashOfVoucher[8:15])
+        //              keccak(hashOfOutput[0:7]),
+        //              keccak(hashOfOutput[8:15])
         //          ),
         //          keccak(
-        //              keccak(hashOfVoucher[16:23]),
-        //              keccak(hashOfVoucher[24:31])
+        //              keccak(hashOfOutput[16:23]),
+        //              keccak(hashOfOutput[24:31])
         //          )
         //     )
-        // is contained in it. We can't simply use hashOfVoucher because the
+        // is contained in it. We can't simply use hashOfOutput because the
         // log2size of the leaf is three (8 bytes) not  five (32 bytes)
-        bytes32 merkleRootOfHashOfVoucher =
+        bytes32 merkleRootOfHashOfOutput =
             Merkle.getMerkleRootFromBytes(
-                abi.encodePacked(keccak256(_encodedVoucher)),
+                abi.encodePacked(keccak256(_encodedOutput)),
                 KECCAK_LOG2_SIZE
             );
 
-        // prove that merkle root hash of bytes(hashOfVoucher) is contained
-        // in the voucher metadata array drive
+        // prove that merkle root hash of bytes(hashOfOutput) is contained
+        // in the output metadata array drive
         require(
             Merkle.getRootAfterReplacementInDrive(
-                getIntraDrivePosition(_v.voucherIndex, KECCAK_LOG2_SIZE),
+                getIntraDrivePosition(_v.outputIndex, KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
-                VOUCHER_METADATA_LOG2_SIZE,
-                merkleRootOfHashOfVoucher,
-                _v.voucherMetadataProof
-            ) == _v.voucherMetadataArrayDriveHash,
-            "voucherMetadataArrayDriveHash incorrect"
+                _outputMetadataLog2Size,
+                merkleRootOfHashOfOutput,
+                _v.outputMetadataProof
+            ) == _v.outputMetadataArrayDriveHash,
+            "outputMetadataArrayDriveHash incorrect"
         );
 
         return true;
     }
 
-    /// @notice functions modified by validProof will only be executed if
+    /// @notice functions modified by isValidVoucherProof will only be executed if
+    //  the validity proof is valid
+    function isValidVoucherProof(
+        bytes memory _encodedVoucher,
+        bytes32 _epochHash,
+        OutputValidityProof calldata _v
+    )
+        public
+        pure
+        returns (bool)
+    {
+        return isValidProof(
+            _encodedVoucher,
+            _epochHash,
+            _v.epochVoucherDriveHash,
+            EPOCH_VOUCHER_LOG2_SIZE,
+            VOUCHER_METADATA_LOG2_SIZE,
+            _v
+        );
+    }
+
+    /// @notice functions modified by isValidNoticeProof will only be executed if
     //  the validity proof is valid
     function isValidNoticeProof(
         bytes memory _encodedNotice,
         bytes32 _epochHash,
-        NoticeValidityProof calldata _v
-    ) public pure returns (bool) {
-        // prove that notices hash is represented in a finalized epoch
-        require(
-            keccak256(
-                abi.encodePacked(
-                    _v.epochVoucherDriveHash,
-                    _v.epochNoticeDriveHash,
-                    _v.epochMachineFinalState
-                )
-            ) == _epochHash,
-            "epochHash incorrect"
+        OutputValidityProof calldata _v
+    )
+        public
+        pure
+        returns (bool)
+    {
+        return isValidProof(
+            _encodedNotice,
+            _epochHash,
+            _v.epochNoticeDriveHash,
+            EPOCH_NOTICE_LOG2_SIZE,
+            NOTICE_METADATA_LOG2_SIZE,
+            _v
         );
-
-        // prove that notice metadata drive is contained in epoch's notice drive
-        require(
-            Merkle.getRootAfterReplacementInDrive(
-                getIntraDrivePosition(_v.inputIndex, KECCAK_LOG2_SIZE),
-                KECCAK_LOG2_SIZE,
-                EPOCH_NOTICE_LOG2_SIZE,
-                keccak256(abi.encodePacked(_v.noticeMetadataArrayDriveHash)),
-                _v.epochNoticeDriveProof
-            ) == _v.epochNoticeDriveHash,
-            "epochNoticeDriveHash incorrect"
-        );
-
-        // The hash of the notice is converted to bytes (abi.encode) and
-        // treated as data. The metadata notice drive stores that data while
-        // being indifferent to its contents. To prove that the received
-        // notice is contained in the metadata notice drive we need to
-        // prove that x, where:
-        // x = keccak(
-        //          keccak(
-        //              keccak(hashOfNotice[0:7]),
-        //              keccak(hashOfNotice[8:15])
-        //          ),
-        //          keccak(
-        //              keccak(hashOfNotice[16:23]),
-        //              keccak(hashOfNotice[24:31])
-        //          )
-        //     )
-        // is contained in it. We can't simply use hashOfNotice because the
-        // log2size of the leaf is three (8 bytes) not  five (32 bytes)
-        bytes32 merkleRootOfHashOfNotice =
-            Merkle.getMerkleRootFromBytes(
-                abi.encodePacked(keccak256(_encodedNotice)),
-                KECCAK_LOG2_SIZE
-            );
-
-        // prove that merkle root hash of bytes(hashOfNotice) is contained
-        // in the notice metadata array drive
-        require(
-            Merkle.getRootAfterReplacementInDrive(
-                getIntraDrivePosition(_v.noticeIndex, KECCAK_LOG2_SIZE),
-                KECCAK_LOG2_SIZE,
-                NOTICE_METADATA_LOG2_SIZE,
-                merkleRootOfHashOfNotice,
-                _v.noticeMetadataProof
-            ) == _v.noticeMetadataArrayDriveHash,
-            "noticeMetadataArrayDriveHash incorrect"
-        );
-
-        return true;
     }
 
     /// @notice get voucher position on bitmask
@@ -294,7 +271,32 @@ contract VoucherImpl is Voucher {
     }
 
     /// @notice get log2 size of epoch voucher drive
-    function getEpochVoucherLog2Size() public pure override returns (uint256) {
+    function getEpochVoucherLog2Size()
+        public
+        pure
+        override
+        returns (uint256)
+    {
         return EPOCH_VOUCHER_LOG2_SIZE;
+    }
+
+    /// @notice get log2 size of notice metadata drive
+    function getNoticeMetadataLog2Size()
+        public
+        pure
+        override
+        returns (uint256)
+    {
+        return NOTICE_METADATA_LOG2_SIZE;
+    }
+
+    /// @notice get log2 size of epoch notice drive
+    function getEpochNoticeLog2Size()
+        public
+        pure
+        override
+        returns (uint256)
+    {
+        return EPOCH_NOTICE_LOG2_SIZE;
     }
 }

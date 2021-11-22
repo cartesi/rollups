@@ -14,46 +14,25 @@
 pragma solidity >=0.7.0;
 
 interface Voucher {
-    /// @param _epochIndex which epoch the voucher belongs to
-    /// @param _inputIndex which input, inside the epoch, the voucher belongs to
-    /// @param _voucherIndex index of voucher inside the input
-    /// @param _voucherMetadataArrayDriveHash hash of the vouchers metadata drive where this voucher is in
+    /// @param _epochIndex which epoch the output belongs to
+    /// @param _inputIndex which input, inside the epoch, the output belongs to
+    /// @param _outputIndex index of output inside the input
+    /// @param _outputMetadataArrayDriveHash hash of the output's metadata drive where this output is in
     /// @param _epochVoucherDriveHash merkle root of all epoch's voucher metadata drive hashes
     /// @param _epochNoticeDriveHash hash of NoticeMetadataArrayDrive
     /// @param _epochMachineFinalState hash of the machine state claimed this epoch
-    /// @param _voucherMetadataProof proof that this voucher's metadata is in meta data drive
-    /// @param _epochVoucherDriveProof proof that this voucher metadata drive is in epoch's Voucher drive
-    struct VoucherValidityProof {
+    /// @param _outputMetadataProof proof that this output's metadata is in meta data drive
+    /// @param _epochOutputDriveProof proof that this output metadata drive is in epoch's Output drive
+    struct OutputValidityProof {
         uint256 epochIndex;
         uint256 inputIndex;
-        uint256 voucherIndex;
-        bytes32 voucherMetadataArrayDriveHash;
+        uint256 outputIndex;
+        bytes32 outputMetadataArrayDriveHash;
         bytes32 epochVoucherDriveHash;
         bytes32 epochNoticeDriveHash;
         bytes32 epochMachineFinalState;
-        bytes32[] voucherMetadataProof;
-        bytes32[] epochVoucherDriveProof;
-    }
-
-    /// @param _epochIndex which epoch the notice belongs to
-    /// @param _inputIndex which input, inside the epoch, the notice belongs to
-    /// @param _noticeIndex index of notice inside the input
-    /// @param _noticeMetadataArrayDriveHash hash of the notices metadata drive where this notice is in
-    /// @param _epochNoticeDriveHash merkle root of all epoch's notice metadata drive hashes
-    /// @param _epochNoticeDriveHash hash of NoticeMetadataArrayDrive
-    /// @param _epochMachineFinalState hash of the machine state claimed this epoch
-    /// @param _noticeMetadataProof proof that this notice's metadata is in meta data drive
-    /// @param _epochNoticeDriveProof proof that this notice metadata drive is in epoch's Notice drive
-    struct NoticeValidityProof {
-        uint256 epochIndex;
-        uint256 inputIndex;
-        uint256 noticeIndex;
-        bytes32 noticeMetadataArrayDriveHash;
-        bytes32 epochVoucherDriveHash;
-        bytes32 epochNoticeDriveHash;
-        bytes32 epochMachineFinalState;
-        bytes32[] noticeMetadataProof;
-        bytes32[] epochNoticeDriveProof;
+        bytes32[] outputMetadataProof;
+        bytes32[] epochOutputDriveProof;
     }
 
     /// @notice executes voucher
@@ -65,7 +44,7 @@ interface Voucher {
     function executeVoucher(
         address _destination,
         bytes calldata _payload,
-        VoucherValidityProof calldata _v
+        OutputValidityProof calldata _v
     ) external returns (bool);
 
     /// @notice called by rollups when an epoch is finalized
@@ -84,6 +63,18 @@ interface Voucher {
 
     /// @notice get log2 size of epoch voucher drive
     function getEpochVoucherLog2Size()
+        external
+        pure
+        returns (uint256);
+
+    /// @notice get log2 size of notice metadata drive
+    function getNoticeMetadataLog2Size()
+        external
+        pure
+        returns (uint256);
+
+    /// @notice get log2 size of epoch notice drive
+    function getEpochNoticeLog2Size()
         external
         pure
         returns (uint256);

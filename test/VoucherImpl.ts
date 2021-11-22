@@ -21,7 +21,7 @@ use(solidity);
 // Normally, the address of that contract may change on different machines, resulting in different merkle proofs.
 // That's why we deploy that contract deterministically.
 
-// In case you need to modify proofs, modify the value of `voucherMetadataArrayDriveHash` and `epochVoucherDriveHash`
+// In case you need to modify proofs, modify the value of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` or `epochNoticeDriveHash`
 
 // Steps for modification are as follows:
 // 1. uncomment lines `console.log(encodedVoucher);`.
@@ -29,7 +29,7 @@ use(solidity);
 // 3. take the keccak value and replace into the variable `KeccakForVoucher0` in "shell.sh"
 //    run the shell in the Cartesi machine as we need to use `merkle-tree-hash`
 //    (the shell script can be found here: https://github.com/cartesi-corp/rollups/pull/120)
-// 4. run the script and modify values of `voucherMetadataArrayDriveHash` and `epochVoucherDriveHash`
+// 4. run the script and modify values of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` or `epochNoticeDriveHash`
 
 describe("Voucher Implementation Testing", () => {
     let enableDelegate = process.env["DELEGATE_TEST"];
@@ -100,17 +100,18 @@ describe("Voucher Implementation Testing", () => {
         simpleContractAddress = simpleContract.address;
     });
 
-    interface VoucherValidityProof {
+    interface OutputValidityProof {
         epochIndex: number;
         inputIndex: number;
-        voucherIndex: number;
-        voucherMetadataArrayDriveHash: BytesLike;
+        outputIndex: number;
+        outputMetadataArrayDriveHash: BytesLike;
         epochVoucherDriveHash: BytesLike;
         epochNoticeDriveHash: BytesLike;
         epochMachineFinalState: BytesLike;
-        voucherMetadataProof: BytesLike[];
-        epochVoucherDriveProof: BytesLike[];
+        outputMetadataProof: BytesLike[];
+        epochOutputDriveProof: BytesLike[];
     }
+
     // proofs are from bottom to top
     let proof1 = [
         "0xae39ce8537aca75e2eff3e38c98011dfe934e700a0967732fc07b430dd656a23",
@@ -166,11 +167,11 @@ describe("Voucher Implementation Testing", () => {
     ];
 
     // Voucher validity proof
-    let v: VoucherValidityProof = {
+    let v: OutputValidityProof = {
         epochIndex: 0,
         inputIndex: 1,
-        voucherIndex: 0,
-        voucherMetadataArrayDriveHash:
+        outputIndex: 0,
+        outputMetadataArrayDriveHash:
             "0x8317104bc611f3bf9f3a7dfcdef769ef1e9191acdaa1fe2b175c9d8ccfb67741",
         epochVoucherDriveHash:
             "0xdf15833cade8d548eff4bb66990489efd2fd2f07ebec1968e521a78a191d5c62",
@@ -178,8 +179,8 @@ describe("Voucher Implementation Testing", () => {
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d45",
         epochMachineFinalState:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d46",
-        voucherMetadataProof: proof1,
-        epochVoucherDriveProof: proof2,
+        outputMetadataProof: proof1,
+        epochOutputDriveProof: proof2,
     };
     let epochHashForVoucher = keccak256(
         ethers.utils.defaultAbiCoder.encode(
@@ -193,22 +194,11 @@ describe("Voucher Implementation Testing", () => {
     );
 
     // Notice validity proof
-    interface NoticeValidityProof {
-        epochIndex: number;
-        inputIndex: number;
-        noticeIndex: number;
-        noticeMetadataArrayDriveHash: BytesLike;
-        epochVoucherDriveHash: BytesLike;
-        epochNoticeDriveHash: BytesLike;
-        epochMachineFinalState: BytesLike;
-        noticeMetadataProof: BytesLike[];
-        epochNoticeDriveProof: BytesLike[];
-    }
-    let n: NoticeValidityProof = {
+    let n: OutputValidityProof = {
         epochIndex: 0,
         inputIndex: 1,
-        noticeIndex: 0,
-        noticeMetadataArrayDriveHash:
+        outputIndex: 0,
+        outputMetadataArrayDriveHash:
             "0x8317104bc611f3bf9f3a7dfcdef769ef1e9191acdaa1fe2b175c9d8ccfb67741",
         epochVoucherDriveHash:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d45",
@@ -216,8 +206,8 @@ describe("Voucher Implementation Testing", () => {
             "0xdf15833cade8d548eff4bb66990489efd2fd2f07ebec1968e521a78a191d5c62",
         epochMachineFinalState:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d46",
-        noticeMetadataProof: proof1,
-        epochNoticeDriveProof: proof2,
+        outputMetadataProof: proof1,
+        epochOutputDriveProof: proof2,
     };
     let epochHashForNotice = keccak256(
         ethers.utils.defaultAbiCoder.encode(
@@ -287,7 +277,7 @@ describe("Voucher Implementation Testing", () => {
             // console.log(encodedVoucher_new);
 
             let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-            v_new.voucherMetadataArrayDriveHash =
+            v_new.outputMetadataArrayDriveHash =
                 "0xe5be80823befc1f1a95536be35387f028135c20f994b55f4d7f8c5d03b93f79b";
             v_new.epochVoucherDriveHash =
                 "0xab6efb5e6cdc2a7e23180afe47e47e0eb2b410359f27e55dbd0945d368aaa25e";
@@ -321,7 +311,7 @@ describe("Voucher Implementation Testing", () => {
             // console.log(encodedVoucher_new);
 
             let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-            v_new.voucherMetadataArrayDriveHash =
+            v_new.outputMetadataArrayDriveHash =
                 "0x3baf948555a6992a67b094e5139eeb80747c554edbe32e97b10bbc8fc27f6506";
             v_new.epochVoucherDriveHash =
                 "0xefc144b11a003dbd9858588cb72309fae9b2556dc29a654624153a2f4fcabb61";
@@ -380,24 +370,24 @@ describe("Voucher Implementation Testing", () => {
         ).to.be.revertedWith("epochHash incorrect");
     });
 
-    it("isValidVoucherProof() should revert when epochVoucherDriveHash doesn't match", async () => {
+    it("isValidVoucherProof() should revert when epochOutputDriveHash doesn't match", async () => {
         let tempInputIndex = v.inputIndex;
         v.inputIndex = 10;
         await expect(
             voucherImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
-        ).to.be.revertedWith("epochVoucherDriveHash incorrect");
+        ).to.be.revertedWith("epochOutputDriveHash incorrect");
         // restore v
         v.inputIndex = tempInputIndex;
     });
 
-    it("isValidVoucherProof() should revert when voucherMetadataArrayDriveHash doesn't match", async () => {
-        let tempVoucherIndex = v.voucherIndex;
-        v.voucherIndex = 10;
+    it("isValidVoucherProof() should revert when outputMetadataArrayDriveHash doesn't match", async () => {
+        let tempVoucherIndex = v.outputIndex;
+        v.outputIndex = 10;
         await expect(
             voucherImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
-        ).to.be.revertedWith("voucherMetadataArrayDriveHash incorrect");
+        ).to.be.revertedWith("outputMetadataArrayDriveHash incorrect");
         // restore v
-        v.voucherIndex = tempVoucherIndex;
+        v.outputIndex = tempVoucherIndex;
     });
 
     /// ***test function isValidNoticeProof()///
@@ -417,24 +407,24 @@ describe("Voucher Implementation Testing", () => {
         ).to.be.revertedWith("epochHash incorrect");
     });
 
-    it("isValidNoticeProof() should revert when epochNoticeDriveHash doesn't match", async () => {
+    it("isValidNoticeProof() should revert when epochOutputDriveHash doesn't match", async () => {
         let tempInputIndex = n.inputIndex;
         n.inputIndex = 10;
         await expect(
             voucherImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
-        ).to.be.revertedWith("epochNoticeDriveHash incorrect");
+        ).to.be.revertedWith("epochOutputDriveHash incorrect");
         // restore n
         n.inputIndex = tempInputIndex;
     });
 
-    it("isValidNoticeProof() should revert when noticeMetadataArrayDriveHash doesn't match", async () => {
-        let tempNoticeIndex = n.noticeIndex;
-        n.noticeIndex = 10;
+    it("isValidNoticeProof() should revert when outputMetadataArrayDriveHash doesn't match", async () => {
+        let tempNoticeIndex = n.outputIndex;
+        n.outputIndex = 10;
         await expect(
             voucherImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
-        ).to.be.revertedWith("noticeMetadataArrayDriveHash incorrect");
+        ).to.be.revertedWith("outputMetadataArrayDriveHash incorrect");
         // restore n
-        n.noticeIndex = tempNoticeIndex;
+        n.outputIndex = tempNoticeIndex;
     });
 
 
@@ -519,7 +509,7 @@ describe("Voucher Implementation Testing", () => {
             if (!permissionModifiersOn) {
                 // disable modifiers to call onNewEpoch()
                 /// ***test case 2 - only one voucher executed
-                // voucherIndex: 0;
+                // outputIndex: 0;
                 //  inputIndex: 1;
                 //  epochIndex: 0;
                 await voucherImpl.onNewEpoch(epochHashForVoucher);
@@ -545,8 +535,8 @@ describe("Voucher Implementation Testing", () => {
                 );
 
                 let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-                v_new.epochIndex = 1; // we use the same voucherIndex and inputIndex
-                v_new.voucherMetadataArrayDriveHash =
+                v_new.epochIndex = 1; // we use the same outputIndex and inputIndex
+                v_new.outputMetadataArrayDriveHash =
                     "0xc26ccca0f2995d3584e183ff7d8e2cd9f6ac01e263a3beb8f1a2345638d2bc9c";
                 v_new.epochVoucherDriveHash =
                     "0x4ddc5a9a0f46871a08135296b981b86a8bca580c7f7d7de7c473089f234abab1";
@@ -584,7 +574,7 @@ describe("Voucher Implementation Testing", () => {
                 _payload_new = iface.encodeFunctionData("nonExistent()");
                 v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
                 v_new.epochIndex = 2;
-                v_new.voucherMetadataArrayDriveHash =
+                v_new.outputMetadataArrayDriveHash =
                     "0x9bfa174d480e37b808e0bf8ac3f2c5e4e25113c435dec2e353370fe956c3cb10";
                 v_new.epochVoucherDriveHash =
                     "0x5b0d4f6b91fdfe5eebe393a19ee03426def24e061f78b6cb57dd19ac9e5404e8";
@@ -611,7 +601,7 @@ describe("Voucher Implementation Testing", () => {
                 // since the execution was failed, everything should remain the same
                 expect(
                     Object.keys(state.vouchers).length,
-                    "only 1 voucherIndex"
+                    "only 1 outputIndex"
                 ).to.equal(1);
                 expect(
                     Object.keys(state.vouchers[0]).length,
@@ -639,7 +629,7 @@ describe("Voucher Implementation Testing", () => {
                 state = JSON.parse(await getState(initialState));
                 expect(
                     Object.keys(state.vouchers).length,
-                    "still only 1 voucherIndex"
+                    "still only 1 outputIndex"
                 ).to.equal(1);
                 expect(
                     Object.keys(state.vouchers[0]).length,
