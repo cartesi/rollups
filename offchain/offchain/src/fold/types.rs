@@ -1,7 +1,7 @@
 use offchain_core::ethers;
 
 use ethers::abi::{encode, Token};
-use ethers::types::{Address, H256, U256, U64};
+use ethers::types::{Address, H256, I256, U256, U64};
 use im::{HashMap, HashSet, Vector};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -307,11 +307,18 @@ pub struct ImmutableState {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FeeManagerState {
     pub validator_manager_address: Address,
-    pub validator_manager_balance: U256,
+    pub fee_manager_balance: U256,
     pub erc20_address: Address,
     pub fee_per_claim: U256, // only the current value
-    // validator -> (#claimsMade, #claimsRedeemed)
-    pub validator_redeemed: HashMap<Address, (U256, U256)>,
+    /// Tuple containing (validator, #claimsRedeemed)
+    /// (1, 200)
+    /// (2, 300)
+    /// (1, 50)
+    ///
+    /// validator_redeemed = [(1, 250), (2, 300)]
+    pub validator_redeemed: [Option<(Address, U256)>; 8],
+    /// Balance of fee manager contract minus amount of unredeemed fees
+    pub leftover_balance: I256,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
