@@ -23,30 +23,6 @@ use im::HashMap;
 #[derive(Default)]
 pub struct FeeManagerDelegate {}
 
-/// voucher_position = voucher_index * 2 ** 128 + input_index * 2 ** 64 + epoch
-/// We always assume indices have at most 8 bytes, as does rust
-fn convert_voucher_position_to_indices(
-    voucher_position: U256,
-) -> (usize, usize, usize) {
-    let mut pos_bytes = [0u8; 32];
-    voucher_position.to_big_endian(&mut pos_bytes);
-
-    let mut voucher_index_bytes = [0u8; 8];
-    voucher_index_bytes.copy_from_slice(&pos_bytes[8..16]);
-
-    let mut input_index_bytes = [0u8; 8];
-    input_index_bytes.copy_from_slice(&pos_bytes[16..24]);
-
-    let mut epoch_bytes = [0u8; 8];
-    epoch_bytes.copy_from_slice(&pos_bytes[24..32]);
-
-    (
-        usize::from_be_bytes(voucher_index_bytes),
-        usize::from_be_bytes(input_index_bytes),
-        usize::from_be_bytes(epoch_bytes),
-    )
-}
-
 #[async_trait]
 impl StateFoldDelegate for FeeManagerDelegate {
     type InitialState = Address;
@@ -63,6 +39,7 @@ impl StateFoldDelegate for FeeManagerDelegate {
             .build_sync_contract(*fee_manager_address, block.number, FeeManagerImpl::new)
             .await;
 
+        // `fee_manager_created` event
         let events = contract.fee_manager_created_filter().query().await.context(
             SyncContractError {
                 err: "Error querying for fee manager created events",
@@ -70,6 +47,7 @@ impl StateFoldDelegate for FeeManagerDelegate {
         )?;
         let created_event = events.first().unwrap();
 
+        // `fee_redeemed` events
         let events = contract.fee_redeemed_filter().query().await.context(
             SyncContractError {
                 err: "Error querying for fee redeemed events",
@@ -90,27 +68,21 @@ impl StateFoldDelegate for FeeManagerDelegate {
             validator_redeemed[index] = Some((*sum.0, *sum.1));
         }
 
-        let mut vouchers: HashMap<usize, HashMap<usize, HashMap<usize, bool>>> =
-            HashMap::new();
-        for ev in events {
-            let (voucher_index, input_index, epoch_index) =
-                convert_voucher_position_to_indices(ev.voucher_position);
-            vouchers
-                .entry(voucher_index)
-                .or_insert_with(|| HashMap::new())
-                .entry(input_index)
-                .or_insert_with(|| HashMap::new())
-                .entry(epoch_index)
-                .or_insert_with(|| true);
-        }
+        // filter event `Transfer(sender, recipient, amount) at erc20 address
+        // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/86bd4d73896afcb35a205456e361436701823c7a/contracts/token/ERC20/ERC20.sol#L238
+        // filter recipient as `fee_manager`
+        // balance of fee manager = total income - total fees redeemed by validators
+
+
+        // leftover_balance seems to be overlapped with validator manager delegate
 
         Ok(FeeManagerState {
             validator_manager_address: created_event.validator_manager_cci,
             erc20_address: created_event.erc20,
             fee_per_claim: created_event.fee_per_claim,
             validator_redeemed,
-            leftover_balance: I256::zero(),
             fee_manager_balance: U256::zero(),
+            leftover_balance: I256::zero(),
         })
     }
 

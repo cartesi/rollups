@@ -307,17 +307,12 @@ pub struct ImmutableState {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FeeManagerState {
     pub validator_manager_address: Address,
-    pub fee_manager_balance: U256,
     pub erc20_address: Address,
     pub fee_per_claim: U256, // only the current value
-    /// Tuple containing (validator, #claimsRedeemed)
-    /// (1, 200)
-    /// (2, 300)
-    /// (1, 50)
-    ///
-    /// validator_redeemed = [(1, 250), (2, 300)]
+    /// Tuple containing (validator, #claims_redeemed_so_far)
     pub validator_redeemed: [Option<(Address, U256)>; 8],
-    /// Balance of fee manager contract minus amount of unredeemed fees
+    pub fee_manager_balance: U256,
+    /// Balance of fee manager contract minus amount of to-be-redeemed fees
     pub leftover_balance: I256,
 }
 
