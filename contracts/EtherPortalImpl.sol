@@ -57,7 +57,11 @@ contract EtherPortalImpl is EtherPortal {
             uint256 value
         ) = abi.decode(_data, (address, uint256));
 
-        receiver.transfer(value);
+        // We used to call receiver.transfer(value) but it's no
+        // longer considered safe, as it assumes gas costs are
+        // immutable, while in fact they are not.
+        (bool success, ) = receiver.call{value: value}("");
+        require(success, "transfer failed");
 
         emit EtherWithdrawn(receiver, value);
 

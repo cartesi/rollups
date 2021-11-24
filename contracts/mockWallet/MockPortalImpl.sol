@@ -167,8 +167,8 @@ contract MockPortalImpl is MockPortal {
         onlyVoucherContract
         returns (bool)
     {
-        // transfer reverts on failure
-        _receiver.transfer(_amount);
+        (bool success,) = _receiver.call{value: _amount}("");
+        require(success, "transfer failed");
 
         emit EtherWithdrawn(_receiver, _amount);
         return true;
