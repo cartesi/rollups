@@ -28,9 +28,9 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 # build
 COPY ./offchain .
-RUN cargo build --release --bin voucher_server_main
+RUN cargo build --release --bin offchain_main
 # for alpine, run this instead
-# RUN cargo build --release --target x86_64-unknown-linux-musl --bin voucher_server_main
+# RUN cargo build --release --target x86_64-unknown-linux-musl --bin offchain_main
 
 
 ## Run application
@@ -39,12 +39,12 @@ RUN cargo build --release --bin voucher_server_main
 FROM debian:buster-slim  AS runtime
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR app
-COPY --from=builder /rollups/offchain/target/release/voucher_server_main /usr/local/bin
+COPY --from=builder /rollups/offchain/target/release/offchain_main /usr/local/bin
 
-# alpine
+# alpine (untested)
 # FROM alpine AS runtime
 # RUN addgroup -S myuser && adduser -S myuser -G myuser
-# COPY --from=builder /rollups/offchain/target/x86_64-unknown-linux-musl/release/voucher_server_main /usr/local/bin
+# COPY --from=builder /rollups/offchain/target/x86_64-unknown-linux-musl/release/offchain_main /usr/local/bin
 # USER myuser
 
-ENTRYPOINT ["/usr/local/bin/voucher_server_main"]
+ENTRYPOINT ["/usr/local/bin/offchain_main"]
