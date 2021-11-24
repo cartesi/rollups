@@ -17,7 +17,7 @@ rate = 20
 confirmations = 10
 
 # end points
-signer_http_endpoint = "http://signer:8555"
-ws_endpoint = "ws://ws_endpoint:8556"
-state_fold_grpc_endpoint = "http://state_fold:8557"
-mm_endpoint = "http://state_fold:8557"
+signer_http_endpoint = "signer"
+ws_endpoint = "ws_endpoint"
+state_fold_grpc_endpoint = "state_fold_grpc_endpoint"
+mm_endpoint = "mm_endpoint"
