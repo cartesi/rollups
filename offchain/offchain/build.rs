@@ -36,6 +36,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         write_contract(name, &path, &destination)?;
     }
 
+    let path ="../../artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json";
+    let destination = "./src/contracts/erc20_contract.rs";
+    write_contract("ERC20", &path, &destination)?;
+
     tonic_build::configure().build_server(false).compile(
         &[
             "../../grpc-interfaces/versioning.proto",
