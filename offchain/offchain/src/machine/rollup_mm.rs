@@ -257,7 +257,7 @@ impl MachineInterface for MachineManager {
 
         let notices_metadata_hash = epoch_response
             .most_recent_notices_epoch_root_hash
-            .expect("Machine Manager should return most_recent_vouchers_epoch_root_hash")
+            .expect("Machine Manager should return most_recent_notices_epoch_root_hash")
             .data;
 
         let machine_state_hash = epoch_response

@@ -225,7 +225,7 @@ contract MockInputImpl is MockInput {
             }
         }
 
-        //finalize the epoch after processing 10 inputs with the voucher contract on epoch
+        //finalize the epoch after processing 10 inputs with the Output contract on epoch
 
         return true;
     }

@@ -3,10 +3,10 @@ use offchain_core::ethers;
 use crate::contracts::rollups_contract::*;
 
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
-use super::voucher_delegate::VoucherFoldDelegate;
+use super::output_delegate::OutputFoldDelegate;
 use super::sealed_epoch_delegate::SealedEpochState;
 use super::types::{
-    AccumulatingEpoch, RollupsState, ImmutableState, VoucherState,
+    AccumulatingEpoch, RollupsState, ImmutableState, OutputState,
     PhaseState,
 };
 
@@ -28,17 +28,17 @@ use ethers::types::{Address, U256};
 /// Rollups StateActor Delegate, which implements `sync` and `fold`.
 pub struct RollupsFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
     epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
-    voucher_fold: Arc<StateFold<VoucherFoldDelegate, DA>>,
+    output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
 }
 
 impl<DA: DelegateAccess + Send + Sync + 'static> RollupsFoldDelegate<DA> {
     pub fn new(
         epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
-        voucher_fold: Arc<StateFold<VoucherFoldDelegate, DA>>,
+        output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
     ) -> Self {
         Self {
             epoch_fold,
-            voucher_fold,
+            output_fold,
         }
     }
 }
@@ -124,16 +124,16 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
-        let voucher_state = self
-            .voucher_fold
+        let output_state = self
+            .output_fold
             .get_state_for_block(
-                &constants.voucher_contract_address,
+                &constants.output_contract_address,
                 Some(block.hash),
             )
             .await
             .map_err(|e| {
                 SyncDelegateError {
-                    err: format!("Voucher state fold error: {:?}", e),
+                    err: format!("Output state fold error: {:?}", e),
                 }
                 .build()
             })?
@@ -144,7 +144,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             constants,
             block,
             &epoch_number,
-            voucher_state,
+            output_state,
         ))
     }
 
@@ -155,7 +155,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         _access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         let constants = previous_state.constants.clone();
-        let voucher_address = constants.voucher_contract_address;
+        let output_address = constants.output_contract_address;
 
         // get raw state from EpochFoldDelegate
         let raw_contract_state = self
@@ -176,13 +176,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
-        let voucher_state = self
-            .voucher_fold
-            .get_state_for_block(&voucher_address, Some(block.hash))
+        let output_state = self
+            .output_fold
+            .get_state_for_block(&output_address, Some(block.hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {
-                    err: format!("Voucher state fold error: {:?}", e),
+                    err: format!("Output state fold error: {:?}", e),
                 }
                 .build()
             })?
@@ -193,7 +193,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             constants,
             block,
             &previous_state.initial_epoch,
-            voucher_state,
+            output_state,
         ))
     }
 
@@ -213,7 +213,7 @@ fn convert_raw_to_logical(
     constants: ImmutableState,
     block: &Block,
     initial_epoch: &U256,
-    voucher_state: VoucherState,
+    output_state: OutputState,
 ) -> RollupsState {
     // If the raw state is InputAccumulation but it has expired, then the raw
     // state's `current_epoch` becomes the sealed epoch, and the logic state's
@@ -331,7 +331,7 @@ fn convert_raw_to_logical(
         current_phase: phase_state,
         finalized_epochs: contract_state.finalized_epochs,
         current_epoch,
-        voucher_state,
+        output_state,
     }
 }
 
@@ -344,7 +344,7 @@ impl From<&(RollupsCreatedFilter, U256, Address)> for ImmutableState {
             challenge_period: ev.challenge_period,
             contract_creation_timestamp: ts.clone(),
             input_contract_address: ev.input,
-            voucher_contract_address: ev.voucher,
+            output_contract_address: ev.output,
             validator_contract_address: ev.validator_manager,
             dispute_contract_address: ev.dispute_manager,
             rollups_contract_address: *rollups_contract_address,

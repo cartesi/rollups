@@ -17,7 +17,7 @@ configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "3834
 state-fold = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
 state-server-grpc = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
 offchain = { path = "../offchain" }
-voucherserver = { path = "../voucherserver" }
+outputserver = { path = "../outputserver" }
 
 ethers = { version = "0.5.3" }
 

@@ -6,7 +6,7 @@ authors = ["victornogueira <victor.nogueira@cartesi.io>"]
 edition = "2018"
 
 [[bin]]
-name = "voucher_server_main"
+name = "output_server_main"
 path = "src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

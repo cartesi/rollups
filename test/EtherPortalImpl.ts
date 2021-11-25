@@ -74,7 +74,7 @@ describe("EtherPortal Implementation", async () => {
 
     });
 
-    it("executeRollupsVoucher should revert if not called from voucher", async () => {
+    it("executeRollupsVoucher should revert if not called from output", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint"],
             [
@@ -84,7 +84,7 @@ describe("EtherPortal Implementation", async () => {
         );
         await expect(
             portalImpl.connect(signer2).executeRollupsVoucher(data)
-        ).to.be.revertedWith("only voucherContract");
+        ).to.be.revertedWith("only outputContract");
     });
 
     it("executeRollupsVoucher should emit EtherWithdrawn and return true", async () => {

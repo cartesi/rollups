@@ -17,16 +17,16 @@ DELEGATE_TEST=1 npx hardhat test test/InputImpl.ts --network localhost
 pkill -P "$delegate_server_pid"
 
 
-## testing voucher delegate
+## testing output delegate
 
-./scripts/run_voucher_server.sh --sf-safety-margin 0 >> /dev/null 2>&1 &
+./scripts/run_output_server.sh --sf-safety-margin 0 >> /dev/null 2>&1 &
 delegate_server_pid=$!
 sleep 3
 
 DELEGATE_TEST=1 npx hardhat test test/VoucherImpl.ts --network localhost
 
 
-# kill voucher server
+# kill output server
 
 pkill -P "$delegate_server_pid"
 

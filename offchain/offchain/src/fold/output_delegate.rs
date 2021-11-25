@@ -1,6 +1,6 @@
-use crate::contracts::voucher_contract::*;
+use crate::contracts::output_contract::*;
 
-use super::types::VoucherState;
+use super::types::OutputState;
 
 use offchain_core::types::Block;
 use state_fold::{
@@ -18,9 +18,9 @@ use ethers::types::{Address, U256};
 
 use im::HashMap;
 
-/// Voucher StateFold Delegate
+/// Output StateFold Delegate
 #[derive(Default)]
-pub struct VoucherFoldDelegate {}
+pub struct OutputFoldDelegate {}
 
 /// voucher_position = voucher_index * 2 ** 128 + input_index * 2 ** 64 + epoch
 /// We always assume indices have at most 8 bytes, as does rust
@@ -47,19 +47,19 @@ fn convert_voucher_position_to_indices(
 }
 
 #[async_trait]
-impl StateFoldDelegate for VoucherFoldDelegate {
+impl StateFoldDelegate for OutputFoldDelegate {
     type InitialState = Address;
-    type Accumulator = VoucherState;
+    type Accumulator = OutputState;
     type State = BlockState<Self::Accumulator>;
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
-        voucher_address: &Address,
+        output_address: &Address,
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
         let contract = access
-            .build_sync_contract(*voucher_address, block.number, VoucherImpl::new)
+            .build_sync_contract(*output_address, block.number, OutputImpl::new)
             .await;
 
         // Retrieve `VoucherExecuted` events
@@ -83,9 +83,9 @@ impl StateFoldDelegate for VoucherFoldDelegate {
                 .or_insert_with(|| true);
         }
 
-        Ok(VoucherState {
+        Ok(OutputState {
             vouchers,
-            voucher_address: *voucher_address,
+            output_address: *output_address,
         })
     }
 
@@ -95,10 +95,10 @@ impl StateFoldDelegate for VoucherFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let voucher_address = previous_state.voucher_address;
+        let output_address = previous_state.output_address;
 
         // If not in bloom copy previous state
-        if !(fold_utils::contains_address(&block.logs_bloom, &voucher_address)
+        if !(fold_utils::contains_address(&block.logs_bloom, &output_address)
             && fold_utils::contains_topic(
                 &block.logs_bloom,
                 &VoucherExecutedFilter::signature(),
@@ -108,7 +108,7 @@ impl StateFoldDelegate for VoucherFoldDelegate {
         }
 
         let contract = access
-            .build_fold_contract(voucher_address, block.hash, VoucherImpl::new)
+            .build_fold_contract(output_address, block.hash, OutputImpl::new)
             .await;
 
         let events = contract.voucher_executed_filter().query().await.context(
@@ -130,9 +130,9 @@ impl StateFoldDelegate for VoucherFoldDelegate {
                 .or_insert_with(|| true);
         }
 
-        Ok(VoucherState {
+        Ok(OutputState {
             vouchers,
-            voucher_address: voucher_address,
+            output_address: output_address,
         })
     }
 

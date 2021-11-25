@@ -14,7 +14,7 @@
 pragma solidity ^0.8.0;
 
 import "./InputImpl.sol";
-import "./VoucherImpl.sol";
+import "./OutputImpl.sol";
 import "./ValidatorManagerImpl.sol";
 import "./Rollups.sol";
 import "./DisputeManagerImpl.sol";
@@ -41,7 +41,7 @@ contract RollupsImpl is Rollups {
     ///
 
     InputImpl public input; // contract responsible for inputs
-    VoucherImpl public voucher; // contract responsible for vouchers
+    OutputImpl public output; // contract responsible for outputs
     ValidatorManagerImpl public validatorManager; // contract responsible for validators
     DisputeManagerImpl public disputeManager; // contract responsible for dispute resolution
 
@@ -82,7 +82,7 @@ contract RollupsImpl is Rollups {
         address payable[] memory _validators
     ) {
         input = new InputImpl(address(this), _inputLog2Size);
-        voucher = new VoucherImpl(address(this));
+        output = new OutputImpl(address(this));
         validatorManager = new ValidatorManagerImpl(address(this), _validators);
         disputeManager = new DisputeManagerImpl(address(this));
 
@@ -96,7 +96,7 @@ contract RollupsImpl is Rollups {
 
         emit RollupsCreated(
             address(input),
-            address(voucher),
+            address(output),
             address(validatorManager),
             address(disputeManager),
             _inputDuration,
@@ -144,7 +144,7 @@ contract RollupsImpl is Rollups {
         // emit the claim event before processing it
         // so if the epoch is finalized in this claim (consensus)
         // the number of final epochs doesnt gets contaminated
-        emit Claim(voucher.getNumberOfFinalizedEpochs(), msg.sender, _epochHash);
+        emit Claim(output.getNumberOfFinalizedEpochs(), msg.sender, _epochHash);
 
         resolveValidatorResult(result, claims, claimers);
     }
@@ -228,10 +228,10 @@ contract RollupsImpl is Rollups {
 
         bytes32 finalClaim = validatorManager.onNewEpoch();
 
-        // emit event before finalized epoch is added to vouchers storage
-        emit FinalizeEpoch(voucher.getNumberOfFinalizedEpochs(), finalClaim);
+        // emit event before finalized epoch is added to the Output contract's storage
+        emit FinalizeEpoch(output.getNumberOfFinalizedEpochs(), finalClaim);
 
-        voucher.onNewEpoch(finalClaim);
+        output.onNewEpoch(finalClaim);
         input.onNewEpoch();
     }
 
@@ -270,7 +270,7 @@ contract RollupsImpl is Rollups {
     //       one awaiting consensus/dispute and another accumulating input
 
     function getCurrentEpoch() public view override returns (uint256) {
-        uint256 finalizedEpochs = voucher.getNumberOfFinalizedEpochs();
+        uint256 finalizedEpochs = output.getNumberOfFinalizedEpochs();
 
         Phase currentPhase = Phase(storageVar.currentPhase_int);
 
@@ -285,9 +285,9 @@ contract RollupsImpl is Rollups {
         return address(input);
     }
 
-    /// @notice returns address of voucher contract
-    function getVoucherAddress() public view override returns (address) {
-        return address(voucher);
+    /// @notice returns address of output contract
+    function getOutputAddress() public view override returns (address) {
+        return address(output);
     }
 
     /// @notice returns address of validator manager contract

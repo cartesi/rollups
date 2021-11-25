@@ -51,8 +51,8 @@ impl EpochInputState {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct VoucherState {
-    pub voucher_address: Address,
+pub struct OutputState {
+    pub output_address: Address,
     pub vouchers: HashMap<usize, HashMap<usize, HashMap<usize, bool>>>,
 }
 
@@ -287,8 +287,8 @@ pub struct ImmutableState {
     /// contract responsible for inputs
     pub input_contract_address: Address,
 
-    /// contract responsible for vouchers
-    pub voucher_contract_address: Address,
+    /// contract responsible for outputs
+    pub output_contract_address: Address,
 
     /// contract responsible for validators
     pub validator_contract_address: Address,
@@ -310,5 +310,5 @@ pub struct RollupsState {
 
     pub current_phase: PhaseState,
 
-    pub voucher_state: VoucherState,
+    pub output_state: OutputState,
 }

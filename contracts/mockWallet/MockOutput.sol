@@ -10,10 +10,10 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Voucher
+/// @title Output
 pragma solidity >=0.7.0;
 
-interface MockVoucher {
+interface MockOutput {
     /// @notice executes voucher
     /// @param _destination address that will execute voucher
     /// @param _payload payload to be executed by destination

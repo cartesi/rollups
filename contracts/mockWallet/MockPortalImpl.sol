@@ -19,12 +19,12 @@ import "./MockPortal.sol";
 import "./MockInput.sol";
 
 contract MockPortalImpl is MockPortal {
-    address immutable voucherContract;
+    address immutable outputContract;
     MockInput immutable inputContract;
     bool lock;
 
-    modifier onlyVoucherContract {
-        require(msg.sender == voucherContract, "msg.sender != voucherContract");
+    modifier onlyOutputContract {
+        require(msg.sender == outputContract, "msg.sender != outputContract");
         _;
     }
 
@@ -37,9 +37,9 @@ contract MockPortalImpl is MockPortal {
         lock = false;
     }
 
-    constructor(address _inputContract, address _voucherContract) {
+    constructor(address _inputContract, address _outputContract) {
         inputContract = MockInput(_inputContract);
-        voucherContract = _voucherContract;
+        outputContract = _outputContract;
     }
 
     /// @notice deposits ether in portal contract and create ether in L2
@@ -128,11 +128,11 @@ contract MockPortalImpl is MockPortal {
     /// @notice executes a rollups voucher
     /// @param _data data with information necessary to execute voucher
     /// @return status of voucher execution
-    /// @dev can only be called by Voucher contract
+    /// @dev can only be called by the Output contract
     function executeRollupsVoucher(bytes calldata _data)
         public
         override
-        onlyVoucherContract
+        onlyOutputContract
         returns (bool)
     {
         // TODO: should use assembly to figure out where the first
@@ -164,7 +164,7 @@ contract MockPortalImpl is MockPortal {
     /// @return status of withdrawal
     function etherWithdrawal(address payable _receiver, uint256 _amount)
         internal
-        onlyVoucherContract
+        onlyOutputContract
         returns (bool)
     {
         (bool success, ) = _receiver.call{value: _amount}("");
@@ -183,7 +183,7 @@ contract MockPortalImpl is MockPortal {
         address _ERC20,
         address payable _receiver,
         uint256 _amount
-    ) internal onlyVoucherContract returns (bool) {
+    ) internal onlyOutputContract returns (bool) {
         IERC20 token = IERC20(_ERC20);
 
         // transfer reverts on failure

@@ -6,8 +6,8 @@ import {
     deployMockContract,
     MockContract,
 } from "@ethereum-waffle/mock-contract";
-import { VoucherImpl } from "../dist/src/types/VoucherImpl";
-import { VoucherImpl__factory } from "../dist/src/types/factories/VoucherImpl__factory";
+import { OutputImpl } from "../dist/src/types/OutputImpl";
+import { OutputImpl__factory } from "../dist/src/types/factories/OutputImpl__factory";
 import { Merkle } from "../dist/src/types/Merkle";
 import { CartesiMath } from "../dist/src/types/CartesiMath";
 import { Bytes, BytesLike } from "@ethersproject/bytes";
@@ -16,81 +16,81 @@ import { getState } from "./getState";
 
 use(solidity);
 
-// In the test epoch, we have 2 inputs. For Input1, we have only Voucher0.
-// The payload that we use is to execute functions of a simple contract.
-// Normally, the address of that contract may change on different machines, resulting in different merkle proofs.
-// That's why we deploy that contract deterministically.
+    // In the test epoch, we have 2 inputs. For Input1, we have only Voucher0.
+    // The payload that we use is to execute functions of a simple contract.
+    // Normally, the address of that contract may change on different machines, resulting in different merkle proofs.
+    // That's why we deploy that contract deterministically.
 
-// In case you need to modify proofs, modify the value of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` or `epochNoticeDriveHash`
+    // In case you need to modify proofs, modify the value of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` or `epochNoticeDriveHash`
 
-// Steps for modification are as follows:
-// 1. uncomment lines `console.log(encodedVoucher);`.
-// 2. keccak256 the value of encodedVoucher
-// 3. take the keccak value and replace into the variable `KeccakForVoucher0` in "shell.sh"
-//    run the shell in the Cartesi machine as we need to use `merkle-tree-hash`
-//    (the shell script can be found here: https://github.com/cartesi-corp/rollups/pull/120)
-// 4. run the script and modify values of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` or `epochNoticeDriveHash`
+    // Steps for modification are as follows:
+    // 1. uncomment lines `console.log(encodedVoucher);`.
+    // 2. keccak256 the value of encodedVoucher
+    // 3. take the keccak value and replace into the variable `KeccakForVoucher0` in "shell.sh"
+    //    run the shell in the Cartesi machine as we need to use `merkle-tree-hash`
+    //    (the shell script can be found here: https://github.com/cartesi-corp/rollups/pull/120)
+    // 4. run the script and modify values of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` or `epochNoticeDriveHash`
 
-describe("Voucher Implementation Testing", () => {
-    let enableDelegate = process.env["DELEGATE_TEST"];
+    describe("Output Implementation Testing", () => {
+        let enableDelegate = process.env["DELEGATE_TEST"];
 
-    /// for tests when modifiers are on, set this to true
-    /// for tests when modifiers are off, set this to false
-    let permissionModifiersOn = true;
+        /// for tests when modifiers are on, set this to true
+        /// for tests when modifiers are off, set this to false
+        let permissionModifiersOn = true;
 
-    let signers: Signer[];
-    let mockRollups: MockContract;
-    let voucherImpl: VoucherImpl;
+        let signers: Signer[];
+        let mockRollups: MockContract;
+        let outputImpl: OutputImpl;
 
-    let simpleContractAddress: string;
-    let _destination: string;
-    let _payload: string;
-    let encodedVoucher: string;
-    let encodedNotice: string;
+        let simpleContractAddress: string;
+        let _destination: string;
+        let _payload: string;
+        let encodedVoucher: string;
+        let encodedNotice: string;
 
-    beforeEach(async () => {
-        // get signers
-        signers = await ethers.getSigners();
+        beforeEach(async () => {
+            // get signers
+            signers = await ethers.getSigners();
 
-        // mock Rollups
-        const Rollups = await deployments.getArtifact("Rollups");
-        mockRollups = await deployMockContract(signers[0], Rollups.abi);
+            // mock Rollups
+            const Rollups = await deployments.getArtifact("Rollups");
+            mockRollups = await deployMockContract(signers[0], Rollups.abi);
 
-        // deploy libraries and get addresses. Depedencies are as follows:
-        // VoucherImpl <= Bitmask, Merkle
-        // Merkle <= CartesiMath
+            // deploy libraries and get addresses. Depedencies are as follows:
+            // OutputImpl <= Bitmask, Merkle
+            // Merkle <= CartesiMath
 
-        // Bitmask
-        const bitMaskLibrary = await deployments.deploy("Bitmask", {
-            from: await signers[0].getAddress(),
-        });
-        const bitMaskAddress = bitMaskLibrary.address;
+            // Bitmask
+            const bitMaskLibrary = await deployments.deploy("Bitmask", {
+                from: await signers[0].getAddress(),
+            });
+            const bitMaskAddress = bitMaskLibrary.address;
 
-        // CartesiMath
-        const cartesiMath = await deployments.deploy("CartesiMath", {
-            from: await signers[0].getAddress(),
-        });
-        const cartesiMathAddress = cartesiMath.address;
+            // CartesiMath
+            const cartesiMath = await deployments.deploy("CartesiMath", {
+                from: await signers[0].getAddress(),
+            });
+            const cartesiMathAddress = cartesiMath.address;
 
-        // Merkle
-        const merkle = await deployments.deploy("Merkle", {
-            from: await signers[0].getAddress(),
-            libraries: {
-                CartesiMath: cartesiMathAddress,
-            },
-        });
-        const merkleAddress = merkle.address;
+            // Merkle
+            const merkle = await deployments.deploy("Merkle", {
+                from: await signers[0].getAddress(),
+                libraries: {
+                    CartesiMath: cartesiMathAddress,
+                },
+            });
+            const merkleAddress = merkle.address;
 
-        // VoucherImpl
-        const { address } = await deployments.deploy("VoucherImpl", {
-            from: await signers[0].getAddress(),
-            libraries: {
-                Bitmask: bitMaskAddress,
-                Merkle: merkleAddress,
-            },
-            args: [mockRollups.address],
-        });
-        voucherImpl = VoucherImpl__factory.connect(address, signers[0]);
+            // OutputImpl
+            const { address } = await deployments.deploy("OutputImpl", {
+                from: await signers[0].getAddress(),
+                libraries: {
+                    Bitmask: bitMaskAddress,
+                    Merkle: merkleAddress,
+                },
+                args: [mockRollups.address],
+            });
+            outputImpl = OutputImpl__factory.connect(address, signers[0]);
 
         // deploy a simple contract to execute
         const simpleContract = await deployments.deploy("SimpleContract", {
@@ -245,7 +245,7 @@ describe("Voucher Implementation Testing", () => {
         encodedNotice = encodedVoucher;
 
         expect(
-            await voucherImpl.getNumberOfFinalizedEpochs(),
+            await outputImpl.getNumberOfFinalizedEpochs(),
             "check initial epoch number"
         ).to.equal(0);
     });
@@ -255,9 +255,9 @@ describe("Voucher Implementation Testing", () => {
         it("executeVoucher(): execute SimpleContract.simple_function()", async () => {
             // onNewEpoch() should be called first to push some epochHashes before calling executeVoucher()
             // we need permission modifier off to call onNewEpoch()
-            await voucherImpl.onNewEpoch(epochHashForVoucher);
+            await outputImpl.onNewEpoch(epochHashForVoucher);
             expect(
-                await voucherImpl.callStatic.executeVoucher(
+                await outputImpl.callStatic.executeVoucher(
                     _destination,
                     _payload,
                     v
@@ -292,9 +292,9 @@ describe("Voucher Implementation Testing", () => {
                 )
             );
 
-            await voucherImpl.onNewEpoch(epochHash_new);
+            await outputImpl.onNewEpoch(epochHash_new);
             expect(
-                await voucherImpl.callStatic.executeVoucher(
+                await outputImpl.callStatic.executeVoucher(
                     _destination,
                     _payload_new,
                     v_new
@@ -326,9 +326,9 @@ describe("Voucher Implementation Testing", () => {
                 )
             );
 
-            await voucherImpl.onNewEpoch(epochHash_new);
+            await outputImpl.onNewEpoch(epochHash_new);
             expect(
-                await voucherImpl.callStatic.executeVoucher(
+                await outputImpl.callStatic.executeVoucher(
                     _destination,
                     _payload_new,
                     v_new
@@ -337,18 +337,18 @@ describe("Voucher Implementation Testing", () => {
         });
 
         it("executeVoucher() should revert if voucher has already been executed", async () => {
-            await voucherImpl.onNewEpoch(epochHashForVoucher);
-            await voucherImpl.executeVoucher(_destination, _payload, v);
+            await outputImpl.onNewEpoch(epochHashForVoucher);
+            await outputImpl.executeVoucher(_destination, _payload, v);
             await expect(
-                voucherImpl.executeVoucher(_destination, _payload, v)
+                outputImpl.executeVoucher(_destination, _payload, v)
             ).to.be.revertedWith("re-execution not allowed");
         });
 
         it("executeVoucher() should revert if proof is not valid", async () => {
-            await voucherImpl.onNewEpoch(epochHashForVoucher);
+            await outputImpl.onNewEpoch(epochHashForVoucher);
             let _payload_new = iface.encodeFunctionData("nonExistent()");
             await expect(
-                voucherImpl.executeVoucher(_destination, _payload_new, v)
+                outputImpl.executeVoucher(_destination, _payload_new, v)
             ).to.be.reverted;
         });
     }
@@ -356,13 +356,13 @@ describe("Voucher Implementation Testing", () => {
     /// ***test function isValidVoucherProof()///
     it("testing function isValidVoucherProof()", async () => {
         expect(
-            await voucherImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
+            await outputImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
         ).to.equal(true);
     });
 
     it("isValidVoucherProof() should revert when _epochHash doesn't match", async () => {
         await expect(
-            voucherImpl.isValidVoucherProof(
+            outputImpl.isValidVoucherProof(
                 encodedVoucher,
                 ethers.utils.formatBytes32String("hello"),
                 v
@@ -374,7 +374,7 @@ describe("Voucher Implementation Testing", () => {
         let tempInputIndex = v.inputIndex;
         v.inputIndex = 10;
         await expect(
-            voucherImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
+            outputImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
         ).to.be.revertedWith("epochOutputDriveHash incorrect");
         // restore v
         v.inputIndex = tempInputIndex;
@@ -384,7 +384,7 @@ describe("Voucher Implementation Testing", () => {
         let tempVoucherIndex = v.outputIndex;
         v.outputIndex = 10;
         await expect(
-            voucherImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
+            outputImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
         ).to.be.revertedWith("outputMetadataArrayDriveHash incorrect");
         // restore v
         v.outputIndex = tempVoucherIndex;
@@ -393,13 +393,13 @@ describe("Voucher Implementation Testing", () => {
     /// ***test function isValidNoticeProof()///
     it("testing function isValidNoticeProof()", async () => {
         expect(
-            await voucherImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
+            await outputImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
         ).to.equal(true);
     });
 
     it("isValidNoticeProof() should revert when _epochHash doesn't match", async () => {
         await expect(
-            voucherImpl.isValidNoticeProof(
+            outputImpl.isValidNoticeProof(
                 encodedNotice,
                 ethers.utils.formatBytes32String("hello"),
                 n
@@ -411,7 +411,7 @@ describe("Voucher Implementation Testing", () => {
         let tempInputIndex = n.inputIndex;
         n.inputIndex = 10;
         await expect(
-            voucherImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
+            outputImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
         ).to.be.revertedWith("epochOutputDriveHash incorrect");
         // restore n
         n.inputIndex = tempInputIndex;
@@ -421,7 +421,7 @@ describe("Voucher Implementation Testing", () => {
         let tempNoticeIndex = n.outputIndex;
         n.outputIndex = 10;
         await expect(
-            voucherImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
+            outputImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
         ).to.be.revertedWith("outputMetadataArrayDriveHash incorrect");
         // restore n
         n.outputIndex = tempNoticeIndex;
@@ -434,7 +434,7 @@ describe("Voucher Implementation Testing", () => {
         const _input = 456;
         const _epoch = 789;
         expect(
-            await voucherImpl.getBitMaskPosition(_voucher, _input, _epoch)
+            await outputImpl.getBitMaskPosition(_voucher, _input, _epoch)
         ).to.equal(
             BigInt(_voucher) * BigInt(2 ** 128) +
                 BigInt(_input) * BigInt(2 ** 64) +
@@ -447,7 +447,7 @@ describe("Voucher Implementation Testing", () => {
         const _index = 10;
         const _log2Size = 4;
         expect(
-            await voucherImpl.getIntraDrivePosition(_index, _log2Size)
+            await outputImpl.getIntraDrivePosition(_index, _log2Size)
         ).to.equal(_index * 2 ** _log2Size);
     });
 
@@ -455,7 +455,7 @@ describe("Voucher Implementation Testing", () => {
     if (permissionModifiersOn) {
         it("only Rollups can call onNewEpoch()", async () => {
             await expect(
-                voucherImpl.onNewEpoch(
+                outputImpl.onNewEpoch(
                     ethers.utils.formatBytes32String("hello")
                 )
             ).to.be.revertedWith("Only rollups");
@@ -464,39 +464,39 @@ describe("Voucher Implementation Testing", () => {
 
     if (!permissionModifiersOn) {
         it("fake onNewEpoch() to test if getNumberOfFinalizedEpochs() increases", async () => {
-            await voucherImpl.onNewEpoch(
+            await outputImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello")
             );
-            expect(await voucherImpl.getNumberOfFinalizedEpochs()).to.equal(1);
+            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(1);
 
-            await voucherImpl.onNewEpoch(
+            await outputImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello2")
             );
-            expect(await voucherImpl.getNumberOfFinalizedEpochs()).to.equal(2);
+            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(2);
 
-            await voucherImpl.onNewEpoch(
+            await outputImpl.onNewEpoch(
                 ethers.utils.formatBytes32String("hello3")
             );
-            expect(await voucherImpl.getNumberOfFinalizedEpochs()).to.equal(3);
+            expect(await outputImpl.getNumberOfFinalizedEpochs()).to.equal(3);
         });
     }
 
     /// ***test function getVoucherMetadataLog2Size()*** ///
     it("testing function getVoucherMetadataLog2Size()", async () => {
-        expect(await voucherImpl.getVoucherMetadataLog2Size()).to.equal(21);
+        expect(await outputImpl.getVoucherMetadataLog2Size()).to.equal(21);
     });
 
     /// ***test function getEpochVoucherLog2Size()*** ///
     it("testing function getEpochVoucherLog2Size()", async () => {
-        expect(await voucherImpl.getEpochVoucherLog2Size()).to.equal(37);
+        expect(await outputImpl.getEpochVoucherLog2Size()).to.equal(37);
     });
 
     /// ***test delegate*** ///
     if (enableDelegate) {
-        it("testing voucher delegate", async () => {
+        it("testing output delegate", async () => {
             /// ***test case 1 - initial check
             let initialState = JSON.stringify({
-                voucher_address: voucherImpl.address,
+                output_address: outputImpl.address,
             });
             let state = JSON.parse(await getState(initialState));
 
@@ -512,8 +512,8 @@ describe("Voucher Implementation Testing", () => {
                 // outputIndex: 0;
                 //  inputIndex: 1;
                 //  epochIndex: 0;
-                await voucherImpl.onNewEpoch(epochHashForVoucher);
-                await voucherImpl.executeVoucher(_destination, _payload, v);
+                await outputImpl.onNewEpoch(epochHashForVoucher);
+                await outputImpl.executeVoucher(_destination, _payload, v);
 
                 state = JSON.parse(await getState(initialState));
 
@@ -551,8 +551,8 @@ describe("Voucher Implementation Testing", () => {
                     )
                 );
 
-                await voucherImpl.onNewEpoch(epochHash_new);
-                await voucherImpl.executeVoucher(
+                await outputImpl.onNewEpoch(epochHash_new);
+                await outputImpl.executeVoucher(
                     _destination,
                     _payload_new,
                     v_new
@@ -589,8 +589,8 @@ describe("Voucher Implementation Testing", () => {
                     )
                 );
 
-                await voucherImpl.onNewEpoch(epochHash_new);
-                await voucherImpl.executeVoucher(
+                await outputImpl.onNewEpoch(epochHash_new);
+                await outputImpl.executeVoucher(
                     _destination,
                     _payload_new,
                     v_new
@@ -616,13 +616,13 @@ describe("Voucher Implementation Testing", () => {
                 /// ***and test case 6 - proof not valid
                 /// after these 2 failure cases, the executed vouchers should remain the same
                 await expect(
-                    voucherImpl.executeVoucher(_destination, _payload, v),
+                    outputImpl.executeVoucher(_destination, _payload, v),
                     "already executed, should revert"
                 ).to.be.revertedWith("re-execution not allowed");
 
                 _payload_new = iface.encodeFunctionData("nonExistent()");
                 await expect(
-                    voucherImpl.executeVoucher(_destination, _payload_new, v),
+                    outputImpl.executeVoucher(_destination, _payload_new, v),
                     "proof not valid, should revert"
                 ).to.be.reverted;
 

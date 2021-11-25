@@ -19,17 +19,17 @@ import "./ERC20Portal.sol";
 import "./Input.sol";
 
 contract ERC20PortalImpl is ERC20Portal {
-    address immutable voucherContract;
+    address immutable outputContract;
     Input immutable inputContract;
 
-    modifier onlyVoucherContract {
-        require(msg.sender == voucherContract, "only voucherContract");
+    modifier onlyOutputContract {
+        require(msg.sender == outputContract, "only outputContract");
         _;
     }
 
-    constructor(address _inputContract, address _voucherContract) {
+    constructor(address _inputContract, address _outputContract) {
         inputContract = Input(_inputContract);
-        voucherContract = _voucherContract;
+        outputContract = _outputContract;
     }
 
     /// @notice deposit an amount of a generic ERC20 in the portal contract and create tokens in L2
@@ -63,11 +63,11 @@ contract ERC20PortalImpl is ERC20Portal {
 
     /// @notice execute a rollups voucher
     /// @param _data data with information necessary to execute voucher
-    /// @dev can only be called by Voucher contract
+    /// @dev can only be called by the Output contract
     function executeRollupsVoucher(bytes calldata _data)
         public
         override
-        onlyVoucherContract
+        onlyOutputContract
         returns (bool)
     {
         (

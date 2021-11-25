@@ -23,7 +23,7 @@ interface EtherPortal {
 
     /// @notice execute a rollups voucher
     /// @param _data data with information necessary to execute voucher
-    /// @dev can only be called by Voucher contract
+    /// @dev can only be called by the Output contract
     function executeRollupsVoucher(bytes calldata _data)
         external
         returns (bool);

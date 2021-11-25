@@ -10,10 +10,10 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Voucher
+/// @title Output
 pragma solidity >=0.7.0;
 
-interface Voucher {
+interface Output {
     /// @param _epochIndex which epoch the output belongs to
     /// @param _inputIndex which input, inside the epoch, the output belongs to
     /// @param _outputIndex index of output inside the input

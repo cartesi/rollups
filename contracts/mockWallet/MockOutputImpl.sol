@@ -10,15 +10,15 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Voucher Implementation
+/// @title Output Implementation
 pragma solidity ^0.8.0;
 
 import "@cartesi/util/contracts/Bitmask.sol";
 import "@cartesi/util/contracts/Merkle.sol";
 
-import "./MockVoucher.sol";
+import "./MockOutput.sol";
 
-contract MockVoucherImpl is MockVoucher {
+contract MockOutputImpl is MockOutput {
     using Bitmask for mapping(uint256 => uint256);
 
     uint8 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
@@ -45,7 +45,7 @@ contract MockVoucherImpl is MockVoucher {
         _;
     }
 
-    // @notice creates VoucherImpl contract
+    // @notice creates OutputImpl contract
     // @params _rollups address of rollupscontract
     constructor(address _rollups) {
         rollups = _rollups;

@@ -5,7 +5,7 @@ pub mod rollups_delegate;
 mod epoch_delegate;
 mod input_contract_address_delegate;
 pub mod input_delegate;
-pub mod voucher_delegate;
+pub mod output_delegate;
 
 mod accumulating_epoch_delegate;
 mod finalized_epoch_delegate;
@@ -19,5 +19,5 @@ use epoch_delegate::EpochFoldDelegate;
 use finalized_epoch_delegate::FinalizedEpochFoldDelegate;
 use input_contract_address_delegate::InputContractAddressFoldDelegate;
 use input_delegate::InputFoldDelegate;
-use voucher_delegate::VoucherFoldDelegate;
+use output_delegate::OutputFoldDelegate;
 use sealed_epoch_delegate::SealedEpochFoldDelegate;

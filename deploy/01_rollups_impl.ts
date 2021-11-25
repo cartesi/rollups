@@ -78,16 +78,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let rollupsImpl = RollupsImpl__factory.connect(address, signers[0]);
 
     let inputAddress = await rollupsImpl.getInputAddress();
-    let voucherAddress = await rollupsImpl.getVoucherAddress();
+    let outputAddress = await rollupsImpl.getOutputAddress();
 
     let erc20PortalImpl = await deployments.deploy("ERC20PortalImpl", {
         from: await signers[0].getAddress(),
-        args: [inputAddress, voucherAddress],
+        args: [inputAddress, outputAddress],
     });
 
     let etherPortalImpl = await deployments.deploy("EtherPortalImpl", {
         from: await signers[0].getAddress(),
-        args: [inputAddress, voucherAddress],
+        args: [inputAddress, outputAddress],
     });
 
     console.log("Rollups Impl address: " + rollupsImpl.address);
@@ -97,7 +97,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     );
     console.log("Rollups accumulation start: " + await rollupsImpl.getInputAccumulationStart());
     console.log("Input address " + inputAddress);
-    console.log("Voucher address " + voucherAddress);
+    console.log("Output address " + outputAddress);
     console.log("Ether Portal address " + etherPortalImpl.address);
     console.log("ERC20 Portal address " + erc20PortalImpl.address);
 };

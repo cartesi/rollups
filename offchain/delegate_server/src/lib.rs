@@ -1,10 +1,10 @@
 pub mod input_server;
-pub mod voucher_server;
+pub mod output_server;
 pub mod rollups_server;
 
 use offchain::fold::setup::{
-    create_rollups_state_fold, create_input, create_voucher,
-    RollupsStateFold, InputStateFold, VoucherStateFold,
+    create_rollups_state_fold, create_input, create_output,
+    RollupsStateFold, InputStateFold, OutputStateFold,
 };
 use offchain::logic::instantiate_state_fold::{create_access, RollupsAccess};
 
@@ -19,13 +19,13 @@ pub fn instantiate_input_fold_delegate(
     create_input(access, &config)
 }
 
-pub fn instantiate_voucher_fold_delegate(
+pub fn instantiate_output_fold_delegate(
     config: &SFConfig,
     url: String,
-) -> VoucherStateFold<RollupsAccess> {
+) -> OutputStateFold<RollupsAccess> {
     let access = create_access(config, url).unwrap();
 
-    create_voucher(access, &config)
+    create_output(access, &config)
 }
 
 pub fn instantiate_rollups_fold_delegate(

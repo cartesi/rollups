@@ -14,9 +14,9 @@ pub fn create_rollups_state_fold<
     config: &SFConfig,
 ) -> RollupsStateFold<DA> {
     let epoch_fold = create_epoch(Arc::clone(&access), config);
-    let voucher_fold = create_voucher(Arc::clone(&access), config);
+    let output_fold = create_output(Arc::clone(&access), config);
 
-    let delegate = RollupsFoldDelegate::new(epoch_fold, voucher_fold);
+    let delegate = RollupsFoldDelegate::new(epoch_fold, output_fold);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
@@ -42,12 +42,12 @@ fn create_input_contract_address<DA: DelegateAccess + Send + Sync + 'static>(
     Arc::new(state_fold)
 }
 
-pub type VoucherStateFold<DA> = Arc<StateFold<VoucherFoldDelegate, DA>>;
-pub fn create_voucher<DA: DelegateAccess + Send + Sync + 'static>(
+pub type OutputStateFold<DA> = Arc<StateFold<OutputFoldDelegate, DA>>;
+pub fn create_output<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SFConfig,
-) -> VoucherStateFold<DA> {
-    let delegate = VoucherFoldDelegate::default();
+) -> OutputStateFold<DA> {
+    let delegate = OutputFoldDelegate::default();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
