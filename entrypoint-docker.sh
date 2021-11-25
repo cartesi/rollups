@@ -3,7 +3,16 @@
 cd /usr/src/app;
 
 # Run hardhat
-yarn deploy;
+npx hardhat node --network hardhat &
+pid=$!
+
+npx hardhat deploy --network hardhat --export /opt/cartesi/share/blockchain/localhost.json
+
+
+wait $pid
+
+
+# yarn test;
 
 # Keep node alive
 # set -e
