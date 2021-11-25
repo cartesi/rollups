@@ -1,15 +1,33 @@
-FROM node:14
+FROM node:14-alpine
 
-RUN npm install -g node-pre-gyp
+COPY . /usr/src/app
 
-ENV APP_ROOT /app
+WORKDIR /usr/src/app
 
-RUN mkdir ${APP_ROOT}
-WORKDIR ${APP_ROOT}
-ADD . ${APP_ROOT}
+RUN apk add git;
 
-RUN yarn install
+RUN yarn install --non-interactive --frozen-lockfile
 
-EXPOSE 8545
+COPY $PWD/entrypoint-docker.sh /usr/local/bin
 
-CMD [ "yarn test"]
+ENTRYPOINT ["/bin/sh", "/usr/local/bin/entrypoint.sh"]
+
+
+# FROM node:14-alpine
+
+# COPY . /usr/src/app
+
+# WORKDIR /usr/src/app
+
+# COPY package.json yarn.lock ./
+# RUN apk --no-cache --virtual build-dependencies add \
+#         python \
+#         make \
+#         g++ \
+# && yarn install --production \
+# && apk del build-dependencies
+
+# COPY $PWD/entrypoint-docker.sh /usr/local/bin
+
+# ENTRYPOINT ["/bin/sh", "/usr/local/bin/entrypoint.sh"]
+
