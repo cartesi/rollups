@@ -10,14 +10,14 @@ services:
     ports:
      - 8545:8545
 
-  dispatcher:
-    build:
-      context: .
-      dockerfile: offchain/offchain/Dockerfile
+  # dispatcher:
+  #   build:
+  #     context: .
+  #     dockerfile: offchain/offchain/Dockerfile
 
-  statefold_server:
-    build:
-      context: .
-      dockerfile: ./offchain/delegate_server/Dockerfile
+  # statefold_server:
+  #   build:
+  #     context: .
+  #     dockerfile: ./offchain/delegate_server/Dockerfile
 
     # /health return 200 if healthy
