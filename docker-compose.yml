@@ -28,12 +28,7 @@ services:
     restart: always
     volumes:
       - blockchain_data:/opt/cartesi/share/blockchain
-      # - config:/opt/cartesi/share/config
       - ./offchain/offchain:/opt/cartesi/share/config/
 
-        #echo_machine:
-
 volumes:
-  # config:$PWD/offchain/offchain/
-  config:
   blockchain_data:
