@@ -5,7 +5,6 @@
 # https://github.com/LukeMathWalker/cargo-chef
 
 ## Build Stage
-
 # Start with deps
 FROM rust:1.56.1 AS chef
 RUN rustup component add rustfmt
@@ -32,9 +31,7 @@ RUN cargo build --release --bin offchain_main
 # for alpine, run this instead
 # RUN cargo build --release --target x86_64-unknown-linux-musl --bin offchain_main
 
-
 ## Run application
-
 # debian
 FROM debian:buster-slim  AS runtime
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
@@ -47,4 +44,5 @@ COPY --from=builder /rollups/offchain/target/release/offchain_main /usr/local/bi
 # COPY --from=builder /rollups/offchain/target/x86_64-unknown-linux-musl/release/offchain_main /usr/local/bin
 # USER myuser
 
-ENTRYPOINT ["/usr/local/bin/offchain_main"]
+COPY ./offchain/offchain/entrypoint-dispatcher.sh .
+ENTRYPOINT ["/bin/sh", "./entrypoint-dispatcher.sh"]
