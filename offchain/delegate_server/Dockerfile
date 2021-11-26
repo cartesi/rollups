@@ -5,7 +5,6 @@
 # https://github.com/LukeMathWalker/cargo-chef
 
 ## Build Stage
-
 # Start with deps
 FROM rust:1.56.1 AS chef
 RUN rustup component add rustfmt
@@ -32,9 +31,7 @@ RUN cargo build --release --bin voucher_server_main
 # for alpine, run this instead
 # RUN cargo build --release --target x86_64-unknown-linux-musl --bin voucher_server_main
 
-
 ## Run application
-
 # debian
 FROM debian:buster-slim  AS runtime
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
@@ -47,4 +44,5 @@ COPY --from=builder /rollups/offchain/target/release/voucher_server_main /usr/lo
 # COPY --from=builder /rollups/offchain/target/x86_64-unknown-linux-musl/release/voucher_server_main /usr/local/bin
 # USER myuser
 
-ENTRYPOINT ["/usr/local/bin/voucher_server_main"]
+COPY ./offchain/delegate_server/entrypoint-delegate-server.sh .
+ENTRYPOINT ["/bin/sh", "./entrypoint-delegate-server.sh"]
