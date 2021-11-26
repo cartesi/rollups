@@ -2,22 +2,38 @@ version: '3'
 
 services:
   hardhat:
+    platform: linux/amd64 # TODO: Otherwise it fails on M1
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
-    command: npx hardhat test
-    ports:
-     - 8545:8545
+    volumes:
+      - blockchain_data:/opt/cartesi/share/blockchain
 
-  # dispatcher:
-  #   build:
-  #     context: .
-  #     dockerfile: offchain/offchain/Dockerfile
+  rollups_dispatcher:
+    depends_on: [hardhat]
+    build:
+      context: .
+      dockerfile: ./offchain/offchain/Dockerfile
+    restart: always
+    volumes:
+      - blockchain_data:/opt/cartesi/share/blockchain
+      - ./offchain/offchain:/opt/cartesi/share/config/
 
-  # statefold_server:
-  #   build:
-  #     context: .
-  #     dockerfile: ./offchain/delegate_server/Dockerfile
+  statefold_server:
+    depends_on: [hardhat]
+    build:
+      context: .
+      dockerfile: ./offchain/delegate_server/Dockerfile
+    restart: always
+    volumes:
+      - blockchain_data:/opt/cartesi/share/blockchain
+      # - config:/opt/cartesi/share/config
+      - ./offchain/offchain:/opt/cartesi/share/config/
 
-    # /health return 200 if healthy
+        #echo_machine:
+
+volumes:
+  # config:$PWD/offchain/offchain/
+  config:
+  blockchain_data:
