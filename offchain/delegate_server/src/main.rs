@@ -24,7 +24,8 @@ struct ServerConfig {
 #[derive(StructOpt)]
 enum DelegateServerType {
     Input,
-    Output,
+    Voucher,
+    FeeManager,
     Rollups,
 }
 
@@ -65,6 +66,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 SERVER_ADDRESS,
                 delegate_server::output_server::OutputDelegateManager {
                     fold: output_fold,
+                },
+                shutdown_rx,
+            )
+            .await
+        }
+        DelegateServerType::FeeManager => {
+            let fee_manager_fold = delegate_server::instantiate_fee_manager_fold_delegate(
+                &sf_config,
+                basic_config.url.clone(),
+            );
+
+            serve_delegate_manager(
+                "[::1]:50051",
+                delegate_server::fee_manager_server::FeeManagerDelegateManager {
+                    fold: fee_manager_fold,
                 },
                 shutdown_rx,
             )

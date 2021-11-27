@@ -52,6 +52,16 @@ pub fn create_output<DA: DelegateAccess + Send + Sync + 'static>(
     Arc::new(state_fold)
 }
 
+pub type FeeManagerStateFold<DA> = Arc<StateFold<FeeManagerFoldDelegate, DA>>;
+pub fn create_fee_manager<DA: DelegateAccess + Send + Sync + 'static>(
+    access: Arc<DA>,
+    config: &SFConfig,
+) -> FeeManagerStateFold<DA> {
+    let delegate = FeeManagerFoldDelegate::default();
+    let state_fold = StateFold::new(delegate, access, config.safety_margin);
+    Arc::new(state_fold)
+}
+
 type AccumulatingEpochStateFold<DA> =
     Arc<StateFold<AccumulatingEpochFoldDelegate<DA>, DA>>;
 fn create_accumulating_epoch<DA: DelegateAccess + Send + Sync + 'static>(

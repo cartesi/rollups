@@ -31,6 +31,20 @@ DELEGATE_TEST=1 npx hardhat test test/OutputImpl.ts --network localhost
 pkill -P "$delegate_server_pid"
 
 
+## testing fee manager delegate
+
+./scripts/run_fee_manager_server.sh --sf-safety-margin 0 >> /dev/null 2>&1 &
+delegate_server_pid=$!
+sleep 3
+
+DELEGATE_TEST=1 npx hardhat test test/FeeManagerImpl.ts --network localhost
+
+
+# kill fee manager server
+
+pkill -P "$delegate_server_pid"
+
+
 ## testing rollups delegate
 
 ./scripts/run_rollups_server.sh --sf-safety-margin 0 >> /dev/null 2>&1 &

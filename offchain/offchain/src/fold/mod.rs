@@ -6,7 +6,7 @@ mod epoch_delegate;
 mod input_contract_address_delegate;
 pub mod input_delegate;
 pub mod voucher_delegate;
-mod fee_manager_delegate;
+pub mod fee_manager_delegate;
 
 mod accumulating_epoch_delegate;
 mod finalized_epoch_delegate;

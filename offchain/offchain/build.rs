@@ -36,6 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         write_contract(name, &path, &destination)?;
     }
 
+    // create types for ERC20
     let path ="../../artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json";
     let destination = "./src/contracts/erc20_contract.rs";
     write_contract("ERC20", &path, &destination)?;

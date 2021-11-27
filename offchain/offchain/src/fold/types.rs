@@ -313,7 +313,8 @@ pub struct FeeManagerState {
     pub validator_redeemed: [Option<(Address, U256)>; 8],
     pub fee_manager_balance: U256,
     /// Balance of fee manager contract minus amount of to-be-redeemed fees
-    pub leftover_balance: I256,
+    // pub leftover_balance: I256, // implement this after validator manager delegeate
+    pub fee_manager_address: Address,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
