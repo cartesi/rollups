@@ -27,21 +27,21 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 # build
 COPY ./offchain .
-RUN cargo build --release --bin voucher_server_main
+RUN cargo build --release --bin output_server_main
 # for alpine, run this instead
-# RUN cargo build --release --target x86_64-unknown-linux-musl --bin voucher_server_main
+# RUN cargo build --release --target x86_64-unknown-linux-musl --bin output_server_main
 
 ## Run application
 # debian
 FROM debian:buster-slim  AS runtime
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR app
-COPY --from=builder /rollups/offchain/target/release/voucher_server_main /usr/local/bin
+COPY --from=builder /rollups/offchain/target/release/output_server_main /usr/local/bin
 
 # alpine
 # FROM alpine AS runtime
 # RUN addgroup -S myuser && adduser -S myuser -G myuser
-# COPY --from=builder /rollups/offchain/target/x86_64-unknown-linux-musl/release/voucher_server_main /usr/local/bin
+# COPY --from=builder /rollups/offchain/target/x86_64-unknown-linux-musl/release/output_server_main /usr/local/bin
 # USER myuser
 
 COPY ./offchain/delegate_server/entrypoint-delegate-server.sh .
