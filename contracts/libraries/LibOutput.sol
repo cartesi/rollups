@@ -10,15 +10,17 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Rollups initialization library
+/// @title Output library
 pragma solidity ^0.8.0;
 
-library LibRollupsInit {
+library LibOutput {
     bytes32 constant DIAMOND_STORAGE_POSITION =
-        keccak256("RollupsInit.diamond.storage");
+        keccak256("Output.diamond.storage");
 
     struct DiamondStorage {
-        bool initialized;
+        mapping(uint256 => uint256) voucherBitmask;
+        bytes32[] epochHashes;
+        bool lock; //reentrancy lock
     }
 
     function diamondStorage()
@@ -30,5 +32,19 @@ library LibRollupsInit {
         assembly {
             ds.slot := position
         }
+    }
+
+    /// @notice to be called when an epoch is finalized
+    /// @param _epochHash hash of finalized epoch
+    /// @dev an epoch being finalized means that its vouchers can be called
+    function onNewEpoch(bytes32 _epochHash) internal {
+        DiamondStorage storage ds = diamondStorage();
+        ds.epochHashes.push(_epochHash);
+    }
+
+    /// @notice get number of finalized epochs
+    function getNumberOfFinalizedEpochs() internal view returns (uint256) {
+        DiamondStorage storage ds = diamondStorage();
+        return ds.epochHashes.length;
     }
 }

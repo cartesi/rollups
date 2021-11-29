@@ -38,4 +38,27 @@ library LibInput {
             ds.slot := position
         }
     }
+
+    /// @notice called when a new input accumulation phase begins
+    ///         swap inbox to receive inputs for upcoming epoch
+    function onNewInputAccumulation() internal {
+        swapInputBox();
+    }
+
+    /// @notice called when a new epoch begins, clears deprecated inputs
+    function onNewEpoch() internal {
+        // clear input box for new inputs
+        // the current input box should be accumulating inputs
+        // for the new epoch already. So we clear the other one.
+        DiamondStorage storage ds = diamondStorage();
+        ds.currentInputBox == 0 ? delete ds.inputBox1 : delete ds.inputBox0;
+    }
+
+    /// @notice changes current input box
+    function swapInputBox() internal {
+        DiamondStorage storage ds = diamondStorage();
+        ds.currentInputBox == 0
+            ? ds.currentInputBox = 1
+            : ds.currentInputBox = 0;
+    }
 }

@@ -13,7 +13,7 @@
 /// @title Validator Manager library
 pragma solidity ^0.8.0;
 
-import {IValidatorManager, Result} from "../interfaces/IValidatorManager.sol";
+import {Result} from "../interfaces/IValidatorManager.sol";
 
 // TODO: this libray seems to be very unsafe, need to think about security implications
 library LibValidatorManager {
@@ -325,5 +325,12 @@ library LibValidatorManager {
         uint256 _consensusGoalMask
     ) internal pure returns (bool) {
         return _claimAgreementMask == _consensusGoalMask;
+    }
+
+    // @notice get current claim
+    // @return current claim
+    function getCurrentClaim() internal view returns (bytes32) {
+        DiamondStorage storage ds = diamondStorage();
+        return ds.currentClaim;
     }
 }

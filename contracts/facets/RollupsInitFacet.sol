@@ -13,29 +13,55 @@
 /// @title Rollups initialization facet
 pragma solidity ^0.8.0;
 
+import {IRollupsInit} from "../interfaces/IRollupsInit.sol";
+
 import {LibRollupsInit} from "../libraries/LibRollupsInit.sol";
+import {LibInput} from "../libraries/LibInput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
-contract RollupsInitFacet {
+contract RollupsInitFacet is IRollupsInit {
     // @notice initialize the Rollups contract
-    // @params _validators initial validator set
+    // @param _inputDuration duration of input accumulation phase in seconds
+    // @param _challengePeriod duration of challenge period in seconds
+    // @param _inputLog2Size size of the input drive in this machine
+    // @param _validators initial validator set
     // @dev validators have to be unique, if the same validator is added twice
     //      consensus will never be reached
     function init(
-        // Validator Manager parameters
+        uint256 _inputDuration,
+        uint256 _challengePeriod,
+        // input constructor variables
+        uint256 _inputLog2Size,
+        // validator manager constructor variables
         address payable[] memory _validators
-    ) public {
+    ) public override {
         LibRollupsInit.DiamondStorage storage ds =
             LibRollupsInit.diamondStorage();
 
         require(!ds.initialized, "Rollups already initialized");
-        ds.initialized = true; // avoid reentrancy and reinitialization
 
+        initInput(_inputLog2Size);
         initValidatorManager(_validators);
+
+        ds.initialized = true;
+
+        emit RollupsInitialized(_inputDuration, _challengePeriod);
+    }
+
+    // @notice initalize the Input facet
+    // @param _inputLog2Size size of the input drive in this machine
+    function initInput(uint256 _inputLog2Size) private {
+        LibInput.DiamondStorage storage ds = LibInput.diamondStorage();
+
+        require(
+            _inputLog2Size >= 3 && _inputLog2Size <= 64,
+            "Log of input size: [3,64]"
+        );
+        ds.inputDriveSize = (1 << _inputLog2Size);
     }
 
     // @notice initialize the Validator Manager facet
-    // @params _validators initial validator set
+    // @param _validators initial validator set
     function initValidatorManager(address payable[] memory _validators)
         private
     {

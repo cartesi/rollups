@@ -62,12 +62,22 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         from: await signers[0].getAddress(),
         owner: await signers[0].getAddress(),
         facets: [
+            'InputFacet',
+            'RollupsFacet',
             'RollupsInitFacet',
             'ValidatorManagerFacet',
+            'OutputFacet',
         ],
+        libraries: {
+            Bitmask: bitMaskAddress,
+            Merkle: merkleAddress,
+        },
         execute : {
             methodName: 'init',
             args: [
+                INPUT_DURATION,
+                CHALLENGE_PERIOD,
+                INPUT_LOG2_SIZE,
                 [
                     await signers[0].getAddress(),
                     await signers[1].getAddress(),

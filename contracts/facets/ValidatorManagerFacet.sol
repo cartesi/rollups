@@ -20,18 +20,22 @@ contract ValidatorManagerFacet is IValidatorManager {
     // @notice get agreement mask
     // @return current state of agreement mask
     function getCurrentAgreementMask() public view returns (uint32) {
-        return LibValidatorManager.diamondStorage().claimAgreementMask;
+        LibValidatorManager.DiamondStorage storage ds =
+            LibValidatorManager.diamondStorage();
+        return ds.claimAgreementMask;
     }
 
     // @notice get consensus goal mask
     // @return current consensus goal mask
     function getConsensusGoalMask() public view returns (uint32) {
-        return LibValidatorManager.diamondStorage().consensusGoalMask;
+        LibValidatorManager.DiamondStorage storage ds =
+            LibValidatorManager.diamondStorage();
+        return ds.consensusGoalMask;
     }
 
     // @notice get current claim
     // @return current claim
     function getCurrentClaim() public view override returns (bytes32) {
-        return LibValidatorManager.diamondStorage().currentClaim;
+        return LibValidatorManager.getCurrentClaim();
     }
 }

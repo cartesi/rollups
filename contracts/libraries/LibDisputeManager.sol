@@ -10,9 +10,21 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Diamond initialization contract
+/// @title Dispute Manager library
 pragma solidity ^0.8.0;
 
-contract DiamondInit {
-    function init() external {}
+import {LibRollups} from "../libraries/LibRollups.sol";
+
+library LibDisputeManager {
+    /// @notice initiates a dispute betweent two players
+    /// @param _claims conflicting claims
+    /// @param _claimers addresses of senders of conflicting claim
+    /// @dev this is a mock implementation that just gives the win
+    ///      to the address in the first posititon of _claimers array
+    function initiateDispute(
+        bytes32[2] memory _claims,
+        address payable[2] memory _claimers
+    ) internal {
+        LibRollups.resolveDispute(_claimers[0], _claimers[1], _claims[0]);
+    }
 }
