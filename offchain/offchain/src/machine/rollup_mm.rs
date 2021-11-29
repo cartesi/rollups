@@ -22,9 +22,9 @@ use cartesi_machine::{
 };
 use cartesi_rollup_machine_manager::rollup_machine_manager_client::RollupMachineManagerClient;
 use cartesi_rollup_machine_manager::{
-    AdvanceStateRequest, CyclesConfig, DeadlineConfig, FinishEpochRequest,
-    GetEpochStatusRequest, GetEpochStatusResponse, GetSessionStatusRequest,
-    StartSessionRequest,
+    Address as MMAddress, AdvanceStateRequest, CyclesConfig, DeadlineConfig,
+    FinishEpochRequest, GetEpochStatusRequest, GetEpochStatusResponse,
+    GetSessionStatusRequest, InputMetadata, StartSessionRequest,
 };
 
 pub mod versioning {
@@ -84,8 +84,8 @@ impl Config {
             update_merkle_tree: 1000 * 60 * 2,
             advance_state: 1000 * 60 * 3,
             advance_state_increment: 1000 * 10,
-            inspect_state: 0,           // TODO
-            inspect_state_increment: 0, // TODO
+            inspect_state: 1000 * 60 * 3,
+            inspect_state_increment: 1000 * 10,
             machine: 1000 * 60,
             store: 1000 * 60 * 3,
             fast: 1000 * 5,
@@ -94,8 +94,8 @@ impl Config {
         let server_cycles = CyclesConfig {
             max_advance_state: u64::MAX >> 2,
             advance_state_increment: 1 << 22,
-            max_inspect_state: 0,       // TODO
-            inspect_state_increment: 0, // TODO
+            max_inspect_state: u64::MAX >> 2,
+            inspect_state_increment: 1 << 22,
         };
 
         Self {
@@ -194,13 +194,27 @@ impl MachineInterface for MachineManager {
     ) -> Result<()> {
         let mut client = self.client.lock().await;
 
+        let epoch_index = epoch_number.as_u64();
+
         for (i, input) in inputs.iter().enumerate() {
+            let input_index = first_input_index.as_u64() + i as u64;
+
+            let input_metadata = InputMetadata {
+                msg_sender: Some(MMAddress {
+                    data: input.sender.as_bytes().to_vec(),
+                }),
+                block_number: input.block_number.as_u64(),
+                time_stamp: input.timestamp.as_u64(),
+                epoch_index: epoch_index,
+                input_index: input_index,
+            };
+
             let advance_state_request =
                 tonic::Request::new(AdvanceStateRequest {
                     session_id: self.session_id.clone(),
-                    active_epoch_index: epoch_number.as_u64(),
-                    current_input_index: first_input_index.as_u64() + i as u64,
-                    input_metadata: input.get_metadata(),
+                    active_epoch_index: epoch_index,
+                    current_input_index: input_index,
+                    input_metadata: Some(input_metadata),
                     input_payload: (*input.payload).clone(),
                 });
 

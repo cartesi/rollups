@@ -9,7 +9,8 @@ use std::sync::Arc;
 /// Single input from Input.sol contract
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Input {
-    pub sender: Address,       // TODO: Get from calldata.
+    pub sender: Address, // TODO: Get from calldata.
+    pub block_number: U64,
     pub timestamp: U256,       // TODO: Get from calldata.
     pub payload: Arc<Vec<u8>>, // TODO: Get from calldata.
 }
@@ -234,10 +235,7 @@ impl AccumulatingEpoch {
     ) -> Self {
         Self {
             epoch_number,
-            inputs: EpochInputState::new(
-                epoch_number,
-                input_contract_address,
-            ),
+            inputs: EpochInputState::new(epoch_number, input_contract_address),
             rollups_contract_address,
             input_contract_address,
         }

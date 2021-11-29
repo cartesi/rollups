@@ -17,6 +17,7 @@ use im::Vector;
 use snafu::ResultExt;
 use std::sync::Arc;
 
+use ethers::contract::LogMeta;
 use ethers::prelude::EthEvent;
 use ethers::types::{Address, U256};
 
@@ -50,7 +51,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         let events = contract
             .input_added_filter()
             .topic1(epoch_number)
-            .query()
+            .query_with_meta()
             .await
             .context(SyncContractError {
                 err: "Error querying for input added events",
@@ -97,7 +98,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         let events = contract
             .input_added_filter()
             .topic1(previous_state.epoch_number)
-            .query()
+            .query_with_meta()
             .await
             .context(FoldContractError {
                 err: "Error querying for input added events",
@@ -123,12 +124,15 @@ impl StateFoldDelegate for InputFoldDelegate {
     }
 }
 
-impl From<InputAddedFilter> for Input {
-    fn from(ev: InputAddedFilter) -> Self {
+impl From<(InputAddedFilter, LogMeta)> for Input {
+    fn from(log: (InputAddedFilter, LogMeta)) -> Self {
+        let ev = log.0;
         Self {
             sender: ev.sender,
             payload: Arc::new(ev.input),
             timestamp: ev.timestamp,
+
+            block_number: log.1.block_number,
         }
     }
 }
