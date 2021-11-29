@@ -2,20 +2,23 @@ import { deployments, ethers, network } from "hardhat";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { RollupsImpl } from "../dist/src/types/RollupsImpl";
-import { RollupsImpl__factory } from "../dist/src/types/factories/RollupsImpl__factory";
+import { RollupsFacet } from "../dist/src/types/RollupsFacet";
+import { RollupsFacet__factory } from "../dist/src/types/factories/RollupsFacet__factory";
+import { RollupsInitFacet } from "../dist/src/types/RollupsInitFacet";
+import { RollupsInitFacet__factory } from "../dist/src/types/factories/RollupsInitFacet__factory";
 import { getState } from "./getState";
 
 use(solidity);
 
-describe("Rollups Implementation", () => {
+describe("Rollups facet", () => {
     /// for testing Rollups when modifiers are on, set this to true
     /// for testing Rollups when modifiers are off, set this to false
     let permissionModifiersOn = true;
 
     let enableDelegate = process.env["DELEGATE_TEST"];
 
-    let rollupsImpl: RollupsImpl;
+    let rollupsFacet: RollupsFacet;
+    let rollupsInitFacet: RollupsInitFacet;
 
     const MINUTE = 60; // seconds in a minute
     const HOUR = 60 * MINUTE; // seconds in an hour
@@ -56,8 +59,12 @@ describe("Rollups Implementation", () => {
         signers = await ethers.getSigners();
 
         await deployments.fixture();
-        const dAddress = (await deployments.get("RollupsImpl")).address;
-        rollupsImpl = RollupsImpl__factory.connect(
+        const dAddress = (await deployments.get("CartesiRollups")).address;
+        rollupsFacet = RollupsFacet__factory.connect(
+            dAddress,
+            signers[0]
+        );
+        rollupsInitFacet = RollupsInitFacet__factory.connect(
             dAddress,
             signers[0]
         );
@@ -68,14 +75,14 @@ describe("Rollups Implementation", () => {
         initialEpoch = "0x0";
         initialState = JSON.stringify({
             initial_epoch: initialEpoch,
-            rollups_address: rollupsImpl.address,
+            rollups_address: rollupsFacet.address,
         });
     });
 
     /// ***test public variable currentPhase*** ///
     it("initial phase should be InputAccumulation", async () => {
         expect(
-            await rollupsImpl.getCurrentPhase(),
+            await rollupsFacet.getCurrentPhase(),
             "initial phase check"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -83,7 +90,7 @@ describe("Rollups Implementation", () => {
     /// ***test function claim()*** ///
     it("calling claim() should revert if input duration has not yet past", async () => {
         await expect(
-            rollupsImpl.claim(ethers.utils.formatBytes32String("hello")),
+            rollupsFacet.claim(ethers.utils.formatBytes32String("hello")),
             "phase incorrect because inputDuration not over"
         ).to.be.revertedWith("Phase != AwaitingConsensus");
 
@@ -91,7 +98,7 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_mine");
 
         await expect(
-            rollupsImpl.claim(ethers.utils.formatBytes32String("hello")),
+            rollupsFacet.claim(ethers.utils.formatBytes32String("hello")),
             "phase incorrect because inputDuration not over"
         ).to.be.revertedWith("Phase != AwaitingConsensus");
     });
@@ -100,9 +107,9 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
         expect(
-            await rollupsImpl.getCurrentPhase(),
+            await rollupsFacet.getCurrentPhase(),
             "current phase should be updated to AwaitingConsensus"
         ).to.equal(Phase.AwaitingConsensus);
     });
@@ -112,17 +119,17 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_mine");
 
         // all validators agree with claim
-        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
-        await rollupsImpl
+        await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsFacet
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
-        await rollupsImpl
+        await rollupsFacet
             .connect(signers[2])
             .claim(ethers.utils.formatBytes32String("hello"));
 
         expect(
-            await rollupsImpl.getCurrentPhase(),
+            await rollupsFacet.getCurrentPhase(),
             "current phase should be updated to InputAccumulation"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -131,15 +138,15 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
-        await rollupsImpl
+        await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsFacet
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("not hello"));
 
         // In this version disputes get solved immediately
         // so the phase should be awaiting consensus after a disagreement
         expect(
-            await rollupsImpl.getCurrentPhase(),
+            await rollupsFacet.getCurrentPhase(),
             "current phase should be updated to AwaitingConsensus"
         ).to.equal(Phase.AwaitingConsensus);
     });
@@ -149,19 +156,19 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
-        await rollupsImpl
+        await rollupsFacet
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
-        await rollupsImpl
+        await rollupsFacet
             .connect(signers[2])
             .claim(ethers.utils.formatBytes32String("not hello"));
         ///END: make two different claims///
 
         expect(
-            await rollupsImpl.getCurrentPhase(),
+            await rollupsFacet.getCurrentPhase(),
             "current phase should be updated to InputAccumulation"
         ).to.equal(Phase.InputAccumulation);
     });
@@ -169,7 +176,7 @@ describe("Rollups Implementation", () => {
     /// ***test function finalizeEpoch()*** ///
     it("finalizeEpoch(): should revert if currentPhase is InputAccumulation", async () => {
         await expect(
-            rollupsImpl.finalizeEpoch(),
+            rollupsFacet.finalizeEpoch(),
             "phase incorrect"
         ).to.be.revertedWith("Phase != Awaiting Consensus");
     });
@@ -180,15 +187,15 @@ describe("Rollups Implementation", () => {
     //    await network.provider.send("evm_increaseTime", [inputDuration + 1]);
     //    await network.provider.send("evm_mine");
 
-    //    await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
+    //    await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
-    //    await rollupsImpl
+    //    await rollupsFacet
     //        .connect(signers[1])
     //        .claim(ethers.utils.formatBytes32String("halo"));
     //    ///END: make two different claims///
 
     //    await expect(
-    //        rollupsImpl.finalizeEpoch(),
+    //        rollupsFacet.finalizeEpoch(),
     //        "phase incorrect"
     //    ).to.be.revertedWith("Phase != Awaiting Consensus");
     //});
@@ -197,10 +204,10 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
-            rollupsImpl.finalizeEpoch(),
+            rollupsFacet.finalizeEpoch(),
             "Challenge period is not over"
         ).to.be.revertedWith("Challenge period not over");
     });
@@ -211,7 +218,7 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_mine");
 
         await expect(
-            rollupsImpl.claim(currentClaim),
+            rollupsFacet.claim(currentClaim),
             "empty claim"
         ).to.be.revertedWith("empty claim");
     });
@@ -221,183 +228,29 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await rollupsImpl.claim(currentClaim);
+        await rollupsFacet.claim(currentClaim);
 
         await network.provider.send("evm_increaseTime", [challengePeriod + 1]);
         await network.provider.send("evm_mine");
 
-        await rollupsImpl.finalizeEpoch();
+        await rollupsFacet.finalizeEpoch();
 
         expect(
-            await rollupsImpl.getCurrentPhase(),
+            await rollupsFacet.getCurrentPhase(),
             "final phase check"
         ).to.equal(Phase.InputAccumulation);
     });
 
-    /// modifiers on
-    if (permissionModifiersOn) {
-        /// ***test function notifyInput() with modifier*** ///
-        it("only input contract can call notifyInput()", async () => {
-            await expect(
-                rollupsImpl.notifyInput(),
-                "msg.sender != input contract"
-            ).to.be.revertedWith("only Input Contract");
-        });
-
-        /// ***test function resolveDispute() with modifier*** ///
-        it("only DisputeManager contract can call resolveDispute()", async () => {
-            await expect(
-                rollupsImpl.resolveDispute(
-                    await signers[0].getAddress(),
-                    await signers[1].getAddress(),
-                    ethers.utils.formatBytes32String("hello")
-                ),
-                "msg.sender != dispute manager contract"
-            ).to.be.revertedWith("only Dispute Contract");
-        });
-    }
-
-    /// modifiers off
-    if (!permissionModifiersOn) {
-        /// ***test function notifyInput() without modifier*** ///
-        it("notifyInput(): should return false if inputDuration has not past yet", async () => {
-            expect(
-                //callStatic is from ethers.js, used to call a state changing function without acutally changing the states. Use callStatic in order to check the return value.
-                await rollupsImpl.callStatic.notifyInput(),
-                "inputDuration has not past yet"
-            ).to.equal(false);
-        });
-
-        it("notifyInput(): if inputDuration has past and current phase is InputAccumulation, should return true and update the current phase to AwaitingConsensus", async () => {
-            await network.provider.send("evm_increaseTime", [
-                inputDuration + 1,
-            ]);
-            await network.provider.send("evm_mine");
-
-            expect(
-                await rollupsImpl.callStatic.notifyInput(),
-                "should return true"
-            ).to.equal(true);
-
-            await rollupsImpl.notifyInput(); //actually change states before getting current phase
-            expect(
-                await rollupsImpl.getCurrentPhase(),
-                "the updated current phase"
-            ).to.equal(Phase.AwaitingConsensus);
-        });
-
-        it("notifyInput(): should return false if currentPhase is AwaitingDispute", async () => {
-            ///make two different claims///
-            await network.provider.send("evm_increaseTime", [
-                inputDuration + 1,
-            ]);
-            await network.provider.send("evm_mine");
-
-            await rollupsImpl.claim(
-                ethers.utils.formatBytes32String("hello")
-            );
-
-            await rollupsImpl
-                .connect(signers[1])
-                .claim(ethers.utils.formatBytes32String("halo"));
-            ///END: make two different claims///
-
-            expect(
-                await rollupsImpl.callStatic.notifyInput(),
-                "phase incorrect"
-            ).to.equal(false);
-        });
-
-        it("notifyInput(): if called more than once in an epoch, return false.", async () => {
-            await network.provider.send("evm_increaseTime", [
-                inputDuration + 1,
-            ]);
-            await network.provider.send("evm_mine");
-
-            await rollupsImpl.notifyInput();
-            //Now the current phase is AwaitingConsensus
-            expect(
-                await rollupsImpl.callStatic.notifyInput(),
-                "repeated calling"
-            ).to.equal(false);
-        });
-
-        // the following 3 tests are unnecessary because they are already tested with claim() function during conflicts
-        /// ***test function resolveDispute() without modifier*** ///
-        // it("resolveDispute(): if consensus, updated current phase should be InputAccumulation", async () => {
-        //     await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
-        //     await rollupsImpl.connect(signers[2]).claim(ethers.utils.formatBytes32String("hello"));
-        //     await rollupsImpl.resolveDispute(
-        //         await signers[0].getAddress(),
-        //         await signers[1].getAddress(),
-        //         ethers.utils.formatBytes32String("hello")
-        //     );
-        //     expect(
-        //         await rollupsImpl.getCurrentPhase(),
-        //         "updated current phase if consensus"
-        //     ).to.equal(Phase.InputAccumulation);
-        // });
-
-        // it("resolveDispute(): if NoConflict, updated current phase should be AwaitingConsensus", async () => {
-        //     await rollupsImpl.resolveDispute(
-        //         await signers[0].getAddress(),
-        //         await signers[1].getAddress(),
-        //         ethers.utils.formatBytes32String("hello")
-        //     );
-        //     console.log(await rollupsImpl.getCurrentPhase())
-        //     expect(
-        //         await rollupsImpl.getCurrentPhase(),
-        //         "updated current phase if consensus"
-        //     ).to.equal(Phase.AwaitingConsensus);
-        // });
-
-        // it("resolveDispute(): if Conflict, updated current phase should be AwaitingDispute", async () => {
-        //     await rollupsImpl.resolveDispute(
-        //         await signers[0].getAddress(),
-        //         await signers[1].getAddress(),
-        //         ethers.utils.formatBytes32String("hello")
-        //     );
-
-        //     expect(
-        //         await rollupsImpl.getCurrentPhase(),
-        //         "updated current phase if Conflict"
-        //     ).to.equal(Phase.AwaitingDispute);
-        //     //then start new dispute all over again
-        // });
-    }
-
     /// ***test emitting events*** ///
-    it("event RollupsCreated", async () => {
+    it("event RollupsInitialized", async () => {
         // we use ethers.js to query historic events
         // ref: https://docs.ethers.io/v5/single-page/#/v5/getting-started/-%23-getting-started--history
-        let eventFilter = rollupsImpl.filters.RollupsCreated(
+        let eventFilter = rollupsInitFacet.filters.RollupsInitialized(
             null,
             null,
-            null,
-            null,
-            null,
-            null
         );
-        let event = await rollupsImpl.queryFilter(eventFilter);
-        let eventArgs = event[0]["args"]; // get 'args' from the first RollupsCreated event
-
-        expect(eventArgs["_input"], "input address").to.equal(
-            await rollupsImpl.input()
-        );
-
-        expect(eventArgs["_output"], "output address").to.equal(
-            await rollupsImpl.output()
-        );
-
-        expect(
-            eventArgs["_validatorManager"],
-            "Validator Manager address"
-        ).to.equal(await rollupsImpl.validatorManager());
-
-        expect(
-            eventArgs["_disputeManager"],
-            "Dispute Manager address"
-        ).to.equal(await rollupsImpl.disputeManager());
+        let event = await rollupsInitFacet.queryFilter(eventFilter);
+        let eventArgs = event[0]["args"]; // get 'args' from the first RollupsInitialized event
 
         expect(eventArgs["_inputDuration"], "Input Duration").to.equal(
             inputDuration
@@ -413,9 +266,9 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_mine");
 
         await expect(
-            rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
+            rollupsFacet.claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(rollupsImpl, "Claim")
+            .to.emit(rollupsFacet, "Claim")
             .withArgs(
                 0,
                 await signers[0].getAddress(),
@@ -423,11 +276,11 @@ describe("Rollups Implementation", () => {
             );
 
         await expect(
-            rollupsImpl
+            rollupsFacet
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("not hello"))
         )
-            .to.emit(rollupsImpl, "Claim")
+            .to.emit(rollupsFacet, "Claim")
             .withArgs(
                 0,
                 await signers[1].getAddress(),
@@ -439,18 +292,18 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
-        await rollupsImpl
+        await rollupsFacet
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
-            rollupsImpl
+            rollupsFacet
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(rollupsImpl, "Claim")
+            .to.emit(rollupsFacet, "Claim")
             .withArgs(
                 0,
                 await signers[2].getAddress(),
@@ -462,18 +315,18 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_mine");
 
         // claim epoch 1
-        await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
+        await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
-        await rollupsImpl
+        await rollupsFacet
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
-            rollupsImpl
+            rollupsFacet
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(rollupsImpl, "Claim")
+            .to.emit(rollupsFacet, "Claim")
             .withArgs(
                 1,
                 await signers[2].getAddress(),
@@ -484,39 +337,39 @@ describe("Rollups Implementation", () => {
     it("event PhaseChange", async () => {
         //advance input duration from input accumulation start
         await network.provider.send("evm_increaseTime", [
-            (await rollupsImpl.getInputAccumulationStart()).toNumber() +
+            (await rollupsFacet.getInputAccumulationStart()).toNumber() +
                 inputDuration +
                 1,
         ]);
         await network.provider.send("evm_mine");
 
         await expect(
-            rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
+            rollupsFacet.claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(rollupsImpl, "PhaseChange")
+            .to.emit(rollupsFacet, "PhaseChange")
             .withArgs(Phase.AwaitingConsensus);
 
-        await rollupsImpl
+        await rollupsFacet
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
         //event PhaseChange: InputAccumulation
         await expect(
-            rollupsImpl
+            rollupsFacet
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(rollupsImpl, "PhaseChange")
+            .to.emit(rollupsFacet, "PhaseChange")
             .withArgs(Phase.InputAccumulation);
 
         // @dev this version doesnt include Awaiting Dispute phase
         //event PhaseChange: AwaitingDispute
         //await expect(
-        //    rollupsImpl
+        //    rollupsFacet
         //        .connect(signers[1])
         //        .claim(ethers.utils.formatBytes32String("halo"))
         //)
-        //    .to.emit(rollupsImpl, "PhaseChange")
+        //    .to.emit(rollupsFacet, "PhaseChange")
         //    .withArgs(Phase.AwaitingDispute);
     });
 
@@ -524,49 +377,24 @@ describe("Rollups Implementation", () => {
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
         await network.provider.send("evm_mine");
 
-        await rollupsImpl
+        await rollupsFacet
             .connect(signers[2])
             .claim(ethers.utils.formatBytes32String("hello"));
 
-        await rollupsImpl
+        await rollupsFacet
             .connect(signers[1])
             .claim(ethers.utils.formatBytes32String("hello"));
 
         await expect(
-            rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
+            rollupsFacet.claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(rollupsImpl, "FinalizeEpoch")
+            .to.emit(rollupsFacet, "FinalizeEpoch")
             .withArgs(0, ethers.utils.formatBytes32String("hello"));
     });
 
-    /// modifiers off
-    if (!permissionModifiersOn) {
-        //event ResolveDispute needs to be tested without modifier: onlyDisputeContract
-        it("event ResolveDispute", async () => {
-            await network.provider.send("evm_increaseTime", [
-                inputDuration + 1,
-            ]);
-            await network.provider.send("evm_mine");
-
-            await expect(
-                rollupsImpl.resolveDispute(
-                    await signers[0].getAddress(),
-                    await signers[1].getAddress(),
-                    ethers.utils.formatBytes32String("hello")
-                )
-            )
-                .to.emit(rollupsImpl, "ResolveDispute")
-                .withArgs(
-                    await signers[0].getAddress(),
-                    await signers[1].getAddress(),
-                    ethers.utils.formatBytes32String("hello")
-                );
-        });
-    }
-
     it("getCurrentEpoch() without conflict", async () => {
         // initial epoch number
-        expect(await rollupsImpl.getCurrentEpoch()).to.equal(0);
+        expect(await rollupsFacet.getCurrentEpoch()).to.equal(0);
 
         let epochNum = 0;
 
@@ -574,7 +402,7 @@ describe("Rollups Implementation", () => {
         // the length of finalized epochs array increases upon consensus without conflict
         for (let i = 0; i < 9; i++) {
             // input accumulation
-            expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
+            expect(await rollupsFacet.getCurrentEpoch()).to.equal(epochNum);
 
             // input accumulation over
             // ***epoch increases by 1***
@@ -586,27 +414,27 @@ describe("Rollups Implementation", () => {
             epochNum++;
 
             await expect(
-                rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
+                rollupsFacet.claim(ethers.utils.formatBytes32String("hello"))
             )
-                .to.emit(rollupsImpl, "Claim")
+                .to.emit(rollupsFacet, "Claim")
                 .withArgs(
                     epochNum - 1, // claim for the previous epoch
                     await signers[0].getAddress(),
                     ethers.utils.formatBytes32String("hello")
                 );
 
-            await rollupsImpl
+            await rollupsFacet
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
-            expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
+            expect(await rollupsFacet.getCurrentEpoch()).to.equal(epochNum);
 
             await expect(
-                rollupsImpl
+                rollupsFacet
                     .connect(signers[2])
                     .claim(ethers.utils.formatBytes32String("hello"))
             )
-                .to.emit(rollupsImpl, "Claim")
+                .to.emit(rollupsFacet, "Claim")
                 .withArgs(
                     epochNum - 1, // claim for the previous epoch
                     await signers[2].getAddress(),
@@ -615,18 +443,18 @@ describe("Rollups Implementation", () => {
             // enter input accumulation again
             // ***the length of finalized epochs array increases by 1***
             // now it is the same as the epoch number
-            expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
+            expect(await rollupsFacet.getCurrentEpoch()).to.equal(epochNum);
         }
     });
 
     it("getCurrentEpoch() with conflict", async () => {
         // initial epoch number
-        expect(await rollupsImpl.getCurrentEpoch()).to.equal(0);
+        expect(await rollupsFacet.getCurrentEpoch()).to.equal(0);
 
         let epochNum = 0;
 
         // input accumulation
-        expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
+        expect(await rollupsFacet.getCurrentEpoch()).to.equal(epochNum);
 
         // input accumulation over
         // ***epoch increases by 1***
@@ -637,23 +465,23 @@ describe("Rollups Implementation", () => {
 
         // first claim
         await expect(
-            rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
+            rollupsFacet.claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(rollupsImpl, "Claim")
+            .to.emit(rollupsFacet, "Claim")
             .withArgs(
                 epochNum - 1, // claim for the previous epoch
                 await signers[0].getAddress(),
                 ethers.utils.formatBytes32String("hello")
             );
-        expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
+        expect(await rollupsFacet.getCurrentEpoch()).to.equal(epochNum);
 
         // 2nd claim => conflict
         await expect(
-            rollupsImpl
+            rollupsFacet
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("halo"))
         )
-            .to.emit(rollupsImpl, "Claim")
+            .to.emit(rollupsFacet, "Claim")
             .withArgs(
                 epochNum - 1, // claim for the previous epoch
                 await signers[1].getAddress(),
@@ -662,11 +490,11 @@ describe("Rollups Implementation", () => {
 
         // 3rd claim => Consensus
         await expect(
-            rollupsImpl
+            rollupsFacet
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(rollupsImpl, "Claim")
+            .to.emit(rollupsFacet, "Claim")
             .withArgs(
                 epochNum - 1, // claim for the previous epoch
                 await signers[2].getAddress(),
@@ -675,7 +503,7 @@ describe("Rollups Implementation", () => {
         // enter input accumulation again
         // ***the length of finalized epochs array increases by 1***
         // now it is the same as the epoch number
-        expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
+        expect(await rollupsFacet.getCurrentEpoch()).to.equal(epochNum);
 
         // in this epoch, signers[1] is already deleted
         await network.provider.send("evm_increaseTime", [inputDuration + 1]);
@@ -683,30 +511,30 @@ describe("Rollups Implementation", () => {
         epochNum++;
         // first claim
         await expect(
-            rollupsImpl.claim(ethers.utils.formatBytes32String("hello"))
+            rollupsFacet.claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(rollupsImpl, "Claim")
+            .to.emit(rollupsFacet, "Claim")
             .withArgs(
                 epochNum - 1, // claim for the previous epoch
                 await signers[0].getAddress(),
                 ethers.utils.formatBytes32String("hello")
             );
-        expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
+        expect(await rollupsFacet.getCurrentEpoch()).to.equal(epochNum);
 
         // 2nd claim => revert because claimer lost the dispute before
         await expect(
-            rollupsImpl
+            rollupsFacet
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"))
         ).to.be.revertedWith("sender not allowed");
 
         // 3rd claim => Consensus
         await expect(
-            rollupsImpl
+            rollupsFacet
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"))
         )
-            .to.emit(rollupsImpl, "Claim")
+            .to.emit(rollupsFacet, "Claim")
             .withArgs(
                 epochNum - 1, // claim for the previous epoch
                 await signers[2].getAddress(),
@@ -714,7 +542,7 @@ describe("Rollups Implementation", () => {
             );
 
         // enter input accumulation again
-        expect(await rollupsImpl.getCurrentEpoch()).to.equal(epochNum);
+        expect(await rollupsFacet.getCurrentEpoch()).to.equal(epochNum);
     });
 
     // test delegate
@@ -775,33 +603,9 @@ describe("Rollups Implementation", () => {
                 "contract creation timestamp does not match"
             ).to.equal(contract_creation_time);
             expect(
-                state.constants.input_contract_address,
-                "input contract address does not match"
-            ).to.equal((await rollupsImpl.getInputAddress()).toLowerCase());
-            expect(
-                    state.constants.output_contract_address,
-                    "output contract address does not match"
-            ).to.equal(
-                (await rollupsImpl.getOutputAddress()).toLowerCase()
-            );
-            expect(
-                state.constants.validator_contract_address,
-                "validator manager contract address does not match"
-            ).to.equal(
-                (
-                    await rollupsImpl.getValidatorManagerAddress()
-                ).toLowerCase()
-            );
-            expect(
-                state.constants.dispute_contract_address,
-                "dispute manager contract address does not match"
-            ).to.equal(
-                (await rollupsImpl.getDisputeManagerAddress()).toLowerCase()
-            );
-            expect(
                 state.constants.rollups_contract_address,
                 "rollups contract address does not match"
-            ).to.equal(rollupsImpl.address.toLowerCase());
+            ).to.equal(rollupsFacet.address.toLowerCase());
 
             // test initial_epoch
             expect(
@@ -821,11 +625,7 @@ describe("Rollups Implementation", () => {
             expect(
                 state.finalized_epochs.rollups_contract_address,
                 "finalized_epochs.rollups_contract_address does not match"
-            ).to.equal(rollupsImpl.address.toLowerCase());
-            expect(
-                state.finalized_epochs.input_contract_address,
-                "finalized_epochs.input_contract_address does not match"
-            ).to.equal((await rollupsImpl.getInputAddress()).toLowerCase());
+            ).to.equal(rollupsFacet.address.toLowerCase());
 
             // test initial current_epoch
             checkCurrentEpochNum(state, initialEpoch);
@@ -838,27 +638,13 @@ describe("Rollups Implementation", () => {
                 "initially there's no inputs"
             ).to.equal(0);
             expect(
-                state.current_epoch.inputs.input_contract_address,
-                "current_epoch.inputs.input_contract_address does not match"
-            ).to.equal((await rollupsImpl.getInputAddress()).toLowerCase());
-            expect(
                 state.current_epoch.rollups_contract_address,
                 "current_epoch.rollups_contract_address does not match"
-            ).to.equal(rollupsImpl.address.toLowerCase());
-            expect(
-                state.current_epoch.input_contract_address,
-                "current_epoch.input_contract_address does not match"
-            ).to.equal((await rollupsImpl.getInputAddress()).toLowerCase());
+            ).to.equal(rollupsFacet.address.toLowerCase());
             expect(
                 JSON.stringify(state.current_phase.InputAccumulation) == "{}",
                 "initial phase"
             ).to.equal(true);
-            expect(
-                state.output_state.output_address,
-                "output_state.output_address does not match"
-            ).to.equal(
-                (await rollupsImpl.getOutputAddress()).toLowerCase()
-            );
             expect(
                 JSON.stringify(state.output_state.vouchers) == "{}",
                 "initially there's no vouchers"
@@ -866,7 +652,7 @@ describe("Rollups Implementation", () => {
 
             // *** EPOCH 0: claim when the input duration has not past ***
             await expect(
-                rollupsImpl.claim(
+                rollupsFacet.claim(
                     ethers.utils.formatBytes32String("hello")
                 ),
                 "phase incorrect because inputDuration not over"
@@ -876,7 +662,7 @@ describe("Rollups Implementation", () => {
             ]);
             await network.provider.send("evm_mine");
             await expect(
-                rollupsImpl.claim(
+                rollupsFacet.claim(
                     ethers.utils.formatBytes32String("hello")
                 ),
                 "phase incorrect because inputDuration not over"
@@ -890,7 +676,7 @@ describe("Rollups Implementation", () => {
                 inputDuration / 2 + 1,
             ]);
             await network.provider.send("evm_mine");
-            await rollupsImpl.claim(
+            await rollupsFacet.claim(
                 ethers.utils.formatBytes32String("hello")
             );
 
@@ -929,7 +715,7 @@ describe("Rollups Implementation", () => {
             // inputs are tested in the input delegate tests
 
             // *** EPOCH 0: claim to reach consensus ***
-            await rollupsImpl
+            await rollupsFacet
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
@@ -953,7 +739,7 @@ describe("Rollups Implementation", () => {
                 "signers[1] should be in the claimers list"
             ).to.equal(true);
 
-            await rollupsImpl
+            await rollupsFacet
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
@@ -982,13 +768,13 @@ describe("Rollups Implementation", () => {
             ).to.equal("0x1");
 
             // *** EPOCH 1: conflicting claims ***
-            await rollupsImpl.claim(
+            await rollupsFacet.claim(
                 ethers.utils.formatBytes32String("hello1")
             );
             let first_claim_timestamp = (
                 await ethers.provider.getBlock("latest")
             ).timestamp;
-            await rollupsImpl
+            await rollupsFacet
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("not hello1"));
 
@@ -1043,7 +829,7 @@ describe("Rollups Implementation", () => {
             ).to.equal("0x1");
 
             // *** EPOCH 1 -> 2: finalize after consensus times out ***
-            await rollupsImpl.finalizeEpoch();
+            await rollupsFacet.finalizeEpoch();
 
             state = JSON.parse(await getState(initialState)); // update state
             // now can test the finalized epoch 1
@@ -1061,10 +847,10 @@ describe("Rollups Implementation", () => {
             ]);
             await network.provider.send("evm_mine");
 
-            await rollupsImpl.claim(
+            await rollupsFacet.claim(
                 ethers.utils.formatBytes32String("hello2")
             );
-            await rollupsImpl
+            await rollupsFacet
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("not hello2"));
 

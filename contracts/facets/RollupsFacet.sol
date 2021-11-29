@@ -107,4 +107,18 @@ contract RollupsFacet is IRollups {
     function getCurrentEpoch() public view override returns (uint256) {
         return LibRollups.getCurrentEpoch();
     }
+
+    /// @notice returns the current phase
+    function getCurrentPhase() public view returns (Phase) {
+        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
+        Phase currentPhase = Phase(ds.currentPhase_int);
+        return currentPhase;
+    }
+
+    /// @notice returns the input accumulation start timestamp
+    function getInputAccumulationStart() public view returns (uint256) {
+        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
+        uint256 inputAccumulationStart = ds.inputAccumulationStart;
+        return inputAccumulationStart;
+    }
 }

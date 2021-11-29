@@ -13,9 +13,11 @@
 /// @title Rollups initialization facet
 pragma solidity ^0.8.0;
 
+import {Phase} from "../interfaces/IRollups.sol";
 import {IRollupsInit} from "../interfaces/IRollupsInit.sol";
 
 import {LibRollupsInit} from "../libraries/LibRollupsInit.sol";
+import {LibRollups} from "../libraries/LibRollups.sol";
 import {LibInput} from "../libraries/LibInput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
@@ -28,6 +30,7 @@ contract RollupsInitFacet is IRollupsInit {
     // @dev validators have to be unique, if the same validator is added twice
     //      consensus will never be reached
     function init(
+        // rollups contructor variables
         uint256 _inputDuration,
         uint256 _challengePeriod,
         // input constructor variables
@@ -42,6 +45,7 @@ contract RollupsInitFacet is IRollupsInit {
 
         initInput(_inputLog2Size);
         initValidatorManager(_validators);
+        initRollups(_inputDuration, _challengePeriod);
 
         ds.initialized = true;
 
@@ -57,6 +61,7 @@ contract RollupsInitFacet is IRollupsInit {
             _inputLog2Size >= 3 && _inputLog2Size <= 64,
             "Log of input size: [3,64]"
         );
+
         ds.inputDriveSize = (1 << _inputLog2Size);
     }
 
@@ -70,5 +75,20 @@ contract RollupsInitFacet is IRollupsInit {
 
         ds.validators = _validators;
         ds.consensusGoalMask = LibValidatorManager.updateConsensusGoalMask();
+    }
+
+    // @notice initialize the Rollups facet
+    // @param _inputDuration duration of input accumulation phase in seconds
+    // @param _challengePeriod duration of challenge period in seconds
+    function initRollups(uint256 _inputDuration, uint256 _challengePeriod)
+        private
+    {
+        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
+
+        // Is this optimal?
+        ds.inputDuration = uint32(_inputDuration);
+        ds.challengePeriod = uint32(_challengePeriod);
+        ds.inputAccumulationStart = uint32(block.timestamp);
+        ds.currentPhase_int = uint32(Phase.InputAccumulation);
     }
 }
