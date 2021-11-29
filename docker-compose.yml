@@ -19,7 +19,7 @@ services:
     environment:
       # TODO: currently hardhat's default mnemonic
       # this should become a secret
-      - MNEMONIC="test test test test test test test test test test test junk"
+      - MNEMONIC=test test test test test test test test test test test junk
     volumes:
       - blockchain_data:/opt/cartesi/share/blockchain
       - ./offchain/offchain:/opt/cartesi/share/config/
@@ -37,8 +37,6 @@ services:
   echo_machine:
     image: cartesicorp/rollup-echo-server:0.1.0-test2a
     restart: always
-    ports:
-      - "5001:5001"
 
 volumes:
   blockchain_data:
