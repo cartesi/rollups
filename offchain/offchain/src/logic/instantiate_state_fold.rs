@@ -6,7 +6,6 @@ use crate::fold::*;
 use state_fold::config::SFConfig;
 use state_fold::Access;
 
-use ethers::core::types::{Address, U64};
 use ethers::providers::{Http, Provider};
 
 use snafu::ResultExt;

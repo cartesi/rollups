@@ -12,8 +12,8 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-block-subscriber = { git = "https://github.com/cartesi/offchain-utils", rev = "38342b0" }
-configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "38342b0" }
+block-subscriber = { git = "https://github.com/cartesi/offchain-utils", rev = "c4a9c05" }
+configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "c4a9c05" }
 state-fold = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
 state-server-grpc = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
 offchain = { path = "../offchain" }

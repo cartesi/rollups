@@ -140,7 +140,7 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 [[package]]
 name = "backoff"
 version = "0.1.0"
-source = "git+https://github.com/cartesi/offchain-utils?rev=38342b0#38342b0c0a3dccaf98793920f242822c0c161d39"
+source = "git+https://github.com/cartesi/offchain-utils?rev=c4a9c05#c4a9c05a8d3e46868e05ac9cc5057e946169eb3c"
 dependencies = [
  "rand",
  "tokio",
@@ -283,7 +283,7 @@ checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 [[package]]
 name = "block-subscriber"
 version = "0.1.0"
-source = "git+https://github.com/cartesi/offchain-utils?rev=38342b0#38342b0c0a3dccaf98793920f242822c0c161d39"
+source = "git+https://github.com/cartesi/offchain-utils?rev=c4a9c05#c4a9c05a8d3e46868e05ac9cc5057e946169eb3c"
 dependencies = [
  "async-trait",
  "backoff",
@@ -462,10 +462,11 @@ dependencies = [
 [[package]]
 name = "configuration"
 version = "0.1.0"
-source = "git+https://github.com/cartesi/offchain-utils?rev=38342b0#38342b0c0a3dccaf98793920f242822c0c161d39"
+source = "git+https://github.com/cartesi/offchain-utils?rev=c4a9c05#c4a9c05a8d3e46868e05ac9cc5057e946169eb3c"
 dependencies = [
  "im",
  "offchain-core",
+ "rpassword",
  "serde",
  "serde_json",
  "snafu",
@@ -1504,7 +1505,7 @@ checksum = "308cc39be01b73d0d18f82a0e7b2a3df85245f84af96fdddc5d202d27e47b86a"
 [[package]]
 name = "middleware-factory"
 version = "0.1.0"
-source = "git+https://github.com/cartesi/offchain-utils?rev=38342b0#38342b0c0a3dccaf98793920f242822c0c161d39"
+source = "git+https://github.com/cartesi/offchain-utils?rev=c4a9c05#c4a9c05a8d3e46868e05ac9cc5057e946169eb3c"
 dependencies = [
  "async-trait",
  "backoff",
@@ -1619,16 +1620,20 @@ dependencies = [
 [[package]]
 name = "offchain-core"
 version = "0.1.0"
-source = "git+https://github.com/cartesi/offchain-utils?rev=38342b0#38342b0c0a3dccaf98793920f242822c0c161d39"
+source = "git+https://github.com/cartesi/offchain-utils?rev=c4a9c05#c4a9c05a8d3e46868e05ac9cc5057e946169eb3c"
 dependencies = [
+ "anyhow",
  "ethabi 14.1.0",
  "ethers",
+ "proc-macro2",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
 name = "offchain-utils"
 version = "0.1.0"
-source = "git+https://github.com/cartesi/offchain-utils?rev=38342b0#38342b0c0a3dccaf98793920f242822c0c161d39"
+source = "git+https://github.com/cartesi/offchain-utils?rev=c4a9c05#c4a9c05a8d3e46868e05ac9cc5057e946169eb3c"
 dependencies = [
  "backoff",
  "block-subscriber",
@@ -2221,6 +2226,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "rpassword"
+version = "5.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffc936cf8a7ea60c58f030fd36a612a48f440610214dc54bc36431f9ea0c3efb"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]
@@ -3026,7 +3041,7 @@ dependencies = [
 [[package]]
 name = "tx-manager"
 version = "0.1.0"
-source = "git+https://github.com/cartesi/tx-manager?rev=61b4d85#61b4d85c16ee55112b512e9e2f4ae013042edf23"
+source = "git+https://github.com/cartesi/tx-manager?rev=a35a776#a35a7766ea11525a506192820e6a16dd450c942d"
 dependencies = [
  "async-trait",
  "futures",

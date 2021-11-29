@@ -11,11 +11,11 @@ name = "offchain_main"
 path = "src/main.rs"
 
 [dependencies]
-block-subscriber = { git = "https://github.com/cartesi/offchain-utils", rev = "38342b0" }
-middleware-factory = { git = "https://github.com/cartesi/offchain-utils", rev = "38342b0" }
-offchain-core = { git = "https://github.com/cartesi/offchain-utils", rev = "38342b0" }
-configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "38342b0" }
-tx-manager = { git = "https://github.com/cartesi/tx-manager", rev = "61b4d85" }
+block-subscriber = { git = "https://github.com/cartesi/offchain-utils", rev = "c4a9c05" }
+middleware-factory = { git = "https://github.com/cartesi/offchain-utils", rev = "c4a9c05" }
+offchain-core = { git = "https://github.com/cartesi/offchain-utils", rev = "c4a9c05" }
+configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "c4a9c05" }
+tx-manager = { git = "https://github.com/cartesi/tx-manager", rev = "a35a776" }
 state-fold = { git = "https://github.com/cartesi/state-fold", rev = "64f9c0e" }
 
 ethers = { version = "0.5.3", features = [ "legacy", "ws" ] }

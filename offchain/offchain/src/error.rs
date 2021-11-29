@@ -1,7 +1,7 @@
 use snafu::Snafu;
 
 use middleware_factory;
-use state_fold;
+use offchain_core::ethers::signers::WalletError;
 use tokio::sync::broadcast::error::RecvError;
 
 #[derive(Debug, Snafu)]
@@ -19,10 +19,6 @@ pub enum Error {
     #[snafu(display("Failed to receive"))]
     SubscriberReceiveError { source: RecvError },
 
-    // #[snafu(display("State fold error"))]
-    // StateFoldError {
-    //     source: state_fold::error::Error<RollupsAccess>,
-    // },
     #[snafu(display("Tonic status error"))]
     TonicStatusError { source: tonic::Status },
 
@@ -34,6 +30,9 @@ pub enum Error {
 
     #[snafu(display("Bad configuration: {}", err))]
     BadConfiguration { err: String },
+
+    #[snafu(display("Mnemonic builder error: {}", source))]
+    MnemonicError { source: WalletError },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

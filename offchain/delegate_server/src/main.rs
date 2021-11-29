@@ -1,7 +1,6 @@
 #![warn(unused_extern_crates)]
 use state_server_grpc::{serve_delegate_manager, wait_for_signal};
 
-use offchain::config::{ApplicationCLIConfig, ApplicationConfig};
 use structopt::StructOpt;
 use tokio::sync::oneshot;
 
@@ -10,7 +9,7 @@ use configuration::config::{
 };
 use state_fold::config::{SFConfig, SFEnvCLIConfig};
 
-const SERVER_ADDRESS: &str = "0.0.0.0:50051"
+const SERVER_ADDRESS: &str = "0.0.0.0:50051";
 
 #[derive(StructOpt)]
 struct ServerConfig {

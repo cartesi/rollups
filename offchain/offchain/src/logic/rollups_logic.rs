@@ -1,9 +1,7 @@
 use offchain_core::ethers;
 
 use super::instantiate_block_subscriber::instantiate_block_subscriber;
-use super::instantiate_tx_manager::{
-    instantiate_tx_manager, RollupsTxManager,
-};
+use super::instantiate_tx_manager::{instantiate_tx_manager, RollupsTxManager};
 
 use super::config::LogicConfig;
 use crate::config::ApplicationConfig;
@@ -37,8 +35,9 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     )
     .await?;
 
-    let tx_manager = instantiate_tx_manager(
-        config.logic_config.signer_http_endpoint.clone(),
+    let (tx_manager, sender) = instantiate_tx_manager(
+        config.logic_config.provider_http_endpoint.clone(),
+        config.logic_config.mnemonic.clone(),
         Arc::clone(&block_subscriber),
         &config.tm_config,
     )
@@ -87,7 +86,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
                     .await?;
 
                 react(
-                    &config.logic_config.sender,
+                    &sender,
                     &tx_config,
                     state,
                     &tx_manager,
@@ -436,9 +435,7 @@ async fn send_claim_tx(
     tx_manager: &RollupsTxManager,
     rollups_contract: &RollupsImpl<Provider<MockProvider>>,
 ) {
-    let claim_tx = rollups_contract
-        .claim(claim.to_fixed_bytes())
-        .from(sender);
+    let claim_tx = rollups_contract.claim(claim.to_fixed_bytes()).from(sender);
 
     let label = format!("claim_for_epoch:{}", epoch_number);
 

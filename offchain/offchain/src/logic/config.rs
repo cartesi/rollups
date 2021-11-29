@@ -15,15 +15,15 @@ pub struct LogicEnvCLIConfig {
     /// Path to logic .toml config
     #[structopt(long, env)]
     pub logic_config_path: Option<String>,
-    /// Signer address
-    #[structopt(long, env)]
-    pub sender: Option<String>,
+    /// Signer Mnemonic
+    #[structopt(long, env = "MNEMONIC")]
+    pub mnemonic: Option<String>,
     /// Address of deployed rollups contract
     #[structopt(long, env)]
     pub rollups_contract_address: Option<String>,
-    /// URL of transaction signer http endpoint
+    /// URL of provider http endpoint
     #[structopt(long, env)]
-    pub signer_http_endpoint: Option<String>,
+    pub provider_http_endpoint: Option<String>,
     /// URL of websocket provider endpoint
     #[structopt(long, env)]
     pub ws_endpoint: Option<String>,
@@ -55,9 +55,9 @@ pub struct LogicEnvCLIConfig {
 
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct LogicFileConfig {
-    pub sender: Option<String>,
+    pub mnemonic: Option<String>,
     pub rollups_contract_address: Option<String>,
-    pub signer_http_endpoint: Option<String>,
+    pub provider_http_endpoint: Option<String>,
     pub ws_endpoint: Option<String>,
     pub state_fold_grpc_endpoint: Option<String>,
     pub initial_epoch: Option<u64>,
@@ -76,11 +76,11 @@ pub struct FileConfig {
 
 #[derive(Clone, Debug)]
 pub struct LogicConfig {
-    pub sender: Address,
+    pub mnemonic: String,
     pub rollups_contract_address: Address,
     pub initial_epoch: U256,
 
-    pub signer_http_endpoint: String,
+    pub provider_http_endpoint: String,
     pub ws_endpoint: String,
     pub state_fold_grpc_endpoint: String,
 
@@ -117,21 +117,13 @@ impl LogicConfig {
             c.logic_config
         };
 
-        let sender: Address = Address::from_str(
-            &env_cli_config
-                .sender
-                .or(file_config.sender)
-                .ok_or(snafu::NoneError)
-                .context(config_error::FileError {
-                    err: "Must specify sender address",
-                })?,
-        )
-        .map_err(|e| {
-            config_error::FileError {
-                err: format!("Sender address string ill-formed: {}", e),
-            }
-            .build()
-        })?;
+        let mnemonic: String = env_cli_config
+            .mnemonic
+            .or(file_config.mnemonic)
+            .ok_or(snafu::NoneError)
+            .context(config_error::FileError {
+                err: "Must specify mnemonic",
+            })?;
 
         let rollups_contract_address: Address = Address::from_str(
             &env_cli_config
@@ -159,9 +151,9 @@ impl LogicConfig {
                 .unwrap_or(DEFAULT_INITIAL_EPOCH),
         );
 
-        let signer_http_endpoint: String = env_cli_config
-            .signer_http_endpoint
-            .or(file_config.signer_http_endpoint)
+        let provider_http_endpoint: String = env_cli_config
+            .provider_http_endpoint
+            .or(file_config.provider_http_endpoint)
             .unwrap_or(DEFAULT_PROVIDER_HTTP_ENDPOINT.to_owned());
 
         let ws_endpoint: String = env_cli_config
@@ -202,11 +194,11 @@ impl LogicConfig {
             .unwrap_or(DEFAULT_CONFIRMATIONS);
 
         Ok(LogicConfig {
-            sender,
+            mnemonic,
             rollups_contract_address,
             initial_epoch,
 
-            signer_http_endpoint,
+            provider_http_endpoint,
             ws_endpoint,
             state_fold_grpc_endpoint,
 
