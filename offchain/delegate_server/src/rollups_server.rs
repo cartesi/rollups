@@ -52,8 +52,7 @@ impl DelegateManager for RollupsDelegateManager {
             .fold
             .get_state_for_block(&(rollups_address, initial_epoch), None)
             .await
-            .map_err(|e| Status::new(Code::Unavailable, format!("{}", e)))?
-            .state; // TODO return BlockState<RollupsState>
+            .map_err(|e| Status::new(Code::Unavailable, format!("{}", e)))?;
 
         let reply = GetStateResponse {
             json_state: serde_json::to_string(&contract_state)
