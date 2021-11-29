@@ -75,7 +75,7 @@ impl Config {
             }),
 
             machine_oneof: Some(MachineOneof::Directory(
-                "machine_config_directory".to_owned(),
+                "/opt/cartesi/share/echo-server".to_owned(),
             )),
         };
 
