@@ -10,6 +10,8 @@ use configuration::config::{
 };
 use state_fold::config::{SFConfig, SFEnvCLIConfig};
 
+const SERVER_ADDRESS: &str = "0.0.0.0:50051"
+
 #[derive(StructOpt)]
 struct ServerConfig {
     #[structopt(flatten)]
@@ -46,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
 
             serve_delegate_manager(
-                "[::1]:50051",
+                SERVER_ADDRESS,
                 delegate_server::input_server::InputDelegateManager {
                     fold: input_fold,
                 },
@@ -61,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
 
             serve_delegate_manager(
-                "[::1]:50051",
+                SERVER_ADDRESS,
                 delegate_server::output_server::OutputDelegateManager {
                     fold: output_fold,
                 },
@@ -77,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
 
             serve_delegate_manager(
-                "[::1]:50051",
+                SERVER_ADDRESS,
                 delegate_server::rollups_server::RollupsDelegateManager {
                     fold: rollups_fold,
                 },
