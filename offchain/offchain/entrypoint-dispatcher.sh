@@ -1,7 +1,6 @@
 #!/bin/sh
 # addresses
-SENDER_ADDRESS=0x2A20380DcA5bC24D052acfbf79ba23e988ad0050
-ROLLUPS_CONTRACT_ADDRESS=0x2A20380DcA5bC24D052acfbf79ba23e988ad0050
+ROLLUPS_CONTRACT_ADDRESS="0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
 
 # config files
 LOGIC_CONFIG_PATH="/opt/cartesi/share/config/logic-config.toml"
@@ -15,7 +14,7 @@ TM_CONFIG_PATH="/opt/cartesi/share/config/tm-config.toml"
 #done
 sleep 40
 
-/usr/local/bin/offchain_main --sender $SENDER_ADDRESS --rollups-contract-address $ROLLUPS_CONTRACT_ADDRESS \
+/usr/local/bin/offchain_main --rollups-contract-address $ROLLUPS_CONTRACT_ADDRESS \
   --logic-config-path $LOGIC_CONFIG_PATH \
   --sf-config $SF_CONFIG_PATH \
   --bs-config $BS_CONFIG_PATH \
