@@ -18,6 +18,7 @@ import "./OutputImpl.sol";
 import "./ValidatorManagerImpl.sol";
 import "./Rollups.sol";
 import "./DisputeManagerImpl.sol";
+import "./ValidatorManagerClaimsCountedImpl.sol";
 
 contract RollupsImpl is Rollups {
     ////
@@ -44,6 +45,7 @@ contract RollupsImpl is Rollups {
     OutputImpl public output; // contract responsible for outputs
     ValidatorManagerImpl public validatorManager; // contract responsible for validators
     DisputeManagerImpl public disputeManager; // contract responsible for dispute resolution
+    ValidatorManagerClaimsCountedImpl public feeManager; // contract responsible for fee redemption
 
     struct StorageVar {
         uint32 inputDuration; // duration of input accumulation phase in seconds
@@ -85,6 +87,7 @@ contract RollupsImpl is Rollups {
         output = new OutputImpl(address(this));
         validatorManager = new ValidatorManagerImpl(address(this), _validators);
         disputeManager = new DisputeManagerImpl(address(this));
+        feeManager =  new ValidatorManagerClaimsCountedImpl(address(this), _validators);
 
         storageVar = StorageVar(
             uint32(_inputDuration),
@@ -99,6 +102,7 @@ contract RollupsImpl is Rollups {
             address(output),
             address(validatorManager),
             address(disputeManager),
+            address(feeManager),
             _inputDuration,
             _challengePeriod
         );

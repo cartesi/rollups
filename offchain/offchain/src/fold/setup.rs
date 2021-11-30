@@ -2,6 +2,7 @@ use super::*;
 use state_fold::{config::SFConfig, DelegateAccess, StateFold};
 
 use std::sync::Arc;
+use crate::fold::fee_manager_delegate::FeeManagerFoldDelegate;
 
 pub type RollupsStateFold<DA> =
     Arc<StateFold<RollupsFoldDelegate<DA>, DA>>;
@@ -14,9 +15,10 @@ pub fn create_rollups_state_fold<
     config: &SFConfig,
 ) -> RollupsStateFold<DA> {
     let epoch_fold = create_epoch(Arc::clone(&access), config);
-    let output_fold = create_output(Arc::clone(&access), config);
+    let voucher_fold = create_voucher(Arc::clone(&access), config);
+    let fee_manager_fold = create_fee_manager(Arc::clone(&access), config);
 
-    let delegate = RollupsFoldDelegate::new(epoch_fold, output_fold);
+    let delegate = RollupsFoldDelegate::new(epoch_fold, voucher_fold, fee_manager_fold);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }

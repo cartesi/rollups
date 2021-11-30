@@ -1,7 +1,7 @@
 use offchain_core::ethers;
 
 use ethers::abi::{encode, Token};
-use ethers::types::{Address, H256, I256, U256, U64};
+use ethers::types::{Address, H256, U256, U64};
 use im::{HashMap, HashSet, Vector};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -299,6 +299,9 @@ pub struct ImmutableState {
 
     /// contract responsible for dispute resolution
     pub dispute_contract_address: Address,
+
+    /// contract responsible for fee management
+    pub fee_manager_contract_address: Address,
 
     /// rollups contract address
     pub rollups_contract_address: Address,

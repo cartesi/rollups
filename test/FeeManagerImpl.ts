@@ -10,10 +10,13 @@ import { FeeManagerImpl } from "../dist/src/types/FeeManagerImpl";
 import { FeeManagerImpl__factory } from "../dist/src/types/factories/FeeManagerImpl__factory";
 import { SimpleToken } from "../dist/src/types/SimpleToken";
 import { SimpleToken__factory } from "../dist/src/types/factories/SimpleToken__factory";
+import { getState } from "./getState";
 
 use(solidity);
 
 describe("FeeManager Implementation", () => {
+    let enableDelegate = process.env["DELEGATE_TEST"];
+
     let signers: Signer[];
     let mockValidatorManager: MockContract;
     let token: SimpleToken;
@@ -75,6 +78,17 @@ describe("FeeManager Implementation", () => {
         expect(await feeManager.feePerClaim(), "initial feePerClaim").to.equal(
             initialFeePerClaim
         );
+
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: feeManager.address,
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            console.log(state);
+        }
     });
 
     it("test constructor event FeeManagerCreated", async () => {

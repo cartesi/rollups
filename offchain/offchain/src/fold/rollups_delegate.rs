@@ -24,21 +24,26 @@ use std::sync::Arc;
 
 use ethers::providers::Middleware;
 use ethers::types::{Address, U256};
+use crate::fold::fee_manager_delegate::FeeManagerFoldDelegate;
+use crate::fold::types::FeeManagerState;
 
 /// Rollups StateActor Delegate, which implements `sync` and `fold`.
 pub struct RollupsFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
     epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
-    output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
+    voucher_fold: Arc<StateFold<VoucherFoldDelegate, DA>>,
+    fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate, DA>>,
 }
 
 impl<DA: DelegateAccess + Send + Sync + 'static> RollupsFoldDelegate<DA> {
     pub fn new(
         epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
-        output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
+        voucher_fold: Arc<StateFold<VoucherFoldDelegate, DA>>,
+        fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate, DA>>,
     ) -> Self {
         Self {
             epoch_fold,
-            output_fold,
+            voucher_fold,
+            fee_manager_fold,
         }
     }
 }
@@ -139,12 +144,25 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
+        let fee_manager_state = self
+            .fee_manager_fold
+            .get_state_for_block(&constants.fee_manager_contract_address, Some(block.hash))
+            .await
+            .map_err(|e| {
+                SyncDelegateError {
+                    err: format!("Fee Manager state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
         Ok(convert_raw_to_logical(
             raw_contract_state,
             constants,
             block,
             &epoch_number,
-            output_state,
+            voucher_state,
+            fee_manager_state,
         ))
     }
 
@@ -155,7 +173,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         _access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         let constants = previous_state.constants.clone();
-        let output_address = constants.output_contract_address;
+        let voucher_address = constants.voucher_contract_address;
+        let fee_manager_address = constants.fee_manager_contract_address;
 
         // get raw state from EpochFoldDelegate
         let raw_contract_state = self
@@ -188,12 +207,25 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
+        let fee_manager_state = self
+            .fee_manager_fold
+            .get_state_for_block(&fee_manager_address, Some(block.hash))
+            .await
+            .map_err(|e| {
+                FoldDelegateError {
+                    err: format!("Fee manager fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
         Ok(convert_raw_to_logical(
             raw_contract_state,
             constants,
             block,
             &previous_state.initial_epoch,
-            output_state,
+            voucher_state,
+            fee_manager_state
         ))
     }
 
@@ -213,7 +245,8 @@ fn convert_raw_to_logical(
     constants: ImmutableState,
     block: &Block,
     initial_epoch: &U256,
-    output_state: OutputState,
+    voucher_state: VoucherState,
+    fee_manager_state: FeeManagerState,
 ) -> RollupsState {
     // If the raw state is InputAccumulation but it has expired, then the raw
     // state's `current_epoch` becomes the sealed epoch, and the logic state's
@@ -331,7 +364,8 @@ fn convert_raw_to_logical(
         current_phase: phase_state,
         finalized_epochs: contract_state.finalized_epochs,
         current_epoch,
-        output_state,
+        voucher_state,
+        fee_manager_state,
     }
 }
 
@@ -347,6 +381,7 @@ impl From<&(RollupsCreatedFilter, U256, Address)> for ImmutableState {
             output_contract_address: ev.output,
             validator_contract_address: ev.validator_manager,
             dispute_contract_address: ev.dispute_manager,
+            fee_manager_contract_address: ev.fee_manager,
             rollups_contract_address: *rollups_contract_address,
         }
     }

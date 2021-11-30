@@ -86,6 +86,7 @@ interface Rollups {
         address _output,
         address _validatorManager,
         address _disputeManager,
+        address _feeManager,
         uint256 _inputDuration,
         uint256 _challengePeriod
     );
