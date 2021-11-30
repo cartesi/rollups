@@ -9,11 +9,11 @@ module.exports = {
 				primaryKey: true
 			},
 			input_duration: {
-				type: Sequelize.INTEGER,
+				type: Sequelize.STRING,
 				allowNull: false
 			},
 			challenge_period: {
-				type: Sequelize.INTEGER,
+				type: Sequelize.STRING,
 				allowNull: false
 			},
 			contract_creation_timestamp: {
@@ -24,7 +24,7 @@ module.exports = {
 				type: Sequelize.STRING,
 				allowNull: false
 			},
-			voucher_contract_address: {
+			output_contract_address: {
 				type: Sequelize.STRING,
 				allowNull: false
 			},

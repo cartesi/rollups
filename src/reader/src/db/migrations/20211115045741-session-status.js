@@ -3,16 +3,16 @@ module.exports = {
 	up: async (queryInterface, Sequelize) => {
 		await queryInterface.createTable("SessionStatuses", {
 			session_id: {
-				type: Sequelize.UUID,
+				type: Sequelize.STRING,
 				allowNull: false,
 				primaryKey: true
 			},
 			active_epoch_index: {
-				type: Sequelize.INTEGER,
+				type: Sequelize.STRING,
 				allowNull: false
 			},
 			epoch_index: {
-				type: Sequelize.ARRAY(Sequelize.INTEGER),
+				type: Sequelize.ARRAY(Sequelize.STRING),
 				allowNull: false
 			},
 			taint_status: {

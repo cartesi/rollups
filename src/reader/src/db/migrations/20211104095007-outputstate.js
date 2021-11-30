@@ -2,13 +2,13 @@
 
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
-		await queryInterface.createTable("VoucherStates", {
+		await queryInterface.createTable("OutputStates", {
 			id: {
 				type: Sequelize.UUID,
 				allowNull: false,
 				primaryKey: true
 			},
-			voucher_address: {
+			output_address: {
 				type: Sequelize.STRING,
 				allowNull: false
 			},
