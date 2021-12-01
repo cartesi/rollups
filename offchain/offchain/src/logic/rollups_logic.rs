@@ -228,14 +228,6 @@ async fn react<MM: MachineInterface + Sync>(
                 }
             }
 
-            // Enqueue accumulating epoch.
-            enqueue_remaning_inputs(
-                &mm_epoch_status,
-                &state.current_epoch.inputs.inputs,
-                machine_manager,
-            )
-            .await?;
-
             info!("Querying machine manager for sealed epoch claim");
 
             let claim =
