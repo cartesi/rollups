@@ -9,6 +9,7 @@ use ethers::types::{H256, U256};
 use fold::types::*;
 use im::Vector;
 
+#[derive(Debug)]
 pub struct EpochStatus {
     pub epoch_number: U256,
     pub processed_input_count: usize,
@@ -18,7 +19,7 @@ pub struct EpochStatus {
 
 // TODO: what happens with skipped inputs?
 #[async_trait]
-pub trait MachineInterface {
+pub trait MachineInterface: std::fmt::Debug {
     async fn get_current_epoch_status(&self) -> Result<EpochStatus>;
 
     async fn enqueue_inputs(
@@ -41,6 +42,7 @@ pub trait MachineInterface {
     async fn get_epoch_claim(&self, epoch_number: U256) -> Result<H256>;
 }
 
+#[derive(Debug)]
 pub struct MockMachine {}
 
 #[async_trait]

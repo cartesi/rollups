@@ -110,6 +110,7 @@ impl Config {
     }
 }
 
+#[derive(Debug)]
 pub struct MachineManager {
     session_id: String,
     storage_directory: String,

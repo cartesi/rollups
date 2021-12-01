@@ -20,6 +20,9 @@ use ethers::providers::{MockProvider, Provider};
 use im::Vector;
 use std::sync::Arc;
 
+use tracing::{debug, error, info, instrument, trace};
+
+#[derive(Debug)]
 pub struct TxConfig {
     pub gas_multiplier: Option<f64>,
     pub gas_price_multiplier: Option<f64>,
@@ -28,12 +31,23 @@ pub struct TxConfig {
     pub confirmations: usize,
 }
 
+#[instrument]
 pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
+    debug!(
+        "Creating block subscriber with endpoint `{}`",
+        &config.logic_config.ws_endpoint
+    );
+
     let (block_subscriber, _subscriber_handle) = instantiate_block_subscriber(
         config.logic_config.ws_endpoint.clone(),
         &config.bs_config,
     )
     .await?;
+
+    debug!(
+        "Creating transaction manager with endpoint `{}`",
+        &config.logic_config.provider_http_endpoint
+    );
 
     let (tx_manager, sender) = instantiate_tx_manager(
         config.logic_config.provider_http_endpoint.clone(),
@@ -43,17 +57,37 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     )
     .await?;
 
+    info!("Dispatcher running with validator address `{}`", sender);
+
+    trace!(
+        "Instantiating rollups contract at address `{}`",
+        config.logic_config.rollups_contract_address,
+    );
+
     let (provider, _mock) = Provider::mocked();
     let rollups_contract = RollupsImpl::new(
         config.logic_config.rollups_contract_address,
         Arc::new(provider),
     );
 
+    debug!(
+        "Creating state-fold server gRPC connection at endpoint `{}`",
+        &config.logic_config.state_fold_grpc_endpoint
+    );
+
     let rollups_state_fold = RollupsStateFold::new(
         config.logic_config.state_fold_grpc_endpoint.clone(),
     )
     .await?;
+
+    // For a local statefold, use the following:
     // let state_fold = instantiate_state_fold(&config.into())?;
+
+    debug!(
+        "Creating rollup machine manager gRPC connection at endpoint `{}` with session id `{}`",
+        &config.logic_config.mm_endpoint,
+        &config.logic_config.session_id,
+    );
 
     let machine_manager = {
         let mm_config = rollup_mm::Config::new_with_default(
@@ -64,6 +98,8 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
         rollup_mm::MachineManager::new(mm_config).await?
     };
 
+    trace!("Starting block-subscriber subscription");
+
     let mut subscription = block_subscriber
         .subscribe()
         .await
@@ -71,10 +107,19 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
 
     let tx_config = (&config.logic_config).into();
 
+    trace!("Entering main loop...");
+
     loop {
         // TODO: change to n blocks in the past.
+        //
+        trace!("Awaiting new blocks...");
+
         match subscription.recv().await {
             Ok(block) => {
+                info!("Dispatcher received new block `{:#?}`", &block);
+
+                debug!("Querying state-fold server latest state");
+
                 let state = rollups_state_fold
                     .get_state(
                         &block.hash,
@@ -85,6 +130,8 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
                     )
                     .await?;
 
+                trace!("Reacting on state `{:#?}`", &state);
+
                 react(
                     &sender,
                     &tx_config,
@@ -94,13 +141,19 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
                     &machine_manager,
                 )
                 .await?;
+
+                trace!("Reacting done");
             }
 
-            Err(e) => return Err(Error::SubscriberReceiveError { source: e }),
+            Err(e) => {
+                error!("Block subscription failed! Error: {}", e);
+                return Err(Error::SubscriberReceiveError { source: e });
+            }
         }
     }
 }
 
+#[instrument(skip(tx_manager))]
 async fn react<MM: MachineInterface + Sync>(
     sender: &Address,
     config: &TxConfig,
@@ -109,9 +162,10 @@ async fn react<MM: MachineInterface + Sync>(
     rollups_contract: &RollupsImpl<Provider<MockProvider>>,
     machine_manager: &MM,
 ) -> Result<()> {
-    let state = state;
-
+    debug!("Querying machine manager for current epoch status");
     let mm_epoch_status = machine_manager.get_current_epoch_status().await?;
+
+    info!("Current epoch status: {:#?}", mm_epoch_status);
 
     let (should_continue, mm_epoch_status) =
         enqueue_inputs_of_finalized_epochs(
@@ -122,11 +176,14 @@ async fn react<MM: MachineInterface + Sync>(
         .await?;
 
     if !should_continue {
+        debug!("Machine manager finalization pending; exiting `react`");
         return Ok(());
     }
 
     match state.current_phase {
         PhaseState::InputAccumulation {} => {
+            debug!("InputAccumulation phase; enqueueing inputs");
+
             // Discover latest MM accumulating input index
             // Enqueue diff one by one
             enqueue_remaning_inputs(
@@ -141,6 +198,9 @@ async fn react<MM: MachineInterface + Sync>(
         }
 
         PhaseState::EpochSealedAwaitingFirstClaim { sealed_epoch } => {
+            debug!("EpochSealedAwaitingFirstClaim phase");
+            trace!("Sealed epoch: {:#?}", sealed_epoch);
+
             // On EpochSealedAwaitingFirstClaim we have two unfinalized epochs:
             // sealed and accumulating.
 
@@ -151,10 +211,11 @@ async fn react<MM: MachineInterface + Sync>(
             // Then, enqueue accumulating inputs.
 
             // If MM is on accumulating epoch, get claim of previous
-            // epoch (sealed) and
-            // React claim
+            // epoch (sealed) and React claim
             let sealed_epoch_number = state.finalized_epochs.next_epoch();
             if mm_epoch_status.epoch_number == sealed_epoch_number {
+                debug!("Machine manager is on sealed epoch");
+
                 let all_inputs_processed = update_sealed_epoch(
                     &sealed_epoch.inputs.inputs,
                     &mm_epoch_status,
@@ -164,6 +225,7 @@ async fn react<MM: MachineInterface + Sync>(
 
                 if !all_inputs_processed {
                     // React Idle
+                    debug!("Machine manager has unprocessed inputs; exiting `react`");
                     return Ok(());
                 }
             }
@@ -176,8 +238,13 @@ async fn react<MM: MachineInterface + Sync>(
             )
             .await?;
 
+            debug!("Querying machine manager for sealed epoch claim");
+
             let claim =
                 machine_manager.get_epoch_claim(sealed_epoch_number).await?;
+
+            info!("Machine manager returned claim `{}`; sending transaction for first claim...", claim);
+
             send_claim_tx(
                 sender.clone(),
                 claim,
@@ -195,8 +262,13 @@ async fn react<MM: MachineInterface + Sync>(
         | PhaseState::AwaitingConsensusAfterConflict {
             claimed_epoch, ..
         } => {
+            debug!("AwaitingConsensusNoConflict or AwaitingConsensusAfterConflict  phase");
+            trace!("Claimed epoch: {:#?}", claimed_epoch);
+
             let sealed_epoch_number = state.finalized_epochs.next_epoch();
             if mm_epoch_status.epoch_number == sealed_epoch_number {
+                debug!("Machine manager is on sealed epoch");
+
                 let all_inputs_processed = update_sealed_epoch(
                     &claimed_epoch.inputs.inputs,
                     &mm_epoch_status,
@@ -206,6 +278,7 @@ async fn react<MM: MachineInterface + Sync>(
 
                 if !all_inputs_processed {
                     // React Idle
+                    debug!("Machine manager has unprocessed inputs; exiting `react`");
                     return Ok(());
                 }
             }
@@ -220,9 +293,13 @@ async fn react<MM: MachineInterface + Sync>(
 
             let sender_claim = claimed_epoch.claims.get_sender_claim(sender);
             if sender_claim.is_none() {
+                info!("Validator has sent no claims yet; getting claim from machine manager...");
+
                 let claim = machine_manager
                     .get_epoch_claim(sealed_epoch_number)
                     .await?;
+
+                info!("Machine manager returned claim `{}`; sending transaction for claim...", claim);
 
                 send_claim_tx(
                     sender.clone(),
@@ -236,6 +313,8 @@ async fn react<MM: MachineInterface + Sync>(
 
                 return Ok(());
             }
+
+            info!("Validator has sent claim for this epoch");
 
             // On AwaitingConsensusConflict we have two unfinalized epochs:
             // claimed and accumulating.
@@ -251,8 +330,13 @@ async fn react<MM: MachineInterface + Sync>(
         }
 
         PhaseState::ConsensusTimeout { claimed_epoch } => {
+            debug!("ConsensusTimeout phase");
+            trace!("Claimed epoch: {:#?}", claimed_epoch);
+
             let sealed_epoch_number = state.finalized_epochs.next_epoch();
             if mm_epoch_status.epoch_number == sealed_epoch_number {
+                debug!("Machine manager is on sealed epoch");
+
                 let all_inputs_processed = update_sealed_epoch(
                     &claimed_epoch.inputs.inputs,
                     &mm_epoch_status,
@@ -262,6 +346,7 @@ async fn react<MM: MachineInterface + Sync>(
 
                 if !all_inputs_processed {
                     // React Idle
+                    debug!("Machine manager has unprocessed inputs; exiting `react`");
                     return Ok(());
                 }
             }
@@ -276,9 +361,13 @@ async fn react<MM: MachineInterface + Sync>(
 
             let sender_claim = claimed_epoch.claims.get_sender_claim(sender);
             if sender_claim.is_none() {
+                info!("Validator has sent no claims yet; getting claim from machine manager...");
+
                 let claim = machine_manager
                     .get_epoch_claim(sealed_epoch_number)
                     .await?;
+
+                info!("Machine manager returned claim `{}`; sending transaction claim...", claim);
 
                 send_claim_tx(
                     sender.clone(),
@@ -290,8 +379,12 @@ async fn react<MM: MachineInterface + Sync>(
                 )
                 .await;
 
+                trace!("Claim sent; exiting `react`");
+
                 return Ok(());
             } else {
+                info!("Validator has sent a claim; sending finalize epoch transaction");
+
                 send_finalize_tx(
                     sender.clone(),
                     sealed_epoch_number,
@@ -301,8 +394,11 @@ async fn react<MM: MachineInterface + Sync>(
                 )
                 .await;
 
+                trace!("Finalize transaction sent; exiting `react`");
+
                 return Ok(());
             }
+
             // On ConsensusTimeout we have two unfinalized epochs:
             // claimed and accumulating.
             //
@@ -322,12 +418,14 @@ async fn react<MM: MachineInterface + Sync>(
             unreachable!()
         }
     }
-    todo!()
+
+    Ok(())
 }
 
 /// Returns true if react can continue, false otherwise, as well as the new
 /// `mm_epoch_status`.
 #[async_recursion]
+#[instrument]
 async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
     state: &RollupsState,
     mm_epoch_status: EpochStatus,
@@ -336,6 +434,7 @@ async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
     // Checking if there are finalized_epochs beyond the machine manager.
     // TODO: comment on index compare.
     if mm_epoch_status.epoch_number >= state.finalized_epochs.next_epoch() {
+        trace!("Machine manager epoch number ahead of finalized_epochs");
         return Ok((true, mm_epoch_status));
     }
 
@@ -345,13 +444,25 @@ async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
         .expect("We should have more `finalized_epochs` than machine manager")
         .inputs;
 
+    trace!(
+        "Got `{}` inputs for epoch `{}`",
+        inputs.inputs.len(),
+        inputs.epoch_number,
+    );
+
     if mm_epoch_status.processed_input_count == inputs.inputs.len() {
+        trace!("Machine manager has processed all inputs of epoch");
         assert_eq!(
             mm_epoch_status.pending_input_count, 0,
             "Pending input count should be zero"
         );
 
         // Call finish
+        info!(
+            "Finishing epoch `{}` on machine manager with `{}` inputs",
+            inputs.epoch_number,
+            inputs.inputs.len()
+        );
         machine_manager
             .finish_epoch(
                 mm_epoch_status.epoch_number,
@@ -359,10 +470,12 @@ async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
             )
             .await?;
 
+        trace!("Querying machine manager current epoch status");
         let mm_epoch_status =
             machine_manager.get_current_epoch_status().await?;
 
         // recursively call enqueue_inputs_of_finalized_epochs
+        trace!("Recursively call `enqueue_inputs_of_finalized_epochs` for new status");
         return enqueue_inputs_of_finalized_epochs(
             &state,
             mm_epoch_status,
@@ -377,19 +490,30 @@ async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
     Ok((false, mm_epoch_status))
 }
 
+#[instrument]
 async fn enqueue_remaning_inputs<MM: MachineInterface>(
     mm_epoch_status: &EpochStatus,
     inputs: &Vector<Input>,
     machine_manager: &MM,
 ) -> Result<bool> {
     if mm_epoch_status.processed_input_count == inputs.len() {
+        trace!("Machine manager has processed all current inputs");
         return Ok(true);
     }
 
     let inputs_sent_count = mm_epoch_status.processed_input_count
         + mm_epoch_status.pending_input_count;
 
+    trace!("Number of inputs in machine manager: {}", inputs_sent_count);
+
     let input_slice = inputs.clone().slice(inputs_sent_count..);
+
+    info!(
+        "Machine manager enqueueing inputs from `{}` to `{}`",
+        inputs_sent_count,
+        inputs.len()
+    );
+
     machine_manager
         .enqueue_inputs(
             mm_epoch_status.epoch_number,
@@ -401,6 +525,7 @@ async fn enqueue_remaning_inputs<MM: MachineInterface>(
     Ok(false)
 }
 
+#[instrument(skip(machine_manager))]
 async fn update_sealed_epoch<MM: MachineInterface>(
     sealed_inputs: &Vector<Input>,
     mm_epoch_status: &EpochStatus,
@@ -414,8 +539,14 @@ async fn update_sealed_epoch<MM: MachineInterface>(
     .await?;
 
     if !all_inputs_processed {
+        trace!("There are still inputs to be processed");
         return Ok(false);
     }
+
+    info!(
+        "Finishing epoch `{}` on machine manager with `{}` inputs",
+        mm_epoch_status.epoch_number, mm_epoch_status.processed_input_count
+    );
 
     machine_manager
         .finish_epoch(
@@ -427,6 +558,7 @@ async fn update_sealed_epoch<MM: MachineInterface>(
     Ok(true)
 }
 
+#[instrument(skip(tx_manager, rollups_contract))]
 async fn send_claim_tx(
     sender: Address,
     claim: H256,
@@ -436,9 +568,12 @@ async fn send_claim_tx(
     rollups_contract: &RollupsImpl<Provider<MockProvider>>,
 ) {
     let claim_tx = rollups_contract.claim(claim.to_fixed_bytes()).from(sender);
+    trace!("Built claim transaction: `{:?}`", claim_tx);
 
     let label = format!("claim_for_epoch:{}", epoch_number);
+    trace!("Claim transaction label: {}", &label);
 
+    trace!("Sending claim transaction");
     tx_manager
         .send_transaction(
             label,
@@ -454,6 +589,7 @@ async fn send_claim_tx(
         .expect("Transaction conversion should never fail");
 }
 
+#[instrument(skip(tx_manager, rollups_contract))]
 async fn send_finalize_tx(
     sender: Address,
     epoch_number: U256,
@@ -462,9 +598,12 @@ async fn send_finalize_tx(
     rollups_contract: &RollupsImpl<Provider<MockProvider>>,
 ) {
     let finalize_tx = rollups_contract.finalize_epoch().from(sender);
+    trace!("Built finalize transaction: `{:?}`", finalize_tx);
 
     let label = format!("finalize_epoch:{}", epoch_number);
+    trace!("Finalize transaction label: {}", &label);
 
+    trace!("Sending finalize");
     tx_manager
         .send_transaction(
             label,
