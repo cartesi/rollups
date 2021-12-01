@@ -41,7 +41,7 @@ paths:
         default:
           description: Error response
           content:
-            application/json:
+            text/plain:
               schema:
                 $ref: '#/components/schemas/Error'
 
@@ -78,7 +78,7 @@ paths:
         default:
           description: Error response
           content:
-            application/json:
+            text/plain:
               schema:
                 $ref: '#/components/schemas/Error'
 
@@ -114,7 +114,7 @@ paths:
         default:
           description: Error response.
           content:
-            application/json:
+            text/plain:
               schema:
                 $ref: '#/components/schemas/Error'
 
@@ -150,7 +150,7 @@ paths:
         default:
           description: Error response.
           content:
-            application/json:
+            text/plain:
               schema:
                 $ref: '#/components/schemas/Error'
 
@@ -179,7 +179,7 @@ paths:
         default:
           description: Error response.
           content:
-            application/json:
+            text/plain:
               schema:
                 $ref: '#/components/schemas/Error'
 
@@ -216,7 +216,7 @@ paths:
         default:
           description: Error response.
           content:
-            application/json:
+            text/plain:
               schema:
                 $ref: '#/components/schemas/Error'
 
@@ -282,20 +282,6 @@ components:
           $ref: '#/components/schemas/Payload'
 
     Error:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: HTTP status code.
-              example: 400
-            reason:
-              type: string
-              description: String representation of the HTTP status code.
-              example: "Bad Request"
-            description:
-              type: string
-              description: Detailed description of the error.
-              example: "The request could not be understood by the server due to malformed syntax."
+      type: string
+      description: Detailed error message.
+      example: "The request could not be understood by the server due to malformed syntax"
