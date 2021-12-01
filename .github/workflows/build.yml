@@ -10,7 +10,7 @@ jobs:
                   token: ${{ secrets.CI_TOKEN }}
             - uses: actions/setup-node@v1
               with:
-                  node-version: "15"
+                  node-version: "16"
             - run: yarn install
             - run: yarn prettier
             - run: yarn test
