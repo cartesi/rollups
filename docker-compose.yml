@@ -20,6 +20,7 @@ services:
       # TODO: currently hardhat's default mnemonic
       # this should become a secret
       - MNEMONIC=test test test test test test test test test test test junk
+      - RUST_LOG=info
     volumes:
       - blockchain_data:/opt/cartesi/share/blockchain
       - ./offchain/offchain:/opt/cartesi/share/config/
@@ -30,6 +31,8 @@ services:
       context: .
       dockerfile: ./offchain/delegate_server/Dockerfile
     restart: always
+    environment:
+      - URL=http://hardhat:8545
     volumes:
       - blockchain_data:/opt/cartesi/share/blockchain
       - ./offchain/offchain:/opt/cartesi/share/config/
