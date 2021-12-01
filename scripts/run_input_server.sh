@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./offchain/target/debug/delegate_server $@ input
+./offchain/target/debug/voucher_server_main $@ input

@@ -82,7 +82,7 @@ describe("FeeManager Implementation", () => {
         // test delegate
         if (enableDelegate) {
             let initialState = JSON.stringify({
-                input_address: feeManager.address,
+                fee_manager_address: feeManager.address,
             });
 
             let state = JSON.parse(await getState(initialState));

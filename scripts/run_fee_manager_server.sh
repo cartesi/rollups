@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./offchain/target/debug/delegate_server $@ fee_manager
+./offchain/target/debug/voucher_server_main $@ fee-manager
