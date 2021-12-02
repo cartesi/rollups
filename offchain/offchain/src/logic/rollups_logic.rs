@@ -20,7 +20,7 @@ use ethers::providers::{MockProvider, Provider};
 use im::Vector;
 use std::sync::Arc;
 
-use tracing::{error, info};
+use tracing::{error, info, instrument};
 
 #[derive(Debug)]
 pub struct TxConfig {
@@ -31,6 +31,7 @@ pub struct TxConfig {
     pub confirmations: usize,
 }
 
+#[instrument(skip_all)]
 pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     info!(
         "Creating block subscriber with endpoint `{}`",
@@ -152,6 +153,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     }
 }
 
+#[instrument(skip_all)]
 async fn react<MM: MachineInterface + Sync>(
     sender: &Address,
     config: &TxConfig,
@@ -178,15 +180,15 @@ async fn react<MM: MachineInterface + Sync>(
         return Ok(());
     }
 
-    match state.current_phase {
+    match &state.current_phase {
         PhaseState::InputAccumulation {} => {
             info!("InputAccumulation phase; enqueueing inputs");
 
             // Discover latest MM accumulating input index
             // Enqueue diff one by one
-            enqueue_remaning_inputs(
+            enqueue_inputs_for_accumulating_epoch(
                 &mm_epoch_status,
-                &state.current_epoch.inputs.inputs,
+                &state,
                 machine_manager,
             )
             .await?;
@@ -211,7 +213,9 @@ async fn react<MM: MachineInterface + Sync>(
             // If MM is on accumulating epoch, get claim of previous
             // epoch (sealed) and React claim
             let sealed_epoch_number = state.finalized_epochs.next_epoch();
-            if mm_epoch_status.epoch_number == sealed_epoch_number {
+            let mm_epoch_status = if mm_epoch_status.epoch_number
+                == sealed_epoch_number
+            {
                 info!("Machine manager is on sealed epoch");
 
                 let all_inputs_processed = update_sealed_epoch(
@@ -226,7 +230,19 @@ async fn react<MM: MachineInterface + Sync>(
                     info!("Machine manager has unprocessed inputs; exiting `react`");
                     return Ok(());
                 }
-            }
+
+                machine_manager.get_current_epoch_status().await?
+            } else {
+                mm_epoch_status
+            };
+
+            // Enqueue accumulating epoch.
+            enqueue_inputs_for_accumulating_epoch(
+                &mm_epoch_status,
+                &state,
+                machine_manager,
+            )
+            .await?;
 
             info!("Querying machine manager for sealed epoch claim");
 
@@ -256,7 +272,9 @@ async fn react<MM: MachineInterface + Sync>(
             info!("Claimed epoch: {:#?}", claimed_epoch);
 
             let sealed_epoch_number = state.finalized_epochs.next_epoch();
-            if mm_epoch_status.epoch_number == sealed_epoch_number {
+            let mm_epoch_status = if mm_epoch_status.epoch_number
+                == sealed_epoch_number
+            {
                 info!("Machine manager is on sealed epoch");
 
                 let all_inputs_processed = update_sealed_epoch(
@@ -271,12 +289,16 @@ async fn react<MM: MachineInterface + Sync>(
                     info!("Machine manager has unprocessed inputs; exiting `react`");
                     return Ok(());
                 }
-            }
+
+                machine_manager.get_current_epoch_status().await?
+            } else {
+                mm_epoch_status
+            };
 
             // Enqueue accumulating epoch.
-            enqueue_remaning_inputs(
+            enqueue_inputs_for_accumulating_epoch(
                 &mm_epoch_status,
-                &state.current_epoch.inputs.inputs,
+                &state,
                 machine_manager,
             )
             .await?;
@@ -324,7 +346,9 @@ async fn react<MM: MachineInterface + Sync>(
             info!("Claimed epoch: {:#?}", claimed_epoch);
 
             let sealed_epoch_number = state.finalized_epochs.next_epoch();
-            if mm_epoch_status.epoch_number == sealed_epoch_number {
+            let mm_epoch_status = if mm_epoch_status.epoch_number
+                == sealed_epoch_number
+            {
                 info!("Machine manager is on sealed epoch");
 
                 let all_inputs_processed = update_sealed_epoch(
@@ -339,12 +363,15 @@ async fn react<MM: MachineInterface + Sync>(
                     info!("Machine manager has unprocessed inputs; exiting `react`");
                     return Ok(());
                 }
-            }
+                machine_manager.get_current_epoch_status().await?
+            } else {
+                mm_epoch_status
+            };
 
             // Enqueue accumulating epoch.
-            enqueue_remaning_inputs(
+            enqueue_inputs_for_accumulating_epoch(
                 &mm_epoch_status,
-                &state.current_epoch.inputs.inputs,
+                &state,
                 machine_manager,
             )
             .await?;
@@ -415,6 +442,7 @@ async fn react<MM: MachineInterface + Sync>(
 /// Returns true if react can continue, false otherwise, as well as the new
 /// `mm_epoch_status`.
 #[async_recursion]
+#[instrument(skip_all)]
 async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
     state: &RollupsState,
     mm_epoch_status: EpochStatus,
@@ -423,7 +451,11 @@ async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
     // Checking if there are finalized_epochs beyond the machine manager.
     // TODO: comment on index compare.
     if mm_epoch_status.epoch_number >= state.finalized_epochs.next_epoch() {
-        info!("Machine manager epoch number ahead of finalized_epochs");
+        info!(
+            "Machine manager epoch number `{}` ahead of finalized_epochs `{}`",
+            mm_epoch_status.epoch_number,
+            state.finalized_epochs.next_epoch()
+        );
         return Ok((true, mm_epoch_status));
     }
 
@@ -434,9 +466,10 @@ async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
         .inputs;
 
     info!(
-        "Got `{}` inputs for epoch `{}`",
+        "Got `{}` inputs for epoch `{}`; machine manager in epoch `{}`",
         inputs.inputs.len(),
         inputs.epoch_number,
+        mm_epoch_status.epoch_number
     );
 
     if mm_epoch_status.processed_input_count == inputs.inputs.len() {
@@ -463,6 +496,11 @@ async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
         let mm_epoch_status =
             machine_manager.get_current_epoch_status().await?;
 
+        info!(
+            "New machine manager epoch `{}`",
+            mm_epoch_status.epoch_number
+        );
+
         // recursively call enqueue_inputs_of_finalized_epochs
         info!("Recursively call `enqueue_inputs_of_finalized_epochs` for new status");
         return enqueue_inputs_of_finalized_epochs(
@@ -479,6 +517,28 @@ async fn enqueue_inputs_of_finalized_epochs<MM: MachineInterface + Sync>(
     Ok((false, mm_epoch_status))
 }
 
+#[instrument(skip_all)]
+async fn enqueue_inputs_for_accumulating_epoch<MM: MachineInterface>(
+    mm_epoch_status: &EpochStatus,
+    state: &RollupsState,
+    machine_manager: &MM,
+) -> Result<bool> {
+    info!(
+        "Enqueue inputs for accumulating epoch `{}`; machine manager in epoch `{}`",
+        state.current_epoch.epoch_number,
+        mm_epoch_status.epoch_number
+    );
+
+    // Enqueue accumulating epoch.
+    enqueue_remaning_inputs(
+        &mm_epoch_status,
+        &state.current_epoch.inputs.inputs,
+        machine_manager,
+    )
+    .await
+}
+
+#[instrument(skip_all)]
 async fn enqueue_remaning_inputs<MM: MachineInterface>(
     mm_epoch_status: &EpochStatus,
     inputs: &Vector<Input>,
@@ -513,6 +573,7 @@ async fn enqueue_remaning_inputs<MM: MachineInterface>(
     Ok(false)
 }
 
+#[instrument(skip_all)]
 async fn update_sealed_epoch<MM: MachineInterface>(
     sealed_inputs: &Vector<Input>,
     mm_epoch_status: &EpochStatus,
@@ -545,6 +606,7 @@ async fn update_sealed_epoch<MM: MachineInterface>(
     Ok(true)
 }
 
+#[instrument(skip_all)]
 async fn send_claim_tx(
     sender: Address,
     claim: H256,
@@ -575,6 +637,7 @@ async fn send_claim_tx(
         .expect("Transaction conversion should never fail");
 }
 
+#[instrument(skip_all)]
 async fn send_finalize_tx(
     sender: Address,
     epoch_number: U256,
