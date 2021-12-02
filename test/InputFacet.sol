@@ -26,117 +26,147 @@ import {
     MockContract,
 } from "@ethereum-waffle/mock-contract";
 import { solidity } from "ethereum-waffle";
-import { InputImpl__factory } from "../dist/src/types/factories/InputImpl__factory";
 import { Signer } from "ethers";
-import { InputImpl } from "../dist/src/types/InputImpl";
+import { InputFacet } from "../dist/src/types/InputFacet";
+import { InputFacet__factory } from "../dist/src/types/factories/InputFacet__factory";
+import { RollupsDebugFacet } from "../dist/src/types/RollupsDebugFacet";
+import { RollupsDebugFacet__factory } from "../dist/src/types/factories/RollupsDebugFacet__factory";
+import { getState } from "./getState";
 
 use(solidity);
 
-describe("Input Implementation", () => {
+describe("Input Facet", () => {
+    let enableDelegate = process.env["DELEGATE_TEST"];
+
     /// for testing Rollups when modifiers are on, set this to true
     /// for testing Rollups when modifiers are off, set this to false
     let permissionModifiersOn = true;
 
     let signer: Signer;
-    let inputImpl: InputImpl;
-    let mockRollups: MockContract; //mock rollups implementation
+    let inputFacet: InputFacet;
+    let rollupsDebugFacet: RollupsDebugFacet;
 
-    const log2Size = 7;
+    ///let enum starts from 0
+    enum Phase {
+        InputAccumulation = 0,
+        AwaitingConsensus = 1,
+        AwaitingDispute = 2,
+    }
 
     beforeEach(async () => {
         await deployments.fixture();
         [signer] = await ethers.getSigners();
 
-        const Rollups = await deployments.getArtifact("Rollups");
-
-        mockRollups = await deployMockContract(signer, Rollups.abi);
-
-        const inputFactory = new InputImpl__factory(signer);
-
-        inputImpl = await inputFactory.deploy(
-            mockRollups.address,
-            log2Size
-        );
-    });
-
-    it("test constructor", async () => {
-        const inputFactory = new InputImpl__factory(signer);
-
-        let wrongLog2Size = 2;
-        await expect(
-            inputFactory.deploy(mockRollups.address, wrongLog2Size),
-            "log2Size < 3"
-        ).to.be.revertedWith("log size: [3,64]");
-
-        wrongLog2Size = 65;
-        await expect(
-            inputFactory.deploy(mockRollups.address, wrongLog2Size),
-            "log2Size > 64"
-        ).to.be.revertedWith("log size: [3,64]");
+        const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
+        rollupsDebugFacet = RollupsDebugFacet__factory.connect(diamondAddress, signer);
+        inputFacet = InputFacet__factory.connect(diamondAddress, signer);
     });
 
     it("addInput should revert if input length == 0", async () => {
         await expect(
-            inputImpl.addInput([]),
+            inputFacet.addInput([]),
             "empty input should revert"
         ).to.be.revertedWith("input len: (0,driveSize]");
+
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputFacet.address,
+                epoch_number: "0x0",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            expect(
+                state.inputs.length,
+                "shouldn't have any inputs when adding empty inputs"
+            ).to.equal(0);
+        }
     });
 
-    it("addInput should revert if input is larger than drive (log2Size)", async () => {
+    it("addInput should revert if input is larger than drive (log2Size=7)", async () => {
         var input_150_bytes = Buffer.from("a".repeat(150), "utf-8");
         // one extra byte
         var input_129_bytes = Buffer.from("a".repeat(129), "utf-8");
 
         await expect(
-            inputImpl.addInput(input_150_bytes),
+            inputFacet.addInput(input_150_bytes),
             "input cant be bigger than drive"
         ).to.be.revertedWith("input len: (0,driveSize]");
 
         // input shouldnt fit because of one extra byte
         await expect(
-            inputImpl.addInput(input_129_bytes),
+            inputFacet.addInput(input_129_bytes),
             "input should still revert because metadata doesnt fit"
         ).to.be.revertedWith("input len: (0,driveSize]");
+
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputFacet.address,
+                epoch_number: "0x0",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            expect(
+                state.inputs.length,
+                "shouldn't have any inputs when adding inputs larger than the drive"
+            ).to.equal(0);
+        }
     });
 
     it("addInput should add input to inbox", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
-        await mockRollups.mock.notifyInput.returns(false);
-        await mockRollups.mock.getCurrentEpoch.returns(0);
-
-        await inputImpl.addInput(input_64_bytes);
-        await inputImpl.addInput(input_64_bytes);
-        await inputImpl.addInput(input_64_bytes);
+        await inputFacet.addInput(input_64_bytes);
+        await inputFacet.addInput(input_64_bytes);
+        await inputFacet.addInput(input_64_bytes);
 
         expect(
-            await inputImpl.getNumberOfInputs(),
+            await inputFacet.getNumberOfInputs(),
             "Number of inputs should be zero, because non active inbox is empty"
         ).to.equal(0);
 
-        await mockRollups.mock.notifyInput.returns(true);
-        await mockRollups.mock.getCurrentEpoch.returns(1);
+        // Enough time has passed...
+        await rollupsDebugFacet._setInputAccumulationStart(0);
 
-        await inputImpl.addInput(input_64_bytes);
+        await inputFacet.addInput(input_64_bytes);
 
         expect(
-            await inputImpl.getNumberOfInputs(),
+            await inputFacet.getNumberOfInputs(),
             "Number of inputs should be 3, because last addition changes the inbox"
         ).to.equal(3);
 
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputFacet.address,
+                epoch_number: "0x0",
+            });
+            let state = JSON.parse(await getState(initialState));
+            expect(
+                state.inputs.length,
+                "now receiving inputs for epoch 1, getNumberOfInputs() reflects epoch 0"
+            ).to.equal(3);
+
+            initialState = JSON.stringify({
+                input_address: inputFacet.address,
+                epoch_number: "0x1",
+            });
+            state = JSON.parse(await getState(initialState));
+            expect(state.inputs.length, "only 1 input for epoch 1").to.equal(1);
+        }
     });
 
     it("emit event InputAdded", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
-        await mockRollups.mock.notifyInput.returns(false);
-        await mockRollups.mock.getCurrentEpoch.returns(0);
-
         await expect(
-            inputImpl.addInput(input_64_bytes),
+            inputFacet.addInput(input_64_bytes),
             "should emit event InputAdded"
         )
-            .to.emit(inputImpl, "InputAdded")
+            .to.emit(inputFacet, "InputAdded")
             .withArgs(
                 0,
                 await signer.getAddress(),
@@ -144,12 +174,21 @@ describe("Input Implementation", () => {
                 "0x" + input_64_bytes.toString("hex")
             );
 
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputFacet.address,
+                epoch_number: "0x0",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            expect(state.inputs.length, "only one input").to.equal(1);
+        }
     });
 
     it("test return value of addInput()", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
-        await mockRollups.mock.notifyInput.returns(false);
-        await mockRollups.mock.getCurrentEpoch.returns(0);
 
         // calculate input hash: keccak256(abi.encode(keccak256(metadata), keccak256(_input)))
         // metadata: abi.encode(msg.sender, block.timestamp)
@@ -172,18 +211,43 @@ describe("Input Implementation", () => {
         let input_hash = ethers.utils.keccak256(abi_metadata_input);
 
         expect(
-            await inputImpl.callStatic.addInput(input_64_bytes),
+            await inputFacet.callStatic.addInput(input_64_bytes),
             "use callStatic to view the return value"
         ).to.equal(input_hash);
 
+        // test delegate
+        if (enableDelegate) {
+            await inputFacet.addInput(input_64_bytes);
+
+            let initialState = JSON.stringify({
+                input_address: inputFacet.address,
+                epoch_number: "0x0",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            // checking the input hash is essentially checking the
+            // sender address, block timestamp, and payload
+            // otherwise if hash is needed, follow the calculations above
+            expect(
+                state.inputs[0].sender,
+                "check the recorded sender address"
+            ).to.equal((await signer.getAddress()).toLowerCase());
+            expect(
+                parseInt(state.inputs[0].timestamp, 16), // from hex to dec
+                "check the recorded timestamp"
+            ).to.equal((await ethers.provider.getBlock("latest")).timestamp);
+            expect(
+                Buffer.from(state.inputs[0].payload, "utf-8").toString(),
+                "check the recorded payload"
+            ).to.equal(input_64_bytes.toString());
+        }
     });
 
     it("test getInput()", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
-        await mockRollups.mock.notifyInput.returns(false);
-        await mockRollups.mock.getCurrentEpoch.returns(0);
 
-        await inputImpl.addInput(input_64_bytes);
+        await inputFacet.addInput(input_64_bytes);
 
         // test for input box 0
         // calculate input hash again
@@ -206,14 +270,15 @@ describe("Input Implementation", () => {
         );
         let input_hash = ethers.utils.keccak256(abi_metadata_input);
 
+        // Enough time has passed...
+        await rollupsDebugFacet._setInputAccumulationStart(0);
+
         // switch input boxes before testing getInput()
-        await mockRollups.mock.notifyInput.returns(true);
-        await mockRollups.mock.getCurrentEpoch.returns(1);
-        await inputImpl.addInput(input_64_bytes);
+        await inputFacet.addInput(input_64_bytes);
         let block_epoch1 = await ethers.provider.getBlock("latest");
 
         expect(
-            await inputImpl.getInput(0),
+            await inputFacet.getInput(0),
             "get the first value in input box 0"
         ).to.equal(input_hash);
 
@@ -238,150 +303,73 @@ describe("Input Implementation", () => {
         );
         input_hash = ethers.utils.keccak256(abi_metadata_input);
 
+        // We're accumulating inputs and enough time has passed...
+        await rollupsDebugFacet._setCurrentPhase(0);
+        await rollupsDebugFacet._setInputAccumulationStart(0);
+
         // switch input boxes before testing getInput()
-        await mockRollups.mock.getCurrentEpoch.returns(2);
-        await inputImpl.addInput(input_64_bytes);
+        await inputFacet.addInput(input_64_bytes);
 
         expect(
-            await inputImpl.getInput(0),
+            await inputFacet.getInput(0),
             "get the first value in input box 1"
         ).to.equal(input_hash);
 
+        // test delegate for epoch 1
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                input_address: inputFacet.address,
+                epoch_number: "0x1",
+            });
+
+            let state = JSON.parse(await getState(initialState));
+            expect(
+                state.inputs[0].sender,
+                "check the recorded sender address for epoch 1"
+            ).to.equal((await signer.getAddress()).toLowerCase());
+            expect(
+                parseInt(state.inputs[0].timestamp, 16), // from hex to dec
+                "check the recorded timestamp for epoch 1"
+            ).to.equal(block_epoch1.timestamp);
+            expect(
+                Buffer.from(state.inputs[0].payload, "utf-8").toString(),
+                "check the recorded payload for epoch 1"
+            ).to.equal(input_64_bytes.toString());
+        }
     });
 
     it("getCurrentInbox should return correct inbox", async () => {
         var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
 
-        await mockRollups.mock.notifyInput.returns(false);
-        await mockRollups.mock.getCurrentEpoch.returns(0);
-
         expect(
-            await inputImpl.getCurrentInbox(),
+            await inputFacet.getCurrentInbox(),
             "current inbox should start as zero"
         ).to.equal(0);
 
-        await inputImpl.addInput(input_64_bytes);
+        await inputFacet.addInput(input_64_bytes);
 
         expect(
-            await inputImpl.getCurrentInbox(),
+            await inputFacet.getCurrentInbox(),
             "inbox shouldnt change if notifyInput returns false"
         ).to.equal(0);
 
-        await mockRollups.mock.notifyInput.returns(true);
-        await mockRollups.mock.getCurrentEpoch.returns(1);
-        await inputImpl.addInput(input_64_bytes);
+        // Enough time has passed...
+        await rollupsDebugFacet._setInputAccumulationStart(0);
+
+        await inputFacet.addInput(input_64_bytes);
 
         expect(
-            await inputImpl.getCurrentInbox(),
+            await inputFacet.getCurrentInbox(),
             "inbox should change if notifyInput returns true"
         ).to.equal(1);
 
-        mockRollups.mock.notifyInput.returns(false);
-        await mockRollups.mock.getCurrentEpoch.returns(1);
-        await inputImpl.addInput(input_64_bytes);
+        await inputFacet.addInput(input_64_bytes);
 
         expect(
-            await inputImpl.getCurrentInbox(),
+            await inputFacet.getCurrentInbox(),
             "inbox shouldnt change if notifyInput returns false (2)"
         ).to.equal(1);
 
         // there isn't a concept of input box in the delegate
     });
-
-    if (permissionModifiersOn) {
-        it("onNewEpoch() can only be called by rollups", async () => {
-            await expect(
-                inputImpl.onNewEpoch(),
-                "onNewEpoch() can only be called by rollups"
-            ).to.be.revertedWith("Only rollups");
-        });
-
-        it("onNewInputAccumulation() can only be called by rollups", async () => {
-            await expect(
-                inputImpl.onNewInputAccumulation(),
-                "onNewInputAccumulation() can only be called by rollups"
-            ).to.be.revertedWith("Only rollups");
-        });
-    }
-
-    if (!permissionModifiersOn) {
-        it("test onNewInputAccumulation() with modifiers off", async () => {
-            expect(
-                await inputImpl.getCurrentInbox(),
-                "initial box number"
-            ).to.equal(0);
-
-            await inputImpl.onNewInputAccumulation();
-            expect(
-                await inputImpl.getCurrentInbox(),
-                "new input box, number should be 1"
-            ).to.equal(1);
-
-            await inputImpl.onNewInputAccumulation();
-            expect(
-                await inputImpl.getCurrentInbox(),
-                "another new input box, number should be 0"
-            ).to.equal(0);
-        });
-
-        it("test onNewEpoch() with modifiers off", async () => {
-            // currentInputBox: 0
-            expect(
-                await inputImpl.getNumberOfInputs(),
-                "initial box 1 should be empty"
-            ).to.equal(0);
-
-            var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
-            await mockRollups.mock.notifyInput.returns(true);
-            await mockRollups.mock.getCurrentEpoch.returns(0);
-            // add input to box 1
-            await inputImpl.addInput(input_64_bytes);
-
-            // currentInputBox: 1
-            expect(
-                await inputImpl.getNumberOfInputs(),
-                "initial box 0 should also be empty"
-            ).to.equal(0);
-
-            await mockRollups.mock.getCurrentEpoch.returns(1);
-            // add 3 inputs to box 0
-            await inputImpl.addInput(input_64_bytes);
-            await mockRollups.mock.notifyInput.returns(false);
-            await inputImpl.addInput(input_64_bytes);
-            await inputImpl.addInput(input_64_bytes);
-
-            // currentInputBox: 0
-            expect(
-                await inputImpl.getNumberOfInputs(),
-                "box 1 should have 1 input"
-            ).to.equal(1);
-
-            // onNewEpoch() deletes box 1 and swap boxes
-            await inputImpl.onNewEpoch();
-            await inputImpl.onNewInputAccumulation();
-            // currentInputBox: 1
-            expect(
-                await inputImpl.getNumberOfInputs(),
-                "box 0 should have 3 input"
-            ).to.equal(3);
-
-            // onNewEpoch() deletes box 0 and swap boxes
-            // now both boxes are empty
-            await inputImpl.onNewEpoch();
-            await inputImpl.onNewInputAccumulation();
-            // currentInputBox: 0
-            expect(
-                await inputImpl.getNumberOfInputs(),
-                "box 1 should have 0 input"
-            ).to.equal(0);
-
-            await inputImpl.onNewEpoch();
-            await inputImpl.onNewInputAccumulation();
-            // currentInputBox: 1
-            expect(
-                await inputImpl.getNumberOfInputs(),
-                "box 0 should have 0 input"
-            ).to.equal(0);
-        });
-    }
 });
