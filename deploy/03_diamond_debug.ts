@@ -21,6 +21,7 @@
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
+import { MockProvider } from "ethereum-waffle";
 import { ethers } from "hardhat";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
@@ -35,6 +36,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const INPUT_LOG2_SIZE = 7;
 
     let signers = await ethers.getSigners();
+
+    const provider = new MockProvider();
+    const wallets = provider.getWallets();
+    var validators: string[] = [];
+
+    // add all wallets as validators
+    for (var wallet of wallets) {
+        let address = await wallet.getAddress();
+        validators.push(address);
+    }
 
     // Bitmask
     const bitMaskLibrary = await deployments.deploy("Bitmask", {
@@ -70,6 +81,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             // debug facets
             'RollupsDebugFacet',
             'OutputDebugFacet',
+            'ValidatorManagerDebugFacet',
         ],
         libraries: {
             Bitmask: bitMaskAddress,
@@ -81,11 +93,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 INPUT_DURATION,
                 CHALLENGE_PERIOD,
                 INPUT_LOG2_SIZE,
-                [
-                    await signers[0].getAddress(),
-                    await signers[1].getAddress(),
-                    await signers[2].getAddress(),
-                ],
+                validators,
             ],
         },
     });
@@ -119,4 +127,4 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 export default func;
-export const tags = ["Diamond", "Debug"];
+export const tags = ["CartesiRollupsDebug"];
