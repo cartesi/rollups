@@ -40,19 +40,11 @@ describe("FeeManager Implementation", () => {
         );
 
         // deploy ERC20 token
-        let deployedToken = await deployments.deploy("SimpleToken", {
-            from: await signers[0].getAddress(),
-            args: [tokenSupply],
-        });
+        let deployedToken = await deployments.get("SimpleToken");
         token = SimpleToken__factory.connect(deployedToken.address, signers[0]);
 
         // deploy ClaimsMaskLibrary
-        const claimsMaskLibrary = await deployments.deploy(
-            "ClaimsMaskLibrary",
-            {
-                from: await signers[0].getAddress(),
-            }
-        );
+        let claimsMaskLibrary = await deployments.get("ClaimsMaskLibrary");
         const claimsMaskLibraryAddress = claimsMaskLibrary.address;
 
         // deploy Fee Manager
@@ -87,7 +79,7 @@ describe("FeeManager Implementation", () => {
 
             let state = JSON.parse(await getState(initialState));
 
-            console.log(state);
+            // console.log(state);
         }
     });
 

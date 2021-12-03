@@ -61,9 +61,10 @@ describe("Rollups Implementation", () => {
             dAddress,
             signers[0]
         );
-        // get the timestamp of the second last block, because after deploying rollups, portalImpl was deployed
+        // get the timestamp of the third last block 
+        // because after deploying rollups, ERC20PortalImpl and EtherPortalImpl were deployed
         contract_creation_time =
-            (await ethers.provider.getBlock("latest")).timestamp - 1;
+            (await ethers.provider.getBlock("latest")).timestamp - 2;
 
         initialEpoch = "0x0";
         initialState = JSON.stringify({
@@ -376,7 +377,8 @@ describe("Rollups Implementation", () => {
             null,
             null,
             null,
-            null
+            null,
+            null,
         );
         let event = await rollupsImpl.queryFilter(eventFilter);
         let eventArgs = event[0]["args"]; // get 'args' from the first RollupsCreated event
@@ -398,6 +400,11 @@ describe("Rollups Implementation", () => {
             eventArgs["_disputeManager"],
             "Dispute Manager address"
         ).to.equal(await rollupsImpl.disputeManager());
+
+        expect(
+            eventArgs["_feeManager"],
+            "Fee Manager address"
+        ).to.equal(await rollupsImpl.feeManager());
 
         expect(eventArgs["_inputDuration"], "Input Duration").to.equal(
             inputDuration

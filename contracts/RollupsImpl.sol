@@ -14,11 +14,11 @@
 pragma solidity ^0.8.0;
 
 import "./InputImpl.sol";
-import "./OutputImpl.sol";
-import "./ValidatorManagerImpl.sol";
+import "./VoucherImpl.sol";
 import "./Rollups.sol";
 import "./DisputeManagerImpl.sol";
 import "./ValidatorManagerClaimsCountedImpl.sol";
+import "./FeeManagerImpl.sol";
 
 contract RollupsImpl is Rollups {
     ////
@@ -42,10 +42,10 @@ contract RollupsImpl is Rollups {
     ///
 
     InputImpl public input; // contract responsible for inputs
-    OutputImpl public output; // contract responsible for outputs
-    ValidatorManagerImpl public validatorManager; // contract responsible for validators
+    VoucherImpl public voucher; // contract responsible for vouchers
+    ValidatorManagerClaimsCountedImpl public validatorManager; // contract responsible for validators
     DisputeManagerImpl public disputeManager; // contract responsible for dispute resolution
-    ValidatorManagerClaimsCountedImpl public feeManager; // contract responsible for fee redemption
+    FeeManagerImpl public feeManager; // contract responsible for fee redemption
 
     struct StorageVar {
         uint32 inputDuration; // duration of input accumulation phase in seconds
@@ -81,13 +81,27 @@ contract RollupsImpl is Rollups {
         // input constructor variables
         uint256 _inputLog2Size,
         // validator manager constructor variables
-        address payable[] memory _validators
+        address payable[] memory _validators,
+        // erc20 tokens used for fee manager to reward validators
+        address _ERC20,
+        // the number of tokens to reward validators for each claim they made
+        uint256 _feePerClaim
     ) {
         input = new InputImpl(address(this), _inputLog2Size);
-        output = new OutputImpl(address(this));
-        validatorManager = new ValidatorManagerImpl(address(this), _validators);
+        voucher = new VoucherImpl(
+            address(this),
+            _log2VoucherMetadataArrayDriveSize
+        );
+        validatorManager = new ValidatorManagerClaimsCountedImpl(
+            address(this),
+            _validators
+        );
         disputeManager = new DisputeManagerImpl(address(this));
-        feeManager =  new ValidatorManagerClaimsCountedImpl(address(this), _validators);
+        feeManager = new FeeManagerImpl(
+            address(validatorManager),
+            _ERC20,
+            _feePerClaim
+        );
 
         storageVar = StorageVar(
             uint32(_inputDuration),
@@ -148,7 +162,11 @@ contract RollupsImpl is Rollups {
         // emit the claim event before processing it
         // so if the epoch is finalized in this claim (consensus)
         // the number of final epochs doesnt gets contaminated
-        emit Claim(output.getNumberOfFinalizedEpochs(), msg.sender, _epochHash);
+        emit Claim(
+            voucher.getNumberOfFinalizedEpochs(),
+            msg.sender,
+            _epochHash
+        );
 
         resolveValidatorResult(result, claims, claimers);
     }

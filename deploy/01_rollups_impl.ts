@@ -23,6 +23,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
 import { RollupsImpl__factory } from "../dist/src/types/factories/RollupsImpl__factory";
+import { SimpleToken__factory } from "../dist/src/types/factories/SimpleToken__factory";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments } = hre;
@@ -57,12 +58,30 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
     const merkleAddress = merkle.address;
 
+    // deploy ERC20 token
+    let tokenSupply = 1000000; // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
+    let initialFeePerClaim = 10; // set initial fees per claim as 10 token
+    let deployedToken = await deployments.deploy("SimpleToken", {
+        from: await signers[0].getAddress(),
+        args: [tokenSupply],
+    });
+    let token = SimpleToken__factory.connect(deployedToken.address, signers[0]);
+    // deploy ClaimsMaskLibrary that will be used for FeeManager
+    const claimsMaskLibrary = await deployments.deploy(
+        "ClaimsMaskLibrary",
+        {
+            from: await signers[0].getAddress(),
+        }
+    );
+    const claimsMaskLibraryAddress = claimsMaskLibrary.address;
+
     // RollupsImpl
     const { address } = await deployments.deploy("RollupsImpl", {
         from: await signers[0].getAddress(),
         libraries: {
             Bitmask: bitMaskAddress,
             Merkle: merkleAddress,
+            ClaimsMaskLibrary: claimsMaskLibraryAddress,
         },
         args: [
             INPUT_DURATION,
@@ -73,6 +92,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 await signers[1].getAddress(),
                 await signers[2].getAddress(),
             ],
+            token.address,
+            initialFeePerClaim,
         ],
     });
     let rollupsImpl = RollupsImpl__factory.connect(address, signers[0]);
@@ -95,7 +116,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         "Rollups Impl getCurrentEpoch: " +
             (await rollupsImpl.getCurrentEpoch())
     );
-    console.log("Rollups accumulation start: " + await rollupsImpl.getInputAccumulationStart());
+    console.log(
+        "Rollups accumulation start: " +
+            (await rollupsImpl.getInputAccumulationStart())
+    );
     console.log("Input address " + inputAddress);
     console.log("Output address " + outputAddress);
     console.log("Ether Portal address " + etherPortalImpl.address);
