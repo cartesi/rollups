@@ -271,6 +271,12 @@ pub enum PhaseState {
     // TODO: add dispute timeout when disputes are turned on.
 }
 
+impl Default for PhaseState {
+    fn default() -> Self {
+        Self::InputAccumulation {}
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ImmutableState {
     /// duration of input accumulation phase in seconds

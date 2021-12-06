@@ -2,9 +2,10 @@
 members = [
   "delegate_server",
   "offchain",
+  "indexer"
 ]
 
 
-[patch.'https://github.com/cartesi/state-fold']
+[patch.'ssh://github.com/cartesi-corp/state-fold']
 state-fold = { path = "./state-fold/state-fold" }
 state-server-grpc = { path = "./state-fold/state-server-grpc" }
