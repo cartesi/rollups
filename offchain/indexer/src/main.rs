@@ -8,11 +8,11 @@ use indexer::error::BadConfiguration;
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let polling_config = PollingConfig::initialize()
         .map_err(|e| {
-            BadConfiguration {
-                err: format!("Fail to intialize polling config: {}", e),
-            }
-            .build()
-        })?;
+        BadConfiguration {
+            err: format!("Fail to intialize polling config: {}", e),
+        }
+        .build()
+    })?;
 
     let rollups_address = polling_config.rollups_contract_address;
     let poll_interval = std::time::Duration::from_secs(polling_config.interval);
@@ -28,8 +28,21 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let _state_res = tokio::try_join!(
+    let rollup_machine_manager_endpoint = polling_config.mm_endpoint;
+    let machine_manager_poller = indexer::machine_manager::Poller::new(
+        rollup_machine_manager_endpoint,
+        pool,
+    )
+    .await?;
+
+    let session_id = polling_config.session_id;
+    let (_state_res, _version_res, _status_res, _session_status_res) = tokio::try_join!(
         state.poll(&initial_state, poll_interval),
+        machine_manager_poller.clone().poll_version(poll_interval),
+        machine_manager_poller.clone().poll_status(poll_interval),
+        machine_manager_poller
+            .clone()
+            .poll_session_status(session_id.clone(), poll_interval),
     )?;
 
     Ok(())

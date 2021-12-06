@@ -1,4 +1,3 @@
-use configuration;
 use configuration::error as config_error;
 
 use serde::Deserialize;
@@ -31,6 +30,10 @@ pub struct PollingEnvCLIConfig {
     pub initial_epoch: Option<u64>,
     #[structopt(long)]
     pub postgres_endpoint: Option<String>,
+    #[structopt(long)]
+    pub mm_endpoint: Option<String>,
+    #[structopt(long)]
+    pub session_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -40,6 +43,8 @@ pub struct PollingFileConfig {
     pub interval: Option<u64>,
     pub initial_epoch: Option<u64>,
     pub postgres_endpoint: Option<String>,
+    pub mm_endpoint: Option<String>,
+    pub session_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -54,7 +59,10 @@ pub struct PollingConfig {
     pub initial_epoch: U256,
 
     pub interval: u64,
+
+    pub mm_endpoint: String,
     pub postgres_endpoint: String,
+    pub session_id: String,
 }
 
 impl PollingConfig {
@@ -87,7 +95,7 @@ impl PollingConfig {
             }
             .build()
         })?;
-        
+
         let state_server_endpoint: String = env_cli_config
             .state_server_endpoint
             .or(file_config.state_server_endpoint)
@@ -96,13 +104,15 @@ impl PollingConfig {
                 err: "Must specifify state server endpoint",
             })?;
 
-        let initial_epoch: U256 = U256::from(env_cli_config
-            .initial_epoch
-            .or(file_config.initial_epoch)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specifify initial epoch",
-            })?);
+        let initial_epoch: U256 = U256::from(
+            env_cli_config
+                .initial_epoch
+                .or(file_config.initial_epoch)
+                .ok_or(snafu::NoneError)
+                .context(config_error::FileError {
+                    err: "Must specifify initial epoch",
+                })?,
+        );
 
         let interval: u64 = env_cli_config
             .interval
@@ -110,6 +120,14 @@ impl PollingConfig {
             .ok_or(snafu::NoneError)
             .context(config_error::FileError {
                 err: "Must specifify interval",
+            })?;
+
+        let mm_endpoint: String = env_cli_config
+            .mm_endpoint
+            .or(file_config.mm_endpoint)
+            .ok_or(snafu::NoneError)
+            .context(config_error::FileError {
+                err: "Must specifify machine manager endpoint",
             })?;
 
         let postgres_endpoint: String = env_cli_config
@@ -120,13 +138,22 @@ impl PollingConfig {
                 err: "Must specifify postgres endpoint",
             })?;
 
+        let session_id: String = env_cli_config
+            .session_id
+            .or(file_config.session_id)
+            .ok_or(snafu::NoneError)
+            .context(config_error::FileError {
+                err: "Must specifify session id endpoint",
+            })?;
 
         Ok(PollingConfig {
             rollups_contract_address,
             state_server_endpoint,
-            interval,
             initial_epoch,
+            interval,
+            mm_endpoint,
             postgres_endpoint,
+            session_id,
         })
     }
 }

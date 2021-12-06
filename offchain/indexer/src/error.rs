@@ -28,6 +28,9 @@ pub enum Error {
 
     #[snafu(display("Bad configuration: {}", err))]
     BadConfiguration { err: String },
+
+    #[snafu(display("Machine Manager out of sync: {}", err))]
+    OutOfSync { err: String },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
