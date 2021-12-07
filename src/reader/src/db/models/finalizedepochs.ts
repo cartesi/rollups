@@ -6,7 +6,7 @@ interface FinalizedEpochsAttributes {
 	initial_epoch: string;
 	descartesv2_contract_address: string;
 	input_contract_address: string;
-	descartes_hash: string;
+	rollups_hash: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -18,7 +18,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		initial_epoch!: string;
 		descartesv2_contract_address!: string;
 		input_contract_address!: string;
-		descartes_hash!: string;
+		rollups_hash!: string;
 		createdAt!: string;
 		updatedAt!: string;
 
@@ -48,7 +48,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				type: DataTypes.STRING,
 				allowNull: false
 			},
-			descartes_hash: DataTypes.UUID,
+			rollups_hash: DataTypes.STRING,
 			createdAt: {
 				type: DataTypes.DATE,
 				allowNull: false

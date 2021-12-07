@@ -7,7 +7,7 @@ interface AccumulatingEpochAttributes {
 	descartesv2_contract_address: string;
 	input_contract_address: string;
 	epochInputStateId: string;
-	descartes_hash: string;
+	rollups_hash: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -20,7 +20,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		descartesv2_contract_address!: string;
 		input_contract_address!: string;
 		epochInputStateId!: string;
-		descartes_hash!: string;
+		rollups_hash!: string;
 		createdAt!: string;
 		updatedAt!: string;
 	}
@@ -48,7 +48,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				type: DataTypes.UUID,
 				allowNull: false
 			},
-			descartes_hash: DataTypes.UUID,
+			rollups_hash: DataTypes.STRING,
 			createdAt: {
 				type: DataTypes.DATE,
 				allowNull: false

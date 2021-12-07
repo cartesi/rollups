@@ -11,7 +11,7 @@ interface ImmutableStateAttributes {
 	validator_contract_address: string;
 	dispute_contract_address: string;
 	descartesv2_contract_address: string;
-	descartes_hash: string;
+	rollups_hash: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -28,7 +28,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		validator_contract_address!: string;
 		dispute_contract_address!: string;
 		descartesv2_contract_address!: string;
-		descartes_hash!: string;
+		rollups_hash!: string;
 		createdAt!: string;
 		updatedAt!: string;
 
@@ -45,11 +45,11 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				primaryKey: true
 			},
 			input_duration: {
-				type: DataTypes.INTEGER,
+				type: DataTypes.STRING,
 				allowNull: false
 			},
 			challenge_period: {
-				type: DataTypes.INTEGER,
+				type: DataTypes.STRING,
 				allowNull: false
 			},
 			contract_creation_timestamp: {
@@ -76,7 +76,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				type: DataTypes.STRING,
 				allowNull: false
 			},
-			descartes_hash: DataTypes.UUID,
+			rollups_hash: DataTypes.STRING,
 			createdAt: {
 				type: DataTypes.DATE,
 				allowNull: false

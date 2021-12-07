@@ -11,7 +11,7 @@ interface VoucherStateAttributes {
 			};
 		};
 	};
-	descartes_hash: string;
+	rollups_hash: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -28,7 +28,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				};
 			};
 		};
-		descartes_hash!: string;
+		rollups_hash!: string;
 		createdAt!: string;
 		updatedAt!: string;
 	}
@@ -48,7 +48,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				type: DataTypes.JSON,
 				allowNull: false
 			},
-			descartes_hash: DataTypes.UUID,
+			rollups_hash: DataTypes.STRING,
 			createdAt: {
 				type: DataTypes.DATE
 			},

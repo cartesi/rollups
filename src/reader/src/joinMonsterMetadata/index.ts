@@ -135,10 +135,10 @@ export default {
 			}
 		}
 	},
-	DescartesV2State: {
+	RollupsState: {
 		extensions: {
 			joinMonster: {
-				sqlTable: '"DescartesV2States"',
+				sqlTable: '"RollupsStates"',
 				uniqueKey: "block_hash",
 				orderBy: '"createdAt"'
 			}
@@ -149,8 +149,8 @@ export default {
 					joinMonster: {
 						sqlTable: '"ImmutableStates"',
 						uniqueKey: "id",
-						sqlJoin: (descartesV2StateTable: any, immutableStateTable: any) =>
-							`${descartesV2StateTable}.block_hash = ${immutableStateTable}.descartes_hash`
+						sqlJoin: (RollupsStateTable: any, immutableStateTable: any) =>
+							`${RollupsStateTable}.block_hash = ${immutableStateTable}.rollups_hash`
 					}
 				}
 			},
@@ -159,11 +159,8 @@ export default {
 					joinMonster: {
 						sqlTable: '"AccumulatingEpoches"',
 						uniqueKey: "id",
-						sqlJoin: (
-							descartesV2StateTable: any,
-							accumulatingEpochTable: any
-						) =>
-							`${descartesV2StateTable}.block_hash = ${accumulatingEpochTable}.descartes_hash`
+						sqlJoin: (RollupsStateTable: any, accumulatingEpochTable: any) =>
+							`${RollupsStateTable}.block_hash = ${accumulatingEpochTable}.rollups_hash`
 					}
 				}
 			},
@@ -172,8 +169,8 @@ export default {
 					joinMonster: {
 						sqlTable: '"VoucherStates"',
 						uniqueKey: "id",
-						sqlJoin: (descartesV2StateTable: any, voucherStateTable: any) =>
-							`${descartesV2StateTable}.block_hash = ${voucherStateTable}.descartes_hash`
+						sqlJoin: (RollupsStateTable: any, voucherStateTable: any) =>
+							`${RollupsStateTable}.block_hash = ${voucherStateTable}.rollups_hash`
 					}
 				}
 			}
@@ -189,6 +186,98 @@ export default {
 			}
 		}
 	},
+	Report: {
+		extensions: {
+			joinMonster: {
+				sqlTable: '"Reports"',
+				uniqueKey: "id"
+			}
+		}
+	},
+	Notice: {
+		extensions: {
+			joinMonster: {
+				sqlTable: '"Notices"',
+				sqlPaginate: true,
+				orderBy: '"createdAt"',
+				uniqueKey: "id"
+			}
+		}
+	},
+	Voucher: {
+		extensions: {
+			joinMonster: {
+				sqlTable: '"Vouchers"',
+				sqlPaginate: true,
+				orderBy: '"createdAt"',
+				uniqueKey: "id"
+			}
+		}
+	},
+	InputResult: {
+		extensions: {
+			joinMonster: {
+				sqlTable: '"InputResults"',
+				sqlPaginate: true,
+				orderBy: '"createdAt"',
+				uniqueKey: "id"
+			}
+		},
+		fields: {
+			vouchers: {
+				extensions: {
+					joinMonster: {
+						sqlTable: '"Vouchers"',
+						uniqueKey: "id",
+						sqlJoin: (inputResultsTable: any, voucherTable: any) =>
+							`${inputResultsTable}."id" = ${voucherTable}."input_result_id"`
+					}
+				}
+			},
+			notices: {
+				extensions: {
+					joinMonster: {
+						sqlTable: '"Notices"',
+						uniqueKey: "id",
+						sqlJoin: (inputResultsTable: any, noticesTable: any) =>
+							`${inputResultsTable}."id" = ${noticesTable}."input_result_id"`
+					}
+				}
+			}
+		}
+	},
+	ProcessedInput: {
+		extensions: {
+			joinMonster: {
+				sqlTable: '"ProcessedInputs"',
+				sqlPaginate: true,
+				orderBy: '"createdAt"',
+				uniqueKey: "id"
+			}
+		},
+		fields: {
+			reports: {
+				extensions: {
+					joinMonster: {
+						sqlTable: '"Reports"',
+						uniqueKey: "id",
+						sqlJoin: (processInputsTable: any, reportsTable: any) =>
+							`${processInputsTable}."id" = ${reportsTable}."processed_input_id"`
+					}
+				}
+			},
+			result: {
+				extensions: {
+					joinMonster: {
+						sqlTable: '"InputResults"',
+						uniqueKey: "id",
+						sqlJoin: (processInputsTable: any, inputResultsTable: any) =>
+							`${processInputsTable}."id" = ${inputResultsTable}."processed_input_id"`
+					}
+				}
+			}
+		}
+	},
 	GetEpochStatusResponse: {
 		extensions: {
 			joinMonster: {
@@ -196,6 +285,28 @@ export default {
 				sqlPaginate: true,
 				orderBy: '"createdAt"',
 				uniqueKey: "session_id"
+			}
+		},
+		fields: {
+			processed_inputs: {
+				extensions: {
+					joinMonster: {
+						sqlTable: '"ProcessedInputs"',
+						uniqueKey: "id",
+						sqlJoin: (epochStatusTable: any, processedInputTable: any) =>
+							`${epochStatusTable}."session_id" = ${processedInputTable}."epoch_status_id"`
+					}
+				}
+			}
+		}
+	},
+	Version: {
+		extensions: {
+			joinMonster: {
+				sqlTable: '"Versions"',
+				sqlPaginate: true,
+				orderBy: '"createdAt"',
+				uniqueKey: "id"
 			}
 		}
 	}

@@ -8,8 +8,8 @@ module.exports = {
 			[
 				{
 					id: uuidv4(),
-					input_duration: 1222,
-					challenge_period: 123,
+					input_duration: "An Input duration",
+					challenge_period: "A challenge period",
 					contract_creation_timestamp: new Date(),
 					input_contract_address: "Address 1",
 					voucher_contract_address: "Address 1",
@@ -21,8 +21,8 @@ module.exports = {
 				},
 				{
 					id: uuidv4(),
-					input_duration: 1222,
-					challenge_period: 123,
+					input_duration: "An Input duration",
+					challenge_period: "A challenge period",
 					contract_creation_timestamp: new Date(),
 					input_contract_address: "Address 2",
 					voucher_contract_address: "Address 2",

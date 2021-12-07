@@ -74,8 +74,8 @@ query voucher_state {
   }
 }
 
-query descartes {
-  DescartesState {
+query rollups {
+  RollupsState {
     id
     block_hash
     constants {
@@ -155,26 +155,61 @@ query getEpochStatus {
     session_id
     epoch_index
     state
-    most_recent_machine_hash
-    most_recent_vouchers_epoch_root_hash
-    most_recent_notices_epoch_root_hash
+    most_recent_machine_hash {
+      data
+    }
+    most_recent_vouchers_epoch_root_hash {
+      data
+    }
+    most_recent_notices_epoch_root_hash {
+      data
+    }
     processed_inputs {
       input_index
-      most_recent_machine_hash
-      voucher_hashes_in_epoch
-      notice_hashes_in_epoch
+      most_recent_machine_hash {
+        data
+      }
+      voucher_hashes_in_epoch {
+        target_address
+        log2_target_size
+        target_hash {
+          data
+        }
+        sibling_hashes {
+          data
+        }
+      }
+      notice_hashes_in_epoch {
+        target_address
+        log2_target_size
+        target_hash {
+          data
+        }
+      }
       reports {
         payload
       }
       result {
-        voucher_hashes_in_machine
+        voucher_hashes_in_machine {
+          target_address
+          log2_target_size
+          target_hash {
+            data
+          }
+        }
         vouchers {
           keccak
           address
           payload
           keccak_in_voucher_hashes
         }
-        notice_hashes_in_machine
+        notice_hashes_in_machine {
+          target_address
+          log2_target_size
+          target_hash {
+            data
+          }
+        }
         notices {
           keccak
           payload

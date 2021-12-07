@@ -4,15 +4,17 @@ import { Model, UUIDV4 } from "sequelize";
 interface ProcessedInput {
 	// I don't think this is needed
 }
+interface CartesiMachineHash {
+	data: string;
+}
 
 interface EpochStatusAttributes {
 	session_id: string;
 	epoch_index: number;
 	state: string;
-	most_recent_machine_hash: string;
-	most_recent_vouchers_epoch_root_hash: string;
-	most_recent_notices_epoch_root_hash: string;
-	processed_inputs: ProcessedInput[];
+	most_recent_machine_hash: CartesiMachineHash;
+	most_recent_vouchers_epoch_root_hash: CartesiMachineHash;
+	most_recent_notices_epoch_root_hash: CartesiMachineHash;
 	pending_input_count: number;
 	taint_status: {
 		error_code: number;
@@ -28,10 +30,9 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		session_id!: string;
 		epoch_index!: number;
 		state!: string;
-		most_recent_machine_hash!: string;
-		most_recent_vouchers_epoch_root_hash!: string;
-		most_recent_notices_epoch_root_hash!: string;
-		processed_inputs!: ProcessedInput[];
+		most_recent_machine_hash!: CartesiMachineHash;
+		most_recent_vouchers_epoch_root_hash!: CartesiMachineHash;
+		most_recent_notices_epoch_root_hash!: CartesiMachineHash;
 		pending_input_count!: number;
 		taint_status!: {
 			error_code: number;
@@ -39,6 +40,12 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		};
 		createdAt!: string;
 		updatedAt!: string;
+
+		static associate(models: any) {
+			EpochStatus.hasMany(models.ProcessedInput, {
+				foreignKey: "epoch_status_id"
+			});
+		}
 	}
 	EpochStatus.init(
 		{
@@ -57,19 +64,15 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				allowNull: false
 			},
 			most_recent_machine_hash: {
-				type: DataTypes.STRING,
+				type: DataTypes.JSON,
 				allowNull: false
 			},
 			most_recent_vouchers_epoch_root_hash: {
-				type: DataTypes.STRING,
+				type: DataTypes.JSON,
 				allowNull: false
 			},
 			most_recent_notices_epoch_root_hash: {
-				type: DataTypes.STRING,
-				allowNull: false
-			},
-			processed_inputs: {
-				type: DataTypes.ARRAY(DataTypes.JSON),
+				type: DataTypes.JSON,
 				allowNull: false
 			},
 			pending_input_count: {

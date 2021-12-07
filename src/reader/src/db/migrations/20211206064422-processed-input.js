@@ -1,40 +1,38 @@
 "use strict";
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
-		await queryInterface.createTable("EpochStatuses", {
-			session_id: {
-				type: Sequelize.STRING,
+		await queryInterface.createTable("ProcessedInputs", {
+			id: {
+				type: Sequelize.UUID,
 				allowNull: false,
 				primaryKey: true
 			},
-			epoch_index: {
+			input_index: {
 				type: Sequelize.INTEGER,
-				allowNull: false
-			},
-			state: {
-				type: Sequelize.STRING,
 				allowNull: false
 			},
 			most_recent_machine_hash: {
 				type: Sequelize.JSON,
 				allowNull: false
 			},
-			most_recent_vouchers_epoch_root_hash: {
+			voucher_hashes_in_epoch: {
 				type: Sequelize.JSON,
 				allowNull: false
 			},
-			most_recent_notices_epoch_root_hash: {
+			notice_hashes_in_epoch: {
 				type: Sequelize.JSON,
 				allowNull: false
 			},
-			pending_input_count: {
-				type: Sequelize.INTEGER,
+			// reports: {
+			// 	type: Sequelize.ARRAY(Sequelize.STRING),
+			// 	allowNull: false
+			// },
+			// result: Sequelize.UUID,
+			skip_reason: {
+				type: Sequelize.STRING,
 				allowNull: false
 			},
-			taint_status: {
-				type: Sequelize.JSON,
-				allowNull: false
-			},
+			epoch_status_id: Sequelize.UUID,
 			createdAt: {
 				type: Sequelize.DATE
 			},
@@ -44,6 +42,6 @@ module.exports = {
 		});
 	},
 	down: async (queryInterface, Sequelize) => {
-		await queryInterface.dropTable("EpochStatuses");
+		await queryInterface.dropTable("ProcessedInputs");
 	}
 };

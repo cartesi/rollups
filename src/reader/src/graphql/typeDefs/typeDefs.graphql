@@ -1,8 +1,13 @@
 # Query types
+type Version {
+	id: Int!
+	version: String!
+}
+
 type ImmutableState {
 	id: ID!
-	input_duration: Int!
-	challenge_period: Int!
+	input_duration: String!
+	challenge_period: String!
 	contract_creation_timestamp: String!
 	input_contract_address: String!
 	voucher_contract_address: String!
@@ -77,10 +82,10 @@ type VoucherState {
 	vouchers: IntegerObject
 }
 
-type DescartesV2State {
+type RollupsState {
 	id: ID!
 	block_hash: String!
-	constants: [ImmutableState]!
+	constants: ImmutableState!
 	initial_epoch: String!
 	current_epoch: AccumulatingEpoch!
 	current_phase: PhaseState!
@@ -103,16 +108,35 @@ type GetSessionStatusResponse {
 	taint_status: TaintStatus!
 }
 
+type Hash {
+	data: String!
+}
+
+type CartesiMachineHash {
+	data: String!
+}
+
+type CartesiMachineMerkleTreeProof {
+	target_address: Int!
+	log2_target_size: Int!
+	target_hash: Hash!
+	log2_root_size: Int!
+	root_hash: Hash!
+	sibling_hashes: [Hash]!
+}
+
 enum EpochState {
 	ACTIVE
 	FINISHED
 }
 
 type Report {
+	id: ID!
 	payload: String!
 }
 
 type Voucher {
+	id: ID!
 	keccak: String!
 	address: String!
 	payload: String!
@@ -120,15 +144,17 @@ type Voucher {
 }
 
 type Notice {
+	id: ID!
 	keccak: String!
 	payload: String!
 	keccak_in_notice_hashes: String!
 }
 
 type InputResult {
-	voucher_hashes_in_machine: String!
+	id: ID!
+	voucher_hashes_in_machine: CartesiMachineMerkleTreeProof!
 	vouchers: [Voucher]!
-	notice_hashes_in_machine: String!
+	notice_hashes_in_machine: CartesiMachineMerkleTreeProof!
 	notices: [Notice]!
 }
 
@@ -141,10 +167,11 @@ enum CompletionStatus {
 }
 
 type ProcessedInput {
+	id: ID!
 	input_index: Int!
-	most_recent_machine_hash: String!
-	voucher_hashes_in_epoch: String!
-	notice_hashes_in_epoch: String!
+	most_recent_machine_hash: CartesiMachineHash!
+	voucher_hashes_in_epoch: CartesiMachineMerkleTreeProof!
+	notice_hashes_in_epoch: CartesiMachineMerkleTreeProof!
 	reports: [Report]!
 	# is supposed to be "oneof"
 	result: InputResult
@@ -155,9 +182,9 @@ type GetEpochStatusResponse {
 	session_id: ID!
 	epoch_index: Int!
 	state: EpochState!
-	most_recent_machine_hash: String!
-	most_recent_vouchers_epoch_root_hash: String!
-	most_recent_notices_epoch_root_hash: String!
+	most_recent_machine_hash: CartesiMachineHash!
+	most_recent_vouchers_epoch_root_hash: CartesiMachineHash!
+	most_recent_notices_epoch_root_hash: CartesiMachineHash!
 	processed_inputs: [ProcessedInput]!
 	pending_input_count: Int!
 	taint_status: TaintStatus!
@@ -165,8 +192,8 @@ type GetEpochStatusResponse {
 
 # Mutation Inputs
 input ImmutableStateInput {
-	input_duration: Int!
-	challenge_period: Int!
+	input_duration: String!
+	challenge_period: String!
 	# contract_creation_timestamp: String!
 	input_contract_address: String!
 	voucher_contract_address: String!
@@ -225,9 +252,9 @@ input VoucherStateInput {
 	vouchers: IntegerObjectInput!
 }
 
-input DescartesInput {
+input RollupsInput {
 	block_hash: String!
-	constants: [ImmutableStateInput]!
+	constants: ImmutableStateInput!
 	initial_epoch: String!
 	current_epoch: AccumulatingEpochInput!
 	current_phase: PhaseState!
@@ -250,8 +277,8 @@ type Query {
 	current_epoch: [AccumulatingEpoch]!
 	current_phase: [PhaseState]!
 	voucher_state: [VoucherState]!
-	DescartesState: [DescartesV2State]!
-	GetVersion: String!
+	RollupsState: [RollupsState]!
+	GetVersion: Version!
 	GetStatus: GetStatusResponse!
 	GetSessionStatus(query: GetSessionStatusRequest!): GetSessionStatusResponse!
 	GetEpochStatus(query: GetEpochStatusRequest!): GetEpochStatusResponse!
@@ -264,5 +291,5 @@ type Mutation {
 	current_epoch(input: AccumulatingEpochInput!): AccumulatingEpoch!
 	current_phase(input: PhaseState!): PhaseState!
 	voucher_state(input: VoucherStateInput!): VoucherState!
-	DescartesState(input: DescartesInput!): DescartesV2State!
+	RollupsState(input: RollupsInput!): RollupsState!
 }
