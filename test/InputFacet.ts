@@ -29,8 +29,8 @@ import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import { InputFacet } from "../dist/src/types/InputFacet";
 import { InputFacet__factory } from "../dist/src/types/factories/InputFacet__factory";
-import { RollupsDebugFacet } from "../dist/src/types/RollupsDebugFacet";
-import { RollupsDebugFacet__factory } from "../dist/src/types/factories/RollupsDebugFacet__factory";
+import { DebugFacet } from "../dist/src/types/DebugFacet";
+import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { getState } from "./getState";
 
 use(solidity);
@@ -40,7 +40,7 @@ describe("Input Facet", () => {
 
     let signer: Signer;
     let inputFacet: InputFacet;
-    let rollupsDebugFacet: RollupsDebugFacet;
+    let debugFacet: DebugFacet;
 
     ///let enum starts from 0
     enum Phase {
@@ -54,7 +54,7 @@ describe("Input Facet", () => {
         [signer] = await ethers.getSigners();
 
         const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
-        rollupsDebugFacet = RollupsDebugFacet__factory.connect(diamondAddress, signer);
+        debugFacet = DebugFacet__factory.connect(diamondAddress, signer);
         inputFacet = InputFacet__factory.connect(diamondAddress, signer);
     });
 
@@ -125,7 +125,7 @@ describe("Input Facet", () => {
         ).to.equal(0);
 
         // Enough time has passed...
-        await rollupsDebugFacet._setInputAccumulationStart(0);
+        await debugFacet._setInputAccumulationStart(0);
 
         await inputFacet.addInput(input_64_bytes);
 
@@ -267,7 +267,7 @@ describe("Input Facet", () => {
         let input_hash = ethers.utils.keccak256(abi_metadata_input);
 
         // Enough time has passed...
-        await rollupsDebugFacet._setInputAccumulationStart(0);
+        await debugFacet._setInputAccumulationStart(0);
 
         // switch input boxes before testing getInput()
         await inputFacet.addInput(input_64_bytes);
@@ -300,8 +300,8 @@ describe("Input Facet", () => {
         input_hash = ethers.utils.keccak256(abi_metadata_input);
 
         // We're accumulating inputs and enough time has passed...
-        await rollupsDebugFacet._setCurrentPhase(0);
-        await rollupsDebugFacet._setInputAccumulationStart(0);
+        await debugFacet._setCurrentPhase(0);
+        await debugFacet._setInputAccumulationStart(0);
 
         // switch input boxes before testing getInput()
         await inputFacet.addInput(input_64_bytes);
@@ -350,7 +350,7 @@ describe("Input Facet", () => {
         ).to.equal(0);
 
         // Enough time has passed...
-        await rollupsDebugFacet._setInputAccumulationStart(0);
+        await debugFacet._setInputAccumulationStart(0);
 
         await inputFacet.addInput(input_64_bytes);
 

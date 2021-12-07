@@ -13,7 +13,11 @@
 /// @title Input library
 pragma solidity ^0.8.0;
 
+import {LibRollups} from "../libraries/LibRollups.sol";
+
 library LibInput {
+    using LibRollups for LibRollups.DiamondStorage;
+
     bytes32 constant DIAMOND_STORAGE_POSITION =
         keccak256("Input.diamond.storage");
 
@@ -68,13 +72,50 @@ library LibInput {
             ds.currentInputBox == 0 ? ds.inputBox1.length : ds.inputBox0.length;
     }
 
-    /// @notice add input to correct input box
+    /// @notice add input to processed by next epoch
     /// @param ds diamond storage pointer
-    /// @param inputHash hash of input to be added
-    function addInput(DiamondStorage storage ds, bytes32 inputHash) internal {
+    /// @param input input to be understood by offchain machine
+    /// @dev offchain code is responsible for making sure
+    ///      that input size is power of 2 and multiple of 8 since
+    //       the offchain machine has a 8 byte word
+    function addInput(DiamondStorage storage ds, bytes memory input)
+        internal
+        returns (bytes32)
+    {
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+
+        require(
+            input.length > 0 && input.length <= ds.inputDriveSize,
+            "input len: (0,driveSize]"
+        );
+
+        // keccak 64 bytes into 32 bytes
+        bytes32 keccakMetadata =
+            keccak256(abi.encode(msg.sender, block.timestamp));
+        bytes32 keccakInput = keccak256(input);
+
+        bytes32 inputHash = keccak256(abi.encode(keccakMetadata, keccakInput));
+
+        // notifyInput returns true if that input
+        // belongs to a new epoch
+        if (rollupsDS.notifyInput()) {
+            swapInputBox(ds);
+        }
+
+        // add input to correct input box
         ds.currentInputBox == 0
             ? ds.inputBox0.push(inputHash)
             : ds.inputBox1.push(inputHash);
+
+        emit InputAdded(
+            rollupsDS.getCurrentEpoch(),
+            msg.sender,
+            block.timestamp,
+            input
+        );
+
+        return inputHash;
     }
 
     /// @notice called when a new input accumulation phase begins
@@ -98,4 +139,16 @@ library LibInput {
     function swapInputBox(DiamondStorage storage ds) internal {
         ds.currentInputBox = (ds.currentInputBox == 0) ? 1 : 0;
     }
+
+    /// @notice input added
+    /// @param _epochNumber which epoch this input belongs to
+    /// @param _sender msg.sender
+    /// @param _timestamp block.timestamp
+    /// @param _input input data
+    event InputAdded(
+        uint256 indexed _epochNumber,
+        address _sender,
+        uint256 _timestamp,
+        bytes _input
+    );
 }

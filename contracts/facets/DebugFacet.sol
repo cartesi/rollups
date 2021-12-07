@@ -10,32 +10,42 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Validator Manager debug facet
+/// @title Debug facet
 pragma solidity ^0.8.0;
 
 import {Result} from "../interfaces/IValidatorManager.sol";
+import {Phase} from "../interfaces/IRollups.sol";
 
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
+import {LibRollups} from "../libraries/LibRollups.sol";
 
-contract ValidatorManagerDebugFacet {
+contract DebugFacet {
+    using LibRollups for LibRollups.DiamondStorage;
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
 
-    // @notice emitted on Claim received
-    event ClaimReceived(
-        Result result,
-        bytes32[2] claims,
-        address payable[2] validators
-    );
+    function _setInputAccumulationStart(uint32 _inputAccumulationStart) public {
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        rollupsDS.inputAccumulationStart = _inputAccumulationStart;
+    }
 
-    // @notice emitted on Dispute end
-    event DisputeEnded(
-        Result result,
-        bytes32[2] claims,
-        address payable[2] validators
-    );
+    function _setCurrentPhase(Phase _phase) public {
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        rollupsDS.currentPhase_int = uint32(_phase);
+    }
 
-    // @notice emitted on new Epoch
-    event NewEpoch(bytes32 claim);
+    function _getCurrentPhase() public view returns (Phase _phase) {
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        return Phase(rollupsDS.currentPhase_int);
+    }
+
+    function _getCurrentEpoch() public view returns (uint256) {
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        return rollupsDS.getCurrentEpoch();
+    }
 
     function _getValidators()
         public
@@ -88,4 +98,21 @@ contract ValidatorManagerDebugFacet {
             LibValidatorManager.diamondStorage();
         return vmDS.onNewEpoch();
     }
+
+    // @notice emitted on Claim received
+    event ClaimReceived(
+        Result result,
+        bytes32[2] claims,
+        address payable[2] validators
+    );
+
+    // @notice emitted on Dispute end
+    event DisputeEnded(
+        Result result,
+        bytes32[2] claims,
+        address payable[2] validators
+    );
+
+    // @notice emitted on new Epoch
+    event NewEpoch(bytes32 claim);
 }

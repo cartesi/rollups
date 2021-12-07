@@ -78,10 +78,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             'RollupsInitFacet',
             'ValidatorManagerFacet',
             'OutputFacet',
-            // debug facets
-            'RollupsDebugFacet',
-            'OutputDebugFacet',
-            'ValidatorManagerDebugFacet',
+            'EtherPortalFacet',
+            'DebugFacet', // For debug pursposes only
         ],
         libraries: {
             Bitmask: bitMaskAddress,
@@ -99,32 +97,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
 
     console.log("Debug Diamond address: " + address);
-//    let rollupsImpl = RollupsImpl__factory.connect(address, signers[0]);
-//
-//    let inputAddress = await rollupsImpl.getInputAddress();
-//    let voucherAddress = await rollupsImpl.getVoucherAddress();
-//
-//    let erc20PortalImpl = await deployments.deploy("ERC20PortalImpl", {
-//        from: await signers[0].getAddress(),
-//        args: [inputAddress, voucherAddress],
-//    });
-//
-//    let etherPortalImpl = await deployments.deploy("EtherPortalImpl", {
-//        from: await signers[0].getAddress(),
-//        args: [inputAddress, voucherAddress],
-//    });
-//
-//    console.log("Rollups Impl address: " + rollupsImpl.address);
-//    console.log(
-//        "Rollups Impl getCurrentEpoch: " +
-//            (await rollupsImpl.getCurrentEpoch())
-//    );
-//    console.log("Rollups accumulation start: " + await rollupsImpl.getInputAccumulationStart());
-//    console.log("Input address " + inputAddress);
-//    console.log("Voucher address " + voucherAddress);
-//    console.log("Ether Portal address " + etherPortalImpl.address);
-//    console.log("ERC20 Portal address " + erc20PortalImpl.address);
 };
 
 export default func;
-export const tags = ["CartesiRollupsDebug"];
+export const tags = ["Diamond", "Debug"];

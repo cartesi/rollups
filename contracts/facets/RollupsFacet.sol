@@ -22,6 +22,26 @@ import {LibOutput} from "../libraries/LibOutput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
 contract RollupsFacet is IRollups {
+    ////
+    //                             All claims agreed OR challenge period ended
+    //                              functions: claim() or finalizeEpoch()
+    //                        +--------------------------------------------------+
+    //                        |                                                  |
+    //               +--------v-----------+   new input after IPAD     +---------+----------+
+    //               |                    +--------------------------->+                    |
+    //   START  ---> | Input Accumulation |   firt claim after IPAD    | Awaiting Consensus |
+    //               |                    +--------------------------->+                    |
+    //               +-+------------------+                            +-----------------+--+
+    //                 ^                                                                 ^  |
+    //                 |                                              dispute resolved   |  |
+    //                 |  dispute resolved                            before challenge   |  |
+    //                 |  after challenge     +--------------------+  period ended       |  |
+    //                 |  period ended        |                    +---------------------+  |
+    //                 +----------------------+  Awaiting Dispute  |                        |
+    //                                        |                    +<-----------------------+
+    //                                        +--------------------+    conflicting claim
+    ///
+
     using LibRollups for LibRollups.DiamondStorage;
     using LibInput for LibInput.DiamondStorage;
     using LibOutput for LibOutput.DiamondStorage;

@@ -16,51 +16,18 @@ pragma solidity ^0.8.0;
 import {IInput} from "../interfaces/IInput.sol";
 
 import {LibInput} from "../libraries/LibInput.sol";
-import {LibRollups} from "../libraries/LibRollups.sol";
 
 contract InputFacet is IInput {
     using LibInput for LibInput.DiamondStorage;
-    using LibRollups for LibRollups.DiamondStorage;
 
     /// @notice add input to processed by next epoch
     /// @param _input input to be understood by offchain machine
     /// @dev offchain code is responsible for making sure
     ///      that input size is power of 2 and multiple of 8 since
-    // the offchain machine has a 8 byte word
+    //       the offchain machine has a 8 byte word
     function addInput(bytes calldata _input) public override returns (bytes32) {
         LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
-
-        require(
-            _input.length > 0 && _input.length <= inputDS.inputDriveSize,
-            "input len: (0,driveSize]"
-        );
-
-        // keccak 64 bytes into 32 bytes
-        bytes32 keccakMetadata =
-            keccak256(abi.encode(msg.sender, block.timestamp));
-        bytes32 keccakInput = keccak256(_input);
-
-        bytes32 inputHash = keccak256(abi.encode(keccakMetadata, keccakInput));
-
-        // notifyInput returns true if that input
-        // belongs to a new epoch
-        if (rollupsDS.notifyInput()) {
-            inputDS.swapInputBox();
-        }
-
-        // add input to correct inbox
-        inputDS.addInput(inputHash);
-
-        emit InputAdded(
-            rollupsDS.getCurrentEpoch(),
-            msg.sender,
-            block.timestamp,
-            _input
-        );
-
-        return inputHash;
+        return inputDS.addInput(_input);
     }
 
     /// @notice get input inside inbox of currently proposed claim

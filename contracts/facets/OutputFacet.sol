@@ -40,12 +40,12 @@ contract OutputFacet is IOutput {
 
     /// @notice functions modified by noReentrancy are not subject to recursion
     modifier noReentrancy() {
-        LibOutput.DiamondStorage storage ds = LibOutput.diamondStorage();
+        LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
 
-        require(!ds.lock, "reentrancy not allowed");
-        ds.lock = true;
+        require(!outputDS.lock, "reentrancy not allowed");
+        outputDS.lock = true;
         _;
-        ds.lock = false;
+        outputDS.lock = false;
     }
 
     /// @notice executes voucher
@@ -59,19 +59,23 @@ contract OutputFacet is IOutput {
         bytes calldata _payload,
         OutputValidityProof calldata _v
     ) public override noReentrancy returns (bool) {
-        LibOutput.DiamondStorage storage ds = LibOutput.diamondStorage();
+        LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
 
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
 
         // check if validity proof matches the voucher provided
-        isValidVoucherProof(encodedVoucher, ds.epochHashes[_v.epochIndex], _v);
+        isValidVoucherProof(
+            encodedVoucher,
+            outputDS.epochHashes[_v.epochIndex],
+            _v
+        );
 
         uint256 voucherPosition =
             getBitMaskPosition(_v.outputIndex, _v.inputIndex, _v.epochIndex);
 
         // check if voucher has been executed
         require(
-            !ds.voucherBitmask.getBit(voucherPosition),
+            !outputDS.voucherBitmask.getBit(voucherPosition),
             "re-execution not allowed"
         );
 
@@ -80,7 +84,7 @@ contract OutputFacet is IOutput {
 
         // if properly executed, mark it as executed and emit event
         if (succ) {
-            ds.voucherBitmask.setBit(voucherPosition, true);
+            outputDS.voucherBitmask.setBit(voucherPosition, true);
             emit VoucherExecuted(voucherPosition);
         }
 
@@ -232,8 +236,8 @@ contract OutputFacet is IOutput {
         override
         returns (uint256)
     {
-        LibOutput.DiamondStorage storage ds = LibOutput.diamondStorage();
-        return ds.getNumberOfFinalizedEpochs();
+        LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
+        return outputDS.getNumberOfFinalizedEpochs();
     }
 
     /// @notice get log2 size of voucher metadata drive

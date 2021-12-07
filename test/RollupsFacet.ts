@@ -10,7 +10,7 @@ import { getState } from "./getState";
 
 use(solidity);
 
-describe("Rollups facet", () => {
+describe("Rollups Facet", () => {
     /// for testing Rollups when modifiers are on, set this to true
     /// for testing Rollups when modifiers are off, set this to false
     let permissionModifiersOn = true;

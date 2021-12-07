@@ -27,7 +27,8 @@ library LibDisputeManager {
         bytes32[2] memory claims,
         address payable[2] memory claimers
     ) internal {
-        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
-        ds.resolveDispute(claimers[0], claimers[1], claims[0]);
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        rollupsDS.resolveDispute(claimers[0], claimers[1], claims[0]);
     }
 }

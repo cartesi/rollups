@@ -25,21 +25,18 @@ import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import { RollupsFacet } from "../dist/src/types/RollupsFacet";
 import { RollupsFacet__factory } from "../dist/src/types/factories/RollupsFacet__factory";
-import { RollupsDebugFacet } from "../dist/src/types/RollupsDebugFacet";
-import { RollupsDebugFacet__factory } from "../dist/src/types/factories/RollupsDebugFacet__factory";
-import { ValidatorManagerDebugFacet } from "../dist/src/types/ValidatorManagerDebugFacet";
-import { ValidatorManagerDebugFacet__factory } from "../dist/src/types/factories/ValidatorManagerDebugFacet__factory";
+import { DebugFacet } from "../dist/src/types/DebugFacet";
+import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { ValidatorManagerFacet } from "../dist/src/types/ValidatorManagerFacet";
 import { ValidatorManagerFacet__factory } from "../dist/src/types/factories/ValidatorManagerFacet__factory";
 
 use(solidity);
 
-describe("Validator Manager Implementation", async () => {
+describe("Validator Manager Facet", async () => {
     var signer: Signer;
     var rollupsFacet: RollupsFacet;
-    var rollupsDebugFacet: RollupsDebugFacet;
     var validatorManagerFacet: ValidatorManagerFacet;
-    var validatorManagerDebugFacet: ValidatorManagerDebugFacet;
+    var debugFacet: DebugFacet;
     var validators: string[] = [];
 
     let hash_zero = ethers.constants.HashZero;
@@ -56,10 +53,9 @@ describe("Validator Manager Implementation", async () => {
         [, signer] = await ethers.getSigners();
         const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
         rollupsFacet = RollupsFacet__factory.connect(diamondAddress, signer);
-        rollupsDebugFacet = RollupsDebugFacet__factory.connect(diamondAddress, signer);
         validatorManagerFacet = ValidatorManagerFacet__factory.connect(diamondAddress, signer);
-        validatorManagerDebugFacet = ValidatorManagerDebugFacet__factory.connect(diamondAddress, signer);
-        validators = await validatorManagerDebugFacet._getValidators();
+        debugFacet = DebugFacet__factory.connect(diamondAddress, signer);
+        validators = await debugFacet._getValidators();
     });
 
     it("check initial consensusGoalMask", async () => {
@@ -86,7 +82,7 @@ describe("Validator Manager Implementation", async () => {
 
     it("onClaim should revert if claim is 0x00", async () => {
         await expect(
-            validatorManagerDebugFacet._onClaim(validators[0], hash_zero),
+            debugFacet._onClaim(validators[0], hash_zero),
             "should revert if claim == 0x00"
         ).to.be.revertedWith("empty claim");
     });
@@ -94,7 +90,7 @@ describe("Validator Manager Implementation", async () => {
     it("onClaim should revert if sender is not allowed", async () => {
         var claim = "0x" + "1".repeat(64);
         await expect(
-            validatorManagerDebugFacet._onClaim(address_zero, claim),
+            debugFacet._onClaim(address_zero, claim),
             "should revert if sender is not in validators array"
         ).to.be.revertedWith("sender not allowed");
     });
@@ -108,7 +104,7 @@ describe("Validator Manager Implementation", async () => {
             // callStatic: check return value
             expect(
                 JSON.stringify(
-                    await validatorManagerDebugFacet.callStatic._onClaim(validators[i], claim)
+                    await debugFacet.callStatic._onClaim(validators[i], claim)
                 ),
                 "use callStatic to check return value of onClaim() when NoConflict"
             ).to.equal(
@@ -121,10 +117,10 @@ describe("Validator Manager Implementation", async () => {
 
             // check emitted event
             await expect(
-                validatorManagerDebugFacet._onClaim(validators[i], claim),
+                debugFacet._onClaim(validators[i], claim),
                 "equal claims should not generate conflict nor consensus, if not all validators have agreed"
             )
-                .to.emit(validatorManagerDebugFacet, "ClaimReceived")
+                .to.emit(debugFacet, "ClaimReceived")
                 .withArgs(
                     Result.NoConflict,
                     [hash_zero, hash_zero],
@@ -149,7 +145,7 @@ describe("Validator Manager Implementation", async () => {
         // callStatic: check return value
         var lastValidator = validators[validators.length - 1];
         expect(
-            JSON.stringify(await validatorManagerDebugFacet.callStatic._onClaim(lastValidator, claim)),
+            JSON.stringify(await debugFacet.callStatic._onClaim(lastValidator, claim)),
             "use callStatic to check return value of onClaim() when Consensus"
         ).to.equal(
             JSON.stringify([
@@ -161,10 +157,10 @@ describe("Validator Manager Implementation", async () => {
 
         // check emitted event
         await expect(
-            validatorManagerDebugFacet._onClaim(lastValidator, claim),
+            debugFacet._onClaim(lastValidator, claim),
             "after all validators claim should be consensus"
         )
-            .to.emit(validatorManagerDebugFacet, "ClaimReceived")
+            .to.emit(debugFacet, "ClaimReceived")
             .withArgs(
                 Result.Consensus,
                 [claim, hash_zero],
@@ -185,10 +181,10 @@ describe("Validator Manager Implementation", async () => {
         var claim2 = "0x" + "2".repeat(64);
 
         await expect(
-            validatorManagerDebugFacet._onClaim(validators[0], claim),
+            debugFacet._onClaim(validators[0], claim),
             "first claim should not generate conflict"
         )
-            .to.emit(validatorManagerDebugFacet, "ClaimReceived")
+            .to.emit(debugFacet, "ClaimReceived")
             .withArgs(
                 Result.NoConflict,
                 [hash_zero, hash_zero],
@@ -197,7 +193,7 @@ describe("Validator Manager Implementation", async () => {
 
         // callStatic: check return value
         expect(
-            JSON.stringify(await validatorManagerDebugFacet.callStatic._onClaim(validators[1], claim2)),
+            JSON.stringify(await debugFacet.callStatic._onClaim(validators[1], claim2)),
             "use callStatic to check return value of onClaim() when conflict"
         ).to.equal(
             JSON.stringify([
@@ -209,10 +205,10 @@ describe("Validator Manager Implementation", async () => {
 
         // check emitted event
         await expect(
-            validatorManagerDebugFacet._onClaim(validators[1], claim2),
+            debugFacet._onClaim(validators[1], claim2),
             "different claim should generate conflict"
         )
-            .to.emit(validatorManagerDebugFacet, "ClaimReceived")
+            .to.emit(debugFacet, "ClaimReceived")
             .withArgs(
                 Result.Conflict,
                 [claim, claim2],
@@ -232,12 +228,12 @@ describe("Validator Manager Implementation", async () => {
 
         // start with no conflict claim to populate
         // variables
-        await validatorManagerDebugFacet._onClaim(validators[0], claim);
+        await debugFacet._onClaim(validators[0], claim);
 
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await validatorManagerDebugFacet.callStatic._onDisputeEnd(
+                await debugFacet.callStatic._onDisputeEnd(
                     validators[0],
                     validators[1],
                     claim
@@ -254,10 +250,10 @@ describe("Validator Manager Implementation", async () => {
 
         // check emitted event
         await expect(
-            validatorManagerDebugFacet._onDisputeEnd(validators[0], validators[1], claim),
+            debugFacet._onDisputeEnd(validators[0], validators[1], claim),
             "if winning claim is current claim and there is no consensus, should return NoConflict"
         )
-            .to.emit(validatorManagerDebugFacet, "DisputeEnded")
+            .to.emit(debugFacet, "DisputeEnded")
             .withArgs(
                 Result.NoConflict,
                 [hash_zero, hash_zero],
@@ -286,14 +282,14 @@ describe("Validator Manager Implementation", async () => {
 
         // all validators agree but last one
         for (var i = 0; i < validators.length - 1; i++) {
-            await validatorManagerDebugFacet._onClaim(validators[i], claim);
+            await debugFacet._onClaim(validators[i], claim);
         }
 
         // last validator lost dispute, the only one that disagreed
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await validatorManagerDebugFacet.callStatic._onDisputeEnd(
+                await debugFacet.callStatic._onDisputeEnd(
                     validators[0],
                     lastValidator,
                     claim
@@ -310,10 +306,10 @@ describe("Validator Manager Implementation", async () => {
 
         // check emitted event
         await expect(
-            validatorManagerDebugFacet._onDisputeEnd(validators[0], lastValidator, claim),
+            debugFacet._onDisputeEnd(validators[0], lastValidator, claim),
             "if losing claim was the only one not agreeing, should return consensus"
         )
-            .to.emit(validatorManagerDebugFacet, "DisputeEnded")
+            .to.emit(debugFacet, "DisputeEnded")
             .withArgs(
                 Result.Consensus,
                 [claim, hash_zero],
@@ -328,14 +324,14 @@ describe("Validator Manager Implementation", async () => {
 
         // all validators agree but last one
         for (var i = 0; i < validators.length - 1; i++) {
-            await validatorManagerDebugFacet._onClaim(validators[i], claim);
+            await debugFacet._onClaim(validators[i], claim);
         }
         // first validator lost dispute
         // next defender should be validators[1]
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await validatorManagerDebugFacet.callStatic._onDisputeEnd(
+                await debugFacet.callStatic._onDisputeEnd(
                     lastValidator,
                     validators[0],
                     claim2
@@ -351,10 +347,10 @@ describe("Validator Manager Implementation", async () => {
         );
         // check emitted event
         await expect(
-            validatorManagerDebugFacet._onDisputeEnd(lastValidator, validators[0], claim2),
+            debugFacet._onDisputeEnd(lastValidator, validators[0], claim2),
             "conflict should continue if there are validators still defending claim that lost"
         )
-            .to.emit(validatorManagerDebugFacet, "DisputeEnded")
+            .to.emit(debugFacet, "DisputeEnded")
             .withArgs(
                 Result.Conflict,
                 [claim, claim2],
@@ -363,7 +359,7 @@ describe("Validator Manager Implementation", async () => {
 
         // make all other validators but last defending the losing dispute
         for (var i = 1; i < validators.length - 2; i++) {
-            await validatorManagerDebugFacet._onDisputeEnd(lastValidator, validators[i], claim2);
+            await debugFacet._onDisputeEnd(lastValidator, validators[i], claim2);
         }
 
         // honest validator by himself can generate consensus
@@ -371,7 +367,7 @@ describe("Validator Manager Implementation", async () => {
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await validatorManagerDebugFacet.callStatic._onDisputeEnd(
+                await debugFacet.callStatic._onDisputeEnd(
                     lastValidator,
                     validators[validators.length - 2],
                     claim2
@@ -387,14 +383,14 @@ describe("Validator Manager Implementation", async () => {
         );
         // check emitted event
         await expect(
-            validatorManagerDebugFacet._onDisputeEnd(
+            debugFacet._onDisputeEnd(
                 lastValidator,
                 validators[validators.length - 2],
                 claim2
             ),
             "lastValidator should be the last one in the validator set"
         )
-            .to.emit(validatorManagerDebugFacet, "DisputeEnded")
+            .to.emit(debugFacet, "DisputeEnded")
             .withArgs(
                 Result.Consensus,
                 [claim2, hash_zero],
@@ -410,18 +406,18 @@ describe("Validator Manager Implementation", async () => {
 
         // all validators agree but the last two
         for (var i = 0; i < validators.length - 2; i++) {
-            await validatorManagerDebugFacet._onClaim(validators[i], claim);
+            await debugFacet._onClaim(validators[i], claim);
         }
 
         // make all other validators but the last two defending the losing dispute
         for (var i = 0; i < validators.length - 3; i++) {
-            await validatorManagerDebugFacet._onDisputeEnd(lastValidator, validators[i], claim2);
+            await debugFacet._onDisputeEnd(lastValidator, validators[i], claim2);
         }
         // honest validator winning the last dispute
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await validatorManagerDebugFacet.callStatic._onDisputeEnd(
+                await debugFacet.callStatic._onDisputeEnd(
                     lastValidator,
                     validators[validators.length - 3],
                     claim2
@@ -437,14 +433,14 @@ describe("Validator Manager Implementation", async () => {
         );
         // check emitted event
         await expect(
-            validatorManagerDebugFacet._onDisputeEnd(
+            debugFacet._onDisputeEnd(
                 lastValidator,
                 validators[validators.length - 3],
                 claim2
             ),
             "check emitted event for the last dispute"
         )
-            .to.emit(validatorManagerDebugFacet, "DisputeEnded")
+            .to.emit(debugFacet, "DisputeEnded")
             .withArgs(
                 Result.NoConflict,
                 [hash_zero, hash_zero],
@@ -455,7 +451,7 @@ describe("Validator Manager Implementation", async () => {
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await validatorManagerDebugFacet.callStatic._onClaim(secondLastValidator, claim2)
+                await debugFacet.callStatic._onClaim(secondLastValidator, claim2)
             ),
             "use callStatic to check return value of onClaim() to finalize consensus"
         ).to.equal(
@@ -467,10 +463,10 @@ describe("Validator Manager Implementation", async () => {
         );
         // check emitted event
         await expect(
-            validatorManagerDebugFacet._onClaim(secondLastValidator, claim2),
+            debugFacet._onClaim(secondLastValidator, claim2),
             "finalize the consensus"
         )
-            .to.emit(validatorManagerDebugFacet, "ClaimReceived")
+            .to.emit(debugFacet, "ClaimReceived")
             .withArgs(
                 Result.Consensus,
                 [claim2, hash_zero],
@@ -482,20 +478,20 @@ describe("Validator Manager Implementation", async () => {
         var claim = "0x" + "1".repeat(64);
 
         // one validator claims
-        await validatorManagerDebugFacet._onClaim(validators[0], claim);
+        await debugFacet._onClaim(validators[0], claim);
 
         // epoch ends without consensus
         // callStatic: check return value
         expect(
-            await validatorManagerDebugFacet.callStatic._onNewEpoch(),
+            await debugFacet.callStatic._onNewEpoch(),
             "onNewEpoch() should return current claim"
         ).to.equal(claim);
         // check emitted event
         await expect(
-            validatorManagerDebugFacet._onNewEpoch(),
+            debugFacet._onNewEpoch(),
             "new epoch should emit event NewEpoch with current claim"
         )
-            .to.emit(validatorManagerDebugFacet, "NewEpoch")
+            .to.emit(debugFacet, "NewEpoch")
             .withArgs(claim);
 
         expect(
