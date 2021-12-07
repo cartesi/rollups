@@ -39,26 +39,63 @@ library LibInput {
         }
     }
 
+    /// @notice get input inside inbox of currently proposed claim
+    /// @param ds diamond storage pointer
+    /// @param index index of input inside that inbox
+    /// @return hash of input at index index
+    /// @dev currentInputBox being zero means that the inputs for
+    ///      the claimed epoch are on input box one
+    function getInput(DiamondStorage storage ds, uint256 index)
+        internal
+        view
+        returns (bytes32)
+    {
+        return
+            ds.currentInputBox == 0 ? ds.inputBox1[index] : ds.inputBox0[index];
+    }
+
+    /// @notice get number of inputs inside inbox of currently proposed claim
+    /// @param ds diamond storage pointer
+    /// @return number of inputs on that input box
+    /// @dev currentInputBox being zero means that the inputs for
+    ///      the claimed epoch are on input box one
+    function getNumberOfInputs(DiamondStorage storage ds)
+        internal
+        view
+        returns (uint256)
+    {
+        return
+            ds.currentInputBox == 0 ? ds.inputBox1.length : ds.inputBox0.length;
+    }
+
+    /// @notice add input to correct input box
+    /// @param ds diamond storage pointer
+    /// @param inputHash hash of input to be added
+    function addInput(DiamondStorage storage ds, bytes32 inputHash) internal {
+        ds.currentInputBox == 0
+            ? ds.inputBox0.push(inputHash)
+            : ds.inputBox1.push(inputHash);
+    }
+
     /// @notice called when a new input accumulation phase begins
     ///         swap inbox to receive inputs for upcoming epoch
-    function onNewInputAccumulation() internal {
-        swapInputBox();
+    /// @param ds diamond storage pointer
+    function onNewInputAccumulation(DiamondStorage storage ds) internal {
+        swapInputBox(ds);
     }
 
     /// @notice called when a new epoch begins, clears deprecated inputs
-    function onNewEpoch() internal {
+    /// @param ds diamond storage pointer
+    function onNewEpoch(DiamondStorage storage ds) internal {
         // clear input box for new inputs
         // the current input box should be accumulating inputs
         // for the new epoch already. So we clear the other one.
-        DiamondStorage storage ds = diamondStorage();
         ds.currentInputBox == 0 ? delete ds.inputBox1 : delete ds.inputBox0;
     }
 
     /// @notice changes current input box
-    function swapInputBox() internal {
-        DiamondStorage storage ds = diamondStorage();
-        ds.currentInputBox == 0
-            ? ds.currentInputBox = 1
-            : ds.currentInputBox = 0;
+    /// @param ds diamond storage pointer
+    function swapInputBox(DiamondStorage storage ds) internal {
+        ds.currentInputBox = (ds.currentInputBox == 0) ? 1 : 0;
     }
 }

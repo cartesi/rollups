@@ -17,33 +17,29 @@ import {Phase} from "../interfaces/IRollups.sol";
 import {LibRollups} from "../libraries/LibRollups.sol";
 
 contract RollupsDebugFacet {
+    using LibRollups for LibRollups.DiamondStorage;
+
     function _setInputAccumulationStart(uint32 _inputAccumulationStart) public {
-        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
-        ds.inputAccumulationStart = _inputAccumulationStart;
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        rollupsDS.inputAccumulationStart = _inputAccumulationStart;
     }
 
     function _setCurrentPhase(Phase _phase) public {
-        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
-        ds.currentPhase_int = uint32(_phase);
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        rollupsDS.currentPhase_int = uint32(_phase);
     }
 
     function _getCurrentPhase() public view returns (Phase _phase) {
-        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
-        return Phase(ds.currentPhase_int);
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        return Phase(rollupsDS.currentPhase_int);
     }
 
     function _getCurrentEpoch() public view returns (uint256) {
-        return LibRollups.getCurrentEpoch();
-    }
-
-    function _notifyInput() public view returns (bool) {
-        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
-
-        Phase currentPhase = Phase(ds.currentPhase_int);
-        uint256 inputAccumulationStart = ds.inputAccumulationStart;
-        uint256 inputDuration = ds.inputDuration;
-
-        return (currentPhase == Phase.InputAccumulation &&
-            block.timestamp > inputAccumulationStart + inputDuration);
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        return rollupsDS.getCurrentEpoch();
     }
 }

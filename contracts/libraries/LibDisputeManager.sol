@@ -16,15 +16,18 @@ pragma solidity ^0.8.0;
 import {LibRollups} from "../libraries/LibRollups.sol";
 
 library LibDisputeManager {
+    using LibRollups for LibRollups.DiamondStorage;
+
     /// @notice initiates a dispute betweent two players
-    /// @param _claims conflicting claims
-    /// @param _claimers addresses of senders of conflicting claim
+    /// @param claims conflicting claims
+    /// @param claimers addresses of senders of conflicting claim
     /// @dev this is a mock implementation that just gives the win
-    ///      to the address in the first posititon of _claimers array
+    ///      to the address in the first posititon of claimers array
     function initiateDispute(
-        bytes32[2] memory _claims,
-        address payable[2] memory _claimers
+        bytes32[2] memory claims,
+        address payable[2] memory claimers
     ) internal {
-        LibRollups.resolveDispute(_claimers[0], _claimers[1], _claims[0]);
+        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
+        ds.resolveDispute(claimers[0], claimers[1], claims[0]);
     }
 }

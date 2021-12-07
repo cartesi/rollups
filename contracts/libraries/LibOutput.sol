@@ -35,16 +35,20 @@ library LibOutput {
     }
 
     /// @notice to be called when an epoch is finalized
-    /// @param _epochHash hash of finalized epoch
+    /// @param ds diamond storage pointer
+    /// @param epochHash hash of finalized epoch
     /// @dev an epoch being finalized means that its vouchers can be called
-    function onNewEpoch(bytes32 _epochHash) internal {
-        DiamondStorage storage ds = diamondStorage();
-        ds.epochHashes.push(_epochHash);
+    function onNewEpoch(DiamondStorage storage ds, bytes32 epochHash) internal {
+        ds.epochHashes.push(epochHash);
     }
 
     /// @notice get number of finalized epochs
-    function getNumberOfFinalizedEpochs() internal view returns (uint256) {
-        DiamondStorage storage ds = diamondStorage();
+    /// @param ds diamond storage pointer
+    function getNumberOfFinalizedEpochs(DiamondStorage storage ds)
+        internal
+        view
+        returns (uint256)
+    {
         return ds.epochHashes.length;
     }
 }

@@ -22,41 +22,51 @@ import {LibOutput} from "../libraries/LibOutput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
 contract RollupsFacet is IRollups {
+    using LibRollups for LibRollups.DiamondStorage;
+    using LibInput for LibInput.DiamondStorage;
+    using LibOutput for LibOutput.DiamondStorage;
+    using LibValidatorManager for LibValidatorManager.DiamondStorage;
+
     /// @notice claim the result of current epoch
     /// @param _epochHash hash of epoch
     /// @dev ValidatorManager makes sure that msg.sender is allowed
     //       and that claim != bytes32(0)
     /// TODO: add signatures for aggregated claims
     function claim(bytes32 _epochHash) public override {
-        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
+        LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
 
         Result result;
         bytes32[2] memory claims;
         address payable[2] memory claimers;
 
-        Phase currentPhase = Phase(ds.currentPhase_int);
-        uint256 inputAccumulationStart = ds.inputAccumulationStart;
-        uint256 inputDuration = ds.inputDuration;
+        Phase currentPhase = Phase(rollupsDS.currentPhase_int);
+        uint256 inputAccumulationStart = rollupsDS.inputAccumulationStart;
+        uint256 inputDuration = rollupsDS.inputDuration;
 
         if (
             currentPhase == Phase.InputAccumulation &&
             block.timestamp > inputAccumulationStart + inputDuration
         ) {
             currentPhase = Phase.AwaitingConsensus;
-            ds.currentPhase_int = uint32(Phase.AwaitingConsensus);
+            rollupsDS.currentPhase_int = uint32(Phase.AwaitingConsensus);
             emit PhaseChange(Phase.AwaitingConsensus);
 
             // warns input of new epoch
-            LibInput.onNewInputAccumulation();
+            inputDS.onNewInputAccumulation();
             // update timestamp of sealing epoch proposal
-            ds.sealingEpochTimestamp = uint32(block.timestamp);
+            rollupsDS.sealingEpochTimestamp = uint32(block.timestamp);
         }
 
         require(
             currentPhase == Phase.AwaitingConsensus,
             "Phase != AwaitingConsensus"
         );
-        (result, claims, claimers) = LibValidatorManager.onClaim(
+        (result, claims, claimers) = vmDS.onClaim(
             payable(msg.sender),
             _epochHash
         );
@@ -65,38 +75,38 @@ contract RollupsFacet is IRollups {
         // so if the epoch is finalized in this claim (consensus)
         // the number of final epochs doesnt gets contaminated
         emit Claim(
-            LibOutput.getNumberOfFinalizedEpochs(),
+            outputDS.getNumberOfFinalizedEpochs(),
             msg.sender,
             _epochHash
         );
 
-        LibRollups.resolveValidatorResult(result, claims, claimers);
+        rollupsDS.resolveValidatorResult(result, claims, claimers);
     }
 
     /// @notice finalize epoch after timeout
     /// @dev can only be called if challenge period is over
     function finalizeEpoch() public override {
-        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
 
-        Phase currentPhase = Phase(ds.currentPhase_int);
+        Phase currentPhase = Phase(rollupsDS.currentPhase_int);
         require(
             currentPhase == Phase.AwaitingConsensus,
             "Phase != Awaiting Consensus"
         );
 
-        uint256 sealingEpochTimestamp = ds.sealingEpochTimestamp;
-        uint256 challengePeriod = ds.challengePeriod;
+        uint256 sealingEpochTimestamp = rollupsDS.sealingEpochTimestamp;
+        uint256 challengePeriod = rollupsDS.challengePeriod;
         require(
             block.timestamp > sealingEpochTimestamp + challengePeriod,
             "Challenge period not over"
         );
 
-        require(
-            LibValidatorManager.getCurrentClaim() != bytes32(0),
-            "No Claim to be finalized"
-        );
+        require(vmDS.currentClaim != bytes32(0), "No Claim to be finalized");
 
-        LibRollups.startNewEpoch();
+        rollupsDS.startNewEpoch();
     }
 
     /// @notice returns index of current (accumulating) epoch
@@ -105,20 +115,24 @@ contract RollupsFacet is IRollups {
     //       of finalized epochs array, else there are two non finalized epochs,
     //       one awaiting consensus/dispute and another accumulating input
     function getCurrentEpoch() public view override returns (uint256) {
-        return LibRollups.getCurrentEpoch();
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        return rollupsDS.getCurrentEpoch();
     }
 
     /// @notice returns the current phase
     function getCurrentPhase() public view returns (Phase) {
-        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
-        Phase currentPhase = Phase(ds.currentPhase_int);
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        Phase currentPhase = Phase(rollupsDS.currentPhase_int);
         return currentPhase;
     }
 
     /// @notice returns the input accumulation start timestamp
     function getInputAccumulationStart() public view returns (uint256) {
-        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
-        uint256 inputAccumulationStart = ds.inputAccumulationStart;
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        uint256 inputAccumulationStart = rollupsDS.inputAccumulationStart;
         return inputAccumulationStart;
     }
 }

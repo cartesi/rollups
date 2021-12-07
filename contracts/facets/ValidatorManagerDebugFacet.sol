@@ -18,6 +18,8 @@ import {Result} from "../interfaces/IValidatorManager.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
 contract ValidatorManagerDebugFacet {
+    using LibValidatorManager for LibValidatorManager.DiamondStorage;
+
     // @notice emitted on Claim received
     event ClaimReceived(
         Result result,
@@ -40,9 +42,9 @@ contract ValidatorManagerDebugFacet {
         view
         returns (address payable[] memory validators)
     {
-        LibValidatorManager.DiamondStorage storage ds =
+        LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
-        return ds.validators;
+        return vmDS.validators;
     }
 
     function _onClaim(address payable _sender, bytes32 _claim)
@@ -53,7 +55,9 @@ contract ValidatorManagerDebugFacet {
             address payable[2] memory
         )
     {
-        return LibValidatorManager.onClaim(_sender, _claim);
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
+        return vmDS.onClaim(_sender, _claim);
     }
 
     // @notice called when a dispute ends in rollups
@@ -72,12 +76,16 @@ contract ValidatorManagerDebugFacet {
             address payable[2] memory
         )
     {
-        return LibValidatorManager.onDisputeEnd(_winner, _loser, _winningClaim);
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
+        return vmDS.onDisputeEnd(_winner, _loser, _winningClaim);
     }
 
     // @notice called when a new epoch starts
     // @return current claim
     function _onNewEpoch() public returns (bytes32) {
-        return LibValidatorManager.onNewEpoch();
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
+        return vmDS.onNewEpoch();
     }
 }

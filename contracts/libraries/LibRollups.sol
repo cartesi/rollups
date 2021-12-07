@@ -22,6 +22,10 @@ import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibDisputeManager} from "../libraries/LibDisputeManager.sol";
 
 library LibRollups {
+    using LibInput for LibInput.DiamondStorage;
+    using LibOutput for LibOutput.DiamondStorage;
+    using LibValidatorManager for LibValidatorManager.DiamondStorage;
+
     bytes32 constant DIAMOND_STORAGE_POSITION =
         keccak256("Rollups.diamond.storage");
 
@@ -64,10 +68,9 @@ library LibRollups {
     }
 
     /// @notice called when new input arrives, manages the phase changes
+    /// @param ds diamond storage pointer
     /// @dev can only be called by input contract
-    function notifyInput() internal returns (bool) {
-        DiamondStorage storage ds = diamondStorage();
-
+    function notifyInput(DiamondStorage storage ds) internal returns (bool) {
         Phase currentPhase = Phase(ds.currentPhase_int);
         uint256 inputAccumulationStart = ds.inputAccumulationStart;
         uint256 inputDuration = ds.inputDuration;
@@ -84,66 +87,72 @@ library LibRollups {
     }
 
     /// @notice called when a dispute is resolved by the dispute manager
-    /// @param _winner winner of dispute
-    /// @param _loser loser of dispute
-    /// @param _winningClaim initial claim of winning validator
+    /// @param ds diamond storage pointer
+    /// @param winner winner of dispute
+    /// @param loser loser of dispute
+    /// @param winningClaim initial claim of winning validator
     function resolveDispute(
-        address payable _winner,
-        address payable _loser,
-        bytes32 _winningClaim
+        DiamondStorage storage ds,
+        address payable winner,
+        address payable loser,
+        bytes32 winningClaim
     ) internal {
-        DiamondStorage storage ds = diamondStorage();
-
         Result result;
         bytes32[2] memory claims;
         address payable[2] memory claimers;
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
 
-        (result, claims, claimers) = LibValidatorManager.onDisputeEnd(
-            _winner,
-            _loser,
-            _winningClaim
+        (result, claims, claimers) = vmDS.onDisputeEnd(
+            winner,
+            loser,
+            winningClaim
         );
 
         // restart challenge period
         ds.sealingEpochTimestamp = uint32(block.timestamp);
 
-        emit ResolveDispute(_winner, _loser, _winningClaim);
-        resolveValidatorResult(result, claims, claimers);
+        emit ResolveDispute(winner, loser, winningClaim);
+        resolveValidatorResult(ds, result, claims, claimers);
     }
 
     /// @notice resolve results returned by validator manager
-    /// @param _result result from claim or dispute operation
-    /// @param _claims array of claims in case of new conflict
-    /// @param _claimers array of claimers in case of new conflict
+    /// @param ds diamond storage pointer
+    /// @param result result from claim or dispute operation
+    /// @param claims array of claims in case of new conflict
+    /// @param claimers array of claimers in case of new conflict
     function resolveValidatorResult(
-        Result _result,
-        bytes32[2] memory _claims,
-        address payable[2] memory _claimers
+        DiamondStorage storage ds,
+        Result result,
+        bytes32[2] memory claims,
+        address payable[2] memory claimers
     ) internal {
-        DiamondStorage storage ds = diamondStorage();
-
-        if (_result == Result.NoConflict) {
+        if (result == Result.NoConflict) {
             Phase currentPhase = Phase(ds.currentPhase_int);
             if (currentPhase != Phase.AwaitingConsensus) {
                 ds.currentPhase_int = uint32(Phase.AwaitingConsensus);
                 emit PhaseChange(Phase.AwaitingConsensus);
             }
-        } else if (_result == Result.Consensus) {
-            startNewEpoch();
+        } else if (result == Result.Consensus) {
+            startNewEpoch(ds);
         } else {
-            // for the case when _result == Result.Conflict
+            // for the case when result == Result.Conflict
             Phase currentPhase = Phase(ds.currentPhase_int);
             if (currentPhase != Phase.AwaitingDispute) {
                 ds.currentPhase_int = uint32(Phase.AwaitingDispute);
                 emit PhaseChange(Phase.AwaitingDispute);
             }
-            LibDisputeManager.initiateDispute(_claims, _claimers);
+            LibDisputeManager.initiateDispute(claims, claimers);
         }
     }
 
     /// @notice starts new epoch
-    function startNewEpoch() internal {
-        DiamondStorage storage ds = diamondStorage();
+    /// @param ds diamond storage pointer
+    function startNewEpoch(DiamondStorage storage ds) internal {
+        LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
+        LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
 
         // reset input accumulation start and deactivate challenge period start
         ds.currentPhase_int = uint32(Phase.InputAccumulation);
@@ -151,24 +160,29 @@ library LibRollups {
         ds.inputAccumulationStart = uint32(block.timestamp);
         ds.sealingEpochTimestamp = type(uint32).max;
 
-        bytes32 finalClaim = LibValidatorManager.onNewEpoch();
+        bytes32 finalClaim = vmDS.onNewEpoch();
 
         // emit event before finalized epoch is added to the Output storage
-        emit FinalizeEpoch(LibOutput.getNumberOfFinalizedEpochs(), finalClaim);
+        emit FinalizeEpoch(outputDS.getNumberOfFinalizedEpochs(), finalClaim);
 
-        LibOutput.onNewEpoch(finalClaim);
-        LibInput.onNewEpoch();
+        outputDS.onNewEpoch(finalClaim);
+        inputDS.onNewEpoch();
     }
 
     /// @notice returns index of current (accumulating) epoch
+    /// @param ds diamond storage pointer
     /// @return index of current epoch
     /// @dev if phase is input accumulation, then the epoch number is length
     //       of finalized epochs array, else there are two non finalized epochs,
     //       one awaiting consensus/dispute and another accumulating input
-    function getCurrentEpoch() internal view returns (uint256) {
-        DiamondStorage storage ds = diamondStorage();
+    function getCurrentEpoch(DiamondStorage storage ds)
+        internal
+        view
+        returns (uint256)
+    {
+        LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
 
-        uint256 finalizedEpochs = LibOutput.getNumberOfFinalizedEpochs();
+        uint256 finalizedEpochs = outputDS.getNumberOfFinalizedEpochs();
 
         Phase currentPhase = Phase(ds.currentPhase_int);
 

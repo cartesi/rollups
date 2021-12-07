@@ -19,16 +19,21 @@ import {LibInput} from "../libraries/LibInput.sol";
 import {LibRollups} from "../libraries/LibRollups.sol";
 
 contract InputFacet is IInput {
+    using LibInput for LibInput.DiamondStorage;
+    using LibRollups for LibRollups.DiamondStorage;
+
     /// @notice add input to processed by next epoch
     /// @param _input input to be understood by offchain machine
     /// @dev offchain code is responsible for making sure
     ///      that input size is power of 2 and multiple of 8 since
     // the offchain machine has a 8 byte word
     function addInput(bytes calldata _input) public override returns (bytes32) {
-        LibInput.DiamondStorage storage ds = LibInput.diamondStorage();
+        LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
 
         require(
-            _input.length > 0 && _input.length <= ds.inputDriveSize,
+            _input.length > 0 && _input.length <= inputDS.inputDriveSize,
             "input len: (0,driveSize]"
         );
 
@@ -41,17 +46,15 @@ contract InputFacet is IInput {
 
         // notifyInput returns true if that input
         // belongs to a new epoch
-        if (LibRollups.notifyInput()) {
-            LibInput.swapInputBox();
+        if (rollupsDS.notifyInput()) {
+            inputDS.swapInputBox();
         }
 
         // add input to correct inbox
-        ds.currentInputBox == 0
-            ? ds.inputBox0.push(inputHash)
-            : ds.inputBox1.push(inputHash);
+        inputDS.addInput(inputHash);
 
         emit InputAdded(
-            LibRollups.getCurrentEpoch(),
+            rollupsDS.getCurrentEpoch(),
             msg.sender,
             block.timestamp,
             _input
@@ -66,11 +69,8 @@ contract InputFacet is IInput {
     /// @dev currentInputBox being zero means that the inputs for
     ///      the claimed epoch are on input box one
     function getInput(uint256 _index) public view override returns (bytes32) {
-        LibInput.DiamondStorage storage ds = LibInput.diamondStorage();
-        return
-            ds.currentInputBox == 0
-                ? ds.inputBox1[_index]
-                : ds.inputBox0[_index];
+        LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
+        return inputDS.getInput(_index);
     }
 
     /// @notice get number of inputs inside inbox of currently proposed claim
@@ -78,15 +78,14 @@ contract InputFacet is IInput {
     /// @dev currentInputBox being zero means that the inputs for
     ///      the claimed epoch are on input box one
     function getNumberOfInputs() public view override returns (uint256) {
-        LibInput.DiamondStorage storage ds = LibInput.diamondStorage();
-        return
-            ds.currentInputBox == 0 ? ds.inputBox1.length : ds.inputBox0.length;
+        LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
+        return inputDS.getNumberOfInputs();
     }
 
     /// @notice get inbox currently receiveing inputs
     /// @return input inbox currently receiveing inputs
     function getCurrentInbox() public view override returns (uint256) {
-        LibInput.DiamondStorage storage ds = LibInput.diamondStorage();
-        return ds.currentInputBox;
+        LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
+        return inputDS.currentInputBox;
     }
 }

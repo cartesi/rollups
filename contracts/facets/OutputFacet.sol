@@ -21,6 +21,8 @@ import {IOutput, OutputValidityProof} from "../interfaces/IOutput.sol";
 import {LibOutput} from "../libraries/LibOutput.sol";
 
 contract OutputFacet is IOutput {
+    using LibOutput for LibOutput.DiamondStorage;
+
     // Here we only need 248 bits as keys in the mapping, but we use 256 bits for gas optimization
     using Bitmask for mapping(uint256 => uint256);
 
@@ -230,7 +232,8 @@ contract OutputFacet is IOutput {
         override
         returns (uint256)
     {
-        return LibOutput.getNumberOfFinalizedEpochs();
+        LibOutput.DiamondStorage storage ds = LibOutput.diamondStorage();
+        return ds.getNumberOfFinalizedEpochs();
     }
 
     /// @notice get log2 size of voucher metadata drive

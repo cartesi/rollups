@@ -22,6 +22,8 @@ import {LibInput} from "../libraries/LibInput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
 contract RollupsInitFacet is IRollupsInit {
+    using LibValidatorManager for LibValidatorManager.DiamondStorage;
+
     // @notice initialize the Rollups contract
     // @param _inputDuration duration of input accumulation phase in seconds
     // @param _challengePeriod duration of challenge period in seconds
@@ -38,16 +40,16 @@ contract RollupsInitFacet is IRollupsInit {
         // validator manager constructor variables
         address payable[] memory _validators
     ) public override {
-        LibRollupsInit.DiamondStorage storage ds =
+        LibRollupsInit.DiamondStorage storage rollupsInitDS =
             LibRollupsInit.diamondStorage();
 
-        require(!ds.initialized, "Rollups already initialized");
+        require(!rollupsInitDS.initialized, "Rollups already initialized");
 
         initInput(_inputLog2Size);
         initValidatorManager(_validators);
         initRollups(_inputDuration, _challengePeriod);
 
-        ds.initialized = true;
+        rollupsInitDS.initialized = true;
 
         emit RollupsInitialized(_inputDuration, _challengePeriod);
     }
@@ -55,14 +57,14 @@ contract RollupsInitFacet is IRollupsInit {
     // @notice initalize the Input facet
     // @param _inputLog2Size size of the input drive in this machine
     function initInput(uint256 _inputLog2Size) private {
-        LibInput.DiamondStorage storage ds = LibInput.diamondStorage();
+        LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
 
         require(
             _inputLog2Size >= 3 && _inputLog2Size <= 64,
             "Log of input size: [3,64]"
         );
 
-        ds.inputDriveSize = (1 << _inputLog2Size);
+        inputDS.inputDriveSize = (1 << _inputLog2Size);
     }
 
     // @notice initialize the Validator Manager facet
@@ -70,11 +72,11 @@ contract RollupsInitFacet is IRollupsInit {
     function initValidatorManager(address payable[] memory _validators)
         private
     {
-        LibValidatorManager.DiamondStorage storage ds =
+        LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
 
-        ds.validators = _validators;
-        ds.consensusGoalMask = LibValidatorManager.updateConsensusGoalMask();
+        vmDS.validators = _validators;
+        vmDS.consensusGoalMask = vmDS.updateConsensusGoalMask();
     }
 
     // @notice initialize the Rollups facet
@@ -83,12 +85,13 @@ contract RollupsInitFacet is IRollupsInit {
     function initRollups(uint256 _inputDuration, uint256 _challengePeriod)
         private
     {
-        LibRollups.DiamondStorage storage ds = LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
 
         // Is this optimal?
-        ds.inputDuration = uint32(_inputDuration);
-        ds.challengePeriod = uint32(_challengePeriod);
-        ds.inputAccumulationStart = uint32(block.timestamp);
-        ds.currentPhase_int = uint32(Phase.InputAccumulation);
+        rollupsDS.inputDuration = uint32(_inputDuration);
+        rollupsDS.challengePeriod = uint32(_challengePeriod);
+        rollupsDS.inputAccumulationStart = uint32(block.timestamp);
+        rollupsDS.currentPhase_int = uint32(Phase.InputAccumulation);
     }
 }
