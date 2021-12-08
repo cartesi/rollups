@@ -17,17 +17,20 @@ import {Result} from "../interfaces/IValidatorManager.sol";
 import {Phase} from "../interfaces/IRollups.sol";
 import {IEtherPortal} from "../interfaces/IEtherPortal.sol";
 import {IERC20Portal} from "../interfaces/IERC20Portal.sol";
+import {ISERC20Portal} from "../interfaces/ISERC20Portal.sol";
 
 import {LibRollups} from "../libraries/LibRollups.sol";
 import {LibInput} from "../libraries/LibInput.sol";
 import {LibOutput} from "../libraries/LibOutput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
+import {LibSERC20Portal} from "../libraries/LibSERC20Portal.sol";
 
 contract DebugFacet {
     using LibRollups for LibRollups.DiamondStorage;
     using LibInput for LibInput.DiamondStorage;
     using LibOutput for LibOutput.DiamondStorage;
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
+    using LibSERC20Portal for LibSERC20Portal.DiamondStorage;
 
     function _setInputAccumulationStart(uint32 _inputAccumulationStart) public {
         LibRollups.DiamondStorage storage rollupsDS =
@@ -123,6 +126,17 @@ contract DebugFacet {
     function _erc20Withdrawal(bytes calldata _data) public returns (bool) {
         IERC20Portal erc20Portal = IERC20Portal(address(this));
         return erc20Portal.erc20Withdrawal(_data);
+    }
+
+    function _setSERC20Address(address _erc20Contract) public {
+        LibSERC20Portal.DiamondStorage storage serc20DS =
+            LibSERC20Portal.diamondStorage();
+        serc20DS.erc20Contract = _erc20Contract;
+    }
+
+    function _serc20Withdrawal(bytes calldata _data) public returns (bool) {
+        ISERC20Portal serc20Portal = ISERC20Portal(address(this));
+        return serc20Portal.serc20Withdrawal(_data);
     }
 
     // @notice emitted on Claim received

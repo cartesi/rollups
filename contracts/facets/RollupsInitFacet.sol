@@ -20,6 +20,7 @@ import {LibRollupsInit} from "../libraries/LibRollupsInit.sol";
 import {LibRollups} from "../libraries/LibRollups.sol";
 import {LibInput} from "../libraries/LibInput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
+import {LibSERC20Portal} from "../libraries/LibSERC20Portal.sol";
 
 contract RollupsInitFacet is IRollupsInit {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
@@ -29,6 +30,7 @@ contract RollupsInitFacet is IRollupsInit {
     // @param _challengePeriod duration of challenge period in seconds
     // @param _inputLog2Size size of the input drive in this machine
     // @param _validators initial validator set
+    // @param _erc20Contract specific ERC-20 contract address used by the portal
     // @dev validators have to be unique, if the same validator is added twice
     //      consensus will never be reached
     function init(
@@ -38,7 +40,9 @@ contract RollupsInitFacet is IRollupsInit {
         // input constructor variables
         uint256 _inputLog2Size,
         // validator manager constructor variables
-        address payable[] memory _validators
+        address payable[] memory _validators,
+        // specific ERC-20 portal constructor variables
+        address _erc20Contract
     ) public override {
         LibRollupsInit.DiamondStorage storage rollupsInitDS =
             LibRollupsInit.diamondStorage();
@@ -48,6 +52,7 @@ contract RollupsInitFacet is IRollupsInit {
         initInput(_inputLog2Size);
         initValidatorManager(_validators);
         initRollups(_inputDuration, _challengePeriod);
+        initSERC20Portal(_erc20Contract);
 
         rollupsInitDS.initialized = true;
 
@@ -93,5 +98,12 @@ contract RollupsInitFacet is IRollupsInit {
         rollupsDS.challengePeriod = uint32(_challengePeriod);
         rollupsDS.inputAccumulationStart = uint32(block.timestamp);
         rollupsDS.currentPhase_int = uint32(Phase.InputAccumulation);
+    }
+
+    function initSERC20Portal(address _erc20Contract) private {
+        LibSERC20Portal.DiamondStorage storage serc20DS =
+            LibSERC20Portal.diamondStorage();
+
+        serc20DS.erc20Contract = _erc20Contract;
     }
 }

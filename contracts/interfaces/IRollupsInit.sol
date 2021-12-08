@@ -19,15 +19,19 @@ interface IRollupsInit {
     // @param _challengePeriod duration of challenge period in seconds
     // @param _inputLog2Size size of the input drive in this machine
     // @param _validators initial validator set
+    // @param _erc20Contract specific ERC-20 contract address used by the portal
     // @dev validators have to be unique, if the same validator is added twice
     //      consensus will never be reached
     function init(
+        // rollups contructor variables
         uint256 _inputDuration,
         uint256 _challengePeriod,
         // input constructor variables
         uint256 _inputLog2Size,
         // validator manager constructor variables
-        address payable[] memory _validators
+        address payable[] memory _validators,
+        // specific ERC-20 portal constructor variables
+        address _erc20Contract
     ) external;
 
     /// @notice rollups contract initialized

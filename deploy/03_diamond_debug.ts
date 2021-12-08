@@ -34,6 +34,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const INPUT_DURATION = 1 * DAY;
     const CHALLENGE_PERIOD = 7 * DAY;
     const INPUT_LOG2_SIZE = 8;
+    const CTSI_ADDRESS = "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
 
     let signers = await ethers.getSigners();
 
@@ -80,6 +81,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             'OutputFacet',
             'EtherPortalFacet',
             'ERC20PortalFacet',
+            'SERC20PortalFacet',
             'DebugFacet', // For debug pursposes only
         ],
         libraries: {
@@ -93,6 +95,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 CHALLENGE_PERIOD,
                 INPUT_LOG2_SIZE,
                 validators,
+                CTSI_ADDRESS,
             ],
         },
     });

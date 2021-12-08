@@ -14,6 +14,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import {IERC20Portal} from "../interfaces/IERC20Portal.sol";
 
 import {LibInput} from "../libraries/LibInput.sol";
@@ -21,7 +22,7 @@ import {LibInput} from "../libraries/LibInput.sol";
 contract ERC20PortalFacet is IERC20Portal {
     using LibInput for LibInput.DiamondStorage;
 
-    /// @notice deposit an amount of a generic ERC20 in the portal contract and create tokens in L2
+    /// @notice deposit an amount of a generic ERC20 in the Diamond and create tokens in L2
     /// @param _ERC20 address of the ERC20 token contract
     /// @param _amount amount of the ERC20 token to be deposited
     /// @param _data information to be interpreted by L2

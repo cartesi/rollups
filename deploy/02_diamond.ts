@@ -33,8 +33,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const INPUT_DURATION = 1 * DAY;
     const CHALLENGE_PERIOD = 7 * DAY;
     const INPUT_LOG2_SIZE = 25;
+    const CTSI_ADDRESS = "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
 
     let signers = await ethers.getSigners();
+
+    let validators: string[] = [];
+
+    for (let i = 0; i < 3; i++) {
+        let address = await signers[i].getAddress();
+        validators.push(address);
+    }
 
     // Bitmask
     const bitMaskLibrary = await deployments.deploy("Bitmask", {
@@ -69,6 +77,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             'OutputFacet',
             'EtherPortalFacet',
             'ERC20PortalFacet',
+            'SERC20PortalFacet',
         ],
         libraries: {
             Bitmask: bitMaskAddress,
@@ -80,11 +89,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 INPUT_DURATION,
                 CHALLENGE_PERIOD,
                 INPUT_LOG2_SIZE,
-                [
-                    await signers[0].getAddress(),
-                    await signers[1].getAddress(),
-                    await signers[2].getAddress(),
-                ],
+                validators,
+                CTSI_ADDRESS,
             ],
         },
     });

@@ -27,8 +27,8 @@ import {
 } from "@ethereum-waffle/mock-contract";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { ERC20PortalFacet } from "../dist/src/types/ERC20PortalFacet";
-import { ERC20PortalFacet__factory } from "../dist/src/types/factories/ERC20PortalFacet__factory";
+import { SERC20PortalFacet } from "../dist/src/types/SERC20PortalFacet";
+import { SERC20PortalFacet__factory } from "../dist/src/types/factories/SERC20PortalFacet__factory";
 import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { IERC20 } from "../dist/src/types/IERC20";
@@ -36,10 +36,10 @@ import { getInputHash } from "./getInputHash";
 
 use(solidity);
 
-describe("ERC20Portal Facet", async () => {
+describe("SERC20Portal Implementation", async () => {
     let signer: Signer;
     let signer2: Signer;
-    var portalFacet: ERC20PortalFacet;
+    var portalFacet: SERC20PortalFacet;
     var debugFacet: DebugFacet;
     let mockERC20: MockContract; //mock erc20
 
@@ -47,20 +47,22 @@ describe("ERC20Portal Facet", async () => {
         await deployments.fixture(["DebugDiamond"]);
         [signer, signer2] = await ethers.getSigners();
         const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
-        portalFacet = ERC20PortalFacet__factory.connect(diamondAddress, signer);
+        portalFacet = SERC20PortalFacet__factory.connect(diamondAddress, signer);
         debugFacet = DebugFacet__factory.connect(diamondAddress, signer);
 
         // Deploy a mock ERC-20 contract
         const CTSI = await deployments.getArtifact("IERC20");
         mockERC20 = await deployMockContract(signer, CTSI.abi);
+
+        // Inject mock into specific ERC-20 portal diamond storage
+        await debugFacet._setSERC20Address(mockERC20.address);
     });
 
-    it("erc20Deposit should revert if transferFrom returns false", async () => {
+    it("serc20Deposit should revert if transferFrom returns false", async () => {
         await mockERC20.mock.transferFrom.returns(false);
 
         await expect(
-            portalFacet.erc20Deposit(
-                mockERC20.address,
+            portalFacet.serc20Deposit(
                 50,
                 "0x00"
             ),
@@ -68,26 +70,24 @@ describe("ERC20Portal Facet", async () => {
         ).to.be.revertedWith("ERC20 transferFrom failed");
     });
 
-    it("erc20Deposit should emit events", async () => {
+    it("serc20Deposit should emit events", async () => {
         await mockERC20.mock.transferFrom.returns(true);
 
-        const erc20 = mockERC20.address;
         const sender = await signer.getAddress();
         const value = 15;
         const data = "0x00";
 
         expect(
-            await portalFacet.erc20Deposit(erc20, value, data),
-            "expect erc20Deposit function to emit ERC20Deposited event"
+            await portalFacet.serc20Deposit(value, data),
+            "expect serc20Deposit function to emit SERC20Deposited event"
         )
-            .to.emit(portalFacet, "ERC20Deposited")
-            .withArgs(erc20, sender, value, data);
+            .to.emit(portalFacet, "SERC20Deposited")
+            .withArgs(sender, value, data);
     });
 
-    it("erc20Deposit should return the return value of LibInput.addInput()", async () => {
+    it("serc20Deposit should return the return value of LibInput.addInput()", async () => {
         await mockERC20.mock.transferFrom.returns(true);
 
-        const erc20 = mockERC20.address;
         const sender = await signer.getAddress();
         const value = 15;
         const data = "0x00";
@@ -95,53 +95,53 @@ describe("ERC20Portal Facet", async () => {
 
         // Encode input using the default ABI
         const input = ethers.utils.defaultAbiCoder.encode(
-            ["address", "address", "uint", "bytes"],
-            [sender, erc20, value, data]
+            ["address", "uint", "bytes"],
+            [sender, value, data]
         );
 
         // Calculate the input hash
         const inputHash = getInputHash(input, sender, timestamp);
 
         expect(
-            await portalFacet.callStatic.erc20Deposit(erc20, value, data),
+            await portalFacet.callStatic.serc20Deposit(value, data),
             "callStatic to check return value"
         ).to.equal(inputHash);
     });
 
-    it("erc20Withdrawal should revert if not called by the Diamond itself", async () => {
+    it("serc20Withdrawal should revert if not called by the Diamond itself", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint", "uint"],
+            ["uint", "uint"],
             [
-                mockERC20.address,
                 await signer.getAddress(),
                 10,
             ]
         );
         await expect(
-            portalFacet.connect(signer2).erc20Withdrawal(data)
+            portalFacet.connect(signer2).serc20Withdrawal(data)
         ).to.be.revertedWith("only itself");
     });
 
-    it("erc20Withdrawal should emit ERC20Withdrawn and return true", async () => {
+    it("serc20Withdrawal should emit SERC20Withdrawn and return true", async () => {
         await mockERC20.mock.transfer.returns(true);
 
-        const erc20 = mockERC20.address;
         const sender = await signer.getAddress();
         const value = 42;
 
         let data = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint", "uint"],
-            [erc20, sender, value]
+            ["uint", "uint"],
+            [sender, value]
         );
 
         // callStatic check return value
         expect(
-            await debugFacet.callStatic._erc20Withdrawal(data)
+            await debugFacet.callStatic._serc20Withdrawal(data)
         ).to.equal(true);
 
         // check emitted event
-        await expect(debugFacet._erc20Withdrawal(data))
-            .to.emit(portalFacet, "ERC20Withdrawn")
-            .withArgs(erc20, sender, value);
+        await expect(debugFacet._serc20Withdrawal(data))
+            .to.emit(portalFacet, "SERC20Withdrawn")
+            .withArgs(sender, value);
     });
+
+
 });
