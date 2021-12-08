@@ -15,12 +15,15 @@ pragma solidity ^0.8.0;
 
 import {Result} from "../interfaces/IValidatorManager.sol";
 import {Phase} from "../interfaces/IRollups.sol";
+import {IEtherPortal} from "../interfaces/IEtherPortal.sol";
 
-import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibRollups} from "../libraries/LibRollups.sol";
+import {LibInput} from "../libraries/LibInput.sol";
+import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
 contract DebugFacet {
     using LibRollups for LibRollups.DiamondStorage;
+    using LibInput for LibInput.DiamondStorage;
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
 
     function _setInputAccumulationStart(uint32 _inputAccumulationStart) public {
@@ -97,6 +100,16 @@ contract DebugFacet {
         LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
         return vmDS.onNewEpoch();
+    }
+
+    function _getInputDriveSize() public view returns (uint256) {
+        LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
+        return inputDS.inputDriveSize;
+    }
+
+    function _etherWithdrawal(bytes calldata _data) public returns (bool) {
+        IEtherPortal etherPortal = IEtherPortal(address(this));
+        return etherPortal.etherWithdrawal(_data);
     }
 
     // @notice emitted on Claim received

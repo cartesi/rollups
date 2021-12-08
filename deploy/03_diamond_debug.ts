@@ -33,7 +33,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const INPUT_DURATION = 1 * DAY;
     const CHALLENGE_PERIOD = 7 * DAY;
-    const INPUT_LOG2_SIZE = 7;
+    const INPUT_LOG2_SIZE = 8;
 
     let signers = await ethers.getSigners();
 

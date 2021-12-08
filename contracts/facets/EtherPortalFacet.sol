@@ -44,8 +44,7 @@ contract EtherPortalFacet is IEtherPortal {
         override
         returns (bool)
     {
-        // The delegatecall opcode preserves msg.sender,
-        // msg.value and address(this)
+        // Delegate calls preserve msg.sender, msg.value and address(this)
         require(msg.sender == address(this), "only itself");
 
         (address payable receiver, uint256 value) =
