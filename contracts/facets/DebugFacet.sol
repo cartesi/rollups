@@ -16,6 +16,7 @@ pragma solidity ^0.8.0;
 import {Result} from "../interfaces/IValidatorManager.sol";
 import {Phase} from "../interfaces/IRollups.sol";
 import {IEtherPortal} from "../interfaces/IEtherPortal.sol";
+import {IERC20Portal} from "../interfaces/IERC20Portal.sol";
 
 import {LibRollups} from "../libraries/LibRollups.sol";
 import {LibInput} from "../libraries/LibInput.sol";
@@ -117,6 +118,11 @@ contract DebugFacet {
     function _onNewEpochOutput(bytes32 epochHash) public {
         LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
         outputDS.onNewEpoch(epochHash);
+    }
+
+    function _erc20Withdrawal(bytes calldata _data) public returns (bool) {
+        IERC20Portal erc20Portal = IERC20Portal(address(this));
+        return erc20Portal.erc20Withdrawal(_data);
     }
 
     // @notice emitted on Claim received

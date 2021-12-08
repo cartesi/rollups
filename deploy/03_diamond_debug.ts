@@ -79,6 +79,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             'ValidatorManagerFacet',
             'OutputFacet',
             'EtherPortalFacet',
+            'ERC20PortalFacet',
             'DebugFacet', // For debug pursposes only
         ],
         libraries: {
