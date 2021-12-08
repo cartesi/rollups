@@ -49,7 +49,7 @@ describe("Validator Manager Facet", async () => {
     }
 
     beforeEach(async () => {
-        await deployments.fixture();
+        await deployments.fixture(["DebugDiamond"]);
         [, signer] = await ethers.getSigners();
         const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
         rollupsFacet = RollupsFacet__factory.connect(diamondAddress, signer);
@@ -483,12 +483,12 @@ describe("Validator Manager Facet", async () => {
         // epoch ends without consensus
         // callStatic: check return value
         expect(
-            await debugFacet.callStatic._onNewEpoch(),
+            await debugFacet.callStatic._onNewEpochVM(),
             "onNewEpoch() should return current claim"
         ).to.equal(claim);
         // check emitted event
         await expect(
-            debugFacet._onNewEpoch(),
+            debugFacet._onNewEpochVM(),
             "new epoch should emit event NewEpoch with current claim"
         )
             .to.emit(debugFacet, "NewEpoch")

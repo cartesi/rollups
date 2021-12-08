@@ -45,7 +45,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
     }
 
     beforeEach(async () => {
-        await deployments.fixture();
+        await deployments.fixture(["RollupsImpl"]);
         [rollups, signer] = await ethers.getSigners();
         const vmccFactory = new ValidatorManagerClaimsCountedImpl__factory(
             rollups

@@ -50,7 +50,7 @@ describe("Input Facet", () => {
     }
 
     beforeEach(async () => {
-        await deployments.fixture();
+        await deployments.fixture(["DebugDiamond"]);
         [signer] = await ethers.getSigners();
 
         const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;

@@ -47,7 +47,7 @@ describe("Input Implementation", () => {
     const log2Size = 7;
 
     beforeEach(async () => {
-        await deployments.fixture();
+        await deployments.fixture(["RollupsImpl"]);
         [signer] = await ethers.getSigners();
 
         const Rollups = await deployments.getArtifact("Rollups");

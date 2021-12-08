@@ -55,7 +55,7 @@ describe("Rollups Implementation", () => {
     beforeEach(async () => {
         signers = await ethers.getSigners();
 
-        await deployments.fixture();
+        await deployments.fixture(["RollupsImpl"]);
         const dAddress = (await deployments.get("RollupsImpl")).address;
         rollupsImpl = RollupsImpl__factory.connect(
             dAddress,

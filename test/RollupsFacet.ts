@@ -58,7 +58,7 @@ describe("Rollups Facet", () => {
     beforeEach(async () => {
         signers = await ethers.getSigners();
 
-        await deployments.fixture();
+        await deployments.fixture(["Diamond"]);
         const dAddress = (await deployments.get("CartesiRollups")).address;
         rollupsFacet = RollupsFacet__factory.connect(
             dAddress,

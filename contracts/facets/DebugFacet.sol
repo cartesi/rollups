@@ -19,11 +19,13 @@ import {IEtherPortal} from "../interfaces/IEtherPortal.sol";
 
 import {LibRollups} from "../libraries/LibRollups.sol";
 import {LibInput} from "../libraries/LibInput.sol";
+import {LibOutput} from "../libraries/LibOutput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
 contract DebugFacet {
     using LibRollups for LibRollups.DiamondStorage;
     using LibInput for LibInput.DiamondStorage;
+    using LibOutput for LibOutput.DiamondStorage;
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
 
     function _setInputAccumulationStart(uint32 _inputAccumulationStart) public {
@@ -96,7 +98,7 @@ contract DebugFacet {
 
     // @notice called when a new epoch starts
     // @return current claim
-    function _onNewEpoch() public returns (bytes32) {
+    function _onNewEpochVM() public returns (bytes32) {
         LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
         return vmDS.onNewEpoch();
@@ -110,6 +112,12 @@ contract DebugFacet {
     function _etherWithdrawal(bytes calldata _data) public returns (bool) {
         IEtherPortal etherPortal = IEtherPortal(address(this));
         return etherPortal.etherWithdrawal(_data);
+    }
+
+    function _onNewEpochOutput(bytes32 epochHash) public {
+        LibOutput.DiamondStorage storage outputDS =
+            LibOutput.diamondStorage();
+        outputDS.onNewEpoch(epochHash);
     }
 
     // @notice emitted on Claim received

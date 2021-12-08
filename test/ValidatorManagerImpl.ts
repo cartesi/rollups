@@ -45,7 +45,7 @@ describe("Validator Manager Implementation", async () => {
     }
 
     beforeEach(async () => {
-        await deployments.fixture();
+        await deployments.fixture(["RollupsImpl"]);
         [rollups, signer] = await ethers.getSigners();
         const vmiFactory = new ValidatorManagerImpl__factory(rollups);
         var address: any;

@@ -92,4 +92,4 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 export default func;
-export const tags = ["Diamond"];
+func.tags = ["Diamond"];

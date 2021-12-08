@@ -25,7 +25,7 @@ describe("FeeManager Implementation", () => {
         // get signers
         signers = await ethers.getSigners();
 
-        await deployments.fixture();
+        await deployments.fixture(["RollupsImpl"]);
 
         // mock ValidatorManagerCCI
         const ValidatorManagerCCI = await deployments.getArtifact(

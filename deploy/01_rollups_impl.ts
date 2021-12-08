@@ -103,4 +103,4 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 export default func;
-export const tags = ["RollupsImpl", "PortalImpl"];
+func.tags = ["RollupsImpl"];

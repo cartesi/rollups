@@ -38,7 +38,7 @@ describe("EtherPortal Facet", async () => {
     var debugFacet: DebugFacet;
 
     beforeEach(async () => {
-        await deployments.fixture();
+        await deployments.fixture(["DebugDiamond"]);
         [signer, signer2] = await ethers.getSigners();
         const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
         portalFacet = EtherPortalFacet__factory.connect(diamondAddress, signer);
