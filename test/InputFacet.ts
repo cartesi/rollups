@@ -32,6 +32,7 @@ import { InputFacet__factory } from "../dist/src/types/factories/InputFacet__fac
 import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { getState } from "./getState";
+import { getInputHash } from "./getInputHash";
 
 use(solidity);
 
@@ -113,11 +114,11 @@ describe("Input Facet", () => {
     });
 
     it("addInput should add input to inbox", async () => {
-        var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+        var input = Buffer.from("a".repeat(64), "utf-8");
 
-        await inputFacet.addInput(input_64_bytes);
-        await inputFacet.addInput(input_64_bytes);
-        await inputFacet.addInput(input_64_bytes);
+        await inputFacet.addInput(input);
+        await inputFacet.addInput(input);
+        await inputFacet.addInput(input);
 
         expect(
             await inputFacet.getNumberOfInputs(),
@@ -127,7 +128,7 @@ describe("Input Facet", () => {
         // Enough time has passed...
         await debugFacet._setInputAccumulationStart(0);
 
-        await inputFacet.addInput(input_64_bytes);
+        await inputFacet.addInput(input);
 
         expect(
             await inputFacet.getNumberOfInputs(),
@@ -156,10 +157,10 @@ describe("Input Facet", () => {
     });
 
     it("emit event InputAdded", async () => {
-        var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+        var input = Buffer.from("a".repeat(64), "utf-8");
 
         await expect(
-            inputFacet.addInput(input_64_bytes),
+            inputFacet.addInput(input),
             "should emit event InputAdded"
         )
             .to.emit(inputFacet, "InputAdded");
@@ -167,7 +168,7 @@ describe("Input Facet", () => {
 //                0,
 //                await signer.getAddress(),
 //                (await ethers.provider.getBlock("latest")).timestamp + 1, // this is unstable
-//                "0x" + input_64_bytes.toString("hex")
+//                "0x" + input.toString("hex")
 //            );
 
         // test delegate
@@ -184,36 +185,25 @@ describe("Input Facet", () => {
     });
 
     it("test return value of addInput()", async () => {
-        var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+        const input = Buffer.from("a".repeat(64), "utf-8");
+        let block = await ethers.provider.getBlock("latest");
 
-        // calculate input hash: keccak256(abi.encode(keccak256(metadata), keccak256(_input)))
-        // metadata: abi.encode(msg.sender, block.timestamp)
-        let metadata = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint", "uint", "uint", "uint"],
-            [
-                await signer.getAddress(),
-                (await ethers.provider.getBlock("latest")).number,
-                (await ethers.provider.getBlock("latest")).timestamp,
-                0x0,
-                0x0
-            ]
-        );
-        let keccak_metadata = ethers.utils.keccak256(metadata);
-        let keccak_input = ethers.utils.keccak256(input_64_bytes);
-        let abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [keccak_metadata, keccak_input]
-        );
-        let input_hash = ethers.utils.keccak256(abi_metadata_input);
+        let inputHash = getInputHash(
+            input,
+            await signer.getAddress(),
+            block.number,
+            block.timestamp,
+            0x0,
+            0x0);
 
         expect(
-            await inputFacet.callStatic.addInput(input_64_bytes),
+            await inputFacet.callStatic.addInput(input),
             "use callStatic to view the return value"
-        ).to.equal(input_hash);
+        ).to.equal(inputHash);
 
         // test delegate
         if (enableDelegate) {
-            await inputFacet.addInput(input_64_bytes);
+            await inputFacet.addInput(input);
 
             let initialState = JSON.stringify({
                 input_address: inputFacet.address,
@@ -236,80 +226,62 @@ describe("Input Facet", () => {
             expect(
                 Buffer.from(state.inputs[0].payload, "utf-8").toString(),
                 "check the recorded payload"
-            ).to.equal(input_64_bytes.toString());
+            ).to.equal(input.toString());
         }
     });
 
     it("test getInput()", async () => {
-        var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+        var input = Buffer.from("a".repeat(64), "utf-8");
 
-        await inputFacet.addInput(input_64_bytes);
+        await inputFacet.addInput(input);
 
         // test for input box 0
         // calculate input hash again
-        let metadata = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint", "uint", "uint", "uint"],
-            [
-                await signer.getAddress(),
-                (await ethers.provider.getBlock("latest")).number,
-                (await ethers.provider.getBlock("latest")).timestamp,
-                0x0,
-                0x0
-            ]
-        );
+        let block = await ethers.provider.getBlock("latest");
 
-        let keccak_metadata = ethers.utils.keccak256(metadata);
-        let keccak_input = ethers.utils.keccak256(input_64_bytes);
-        let abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [keccak_metadata, keccak_input]
-        );
-        let input_hash = ethers.utils.keccak256(abi_metadata_input);
+        let inputHash = getInputHash(
+            input,
+            await signer.getAddress(),
+            block.number,
+            block.timestamp,
+            0x0,
+            0x0);
 
         // Enough time has passed...
         await debugFacet._setInputAccumulationStart(0);
 
         // switch input boxes before testing getInput()
-        await inputFacet.addInput(input_64_bytes);
+        await inputFacet.addInput(input);
         let block_epoch1 = await ethers.provider.getBlock("latest");
 
         expect(
             await inputFacet.getInput(0),
             "get the first value in input box 0"
-        ).to.equal(input_hash);
+        ).to.equal(inputHash);
 
         // test for input box 1
         // calculate input hash
-        metadata = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint", "uint", "uint", "uint"],
-            [
-                await signer.getAddress(),
-                (await ethers.provider.getBlock("latest")).number,
-                (await ethers.provider.getBlock("latest")).timestamp,
-                0x1,
-                0x0
-            ]
-        );
+        block = await ethers.provider.getBlock("latest");
 
-        keccak_metadata = ethers.utils.keccak256(metadata);
-        keccak_input = ethers.utils.keccak256(input_64_bytes);
-        abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [keccak_metadata, keccak_input]
-        );
-        input_hash = ethers.utils.keccak256(abi_metadata_input);
+        inputHash = getInputHash(
+            input,
+            await signer.getAddress(),
+            block.number,
+            block.timestamp,
+            0x1,
+            0x0);
 
         // We're accumulating inputs and enough time has passed...
         await debugFacet._setCurrentPhase(0);
         await debugFacet._setInputAccumulationStart(0);
 
         // switch input boxes before testing getInput()
-        await inputFacet.addInput(input_64_bytes);
+        await inputFacet.addInput(input);
 
         expect(
             await inputFacet.getInput(0),
             "get the first value in input box 1"
-        ).to.equal(input_hash);
+        ).to.equal(inputHash);
 
         // test delegate for epoch 1
         if (enableDelegate) {
@@ -330,19 +302,19 @@ describe("Input Facet", () => {
             expect(
                 Buffer.from(state.inputs[0].payload, "utf-8").toString(),
                 "check the recorded payload for epoch 1"
-            ).to.equal(input_64_bytes.toString());
+            ).to.equal(input.toString());
         }
     });
 
     it("getCurrentInbox should return correct inbox", async () => {
-        var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+        var input = Buffer.from("a".repeat(64), "utf-8");
 
         expect(
             await inputFacet.getCurrentInbox(),
             "current inbox should start as zero"
         ).to.equal(0);
 
-        await inputFacet.addInput(input_64_bytes);
+        await inputFacet.addInput(input);
 
         expect(
             await inputFacet.getCurrentInbox(),
@@ -352,14 +324,14 @@ describe("Input Facet", () => {
         // Enough time has passed...
         await debugFacet._setInputAccumulationStart(0);
 
-        await inputFacet.addInput(input_64_bytes);
+        await inputFacet.addInput(input);
 
         expect(
             await inputFacet.getCurrentInbox(),
             "inbox should change if notifyInput returns true"
         ).to.equal(1);
 
-        await inputFacet.addInput(input_64_bytes);
+        await inputFacet.addInput(input);
 
         expect(
             await inputFacet.getCurrentInbox(),

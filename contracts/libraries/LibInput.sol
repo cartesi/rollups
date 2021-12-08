@@ -90,26 +90,39 @@ library LibInput {
             "input len: (0,driveSize]"
         );
 
-        // keccak 64 bytes into 32 bytes
-        bytes32 keccakMetadata =
-            keccak256(abi.encode(msg.sender, block.timestamp));
-        bytes32 keccakInput = keccak256(input);
-
-        bytes32 inputHash = keccak256(abi.encode(keccakMetadata, keccakInput));
-
         // notifyInput returns true if that input
         // belongs to a new epoch
         if (rollupsDS.notifyInput()) {
             swapInputBox(ds);
         }
 
-        // add input to correct input box
-        ds.currentInputBox == 0
-            ? ds.inputBox0.push(inputHash)
-            : ds.inputBox1.push(inputHash);
+        // points to correct inputBox
+        bytes32[] storage inputBox = ds.currentInputBox == 0 ? ds.inputBox0 : ds.inputBox1;
+
+        // get current epoch index
+        uint256 currentEpoch = rollupsDS.getCurrentEpoch();
+
+        // keccak 64 bytes into 32 bytes
+        bytes32 keccakMetadata =
+            keccak256(
+                abi.encode(
+                    msg.sender,
+                    block.number,
+                    block.timestamp,
+                    currentEpoch, // epoch index
+                    inputBox.length // input index
+                )
+            );
+
+        bytes32 keccakInput = keccak256(input);
+
+        bytes32 inputHash = keccak256(abi.encode(keccakMetadata, keccakInput));
+
+        // add input to correct inbox
+        inputBox.push(inputHash);
 
         emit InputAdded(
-            rollupsDS.getCurrentEpoch(),
+            currentEpoch,
             msg.sender,
             block.timestamp,
             input

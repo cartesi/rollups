@@ -30,6 +30,7 @@ import { InputImpl__factory } from "../dist/src/types/factories/InputImpl__facto
 import { Signer } from "ethers";
 import { InputImpl } from "../dist/src/types/InputImpl";
 import { getState } from "./getState";
+import { getInputHash } from "./getInputHash";
 
 use(solidity);
 
@@ -148,14 +149,14 @@ describe("Input Implementation", () => {
     });
 
     it("addInput should add input to inbox", async () => {
-        var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+        var input = Buffer.from("a".repeat(64), "utf-8");
 
         await mockRollups.mock.notifyInput.returns(false);
         await mockRollups.mock.getCurrentEpoch.returns(0);
 
-        await inputImpl.addInput(input_64_bytes);
-        await inputImpl.addInput(input_64_bytes);
-        await inputImpl.addInput(input_64_bytes);
+        await inputImpl.addInput(input);
+        await inputImpl.addInput(input);
+        await inputImpl.addInput(input);
 
         expect(
             await inputImpl.getNumberOfInputs(),
@@ -165,7 +166,7 @@ describe("Input Implementation", () => {
         await mockRollups.mock.notifyInput.returns(true);
         await mockRollups.mock.getCurrentEpoch.returns(1);
 
-        await inputImpl.addInput(input_64_bytes);
+        await inputImpl.addInput(input);
 
         expect(
             await inputImpl.getNumberOfInputs(),
@@ -194,13 +195,13 @@ describe("Input Implementation", () => {
     });
 
     it("emit event InputAdded", async () => {
-        var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+        var input = Buffer.from("a".repeat(64), "utf-8");
 
         await mockRollups.mock.notifyInput.returns(false);
         await mockRollups.mock.getCurrentEpoch.returns(0);
 
         await expect(
-            inputImpl.addInput(input_64_bytes),
+            inputImpl.addInput(input),
             "should emit event InputAdded"
         )
             .to.emit(inputImpl, "InputAdded")
@@ -208,7 +209,7 @@ describe("Input Implementation", () => {
                 0,
                 await signer.getAddress(),
                 (await ethers.provider.getBlock("latest")).timestamp + 1,
-                "0x" + input_64_bytes.toString("hex")
+                "0x" + input.toString("hex")
             );
 
         // test delegate
@@ -225,35 +226,29 @@ describe("Input Implementation", () => {
     });
 
     it("test return value of addInput()", async () => {
-        var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+        var input = Buffer.from("a".repeat(64), "utf-8");
+
         await mockRollups.mock.notifyInput.returns(false);
         await mockRollups.mock.getCurrentEpoch.returns(0);
 
-        // calculate input hash: keccak256(abi.encode(keccak256(metadata), keccak256(_input)))
-        // metadata: abi.encode(msg.sender, block.timestamp)
-        let metadata = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [
-                await signer.getAddress(),
-                (await ethers.provider.getBlock("latest")).timestamp,
-            ]
-        );
-        let keccak_metadata = ethers.utils.keccak256(metadata);
-        let keccak_input = ethers.utils.keccak256(input_64_bytes);
-        let abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [keccak_metadata, keccak_input]
-        );
-        let input_hash = ethers.utils.keccak256(abi_metadata_input);
+        let block = await ethers.provider.getBlock("latest");
+
+        let inputHash = getInputHash(
+            input,
+            await signer.getAddress(),
+            block.number,
+            block.timestamp,
+            0x0,
+            0x0);
 
         expect(
-            await inputImpl.callStatic.addInput(input_64_bytes),
+            await inputImpl.callStatic.addInput(input),
             "use callStatic to view the return value"
-        ).to.equal(input_hash);
+        ).to.equal(inputHash);
 
         // test delegate
         if (enableDelegate) {
-            await inputImpl.addInput(input_64_bytes);
+            await inputImpl.addInput(input);
 
             let initialState = JSON.stringify({
                 input_address: inputImpl.address,
@@ -276,70 +271,60 @@ describe("Input Implementation", () => {
             expect(
                 Buffer.from(state.inputs[0].payload, "utf-8").toString(),
                 "check the recorded payload"
-            ).to.equal(input_64_bytes.toString());
+            ).to.equal(input.toString());
         }
     });
 
     it("test getInput()", async () => {
-        var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+        var input = Buffer.from("a".repeat(64), "utf-8");
         await mockRollups.mock.notifyInput.returns(false);
         await mockRollups.mock.getCurrentEpoch.returns(0);
 
-        await inputImpl.addInput(input_64_bytes);
+        await inputImpl.addInput(input);
 
         // test for input box 0
         // calculate input hash again
-        let metadata = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [
-                await signer.getAddress(),
-                (await ethers.provider.getBlock("latest")).timestamp,
-            ]
-        );
-        let keccak_metadata = ethers.utils.keccak256(metadata);
-        let keccak_input = ethers.utils.keccak256(input_64_bytes);
-        let abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [keccak_metadata, keccak_input]
-        );
-        let input_hash = ethers.utils.keccak256(abi_metadata_input);
+        let block = await ethers.provider.getBlock("latest");
+
+        let inputHash = getInputHash(
+            input,
+            await signer.getAddress(),
+            block.number,
+            block.timestamp,
+            0x0,
+            0x0);
 
         // switch input boxes before testing getInput()
         await mockRollups.mock.notifyInput.returns(true);
         await mockRollups.mock.getCurrentEpoch.returns(1);
-        await inputImpl.addInput(input_64_bytes);
+        await inputImpl.addInput(input);
         let block_epoch1 = await ethers.provider.getBlock("latest");
 
         expect(
             await inputImpl.getInput(0),
             "get the first value in input box 0"
-        ).to.equal(input_hash);
+        ).to.equal(inputHash);
 
         // test for input box 1
         // calculate input hash
-        metadata = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [
-                await signer.getAddress(),
-                (await ethers.provider.getBlock("latest")).timestamp,
-            ]
-        );
-        keccak_metadata = ethers.utils.keccak256(metadata);
-        keccak_input = ethers.utils.keccak256(input_64_bytes);
-        abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [keccak_metadata, keccak_input]
-        );
-        input_hash = ethers.utils.keccak256(abi_metadata_input);
+        block = await ethers.provider.getBlock("latest");
+
+        inputHash = getInputHash(
+            input,
+            await signer.getAddress(),
+            block.number,
+            block.timestamp,
+            0x1,
+            0x0);
 
         // switch input boxes before testing getInput()
         await mockRollups.mock.getCurrentEpoch.returns(2);
-        await inputImpl.addInput(input_64_bytes);
+        await inputImpl.addInput(input);
 
         expect(
             await inputImpl.getInput(0),
             "get the first value in input box 1"
-        ).to.equal(input_hash);
+        ).to.equal(inputHash);
 
         // test delegate for epoch 1
         if (enableDelegate) {
@@ -360,12 +345,12 @@ describe("Input Implementation", () => {
             expect(
                 Buffer.from(state.inputs[0].payload, "utf-8").toString(),
                 "check the recorded payload for epoch 1"
-            ).to.equal(input_64_bytes.toString());
+            ).to.equal(input.toString());
         }
     });
 
     it("getCurrentInbox should return correct inbox", async () => {
-        var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+        var input = Buffer.from("a".repeat(64), "utf-8");
 
         await mockRollups.mock.notifyInput.returns(false);
         await mockRollups.mock.getCurrentEpoch.returns(0);
@@ -375,7 +360,7 @@ describe("Input Implementation", () => {
             "current inbox should start as zero"
         ).to.equal(0);
 
-        await inputImpl.addInput(input_64_bytes);
+        await inputImpl.addInput(input);
 
         expect(
             await inputImpl.getCurrentInbox(),
@@ -384,7 +369,7 @@ describe("Input Implementation", () => {
 
         await mockRollups.mock.notifyInput.returns(true);
         await mockRollups.mock.getCurrentEpoch.returns(1);
-        await inputImpl.addInput(input_64_bytes);
+        await inputImpl.addInput(input);
 
         expect(
             await inputImpl.getCurrentInbox(),
@@ -393,7 +378,7 @@ describe("Input Implementation", () => {
 
         mockRollups.mock.notifyInput.returns(false);
         await mockRollups.mock.getCurrentEpoch.returns(1);
-        await inputImpl.addInput(input_64_bytes);
+        await inputImpl.addInput(input);
 
         expect(
             await inputImpl.getCurrentInbox(),
@@ -446,11 +431,11 @@ describe("Input Implementation", () => {
                 "initial box 1 should be empty"
             ).to.equal(0);
 
-            var input_64_bytes = Buffer.from("a".repeat(64), "utf-8");
+            var input = Buffer.from("a".repeat(64), "utf-8");
             await mockRollups.mock.notifyInput.returns(true);
             await mockRollups.mock.getCurrentEpoch.returns(0);
             // add input to box 1
-            await inputImpl.addInput(input_64_bytes);
+            await inputImpl.addInput(input);
 
             // currentInputBox: 1
             expect(
@@ -460,10 +445,10 @@ describe("Input Implementation", () => {
 
             await mockRollups.mock.getCurrentEpoch.returns(1);
             // add 3 inputs to box 0
-            await inputImpl.addInput(input_64_bytes);
+            await inputImpl.addInput(input);
             await mockRollups.mock.notifyInput.returns(false);
-            await inputImpl.addInput(input_64_bytes);
-            await inputImpl.addInput(input_64_bytes);
+            await inputImpl.addInput(input);
+            await inputImpl.addInput(input);
 
             // currentInputBox: 0
             expect(

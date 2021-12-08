@@ -28,6 +28,7 @@ import { EtherPortalFacet__factory } from "../dist/src/types/factories/EtherPort
 import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { keccak256 } from "ethers/lib/utils";
+import { getInputHash } from "./getInputHash";
 
 use(solidity);
 
@@ -103,7 +104,6 @@ describe("EtherPortal Facet", async () => {
         let sender = await signer.getAddress();
         let value = ethers.utils.parseEther("10");
         let data = "0xdeadbeef";
-        let timestamp = (await ethers.provider.getBlock("latest")).timestamp;
 
         // ABI encode the input
         let input = ethers.utils.defaultAbiCoder.encode(
@@ -115,28 +115,15 @@ describe("EtherPortal Facet", async () => {
             ]
         );
 
-        // calculate input hash: keccak256(abi.encode(keccak256(metadata), keccak256(_input)))
-        // metadata: abi.encode(msg.sender, block.timestamp)
-        let metadata = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [
-                sender,    // msg.sender
-                timestamp, // block.timestamp
-            ]
-        );
-        let keccak_metadata = ethers.utils.keccak256(metadata);
-        let keccak_input = ethers.utils.keccak256(input);
-        let abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
-            [keccak_metadata, keccak_input]
-        );
-        let input_hash = ethers.utils.keccak256(abi_metadata_input);
+        // Calculate the input hash
+        let block = await ethers.provider.getBlock("latest");
+        let inputHash = getInputHash(input, sender, block.number, block.timestamp, 0x0, 0x0);
 
         // check if input hashes are identical
         expect(
             await portalFacet.callStatic.etherDeposit(data, {value: value}),
             "callStatic to check return value"
-        ).to.equal(input_hash);
+        ).to.equal(inputHash);
     });
 
 });
