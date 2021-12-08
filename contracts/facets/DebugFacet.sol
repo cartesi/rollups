@@ -115,8 +115,7 @@ contract DebugFacet {
     }
 
     function _onNewEpochOutput(bytes32 epochHash) public {
-        LibOutput.DiamondStorage storage outputDS =
-            LibOutput.diamondStorage();
+        LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
         outputDS.onNewEpoch(epochHash);
     }
 
