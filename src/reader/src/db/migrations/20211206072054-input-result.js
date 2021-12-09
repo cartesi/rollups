@@ -2,11 +2,13 @@
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
 		await queryInterface.createTable("InputResults", {
+			/*
 			id: {
 				allowNull: false,
 				primaryKey: true,
 				type: Sequelize.UUID
 			},
+			*/
 			voucher_hashes_in_machine: {
 				type: Sequelize.JSON,
 				allowNull: false
@@ -23,8 +25,17 @@ module.exports = {
 			// 	type: Sequelize.ARRAY(Sequelize.STRING),
 			// 	allowNull: false
 			// },
-			processed_input_id: {
-				type: Sequelize.UUID
+			session_id: {
+				type: Sequelize.STRING,
+				allowNull: false,
+			},
+			epoch_index: {
+				type: Sequelize.STRING,
+				allowNull: false
+			},
+			input_index: {
+				type: Sequelize.STRING,
+				allowNull: false
 			},
 			createdAt: {
 				allowNull: false,

@@ -2,37 +2,38 @@
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
 		await queryInterface.createTable("ProcessedInputs", {
-			id: {
-				type: Sequelize.UUID,
-				allowNull: false,
-				primaryKey: true
-			},
 			input_index: {
-				type: Sequelize.INTEGER,
+				type: Sequelize.STRING,
 				allowNull: false
 			},
 			most_recent_machine_hash: {
 				type: Sequelize.JSON,
-				allowNull: false
 			},
 			voucher_hashes_in_epoch: {
 				type: Sequelize.JSON,
-				allowNull: false
 			},
 			notice_hashes_in_epoch: {
 				type: Sequelize.JSON,
-				allowNull: false
 			},
 			// reports: {
 			// 	type: Sequelize.ARRAY(Sequelize.STRING),
 			// 	allowNull: false
 			// },
-			// result: Sequelize.UUID,
+			result: { 
+				type: Sequelize.UUID,
+			},
 			skip_reason: {
+				type: Sequelize.STRING,
+			},
+			//epoch_status_id: Sequelize.UUID,
+			session_id: {
+				type: Sequelize.STRING,
+				allowNull: false,
+			},
+			epoch_index: {
 				type: Sequelize.STRING,
 				allowNull: false
 			},
-			epoch_status_id: Sequelize.UUID,
 			createdAt: {
 				type: Sequelize.DATE
 			},

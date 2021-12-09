@@ -9,7 +9,6 @@ module.exports = {
 			},
 			keccak: {
 				type: Sequelize.STRING,
-				allowNull: false
 			},
 			address: {
 				type: Sequelize.STRING,
@@ -20,11 +19,19 @@ module.exports = {
 				allowNull: false
 			},
 			keccak_in_voucher_hashes: {
+				type: Sequelize.JSON,
+			},
+			session_id: {
+				type: Sequelize.STRING,
+				allowNull: false,
+			},
+			epoch_index: {
 				type: Sequelize.STRING,
 				allowNull: false
 			},
-			input_result_id: {
-				type: Sequelize.UUID
+			input_index: {
+				type: Sequelize.STRING,
+				allowNull: false
 			},
 			createdAt: {
 				allowNull: false,

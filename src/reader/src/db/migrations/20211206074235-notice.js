@@ -9,18 +9,25 @@ module.exports = {
 			},
 			keccak: {
 				type: Sequelize.STRING,
-				allowNull: false
 			},
 			payload: {
 				type: Sequelize.STRING,
 				allowNull: false
 			},
 			keccak_in_notice_hashes: {
+				type: Sequelize.JSON,
+			},
+			session_id: {
+				type: Sequelize.STRING,
+				allowNull: false,
+			},
+			epoch_index: {
 				type: Sequelize.STRING,
 				allowNull: false
 			},
-			input_result_id: {
-				type: Sequelize.UUID
+			input_index: {
+				type: Sequelize.STRING,
+				allowNull: false
 			},
 			createdAt: {
 				allowNull: false,

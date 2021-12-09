@@ -8,7 +8,7 @@ module.exports = {
 				primaryKey: true
 			},
 			epoch_index: {
-				type: Sequelize.INTEGER,
+				type: Sequelize.STRING,
 				allowNull: false
 			},
 			state: {
@@ -28,7 +28,8 @@ module.exports = {
 				allowNull: false
 			},
 			pending_input_count: {
-				type: Sequelize.INTEGER,
+				//type: Sequelize.INTEGER,
+				type: Sequelize.STRING,
 				allowNull: false
 			},
 			taint_status: {
