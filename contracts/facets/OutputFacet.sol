@@ -13,8 +13,8 @@
 /// @title Output facet
 pragma solidity ^0.8.0;
 
-import "@cartesi/util/contracts/Bitmask.sol";
-import "@cartesi/util/contracts/Merkle.sol";
+import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
+import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 
 import {IOutput, OutputValidityProof} from "../interfaces/IOutput.sol";
 

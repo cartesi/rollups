@@ -14,6 +14,7 @@
 pragma solidity ^0.8.0;
 
 import {IValidatorManager} from "../interfaces/IValidatorManager.sol";
+
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
 contract ValidatorManagerFacet is IValidatorManager {

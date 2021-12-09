@@ -91,7 +91,6 @@ describe("ERC20Portal Facet", async () => {
         const sender = await signer.getAddress();
         const value = 15;
         const data = "0x00";
-        const timestamp = (await ethers.provider.getBlock("latest")).timestamp;
 
         // Encode input using the default ABI
         const input = ethers.utils.defaultAbiCoder.encode(
@@ -100,7 +99,8 @@ describe("ERC20Portal Facet", async () => {
         );
 
         // Calculate the input hash
-        const inputHash = getInputHash(input, sender, timestamp);
+        const block = await ethers.provider.getBlock("latest");
+        const inputHash = getInputHash(input, sender, block.number, block.timestamp, 0x0, 0x0);
 
         expect(
             await portalFacet.callStatic.erc20Deposit(erc20, value, data),

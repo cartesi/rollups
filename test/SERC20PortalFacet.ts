@@ -36,7 +36,7 @@ import { getInputHash } from "./getInputHash";
 
 use(solidity);
 
-describe("SERC20Portal Implementation", async () => {
+describe("SERC20Portal Facet", async () => {
     let signer: Signer;
     let signer2: Signer;
     var portalFacet: SERC20PortalFacet;
@@ -91,7 +91,6 @@ describe("SERC20Portal Implementation", async () => {
         const sender = await signer.getAddress();
         const value = 15;
         const data = "0x00";
-        const timestamp = (await ethers.provider.getBlock("latest")).timestamp;
 
         // Encode input using the default ABI
         const input = ethers.utils.defaultAbiCoder.encode(
@@ -100,7 +99,8 @@ describe("SERC20Portal Implementation", async () => {
         );
 
         // Calculate the input hash
-        const inputHash = getInputHash(input, sender, timestamp);
+        const block = await ethers.provider.getBlock("latest");
+        const inputHash = getInputHash(input, sender, block.number, block.timestamp, 0x0, 0x0);
 
         expect(
             await portalFacet.callStatic.serc20Deposit(value, data),

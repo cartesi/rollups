@@ -97,7 +97,8 @@ library LibInput {
         }
 
         // points to correct inputBox
-        bytes32[] storage inputBox = ds.currentInputBox == 0 ? ds.inputBox0 : ds.inputBox1;
+        bytes32[] storage inputBox =
+            ds.currentInputBox == 0 ? ds.inputBox0 : ds.inputBox1;
 
         // get current epoch index
         uint256 currentEpoch = rollupsDS.getCurrentEpoch();
@@ -121,12 +122,7 @@ library LibInput {
         // add input to correct inbox
         inputBox.push(inputHash);
 
-        emit InputAdded(
-            currentEpoch,
-            msg.sender,
-            block.timestamp,
-            input
-        );
+        emit InputAdded(currentEpoch, msg.sender, block.timestamp, input);
 
         return inputHash;
     }

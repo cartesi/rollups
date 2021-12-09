@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title Rollups initialization interface
-pragma solidity ^0.8.0;
+pragma solidity >=0.7.0;
 
 interface IRollupsInit {
     // @notice initialize the Rollups contract

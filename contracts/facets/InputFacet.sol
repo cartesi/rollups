@@ -10,7 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Rollups initialization facet
+/// @title Input facet
 pragma solidity ^0.8.0;
 
 import {IInput} from "../interfaces/IInput.sol";
