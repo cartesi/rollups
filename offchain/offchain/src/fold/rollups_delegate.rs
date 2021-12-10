@@ -30,19 +30,19 @@ use crate::fold::types::FeeManagerState;
 /// Rollups StateActor Delegate, which implements `sync` and `fold`.
 pub struct RollupsFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
     epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
-    voucher_fold: Arc<StateFold<VoucherFoldDelegate, DA>>,
+    output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
     fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate, DA>>,
 }
 
 impl<DA: DelegateAccess + Send + Sync + 'static> RollupsFoldDelegate<DA> {
     pub fn new(
         epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
-        voucher_fold: Arc<StateFold<VoucherFoldDelegate, DA>>,
+        output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
         fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate, DA>>,
     ) -> Self {
         Self {
             epoch_fold,
-            voucher_fold,
+            output_fold,
             fee_manager_fold,
         }
     }
@@ -161,7 +161,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             constants,
             block,
             &epoch_number,
-            voucher_state,
+            output_state,
             fee_manager_state,
         ))
     }
@@ -173,7 +173,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         _access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         let constants = previous_state.constants.clone();
-        let voucher_address = constants.voucher_contract_address;
+        let output_address = constants.output_contract_address;
         let fee_manager_address = constants.fee_manager_contract_address;
 
         // get raw state from EpochFoldDelegate
@@ -224,7 +224,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             constants,
             block,
             &previous_state.initial_epoch,
-            voucher_state,
+            output_state,
             fee_manager_state
         ))
     }
@@ -245,7 +245,7 @@ fn convert_raw_to_logical(
     constants: ImmutableState,
     block: &Block,
     initial_epoch: &U256,
-    voucher_state: VoucherState,
+    output_state: OutputState,
     fee_manager_state: FeeManagerState,
 ) -> RollupsState {
     // If the raw state is InputAccumulation but it has expired, then the raw
@@ -364,7 +364,7 @@ fn convert_raw_to_logical(
         current_phase: phase_state,
         finalized_epochs: contract_state.finalized_epochs,
         current_epoch,
-        voucher_state,
+        output_state,
         fee_manager_state,
     }
 }

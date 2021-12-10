@@ -14,7 +14,7 @@
 pragma solidity ^0.8.0;
 
 import "./InputImpl.sol";
-import "./VoucherImpl.sol";
+import "./OutputImpl.sol";
 import "./Rollups.sol";
 import "./DisputeManagerImpl.sol";
 import "./ValidatorManagerClaimsCountedImpl.sol";
@@ -42,7 +42,7 @@ contract RollupsImpl is Rollups {
     ///
 
     InputImpl public input; // contract responsible for inputs
-    VoucherImpl public voucher; // contract responsible for vouchers
+    OutputImpl public output; // contract responsible for outputs
     ValidatorManagerClaimsCountedImpl public validatorManager; // contract responsible for validators
     DisputeManagerImpl public disputeManager; // contract responsible for dispute resolution
     FeeManagerImpl public feeManager; // contract responsible for fee redemption
@@ -88,10 +88,7 @@ contract RollupsImpl is Rollups {
         uint256 _feePerClaim
     ) {
         input = new InputImpl(address(this), _inputLog2Size);
-        voucher = new VoucherImpl(
-            address(this),
-            _log2VoucherMetadataArrayDriveSize
-        );
+        output = new OutputImpl(address(this));
         validatorManager = new ValidatorManagerClaimsCountedImpl(
             address(this),
             _validators
@@ -163,7 +160,7 @@ contract RollupsImpl is Rollups {
         // so if the epoch is finalized in this claim (consensus)
         // the number of final epochs doesnt gets contaminated
         emit Claim(
-            voucher.getNumberOfFinalizedEpochs(),
+            output.getNumberOfFinalizedEpochs(),
             msg.sender,
             _epochHash
         );

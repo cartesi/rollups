@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contracts = vec![
         ("RollupsImpl", "RollupsImpl", "rollups_contract.rs"),
         ("InputImpl", "InputImpl", "input_contract.rs"),
-        ("VoucherImpl", "VoucherImpl", "voucher_contract.rs"),
+        ("OutputImpl", "OutputImpl", "output_contract.rs"),
         ("FeeManagerImpl", "FeeManagerImpl", "fee_manager_contract.rs"),
     ];
 

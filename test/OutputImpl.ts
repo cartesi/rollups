@@ -355,7 +355,11 @@ describe("Output Implementation", () => {
     /// ***test function isValidVoucherProof()///
     it("testing function isValidVoucherProof()", async () => {
         expect(
-            await outputImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
+            await outputImpl.isValidVoucherProof(
+                encodedVoucher,
+                epochHashForVoucher,
+                v
+            )
         ).to.equal(true);
     });
 
@@ -373,7 +377,11 @@ describe("Output Implementation", () => {
         let tempInputIndex = v.inputIndex;
         v.inputIndex = 10;
         await expect(
-            outputImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
+            outputImpl.isValidVoucherProof(
+                encodedVoucher,
+                epochHashForVoucher,
+                v
+            )
         ).to.be.revertedWith("epochOutputDriveHash incorrect");
         // restore v
         v.inputIndex = tempInputIndex;
@@ -383,7 +391,11 @@ describe("Output Implementation", () => {
         let tempVoucherIndex = v.outputIndex;
         v.outputIndex = 10;
         await expect(
-            outputImpl.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
+            outputImpl.isValidVoucherProof(
+                encodedVoucher,
+                epochHashForVoucher,
+                v
+            )
         ).to.be.revertedWith("outputMetadataArrayDriveHash incorrect");
         // restore v
         v.outputIndex = tempVoucherIndex;
@@ -392,7 +404,11 @@ describe("Output Implementation", () => {
     /// ***test function isValidNoticeProof()///
     it("testing function isValidNoticeProof()", async () => {
         expect(
-            await outputImpl.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
+            await outputImpl.isValidNoticeProof(
+                encodedNotice,
+                epochHashForNotice,
+                n
+            )
         ).to.equal(true);
     });
 
@@ -426,7 +442,6 @@ describe("Output Implementation", () => {
         n.outputIndex = tempNoticeIndex;
     });
 
-
     /// ***test function getBitMaskPosition()*** ///
     it("testing function getBitMaskPosition()", async () => {
         const _voucher = 123;
@@ -454,9 +469,7 @@ describe("Output Implementation", () => {
     if (permissionModifiersOn) {
         it("only Rollups can call onNewEpoch()", async () => {
             await expect(
-                outputImpl.onNewEpoch(
-                    ethers.utils.formatBytes32String("hello")
-                )
+                outputImpl.onNewEpoch(ethers.utils.formatBytes32String("hello"))
             ).to.be.revertedWith("Only rollups");
         });
     }

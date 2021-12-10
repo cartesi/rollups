@@ -18,7 +18,7 @@ use ethers::prelude::EthEvent;
 use ethers::types::{Address, U256};
 
 use im::HashMap;
-use crate::contracts::voucher_contract::VoucherExecutedFilter;
+use crate::contracts::output_contract::VoucherExecutedFilter;
 
 /// Fee Manager Delegate
 #[derive(Default)]

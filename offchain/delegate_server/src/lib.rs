@@ -1,11 +1,11 @@
 pub mod input_server;
-pub mod voucher_server;
+pub mod output_server;
 pub mod fee_manager_server;
 pub mod rollups_server;
 
 use offchain::fold::setup::{
-    create_rollups_state_fold, create_input, create_voucher, create_fee_manager,
-    RollupsStateFold, InputStateFold, VoucherStateFold, FeeManagerStateFold,
+    create_rollups_state_fold, create_input, create_output, create_fee_manager,
+    RollupsStateFold, InputStateFold, OutputStateFold, FeeManagerStateFold,
 };
 use offchain::logic::instantiate_state_fold::{create_access, RollupsAccess};
 

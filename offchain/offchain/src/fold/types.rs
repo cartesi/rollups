@@ -330,7 +330,7 @@ pub struct RollupsState {
 
     pub current_phase: PhaseState,
 
-    pub voucher_state: VoucherState,
+    pub output_state: OutputState,
 
     pub fee_manager_state: FeeManagerState,
 }
