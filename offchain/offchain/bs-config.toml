@@ -7,4 +7,4 @@ max_delay = 64
 max_retries = 5
 
 # timeout for block subscriber in seconds
-subscriber_timeout = 120
+timeout = 120
