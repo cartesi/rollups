@@ -52,6 +52,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     let (tx_manager, sender) = instantiate_tx_manager(
         config.logic_config.provider_http_endpoint.clone(),
         config.logic_config.mnemonic.clone(),
+        config.logic_config.chain_id,
         Arc::clone(&block_subscriber),
         &config.tm_config,
     )

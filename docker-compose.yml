@@ -20,6 +20,7 @@ services:
       # TODO: currently hardhat's default mnemonic
       # this should become a secret
       - MNEMONIC=test test test test test test test test test test test junk
+      - CHAIN_ID=31337
       - RUST_LOG=info
     volumes:
       - blockchain_data:/opt/cartesi/share/blockchain
@@ -38,7 +39,7 @@ services:
       - ./offchain/offchain:/opt/cartesi/share/config/
 
   echo_machine:
-    image: cartesicorp/rollup-echo-server:0.1.0-test2a
+    image: cartesicorp/rollup-echo-server:0.1.0-test8
     restart: always
 
 volumes:

@@ -18,6 +18,9 @@ pub struct LogicEnvCLIConfig {
     /// Signer Mnemonic
     #[structopt(long, env = "MNEMONIC")]
     pub mnemonic: Option<String>,
+    /// Chain ID
+    #[structopt(long, env)]
+    pub chain_id: Option<u64>,
     /// Address of deployed rollups contract
     #[structopt(long, env)]
     pub rollups_contract_address: Option<String>,
@@ -56,6 +59,7 @@ pub struct LogicEnvCLIConfig {
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct LogicFileConfig {
     pub mnemonic: Option<String>,
+    pub chain_id: Option<u64>,
     pub rollups_contract_address: Option<String>,
     pub provider_http_endpoint: Option<String>,
     pub ws_endpoint: Option<String>,
@@ -77,6 +81,7 @@ pub struct FileConfig {
 #[derive(Clone, Debug)]
 pub struct LogicConfig {
     pub mnemonic: String,
+    pub chain_id: u64,
     pub rollups_contract_address: Address,
     pub initial_epoch: U256,
 
@@ -123,6 +128,14 @@ impl LogicConfig {
             .ok_or(snafu::NoneError)
             .context(config_error::FileError {
                 err: "Must specify mnemonic",
+            })?;
+
+        let chain_id = env_cli_config
+            .chain_id
+            .or(file_config.chain_id)
+            .ok_or(snafu::NoneError)
+            .context(config_error::FileError {
+                err: "Must specify chain_id",
             })?;
 
         let rollups_contract_address: Address = Address::from_str(
@@ -195,6 +208,7 @@ impl LogicConfig {
 
         Ok(LogicConfig {
             mnemonic,
+            chain_id,
             rollups_contract_address,
             initial_epoch,
 

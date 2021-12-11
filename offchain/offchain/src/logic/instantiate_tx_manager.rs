@@ -28,11 +28,12 @@ pub type RollupsTxManager = Arc<
 pub async fn instantiate_tx_manager(
     http_endpoint: String,
     mnemonic: String,
+    chain_id: u64,
     block_subscriber: RollupsBlockSubscriber,
     config: &TMConfig,
 ) -> Result<(RollupsTxManager, Address)> {
     let (middleware_factory, sender) =
-        create_signer_factory(http_endpoint, mnemonic).await?;
+        create_signer_factory(http_endpoint, mnemonic, chain_id).await?;
     let factory = Factory::new(
         Arc::clone(&middleware_factory),
         config.transaction_timeout,
@@ -51,13 +52,15 @@ pub async fn instantiate_tx_manager(
 async fn create_signer_factory(
     http_endpoint: String,
     mnemonic: String,
+    chain_id: u64,
 ) -> Result<(Arc<RollupsSignerFactory>, Address)> {
     let http_factory = create_http_factory(http_endpoint)?;
 
     let wallet = MnemonicBuilder::<English>::default()
         .phrase(mnemonic.as_str())
         .build()
-        .context(MnemonicError)?;
+        .context(MnemonicError)?
+        .with_chain_id(chain_id);
 
     let address = wallet.address();
 
