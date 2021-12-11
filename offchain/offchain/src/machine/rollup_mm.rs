@@ -54,7 +54,7 @@ pub struct Config {
     endpoint: String,
     session_id: String,
 
-    storage_directory: String,
+    storage_directory_prefix: String,
     machine: MachineRequest,
     active_epoch_index: u64,
     server_deadline: DeadlineConfig,
@@ -101,7 +101,7 @@ impl Config {
         Self {
             endpoint,
             session_id,
-            storage_directory: "default_storage_directory".to_owned(), // TODO
+            storage_directory_prefix: "default_storage_directory".to_owned(), // TODO
             active_epoch_index: 0,
             machine,
             server_cycles,
@@ -113,7 +113,7 @@ impl Config {
 #[derive(Debug)]
 pub struct MachineManager {
     session_id: String,
-    storage_directory: String,
+    storage_directory_prefix: String,
     client: Mutex<RollupMachineManagerClient<Channel>>,
 }
 
@@ -151,7 +151,7 @@ impl MachineManager {
 
         Ok(Self {
             session_id: config.session_id,
-            storage_directory: config.storage_directory,
+            storage_directory_prefix: config.storage_directory_prefix,
             client: Mutex::new(client),
         })
     }
@@ -239,7 +239,11 @@ impl MachineInterface for MachineManager {
             session_id: self.session_id.clone(),
             active_epoch_index: epoch_number.as_u64(),
             processed_input_count: input_count.as_u64(),
-            storage_directory: self.storage_directory.clone(),
+            storage_directory: format!(
+                "{}_{}",
+                self.storage_directory_prefix,
+                epoch_number.as_u64()
+            ),
         });
 
         let _finish_response = client
