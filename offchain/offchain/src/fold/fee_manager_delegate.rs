@@ -214,7 +214,8 @@ impl StateFoldDelegate for FeeManagerFoldDelegate {
         for ev in erc20_events.iter() {
             if ev.to == erc20_address {
                 income = income + ev.value;
-            } else if ev.from == erc20_address {
+            }
+            if ev.from == erc20_address {
                 expense = expense + ev.value;
             }
         }
