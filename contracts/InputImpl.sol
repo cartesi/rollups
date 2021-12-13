@@ -50,23 +50,33 @@ contract InputImpl is Input {
             "input len: (0,driveSize]"
         );
 
-        // keccak 64 bytes into 32 bytes
-        bytes32 keccakMetadata =
-            keccak256(abi.encode(msg.sender, block.timestamp));
-        bytes32 keccakInput = keccak256(_input);
-
-        bytes32 inputHash = keccak256(abi.encode(keccakMetadata, keccakInput));
-
         // notifyInput returns true if that input
         // belongs to a new epoch
         if (rollups.notifyInput()) {
             swapInputBox();
         }
 
+        // points to correct inputBox
+        bytes32[] storage inputBox = currentInputBox == 0 ? inputBox0 : inputBox1;
+
+        // keccak 64 bytes into 32 bytes
+        bytes32 keccakMetadata =
+            keccak256(
+                abi.encode(
+                    msg.sender,
+                    block.number,
+                    block.timestamp,
+                    rollups.getCurrentEpoch(), // epoch index
+                    inputBox.length // input index
+                )
+            );
+
+        bytes32 keccakInput = keccak256(_input);
+
+        bytes32 inputHash = keccak256(abi.encode(keccakMetadata, keccakInput));
+
         // add input to correct inbox
-        currentInputBox == 0
-            ? inputBox0.push(inputHash)
-            : inputBox1.push(inputHash);
+        inputBox.push(inputHash);
 
         emit InputAdded(
             rollups.getCurrentEpoch(),
