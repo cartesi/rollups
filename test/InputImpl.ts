@@ -232,10 +232,13 @@ describe("Input Implementation", () => {
         // calculate input hash: keccak256(abi.encode(keccak256(metadata), keccak256(_input)))
         // metadata: abi.encode(msg.sender, block.timestamp)
         let metadata = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
+            ["uint", "uint", "uint", "uint", "uint"],
             [
                 await signer.getAddress(),
+                (await ethers.provider.getBlock("latest")).number,
                 (await ethers.provider.getBlock("latest")).timestamp,
+                0x0,
+                0x0
             ]
         );
         let keccak_metadata = ethers.utils.keccak256(metadata);
@@ -290,12 +293,16 @@ describe("Input Implementation", () => {
         // test for input box 0
         // calculate input hash again
         let metadata = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
+            ["uint", "uint", "uint", "uint", "uint"],
             [
                 await signer.getAddress(),
+                (await ethers.provider.getBlock("latest")).number,
                 (await ethers.provider.getBlock("latest")).timestamp,
+                0x0,
+                0x0
             ]
         );
+
         let keccak_metadata = ethers.utils.keccak256(metadata);
         let keccak_input = ethers.utils.keccak256(input_64_bytes);
         let abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
@@ -318,12 +325,16 @@ describe("Input Implementation", () => {
         // test for input box 1
         // calculate input hash
         metadata = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint"],
+            ["uint", "uint", "uint", "uint", "uint"],
             [
                 await signer.getAddress(),
+                (await ethers.provider.getBlock("latest")).number,
                 (await ethers.provider.getBlock("latest")).timestamp,
+                0x1,
+                0x0
             ]
         );
+
         keccak_metadata = ethers.utils.keccak256(metadata);
         keccak_input = ethers.utils.keccak256(input_64_bytes);
         abi_metadata_input = ethers.utils.defaultAbiCoder.encode(
