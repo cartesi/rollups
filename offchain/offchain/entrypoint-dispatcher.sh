@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # addresses
-dockerize -wait file:///opt/cartesi/share/blockchain/localhost.json
+dockerize -wait file:///opt/cartesi/share/blockchain/localhost.json -timeout 60s
 ROLLUPS_CONTRACT_ADDRESS=$(jq -r ".contracts.RollupsImpl.address" /opt/cartesi/share/blockchain/localhost.json)
 
 # wait for statefold_server
