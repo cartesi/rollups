@@ -1,3 +1,4 @@
+require("dotenv").config();
 import { IResolvers } from "graphql-tools";
 import { UserInputError } from "apollo-server-express";
 import { v4 as uuidv4 } from "uuid";
@@ -16,6 +17,9 @@ import {
 	VoucherStateInput,
 	RollupsInput,
 	RollupsState,
+	ProcessedInput,
+	Voucher,
+	Notice,
 	GetStatusResponse,
 	GetSessionStatusResponse,
 	GetEpochStatusResponse
@@ -168,6 +172,63 @@ export const UserResolvers: IResolvers = {
 							{},
 							info
 						): Promise<GetEpochStatusResponse> {
+							try {
+								return joinMonster(info, args, (sql: any) => {
+									console.log(sql);
+
+									return db.sequelize.query(sql, {
+										type: db.sequelize.QueryTypes.SELECT
+									});
+								});
+							} catch (error: any) {
+								throw Error(error);
+							}
+						},
+
+						async GetProcessedInput(
+							_: void,
+							args,
+							{},
+							info
+						): Promise<ProcessedInput[]> {
+							try {
+								return joinMonster(info, args, (sql: any) => {
+									console.log(sql);
+
+									return db.sequelize.query(sql, {
+										type: db.sequelize.QueryTypes.SELECT
+									});
+								});
+							} catch (error: any) {
+								throw Error(error);
+							}
+						},
+
+						async GetVoucher(
+							_: void,
+							args,
+							{},
+							info
+						): Promise<Voucher[]> {
+							try {
+								return joinMonster(info, args, (sql: any) => {
+									console.log(sql);
+
+									return db.sequelize.query(sql, {
+										type: db.sequelize.QueryTypes.SELECT
+									});
+								});
+							} catch (error: any) {
+								throw Error(error);
+							}
+						},
+
+						async GetNotice(
+							_: void,
+							args,
+							{},
+							info
+						): Promise<Notice[]> {
 							try {
 								return joinMonster(info, args, (sql: any) => {
 									console.log(sql);

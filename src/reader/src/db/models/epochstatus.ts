@@ -1,5 +1,5 @@
 "use strict";
-import { Model, UUIDV4 } from "sequelize";
+import { Model } from "sequelize";
 
 interface ProcessedInput {
 	// I don't think this is needed
@@ -10,12 +10,12 @@ interface CartesiMachineHash {
 
 interface EpochStatusAttributes {
 	session_id: string;
-	epoch_index: number;
+	epoch_index: string;
 	state: string;
-	most_recent_machine_hash: CartesiMachineHash;
-	most_recent_vouchers_epoch_root_hash: CartesiMachineHash;
-	most_recent_notices_epoch_root_hash: CartesiMachineHash;
-	pending_input_count: number;
+	most_recent_machine_hash: string;
+	most_recent_vouchers_epoch_root_hash: string;
+	most_recent_notices_epoch_root_hash: string;
+	pending_input_count: string;
 	taint_status: {
 		error_code: number;
 		error_message: string;
@@ -28,12 +28,12 @@ module.exports = (sequelize: any, DataTypes: any) => {
 	class EpochStatus extends Model<EpochStatusAttributes>
 		implements EpochStatusAttributes {
 		session_id!: string;
-		epoch_index!: number;
+		epoch_index!: string;
 		state!: string;
-		most_recent_machine_hash!: CartesiMachineHash;
-		most_recent_vouchers_epoch_root_hash!: CartesiMachineHash;
-		most_recent_notices_epoch_root_hash!: CartesiMachineHash;
-		pending_input_count!: number;
+		most_recent_machine_hash!: string;
+		most_recent_vouchers_epoch_root_hash!: string;
+		most_recent_notices_epoch_root_hash!: string;
+		pending_input_count!: string;
 		taint_status!: {
 			error_code: number;
 			error_message: string;
@@ -51,12 +51,11 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		{
 			session_id: {
 				type: DataTypes.UUID,
-				defaultValue: UUIDV4,
 				allowNull: false,
 				primaryKey: true
 			},
 			epoch_index: {
-				type: DataTypes.INTEGER,
+				type: DataTypes.STRING,
 				allowNull: false
 			},
 			state: {
@@ -64,19 +63,19 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				allowNull: false
 			},
 			most_recent_machine_hash: {
-				type: DataTypes.JSON,
+				type: DataTypes.STRING,
 				allowNull: false
 			},
 			most_recent_vouchers_epoch_root_hash: {
-				type: DataTypes.JSON,
+				type: DataTypes.STRING,
 				allowNull: false
 			},
 			most_recent_notices_epoch_root_hash: {
-				type: DataTypes.JSON,
+				type: DataTypes.STRING,
 				allowNull: false
 			},
 			pending_input_count: {
-				type: DataTypes.INTEGER,
+				type: DataTypes.STRING,
 				allowNull: false
 			},
 			taint_status: {

@@ -16,8 +16,11 @@ interface CartesiMachineMerkleTreeProof {
 
 interface InputResultAttribute {
 	id: string;
-	voucher_hashes_in_machine: CartesiMachineMerkleTreeProof;
-	notice_hashes_in_machine: CartesiMachineMerkleTreeProof;
+	session_id: string;
+	epoch_index: string;
+	input_index: string;
+	voucher_hashes_in_machine: string;
+	notice_hashes_in_machine: string;
 	processed_input_id: string;
 	createdAt: string;
 	updatedAt: string;
@@ -27,8 +30,11 @@ module.exports = (sequelize: any, DataTypes: any) => {
 	class InputResult extends Model<InputResultAttribute>
 		implements InputResultAttribute {
 		id!: string;
-		voucher_hashes_in_machine!: CartesiMachineMerkleTreeProof;
-		notice_hashes_in_machine!: CartesiMachineMerkleTreeProof;
+		session_id!: string;
+		epoch_index!: string;
+		input_index!: string;
+		voucher_hashes_in_machine!: string;
+		notice_hashes_in_machine!: string;
 		processed_input_id!: string;
 		createdAt!: string;
 		updatedAt!: string;
@@ -50,12 +56,27 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				defaultValue: UUIDV4,
 				type: DataTypes.UUID
 			},
+			session_id: {
+				type: DataTypes.STRING,
+				allowNull: false,
+				primaryKey: true
+			},
+			epoch_index: {
+				type: DataTypes.STRING,
+				allowNull: false,
+				primaryKey: true
+			},
+			input_index: {
+				type: DataTypes.STRING,
+				allowNull: false,
+				primaryKey: true
+			},
 			voucher_hashes_in_machine: {
-				type: DataTypes.JSON,
+				type: DataTypes.UUID,
 				allowNull: false
 			},
 			notice_hashes_in_machine: {
-				type: DataTypes.JSON,
+				type: DataTypes.UUID,
 				allowNull: false
 			},
 			processed_input_id: DataTypes.UUID,

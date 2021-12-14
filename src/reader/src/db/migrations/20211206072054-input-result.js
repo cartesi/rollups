@@ -9,34 +9,30 @@ module.exports = {
 				type: Sequelize.UUID
 			},
 			*/
-			voucher_hashes_in_machine: {
-				type: Sequelize.JSON,
-				allowNull: false
-			},
-			// vouchers: {
-			// 	type: Sequelize.ARRAY(Sequelize.STRING),
-			// 	allowNull: false
-			// },
-			notice_hashes_in_machine: {
-				type: Sequelize.JSON,
-				allowNull: false
-			},
-			// notices: {
-			// 	type: Sequelize.ARRAY(Sequelize.STRING),
-			// 	allowNull: false
-			// },
 			session_id: {
 				type: Sequelize.STRING,
 				allowNull: false,
+				primaryKey: true
 			},
 			epoch_index: {
 				type: Sequelize.STRING,
-				allowNull: false
+				allowNull: false,
+				primaryKey: true
 			},
 			input_index: {
 				type: Sequelize.STRING,
+				allowNull: false,
+				primaryKey: true
+			},
+			voucher_hashes_in_machine: {
+				type: Sequelize.UUID,
 				allowNull: false
 			},
+			notice_hashes_in_machine: {
+				type: Sequelize.UUID,
+				allowNull: false
+			},
+			processed_input_id: Sequelize.UUID,
 			createdAt: {
 				allowNull: false,
 				type: Sequelize.DATE

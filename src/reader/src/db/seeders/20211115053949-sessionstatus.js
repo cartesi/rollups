@@ -12,7 +12,7 @@ module.exports = {
 					epoch_index: [300, 400, 500],
 					taint_status: `{
 						"error_code": 200,
-						"error_message": "No error occured"
+						"error_message": "Successful"
 					}`,
 					createdAt: new Date(),
 					updatedAt: new Date()
@@ -22,8 +22,8 @@ module.exports = {
 					active_epoch_index: 700,
 					epoch_index: [600, 700, 800],
 					taint_status: `{
-						"error_code": 404,
-						"error_message": "Not found"
+						"error_code": 200,
+						"error_message": "Successful"
 					}`,
 					createdAt: new Date(),
 					updatedAt: new Date()

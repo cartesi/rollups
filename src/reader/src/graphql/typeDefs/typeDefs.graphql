@@ -116,12 +116,13 @@ type CartesiMachineHash {
 	data: String!
 }
 
-type CartesiMachineMerkleTreeProof {
-	target_address: Int!
-	log2_target_size: Int!
-	target_hash: Hash!
-	log2_root_size: Int!
-	root_hash: Hash!
+type MerkleTreeProof {
+	id: ID!
+	target_address: String!
+	log2_target_size: String!
+	target_hash: String!
+	log2_root_size: String!
+	root_hash: String!
 	sibling_hashes: [Hash]!
 }
 
@@ -131,30 +132,41 @@ enum EpochState {
 }
 
 type Report {
-	id: ID!
 	payload: String!
 }
 
 type Voucher {
 	id: ID!
+	session_id: String!
+	epoch_index: String!
+	input_index: String!
+	voucher_index: String!
 	keccak: String!
-	address: String!
+	Address: String!
 	payload: String!
-	keccak_in_voucher_hashes: String!
+	keccak_in_voucher_hashes: MerkleTreeProof!
 }
 
 type Notice {
 	id: ID!
+	session_id: String!
+	epoch_index: String!
+	input_index: String!
+	notice_index: String!
 	keccak: String!
+	Address: String!
 	payload: String!
-	keccak_in_notice_hashes: String!
+	keccak_in_notice_hashes: MerkleTreeProof!
 }
 
 type InputResult {
 	id: ID!
-	voucher_hashes_in_machine: CartesiMachineMerkleTreeProof!
+	session_id: String!
+	epoch_index: String!
+	input_index: String!
+	voucher_hashes_in_machine: MerkleTreeProof!
 	vouchers: [Voucher]!
-	notice_hashes_in_machine: CartesiMachineMerkleTreeProof!
+	notice_hashes_in_machine: MerkleTreeProof!
 	notices: [Notice]!
 }
 
@@ -168,10 +180,12 @@ enum CompletionStatus {
 
 type ProcessedInput {
 	id: ID!
-	input_index: Int!
-	most_recent_machine_hash: CartesiMachineHash!
-	voucher_hashes_in_epoch: CartesiMachineMerkleTreeProof!
-	notice_hashes_in_epoch: CartesiMachineMerkleTreeProof!
+	session_id: String!
+	epoch_index: String!
+	input_index: String!
+	most_recent_machine_hash: String!
+	voucher_hashes_in_epoch: MerkleTreeProof!
+	notice_hashes_in_epoch: MerkleTreeProof!
 	reports: [Report]!
 	# is supposed to be "oneof"
 	result: InputResult
@@ -179,15 +193,21 @@ type ProcessedInput {
 }
 
 type GetEpochStatusResponse {
-	session_id: ID!
-	epoch_index: Int!
+	session_id: String!
+	epoch_index: String!
 	state: EpochState!
-	most_recent_machine_hash: CartesiMachineHash!
-	most_recent_vouchers_epoch_root_hash: CartesiMachineHash!
-	most_recent_notices_epoch_root_hash: CartesiMachineHash!
+	most_recent_machine_hash: String!
+	most_recent_vouchers_epoch_root_hash: String!
+	most_recent_notices_epoch_root_hash: String!
 	processed_inputs: [ProcessedInput]!
-	pending_input_count: Int!
+	pending_input_count: String!
 	taint_status: TaintStatus!
+}
+
+type GetProcessedInputsVouchersAndNotices {
+	processed_input: ProcessedInput
+	voucher: Voucher
+	report: Report
 }
 
 # Mutation Inputs
@@ -266,8 +286,14 @@ input GetSessionStatusRequest {
 }
 
 input GetEpochStatusRequest {
-	session_id: ID!
-	epoch_index: Int!
+	session_id: String!
+	epoch_index: String!
+}
+
+input Keys {
+	session_id: String
+	epoch_index: String
+	input_index: String
 }
 
 type Query {
@@ -282,6 +308,9 @@ type Query {
 	GetStatus: GetStatusResponse!
 	GetSessionStatus(query: GetSessionStatusRequest!): GetSessionStatusResponse!
 	GetEpochStatus(query: GetEpochStatusRequest!): GetEpochStatusResponse!
+	GetProcessedInput(query: Keys): [ProcessedInput]
+	GetVoucher(query: Keys): [Voucher]
+	GetNotice(query: Keys): [Notice]
 }
 
 type Mutation {

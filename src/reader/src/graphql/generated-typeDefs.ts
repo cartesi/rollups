@@ -34,16 +34,6 @@ export type CartesiMachineHash = {
   data: Scalars['String'];
 };
 
-export type CartesiMachineMerkleTreeProof = {
-  __typename?: 'CartesiMachineMerkleTreeProof';
-  log2_root_size: Scalars['Int'];
-  log2_target_size: Scalars['Int'];
-  root_hash: Hash;
-  sibling_hashes: Array<Maybe<Hash>>;
-  target_address: Scalars['Int'];
-  target_hash: Hash;
-};
-
 export enum CompletionStatus {
   Accepted = 'ACCEPTED',
   CycleLimitExceeded = 'CYCLE_LIMIT_EXCEEDED',
@@ -106,21 +96,28 @@ export type FinalizedEpochsInput = {
 };
 
 export type GetEpochStatusRequest = {
-  epoch_index: Scalars['Int'];
-  session_id: Scalars['ID'];
+  epoch_index: Scalars['String'];
+  session_id: Scalars['String'];
 };
 
 export type GetEpochStatusResponse = {
   __typename?: 'GetEpochStatusResponse';
-  epoch_index: Scalars['Int'];
-  most_recent_machine_hash: CartesiMachineHash;
-  most_recent_notices_epoch_root_hash: CartesiMachineHash;
-  most_recent_vouchers_epoch_root_hash: CartesiMachineHash;
-  pending_input_count: Scalars['Int'];
+  epoch_index: Scalars['String'];
+  most_recent_machine_hash: Scalars['String'];
+  most_recent_notices_epoch_root_hash: Scalars['String'];
+  most_recent_vouchers_epoch_root_hash: Scalars['String'];
+  pending_input_count: Scalars['String'];
   processed_inputs: Array<Maybe<ProcessedInput>>;
-  session_id: Scalars['ID'];
+  session_id: Scalars['String'];
   state: EpochState;
   taint_status: TaintStatus;
+};
+
+export type GetProcessedInputsVouchersAndNotices = {
+  __typename?: 'GetProcessedInputsVouchersAndNotices';
+  processed_input?: Maybe<ProcessedInput>;
+  report?: Maybe<Report>;
+  voucher?: Maybe<Voucher>;
 };
 
 export type GetSessionStatusRequest = {
@@ -184,10 +181,13 @@ export type InputData = {
 
 export type InputResult = {
   __typename?: 'InputResult';
+  epoch_index: Scalars['String'];
   id: Scalars['ID'];
-  notice_hashes_in_machine: CartesiMachineMerkleTreeProof;
+  input_index: Scalars['String'];
+  notice_hashes_in_machine: MerkleTreeProof;
   notices: Array<Maybe<Notice>>;
-  voucher_hashes_in_machine: CartesiMachineMerkleTreeProof;
+  session_id: Scalars['String'];
+  voucher_hashes_in_machine: MerkleTreeProof;
   vouchers: Array<Maybe<Voucher>>;
 };
 
@@ -216,6 +216,23 @@ export type IntegerObject = {
 
 export type IntegerObjectInput = {
   integer: IntegerInnerObjectInput;
+};
+
+export type Keys = {
+  epoch_index?: Maybe<Scalars['String']>;
+  input_index?: Maybe<Scalars['String']>;
+  session_id?: Maybe<Scalars['String']>;
+};
+
+export type MerkleTreeProof = {
+  __typename?: 'MerkleTreeProof';
+  id: Scalars['ID'];
+  log2_root_size: Scalars['String'];
+  log2_target_size: Scalars['String'];
+  root_hash: Scalars['String'];
+  sibling_hashes: Array<Maybe<Hash>>;
+  target_address: Scalars['String'];
+  target_hash: Scalars['String'];
 };
 
 export type Mutation = {
@@ -266,10 +283,15 @@ export type MutationVoucher_StateArgs = {
 
 export type Notice = {
   __typename?: 'Notice';
+  Address: Scalars['String'];
+  epoch_index: Scalars['String'];
   id: Scalars['ID'];
+  input_index: Scalars['String'];
   keccak: Scalars['String'];
-  keccak_in_notice_hashes: Scalars['String'];
+  keccak_in_notice_hashes: MerkleTreeProof;
+  notice_index: Scalars['String'];
   payload: Scalars['String'];
+  session_id: Scalars['String'];
 };
 
 export enum PhaseState {
@@ -283,22 +305,27 @@ export enum PhaseState {
 
 export type ProcessedInput = {
   __typename?: 'ProcessedInput';
+  epoch_index: Scalars['String'];
   id: Scalars['ID'];
-  input_index: Scalars['Int'];
-  most_recent_machine_hash: CartesiMachineHash;
-  notice_hashes_in_epoch: CartesiMachineMerkleTreeProof;
+  input_index: Scalars['String'];
+  most_recent_machine_hash: Scalars['String'];
+  notice_hashes_in_epoch: MerkleTreeProof;
   reports: Array<Maybe<Report>>;
   result?: Maybe<InputResult>;
+  session_id: Scalars['String'];
   skip_reason?: Maybe<CompletionStatus>;
-  voucher_hashes_in_epoch: CartesiMachineMerkleTreeProof;
+  voucher_hashes_in_epoch: MerkleTreeProof;
 };
 
 export type Query = {
   __typename?: 'Query';
   GetEpochStatus: GetEpochStatusResponse;
+  GetNotice?: Maybe<Array<Maybe<Notice>>>;
+  GetProcessedInput?: Maybe<Array<Maybe<ProcessedInput>>>;
   GetSessionStatus: GetSessionStatusResponse;
   GetStatus: GetStatusResponse;
   GetVersion: Version;
+  GetVoucher?: Maybe<Array<Maybe<Voucher>>>;
   RollupsState: Array<Maybe<RollupsState>>;
   constants: Array<Maybe<ImmutableState>>;
   current_epoch: Array<Maybe<AccumulatingEpoch>>;
@@ -314,13 +341,27 @@ export type QueryGetEpochStatusArgs = {
 };
 
 
+export type QueryGetNoticeArgs = {
+  query?: Maybe<Keys>;
+};
+
+
+export type QueryGetProcessedInputArgs = {
+  query?: Maybe<Keys>;
+};
+
+
 export type QueryGetSessionStatusArgs = {
   query: GetSessionStatusRequest;
 };
 
+
+export type QueryGetVoucherArgs = {
+  query?: Maybe<Keys>;
+};
+
 export type Report = {
   __typename?: 'Report';
-  id: Scalars['ID'];
   payload: Scalars['String'];
 };
 
@@ -358,11 +399,15 @@ export type Version = {
 
 export type Voucher = {
   __typename?: 'Voucher';
-  address: Scalars['String'];
+  Address: Scalars['String'];
+  epoch_index: Scalars['String'];
   id: Scalars['ID'];
+  input_index: Scalars['String'];
   keccak: Scalars['String'];
-  keccak_in_voucher_hashes: Scalars['String'];
+  keccak_in_voucher_hashes: MerkleTreeProof;
   payload: Scalars['String'];
+  session_id: Scalars['String'];
+  voucher_index: Scalars['String'];
 };
 
 export type VoucherState = {
@@ -450,7 +495,6 @@ export type ResolversTypes = {
   AccumulatingEpochInput: AccumulatingEpochInput;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
   CartesiMachineHash: ResolverTypeWrapper<CartesiMachineHash>;
-  CartesiMachineMerkleTreeProof: ResolverTypeWrapper<CartesiMachineMerkleTreeProof>;
   CompletionStatus: CompletionStatus;
   EpochInputState: ResolverTypeWrapper<EpochInputState>;
   EpochInputStateInput: EpochInputStateInput;
@@ -461,6 +505,7 @@ export type ResolversTypes = {
   FinalizedEpochsInput: FinalizedEpochsInput;
   GetEpochStatusRequest: GetEpochStatusRequest;
   GetEpochStatusResponse: ResolverTypeWrapper<GetEpochStatusResponse>;
+  GetProcessedInputsVouchersAndNotices: ResolverTypeWrapper<GetProcessedInputsVouchersAndNotices>;
   GetSessionStatusRequest: GetSessionStatusRequest;
   GetSessionStatusResponse: ResolverTypeWrapper<GetSessionStatusResponse>;
   GetStatusResponse: ResolverTypeWrapper<GetStatusResponse>;
@@ -478,6 +523,8 @@ export type ResolversTypes = {
   IntegerInnerObjectInput: IntegerInnerObjectInput;
   IntegerObject: ResolverTypeWrapper<IntegerObject>;
   IntegerObjectInput: IntegerObjectInput;
+  Keys: Keys;
+  MerkleTreeProof: ResolverTypeWrapper<MerkleTreeProof>;
   Mutation: ResolverTypeWrapper<{}>;
   Notice: ResolverTypeWrapper<Notice>;
   PhaseState: PhaseState;
@@ -500,7 +547,6 @@ export type ResolversParentTypes = {
   AccumulatingEpochInput: AccumulatingEpochInput;
   Boolean: Scalars['Boolean'];
   CartesiMachineHash: CartesiMachineHash;
-  CartesiMachineMerkleTreeProof: CartesiMachineMerkleTreeProof;
   EpochInputState: EpochInputState;
   EpochInputStateInput: EpochInputStateInput;
   FinalizedEpoch: FinalizedEpoch;
@@ -509,6 +555,7 @@ export type ResolversParentTypes = {
   FinalizedEpochsInput: FinalizedEpochsInput;
   GetEpochStatusRequest: GetEpochStatusRequest;
   GetEpochStatusResponse: GetEpochStatusResponse;
+  GetProcessedInputsVouchersAndNotices: GetProcessedInputsVouchersAndNotices;
   GetSessionStatusRequest: GetSessionStatusRequest;
   GetSessionStatusResponse: GetSessionStatusResponse;
   GetStatusResponse: GetStatusResponse;
@@ -526,6 +573,8 @@ export type ResolversParentTypes = {
   IntegerInnerObjectInput: IntegerInnerObjectInput;
   IntegerObject: IntegerObject;
   IntegerObjectInput: IntegerObjectInput;
+  Keys: Keys;
+  MerkleTreeProof: MerkleTreeProof;
   Mutation: {};
   Notice: Notice;
   ProcessedInput: ProcessedInput;
@@ -552,16 +601,6 @@ export type AccumulatingEpochResolvers<ContextType = any, ParentType extends Res
 
 export type CartesiMachineHashResolvers<ContextType = any, ParentType extends ResolversParentTypes['CartesiMachineHash'] = ResolversParentTypes['CartesiMachineHash']> = {
   data?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CartesiMachineMerkleTreeProofResolvers<ContextType = any, ParentType extends ResolversParentTypes['CartesiMachineMerkleTreeProof'] = ResolversParentTypes['CartesiMachineMerkleTreeProof']> = {
-  log2_root_size?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  log2_target_size?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  root_hash?: Resolver<ResolversTypes['Hash'], ParentType, ContextType>;
-  sibling_hashes?: Resolver<Array<Maybe<ResolversTypes['Hash']>>, ParentType, ContextType>;
-  target_address?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  target_hash?: Resolver<ResolversTypes['Hash'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -593,15 +632,22 @@ export type FinalizedEpochsResolvers<ContextType = any, ParentType extends Resol
 };
 
 export type GetEpochStatusResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['GetEpochStatusResponse'] = ResolversParentTypes['GetEpochStatusResponse']> = {
-  epoch_index?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  most_recent_machine_hash?: Resolver<ResolversTypes['CartesiMachineHash'], ParentType, ContextType>;
-  most_recent_notices_epoch_root_hash?: Resolver<ResolversTypes['CartesiMachineHash'], ParentType, ContextType>;
-  most_recent_vouchers_epoch_root_hash?: Resolver<ResolversTypes['CartesiMachineHash'], ParentType, ContextType>;
-  pending_input_count?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  epoch_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  most_recent_machine_hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  most_recent_notices_epoch_root_hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  most_recent_vouchers_epoch_root_hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  pending_input_count?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   processed_inputs?: Resolver<Array<Maybe<ResolversTypes['ProcessedInput']>>, ParentType, ContextType>;
-  session_id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  session_id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['EpochState'], ParentType, ContextType>;
   taint_status?: Resolver<ResolversTypes['TaintStatus'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type GetProcessedInputsVouchersAndNoticesResolvers<ContextType = any, ParentType extends ResolversParentTypes['GetProcessedInputsVouchersAndNotices'] = ResolversParentTypes['GetProcessedInputsVouchersAndNotices']> = {
+  processed_input?: Resolver<Maybe<ResolversTypes['ProcessedInput']>, ParentType, ContextType>;
+  report?: Resolver<Maybe<ResolversTypes['Report']>, ParentType, ContextType>;
+  voucher?: Resolver<Maybe<ResolversTypes['Voucher']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -645,10 +691,13 @@ export type InputResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type InputResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['InputResult'] = ResolversParentTypes['InputResult']> = {
+  epoch_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  notice_hashes_in_machine?: Resolver<ResolversTypes['CartesiMachineMerkleTreeProof'], ParentType, ContextType>;
+  input_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  notice_hashes_in_machine?: Resolver<ResolversTypes['MerkleTreeProof'], ParentType, ContextType>;
   notices?: Resolver<Array<Maybe<ResolversTypes['Notice']>>, ParentType, ContextType>;
-  voucher_hashes_in_machine?: Resolver<ResolversTypes['CartesiMachineMerkleTreeProof'], ParentType, ContextType>;
+  session_id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  voucher_hashes_in_machine?: Resolver<ResolversTypes['MerkleTreeProof'], ParentType, ContextType>;
   vouchers?: Resolver<Array<Maybe<ResolversTypes['Voucher']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -668,6 +717,17 @@ export type IntegerObjectResolvers<ContextType = any, ParentType extends Resolve
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type MerkleTreeProofResolvers<ContextType = any, ParentType extends ResolversParentTypes['MerkleTreeProof'] = ResolversParentTypes['MerkleTreeProof']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  log2_root_size?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  log2_target_size?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  root_hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  sibling_hashes?: Resolver<Array<Maybe<ResolversTypes['Hash']>>, ParentType, ContextType>;
+  target_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  target_hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   RollupsState?: Resolver<ResolversTypes['RollupsState'], ParentType, ContextType, RequireFields<MutationRollupsStateArgs, 'input'>>;
   constants?: Resolver<Array<Maybe<ResolversTypes['ImmutableState']>>, ParentType, ContextType, RequireFields<MutationConstantsArgs, 'input'>>;
@@ -679,30 +739,40 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type NoticeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Notice'] = ResolversParentTypes['Notice']> = {
+  Address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  epoch_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  input_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   keccak?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  keccak_in_notice_hashes?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  keccak_in_notice_hashes?: Resolver<ResolversTypes['MerkleTreeProof'], ParentType, ContextType>;
+  notice_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   payload?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  session_id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type ProcessedInputResolvers<ContextType = any, ParentType extends ResolversParentTypes['ProcessedInput'] = ResolversParentTypes['ProcessedInput']> = {
+  epoch_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  input_index?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  most_recent_machine_hash?: Resolver<ResolversTypes['CartesiMachineHash'], ParentType, ContextType>;
-  notice_hashes_in_epoch?: Resolver<ResolversTypes['CartesiMachineMerkleTreeProof'], ParentType, ContextType>;
+  input_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  most_recent_machine_hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  notice_hashes_in_epoch?: Resolver<ResolversTypes['MerkleTreeProof'], ParentType, ContextType>;
   reports?: Resolver<Array<Maybe<ResolversTypes['Report']>>, ParentType, ContextType>;
   result?: Resolver<Maybe<ResolversTypes['InputResult']>, ParentType, ContextType>;
+  session_id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   skip_reason?: Resolver<Maybe<ResolversTypes['CompletionStatus']>, ParentType, ContextType>;
-  voucher_hashes_in_epoch?: Resolver<ResolversTypes['CartesiMachineMerkleTreeProof'], ParentType, ContextType>;
+  voucher_hashes_in_epoch?: Resolver<ResolversTypes['MerkleTreeProof'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   GetEpochStatus?: Resolver<ResolversTypes['GetEpochStatusResponse'], ParentType, ContextType, RequireFields<QueryGetEpochStatusArgs, 'query'>>;
+  GetNotice?: Resolver<Maybe<Array<Maybe<ResolversTypes['Notice']>>>, ParentType, ContextType, RequireFields<QueryGetNoticeArgs, never>>;
+  GetProcessedInput?: Resolver<Maybe<Array<Maybe<ResolversTypes['ProcessedInput']>>>, ParentType, ContextType, RequireFields<QueryGetProcessedInputArgs, never>>;
   GetSessionStatus?: Resolver<ResolversTypes['GetSessionStatusResponse'], ParentType, ContextType, RequireFields<QueryGetSessionStatusArgs, 'query'>>;
   GetStatus?: Resolver<ResolversTypes['GetStatusResponse'], ParentType, ContextType>;
   GetVersion?: Resolver<ResolversTypes['Version'], ParentType, ContextType>;
+  GetVoucher?: Resolver<Maybe<Array<Maybe<ResolversTypes['Voucher']>>>, ParentType, ContextType, RequireFields<QueryGetVoucherArgs, never>>;
   RollupsState?: Resolver<Array<Maybe<ResolversTypes['RollupsState']>>, ParentType, ContextType>;
   constants?: Resolver<Array<Maybe<ResolversTypes['ImmutableState']>>, ParentType, ContextType>;
   current_epoch?: Resolver<Array<Maybe<ResolversTypes['AccumulatingEpoch']>>, ParentType, ContextType>;
@@ -713,7 +783,6 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type ReportResolvers<ContextType = any, ParentType extends ResolversParentTypes['Report'] = ResolversParentTypes['Report']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   payload?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -742,11 +811,15 @@ export type VersionResolvers<ContextType = any, ParentType extends ResolversPare
 };
 
 export type VoucherResolvers<ContextType = any, ParentType extends ResolversParentTypes['Voucher'] = ResolversParentTypes['Voucher']> = {
-  address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  Address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  epoch_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  input_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   keccak?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  keccak_in_voucher_hashes?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  keccak_in_voucher_hashes?: Resolver<ResolversTypes['MerkleTreeProof'], ParentType, ContextType>;
   payload?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  session_id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  voucher_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -760,11 +833,11 @@ export type VoucherStateResolvers<ContextType = any, ParentType extends Resolver
 export type Resolvers<ContextType = any> = {
   AccumulatingEpoch?: AccumulatingEpochResolvers<ContextType>;
   CartesiMachineHash?: CartesiMachineHashResolvers<ContextType>;
-  CartesiMachineMerkleTreeProof?: CartesiMachineMerkleTreeProofResolvers<ContextType>;
   EpochInputState?: EpochInputStateResolvers<ContextType>;
   FinalizedEpoch?: FinalizedEpochResolvers<ContextType>;
   FinalizedEpochs?: FinalizedEpochsResolvers<ContextType>;
   GetEpochStatusResponse?: GetEpochStatusResponseResolvers<ContextType>;
+  GetProcessedInputsVouchersAndNotices?: GetProcessedInputsVouchersAndNoticesResolvers<ContextType>;
   GetSessionStatusResponse?: GetSessionStatusResponseResolvers<ContextType>;
   GetStatusResponse?: GetStatusResponseResolvers<ContextType>;
   Hash?: HashResolvers<ContextType>;
@@ -774,6 +847,7 @@ export type Resolvers<ContextType = any> = {
   IntegerBool?: IntegerBoolResolvers<ContextType>;
   IntegerInnerObject?: IntegerInnerObjectResolvers<ContextType>;
   IntegerObject?: IntegerObjectResolvers<ContextType>;
+  MerkleTreeProof?: MerkleTreeProofResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Notice?: NoticeResolvers<ContextType>;
   ProcessedInput?: ProcessedInputResolvers<ContextType>;

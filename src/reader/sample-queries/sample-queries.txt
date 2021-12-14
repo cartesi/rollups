@@ -122,7 +122,10 @@ query rollups {
 }
 
 query getVersionNumber {
-  GetVersion
+  GetVersion {
+    id
+    version
+  }
 }
 
 query getStatus {
@@ -149,32 +152,22 @@ query getEpochStatus {
   GetEpochStatus(
     query: {
       session_id: "42b22569-118b-4232-8cad-8957baecf507"
-      epoch_index: 1
+      epoch_index: "1"
     }
   ) {
     session_id
     epoch_index
     state
-    most_recent_machine_hash {
-      data
-    }
-    most_recent_vouchers_epoch_root_hash {
-      data
-    }
-    most_recent_notices_epoch_root_hash {
-      data
-    }
+    most_recent_machine_hash
+    most_recent_vouchers_epoch_root_hash
+    most_recent_notices_epoch_root_hash
     processed_inputs {
       input_index
-      most_recent_machine_hash {
-        data
-      }
+      most_recent_machine_hash
       voucher_hashes_in_epoch {
         target_address
         log2_target_size
-        target_hash {
-          data
-        }
+        target_hash
         sibling_hashes {
           data
         }
@@ -182,9 +175,7 @@ query getEpochStatus {
       notice_hashes_in_epoch {
         target_address
         log2_target_size
-        target_hash {
-          data
-        }
+        target_hash
       }
       reports {
         payload
@@ -193,27 +184,43 @@ query getEpochStatus {
         voucher_hashes_in_machine {
           target_address
           log2_target_size
-          target_hash {
-            data
-          }
+          target_hash
         }
         vouchers {
           keccak
-          address
+          Address
           payload
-          keccak_in_voucher_hashes
+          keccak_in_voucher_hashes {
+            id
+            target_address
+            log2_target_size
+            target_hash
+            log2_root_size
+            root_hash
+            sibling_hashes {
+              data
+            }
+          }
         }
         notice_hashes_in_machine {
           target_address
           log2_target_size
-          target_hash {
-            data
-          }
+          target_hash
         }
         notices {
           keccak
           payload
-          keccak_in_notice_hashes
+          keccak_in_notice_hashes {
+            id
+            target_address
+            log2_target_size
+            target_hash
+            log2_root_size
+            root_hash
+            sibling_hashes {
+              data
+            }
+          }
         }
       }
       skip_reason
@@ -222,6 +229,139 @@ query getEpochStatus {
     taint_status {
       error_code
       error_message
+    }
+  }
+}
+
+query getProcessedInput {
+  GetProcessedInput(
+    query: {
+      session_id: "e9f1061b-3319-4e0f-86ab-4c12177fa71a"
+      epoch_index: "5f6278bf-9272-462e-b435-80b443a10c24"
+      input_index: "acf3bd3d-1d71-4adb-8b4a-e895055de961"
+    }
+  ) {
+    input_index
+    most_recent_machine_hash
+    voucher_hashes_in_epoch {
+      target_address
+      log2_target_size
+      target_hash
+      sibling_hashes {
+        data
+      }
+    }
+    notice_hashes_in_epoch {
+      target_address
+      log2_target_size
+      target_hash
+    }
+    reports {
+      payload
+    }
+    result {
+      voucher_hashes_in_machine {
+        target_address
+        log2_target_size
+        target_hash
+      }
+      vouchers {
+        keccak
+        Address
+        payload
+        keccak_in_voucher_hashes {
+          id
+          target_address
+          log2_target_size
+          target_hash
+          log2_root_size
+          root_hash
+          sibling_hashes {
+            data
+          }
+        }
+      }
+      notice_hashes_in_machine {
+        target_address
+        log2_target_size
+        target_hash
+      }
+      notices {
+        keccak
+        payload
+        keccak_in_notice_hashes {
+          id
+          target_address
+          log2_target_size
+          target_hash
+          log2_root_size
+          root_hash
+          sibling_hashes {
+            data
+          }
+        }
+      }
+    }
+    skip_reason
+  }
+}
+
+query getVoucher {
+  GetVoucher(
+    query: {
+      session_id: "e9f1061b-3319-4e0f-86ab-4c12177fa71a"
+      epoch_index: "5f6278bf-9272-462e-b435-80b443a10c24"
+      input_index: "acf3bd3d-1d71-4adb-8b4a-e895055de961"
+    }
+  ) {
+    id
+    session_id
+    epoch_index
+    input_index
+    voucher_index
+    keccak
+    Address
+    payload
+    keccak_in_voucher_hashes {
+      id
+      target_address
+      log2_target_size
+      target_hash
+      log2_root_size
+      root_hash
+      sibling_hashes {
+        data
+      }
+    }
+  }
+}
+
+query getNotice {
+  GetNotice(
+    query: {
+      session_id: "e9f1061b-3319-4e0f-86ab-4c12177fa71a"
+      epoch_index: "5f6278bf-9272-462e-b435-80b443a10c24"
+      input_index: "acf3bd3d-1d71-4adb-8b4a-e895055de961"
+    }
+  ) {
+    id
+    session_id
+    epoch_index
+    input_index
+    notice_index
+    keccak
+    Address
+    payload
+    keccak_in_notice_hashes {
+      id
+      target_address
+      log2_target_size
+      target_hash
+      log2_root_size
+      root_hash
+      sibling_hashes {
+        data
+      }
     }
   }
 }

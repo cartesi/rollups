@@ -5,13 +5,20 @@ interface CartesiMachineHash {
 	data: string;
 }
 
+interface Report {
+	payload: string;
+}
+
 interface ProcessedInputAttributes {
 	id: string;
-	input_index: number;
-	most_recent_machine_hash: CartesiMachineHash;
-	voucher_hashes_in_epoch: CartesiMachineHash;
-	notice_hashes_in_epoch: CartesiMachineHash;
+	session_id: string;
+	epoch_index: string;
+	input_index: string;
+	most_recent_machine_hash: string;
+	voucher_hashes_in_epoch: string;
+	notice_hashes_in_epoch: string;
 	skip_reason: string;
+	reports: Report[];
 	epoch_status_id: string;
 	createdAt: string;
 	updatedAt: string;
@@ -21,20 +28,19 @@ module.exports = (sequelize: any, DataTypes: any) => {
 	class ProcessedInput extends Model<ProcessedInputAttributes>
 		implements ProcessedInputAttributes {
 		id!: string;
-		input_index!: number;
-		most_recent_machine_hash!: CartesiMachineHash;
-		voucher_hashes_in_epoch!: CartesiMachineHash;
-		notice_hashes_in_epoch!: CartesiMachineHash;
-		most_recent_notices_epoch_root_hash!: CartesiMachineHash;
+		session_id!: string;
+		epoch_index!: string;
+		input_index!: string;
+		most_recent_machine_hash!: string;
+		voucher_hashes_in_epoch!: string;
+		notice_hashes_in_epoch!: string;
 		skip_reason!: string;
+		reports!: Report[];
 		epoch_status_id!: string;
 		createdAt!: string;
 		updatedAt!: string;
 
 		static associate(models: any) {
-			ProcessedInput.hasMany(models.Report, {
-				foreignKey: "processed_input_id"
-			});
 			ProcessedInput.hasOne(models.InputResult, {
 				foreignKey: "processed_input_id"
 			});
@@ -48,19 +54,34 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				allowNull: false,
 				primaryKey: true
 			},
+			session_id: {
+				type: DataTypes.STRING,
+				allowNull: false,
+				primaryKey: true
+			},
+			epoch_index: {
+				type: DataTypes.STRING,
+				allowNull: false,
+				primaryKey: true
+			},
 			input_index: {
-				type: DataTypes.INTEGER,
-				allowNull: false
+				type: DataTypes.STRING,
+				allowNull: false,
+				primaryKey: true
 			},
 			most_recent_machine_hash: {
-				type: DataTypes.JSON,
+				type: DataTypes.STRING,
 				allowNull: false
 			},
 			voucher_hashes_in_epoch: {
-				type: DataTypes.JSON,
+				type: DataTypes.UUID,
 				allowNull: false
 			},
 			notice_hashes_in_epoch: {
+				type: DataTypes.UUID,
+				allowNull: false
+			},
+			reports: {
 				type: DataTypes.JSON,
 				allowNull: false
 			},
