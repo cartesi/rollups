@@ -95,6 +95,9 @@ paths:
         Until the DApp calls the finish method, this method can be called any number of times.
         Calling this method after finishing is undefined behavior.
 
+        The returned index is the position of the voucher in the merkle tree.
+        The index counting restarts at every input.
+
       requestBody:
         content:
           application/json:
@@ -109,8 +112,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  id:
-                    $ref: '#/components/schemas/Id'
+                  index:
+                    $ref: '#/components/schemas/Index'
 
         default:
           description: Error response.
@@ -131,6 +134,9 @@ paths:
         Until the DApp calls the finish method, this method can be called any number of times.
         Calling this method after finishing is undefined behavior.
 
+        The returned index is the position of the notice in the merkle tree.
+        The index counting restarts at every input.
+
       requestBody:
         content:
           application/json:
@@ -145,8 +151,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  id:
-                    $ref: '#/components/schemas/Id'
+                  index:
+                    $ref: '#/components/schemas/Index'
 
         default:
           description: Error response.
@@ -227,6 +233,12 @@ components:
       type: integer
       format: uint64
       description: Identifier encoded as integer.
+      example: 123
+
+    Index:
+      type: integer
+      format: uint64
+      description: Position in the Merkle tree.
       example: 123
 
     Payload:
