@@ -20,7 +20,6 @@ import {IERC20Portal} from "../interfaces/IERC20Portal.sol";
 import {ISERC20Portal} from "../interfaces/ISERC20Portal.sol";
 
 import {LibRollups} from "../libraries/LibRollups.sol";
-import {LibRollupsInit} from "../libraries/LibRollupsInit.sol";
 import {LibInput} from "../libraries/LibInput.sol";
 import {LibOutput} from "../libraries/LibOutput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
@@ -138,25 +137,6 @@ contract DebugFacet {
     function _serc20Withdrawal(bytes calldata _data) public returns (bool) {
         ISERC20Portal serc20Portal = ISERC20Portal(address(this));
         return serc20Portal.serc20Withdrawal(_data);
-    }
-
-    function _getDiamondStoragePositions() public pure returns (uint256) {
-        return 6;
-    }
-
-    function _getDiamondStoragePosition(uint256 _index)
-        public
-        pure
-        returns (bytes32)
-    {
-        if (_index == 0) return LibRollups.DIAMOND_STORAGE_POSITION;
-        else if (_index == 1) return LibRollupsInit.DIAMOND_STORAGE_POSITION;
-        else if (_index == 2) return LibInput.DIAMOND_STORAGE_POSITION;
-        else if (_index == 3) return LibOutput.DIAMOND_STORAGE_POSITION;
-        else if (_index == 4)
-            return LibValidatorManager.DIAMOND_STORAGE_POSITION;
-        else if (_index == 5) return LibSERC20Portal.DIAMOND_STORAGE_POSITION;
-        else return bytes32(0);
     }
 
     // @notice emitted on Claim received
