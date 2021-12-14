@@ -103,16 +103,21 @@ task("input:addRepeatedInputs", "Send an input to rollups")
             await rollups.getInputAddress()
         );
 
-        for(let i = 0; i < repetitions; i ++) {
+        for (let i = 0; i < repetitions; i++) {
             const tx = await inputContract.addInput(input);
             const events = (await tx.wait()).events;
-            const inputAddedEvent = getEvent("InputAdded", inputContract, events);
+            const inputAddedEvent = getEvent(
+                "InputAdded",
+                inputContract,
+                events
+            );
             if (!inputAddedEvent) {
                 console.log(
                     `Failed to add input '${input}' (signer: ${signer.address}, tx: ${tx.hash})\n`
                 );
             } else {
-                const epochNumber = inputAddedEvent.args._epochNumber.toString();
+                const epochNumber =
+                    inputAddedEvent.args._epochNumber.toString();
                 const timestamp = inputAddedEvent.args._timestamp.toString();
                 console.log(
                     `Added input '${input}' to epoch '${epochNumber}' (timestamp: ${timestamp}, signer: ${signer.address}, tx: ${tx.hash})`
