@@ -1,11 +1,11 @@
 #!/bin/sh
 
 # addresses
-dockerize -wait file:///opt/cartesi/share/blockchain/localhost.json -timeout 60s
-ROLLUPS_CONTRACT_ADDRESS=$(jq -r ".contracts.RollupsImpl.address" /opt/cartesi/share/blockchain/localhost.json)
+dockerize -wait file://${DEPLOYMENT_PATH} -timeout 60s
+ROLLUPS_CONTRACT_ADDRESS=$(jq -r ".contracts.RollupsImpl.address" ${DEPLOYMENT_PATH})
 
-# wait for statefold_server
-dockerize -wait tcp://statefold_server:50051 -timeout 30s
+# wait for services
+dockerize -wait tcp://${STATE_SERVER_HOSTNAME}:${STATE_SERVER_PORT} -wait tcp://${SERVER_MANAGER_HOSTNAME}:${SERVER_MANAGER_PORT} -timeout 30s
 
 # config files
 LOGIC_CONFIG_PATH="/opt/cartesi/share/config/logic-config.toml"
