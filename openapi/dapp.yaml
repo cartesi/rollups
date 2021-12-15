@@ -6,10 +6,11 @@ info:
   license:
     name: Apache-2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
+
   description: |
-    This document describes the API between the Cartesi Rollups DApp and the Cartesi Rollups HTTP-Dispatcher.
-    The DApp section presents the API that should be implemented by the Cartesi DApp.
-    The HTTP-Dispatcher section presents the API that the Cartesi HTTP-Dispatcher implements.
+    This document describes the API between the Cartesi DApp Backend and the Cartesi Server HTTP-Dispatcher.
+    The DApp section presents the API that should be implemented by the Cartesi DApp Backend.
+    The HTTP-Dispatcher section presents the API that the Cartesi Server HTTP-Dispatcher implements.
 
 paths:
   /advance:
@@ -200,7 +201,7 @@ paths:
         The property status in the request body should be either 'accept' or 'reject';
         otherwise, the method will fail and there will be no effect.
 
-        When running inside a Cartesi machine, the Rollups-Machine-Manager will revert the machine,
+        When running inside a Cartesi machine, the Cartesi Server Manager will revert the machine,
         discarting all the vouchers and notices for the current input.
         When running with the Mock, the Mock will discard the vouchers and notices.
         Reports are not discarted in case of reject.
