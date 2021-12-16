@@ -8,7 +8,7 @@ use crate::config::ApplicationConfig;
 use crate::contracts::rollups_contract::RollupsImpl;
 use crate::error::*;
 use crate::fold::types::*;
-use crate::machine::{rollup_mm, EpochStatus, MachineInterface};
+use crate::machine::{rollup_server, EpochStatus, MachineInterface};
 use crate::rollups_state_fold::RollupsStateFold;
 
 use block_subscriber::NewBlockSubscriber;
@@ -91,12 +91,12 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     );
 
     let machine_manager = {
-        let mm_config = rollup_mm::Config::new_with_default(
+        let mm_config = rollup_server::Config::new_with_default(
             config.logic_config.mm_endpoint.clone(),
             config.logic_config.session_id.clone(),
         );
 
-        rollup_mm::MachineManager::new(mm_config).await?
+        rollup_server::MachineManager::new(mm_config).await?
     };
 
     info!("Starting block-subscriber subscription");

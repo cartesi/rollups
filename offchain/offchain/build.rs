@@ -23,11 +23,7 @@ fn write_contract(
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contracts = vec![
-        (
-            "RollupsImpl",
-            "RollupsImpl",
-            "rollups_contract.rs",
-        ),
+        ("RollupsImpl", "RollupsImpl", "rollups_contract.rs"),
         ("InputImpl", "InputImpl", "input_contract.rs"),
         ("OutputImpl", "OutputImpl", "output_contract.rs"),
     ];
@@ -43,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &[
             "../../grpc-interfaces/versioning.proto",
             "../../grpc-interfaces/cartesi-machine.proto",
-            "../../grpc-interfaces/rollup-machine-manager.proto",
+            "../../grpc-interfaces/server-manager.proto",
             "../../grpc-interfaces/stateserver.proto",
         ],
         &["../../grpc-interfaces"],
@@ -53,7 +49,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "cargo:rerun-if-changed=../../grpc-interfaces/cartesi-machine.proto"
     );
-    println!("cargo:rerun-if-changed=../../grpc-interfaces/rollup-machine-manager.proto");
+    println!(
+        "cargo:rerun-if-changed=../../grpc-interfaces/server-manager.proto"
+    );
     println!("cargo:rerun-if-changed=../../grpc-interfaces/stateserver.proto");
 
     println!("cargo:rerun-if-changed=build.rs");

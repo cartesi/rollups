@@ -20,8 +20,8 @@ use cartesi_machine::{
     machine_request::MachineOneof, ConcurrencyConfig, DhdRuntimeConfig,
     MachineRequest, MachineRuntimeConfig, Void,
 };
-use cartesi_rollup_machine_manager::rollup_machine_manager_client::RollupMachineManagerClient;
-use cartesi_rollup_machine_manager::{
+use cartesi_server_manager::server_manager_client::ServerManagerClient;
+use cartesi_server_manager::{
     Address as MMAddress, AdvanceStateRequest, CyclesConfig, DeadlineConfig,
     FinishEpochRequest, GetEpochStatusRequest, GetEpochStatusResponse,
     GetSessionStatusRequest, InputMetadata, StartSessionRequest,
@@ -35,8 +35,8 @@ pub mod cartesi_machine {
     tonic::include_proto!("cartesi_machine");
 }
 
-pub mod cartesi_rollup_machine_manager {
-    tonic::include_proto!("cartesi_rollup_machine_manager");
+pub mod cartesi_server_manager {
+    tonic::include_proto!("cartesi_server_manager");
 }
 
 impl From<GetEpochStatusResponse> for EpochStatus {
@@ -114,12 +114,12 @@ impl Config {
 pub struct MachineManager {
     session_id: String,
     storage_directory_prefix: String,
-    client: Mutex<RollupMachineManagerClient<Channel>>,
+    client: Mutex<ServerManagerClient<Channel>>,
 }
 
 impl MachineManager {
     pub async fn new(config: Config) -> Result<Self> {
-        let mut client = RollupMachineManagerClient::connect(config.endpoint)
+        let mut client = ServerManagerClient::connect(config.endpoint)
             .await
             .context(TonicTransportError)?;
 

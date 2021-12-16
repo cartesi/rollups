@@ -1,7 +1,7 @@
 use super::error;
 use super::fold;
 
-pub mod rollup_mm;
+pub mod rollup_server;
 
 use async_trait::async_trait;
 use error::*;
