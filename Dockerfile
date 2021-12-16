@@ -1,15 +1,21 @@
-FROM node:14-buster-slim
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+FROM node:16-alpine
 
-RUN mkdir -p /opt/cartesi/share/blockchain/
+RUN apk add --no-cache git
 
-WORKDIR /usr/src/app
-COPY . .
+ENV BASE /opt/cartesi
 
-RUN yarn install --non-interactive --frozen-lockfile
+WORKDIR $BASE/share/blockchain
+COPY package.json .
+COPY tsconfig.json .
+COPY yarn.lock .
 
-RUN cp ./entrypoint-docker.sh /usr/local/bin
+COPY hardhat.config.ts .
+COPY contracts ./contracts
+COPY src/tasks ./src/tasks
 
-ENTRYPOINT ["/bin/sh", "/usr/local/bin/entrypoint-docker.sh"]
+RUN yarn install --non-interactive
+
+EXPOSE 8545  
+
+ENTRYPOINT ["npx", "hardhat"]
+CMD ["node" ]
