@@ -9,6 +9,9 @@ COPY package.json .
 COPY tsconfig.json .
 COPY yarn.lock .
 
+ADD wait-for-file.sh /
+RUN chmod +x /wait-for-file.sh
+
 COPY hardhat.config.ts .
 COPY contracts ./contracts
 COPY src/tasks ./src/tasks

@@ -92,7 +92,7 @@ const config: HardhatUserConfig = {
             },
         ],
         deployments: {
-            localhost: ["node_modules/@cartesi/util/deployments/localhost"],
+            localhost: ["deployments/localhost"],
             ropsten: ["node_modules/@cartesi/util/deployments/ropsten"],
             rinkeby: ["node_modules/@cartesi/util/deployments/rinkeby"],
             kovan: ["node_modules/@cartesi/util/deployments/kovan"],
@@ -116,10 +116,6 @@ const config: HardhatUserConfig = {
         beneficiary: {
             default: 1,
         },
-    },
-    tenderly: {
-        username: "cartesi",
-        project: "pos",
     },
 };
 

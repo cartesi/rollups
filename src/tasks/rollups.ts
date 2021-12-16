@@ -10,8 +10,27 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-import { HardhatRuntimeEnvironment, TaskArguments } from "hardhat/types";
+import fs from "fs";
+import {
+    HardhatRuntimeEnvironment,
+    Network,
+    TaskArguments,
+} from "hardhat/types";
 import { task, types } from "hardhat/config";
+import { ContractExport, Export } from "hardhat-deploy/dist/types";
+
+const exportDeployment = async (
+    network: Network,
+    contracts: { [name: string]: ContractExport },
+    filename: string
+) => {
+    const exp: Export = {
+        name: network.name,
+        chainId: network.config.chainId?.toString() || "", // why can it be undefined?
+        contracts,
+    };
+    fs.writeFileSync(filename, JSON.stringify(exp));
+};
 
 task("rollups:create", "Create a set of Rollups contracts")
     .addParam(
@@ -22,7 +41,7 @@ task("rollups:create", "Create a set of Rollups contracts")
         true
     )
     .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
-        const { deployments, ethers } = hre;
+        const { deployments, ethers, network } = hre;
         const MINUTE = 60; // seconds in a minute
         const HOUR = 60 * MINUTE; // seconds in an hour
         const DAY = 24 * HOUR; // seconds in a day
@@ -34,20 +53,17 @@ task("rollups:create", "Create a set of Rollups contracts")
         let signers = await ethers.getSigners();
 
         // Bitmask
-
-        const bitMaskLibrary = await deployments.get("Bitmask");
-        const bitMaskAddress = bitMaskLibrary.address;
+        const Bitmask = await deployments.get("Bitmask");
 
         // Merkle
-        const merkle = await deployments.get("Merkle");
-        const merkleAddress = merkle.address;
+        const Merkle = await deployments.get("Merkle");
 
         // RollupsImpl
-        const { address } = await deployments.deploy("RollupsImpl", {
+        const RollupsImpl = await deployments.deploy("RollupsImpl", {
             from: await signers[0].getAddress(),
             libraries: {
-                Bitmask: bitMaskAddress,
-                Merkle: merkleAddress,
+                Bitmask: Bitmask.address,
+                Merkle: Merkle.address,
             },
             args: [
                 INPUT_DURATION,
@@ -59,19 +75,22 @@ task("rollups:create", "Create a set of Rollups contracts")
 
         // we have to `require`, not `import`, because it's built by typechain
         const { RollupsImpl__factory } =
-            await require("../types/factories/RollupsImpl__factory");
+            await require("../../dist/src/types/factories/RollupsImpl__factory");
 
-        let rollupsImpl = RollupsImpl__factory.connect(address, signers[0]);
+        let rollupsImpl = RollupsImpl__factory.connect(
+            RollupsImpl.address,
+            signers[0]
+        );
 
         let inputAddress = await rollupsImpl.getInputAddress();
         let outputAddress = await rollupsImpl.getOutputAddress();
 
-        let erc20PortalImpl = await deployments.deploy("ERC20PortalImpl", {
+        let Erc20PortalImpl = await deployments.deploy("ERC20PortalImpl", {
             from: await signers[0].getAddress(),
             args: [inputAddress, outputAddress],
         });
 
-        let etherPortalImpl = await deployments.deploy("EtherPortalImpl", {
+        let EtherPortalImpl = await deployments.deploy("EtherPortalImpl", {
             from: await signers[0].getAddress(),
             args: [inputAddress, outputAddress],
         });
@@ -87,9 +106,31 @@ task("rollups:create", "Create a set of Rollups contracts")
         );
         console.log("Input address " + inputAddress);
         console.log("Output address " + outputAddress);
-        console.log("Ether Portal address " + etherPortalImpl.address);
-        console.log("ERC20 Portal address " + erc20PortalImpl.address);
-        // TODO: write output to file
+        console.log("Ether Portal address " + EtherPortalImpl.address);
+        console.log("ERC20 Portal address " + Erc20PortalImpl.address);
+
+        // write export deployment file
+        if (args.export) {
+            network.name;
+            await exportDeployment(
+                network,
+                {
+                    RollupsImpl: {
+                        address: RollupsImpl.address,
+                        abi: RollupsImpl.abi,
+                    },
+                    EtherPortalImpl: {
+                        address: EtherPortalImpl.address,
+                        abi: EtherPortalImpl.abi,
+                    },
+                    Erc20PortalImpl: {
+                        address: Erc20PortalImpl.address,
+                        abi: Erc20PortalImpl.abi,
+                    },
+                },
+                args.export
+            );
+        }
     });
 
 task("rollups:claim", "Send a claim to the current epoch")
