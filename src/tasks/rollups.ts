@@ -1,4 +1,4 @@
-// Copyright 2020 Cartesi Pte. Ltd.
+// Copyright 2022 Cartesi Pte. Ltd.
 
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -12,8 +12,85 @@
 
 import { HardhatRuntimeEnvironment, TaskArguments } from "hardhat/types";
 import { task, types } from "hardhat/config";
-import { BigNumber } from "ethers";
-import { formatUnits } from "@ethersproject/units";
+
+task("rollups:create", "Create a set of Rollups contracts")
+    .addParam(
+        "export",
+        "File to export the deployed contracts information",
+        undefined,
+        types.string,
+        true
+    )
+    .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
+        const { deployments, ethers } = hre;
+        const MINUTE = 60; // seconds in a minute
+        const HOUR = 60 * MINUTE; // seconds in an hour
+        const DAY = 24 * HOUR; // seconds in a day
+
+        const INPUT_DURATION = 1 * DAY;
+        const CHALLENGE_PERIOD = 7 * DAY;
+        const INPUT_LOG2_SIZE = 25;
+
+        let signers = await ethers.getSigners();
+
+        // Bitmask
+
+        const bitMaskLibrary = await deployments.get("Bitmask");
+        const bitMaskAddress = bitMaskLibrary.address;
+
+        // Merkle
+        const merkle = await deployments.get("Merkle");
+        const merkleAddress = merkle.address;
+
+        // RollupsImpl
+        const { address } = await deployments.deploy("RollupsImpl", {
+            from: await signers[0].getAddress(),
+            libraries: {
+                Bitmask: bitMaskAddress,
+                Merkle: merkleAddress,
+            },
+            args: [
+                INPUT_DURATION,
+                CHALLENGE_PERIOD,
+                INPUT_LOG2_SIZE,
+                [await signers[0].getAddress()],
+            ],
+        });
+
+        // we have to `require`, not `import`, because it's built by typechain
+        const { RollupsImpl__factory } =
+            await require("../types/factories/RollupsImpl__factory");
+
+        let rollupsImpl = RollupsImpl__factory.connect(address, signers[0]);
+
+        let inputAddress = await rollupsImpl.getInputAddress();
+        let outputAddress = await rollupsImpl.getOutputAddress();
+
+        let erc20PortalImpl = await deployments.deploy("ERC20PortalImpl", {
+            from: await signers[0].getAddress(),
+            args: [inputAddress, outputAddress],
+        });
+
+        let etherPortalImpl = await deployments.deploy("EtherPortalImpl", {
+            from: await signers[0].getAddress(),
+            args: [inputAddress, outputAddress],
+        });
+
+        console.log("Rollups Impl address: " + rollupsImpl.address);
+        console.log(
+            "Rollups Impl getCurrentEpoch: " +
+                (await rollupsImpl.getCurrentEpoch())
+        );
+        console.log(
+            "Rollups accumulation start: " +
+                (await rollupsImpl.getInputAccumulationStart())
+        );
+        console.log("Input address " + inputAddress);
+        console.log("Output address " + outputAddress);
+        console.log("Ether Portal address " + etherPortalImpl.address);
+        console.log("ERC20 Portal address " + erc20PortalImpl.address);
+        // TODO: write output to file
+    });
 
 task("rollups:claim", "Send a claim to the current epoch")
     .addParam("claim", "Validator's bytes32 claim for current claimable epoch")
