@@ -1,4 +1,4 @@
-// Copyright 2020 Cartesi Pte. Ltd.
+// Copyright 2022 Cartesi Pte. Ltd.
 
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -11,15 +11,11 @@
 // specific language governing permissions and limitations under the License.
 
 import { HardhatRuntimeEnvironment, TaskArguments } from "hardhat/types";
-import { task, types } from "hardhat/config";
-import { BigNumber } from "ethers";
-import { formatUnits } from "@ethersproject/units";
+import { task } from "hardhat/config";
 
 task("util:advanceTime", "Advances time in private blockchain")
     .addParam("seconds", "time to advance in seconds")
     .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
-        const { deployments, ethers } = hre;
-
         await hre.network.provider.send("evm_increaseTime", [
             Number(args.seconds),
         ]);
