@@ -25,13 +25,12 @@ task("testTasks", "test rollups tasks").setAction(
 
         await hre.run("rollups:getState");
 
-        // end InputAccumulation
+        // advance time to phase AwaitingConsensus
+        console.log("advance to awaitingConsensus");
         await hre.run("util:advanceTime", { seconds: "86401" }); // advance 1 day
-        console.log("InputAccumulation ended");
         await hre.run("rollups:getState"); // if nobody makes a claim, state is still InputAccumulation!!!
 
         // make a claim
-        console.log("making a claim");
         await hre.run("rollups:claim", {
             claim: "0x3b68374de055ad8c2d931f468aa4c2dc6e43661d679d14e4fc6207673f1fe8d9",
         });
