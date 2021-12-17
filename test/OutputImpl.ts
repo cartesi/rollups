@@ -48,6 +48,8 @@ describe("Output Implementation", () => {
     let encodedNotice: string;
 
     beforeEach(async () => {
+        await deployments.fixture(["RollupsImpl"]);
+        
         // get signers
         signers = await ethers.getSigners();
 
