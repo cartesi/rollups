@@ -34,6 +34,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
     var VMCC: ValidatorManagerClaimsCountedImpl;
     const provider = new MockProvider();
     var validators: string[] = [];
+    let claimsMaskLibraryAddress: any;
 
     let hash_zero = ethers.constants.HashZero;
     let address_zero = "0x0000000000000000000000000000000000000000";
@@ -47,9 +48,6 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
     beforeEach(async () => {
         await deployments.fixture(["RollupsImpl"]);
         [rollups, signer] = await ethers.getSigners();
-        const vmccFactory = new ValidatorManagerClaimsCountedImpl__factory(
-            rollups
-        );
         var address: any;
 
         var wallets = provider.getWallets();
@@ -61,9 +59,24 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             validators.push(address);
         }
 
-        VMCC = await vmccFactory.deploy(
-            await rollups.getAddress(),
-            validators
+        // deploy ClaimsMaskLibrary
+        let claimsMaskLibrary = await deployments.get("ClaimsMaskLibrary");
+        claimsMaskLibraryAddress = claimsMaskLibrary.address;
+
+        // deploy ValidatorManagerClaimsCountedImpl
+        let deployedVMCC = await deployments.deploy(
+            "ValidatorManagerClaimsCountedImpl",
+            {
+                from: await rollups.getAddress(),
+                libraries: {
+                    ClaimsMaskLibrary: claimsMaskLibraryAddress,
+                },
+                args: [await rollups.getAddress(), validators],
+            }
+        );
+        VMCC = ValidatorManagerClaimsCountedImpl__factory.connect(
+            deployedVMCC.address,
+            rollups
         );
     });
 
@@ -74,11 +87,14 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             var address = await wallets[i].getAddress();
             wrongValidators.push(address);
         }
-        const vmccFactory = new ValidatorManagerClaimsCountedImpl__factory(
-            rollups
-        );
         await expect(
-            vmccFactory.deploy(await rollups.getAddress(), wrongValidators)
+            deployments.deploy("ValidatorManagerClaimsCountedImpl", {
+                from: await rollups.getAddress(),
+                libraries: {
+                    ClaimsMaskLibrary: claimsMaskLibraryAddress,
+                },
+                args: [await rollups.getAddress(), wrongValidators],
+            })
         ).to.be.revertedWith("up to 8 validators");
     });
 
@@ -92,7 +108,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
 
     it("check initial claimAgreementMask", async () => {
         expect(
-            await VMCC.getCurrentAgreementMask(),
+            await VMCC.getAgreementMask(),
             "get initial claimAgreementMask"
         ).to.equal(0);
     });
@@ -104,7 +120,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         ).to.equal(hash_zero);
     });
 
-    it("check initial currentClaim", async () => {
+    it("check initial maxNumValidators", async () => {
         expect(
             await VMCC.maxNumValidators(),
             "get initial maxNumValidators"
@@ -190,7 +206,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             // check updated currentAgreementMask
             currentAgreementMask = currentAgreementMask | (1 << i);
             expect(
-                await VMCC.getCurrentAgreementMask(),
+                await VMCC.getAgreementMask(),
                 "check currentAgreementMask"
             ).to.equal(currentAgreementMask);
 
@@ -231,7 +247,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         currentAgreementMask =
             currentAgreementMask | (1 << (validators.length - 1));
         expect(
-            await VMCC.getCurrentAgreementMask(),
+            await VMCC.getAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
     });
@@ -280,7 +296,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         // check currentAgreementMask
         var currentAgreementMask = 1;
         expect(
-            await VMCC.getCurrentAgreementMask(),
+            await VMCC.getAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
     });
@@ -325,7 +341,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         // check currentAgreementMask
         var currentAgreementMask = 1;
         expect(
-            await VMCC.getCurrentAgreementMask(),
+            await VMCC.getAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
 
@@ -557,7 +573,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             .withArgs(claim);
 
         expect(
-            await VMCC.getCurrentAgreementMask(),
+            await VMCC.getAgreementMask(),
             "current agreement mask should reset"
         ).to.equal(0);
 

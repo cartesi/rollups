@@ -16,48 +16,90 @@ pragma solidity >=0.8.8;
 import "../ClaimsMaskLibrary.sol";
 
 contract TestClaimsMaskLibrary {
-    function getNumClaimsRedeemed(
-        ClaimMask _numClaimsRedeemed,
-        uint256 _validatorIndex
-    ) public pure returns (uint256) {
-        return
-            ClaimsMaskLibrary.getNumClaimsRedeemed(
-                _numClaimsRedeemed,
-                _validatorIndex
-            );
+    function newClaimsMask(uint256 _value) public view returns (ClaimsMask) {
+        return ClaimsMaskLibrary.newClaimsMask(_value);
     }
 
-    function increaseNumClaimed(
-        ClaimMask _numClaimsRedeemed,
-        uint256 _validatorIndex,
-        uint256 _value
-    ) public pure returns (ClaimMask) {
-        return
-            ClaimsMaskLibrary.increaseNumClaimed(
-                _numClaimsRedeemed,
-                _validatorIndex,
-                _value
-            );
-    }
-
-    function setNumClaimsRedeemed(
-        ClaimMask _numClaimsRedeemed,
-        uint256 _validatorIndex,
-        uint256 _value
-    ) public pure returns (ClaimMask) {
-        return
-            ClaimsMaskLibrary.setNumClaimsRedeemed(
-                _numClaimsRedeemed,
-                _validatorIndex,
-                _value
-            );
-    }
-
-    function newNumClaimsRedeemed(uint256[8] calldata _value)
+    function newClaimsMaskWithConsensusGoalSet(uint256 _numValidators)
         public
-        pure
-        returns (ClaimMask)
+        view
+        returns (ClaimsMask)
     {
-        return ClaimsMaskLibrary.newNumClaimsRedeemed(_value);
+        return
+            ClaimsMaskLibrary.newClaimsMaskWithConsensusGoalSet(_numValidators);
+    }
+
+    function getNumClaims(ClaimsMask _claimsMask, uint256 _validatorIndex)
+        public
+        view
+        returns (uint256)
+    {
+        return ClaimsMaskLibrary.getNumClaims(_claimsMask, _validatorIndex);
+    }
+
+    function increaseNumClaims(
+        ClaimsMask _claimsMask,
+        uint256 _validatorIndex,
+        uint256 _value
+    ) public view returns (ClaimsMask) {
+        return
+            ClaimsMaskLibrary.increaseNumClaims(
+                _claimsMask,
+                _validatorIndex,
+                _value
+            );
+    }
+
+    function setNumClaims(
+        ClaimsMask _claimsMask,
+        uint256 _validatorIndex,
+        uint256 _value
+    ) public view returns (ClaimsMask) {
+        return
+            ClaimsMaskLibrary.setNumClaims(
+                _claimsMask,
+                _validatorIndex,
+                _value
+            );
+    }
+
+    function clearAgreementMask(ClaimsMask _claimsMask)
+        public
+        view
+        returns (ClaimsMask)
+    {
+        return ClaimsMaskLibrary.clearAgreementMask(_claimsMask);
+    }
+
+    function getAgreementMask(ClaimsMask _claimsMask)
+        public
+        view
+        returns (uint256)
+    {
+        return ClaimsMaskLibrary.getAgreementMask(_claimsMask);
+    }
+
+    function setAgreementMask(ClaimsMask _claimsMask, uint256 _validatorIndex)
+        public
+        view
+        returns (ClaimsMask)
+    {
+        return ClaimsMaskLibrary.setAgreementMask(_claimsMask, _validatorIndex);
+    }
+
+    function getConsensusGoalMask(ClaimsMask _claimsMask)
+        public
+        view
+        returns (uint256)
+    {
+        return ClaimsMaskLibrary.getConsensusGoalMask(_claimsMask);
+    }
+
+    function removeValidator(ClaimsMask _claimsMask, uint256 _validatorIndex)
+        public
+        view
+        returns (ClaimsMask)
+    {
+        return ClaimsMaskLibrary.removeValidator(_claimsMask, _validatorIndex);
     }
 }

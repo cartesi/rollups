@@ -22,10 +22,16 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 // this FeeManagerImpl manages for up to 8 validators
 contract FeeManagerImpl is FeeManager, Ownable {
     ValidatorManagerClaimsCountedImpl ValidatorManagerCCI;
-    ClaimMask numClaimsRedeemed;
     uint256 public feePerClaim;
     IERC20 immutable token; // the token that is used for paying fees to validators
     bool lock; // reentrancy lock
+
+    // A bit set used for up to 8 validators.
+    // The first 16 bits are not used.
+    // The following every 30 bits are used to indicate the number of total claims each validator has made
+    // |     not used    | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |
+    // |     16 bits     |      30 bits       |      30 bits       | ... |      30 bits       |
+    ClaimsMask numClaimsRedeemed;
 
     /// @notice functions modified by noReentrancy are not subject to recursion
     modifier noReentrancy() {
@@ -65,7 +71,7 @@ contract FeeManagerImpl is FeeManager, Ownable {
         uint256 totalClaims =
             ValidatorManagerCCI.getNumberOfClaimsByIndex(valIndex);
         uint256 redeemedClaims =
-            ClaimsMaskLibrary.getNumClaimsRedeemed(numClaimsRedeemed, valIndex);
+            ClaimsMaskLibrary.getNumClaims(numClaimsRedeemed, valIndex);
 
         return totalClaims - redeemedClaims; // underflow checked by default with sol0.8
     }
@@ -81,13 +87,12 @@ contract FeeManagerImpl is FeeManager, Ownable {
         require(_validator != address(0), "address should not be 0");
         uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
         uint256 redeemedClaims =
-            ClaimsMaskLibrary.getNumClaimsRedeemed(numClaimsRedeemed, valIndex);
+            ClaimsMaskLibrary.getNumClaims(numClaimsRedeemed, valIndex);
 
         return redeemedClaims;
     }
 
     /// @notice contract owner can reset the value of fee per claim
-    ///         validators should be paid for the past unpaid claims before setting the new fee value
     /// @param  _value the new value of fee per claim
     function resetFeePerClaim(uint256 _value) public override onlyOwner {
         // before resetting the feePerClaim, pay fees for all validators as per current rates
@@ -112,7 +117,7 @@ contract FeeManagerImpl is FeeManager, Ownable {
 
         // ** effects **
         uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
-        numClaimsRedeemed = ClaimsMaskLibrary.increaseNumClaimed(
+        numClaimsRedeemed = ClaimsMaskLibrary.increaseNumClaims(
             numClaimsRedeemed,
             valIndex,
             nowRedeemingClaims

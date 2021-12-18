@@ -13,76 +13,150 @@
 /// @title ClaimsMask library
 pragma solidity >=0.8.8;
 
-// ClaimMask is used to keep track of the number of claims (that have been redeemed) for up to 8 validators
-// | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |
-// |       32 bits      |       32 bits      | ... |       32 bits      |
-type ClaimMask is uint256;
+// ClaimsMask is used to keep track of the number of claims for up to 8 validators
+// | agreement mask | consensus goal mask | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |
+// |     8 bits     |        8 bits       |      30 bits       |      30 bits       | ... |      30 bits       |
+// In Validator Manager, #claims_validator indicates the #claims the validator has made.
+// In Fee Manager, #claims_validator indicates the #claims the validator has redeemed. In this case,
+//      agreement mask and consensus goal mask are not used.
+
+type ClaimsMask is uint256;
 
 library ClaimsMaskLibrary {
-    /// @notice this function returns the #claims that the validator has redeemed
-    /// @param  _numClaimsRedeemed the ClaimMask for the number of claims redeemed
-    /// @param  _validatorIndex index of the validator in the validator array
+    uint256 constant claimsBitLen = 30; // #bits used for each #claims
+
+    /// @notice this function creates a new ClaimsMask variable with value _value
+    /// @param  _value the value following the format of ClaimsMask
+    function newClaimsMask(uint256 _value) public pure returns (ClaimsMask) {
+        return ClaimsMask.wrap(_value);
+    }
+
+    /// @notice this function creates a new ClaimsMask variable with the consensus goal mask set,
+    ///         according to the number of validators
+    /// @param  _numValidators the number of validators
+    function newClaimsMaskWithConsensusGoalSet(uint256 _numValidators)
+        public
+        pure
+        returns (ClaimsMask)
+    {
+        require(_numValidators <= 8, "up to 8 validators");
+        uint256 consensusMask = (1 << _numValidators) - 1;
+        return ClaimsMask.wrap(consensusMask << 240); // 256 - 8 - 8 = 240
+    }
+
+    /// @notice this function returns the #claims for the specified validator
+    /// @param  _claimsMask the ClaimsMask value
+    /// @param  _validatorIndex index of the validator in the validator array, starting from 0
     ///     this index can be obtained though `getNumberOfClaimsByIndex` function in Validator Manager
-    function getNumClaimsRedeemed(
-        ClaimMask _numClaimsRedeemed,
-        uint256 _validatorIndex
-    ) public pure returns (uint256) {
+    function getNumClaims(ClaimsMask _claimsMask, uint256 _validatorIndex)
+        public
+        pure
+        returns (uint256)
+    {
         require(_validatorIndex < 8, "index out of range");
-        uint256 bitmask = (1 << 32) - 1;
+        uint256 bitmask = (1 << claimsBitLen) - 1;
         return
-            (ClaimMask.unwrap(_numClaimsRedeemed) >> (32 * _validatorIndex)) &
+            (ClaimsMask.unwrap(_claimsMask) >> (claimsBitLen * _validatorIndex)) &
             bitmask;
     }
 
-    /// @notice this function increases the #claims that the validator has redeemed
-    /// @param  _numClaimsRedeemed the ClaimMask for the number of claims redeemed
-    /// @param  _validatorIndex index of the validator in the validator array
-    /// @param  _value the increase value
-    function increaseNumClaimed(
-        ClaimMask _numClaimsRedeemed,
+    /// @notice this function increases the #claims for the specified validator
+    /// @param  _claimsMask the ClaimsMask value
+    /// @param  _validatorIndex index of the validator in the validator array, starting from 0
+    /// @param  _value the increase amount
+    function increaseNumClaims(
+        ClaimsMask _claimsMask,
         uint256 _validatorIndex,
         uint256 _value
-    ) public pure returns (ClaimMask) {
+    ) public pure returns (ClaimsMask) {
         require(_validatorIndex < 8, "index out of range");
-        uint256 currentNum =
-            getNumClaimsRedeemed(_numClaimsRedeemed, _validatorIndex);
-        uint256 newNum = currentNum + _value; // by default, solc checks if this line overflows
-        return
-            setNumClaimsRedeemed(_numClaimsRedeemed, _validatorIndex, newNum);
+        uint256 currentNum = getNumClaims(_claimsMask, _validatorIndex);
+        uint256 newNum = currentNum + _value; // overflows checked by default with sol0.8
+        return setNumClaims(_claimsMask, _validatorIndex, newNum);
     }
 
-    /// @notice this function sets the #claims that the validator has redeemed
-    /// @param  _numClaimsRedeemed the ClaimMask for the number of claims redeemed
-    /// @param  _validatorIndex index of the validator in the validator array
+    /// @notice this function sets the #claims for the specified validator
+    /// @param  _claimsMask the ClaimsMask value
+    /// @param  _validatorIndex index of the validator in the validator array, starting from 0
     /// @param  _value the set value
-    function setNumClaimsRedeemed(
-        ClaimMask _numClaimsRedeemed,
+    function setNumClaims(
+        ClaimsMask _claimsMask,
         uint256 _validatorIndex,
         uint256 _value
-    ) public pure returns (ClaimMask) {
+    ) public pure returns (ClaimsMask) {
         require(_validatorIndex < 8, "index out of range");
-        require(_value <= ((1 << 32) - 1), "ClaimMask Overflow");
-        uint256 bitmask = ~(((1 << 32) - 1) << (32 * _validatorIndex));
-        uint256 clearedClaimMask =
-            ClaimMask.unwrap(_numClaimsRedeemed) & bitmask;
-        _numClaimsRedeemed = ClaimMask.wrap(
-            clearedClaimMask | (_value << (32 * _validatorIndex))
+        require(_value <= ((1 << claimsBitLen) - 1), "ClaimsMask Overflow");
+        uint256 bitmask =
+            ~(((1 << claimsBitLen) - 1) << (claimsBitLen * _validatorIndex));
+        uint256 clearedClaimsMask = ClaimsMask.unwrap(_claimsMask) & bitmask;
+        _claimsMask = ClaimsMask.wrap(
+            clearedClaimsMask | (_value << (claimsBitLen * _validatorIndex))
         );
-        return _numClaimsRedeemed;
+        return _claimsMask;
     }
 
-    /// @notice this function creates a new ClaimMask variable an array of 8 values
-    /// @param  _value the value array in the order from low -> high (validator# 0->7)
-    function newNumClaimsRedeemed(uint256[8] calldata _value)
+    /// @notice get consensus goal mask
+    /// @param  _claimsMask the ClaimsMask value
+    function clearAgreementMask(ClaimsMask _claimsMask)
         public
         pure
-        returns (ClaimMask)
+        returns (ClaimsMask)
     {
-        uint256 maskValue;
-        for (uint256 i; i < 8; i++) {
-            require(_value[i] < (1 << 32), "value out of range");
-            maskValue = maskValue | (_value[i] << (32 * i));
-        }
-        return ClaimMask.wrap(maskValue);
+        uint256 clearedMask = ClaimsMask.unwrap(_claimsMask) & ((1 << 248) - 1); // 256 - 8 = 248
+        return ClaimsMask.wrap(clearedMask);
+    }
+
+    /// @notice get the entire agreement mask
+    /// @param  _claimsMask the ClaimsMask value
+    function getAgreementMask(ClaimsMask _claimsMask)
+        public
+        pure
+        returns (uint256)
+    {
+        return (ClaimsMask.unwrap(_claimsMask) >> 248); // get the first 8 bits
+    }
+
+    /// @notice set agreement mask for the specified validator
+    /// @param  _claimsMask the ClaimsMask value
+    /// @param  _validatorIndex index of the validator in the validator array, starting from 0
+    function setAgreementMask(ClaimsMask _claimsMask, uint256 _validatorIndex)
+        public
+        pure
+        returns (ClaimsMask)
+    {
+        require(_validatorIndex < 8, "index out of range");
+        uint256 setMask =
+            (ClaimsMask.unwrap(_claimsMask) | (1 << (248 + _validatorIndex))); // 256 - 8 = 248
+        return ClaimsMask.wrap(setMask);
+    }
+
+    /// @notice get the entire consensus goal mask
+    /// @param  _claimsMask the ClaimsMask value
+    function getConsensusGoalMask(ClaimsMask _claimsMask)
+        public
+        pure
+        returns (uint256)
+    {
+        return ((ClaimsMask.unwrap(_claimsMask) << 8) >> 248); // get the second 8 bits
+    }
+
+    /// @notice remove validator from the ClaimsMask
+    /// @param  _claimsMask the ClaimsMask value
+    /// @param  _validatorIndex index of the validator in the validator array, starting from 0
+    function removeValidator(ClaimsMask _claimsMask, uint256 _validatorIndex)
+        public
+        pure
+        returns (ClaimsMask)
+    {
+        require(_validatorIndex < 8, "index out of range");
+        uint256 claimsMaskValue = ClaimsMask.unwrap(_claimsMask);
+        // remove validator from agreement bitmask
+        uint256 zeroMask = ~(1 << (_validatorIndex + 248)); // 256 - 8 = 248
+        claimsMaskValue = (claimsMaskValue & zeroMask);
+        // remove validator from consensus goal mask
+        zeroMask = ~(1 << (_validatorIndex + 240)); // 256 - 8 - 8 = 240
+        claimsMaskValue = (claimsMaskValue & zeroMask);
+        // remove validator from #claims
+        return setNumClaims(ClaimsMask.wrap(claimsMaskValue), _validatorIndex, 0);
     }
 }
