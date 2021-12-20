@@ -6,8 +6,8 @@ pub mod cartesi_machine {
     tonic::include_proto!("cartesi_machine");
 }
 
-pub mod rollup_machine_manager {
-    tonic::include_proto!("cartesi_rollup_machine_manager");
+pub mod server_manager {
+    tonic::include_proto!("cartesi_server_manager");
 }
 
 pub mod state_server {

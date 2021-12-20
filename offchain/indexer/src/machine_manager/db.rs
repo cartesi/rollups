@@ -4,7 +4,7 @@ use crate::error::*;
 
 use crate::grpc::{
     cartesi_machine::{Hash, MerkleTreeProof},
-    rollup_machine_manager::{
+    server_manager::{
         processed_input::ProcessedOneof, Address, GetEpochStatusResponse,
         GetSessionStatusResponse, InputResult, Notice, ProcessedInput, Report,
         TaintStatus, Voucher,
@@ -793,7 +793,7 @@ impl DbEpochStatusResponse {
             if num_processed_inputs_db > self.processed_inputs.len() {
                 return Err(Error::OutOfSync {
                     err: format!(
-                        "Machine Manager processed {}, should've processed {}",
+                        "Server Manager processed {}, should've processed {}",
                         self.processed_inputs.len(),
                         num_processed_inputs_db
                     ),

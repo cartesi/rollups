@@ -4,7 +4,7 @@ use crate::machine_manager::db::{
 };
 
 use crate::grpc::{
-    rollup_machine_manager::{
+    server_manager::{
         GetEpochStatusResponse, GetSessionStatusResponse, GetStatusResponse,
     },
     versioning::GetVersionResponse,

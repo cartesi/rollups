@@ -8,9 +8,11 @@ use crate::db::PollingPool;
 
 use crate::grpc::{
     cartesi_machine::Void,
-    rollup_machine_manager::{
-        rollup_machine_manager_client::RollupMachineManagerClient,
-        GetEpochStatusRequest, GetSessionStatusRequest,
+    server_manager::{
+        server_manager_client::ServerManagerClient,
+        GetEpochStatusRequest, GetSessionStatusRequest, StartSessionRequest,
+        AdvanceStateRequest, FinishEpochRequest, InputMetadata, Address,
+        InspectStateRequest,
     },
 };
 
@@ -18,17 +20,17 @@ use tonic::transport::Channel;
 
 #[derive(Clone)]
 pub struct Poller {
-    client: RollupMachineManagerClient<Channel>,
+    client: ServerManagerClient<Channel>,
     writer: Writer,
 }
 
 impl Poller {
     pub async fn new(
-        rollup_machine_manager_endpoint: String,
+        server_manager_endpoint: String,
         pool: PollingPool,
     ) -> Result<Poller> {
-        let client = RollupMachineManagerClient::connect(
-            rollup_machine_manager_endpoint,
+        let client = ServerManagerClient::connect(
+            server_manager_endpoint,
         )
         .await
         .context(TonicTransportError)?;
