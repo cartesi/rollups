@@ -6,7 +6,7 @@ cd /usr/src/app;
 npx hardhat node --network hardhat &
 pid=$!
 
-npx hardhat deploy --network hardhat --export /opt/cartesi/share/blockchain/localhost.json
+npx hardhat deploy --network hardhat --export /opt/cartesi/share/blockchain/dapp.json
 
 
 wait $pid

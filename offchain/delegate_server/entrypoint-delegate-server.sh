@@ -1,6 +1,6 @@
 #!/bin/sh
 
-dockerize -wait file:///opt/cartesi/share/blockchain/localhost.json -timeout 60s
+dockerize -wait file:///opt/cartesi/share/blockchain/dapp.json -timeout 60s
 
 # config files
 SF_CONFIG_PATH="/opt/cartesi/share/config/sf-config.toml"
