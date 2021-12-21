@@ -13,4 +13,5 @@
 import "./rollups";
 import "./input";
 import "./util";
-//import "./output"
+import "./output";
+import "./testTask";

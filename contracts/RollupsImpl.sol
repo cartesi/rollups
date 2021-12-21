@@ -52,7 +52,7 @@ contract RollupsImpl is Rollups {
         uint32 sealingEpochTimestamp; // timestamp on when a proposed epoch (claim) becomes challengeable
         uint32 currentPhase_int; // current phase in integer form
     }
-    StorageVar storageVar;
+    StorageVar public storageVar;
 
     /// @notice functions modified by onlyInputContract can only be called
     // by input contract

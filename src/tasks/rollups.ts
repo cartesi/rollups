@@ -187,13 +187,14 @@ task(
             rollupsDeployed.address
         );
 
-        const inputDuration = await rollups.inputDuration();
-        const challengePeriod = await rollups.challengePeriod();
+        const storageVar = await rollups.storageVar();
+        const inputDuration = await storageVar.inputDuration;
+        const challengePeriod = await storageVar.challengePeriod;
         const currentEpoch = await rollups.getCurrentEpoch();
-        const accumulationStart = await rollups.inputAccumulationStart();
-        const sealingEpochTimestamp = await rollups.sealingEpochTimestamp();
+        const accumulationStart = await storageVar.inputAccumulationStart;
+        const sealingEpochTimestamp = await storageVar.sealingEpochTimestamp;
 
-        const currentPhase = await rollups.currentPhase();
+        const currentPhase = await storageVar.currentPhase_int;
 
         console.log(`
             current timestamp: ${
