@@ -2,6 +2,7 @@ use offchain_core::ethers;
 
 use crate::error::*;
 use crate::fold::types::RollupsState;
+use state_fold::types::BlockState;
 
 use serde_json;
 use snafu::ResultExt;
@@ -50,9 +51,9 @@ impl RollupsStateFold {
             .into_inner()
             .json_state;
 
-        let state =
+        let block_state: BlockState<RollupsState> =
             serde_json::from_str(&state_json).context(DeserializeError)?;
 
-        Ok(state)
+        Ok(block_state.state)
     }
 }
