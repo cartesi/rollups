@@ -20,4 +20,4 @@ confirmations = 10
 provider_http_endpoint = "http://hardhat:8545"
 ws_endpoint = "ws://hardhat:8545"
 state_fold_grpc_endpoint = "http://statefold_server:50051"
-mm_endpoint = "http://echo_machine:5001"
+mm_endpoint = "http://echo_machine:5000"
