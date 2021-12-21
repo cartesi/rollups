@@ -18,7 +18,7 @@ COPY src/tasks ./src/tasks
 
 RUN yarn install --non-interactive
 
-EXPOSE 8545  
+EXPOSE 8545
 
 ENTRYPOINT ["npx", "hardhat"]
 CMD ["node" ]
