@@ -24,7 +24,7 @@ jobs:
               id: docker_meta
               uses: docker/metadata-action@v3
               with:
-                  images: ${{ secrets.DOCKER_ORGANIZATION }}/rollups
+                  images: ${{ secrets.DOCKER_ORGANIZATION }}/hardhat
                   tags: |
                       type=ref,event=branch
                       type=semver,pattern={{version}}
