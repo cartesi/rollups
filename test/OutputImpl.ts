@@ -32,7 +32,7 @@ use(solidity);
     // 4. run the script and modify values of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` or `epochNoticeDriveHash`
 
     describe("Output Implementation Testing", () => {
-        let enableDelegate = process.env["DELEGATE_TEST"];
+        let enableDelegate = false; //process.env["DELEGATE_TEST"];
 
         /// for tests when modifiers are on, set this to true
         /// for tests when modifiers are off, set this to false

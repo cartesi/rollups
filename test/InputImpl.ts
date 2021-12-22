@@ -34,7 +34,7 @@ import { getState } from "./getState";
 use(solidity);
 
 describe("Input Implementation", () => {
-    let enableDelegate = process.env["DELEGATE_TEST"];
+    let enableDelegate = false;
 
     /// for testing Rollups when modifiers are on, set this to true
     /// for testing Rollups when modifiers are off, set this to false
