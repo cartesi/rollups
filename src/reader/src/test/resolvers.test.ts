@@ -1,4 +1,5 @@
 import db from "../db/models";
+import { expect } from "chai";
 
 import { graphqlTestCall } from "./graphqlTestCall";
 // import { User } from "./entity/User";
@@ -423,15 +424,11 @@ const descartesQuery = `
 	}
 `;
 
-beforeAll(async () => {
-	jest.setTimeout(10000);
-	jest.useFakeTimers("legacy");
+beforeEach(async () => {
 	await db.sequelize.sync();
 });
 
-afterAll(async () => {
-	jest.setTimeout(10000);
-	jest.useFakeTimers("legacy");
+afterEach(async () => {
 	await db.sequelize.drop();
 	await db.sequelize.close();
 });
@@ -439,10 +436,10 @@ afterAll(async () => {
 describe("resolvers", () => {
 	it("constants mutation and query", async () => {
 		const constantsMutationRepsonse = await graphqlTestCall(constantsMutation);
-		expect(constantsMutationRepsonse?.data?.constants.length).toEqual(2);
+		expect(constantsMutationRepsonse?.data?.constants.length).to.equal(2);
 
 		const constantsQueryResponse = await graphqlTestCall(constantsQuery);
-		expect(constantsQueryResponse?.data?.constants).toEqual(
+		expect(constantsQueryResponse?.data?.constants).to.equal(
 			constantsMutationRepsonse?.data?.constants
 		);
 	});
