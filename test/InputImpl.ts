@@ -29,13 +29,10 @@ import { solidity } from "ethereum-waffle";
 import { InputImpl__factory } from "../dist/src/types/factories/InputImpl__factory";
 import { Signer } from "ethers";
 import { InputImpl } from "../dist/src/types/InputImpl";
-import { getState } from "./getState";
 
 use(solidity);
 
 describe("Input Implementation", () => {
-    let enableDelegate = false;
-
     /// for testing Rollups when modifiers are on, set this to true
     /// for testing Rollups when modifiers are off, set this to false
     let permissionModifiersOn = true;
@@ -76,21 +73,6 @@ describe("Input Implementation", () => {
             inputFactory.deploy(mockRollups.address, wrongLog2Size),
             "log2Size > 64"
         ).to.be.revertedWith("log size: [3,64]");
-
-        // test delegate
-        if (enableDelegate) {
-            let initialState = JSON.stringify({
-                input_address: inputImpl.address,
-                epoch_number: "0x0",
-            });
-
-            let state = JSON.parse(await getState(initialState));
-
-            expect(
-                state.inputs.length,
-                "shouldn't have any inputs right after constructor"
-            ).to.equal(0);
-        }
     });
 
     it("addInput should revert if input length == 0", async () => {
@@ -98,21 +80,6 @@ describe("Input Implementation", () => {
             inputImpl.addInput([]),
             "empty input should revert"
         ).to.be.revertedWith("input len: (0,driveSize]");
-
-        // test delegate
-        if (enableDelegate) {
-            let initialState = JSON.stringify({
-                input_address: inputImpl.address,
-                epoch_number: "0x0",
-            });
-
-            let state = JSON.parse(await getState(initialState));
-
-            expect(
-                state.inputs.length,
-                "shouldn't have any inputs when adding empty inputs"
-            ).to.equal(0);
-        }
     });
 
     it("addInput should revert if input is larger than drive (log2Size)", async () => {
@@ -130,21 +97,6 @@ describe("Input Implementation", () => {
             inputImpl.addInput(input_129_bytes),
             "input should still revert because metadata doesnt fit"
         ).to.be.revertedWith("input len: (0,driveSize]");
-
-        // test delegate
-        if (enableDelegate) {
-            let initialState = JSON.stringify({
-                input_address: inputImpl.address,
-                epoch_number: "0x0",
-            });
-
-            let state = JSON.parse(await getState(initialState));
-
-            expect(
-                state.inputs.length,
-                "shouldn't have any inputs when adding inputs larger than the drive"
-            ).to.equal(0);
-        }
     });
 
     it("addInput should add input to inbox", async () => {
@@ -172,25 +124,6 @@ describe("Input Implementation", () => {
             "Number of inputs should be 3, because last addition changes the inbox"
         ).to.equal(3);
 
-        // test delegate
-        if (enableDelegate) {
-            let initialState = JSON.stringify({
-                input_address: inputImpl.address,
-                epoch_number: "0x0",
-            });
-            let state = JSON.parse(await getState(initialState));
-            expect(
-                state.inputs.length,
-                "now receiving inputs for epoch 1, getNumberOfInputs() reflects epoch 0"
-            ).to.equal(3);
-
-            initialState = JSON.stringify({
-                input_address: inputImpl.address,
-                epoch_number: "0x1",
-            });
-            state = JSON.parse(await getState(initialState));
-            expect(state.inputs.length, "only 1 input for epoch 1").to.equal(1);
-        }
     });
 
     it("emit event InputAdded", async () => {
@@ -211,17 +144,6 @@ describe("Input Implementation", () => {
                 "0x" + input_64_bytes.toString("hex")
             );
 
-        // test delegate
-        if (enableDelegate) {
-            let initialState = JSON.stringify({
-                input_address: inputImpl.address,
-                epoch_number: "0x0",
-            });
-
-            let state = JSON.parse(await getState(initialState));
-
-            expect(state.inputs.length, "only one input").to.equal(1);
-        }
     });
 
     it("test return value of addInput()", async () => {
@@ -254,33 +176,6 @@ describe("Input Implementation", () => {
             "use callStatic to view the return value"
         ).to.equal(input_hash);
 
-        // test delegate
-        if (enableDelegate) {
-            await inputImpl.addInput(input_64_bytes);
-
-            let initialState = JSON.stringify({
-                input_address: inputImpl.address,
-                epoch_number: "0x0",
-            });
-
-            let state = JSON.parse(await getState(initialState));
-
-            // checking the input hash is essentially checking the
-            // sender address, block timestamp, and payload
-            // otherwise if hash is needed, follow the calculations above
-            expect(
-                state.inputs[0].sender,
-                "check the recorded sender address"
-            ).to.equal((await signer.getAddress()).toLowerCase());
-            expect(
-                parseInt(state.inputs[0].timestamp, 16), // from hex to dec
-                "check the recorded timestamp"
-            ).to.equal((await ethers.provider.getBlock("latest")).timestamp);
-            expect(
-                Buffer.from(state.inputs[0].payload, "utf-8").toString(),
-                "check the recorded payload"
-            ).to.equal(input_64_bytes.toString());
-        }
     });
 
     it("test getInput()", async () => {
@@ -352,27 +247,6 @@ describe("Input Implementation", () => {
             "get the first value in input box 1"
         ).to.equal(input_hash);
 
-        // test delegate for epoch 1
-        if (enableDelegate) {
-            let initialState = JSON.stringify({
-                input_address: inputImpl.address,
-                epoch_number: "0x1",
-            });
-
-            let state = JSON.parse(await getState(initialState));
-            expect(
-                state.inputs[0].sender,
-                "check the recorded sender address for epoch 1"
-            ).to.equal((await signer.getAddress()).toLowerCase());
-            expect(
-                parseInt(state.inputs[0].timestamp, 16), // from hex to dec
-                "check the recorded timestamp for epoch 1"
-            ).to.equal(block_epoch1.timestamp);
-            expect(
-                Buffer.from(state.inputs[0].payload, "utf-8").toString(),
-                "check the recorded payload for epoch 1"
-            ).to.equal(input_64_bytes.toString());
-        }
     });
 
     it("getCurrentInbox should return correct inbox", async () => {

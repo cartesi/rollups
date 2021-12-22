@@ -12,7 +12,6 @@ import { Merkle } from "../dist/src/types/Merkle";
 import { CartesiMath } from "../dist/src/types/CartesiMath";
 import { Bytes, BytesLike } from "@ethersproject/bytes";
 import { keccak256 } from "ethers/lib/utils";
-import { getState } from "./getState";
 
 use(solidity);
 
@@ -32,8 +31,6 @@ use(solidity);
     // 4. run the script and modify values of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` or `epochNoticeDriveHash`
 
     describe("Output Implementation Testing", () => {
-        let enableDelegate = false; //process.env["DELEGATE_TEST"];
-
         /// for tests when modifiers are on, set this to true
         /// for tests when modifiers are off, set this to false
         let permissionModifiersOn = true;
@@ -490,156 +487,4 @@ use(solidity);
     it("testing function getEpochVoucherLog2Size()", async () => {
         expect(await outputImpl.getEpochVoucherLog2Size()).to.equal(37);
     });
-
-    /// ***test delegate*** ///
-    if (enableDelegate) {
-        it("testing output delegate", async () => {
-            /// ***test case 1 - initial check
-            let initialState = JSON.stringify({
-                output_address: outputImpl.address,
-            });
-            let state = JSON.parse(await getState(initialState));
-
-            // initial check, executed vouchers should be empty
-            expect(
-                JSON.stringify(state.vouchers) == "{}",
-                "initial check"
-            ).to.equal(true);
-
-            if (!permissionModifiersOn) {
-                // disable modifiers to call onNewEpoch()
-                /// ***test case 2 - only one voucher executed
-                // outputIndex: 0;
-                //  inputIndex: 1;
-                //  epochIndex: 0;
-                await outputImpl.onNewEpoch(epochHashForVoucher);
-                await outputImpl.executeVoucher(_destination, _payload, v);
-
-                state = JSON.parse(await getState(initialState));
-
-                // vouchers look like { '0': { '1': { '0': true } } }
-                expect(
-                    Object.keys(state.vouchers).length,
-                    "should have 1 executed voucher"
-                ).to.equal(1);
-                expect(
-                    state.vouchers[0][1][0],
-                    "the first voucher is executed successfully"
-                ).to.equal(true);
-
-                /// ***test case 3 - execute another voucher
-                // execute another voucher for epoch 1
-                let _payload_new = iface.encodeFunctionData(
-                    "simple_function(bytes32)",
-                    [ethers.utils.formatBytes32String("hello")]
-                );
-
-                let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-                v_new.epochIndex = 1; // we use the same outputIndex and inputIndex
-                v_new.outputMetadataArrayDriveHash =
-                    "0xc26ccca0f2995d3584e183ff7d8e2cd9f6ac01e263a3beb8f1a2345638d2bc9c";
-                v_new.epochVoucherDriveHash =
-                    "0x4ddc5a9a0f46871a08135296b981b86a8bca580c7f7d7de7c473089f234abab1";
-                let epochHash_new = keccak256(
-                    ethers.utils.defaultAbiCoder.encode(
-                        ["uint", "uint", "uint"],
-                        [
-                            v_new.epochVoucherDriveHash,
-                            v_new.epochNoticeDriveHash,
-                            v_new.epochMachineFinalState,
-                        ]
-                    )
-                );
-
-                await outputImpl.onNewEpoch(epochHash_new);
-                await outputImpl.executeVoucher(
-                    _destination,
-                    _payload_new,
-                    v_new
-                );
-
-                state = JSON.parse(await getState(initialState));
-
-                // vouchers look like { '0': { '1': { '0': true, '1': true } } }
-                expect(
-                    Object.keys(state.vouchers[0][1]).length,
-                    "should have 2 executed voucher"
-                ).to.equal(2);
-                expect(
-                    state.vouchers[0][1][1],
-                    "execute the second voucher"
-                ).to.equal(true);
-
-                /// ***test case 4 - execute a non-existent function
-                _payload_new = iface.encodeFunctionData("nonExistent()");
-                v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-                v_new.epochIndex = 2;
-                v_new.outputMetadataArrayDriveHash =
-                    "0x9bfa174d480e37b808e0bf8ac3f2c5e4e25113c435dec2e353370fe956c3cb10";
-                v_new.epochVoucherDriveHash =
-                    "0x5b0d4f6b91fdfe5eebe393a19ee03426def24e061f78b6cb57dd19ac9e5404e8";
-                epochHash_new = keccak256(
-                    ethers.utils.defaultAbiCoder.encode(
-                        ["uint", "uint", "uint"],
-                        [
-                            v_new.epochVoucherDriveHash,
-                            v_new.epochNoticeDriveHash,
-                            v_new.epochMachineFinalState,
-                        ]
-                    )
-                );
-
-                await outputImpl.onNewEpoch(epochHash_new);
-                await outputImpl.executeVoucher(
-                    _destination,
-                    _payload_new,
-                    v_new
-                );
-
-                state = JSON.parse(await getState(initialState));
-
-                // since the execution was failed, everything should remain the same
-                expect(
-                    Object.keys(state.vouchers).length,
-                    "only 1 outputIndex"
-                ).to.equal(1);
-                expect(
-                    Object.keys(state.vouchers[0]).length,
-                    "1 inputIndex"
-                ).to.equal(1);
-                expect(
-                    Object.keys(state.vouchers[0][1]).length,
-                    "2 epochIndex"
-                ).to.equal(2);
-
-                /// ***test case 5 - re-execute an already executed voucher
-                /// ***and test case 6 - proof not valid
-                /// after these 2 failure cases, the executed vouchers should remain the same
-                await expect(
-                    outputImpl.executeVoucher(_destination, _payload, v),
-                    "already executed, should revert"
-                ).to.be.revertedWith("re-execution not allowed");
-
-                _payload_new = iface.encodeFunctionData("nonExistent()");
-                await expect(
-                    outputImpl.executeVoucher(_destination, _payload_new, v),
-                    "proof not valid, should revert"
-                ).to.be.reverted;
-
-                state = JSON.parse(await getState(initialState));
-                expect(
-                    Object.keys(state.vouchers).length,
-                    "still only 1 outputIndex"
-                ).to.equal(1);
-                expect(
-                    Object.keys(state.vouchers[0]).length,
-                    "still 1 inputIndex"
-                ).to.equal(1);
-                expect(
-                    Object.keys(state.vouchers[0][1]).length,
-                    "still 2 epochIndex"
-                ).to.equal(2);
-            }
-        });
-    }
 });
