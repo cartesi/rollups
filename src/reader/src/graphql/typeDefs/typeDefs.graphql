@@ -136,7 +136,6 @@ type Report {
 }
 
 type Voucher {
-	id: ID!
 	session_id: String!
 	epoch_index: String!
 	input_index: String!
@@ -148,19 +147,16 @@ type Voucher {
 }
 
 type Notice {
-	id: ID!
 	session_id: String!
 	epoch_index: String!
 	input_index: String!
 	notice_index: String!
 	keccak: String!
-	Address: String!
 	payload: String!
 	keccak_in_notice_hashes: MerkleTreeProof!
 }
 
 type InputResult {
-	id: ID!
 	session_id: String!
 	epoch_index: String!
 	input_index: String!
@@ -179,7 +175,6 @@ enum CompletionStatus {
 }
 
 type ProcessedInput {
-	id: ID!
 	session_id: String!
 	epoch_index: String!
 	input_index: String!

@@ -151,8 +151,8 @@ query getSessionStatus {
 query getEpochStatus {
   GetEpochStatus(
     query: {
-      session_id: "42b22569-118b-4232-8cad-8957baecf507"
-      epoch_index: "1"
+      session_id: "e9f1061b-3319-4e0f-86ab-4c12177fa71b"
+      epoch_index: "5f6278bf-9272-462e-b435-80b443a10c25"
     }
   ) {
     session_id
@@ -314,7 +314,6 @@ query getVoucher {
       input_index: "acf3bd3d-1d71-4adb-8b4a-e895055de961"
     }
   ) {
-    id
     session_id
     epoch_index
     input_index
@@ -344,13 +343,11 @@ query getNotice {
       input_index: "acf3bd3d-1d71-4adb-8b4a-e895055de961"
     }
   ) {
-    id
     session_id
     epoch_index
     input_index
     notice_index
     keccak
-    Address
     payload
     keccak_in_notice_hashes {
       id

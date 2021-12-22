@@ -5,8 +5,6 @@ const session_id = "e9f1061b-3319-4e0f-86ab-4c12177fa71a";
 const epoch_index = "5f6278bf-9272-462e-b435-80b443a10c24";
 const input_index = "acf3bd3d-1d71-4adb-8b4a-e895055de961";
 
-const processedInputId = "e3abeaf9-2c88-48c7-9eba-d2072fe3f564";
-
 const MerkleTreeProofId1 = uuidv4();
 const MerkleTreeProofId2 = uuidv4();
 
@@ -51,7 +49,6 @@ module.exports = {
 
 		await queryInterface.bulkInsert("ProcessedInputs", [
 			{
-				id: uuidv4(),
 				session_id,
 				epoch_index,
 				input_index,

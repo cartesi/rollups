@@ -1,5 +1,5 @@
 "use strict";
-import { Model, UUIDV4 } from "sequelize";
+import { Model } from "sequelize";
 
 interface CartesiMachineHash {
 	data: string;
@@ -10,7 +10,6 @@ interface Report {
 }
 
 interface ProcessedInputAttributes {
-	id: string;
 	session_id: string;
 	epoch_index: string;
 	input_index: string;
@@ -27,7 +26,6 @@ interface ProcessedInputAttributes {
 module.exports = (sequelize: any, DataTypes: any) => {
 	class ProcessedInput extends Model<ProcessedInputAttributes>
 		implements ProcessedInputAttributes {
-		id!: string;
 		session_id!: string;
 		epoch_index!: string;
 		input_index!: string;
@@ -41,19 +39,10 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		updatedAt!: string;
 
 		static associate(models: any) {
-			ProcessedInput.hasOne(models.InputResult, {
-				foreignKey: "processed_input_id"
-			});
 		}
 	}
 	ProcessedInput.init(
 		{
-			id: {
-				type: DataTypes.UUID,
-				defaultValue: UUIDV4,
-				allowNull: false,
-				primaryKey: true
-			},
 			session_id: {
 				type: DataTypes.STRING,
 				allowNull: false,

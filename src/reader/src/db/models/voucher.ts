@@ -2,7 +2,6 @@
 import { Model, UUID } from "sequelize";
 
 interface VoucherAttributes {
-	id: string;
 	session_id: string;
 	epoch_index: string;
 	input_index: string;
@@ -11,14 +10,12 @@ interface VoucherAttributes {
 	Address: string;
 	payload: string;
 	keccak_in_voucher_hashes: string;
-	input_result_id: string;
 	createdAt: string;
 	updatedAt: string;
 }
 
 module.exports = (sequelize: any, DataTypes: any) => {
 	class Voucher extends Model<VoucherAttributes> implements VoucherAttributes {
-		id!: string;
 		session_id!: string;
 		epoch_index!: string;
 		input_index!: string;
@@ -27,7 +24,6 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		Address!: string;
 		payload!: string;
 		keccak_in_voucher_hashes!: string;
-		input_result_id!: string;
 		createdAt!: string;
 		updatedAt!: string;
 
@@ -37,12 +33,6 @@ module.exports = (sequelize: any, DataTypes: any) => {
 	}
 	Voucher.init(
 		{
-			id: {
-				allowNull: false,
-				primaryKey: true,
-				defaultValue: UUID,
-				type: DataTypes.UUID
-			},
 			session_id: {
 				type: DataTypes.STRING,
 				allowNull: false,
@@ -79,7 +69,6 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				type: DataTypes.UUID,
 				allowNull: false
 			},
-			input_result_id: DataTypes.UUID,
 			createdAt: {
 				allowNull: false,
 				type: DataTypes.DATE

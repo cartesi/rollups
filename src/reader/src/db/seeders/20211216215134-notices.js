@@ -37,13 +37,11 @@ module.exports = {
 			"Notices",
 			[
 				{
-					id: uuidv4(),
 					session_id,
 					epoch_index,
 					input_index,
 					notice_index: "A voucher index",
 					keccak: "A keccak",
-					Address: "An address",
 					payload: "A payload",
 					keccak_in_notice_hashes: MerkleTreeProofId1,
 					createdAt: new Date(),

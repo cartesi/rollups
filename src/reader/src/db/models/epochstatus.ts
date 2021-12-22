@@ -50,7 +50,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 	EpochStatus.init(
 		{
 			session_id: {
-				type: DataTypes.UUID,
+				type: DataTypes.STRING,
 				allowNull: false,
 				primaryKey: true
 			},

@@ -12,8 +12,18 @@ export default {
 			GetEpochStatus: {
 				extensions: {
 					joinMonster: {
-						where: (table: any, args: any) =>
-							`${table}.session_id = '${args.query.session_id}'`
+						where: (table: any, args: any) => {
+							const validQueries = [];
+							for (const item of Object.entries(args.query)) {
+								if (item[1] !== "") {
+									validQueries.push(item);
+								}
+							}
+
+							return validQueries
+								.map(query => `${table}.${query[0]} = '${query[1]}'`)
+								.join(" AND ");
+						}
 					}
 				}
 			},
@@ -236,7 +246,7 @@ export default {
 				sqlTable: '"Notices"',
 				sqlPaginate: true,
 				orderBy: '"createdAt"',
-				uniqueKey: "id"
+				uniqueKey: ["session_id", "epoch_index", "input_index"]
 			}
 		},
 		fields: {
@@ -258,7 +268,7 @@ export default {
 				sqlTable: '"Vouchers"',
 				sqlPaginate: true,
 				orderBy: '"createdAt"',
-				uniqueKey: "id"
+				uniqueKey: ["session_id", "epoch_index", "input_index"]
 			}
 		},
 		fields: {
@@ -280,7 +290,7 @@ export default {
 				sqlTable: '"InputResults"',
 				sqlPaginate: true,
 				orderBy: '"createdAt"',
-				uniqueKey: "id"
+				uniqueKey: "session_id"
 			}
 		},
 		fields: {
@@ -308,9 +318,9 @@ export default {
 				extensions: {
 					joinMonster: {
 						sqlTable: '"Vouchers"',
-						uniqueKey: "id",
+						uniqueKey: ["session_id", "epoch_index", "input_index"],
 						sqlJoin: (inputResultsTable: any, voucherTable: any) =>
-							`${inputResultsTable}."id" = ${voucherTable}."input_result_id"`
+							`${inputResultsTable}."session_id" = ${voucherTable}."session_id"`
 					}
 				}
 			},
@@ -318,9 +328,9 @@ export default {
 				extensions: {
 					joinMonster: {
 						sqlTable: '"Notices"',
-						uniqueKey: "id",
+						uniqueKey: ["session_id", "epoch_index", "input_index"],
 						sqlJoin: (inputResultsTable: any, noticesTable: any) =>
-							`${inputResultsTable}."id" = ${noticesTable}."input_result_id"`
+							`${inputResultsTable}."session_id" = ${noticesTable}."session_id"`
 					}
 				}
 			}
@@ -342,7 +352,7 @@ export default {
 				sqlTable: '"ProcessedInputs"',
 				sqlPaginate: true,
 				orderBy: '"createdAt"',
-				uniqueKey: "id"
+				uniqueKey: ["session_id", "epoch_index", "input_index"]
 			}
 		},
 		fields: {
@@ -370,9 +380,9 @@ export default {
 				extensions: {
 					joinMonster: {
 						sqlTable: '"InputResults"',
-						uniqueKey: "id",
+						uniqueKey: ["session_id", "epoch_index", "input_index"],
 						sqlJoin: (processInputsTable: any, inputResultsTable: any) =>
-							`${processInputsTable}."id" = ${inputResultsTable}."processed_input_id"`
+							`${processInputsTable}."session_id" = ${inputResultsTable}."session_id"`
 					}
 				}
 			}
@@ -384,7 +394,7 @@ export default {
 				sqlTable: '"EpochStatuses"',
 				sqlPaginate: true,
 				orderBy: '"createdAt"',
-				uniqueKey: "session_id"
+				uniqueKey: ["session_id", "epoch_index"]
 			}
 		},
 		fields: {
@@ -392,9 +402,9 @@ export default {
 				extensions: {
 					joinMonster: {
 						sqlTable: '"ProcessedInputs"',
-						uniqueKey: "id",
+						uniqueKey: ["session_id", "epoch_index", "input_index"],
 						sqlJoin: (epochStatusTable: any, processedInputTable: any) =>
-							`${epochStatusTable}."session_id" = ${processedInputTable}."epoch_status_id"`
+							`${epochStatusTable}."session_id" = ${processedInputTable}."session_id"`
 					}
 				}
 			}

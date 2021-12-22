@@ -38,7 +38,6 @@ module.exports = {
 			"Vouchers",
 			[
 				{
-					id: uuidv4(),
 					session_id,
 					epoch_index,
 					input_index,

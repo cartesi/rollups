@@ -12,6 +12,11 @@ const MerkleTreeProofId4 = uuidv4();
 const MerkleTreeProofId5 = uuidv4();
 const MerkleTreeProofId6 = uuidv4();
 
+
+const session_id = "e9f1061b-3319-4e0f-86ab-4c12177fa71b";
+const epoch_index = "5f6278bf-9272-462e-b435-80b443a10c25";
+const input_index = "acf3bd3d-1d71-4adb-8b4a-e895055de962";
+
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
 		await queryInterface.bulkInsert(
@@ -115,8 +120,8 @@ module.exports = {
 			"EpochStatuses",
 			[
 				{
-					session_id: epoch_status_id,
-					epoch_index: 400,
+					session_id,
+					epoch_index,
 					state: "FINISHED",
 					most_recent_machine_hash: "A machine hash",
 					most_recent_vouchers_epoch_root_hash: "A recent voucher hash",
@@ -150,10 +155,9 @@ module.exports = {
 
 		await queryInterface.bulkInsert("ProcessedInputs", [
 			{
-				id: processed_input_id,
-				session_id: "A session id",
-				epoch_index: "An epoch index",
-				input_index: "An input index",
+				session_id,
+				epoch_index,
+				input_index,
 				most_recent_machine_hash: "A recent Hash",
 				voucher_hashes_in_epoch: MerkleTreeProofId1,
 				notice_hashes_in_epoch: MerkleTreeProofId2,
@@ -174,14 +178,11 @@ module.exports = {
 
 		await queryInterface.bulkInsert("InputResults", [
 			{
-				id: input_result_id,
-
-				session_id: "session",
-				epoch_index: "epoch",
-				input_index: "input",
+				session_id,
+				epoch_index,
+				input_index,
 				voucher_hashes_in_machine: MerkleTreeProofId3,
 				notice_hashes_in_machine: MerkleTreeProofId4,
-				processed_input_id,
 				createdAt: new Date(),
 				updatedAt: new Date()
 			}
@@ -189,16 +190,14 @@ module.exports = {
 
 		await queryInterface.bulkInsert("Vouchers", [
 			{
-				id: uuidv4(),
-				session_id: "A session id",
-				epoch_index: "An epoch index",
-				input_index: "An input index",
+				session_id,
+				epoch_index,
+				input_index,
 				voucher_index: "A voucher index",
 				keccak: "A keccak",
 				Address: "An address",
 				payload: "A payload",
 				keccak_in_voucher_hashes: MerkleTreeProofId5,
-				input_result_id,
 				createdAt: new Date(),
 				updatedAt: new Date()
 			}
@@ -206,16 +205,13 @@ module.exports = {
 
 		await queryInterface.bulkInsert("Notices", [
 			{
-				id: uuidv4(),
-				session_id: "A session id",
-				epoch_index: "An epoch index",
-				input_index: "An input index",
+				session_id,
+				epoch_index,
+				input_index,
 				notice_index: "A voucher index",
 				keccak: "A keccak",
-				Address: "An address",
 				payload: "A payload",
 				keccak_in_notice_hashes: MerkleTreeProofId5,
-				input_result_id,
 				createdAt: new Date(),
 				updatedAt: new Date()
 			}

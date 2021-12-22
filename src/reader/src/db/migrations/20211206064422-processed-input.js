@@ -2,11 +2,6 @@
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
 		await queryInterface.createTable("ProcessedInputs", {
-			id: {
-				type: Sequelize.UUID,
-				allowNull: false,
-				primaryKey: true
-			},
 			session_id: {
 				type: Sequelize.STRING,
 				allowNull: false,

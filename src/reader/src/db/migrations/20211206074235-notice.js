@@ -2,13 +2,6 @@
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
 		await queryInterface.createTable("Notices", {
-			/*
-			id: {
-				allowNull: false,
-				primaryKey: true,
-				type: Sequelize.UUID
-			},
-			*/
 			session_id: {
 				type: Sequelize.STRING,
 				allowNull: false,
@@ -32,10 +25,6 @@ module.exports = {
 			keccak: {
 				type: Sequelize.STRING,
 			},
-			Address: {
-				type: Sequelize.STRING,
-				allowNull: false
-			},
 			payload: {
 				type: Sequelize.STRING,
 				allowNull: false
@@ -44,7 +33,6 @@ module.exports = {
 				type: Sequelize.UUID,
 				allowNull: false
 			},
-			input_result_id: Sequelize.UUID,
 			createdAt: {
 				allowNull: false,
 				type: Sequelize.DATE

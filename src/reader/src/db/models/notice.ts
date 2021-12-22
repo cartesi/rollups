@@ -8,10 +8,8 @@ interface NoticeAttributes {
 	input_index: string;
 	notice_index: string;
 	keccak: string;
-	Address: string;
 	payload: string;
 	keccak_in_notice_hashes: string;
-	input_result_id: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -24,10 +22,8 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		input_index!: string;
 		notice_index!: string;
 		keccak!: string;
-		Address!: string;
 		payload!: string;
 		keccak_in_notice_hashes!: string;
-		input_result_id!: string;
 		createdAt!: string;
 		updatedAt!: string;
 
@@ -67,10 +63,6 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				type: DataTypes.STRING,
 				allowNull: false
 			},
-			Address: {
-				type: DataTypes.STRING,
-				allowNull: false
-			},
 			payload: {
 				type: DataTypes.STRING,
 				allowNull: false
@@ -79,7 +71,6 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				type: DataTypes.UUID,
 				allowNull: false
 			},
-			input_result_id: DataTypes.UUID,
 			createdAt: {
 				allowNull: false,
 				type: DataTypes.DATE

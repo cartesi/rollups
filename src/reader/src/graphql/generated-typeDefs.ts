@@ -182,7 +182,6 @@ export type InputData = {
 export type InputResult = {
   __typename?: 'InputResult';
   epoch_index: Scalars['String'];
-  id: Scalars['ID'];
   input_index: Scalars['String'];
   notice_hashes_in_machine: MerkleTreeProof;
   notices: Array<Maybe<Notice>>;
@@ -283,9 +282,7 @@ export type MutationVoucher_StateArgs = {
 
 export type Notice = {
   __typename?: 'Notice';
-  Address: Scalars['String'];
   epoch_index: Scalars['String'];
-  id: Scalars['ID'];
   input_index: Scalars['String'];
   keccak: Scalars['String'];
   keccak_in_notice_hashes: MerkleTreeProof;
@@ -306,7 +303,6 @@ export enum PhaseState {
 export type ProcessedInput = {
   __typename?: 'ProcessedInput';
   epoch_index: Scalars['String'];
-  id: Scalars['ID'];
   input_index: Scalars['String'];
   most_recent_machine_hash: Scalars['String'];
   notice_hashes_in_epoch: MerkleTreeProof;
@@ -401,7 +397,6 @@ export type Voucher = {
   __typename?: 'Voucher';
   Address: Scalars['String'];
   epoch_index: Scalars['String'];
-  id: Scalars['ID'];
   input_index: Scalars['String'];
   keccak: Scalars['String'];
   keccak_in_voucher_hashes: MerkleTreeProof;
@@ -692,7 +687,6 @@ export type InputResolvers<ContextType = any, ParentType extends ResolversParent
 
 export type InputResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['InputResult'] = ResolversParentTypes['InputResult']> = {
   epoch_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   input_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   notice_hashes_in_machine?: Resolver<ResolversTypes['MerkleTreeProof'], ParentType, ContextType>;
   notices?: Resolver<Array<Maybe<ResolversTypes['Notice']>>, ParentType, ContextType>;
@@ -739,9 +733,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type NoticeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Notice'] = ResolversParentTypes['Notice']> = {
-  Address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   epoch_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   input_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   keccak?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   keccak_in_notice_hashes?: Resolver<ResolversTypes['MerkleTreeProof'], ParentType, ContextType>;
@@ -753,7 +745,6 @@ export type NoticeResolvers<ContextType = any, ParentType extends ResolversParen
 
 export type ProcessedInputResolvers<ContextType = any, ParentType extends ResolversParentTypes['ProcessedInput'] = ResolversParentTypes['ProcessedInput']> = {
   epoch_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   input_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   most_recent_machine_hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   notice_hashes_in_epoch?: Resolver<ResolversTypes['MerkleTreeProof'], ParentType, ContextType>;
@@ -813,7 +804,6 @@ export type VersionResolvers<ContextType = any, ParentType extends ResolversPare
 export type VoucherResolvers<ContextType = any, ParentType extends ResolversParentTypes['Voucher'] = ResolversParentTypes['Voucher']> = {
   Address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   epoch_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   input_index?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   keccak?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   keccak_in_voucher_hashes?: Resolver<ResolversTypes['MerkleTreeProof'], ParentType, ContextType>;

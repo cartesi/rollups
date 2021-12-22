@@ -1,5 +1,5 @@
 "use strict";
-import { Model, UUIDV4 } from "sequelize";
+import { Model } from "sequelize";
 
 interface Hash {
 	data: string;
@@ -15,7 +15,6 @@ interface CartesiMachineMerkleTreeProof {
 }
 
 interface InputResultAttribute {
-	id: string;
 	session_id: string;
 	epoch_index: string;
 	input_index: string;
@@ -29,7 +28,6 @@ interface InputResultAttribute {
 module.exports = (sequelize: any, DataTypes: any) => {
 	class InputResult extends Model<InputResultAttribute>
 		implements InputResultAttribute {
-		id!: string;
 		session_id!: string;
 		epoch_index!: string;
 		input_index!: string;
@@ -50,12 +48,6 @@ module.exports = (sequelize: any, DataTypes: any) => {
 	}
 	InputResult.init(
 		{
-			id: {
-				allowNull: false,
-				primaryKey: true,
-				defaultValue: UUIDV4,
-				type: DataTypes.UUID
-			},
 			session_id: {
 				type: DataTypes.STRING,
 				allowNull: false,
