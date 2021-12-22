@@ -25,13 +25,15 @@ library LibValidatorManager {
 
     struct DiamondStorage {
         bytes32 currentClaim; // current claim - first claim of this epoch
-        address payable[] validators; // current validators
-        // A bit set for each validator that agrees with current claim,
-        // on their respective positions
-        uint32 claimAgreementMask;
-        // Every validator who should approve (in order to reach consensus) will have a one set on this mask
-        // This mask is updated if a validator is added or removed
-        uint32 consensusGoalMask;
+        address payable[] validators; // up to 8 validators
+        uint256 maxNumValidators; // the maximum number of validators, set in the constructor
+        // A bit set used for up to 8 validators.
+        // The first 8 bits are used to indicate whom supports the current claim
+        // The second 8 bits are used to indicate those should have claimed in order to reach consensus
+        // The following every 30 bits are used to indicate the number of total claims each validator has made
+        // | agreement mask | consensus mask | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |
+        // |     8 bits     |     8 bits     |      30 bits       |      30 bits       | ... |      30 bits       |
+        ClaimsMask claimsMask;
     }
 
     // @notice emitted on Claim received
@@ -80,13 +82,12 @@ library LibValidatorManager {
             address payable[2] memory
         )
     {
-        // remove validator also removes validator from both bitmask
-        removeFromValidatorSetAndBothBitmasks(ds, loser);
+        removeValidator(ds, loser);
 
         if (winningClaim == ds.currentClaim) {
             // first claim stood, dont need to update the bitmask
             return
-                isConsensus(ds.claimAgreementMask, ds.consensusGoalMask)
+                isConsensus(ds)
                     ? emitDisputeEndedAndReturn(
                         Result.Consensus,
                         [winningClaim, bytes32(0)],
@@ -101,7 +102,7 @@ library LibValidatorManager {
 
         // if first claim lost, and other validators have agreed with it
         // there is a new dispute to be played
-        if (ds.claimAgreementMask != 0) {
+        if (ds.claimsMask.getAgreementMask() != 0) {
             return
                 emitDisputeEndedAndReturn(
                     Result.Conflict,
@@ -113,9 +114,9 @@ library LibValidatorManager {
         // we can update current claim and check for consensus in case
         // the winner is the only validator left
         ds.currentClaim = winningClaim;
-        ds.claimAgreementMask = updateClaimAgreementMask(ds, winner);
+        updateClaimAgreementMask(ds, winner);
         return
-            isConsensus(ds.claimAgreementMask, ds.consensusGoalMask)
+            isConsensus(ds)
                 ? emitDisputeEndedAndReturn(
                     Result.Consensus,
                     [winningClaim, bytes32(0)],
@@ -132,12 +133,15 @@ library LibValidatorManager {
     // @param ds diamond storage pointer
     // @return current claim
     function onNewEpoch(DiamondStorage storage ds) internal returns (bytes32) {
+        // reward validators who has made the correct claim by increasing their #claims
+        claimFinalizedIncreaseCounts(ds);
+
         bytes32 tmpClaim = ds.currentClaim;
 
         // clear current claim
         ds.currentClaim = bytes32(0);
         // clear validator agreement bit mask
-        ds.claimAgreementMask = 0;
+        ds.claimsMask = ds.claimsMask.clearAgreementMask();
 
         emit NewEpoch(tmpClaim);
         return tmpClaim;
@@ -182,10 +186,10 @@ library LibValidatorManager {
                     [getClaimerOfCurrentClaim(ds), sender]
                 );
         }
-        ds.claimAgreementMask = updateClaimAgreementMask(ds, sender);
+        updateClaimAgreementMask(ds, sender);
 
         return
-            isConsensus(ds.claimAgreementMask, ds.consensusGoalMask)
+            isConsensus(ds)
                 ? emitClaimReceivedAndReturn(
                     Result.Consensus,
                     [claim, bytes32(0)],
@@ -240,6 +244,48 @@ library LibValidatorManager {
         return (result, claims, validators);
     }
 
+    // @notice only call this function when a claim has been finalized
+    // @param ds pointer to diamond storage
+    // Either a consensus has been reached or challenge period has past
+    function claimFinalizedIncreaseCounts(DiamondStorage storage ds) internal {
+        uint256 agreementMask = ds.claimsMask.getAgreementMask();
+        for (uint256 i; i < ds.validators.length; i++) {
+            // if a validator agrees with the current claim
+            if ((agreementMask & (1 << i)) != 0) {
+                // increase #claims by 1
+                ds.claimsMask = ds.claimsMask.increaseNumClaims(i, 1);
+            }
+        }
+    }
+
+    // @notice removes a validator
+    // @params address of validator to be removed
+    function removeValidator(DiamondStorage storage ds, address validator)
+        internal
+    {
+        for (uint256 i; i < ds.validators.length; i++) {
+            if (validator == ds.validators[i]) {
+                // put address(0) in validators position
+                ds.validators[i] = payable(0);
+                // remove the validator from claimsMask
+                ds.claimsMask = ds.claimsMask.removeValidator(i);
+                break;
+            }
+        }
+    }
+
+    // @notice check if consensus has been reached
+    // @param ds pointer to diamond storage
+    function isConsensus(DiamondStorage storage ds)
+        internal
+        view
+        returns (bool)
+    {
+        ClaimsMask claimsMask = ds.claimsMask;
+        return
+            claimsMask.getAgreementMask() == claimsMask.getConsensusGoalMask();
+    }
+
     // @notice get one of the validators that agreed with current claim
     // @param ds diamond storage pointer
     // @return validator that agreed with current claim
@@ -251,75 +297,36 @@ library LibValidatorManager {
         // TODO: we are always getting the first validator
         // on the array that agrees with the current claim to enter a dispute
         // should this be random?
+        uint256 agreementMask = ds.claimsMask.getAgreementMask();
         for (uint256 i; i < ds.validators.length; i++) {
-            if (ds.claimAgreementMask & (1 << i) != 0) {
+            if (agreementMask & (1 << i) != 0) {
                 return ds.validators[i];
             }
         }
         revert("Agreeing validator not found");
     }
 
-    // @notice updates the consensus goal mask
-    // @param ds diamond storage pointer
-    // @return new consensus goal mask
-    function updateConsensusGoalMask(DiamondStorage storage ds)
-        internal
-        view
-        returns (uint32)
-    {
-        // consensus goal is a number where
-        // all bits related to validators are turned on
-        uint256 consensusMask = (1 << ds.validators.length) - 1;
-        return uint32(consensusMask);
-    }
-
     // @notice updates mask of validators that agreed with current claim
     // @param ds diamond storage pointer
-    // @params sender address that of validator that will be included in mask
-    // @return new claim agreement mask
+    // @params sender address of validator that will be included in mask
     function updateClaimAgreementMask(
         DiamondStorage storage ds,
         address payable sender
-    ) internal view returns (uint32) {
-        uint256 tmpClaimAgreement = ds.claimAgreementMask;
-        for (uint256 i; i < ds.validators.length; i++) {
-            if (sender == ds.validators[i]) {
-                tmpClaimAgreement = (tmpClaimAgreement | (1 << i));
-                break;
-            }
-        }
-
-        return uint32(tmpClaimAgreement);
-    }
-
-    // @notice removes a validator
-    // @param ds diamond storage pointer
-    // @params address of validator to be removed
-    // @returns new claim agreement bitmask
-    // @returns new consensus goal bitmask
-    function removeFromValidatorSetAndBothBitmasks(
-        DiamondStorage storage ds,
-        address validator
     ) internal {
-        // put address(0) in validators position
-        // removes validator from claim agreement bitmask
-        // removes validator from consensus goal mask
-        for (uint256 i; i < ds.validators.length; i++) {
-            if (validator == ds.validators[i]) {
-                ds.validators[i] = payable(0);
-                uint32 zeroMask = ~(uint32(1) << uint32(i));
-                ds.claimAgreementMask = ds.claimAgreementMask & zeroMask;
-                ds.consensusGoalMask = ds.consensusGoalMask & zeroMask;
-                break;
-            }
-        }
+        uint256 validatorIndex = getValidatorIndex(ds, sender);
+        ds.claimsMask = ds.claimsMask.setAgreementMask(validatorIndex);
     }
 
+    // @notice check if the sender is a validator
+    // @param ds pointer to diamond storage
+    // @params sender address
     function isValidator(DiamondStorage storage ds, address sender)
         internal
         view
         returns (bool)
     {
+        require(sender != address(0), "address 0");
+
         for (uint256 i; i < ds.validators.length; i++) {
             if (sender == ds.validators[i]) return true;
         }
@@ -327,11 +334,18 @@ library LibValidatorManager {
         return false;
     }
 
-    function isConsensus(uint256 claimAgreementMask, uint256 consensusGoalMask)
+    // @notice find the validator and return the index or revert
+    // @params validator address
+    // @return validator index or revert
+    function getValidatorIndex(DiamondStorage storage ds, address sender)
         internal
-        pure
-        returns (bool)
+        view
+        returns (uint256)
     {
-        return claimAgreementMask == consensusGoalMask;
+        require(sender != address(0), "address 0");
+        for (uint256 i; i < ds.validators.length; i++) {
+            if (sender == ds.validators[i]) return i;
+        }
+        revert("validator not found");
     }
 }

@@ -42,10 +42,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const wallets = provider.getWallets();
     var validators: string[] = [];
 
-    // add all wallets as validators
+    // add up to 8 wallets as validators
     for (var wallet of wallets) {
         let address = await wallet.getAddress();
         validators.push(address);
+        if (validators.length == 8) break;
     }
 
     // Bitmask

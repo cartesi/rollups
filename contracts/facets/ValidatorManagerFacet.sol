@@ -17,21 +17,25 @@ import {IValidatorManager} from "../interfaces/IValidatorManager.sol";
 
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
+import {ClaimsMaskLibrary, ClaimsMask} from "../ClaimsMaskLibrary.sol";
+
 contract ValidatorManagerFacet is IValidatorManager {
+    using ClaimsMaskLibrary for ClaimsMask;
+
     // @notice get agreement mask
     // @return current state of agreement mask
-    function getCurrentAgreementMask() public view returns (uint32) {
+    function getAgreementMask() public view returns (uint256) {
         LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
-        return vmDS.claimAgreementMask;
+        return vmDS.claimsMask.getAgreementMask();
     }
 
     // @notice get consensus goal mask
     // @return current consensus goal mask
-    function getConsensusGoalMask() public view returns (uint32) {
+    function getConsensusGoalMask() public view returns (uint256) {
         LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
-        return vmDS.consensusGoalMask;
+        return vmDS.claimsMask.getConsensusGoalMask();
     }
 
     // @notice get current claim

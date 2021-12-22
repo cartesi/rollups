@@ -41,6 +41,7 @@ describe("Validator Manager Facet", async () => {
 
     let hash_zero = ethers.constants.HashZero;
     let address_zero = "0x0000000000000000000000000000000000000000";
+    let address_one = "0x0000000000000000000000000000000000000001";
 
     enum Result {
         NoConflict,
@@ -68,7 +69,7 @@ describe("Validator Manager Facet", async () => {
 
     it("check initial claimAgreementMask", async () => {
         expect(
-            await validatorManagerFacet.getCurrentAgreementMask(),
+            await validatorManagerFacet.getAgreementMask(),
             "get initial claimAgreementMask"
         ).to.equal(0);
     });
@@ -87,10 +88,18 @@ describe("Validator Manager Facet", async () => {
         ).to.be.revertedWith("empty claim");
     });
 
-    it("onClaim should revert if sender is not allowed", async () => {
+    it("onClaim should revert if sender is address 0", async () => {
         var claim = "0x" + "1".repeat(64);
         await expect(
             debugFacet._onClaim(address_zero, claim),
+            "should revert if sender is address 0"
+        ).to.be.revertedWith("address 0");
+    });
+
+    it("onClaim should revert if sender is not allowed", async () => {
+        var claim = "0x" + "1".repeat(64);
+        await expect(
+            debugFacet._onClaim(address_one, claim),
             "should revert if sender is not in validators array"
         ).to.be.revertedWith("sender not allowed");
     });
@@ -130,7 +139,7 @@ describe("Validator Manager Facet", async () => {
             // check updated currentAgreementMask
             currentAgreementMask = currentAgreementMask | (1 << i);
             expect(
-                await validatorManagerFacet.getCurrentAgreementMask(),
+                await validatorManagerFacet.getAgreementMask(),
                 "check currentAgreementMask"
             ).to.equal(currentAgreementMask);
 
@@ -171,7 +180,7 @@ describe("Validator Manager Facet", async () => {
         currentAgreementMask =
             currentAgreementMask | (1 << (validators.length - 1));
         expect(
-                await validatorManagerFacet.getCurrentAgreementMask(),
+                await validatorManagerFacet.getAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
     });
@@ -218,7 +227,7 @@ describe("Validator Manager Facet", async () => {
         // check currentAgreementMask
         var currentAgreementMask = 1;
         expect(
-            await validatorManagerFacet.getCurrentAgreementMask(),
+            await validatorManagerFacet.getAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
     });
@@ -263,7 +272,7 @@ describe("Validator Manager Facet", async () => {
         // check currentAgreementMask
         var currentAgreementMask = 1;
         expect(
-            await validatorManagerFacet.getCurrentAgreementMask(),
+            await validatorManagerFacet.getAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
 
@@ -495,7 +504,7 @@ describe("Validator Manager Facet", async () => {
             .withArgs(claim);
 
         expect(
-            await validatorManagerFacet.getCurrentAgreementMask(),
+            await validatorManagerFacet.getAgreementMask(),
             "current agreement mask should reset"
         ).to.equal(0);
 

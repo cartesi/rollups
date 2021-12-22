@@ -22,6 +22,8 @@ import {LibInput} from "../libraries/LibInput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibSERC20Portal} from "../libraries/LibSERC20Portal.sol";
 
+import {ClaimsMaskLibrary} from "../ClaimsMaskLibrary.sol";
+
 contract RollupsInitFacet is IRollupsInit {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
 
@@ -80,8 +82,18 @@ contract RollupsInitFacet is IRollupsInit {
         LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
 
+        uint256 maxNumValidators = _validators.length;
+
+        require(maxNumValidators <= 8, "up to 8 validators");
+
         vmDS.validators = _validators;
-        vmDS.consensusGoalMask = vmDS.updateConsensusGoalMask();
+        vmDS.maxNumValidators = maxNumValidators;
+
+        // create a new ClaimsMask, with only the consensus goal set,
+        //      according to the number of validators
+        vmDS.claimsMask = ClaimsMaskLibrary.newClaimsMaskWithConsensusGoalSet(
+            maxNumValidators
+        );
     }
 
     // @notice initialize the Rollups facet
