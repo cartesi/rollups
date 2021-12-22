@@ -12,8 +12,6 @@ epoch_index = 0
 # polling interval
 interval = 10
 
-rollups_contract_address = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
-
 # end points
 postgres_endpoint = "postgres://postgres:password@database/postgres"
 state_server_endpoint = "http://statefold_server:50051"

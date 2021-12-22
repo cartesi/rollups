@@ -1,9 +1,9 @@
 use configuration::error as config_error;
+use configuration::config::EnvCLIConfig;
+use configuration::config::Config;
 
 use serde::Deserialize;
 use snafu::ResultExt;
-
-use std::str::FromStr;
 
 use ethers::core::types::{Address, U256};
 
@@ -11,6 +11,8 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Clone)]
 pub struct ApplicationCLIConfig {
+    #[structopt(flatten)]
+    pub basic_config: EnvCLIConfig,
     #[structopt(flatten)]
     pub polling_config: PollingEnvCLIConfig,
 }
@@ -69,6 +71,7 @@ impl PollingConfig {
     pub fn initialize() -> config_error::Result<Self> {
         let app_config = ApplicationCLIConfig::from_args();
         let env_cli_config = app_config.polling_config;
+        let base_cli_config = app_config.basic_config;
 
         let file_config: PollingFileConfig = {
             let c: FileConfig = configuration::config::load_config_file(
@@ -76,25 +79,9 @@ impl PollingConfig {
             )?;
             c.polling_config
         };
+        let basic_config = Config::initialize(base_cli_config)?;
 
-        let rollups_contract_address: Address = Address::from_str(
-            &env_cli_config
-                .rollups_contract_address
-                .or(file_config.rollups_contract_address)
-                .ok_or(snafu::NoneError)
-                .context(config_error::FileError {
-                    err: "Must specify rollups contract address",
-                })?,
-        )
-        .map_err(|e| {
-            config_error::FileError {
-                err: format!(
-                    "Rollups contract address string ill-formed: {}",
-                    e
-                ),
-            }
-            .build()
-        })?;
+        let rollups_contract_address = basic_config.contracts["RollupsImpl"];
 
         let state_server_endpoint: String = env_cli_config
             .state_server_endpoint
