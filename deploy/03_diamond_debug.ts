@@ -69,6 +69,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
     const merkleAddress = merkle.address;
 
+    // ClaimsMaskLibrary
+    const claimsMaskLibrary = await deployments.deploy("ClaimsMaskLibrary", {
+        from: await signers[0].getAddress(),
+    });
+    const claimsMaskLibraryAddress = claimsMaskLibrary.address;
+
     // CartesiRollups
     const { address } = await diamond.deploy("CartesiRollupsDebug", {
         from: await signers[0].getAddress(),
@@ -86,6 +92,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             'DebugFacet', // For debug pursposes only
         ],
         libraries: {
+            ClaimsMaskLibrary: claimsMaskLibraryAddress,
             Bitmask: bitMaskAddress,
             Merkle: merkleAddress,
         },

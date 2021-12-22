@@ -65,6 +65,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
     const merkleAddress = merkle.address;
 
+    // ClaimsMaskLibrary
+    const claimsMaskLibrary = await deployments.deploy("ClaimsMaskLibrary", {
+        from: await signers[0].getAddress(),
+    });
+    const claimsMaskLibraryAddress = claimsMaskLibrary.address;
+
     // CartesiRollups
     const { address } = await diamond.deploy("CartesiRollups", {
         from: await signers[0].getAddress(),
@@ -81,6 +87,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             'ERC721PortalFacet',
         ],
         libraries: {
+            ClaimsMaskLibrary: claimsMaskLibraryAddress,
             Bitmask: bitMaskAddress,
             Merkle: merkleAddress,
         },

@@ -15,8 +15,11 @@ pragma solidity ^0.8.0;
 
 import {Result} from "../interfaces/IValidatorManager.sol";
 
-// TODO: this libray seems to be very unsafe, need to think about security implications
+import {ClaimsMaskLibrary, ClaimsMask} from "../ClaimsMaskLibrary.sol";
+
 library LibValidatorManager {
+    using ClaimsMaskLibrary for ClaimsMask;
+
     bytes32 constant DIAMOND_STORAGE_POSITION =
         keccak256("ValidatorManager.diamond.storage");
 
