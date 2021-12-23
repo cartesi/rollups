@@ -291,6 +291,13 @@ export type Notice = {
   session_id: Scalars['String'];
 };
 
+export type NoticeKeys = {
+  epoch_index?: Maybe<Scalars['String']>;
+  input_index?: Maybe<Scalars['String']>;
+  notice_index?: Maybe<Scalars['String']>;
+  session_id?: Maybe<Scalars['String']>;
+};
+
 export enum PhaseState {
   AwaitingConsensusAfterConflict = 'AwaitingConsensusAfterConflict',
   AwaitingConsensusNoConflict = 'AwaitingConsensusNoConflict',
@@ -338,7 +345,7 @@ export type QueryGetEpochStatusArgs = {
 
 
 export type QueryGetNoticeArgs = {
-  query?: Maybe<Keys>;
+  query?: Maybe<NoticeKeys>;
 };
 
 
@@ -353,7 +360,7 @@ export type QueryGetSessionStatusArgs = {
 
 
 export type QueryGetVoucherArgs = {
-  query?: Maybe<Keys>;
+  query?: Maybe<VoucherKeys>;
 };
 
 export type Report = {
@@ -403,6 +410,13 @@ export type Voucher = {
   payload: Scalars['String'];
   session_id: Scalars['String'];
   voucher_index: Scalars['String'];
+};
+
+export type VoucherKeys = {
+  epoch_index?: Maybe<Scalars['String']>;
+  input_index?: Maybe<Scalars['String']>;
+  session_id?: Maybe<Scalars['String']>;
+  voucher_index?: Maybe<Scalars['String']>;
 };
 
 export type VoucherState = {
@@ -522,6 +536,7 @@ export type ResolversTypes = {
   MerkleTreeProof: ResolverTypeWrapper<MerkleTreeProof>;
   Mutation: ResolverTypeWrapper<{}>;
   Notice: ResolverTypeWrapper<Notice>;
+  NoticeKeys: NoticeKeys;
   PhaseState: PhaseState;
   ProcessedInput: ResolverTypeWrapper<ProcessedInput>;
   Query: ResolverTypeWrapper<{}>;
@@ -532,6 +547,7 @@ export type ResolversTypes = {
   TaintStatus: ResolverTypeWrapper<TaintStatus>;
   Version: ResolverTypeWrapper<Version>;
   Voucher: ResolverTypeWrapper<Voucher>;
+  VoucherKeys: VoucherKeys;
   VoucherState: ResolverTypeWrapper<VoucherState>;
   VoucherStateInput: VoucherStateInput;
 };
@@ -572,6 +588,7 @@ export type ResolversParentTypes = {
   MerkleTreeProof: MerkleTreeProof;
   Mutation: {};
   Notice: Notice;
+  NoticeKeys: NoticeKeys;
   ProcessedInput: ProcessedInput;
   Query: {};
   Report: Report;
@@ -581,6 +598,7 @@ export type ResolversParentTypes = {
   TaintStatus: TaintStatus;
   Version: Version;
   Voucher: Voucher;
+  VoucherKeys: VoucherKeys;
   VoucherState: VoucherState;
   VoucherStateInput: VoucherStateInput;
 };

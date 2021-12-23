@@ -6,6 +6,7 @@ const voucherId = "33f88ffc-3818-4e3e-9af2-c7d8c790638f";
 const session_id = "e9f1061b-3319-4e0f-86ab-4c12177fa71a";
 const epoch_index = "5f6278bf-9272-462e-b435-80b443a10c24";
 const input_index = "acf3bd3d-1d71-4adb-8b4a-e895055de961";
+const notice_index = "acf3bd3e-1d72-4adc-8b4b-e895055de962";
 
 const MerkleTreeProofId1 = uuidv4();
 
@@ -40,7 +41,7 @@ module.exports = {
 					session_id,
 					epoch_index,
 					input_index,
-					notice_index: "A voucher index",
+					notice_index,
 					keccak: "A keccak",
 					payload: "A payload",
 					keccak_in_notice_hashes: MerkleTreeProofId1,

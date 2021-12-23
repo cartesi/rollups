@@ -246,7 +246,7 @@ export default {
 				sqlTable: '"Notices"',
 				sqlPaginate: true,
 				orderBy: '"createdAt"',
-				uniqueKey: ["session_id", "epoch_index", "input_index"]
+				uniqueKey: ["session_id", "epoch_index", "input_index", "notice_index"]
 			}
 		},
 		fields: {
@@ -268,7 +268,7 @@ export default {
 				sqlTable: '"Vouchers"',
 				sqlPaginate: true,
 				orderBy: '"createdAt"',
-				uniqueKey: ["session_id", "epoch_index", "input_index"]
+				uniqueKey: ["session_id", "epoch_index", "input_index", "voucher_index"]
 			}
 		},
 		fields: {

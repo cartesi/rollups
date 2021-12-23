@@ -291,6 +291,20 @@ input Keys {
 	input_index: String
 }
 
+input VoucherKeys {
+	session_id: String
+	epoch_index: String
+	input_index: String
+	voucher_index: String
+}
+
+input NoticeKeys {
+	session_id: String
+	epoch_index: String
+	input_index: String
+	notice_index: String
+}
+
 type Query {
 	constants: [ImmutableState]!
 	initial_epoch: String!
@@ -304,8 +318,8 @@ type Query {
 	GetSessionStatus(query: GetSessionStatusRequest!): GetSessionStatusResponse!
 	GetEpochStatus(query: GetEpochStatusRequest!): GetEpochStatusResponse!
 	GetProcessedInput(query: Keys): [ProcessedInput]
-	GetVoucher(query: Keys): [Voucher]
-	GetNotice(query: Keys): [Notice]
+	GetVoucher(query: VoucherKeys): [Voucher]
+	GetNotice(query: NoticeKeys): [Notice]
 }
 
 type Mutation {
