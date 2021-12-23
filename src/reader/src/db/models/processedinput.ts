@@ -18,7 +18,6 @@ interface ProcessedInputAttributes {
 	notice_hashes_in_epoch: string;
 	skip_reason: string;
 	reports: Report[];
-	epoch_status_id: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -34,7 +33,6 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		notice_hashes_in_epoch!: string;
 		skip_reason!: string;
 		reports!: Report[];
-		epoch_status_id!: string;
 		createdAt!: string;
 		updatedAt!: string;
 
@@ -78,7 +76,6 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				type: DataTypes.STRING,
 				allowNull: false
 			},
-			epoch_status_id: DataTypes.UUID,
 			createdAt: {
 				type: DataTypes.DATE
 			},

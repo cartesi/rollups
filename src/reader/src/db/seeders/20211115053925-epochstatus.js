@@ -170,7 +170,6 @@ module.exports = {
 					}
 				]`,
 				skip_reason: "ACCEPTED",
-				epoch_status_id,
 				createdAt: new Date(),
 				updatedAt: new Date()
 			}
