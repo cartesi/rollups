@@ -1,20 +1,13 @@
 FROM node:12
 
-# Create app directory
-ADD . /code
+WORKDIR reader
 
-WORKDIR /code
-
-# Install app dependencies
-COPY package*.json ./
+COPY . .
 
 RUN yarn preinstall
 
 RUN yarn install
 
-
-CMD ["yarn", "start"]
-
-COPY . .
+ENTRYPOINT ["/bin/sh", "./entrypoint-app.sh"]
 
 EXPOSE 4000

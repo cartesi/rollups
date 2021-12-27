@@ -61,7 +61,6 @@ services:
   app:
     env_file: ../../src/reader/.env
     build: ../../src/reader/
-    command: bash -c "yarn run migrate; yarn start"
     volumes:
       - ../../src/reader/:/code
     ports:
