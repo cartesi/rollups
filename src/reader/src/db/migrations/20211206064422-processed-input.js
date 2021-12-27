@@ -35,15 +35,6 @@ module.exports = {
 			skip_reason: {
 				type: Sequelize.STRING,
 			},
-			//epoch_status_id: Sequelize.UUID,
-			session_id: {
-				type: Sequelize.STRING,
-				allowNull: false,
-			},
-			epoch_index: {
-				type: Sequelize.STRING,
-				allowNull: false
-			},
 			createdAt: {
 				type: Sequelize.DATE
 			},
