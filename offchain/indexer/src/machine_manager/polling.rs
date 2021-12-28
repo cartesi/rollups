@@ -9,10 +9,8 @@ use crate::db::PollingPool;
 use crate::grpc::{
     cartesi_machine::Void,
     server_manager::{
-        server_manager_client::ServerManagerClient,
-        GetEpochStatusRequest, GetSessionStatusRequest, StartSessionRequest,
-        AdvanceStateRequest, FinishEpochRequest, InputMetadata, Address,
-        InspectStateRequest,
+        server_manager_client::ServerManagerClient, GetEpochStatusRequest,
+        GetSessionStatusRequest,
     },
 };
 
@@ -29,11 +27,9 @@ impl Poller {
         server_manager_endpoint: String,
         pool: PollingPool,
     ) -> Result<Poller> {
-        let client = ServerManagerClient::connect(
-            server_manager_endpoint,
-        )
-        .await
-        .context(TonicTransportError)?;
+        let client = ServerManagerClient::connect(server_manager_endpoint)
+            .await
+            .context(TonicTransportError)?;
 
         Ok(Poller {
             client,

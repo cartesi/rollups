@@ -12,11 +12,11 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-offchain-core = { git = "ssh://github.com/cartesi/offchain-utils", rev = "c4a9c05" }
-configuration = { git = "https://github.com/cartesi/offchain-utils", rev = "c4a9c05" }
-state-fold = { git = "ssh://github.com/cartesi-corp/state-fold",  rev = "daeb201" }
+offchain-core = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
+configuration = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
+state-fold = { git = "https://github.com/cartesi-corp/state-fold",  tag = "v0.1.0" }
 offchain = { path = "../offchain" }
-state-server-grpc = { git = "ssh://github.com/cartesi-corp/state-fold", rev = "daeb201" }
+state-server-grpc = { git = "https://github.com/cartesi-corp/state-fold", tag = "v0.1.0" }
 
 ethers = { version = "0.5.3", features = [ "legacy", "ws" ] }
 

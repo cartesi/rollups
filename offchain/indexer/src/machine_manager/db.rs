@@ -25,9 +25,7 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::row::NamedRow;
 use diesel::sql_query;
-use diesel::sql_types::{
-    Array, Integer, Json, Nullable, Timestamp, Uuid, VarChar,
-};
+use diesel::sql_types::{Array, Json, Nullable, Timestamp, Uuid, VarChar};
 
 use std::time::SystemTime;
 

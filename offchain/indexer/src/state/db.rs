@@ -23,10 +23,8 @@ use core::str::FromStr;
 
 use snafu::ResultExt;
 
-use std::time::SystemTime;
-//use std::time::Duration;
 use std::convert::TryFrom;
-use std::sync::Arc;
+use std::time::SystemTime;
 
 use im::Vector;
 
