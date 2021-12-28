@@ -16,7 +16,6 @@ pragma solidity ^0.8.0;
 import "./Input.sol";
 import "./Rollups.sol";
 
-// TODO: this contract seems to be very unsafe, need to think about security implications
 contract InputImpl is Input {
     Rollups immutable rollups; // rollups contract using this input contract
 
