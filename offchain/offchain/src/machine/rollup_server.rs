@@ -75,7 +75,7 @@ impl Config {
             }),
 
             machine_oneof: Some(MachineOneof::Directory(
-                "/opt/cartesi/share/echo-server".to_owned(),
+                "/opt/cartesi/share/dapp-bin".to_owned(),
             )),
         };
 
