@@ -64,7 +64,16 @@ The middleware can be used by anyone who's interested in the rollups state of af
 
 # Installation
 
-To be done...
+The Cartesi Rollups infrastructure can be executed in 2 modes:
+1. As a **production environment** that provides a Cartesi Machine where the DApp back-end logic will run after been cross-compiled to the RISC-V architecture. Please check our [examples repository](https://github.com/cartesi-corp/rollups-examples) that showcase Cartesi Rolllups usage.
+2. As a **host environment** that provides the very same HTTP API as the regular one, mimicking the behavior of the actual layer-1 and layer-2 components. This way, the Cartesi Rollups infrastructure can make HTTP requests to a native back-end running on localhost. This allows the developer to run and debug them using familiar tools, such as an IDE. To execute the Cartesi Rollups as a host environment execute the following commands:
+
+    # Clone repo
+    # cd Rollups
+    # Config ports to allow your app be located by the cartesi infra
+    # Run docker compose up
+    # send an input
+    # Log
 
 # Talk with us
 If you’re interested in developing with Cartesi, working with the team, or hanging out in our community, don’t forget to [join us on Discord and follow along](https://discordapp.com/invite/Pt2NrnS).
