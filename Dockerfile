@@ -9,6 +9,8 @@ COPY package.json .
 COPY tsconfig.json .
 COPY yarn.lock .
 
+COPY grpc-interfaces ./grpc-interfaces
+
 ADD wait-for-file.sh /
 RUN chmod +x /wait-for-file.sh
 
