@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tonic_build::configure().build_server(false).compile(
         &[
-    tonic_build::compile_protos("../../grpc-interfaces/rollup-machine-manager.proto")?;
+    tonic_build::compile_protos("../../grpc-interfaces/server-manager.proto")?;
             "../../grpc-interfaces/cartesi-machine.proto",
             "../../grpc-interfaces/server-manager.proto",
     tonic_build::compile_protos("../../grpc-interfaces/stateserver.proto")?;
