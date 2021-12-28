@@ -48,7 +48,7 @@ task("rollups:create", "Create a set of Rollups contracts")
 
         const INPUT_DURATION = 1 * DAY;
         const CHALLENGE_PERIOD = 7 * DAY;
-        const INPUT_LOG2_SIZE = 25;
+        const INPUT_LOG2_SIZE = 20;
 
         let signers = await ethers.getSigners();
 
