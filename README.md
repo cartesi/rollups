@@ -4,19 +4,19 @@ This repository contains the on-chain and off-chain pieces that are used to depl
 
 # Table of contents
 - [Documentation](#documentation)
-- [Installation](#installation)
+- [Experimenting](#experimenting)
 - [Talk with us](#talk-with-us)
 - [Contributing](#contributing)
 - [License](#license)
 
-# Documentation
+## Documentation
 Several articles were written about the code presented here:
 - [Cartesi Rollups - Scalable Smart Contracts Built with mainstream software stacks](https://medium.com/cartesi/scalable-smart-contracts-on-ethereum-built-with-mainstream-software-stacks-8ad6f8f17997)
 - [Rollups On-Chain - Tackling Social Scalability](https://medium.com/cartesi/rollups-on-chain-d749744a9cb3)
 - [State Fold](https://medium.com/cartesi/state-fold-cfe5f4d79639)
 - [Transaction Manager](https://medium.com/cartesi/cartesi-rollups-rollout-transaction-manager-4a49af15d6b9)
 
-# On-chain Rollups:
+## On-chain Rollups:
 Designed to mediate the relationship between the off-chain components with other smart contracts and externally owned accounts. It is composed by several modules, each with clear responsibilities and well-defined interfaces. The modules are the following:
 
 ## Cartesi Rollups Manager
@@ -57,78 +57,23 @@ Regardless of what the name might suggest, validators do not interact with this 
 Disputes occur when two validators claim different state updates to the same epoch. Because of the deterministic nature of our virtual machine and the fact that the inputs that constitute an epoch are agreed upon beforehand, conflicting claims imply dishonest behavior. When a conflict occurs, the module that mediates the interactions between both validators is the dispute resolution.
 The code for rollups dispute resolution is not being published yet - but a big part of it is available on the Cartesi Rollups SDK, using the [Arbitration dlib] (https://github.com/cartesi/arbitration-dlib/)
 
-# Off-chain Rollups
+## Off-chain Rollups
 The Rollups machine and the smart contracts live in fundamentally different environments. This creates the need for a middleware that manages and controls the communication between the blockchain and the machine.
 As such, the middleware is responsible for first reading data from our smart contracts, then sending them to the machine to be processed, and finally publishing their results back to the blockchain.
 The middleware can be used by anyone who's interested in the rollups state of affairs. We divide interested users into two roles, which run different types of nodes: readers and validators. Reader nodes are only interested in advancing their off-chain machine. They consume information from the blockchain but do not bother to enforce state updates, trusting that validators will ensure the validity of all on-chain state updates. Validators, on the other hand, have more responsibility: they not only watch the blockchain but also fight to ensure that the blockchain won't accept that which didn't happen.
 
-# Installation
+## Experimenting
+To get a taste on how to use Cartesi to develop your DApp, check the following resources:
+See Cartesi Rollups in action with the [Simple Echo Example](https://github.com/cartesi/rollups-examples/tree/main/echo).
+To have a glimpse on how to develop your DApp locally using your favorite IDE and tools check our [Host Environment](https://github.com/cartesi/rollups-examples/tree/main/host) repo.
 
-The Cartesi Rollups infrastructure can be executed in 2 modes:
-1. As a **production environment** that provides a Cartesi Machine where the DApp back-end logic will run after being cross-compiled to the RISC-V architecture. Please check our [examples repository](https://github.com/cartesi/rollups-examples) to learn how to use Cartesi Rolllups usage.
-2. As a **host environment** that provides the very same HTTP API as the regular one, mimicking the behavior of the actual layer-1 and layer-2 components. This way, the Cartesi Rollups infrastructure can make HTTP requests to a native back-end running on localhost. This allows the developer to run and debug them using familiar tools, such as an IDE. To execute the Cartesi Rollups as a host environment execute the following commands:
 
-
-        # Clone repo
-        git clone --recurse-submodules git@github.com:cartesi/rollups.git
-        cd rollups
-
-        # Run docker compose up
-        docker-compose up
-
-        # Wait for the hardhat container to start and create the rollup onchain infrastructure:
-        docker exec rollups_hardhat_1 npx hardhat --network localhost rollups:create --export dapp.json
-
-        # You'll know this was created when this command shows you the following reply:
-        Rollups Impl address: 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
-        Rollups Impl getCurrentEpoch: 0
-        Rollups accumulation start: 1640643011
-        Input address 0x9bd03768a7DCc129555dE410FF8E85528A4F88b5
-        Output address 0x440C0fCDC317D69606eabc35C0F676D1a8251Ee1
-        Ether Portal address 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318
-        ERC20 Portal address 0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
-
-        # To send an input, open a new terminal window and run:
-        docker exec rollups_hardhat_1 npx hardhat --network localhost input:addInput --input "0xdeadbeef"
-
-        # You'll know the input was accepted when the terminal shows you something like following reply:
-        Added input '0xdeadbeef' to epoch '0' (timestamp: 1640643170, signer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266, tx: 0x31d7e9e810d8702196623837b8512097786b544a4b5ffb52f693b9ff7d424147)
-
-        # In order to verify the notices generated by your inputs, run the command:
-        curl -v http://localhost:4000/graphql -H 'Content-Type: application/json' -d '{ "query" : "query getNotice { GetNotice( query: { session_id: \"default_rollups_id\", epoch_index: \"0\", input_index: \"0\" } ) { session_id epoch_index input_index notice_index payload keccak_in_notice_hashes { id target_hash target_address }} }" }'
-
-        # The response should be something like:
-        *   Trying 127.0.0.1:4000...
-        * TCP_NODELAY set
-        * Connected to localhost (127.0.0.1) port 4000 (#0)
-        > POST /graphql HTTP/1.1
-        > Host: localhost:4000
-        > User-Agent: curl/7.68.0
-        > Accept: */*
-        > Content-Type: application/json
-        > Content-Length: 251
-        > 
-        * upload completely sent off: 251 out of 251 bytes
-        * Mark bundle as not supporting multiuse
-        < HTTP/1.1 200 OK
-        < X-Powered-By: Express
-        < Access-Control-Allow-Origin: *
-        < Content-Type: application/json; charset=utf-8
-        < Content-Lengt
-
-        # To stop the containers
-        # first end the process with ctrl + c
-        # then remove volumes
-        docker-compose down --volumes
-
-       # The HTTP API uses two different ports, to receive and send information. They're respectively: 5002 and 5003.
-
-# Talk with us
+## Talk with us
 If you’re interested in developing with Cartesi, working with the team, or hanging out in our community, don’t forget to [join us on Discord and follow along](https://discordapp.com/invite/Pt2NrnS).
 
 Want to stay up to date? Make sure to join our [announcements channel on Telegram](https://t.me/CartesiAnnouncements) or [follow our Twitter](https://twitter.com/cartesiproject).
 
-# Contributing
+## Contributing
 
 Thank you for your interest in Cartesi! Head over to our [Contributing Guidelines](CONTRIBUTING.md) for instructions on how to sign our Contributors Agreement and get started with Cartesi!
 
