@@ -1423,6 +1423,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "indexer"
+version = "0.1.0"
+dependencies = [
+ "async-recursion",
+ "async-trait",
+ "configuration",
+ "diesel",
+ "ethers",
+ "futures",
+ "im",
+ "offchain",
+ "offchain-core",
+ "prost 0.7.0",
+ "serde",
+ "serde_json",
+ "snafu",
+ "state-fold",
+ "state-server-grpc",
+ "structopt",
+ "tokio",
+ "tonic 0.4.3",
+ "tonic-build 0.4.2",
+ "uuid",
+]
+
+[[package]]
 name = "indexmap"
 version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1921,32 +1947,6 @@ name = "pkg-config"
 version = "0.3.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "12295df4f294471248581bc09bef3c38a5e46f1e36d6a37353621a0c6c357e1f"
-
-[[package]]
-name = "polling-writing"
-version = "0.1.0"
-dependencies = [
- "async-recursion",
- "async-trait",
- "configuration",
- "diesel",
- "ethers",
- "futures",
- "im",
- "offchain",
- "offchain-core",
- "prost 0.7.0",
- "serde",
- "serde_json",
- "snafu",
- "state-fold",
- "state-server-grpc",
- "structopt",
- "tokio",
- "tonic 0.4.3",
- "tonic-build 0.4.2",
- "uuid",
-]
 
 [[package]]
 name = "ppv-lite86"

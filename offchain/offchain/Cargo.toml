@@ -16,7 +16,7 @@ middleware-factory = { git = "https://github.com/cartesi/offchain-utils", tag = 
 offchain-core = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
 configuration = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
 tx-manager = { git = "https://github.com/cartesi/tx-manager", tag = "v0.1.0" }
-state-fold = { git = "https://github.com/cartesi-corp/state-fold", tag = "v0.1.0" }
+state-fold = { git = "https://github.com/cartesi/state-fold", tag = "v0.1.0" }
 
 ethers = { version = "0.5.3", features = [ "legacy", "ws" ] }
 ethers-core = { version = "^0.5.0", features = [ "legacy" ] }

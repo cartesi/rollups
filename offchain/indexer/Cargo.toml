@@ -14,9 +14,9 @@ path = "src/main.rs"
 [dependencies]
 offchain-core = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
 configuration = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
-state-fold = { git = "https://github.com/cartesi-corp/state-fold",  tag = "v0.1.0" }
+state-fold = { git = "https://github.com/cartesi/state-fold",  tag = "v0.1.0" }
 offchain = { path = "../offchain" }
-state-server-grpc = { git = "https://github.com/cartesi-corp/state-fold", tag = "v0.1.0" }
+state-server-grpc = { git = "https://github.com/cartesi/state-fold", tag = "v0.1.0" }
 
 ethers = { version = "0.5.3", features = [ "legacy", "ws" ] }
 
