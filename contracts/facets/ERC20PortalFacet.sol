@@ -22,7 +22,7 @@ import {LibInput} from "../libraries/LibInput.sol";
 contract ERC20PortalFacet is IERC20Portal {
     using LibInput for LibInput.DiamondStorage;
 
-    /// @notice deposit an amount of a generic ERC20 in the Diamond and create tokens in L2
+    /// @notice deposit an amount of a generic ERC20 in the portal and create tokens in L2
     /// @param _ERC20 address of the ERC20 token contract
     /// @param _amount amount of the ERC20 token to be deposited
     /// @param _data information to be interpreted by L2
@@ -46,9 +46,9 @@ contract ERC20PortalFacet is IERC20Portal {
         return inputDS.addInput(input);
     }
 
-    /// @notice withdraws an amount of a generic ERC20 from the Diamond
+    /// @notice withdraw an amount of a generic ERC20 from the portal
     /// @param _data data with withdrawal information
-    /// @dev can only be called by the Diamond itself
+    /// @dev can only be called by the Rollups contract
     function erc20Withdrawal(bytes calldata _data)
         public
         override

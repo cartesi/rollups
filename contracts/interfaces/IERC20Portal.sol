@@ -14,7 +14,7 @@
 pragma solidity >=0.7.0;
 
 interface IERC20Portal {
-    /// @notice deposit an amount of a generic ERC20 in the Diamond and create tokens in L2
+    /// @notice deposit an amount of a generic ERC20 token in the portal and create tokens in L2
     /// @param _ERC20 address of the ERC20 token contract
     /// @param _amount amount of the ERC20 token to be deposited
     /// @param _data information to be interpreted by L2
@@ -25,9 +25,9 @@ interface IERC20Portal {
         bytes calldata _data
     ) external returns (bytes32);
 
-    /// @notice withdraws an amount of a generic ERC20 from the Diamond
+    /// @notice withdraw an amount of a generic ERC20 token from the portal
     /// @param _data data with withdrawal information
-    /// @dev can only be called by the Diamond itself
+    /// @dev can only be called by the Rollups contract
     function erc20Withdrawal(bytes calldata _data) external returns (bool);
 
     // @notice emitted on ERC20 deposited

@@ -58,7 +58,7 @@ describe("EtherPortal Facet", async () => {
             .withArgs(await signer.getAddress(), value, data);
     });
 
-    it("etherWithdrawal should revert if not called by the Diamond itself", async () => {
+    it("etherWithdrawal should revert if not called by the Rollups contract", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint"],
             [

@@ -108,7 +108,7 @@ describe("ERC20Portal Facet", async () => {
         ).to.equal(inputHash);
     });
 
-    it("erc20Withdrawal should revert if not called by the Diamond itself", async () => {
+    it("erc20Withdrawal should revert if not called by the Rollups contract", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint", "uint"],
             [
