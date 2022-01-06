@@ -1,6 +1,6 @@
 {
     "name": "@cartesi/rollups",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "scripts": {
         "build": "hardhat compile && tsc",
         "clean:dir": "rimraf artifacts && rimraf cache && rimraf src/types/*",
