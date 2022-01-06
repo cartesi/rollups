@@ -61,10 +61,10 @@
     },
     "files": [
         "contracts",
-        "dist/src/types",
+        "dist/src",
         "export"
     ],
-    "main": "./dist/src/types/index.js",
-    "types": "./dist/src/types/index.d.ts",
+    "main": "./dist/src/index.js",
+    "types": "./dist/src/index.d.ts",
     "license": "Apache-2.0"
 }

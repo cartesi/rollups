@@ -9,5 +9,5 @@
         "esModuleInterop": true,
         "outDir": "dist"
     },
-    "exclude": ["dist", "node_modules", "src/reader"]
+    "exclude": ["dist", "node_modules", "src/reader", "src/proto"]
 }
