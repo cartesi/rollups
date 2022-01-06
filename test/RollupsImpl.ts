@@ -2,11 +2,18 @@ import { deployments, ethers, network } from "hardhat";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { RollupsImpl } from "../dist/src/types/RollupsImpl";
-import { RollupsImpl__factory } from "../dist/src/types/factories/RollupsImpl__factory";
+import { RollupsImpl, RollupsImpl__factory } from "../dist/src/types";
 import { getState } from "./getState";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 use(solidity);
+
+interface RollupsProps {
+    inputDuration: number;
+    challengePeriod: number;
+    inputLog2Size: number;
+    validators: (string | number)[];
+}
 
 describe("Rollups Implementation", () => {
     /// for testing Rollups when modifiers are on, set this to true
@@ -52,15 +59,58 @@ describe("Rollups Implementation", () => {
     let initialEpoch: any;
     let initialState: any;
 
+    const setupRollups = deployments.createFixture<RollupsImpl, RollupsProps>(
+        async (
+            hre: HardhatRuntimeEnvironment,
+            options: RollupsProps = {
+                inputDuration,
+                challengePeriod,
+                inputLog2Size: INPUT_LOG2_SIZE,
+                validators: [0, 1, 2],
+            }
+        ) => {
+            const { deployments, ethers } = hre;
+            const { deployer } = await hre.getNamedAccounts();
+
+            // get util contracts
+            const BitmaskLibrary = await deployments.get("Bitmask");
+            const Merkle = await deployments.get("Merkle");
+
+            // process list of validators from config. If item is a number consider as an account index of the defined MNEMONIC
+            const signers = await ethers.getSigners();
+            let validators = options.validators;
+            validators = validators.map((address) =>
+                typeof address == "number" ? signers[address].address : address
+            );
+
+            // RollupsImpl
+            const rollupsArgs = [
+                options.inputDuration,
+                options.challengePeriod,
+                options.inputLog2Size,
+                validators,
+            ];
+            const Rollups = await deployments.deploy("RollupsImpl", {
+                from: deployer,
+                libraries: {
+                    Bitmask: BitmaskLibrary.address,
+                    Merkle: Merkle.address,
+                },
+                args: rollupsArgs,
+            });
+            const rollups = RollupsImpl__factory.connect(
+                Rollups.address,
+                await ethers.getSigner(deployer)
+            );
+            return rollups;
+        }
+    );
+
     beforeEach(async () => {
         signers = await ethers.getSigners();
 
         await deployments.fixture();
-        const dAddress = (await deployments.get("RollupsImpl")).address;
-        rollupsImpl = RollupsImpl__factory.connect(
-            dAddress,
-            signers[0]
-        );
+        rollupsImpl = await setupRollups();
         // get the timestamp of the second last block, because after deploying rollups, portalImpl was deployed
         contract_creation_time =
             (await ethers.provider.getBlock("latest")).timestamp - 1;
@@ -293,9 +343,7 @@ describe("Rollups Implementation", () => {
             ]);
             await network.provider.send("evm_mine");
 
-            await rollupsImpl.claim(
-                ethers.utils.formatBytes32String("hello")
-            );
+            await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
 
             await rollupsImpl
                 .connect(signers[1])
@@ -779,18 +827,14 @@ describe("Rollups Implementation", () => {
                 "input contract address does not match"
             ).to.equal((await rollupsImpl.getInputAddress()).toLowerCase());
             expect(
-                    state.constants.output_contract_address,
-                    "output contract address does not match"
-            ).to.equal(
-                (await rollupsImpl.getOutputAddress()).toLowerCase()
-            );
+                state.constants.output_contract_address,
+                "output contract address does not match"
+            ).to.equal((await rollupsImpl.getOutputAddress()).toLowerCase());
             expect(
                 state.constants.validator_contract_address,
                 "validator manager contract address does not match"
             ).to.equal(
-                (
-                    await rollupsImpl.getValidatorManagerAddress()
-                ).toLowerCase()
+                (await rollupsImpl.getValidatorManagerAddress()).toLowerCase()
             );
             expect(
                 state.constants.dispute_contract_address,
@@ -856,9 +900,7 @@ describe("Rollups Implementation", () => {
             expect(
                 state.output_state.output_address,
                 "output_state.output_address does not match"
-            ).to.equal(
-                (await rollupsImpl.getOutputAddress()).toLowerCase()
-            );
+            ).to.equal((await rollupsImpl.getOutputAddress()).toLowerCase());
             expect(
                 JSON.stringify(state.output_state.vouchers) == "{}",
                 "initially there's no vouchers"
@@ -866,9 +908,7 @@ describe("Rollups Implementation", () => {
 
             // *** EPOCH 0: claim when the input duration has not past ***
             await expect(
-                rollupsImpl.claim(
-                    ethers.utils.formatBytes32String("hello")
-                ),
+                rollupsImpl.claim(ethers.utils.formatBytes32String("hello")),
                 "phase incorrect because inputDuration not over"
             ).to.be.revertedWith("Phase != AwaitingConsensus");
             await network.provider.send("evm_increaseTime", [
@@ -876,9 +916,7 @@ describe("Rollups Implementation", () => {
             ]);
             await network.provider.send("evm_mine");
             await expect(
-                rollupsImpl.claim(
-                    ethers.utils.formatBytes32String("hello")
-                ),
+                rollupsImpl.claim(ethers.utils.formatBytes32String("hello")),
                 "phase incorrect because inputDuration not over"
             ).to.be.revertedWith("Phase != AwaitingConsensus");
 
@@ -890,9 +928,7 @@ describe("Rollups Implementation", () => {
                 inputDuration / 2 + 1,
             ]);
             await network.provider.send("evm_mine");
-            await rollupsImpl.claim(
-                ethers.utils.formatBytes32String("hello")
-            );
+            await rollupsImpl.claim(ethers.utils.formatBytes32String("hello"));
 
             state = JSON.parse(await getState(initialState)); // update state
             checkCurrentEpochNum(state, "0x1");
@@ -982,9 +1018,7 @@ describe("Rollups Implementation", () => {
             ).to.equal("0x1");
 
             // *** EPOCH 1: conflicting claims ***
-            await rollupsImpl.claim(
-                ethers.utils.formatBytes32String("hello1")
-            );
+            await rollupsImpl.claim(ethers.utils.formatBytes32String("hello1"));
             let first_claim_timestamp = (
                 await ethers.provider.getBlock("latest")
             ).timestamp;
@@ -1061,9 +1095,7 @@ describe("Rollups Implementation", () => {
             ]);
             await network.provider.send("evm_mine");
 
-            await rollupsImpl.claim(
-                ethers.utils.formatBytes32String("hello2")
-            );
+            await rollupsImpl.claim(ethers.utils.formatBytes32String("hello2"));
             await rollupsImpl
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("not hello2"));
