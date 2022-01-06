@@ -64,7 +64,7 @@ describe("ERC20Portal Facet", async () => {
                 50,
                 "0x00"
             ),
-            "ether deposit should revert if ERC20 transferFrom fails"
+            "ERC20 deposit should revert if ERC20 transferFrom fails"
         ).to.be.revertedWith("ERC20 transferFrom failed");
     });
 
