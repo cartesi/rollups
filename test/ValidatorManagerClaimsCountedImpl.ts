@@ -22,9 +22,11 @@
 import { expect, use } from "chai";
 import { deployments, ethers } from "hardhat";
 import { solidity, MockProvider } from "ethereum-waffle";
-import { ValidatorManagerClaimsCountedImpl__factory } from "../dist/src/types/factories/ValidatorManagerClaimsCountedImpl__factory";
 import { Signer } from "ethers";
-import { ValidatorManagerClaimsCountedImpl } from "../dist/src/types/ValidatorManagerClaimsCountedImpl";
+import {
+    ValidatorManagerClaimsCountedImpl,
+    ValidatorManagerClaimsCountedImpl__factory,
+} from "../src/types";
 
 use(solidity);
 
@@ -61,10 +63,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             validators.push(address);
         }
 
-        VMCC = await vmccFactory.deploy(
-            await rollups.getAddress(),
-            validators
-        );
+        VMCC = await vmccFactory.deploy(await rollups.getAddress(), validators);
     });
 
     it("should revert if more than 8 validators", async () => {

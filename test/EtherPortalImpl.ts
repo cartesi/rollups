@@ -25,10 +25,9 @@ import {
     deployMockContract,
     MockContract,
 } from "@ethereum-waffle/mock-contract";
-import { solidity, MockProvider, deployContract } from "ethereum-waffle";
-import { EtherPortalImpl__factory } from "../dist/src/types/factories/EtherPortalImpl__factory";
+import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { EtherPortalImpl } from "../dist/src/types/EtherPortalImpl";
+import { EtherPortalImpl, EtherPortalImpl__factory } from "../src/types";
 import { keccak256 } from "ethers/lib/utils";
 
 use(solidity);
@@ -59,10 +58,9 @@ describe("EtherPortal Implementation", async () => {
         await mockInput.mock.addInput.returns(keccak256("0x00"));
 
         expect(
-            await portalImpl.etherDeposit(
-                "0x00",
-                { value: ethers.utils.parseEther("60") }
-            ),
+            await portalImpl.etherDeposit("0x00", {
+                value: ethers.utils.parseEther("60"),
+            }),
             "expect etherDeposit function to emit EtherDeposited event"
         )
             .to.emit(portalImpl, "EtherDeposited")
@@ -71,16 +69,12 @@ describe("EtherPortal Implementation", async () => {
                 ethers.utils.parseEther("60"),
                 "0x00"
             );
-
     });
 
     it("executeRollupsVoucher should revert if not called from output", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint"],
-            [
-                await signer.getAddress(),
-                10,
-            ]
+            [await signer.getAddress(), 10]
         );
         await expect(
             portalImpl.connect(signer2).executeRollupsVoucher(data)
@@ -90,19 +84,13 @@ describe("EtherPortal Implementation", async () => {
     it("executeRollupsVoucher should emit EtherWithdrawn and return true", async () => {
         // deposit ethers to portalImpl for enough balance to call function transfer() in etherWithdrawal()
         await mockInput.mock.addInput.returns(keccak256("0x00"));
-        await portalImpl.etherDeposit(
-            "0x00",
-            {
-                value: ethers.utils.parseEther("10"),
-            }
-        );
+        await portalImpl.etherDeposit("0x00", {
+            value: ethers.utils.parseEther("10"),
+        });
 
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint"],
-            [
-                await signer.getAddress(),
-                10,
-            ]
+            [await signer.getAddress(), 10]
         );
 
         // callStatic check return value
@@ -120,14 +108,10 @@ describe("EtherPortal Implementation", async () => {
         await mockInput.mock.addInput.returns(B32str);
 
         expect(
-            await portalImpl.callStatic.etherDeposit(
-                "0x00",
-                {
-                    value: ethers.utils.parseEther("50"),
-                }
-            ),
+            await portalImpl.callStatic.etherDeposit("0x00", {
+                value: ethers.utils.parseEther("50"),
+            }),
             "callStatic to check return value"
         ).to.equal(B32str);
     });
-
 });

@@ -3,7 +3,9 @@
     "version": "0.1.0",
     "scripts": {
         "build": "hardhat compile && tsc",
-        "clean": "rimraf artifacts && rimraf cache && rimraf deployments/localhost && rimraf dist/src/types/*",
+        "clean:dir": "rimraf artifacts && rimraf cache && rimraf src/types/*",
+        "clean:hardhat": "hardhat clean",
+        "clean": "run-s clean:dir clean:hardhat",
         "copy-dts": "copyfiles -u 1 \"src/**/*.d.ts\" dist/src",
         "deploy": "run-s deploy:development",
         "deploy:testnet": "run-s deploy:rinkeby deploy:kovan deploy:goerli deploy:matic_testnet deploy:bsc_testnet",

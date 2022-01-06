@@ -6,10 +6,12 @@ import {
     deployMockContract,
     MockContract,
 } from "@ethereum-waffle/mock-contract";
-import { FeeManagerImpl } from "../dist/src/types/FeeManagerImpl";
-import { FeeManagerImpl__factory } from "../dist/src/types/factories/FeeManagerImpl__factory";
-import { SimpleToken } from "../dist/src/types/SimpleToken";
-import { SimpleToken__factory } from "../dist/src/types/factories/SimpleToken__factory";
+import {
+    FeeManagerImpl,
+    FeeManagerImpl__factory,
+    SimpleToken,
+    SimpleToken__factory,
+} from "../src/types";
 
 use(solidity);
 

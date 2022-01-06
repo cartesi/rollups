@@ -1,9 +1,11 @@
-import { deployments, ethers, network } from "hardhat";
+import { deployments, ethers } from "hardhat";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { TestClaimsMaskLibrary } from "../dist/src/types/TestClaimsMaskLibrary";
-import { TestClaimsMaskLibrary__factory } from "../dist/src/types/factories/TestClaimsMaskLibrary__factory";
+import {
+    TestClaimsMaskLibrary,
+    TestClaimsMaskLibrary__factory,
+} from "../src/types";
 
 use(solidity);
 

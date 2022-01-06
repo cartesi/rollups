@@ -75,7 +75,7 @@ task("rollups:create", "Create a set of Rollups contracts")
 
         // we have to `require`, not `import`, because it's built by typechain
         const { RollupsImpl__factory } =
-            await require("../../dist/src/types/factories/RollupsImpl__factory");
+            await require("../types/factories/RollupsImpl__factory");
 
         let rollupsImpl = RollupsImpl__factory.connect(
             RollupsImpl.address,

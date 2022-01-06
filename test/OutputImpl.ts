@@ -6,12 +6,9 @@ import {
     deployMockContract,
     MockContract,
 } from "@ethereum-waffle/mock-contract";
-import { OutputImpl } from "../dist/src/types/OutputImpl";
-import { OutputImpl__factory } from "../dist/src/types/factories/OutputImpl__factory";
-import { Merkle } from "../dist/src/types/Merkle";
-import { CartesiMath } from "../dist/src/types/CartesiMath";
-import { Bytes, BytesLike } from "@ethersproject/bytes";
+import { BytesLike } from "@ethersproject/bytes";
 import { keccak256 } from "ethers/lib/utils";
+import { OutputImpl, OutputImpl__factory } from "../src/types";
 
 use(solidity);
 

@@ -81,7 +81,7 @@ const config: HardhatUserConfig = {
         deployments: "deployments",
     },
     typechain: {
-        outDir: "dist/src/types",
+        outDir: "src/types",
         target: "ethers-v5",
     },
     external: {

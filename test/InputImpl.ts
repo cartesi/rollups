@@ -26,9 +26,8 @@ import {
     MockContract,
 } from "@ethereum-waffle/mock-contract";
 import { solidity } from "ethereum-waffle";
-import { InputImpl__factory } from "../dist/src/types/factories/InputImpl__factory";
 import { Signer } from "ethers";
-import { InputImpl } from "../dist/src/types/InputImpl";
+import { InputImpl, InputImpl__factory } from "../src/types";
 
 use(solidity);
 
@@ -53,10 +52,7 @@ describe("Input Implementation", () => {
 
         const inputFactory = new InputImpl__factory(signer);
 
-        inputImpl = await inputFactory.deploy(
-            mockRollups.address,
-            log2Size
-        );
+        inputImpl = await inputFactory.deploy(mockRollups.address, log2Size);
     });
 
     it("test constructor", async () => {
@@ -123,7 +119,6 @@ describe("Input Implementation", () => {
             await inputImpl.getNumberOfInputs(),
             "Number of inputs should be 3, because last addition changes the inbox"
         ).to.equal(3);
-
     });
 
     it("emit event InputAdded", async () => {
@@ -143,7 +138,6 @@ describe("Input Implementation", () => {
                 (await ethers.provider.getBlock("latest")).timestamp + 1,
                 "0x" + input_64_bytes.toString("hex")
             );
-
     });
 
     it("test return value of addInput()", async () => {
@@ -160,7 +154,7 @@ describe("Input Implementation", () => {
                 (await ethers.provider.getBlock("latest")).number,
                 (await ethers.provider.getBlock("latest")).timestamp,
                 0x0,
-                0x0
+                0x0,
             ]
         );
         let keccak_metadata = ethers.utils.keccak256(metadata);
@@ -175,7 +169,6 @@ describe("Input Implementation", () => {
             await inputImpl.callStatic.addInput(input_64_bytes),
             "use callStatic to view the return value"
         ).to.equal(input_hash);
-
     });
 
     it("test getInput()", async () => {
@@ -194,7 +187,7 @@ describe("Input Implementation", () => {
                 (await ethers.provider.getBlock("latest")).number,
                 (await ethers.provider.getBlock("latest")).timestamp,
                 0x0,
-                0x0
+                0x0,
             ]
         );
 
@@ -226,7 +219,7 @@ describe("Input Implementation", () => {
                 (await ethers.provider.getBlock("latest")).number,
                 (await ethers.provider.getBlock("latest")).timestamp,
                 0x1,
-                0x0
+                0x0,
             ]
         );
 
@@ -246,7 +239,6 @@ describe("Input Implementation", () => {
             await inputImpl.getInput(0),
             "get the first value in input box 1"
         ).to.equal(input_hash);
-
     });
 
     it("getCurrentInbox should return correct inbox", async () => {

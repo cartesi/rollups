@@ -1,10 +1,10 @@
 import { deployments, ethers, network } from "hardhat";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { RollupsImpl, RollupsImpl__factory } from "../dist/src/types";
+import { RollupsImpl, RollupsImpl__factory } from "../src/types";
 import { getState } from "./getState";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 use(solidity);
 
