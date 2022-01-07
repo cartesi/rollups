@@ -1,5 +1,5 @@
-import client from './client';
-import { GetStateRequest } from '../src/proto/stateserver_pb'
+import client from "./client";
+import { GetStateRequest } from "../generated-src/proto/stateserver_pb";
 
 export const getState = async (initialState: string) => {
     const request = new GetStateRequest();

@@ -5,6 +5,7 @@ coverage*
 deployments/localhost
 deployments/*/solcInputs/*.json
 dist
+generated-src
 node_modules
 src/proto/stateserver*
 src/types
