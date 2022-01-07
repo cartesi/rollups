@@ -1,4 +1,4 @@
-// Copyright 2020 Cartesi Pte. Ltd.
+// Copyright 2022 Cartesi Pte. Ltd.
 
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -10,79 +10,47 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-import { HardhatRuntimeEnvironment, TaskArguments } from "hardhat/types";
-import { task, types } from "hardhat/config";
+import { task } from "hardhat/config";
 import { getEvent } from "./eventUtil";
+import { ExecuteVoucherArgs } from "./args";
+import { executeVoucherParams, rollupsParams } from "./params";
+import { connected } from "./connect";
+import { TASK_EXECUTE_VOUCHER } from "./constants";
+import { taskDefs } from ".";
 
-task("output:executeVoucher", "execute a voucher")
-    .addParam(
-        "destination",
-        "the destination address that is called for execution"
+rollupsParams(
+    executeVoucherParams(
+        task<ExecuteVoucherArgs>(
+            TASK_EXECUTE_VOUCHER,
+            taskDefs[TASK_EXECUTE_VOUCHER].description,
+            connected(async (args, { outputContract }) => {
+                const signer = await outputContract.signer.getAddress();
+                const proof = JSON.parse(args.proof); // string to JSON object
+
+                const tx = await outputContract.executeVoucher(
+                    args.destination,
+                    args.payload,
+                    proof
+                )!;
+                const events = (await tx.wait()).events!;
+                const voucherExecutedEvent = getEvent(
+                    "VoucherExecuted",
+                    outputContract,
+                    events
+                );
+
+                if (!voucherExecutedEvent) {
+                    console.log(
+                        `Failed to execute payload '${args.payload}' at destination '${args.destination}' with proof '${proof}' (signer: ${signer}, tx: ${tx.hash})`
+                    );
+                } else {
+                    const voucherPosition =
+                        voucherExecutedEvent.args.voucherPosition.toString();
+                    console.log(
+                        `Executed voucher at position '${voucherPosition}' (signer: ${signer}, tx: ${tx.hash})`
+                    );
+                }
+            })
+        )
     )
-    .addParam(
-        "payload",
-        "the abi encoding of the called function and arguments"
-    )
-    .addParam(
-        "proof",
-        "proof for the voucher being valid. Should be wrapped as a JSON string."
-    )
-    .addOptionalParam(
-        "signer",
-        "account index of the signer adding the input",
-        0,
-        types.int
-    )
-    .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
-        const { deployments, ethers } = hre;
-
-        let destination = args.destination;
-        let payload = args.payload;
-        let proof = JSON.parse(args.proof); // string to JSON object
-
-        let signerIndex = args.signer;
-        const signers = await ethers.getSigners();
-        if (signerIndex < 0 || signerIndex >= signers.length) {
-            console.error(
-                `Invalid signer account index ${signerIndex}: must be between 0 and ${signers.length}`
-            );
-            return;
-        }
-        const signer = signers[signerIndex];
-
-        let rollupsDeployed = await deployments.get("RollupsImpl");
-        let rollups = await ethers.getContractAt(
-            rollupsDeployed.abi,
-            rollupsDeployed.address
-        );
-
-        let outputArtifact = await deployments.getArtifact("OutputImpl");
-        let outputContract = await ethers.getContractAt(
-            outputArtifact.abi,
-            await rollups.getOutputAddress()
-        );
-
-        const tx = await outputContract.executeVoucher(
-            destination,
-            payload,
-            proof
-        );
-        const events = (await tx.wait()).events;
-        const voucherExecutedEvent = getEvent(
-            "VoucherExecuted",
-            outputContract,
-            events
-        );
-
-        if (!voucherExecutedEvent) {
-            console.log(
-                `Failed to execute payload '${payload}' at destination '${destination}' with proof '${proof}' (signer: ${signer.address}, tx: ${tx.hash})\n`
-            );
-        } else {
-            const voucherPosition =
-                voucherExecutedEvent.args.voucherPosition.toString();
-            console.log(
-                `Executed voucher at position '${voucherPosition}' (signer: ${signer.address}, tx: ${tx.hash})`
-            );
-        }
-    });
+);

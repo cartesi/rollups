@@ -10,14 +10,19 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-import { HardhatRuntimeEnvironment, TaskArguments } from "hardhat/types";
 import { task } from "hardhat/config";
+import { AdvanceTimeArgs } from "./args";
+import { advanceTimeParams } from "./params";
 
-task("util:advanceTime", "Advances time in private blockchain")
-    .addParam("seconds", "time to advance in seconds")
-    .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
-        await hre.network.provider.send("evm_increaseTime", [
-            Number(args.seconds),
-        ]);
-        await hre.network.provider.send("evm_mine");
-    });
+advanceTimeParams(
+    task<AdvanceTimeArgs>(
+        "util:advanceTime",
+        "Advances time in private blockchain",
+        async (args, hre) => {
+            await hre.network.provider.send("evm_increaseTime", [
+                Number(args.seconds),
+            ]);
+            await hre.network.provider.send("evm_mine");
+        }
+    )
+);

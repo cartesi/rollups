@@ -10,202 +10,159 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-import fs from "fs";
+import { task } from "hardhat/config";
+import { RollupsArgs, CreateArgs, ClaimArgs } from "./args";
 import {
-    HardhatRuntimeEnvironment,
-    Network,
-    TaskArguments,
-} from "hardhat/types";
-import { task, types } from "hardhat/config";
-import { ContractExport, Export } from "hardhat-deploy/dist/types";
+    accountIndexParam,
+    claimParams,
+    createParams,
+    rollupsParams,
+} from "./params";
+import { connect, connected } from "./connect";
+import {
+    taskDefs,
+    TASK_CLAIM,
+    TASK_CREATE,
+    TASK_FINALIZE_EPOCH,
+    TASK_GET_STATE,
+} from "./constants";
 
-const exportDeployment = async (
-    network: Network,
-    contracts: { [name: string]: ContractExport },
-    filename: string
-) => {
-    const exp: Export = {
-        name: network.name,
-        chainId: network.config.chainId?.toString() || "", // why can it be undefined?
-        contracts,
-    };
-    fs.writeFileSync(filename, JSON.stringify(exp));
-};
+// return true if string is an unsigned integer
+const isIndex = (str: string): boolean =>
+    str.match(/^[0-9]+$/) ? true : false;
 
-task("rollups:create", "Create a set of Rollups contracts")
-    .addParam(
-        "export",
-        "File to export the deployed contracts information",
-        undefined,
-        types.string,
-        true
-    )
-    .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
-        const { deployments, ethers, network } = hre;
-        const MINUTE = 60; // seconds in a minute
-        const HOUR = 60 * MINUTE; // seconds in an hour
-        const DAY = 24 * HOUR; // seconds in a day
+createParams(
+    task<CreateArgs>(
+        TASK_CREATE,
+        taskDefs[TASK_CREATE].description,
+        async (args, hre) => {
+            const { deployments, ethers } = hre;
+            const { deployer } = await hre.getNamedAccounts();
 
-        const INPUT_DURATION = 1 * DAY;
-        const CHALLENGE_PERIOD = 7 * DAY;
-        const INPUT_LOG2_SIZE = 20;
+            // get util contracts
+            const Bitmask = await deployments.get("Bitmask");
+            const Merkle = await deployments.get("Merkle");
 
-        let signers = await ethers.getSigners();
+            // process list of validators from config. If item is a number consider as an account index of the defined MNEMONIC
+            const signers = await ethers.getSigners();
+            const validators: string[] = args.validators
+                .split(",")
+                .map((address) =>
+                    isIndex(address)
+                        ? signers[parseInt(address)].address
+                        : address
+                );
 
-        // Bitmask
-        const Bitmask = await deployments.get("Bitmask");
-
-        // Merkle
-        const Merkle = await deployments.get("Merkle");
-
-        // RollupsImpl
-        const RollupsImpl = await deployments.deploy("RollupsImpl", {
-            from: await signers[0].getAddress(),
-            libraries: {
-                Bitmask: Bitmask.address,
-                Merkle: Merkle.address,
-            },
-            args: [
-                INPUT_DURATION,
-                CHALLENGE_PERIOD,
-                INPUT_LOG2_SIZE,
-                [await signers[0].getAddress()],
-            ],
-        });
-
-        // we have to `require`, not `import`, because it's built by typechain
-        const { RollupsImpl__factory } =
-            await require("../types/factories/RollupsImpl__factory");
-
-        let rollupsImpl = RollupsImpl__factory.connect(
-            RollupsImpl.address,
-            signers[0]
-        );
-
-        let inputAddress = await rollupsImpl.getInputAddress();
-        let outputAddress = await rollupsImpl.getOutputAddress();
-
-        let Erc20PortalImpl = await deployments.deploy("ERC20PortalImpl", {
-            from: await signers[0].getAddress(),
-            args: [inputAddress, outputAddress],
-        });
-
-        let EtherPortalImpl = await deployments.deploy("EtherPortalImpl", {
-            from: await signers[0].getAddress(),
-            args: [inputAddress, outputAddress],
-        });
-
-        console.log("Rollups Impl address: " + rollupsImpl.address);
-        console.log(
-            "Rollups Impl getCurrentEpoch: " +
-                (await rollupsImpl.getCurrentEpoch())
-        );
-        console.log(
-            "Rollups accumulation start: " +
-                (await rollupsImpl.getInputAccumulationStart())
-        );
-        console.log("Input address " + inputAddress);
-        console.log("Output address " + outputAddress);
-        console.log("Ether Portal address " + EtherPortalImpl.address);
-        console.log("ERC20 Portal address " + Erc20PortalImpl.address);
-
-        // write export deployment file
-        if (args.export) {
-            network.name;
-            await exportDeployment(
-                network,
-                {
-                    RollupsImpl: {
-                        address: RollupsImpl.address,
-                        abi: RollupsImpl.abi,
-                    },
-                    EtherPortalImpl: {
-                        address: EtherPortalImpl.address,
-                        abi: EtherPortalImpl.abi,
-                    },
-                    Erc20PortalImpl: {
-                        address: Erc20PortalImpl.address,
-                        abi: Erc20PortalImpl.abi,
-                    },
+            // RollupsImpl
+            const RollupsImpl = await deployments.deploy("RollupsImpl", {
+                from: deployer,
+                libraries: {
+                    Bitmask: Bitmask.address,
+                    Merkle: Merkle.address,
                 },
-                args.export
+                args: [
+                    args.inputDuration,
+                    args.challengePeriod,
+                    args.inputLog2Size,
+                    validators,
+                ],
+                log: args.log,
+            });
+
+            const { inputContract, outputContract } = await connect(
+                { rollups: RollupsImpl.address },
+                hre
             );
+
+            // deploy ETH portal
+            const EtherPortalImpl = await deployments.deploy(
+                "EtherPortalImpl",
+                {
+                    from: deployer,
+                    args: [inputContract.address, outputContract.address],
+                    log: args.log,
+                }
+            );
+
+            // deploy ERC20 portal
+            const ERC20PortalImpl = await deployments.deploy(
+                "ERC20PortalImpl",
+                {
+                    from: deployer,
+                    args: [inputContract.address, outputContract.address],
+                    log: args.log,
+                }
+            );
+
+            const result = {
+                RollupsImpl,
+                EtherPortalImpl,
+                ERC20PortalImpl,
+            };
+            return result;
         }
-    });
-
-task("rollups:claim", "Send a claim to the current epoch")
-    .addParam("claim", "Validator's bytes32 claim for current claimable epoch")
-    .setAction(async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
-        const { deployments, ethers } = hre;
-        const [signer] = await ethers.getSigners();
-        let claim = args.claim;
-
-        let rollupsDeployed = await deployments.get("RollupsImpl");
-
-        let rollups = await ethers.getContractAt(
-            rollupsDeployed.abi,
-            rollupsDeployed.address
-        );
-
-        const tx = await rollups.claim(claim);
-        console.log(`${signer.address}: ${tx} : ${claim}`);
-    });
-
-task(
-    "rollups:finalizeEpoch",
-    "Finalizes epoch, if challenge period has passed",
-    async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
-        const { deployments, ethers } = hre;
-        const [signer] = await ethers.getSigners();
-
-        let rollupsDeployed = await deployments.get("RollupsImpl");
-        let rollups = await ethers.getContractAt(
-            rollupsDeployed.abi,
-            rollupsDeployed.address
-        );
-
-        const tx = await rollups.finalizeEpoch();
-        console.log(`${signer.address}: ${tx}`);
-    }
+    )
 );
 
-task(
-    "rollups:getState",
-    "Prints current epoch, current phase, input duration etc",
-    async (args: TaskArguments, hre: HardhatRuntimeEnvironment) => {
-        const { deployments, ethers } = hre;
-        const [signer] = await ethers.getSigners();
+rollupsParams(
+    claimParams(
+        task<ClaimArgs>(
+            TASK_CLAIM,
+            taskDefs[TASK_CLAIM].description,
+            connected(async (args, { rollupsContract }) => {
+                const tx = await rollupsContract.claim(args.claim);
+                console.log(
+                    `Claim ${args.claim} sent to rollups ${rollupsContract.address}`
+                );
+                return tx;
+            })
+        )
+    )
+);
 
-        enum Phases {
-            InputAccumulation,
-            AwaitingConsensus,
-            AwaitingDispute,
-        }
-        let rollupsDeployed = await deployments.get("RollupsImpl");
-        let rollups = await ethers.getContractAt(
-            rollupsDeployed.abi,
-            rollupsDeployed.address
-        );
+rollupsParams(
+    accountIndexParam(
+        task<RollupsArgs>(
+            TASK_FINALIZE_EPOCH,
+            taskDefs[TASK_FINALIZE_EPOCH].description,
+            connected(async (_args, { rollupsContract }) => {
+                const tx = await rollupsContract.finalizeEpoch();
+                console.log(
+                    `Finalized epoch for rollups ${rollupsContract.address}`
+                );
+                return tx;
+            })
+        )
+    )
+);
 
-        const storageVar = await rollups.storageVar();
-        const inputDuration = await storageVar.inputDuration;
-        const challengePeriod = await storageVar.challengePeriod;
-        const currentEpoch = await rollups.getCurrentEpoch();
-        const accumulationStart = await storageVar.inputAccumulationStart;
-        const sealingEpochTimestamp = await storageVar.sealingEpochTimestamp;
+rollupsParams(
+    task<RollupsArgs>(
+        TASK_GET_STATE,
+        taskDefs[TASK_GET_STATE].description,
+        connected(async (_args, { rollupsContract }, hre) => {
+            const { ethers } = hre;
 
-        const currentPhase = await storageVar.currentPhase_int;
+            enum Phases {
+                InputAccumulation,
+                AwaitingConsensus,
+                AwaitingDispute,
+            }
+            const storageVar = await rollupsContract.storageVar();
+            const currentEpoch = await rollupsContract.getCurrentEpoch();
+            const block = await ethers.provider.getBlock("latest");
 
-        console.log(`
-            current timestamp: ${
-                (await ethers.provider.getBlock("latest")).timestamp
-            }.
-            input duration: ${inputDuration},
-            challenge period: ${challengePeriod},
-            current epoch: ${currentEpoch},
-            accumulation start: ${accumulationStart},
-            sealing epoch timestamp: ${sealingEpochTimestamp},
-            current phase: ${Phases[currentPhase]},
-            `);
-    }
+            const result = {
+                currentTimestamp: block.timestamp,
+                inputDuration: storageVar.inputDuration,
+                challengePeriod: storageVar.challengePeriod,
+                currentEpoch: currentEpoch.toNumber(),
+                accumulationStart: storageVar.inputAccumulationStart,
+                sealingEpochTimestamp: storageVar.sealingEpochTimestamp,
+                currentPhase: Phases[storageVar.currentPhase_int],
+            };
+            console.log(JSON.stringify(result, null, 2));
+            return result;
+        })
+    )
 );
