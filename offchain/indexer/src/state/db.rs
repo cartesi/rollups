@@ -8,7 +8,7 @@ use state_fold::types::BlockState;
 
 use crate::error::*;
 
-use ethers::types::{H256, U256};
+use ethers::types::{H256, U256, U64};
 
 use diesel::deserialize::QueryableByName;
 use diesel::pg::Pg;
@@ -162,11 +162,11 @@ impl DbFinalizedEpoch {
     ) -> Result<()> {
         let epoch_number_str =
             U256::to_string(&self.finalized_epoch.epoch_number);
-        let _hash_str = H256::to_string(&self.finalized_epoch.hash);
+        let hash_str = H256::to_string(&self.finalized_epoch.hash);
         let finalized_block_hash_string =
             H256::to_string(&self.finalized_epoch.finalized_block_hash);
-        let finalized_block_number =
-            self.finalized_epoch.finalized_block_number.as_u32();
+        let finalized_block_number_string =
+            U64::to_string(&self.finalized_epoch.finalized_block_number);
 
         let inputs_uuid = self.db_epoch_input_state.insert(conn)?;
 
@@ -177,10 +177,10 @@ impl DbFinalizedEpoch {
         )
         .bind::<Uuid, _>(self.id)
         .bind::<VarChar, _>(epoch_number_str)
-        .bind::<Integer, _>(3)
+        .bind::<VarChar, _>(hash_str)
         .bind::<Uuid, _>(inputs_uuid)
         .bind::<VarChar, _>(finalized_block_hash_string)
-        .bind::<Integer, _>(finalized_block_number as i32)
+        .bind::<VarChar, _>(finalized_block_number_string)
         .bind::<Uuid, _>(finalized_epochs_id)
         .bind::<Timestamp, _>(timestamp)
         .bind::<Timestamp, _>(timestamp);
