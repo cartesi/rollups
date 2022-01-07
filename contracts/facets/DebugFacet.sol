@@ -18,6 +18,7 @@ import {Phase} from "../interfaces/IRollups.sol";
 import {IEtherPortal} from "../interfaces/IEtherPortal.sol";
 import {IERC20Portal} from "../interfaces/IERC20Portal.sol";
 import {ISERC20Portal} from "../interfaces/ISERC20Portal.sol";
+import {IERC721Portal} from "../interfaces/IERC721Portal.sol";
 
 import {LibRollups} from "../libraries/LibRollups.sol";
 import {LibInput} from "../libraries/LibInput.sol";
@@ -137,6 +138,11 @@ contract DebugFacet {
     function _serc20Withdrawal(bytes calldata _data) public returns (bool) {
         ISERC20Portal serc20Portal = ISERC20Portal(address(this));
         return serc20Portal.serc20Withdrawal(_data);
+    }
+
+    function _erc721Withdrawal(bytes calldata _data) public returns (bool) {
+        IERC721Portal erc721Portal = IERC721Portal(address(this));
+        return erc721Portal.erc721Withdrawal(_data);
     }
 
     // @notice emitted on Claim received

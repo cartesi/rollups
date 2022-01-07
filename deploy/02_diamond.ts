@@ -78,6 +78,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             'EtherPortalFacet',
             'ERC20PortalFacet',
             'SERC20PortalFacet',
+            'ERC721PortalFacet',
         ],
         libraries: {
             Bitmask: bitMaskAddress,
