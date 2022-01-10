@@ -57,7 +57,7 @@ describe("ERC721Portal Facet", async () => {
 
     it("erc721Deposit should revert if safeTransferFrom reverts", async () => {
         const reason = "This cryptokitty is not available";
-        await mockERC721.mock.safeTransferFrom.revertsWithReason(reason);
+        await mockERC721.mock['safeTransferFrom(address,address,uint256)'].revertsWithReason(reason);
 
         const erc721 = mockERC721.address;
         const tokenId = 50;
@@ -74,7 +74,7 @@ describe("ERC721Portal Facet", async () => {
     });
 
     it("erc721Deposit should emit events", async () => {
-        await mockERC721.mock.safeTransferFrom.returns();
+        await mockERC721.mock['safeTransferFrom(address,address,uint256)'].returns();
 
         const erc721 = mockERC721.address;
         const sender = await signer.getAddress();
@@ -90,7 +90,7 @@ describe("ERC721Portal Facet", async () => {
     });
 
     it("erc721Deposit should return LibInput.addInput(...)", async () => {
-        await mockERC721.mock.safeTransferFrom.returns();
+        await mockERC721.mock['safeTransferFrom(address,address,uint256)'].returns();
 
         const erc721 = mockERC721.address;
         const sender = await signer.getAddress();
@@ -132,7 +132,7 @@ describe("ERC721Portal Facet", async () => {
     });
 
     it("erc721Withdrawal should emit ERC721Withdrawn and return true", async () => {
-        await mockERC721.mock.safeTransferFrom.returns();
+        await mockERC721.mock['safeTransferFrom(address,address,uint256)'].returns();
 
         const erc721 = mockERC721.address;
         const receiver = await signer.getAddress();

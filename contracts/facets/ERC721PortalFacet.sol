@@ -39,7 +39,7 @@ contract ERC721PortalFacet is IERC721Portal, IERC721Receiver {
         IERC721 token = IERC721(_ERC721);
 
         // transfer reverts on failure
-        token.safeTransferFrom(msg.sender, address(this), _tokenId, "");
+        token.safeTransferFrom(msg.sender, address(this), _tokenId);
 
         bytes memory input = abi.encode(msg.sender, _ERC721, _tokenId, _data);
 
@@ -64,25 +64,19 @@ contract ERC721PortalFacet is IERC721Portal, IERC721Receiver {
         IERC721 token = IERC721(tokenAddr);
 
         // transfer reverts on failure
-        token.safeTransferFrom(address(this), receiver, tokenId, "");
+        token.safeTransferFrom(address(this), receiver, tokenId);
 
         emit ERC721Withdrawn(tokenAddr, receiver, tokenId);
         return true;
     }
 
     /// @notice Handle the receipt of an NFT
-    /// @param _operator The address which called `safeTransferFrom` function
-    /// @param _from The address which previously owned the token
-    /// @param _tokenId The NFT identifier which is being transferred
-    /// @param _data Additional data with no specified format
-    /// @return `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
-    ///  unless throwing
     function onERC721Received(
-        address _operator,
-        address _from,
-        uint256 _tokenId,
-        bytes calldata _data
-    ) public override returns (bytes4) {
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) public pure override returns (bytes4) {
         // always accept NFT transfers to this contract
         return
             bytes4(
