@@ -32,6 +32,7 @@ import { ERC721PortalFacet__factory } from "../dist/src/types/factories/ERC721Po
 import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { IERC721 } from "../dist/src/types/IERC721";
+import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 import { getInputHash } from "./getInputHash";
 
 use(solidity);
@@ -92,6 +93,7 @@ describe("ERC721Portal Facet", async () => {
     it("erc721Deposit should return LibInput.addInput(...)", async () => {
         await mockERC721.mock['safeTransferFrom(address,address,uint256)'].returns();
 
+        const header = keccak256(toUtf8Bytes("ERC721_Transfer"));
         const erc721 = mockERC721.address;
         const sender = await signer.getAddress();
         const tokenId = 15;
@@ -99,8 +101,8 @@ describe("ERC721Portal Facet", async () => {
 
         // Encode input using the default ABI
         const input = ethers.utils.defaultAbiCoder.encode(
-            ["address", "address", "uint", "bytes"],
-            [sender, erc721, tokenId, data]
+            ["bytes32", "address", "address", "uint", "bytes"],
+            [header, sender, erc721, tokenId, data]
         );
 
         // Calculate the input hash

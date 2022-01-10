@@ -30,7 +30,13 @@ contract EtherPortalFacet is IEtherPortal {
         returns (bytes32)
     {
         LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
-        bytes memory input = abi.encode(msg.sender, msg.value, _data);
+        bytes memory input =
+            abi.encode(
+                keccak256("Ether_Transfer"),
+                msg.sender,
+                msg.value,
+                _data
+            );
 
         emit EtherDeposited(msg.sender, msg.value, _data);
         return inputDS.addInput(input);

@@ -32,6 +32,7 @@ import { SERC20PortalFacet__factory } from "../dist/src/types/factories/SERC20Po
 import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { IERC20 } from "../dist/src/types/IERC20";
+import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 import { getInputHash } from "./getInputHash";
 
 use(solidity);
@@ -88,14 +89,15 @@ describe("SERC20Portal Facet", async () => {
     it("serc20Deposit should return the return value of LibInput.addInput()", async () => {
         await mockERC20.mock.transferFrom.returns(true);
 
+        const header = keccak256(toUtf8Bytes("Specific_ERC20_Transfer"));
         const sender = await signer.getAddress();
         const value = 15;
         const data = "0x00";
 
         // Encode input using the default ABI
         const input = ethers.utils.defaultAbiCoder.encode(
-            ["address", "uint", "bytes"],
-            [sender, value, data]
+            ["bytes32", "address", "uint", "bytes"],
+            [header, sender, value, data]
         );
 
         // Calculate the input hash

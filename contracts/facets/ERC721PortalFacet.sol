@@ -41,7 +41,14 @@ contract ERC721PortalFacet is IERC721Portal, IERC721Receiver {
         // transfer reverts on failure
         token.safeTransferFrom(msg.sender, address(this), _tokenId);
 
-        bytes memory input = abi.encode(msg.sender, _ERC721, _tokenId, _data);
+        bytes memory input =
+            abi.encode(
+                keccak256("ERC721_Transfer"),
+                msg.sender,
+                _ERC721,
+                _tokenId,
+                _data
+            );
 
         emit ERC721Deposited(_ERC721, msg.sender, _tokenId, _data);
         return inputDS.addInput(input);

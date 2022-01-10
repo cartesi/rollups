@@ -45,7 +45,13 @@ contract SERC20PortalFacet is ISERC20Portal {
             "ERC20 transferFrom failed"
         );
 
-        bytes memory input = abi.encode(msg.sender, _amount, _data);
+        bytes memory input =
+            abi.encode(
+                keccak256("Specific_ERC20_Transfer"),
+                msg.sender,
+                _amount,
+                _data
+            );
 
         emit SERC20Deposited(msg.sender, _amount, _data);
         return inputDS.addInput(input);

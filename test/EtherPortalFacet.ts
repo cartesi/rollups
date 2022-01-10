@@ -27,7 +27,7 @@ import { EtherPortalFacet } from "../dist/src/types/EtherPortalFacet";
 import { EtherPortalFacet__factory } from "../dist/src/types/factories/EtherPortalFacet__factory";
 import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
-import { keccak256 } from "ethers/lib/utils";
+import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 import { getInputHash } from "./getInputHash";
 
 use(solidity);
@@ -100,6 +100,8 @@ describe("EtherPortal Facet", async () => {
     });
 
     it("etherDeposit should return the return value of LibInput.addInput()", async () => {
+        const header = keccak256(toUtf8Bytes("Ether_Transfer"));
+
         // create some random data
         let sender = await signer.getAddress();
         let value = ethers.utils.parseEther("10");
@@ -107,8 +109,9 @@ describe("EtherPortal Facet", async () => {
 
         // ABI encode the input
         let input = ethers.utils.defaultAbiCoder.encode(
-            ["address", "uint", "bytes"],
+            ["bytes32", "address", "uint", "bytes"],
             [
+                header, // keccak256("Ether_Transfer")
                 sender, // msg.sender
                 value,  // msg.value
                 data,   // _data
