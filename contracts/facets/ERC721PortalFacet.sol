@@ -25,6 +25,8 @@ import {LibInput} from "../libraries/LibInput.sol";
 contract ERC721PortalFacet is IERC721Portal, IERC721Receiver {
     using LibInput for LibInput.DiamondStorage;
 
+    bytes32 constant INPUT_HEADER = keccak256("ERC721_Transfer");
+
     /// @notice deposit an ERC721 token in the portal and create a token in L2
     /// @param _ERC721 address of the ERC721 contract
     /// @param _tokenId index of token for the provided ERC721 contract
@@ -42,13 +44,7 @@ contract ERC721PortalFacet is IERC721Portal, IERC721Receiver {
         token.safeTransferFrom(msg.sender, address(this), _tokenId);
 
         bytes memory input =
-            abi.encode(
-                keccak256("ERC721_Transfer"),
-                msg.sender,
-                _ERC721,
-                _tokenId,
-                _data
-            );
+            abi.encode(INPUT_HEADER, msg.sender, _ERC721, _tokenId, _data);
 
         emit ERC721Deposited(_ERC721, msg.sender, _tokenId, _data);
         return inputDS.addInput(input);

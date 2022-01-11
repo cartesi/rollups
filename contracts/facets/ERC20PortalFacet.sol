@@ -22,6 +22,8 @@ import {LibInput} from "../libraries/LibInput.sol";
 contract ERC20PortalFacet is IERC20Portal {
     using LibInput for LibInput.DiamondStorage;
 
+    bytes32 constant INPUT_HEADER = keccak256("ERC20_Transfer");
+
     /// @notice deposit an amount of a generic ERC20 in the portal and create tokens in L2
     /// @param _ERC20 address of the ERC20 token contract
     /// @param _amount amount of the ERC20 token to be deposited
@@ -41,13 +43,7 @@ contract ERC20PortalFacet is IERC20Portal {
         );
 
         bytes memory input =
-            abi.encode(
-                keccak256("ERC20_Transfer"),
-                msg.sender,
-                _ERC20,
-                _amount,
-                _data
-            );
+            abi.encode(INPUT_HEADER, msg.sender, _ERC20, _amount, _data);
 
         emit ERC20Deposited(_ERC20, msg.sender, _amount, _data);
         return inputDS.addInput(input);

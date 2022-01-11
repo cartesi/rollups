@@ -24,6 +24,8 @@ contract SERC20PortalFacet is ISERC20Portal {
     using LibSERC20Portal for LibSERC20Portal.DiamondStorage;
     using LibInput for LibInput.DiamondStorage;
 
+    bytes32 constant INPUT_HEADER = keccak256("Specific_ERC20_Transfer");
+
     /// @notice deposit an amount of the specific ERC20 token in the portal and create tokens in L2
     /// @param _amount amount of the ERC20 token to be distributed
     /// @param _data information to be interpreted by L2
@@ -46,12 +48,7 @@ contract SERC20PortalFacet is ISERC20Portal {
         );
 
         bytes memory input =
-            abi.encode(
-                keccak256("Specific_ERC20_Transfer"),
-                msg.sender,
-                _amount,
-                _data
-            );
+            abi.encode(INPUT_HEADER, msg.sender, _amount, _data);
 
         emit SERC20Deposited(msg.sender, _amount, _data);
         return inputDS.addInput(input);
