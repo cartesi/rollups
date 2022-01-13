@@ -9,11 +9,5 @@
         "esModuleInterop": true,
         "outDir": "dist"
     },
-    "exclude": [
-        "dist",
-        "generated-src",
-        "node_modules",
-        "src/reader",
-        "src/proto"
-    ]
+    "exclude": ["dist", "node_modules", "src/reader"]
 }

@@ -63,6 +63,7 @@ jobs:
               with:
                   node-version: "16"
             - run: yarn install
+            - run: yarn prepack
 
             - name: Set up Docker Buildx
               id: buildx
@@ -111,6 +112,7 @@ jobs:
               with:
                   node-version: "16"
             - run: yarn install
+            - run: yarn prepack
 
             - name: Set up Docker Buildx
               id: buildx
@@ -159,6 +161,7 @@ jobs:
               with:
                   node-version: "16"
             - run: yarn install
+            - run: yarn prepack
 
             - name: Set up Docker Buildx
               id: buildx
@@ -207,6 +210,7 @@ jobs:
               with:
                   node-version: "16"
             - run: yarn install
+            - run: yarn prepack
 
             - name: Set up Docker Buildx
               id: buildx
