@@ -14,16 +14,16 @@ pub struct ApplicationCLIConfig {
     #[structopt(flatten)]
     pub basic_config: EnvCLIConfig,
     #[structopt(flatten)]
-    pub polling_config: PollingEnvCLIConfig,
+    pub indexer_config: IndexerEnvCLIConfig,
 }
 
 #[derive(StructOpt, Clone)]
-#[structopt(name = "polling_config", about = "Configuration for polling")]
-pub struct PollingEnvCLIConfig {
+#[structopt(name = "indexer_config", about = "Configuration for indexer")]
+pub struct IndexerEnvCLIConfig {
     #[structopt(long, env)]
     pub rollups_contract_address: Option<String>,
     #[structopt(long, env)]
-    pub polling_config_path: Option<String>,
+    pub indexer_config_path: Option<String>,
     #[structopt(long)]
     pub state_server_endpoint: Option<String>,
     #[structopt(long)]
@@ -39,7 +39,7 @@ pub struct PollingEnvCLIConfig {
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
-pub struct PollingFileConfig {
+pub struct IndexerFileConfig {
     pub rollups_contract_address: Option<String>,
     pub state_server_endpoint: Option<String>,
     pub interval: Option<u64>,
@@ -51,11 +51,11 @@ pub struct PollingFileConfig {
 
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct FileConfig {
-    pub polling_config: PollingFileConfig,
+    pub indexer_config: IndexerFileConfig,
 }
 
 #[derive(Clone, Debug)]
-pub struct PollingConfig {
+pub struct IndexerConfig {
     pub rollups_contract_address: Address,
     pub state_server_endpoint: String,
     pub initial_epoch: U256,
@@ -67,17 +67,17 @@ pub struct PollingConfig {
     pub session_id: String,
 }
 
-impl PollingConfig {
+impl IndexerConfig {
     pub fn initialize() -> config_error::Result<Self> {
         let app_config = ApplicationCLIConfig::from_args();
-        let env_cli_config = app_config.polling_config;
+        let env_cli_config = app_config.indexer_config;
         let base_cli_config = app_config.basic_config;
 
-        let file_config: PollingFileConfig = {
+        let file_config: IndexerFileConfig = {
             let c: FileConfig = configuration::config::load_config_file(
-                env_cli_config.polling_config_path,
+                env_cli_config.indexer_config_path,
             )?;
-            c.polling_config
+            c.indexer_config
         };
         let basic_config = Config::initialize(base_cli_config)?;
 
@@ -133,7 +133,7 @@ impl PollingConfig {
                 err: "Must specifify session id endpoint",
             })?;
 
-        Ok(PollingConfig {
+        Ok(IndexerConfig {
             rollups_contract_address,
             state_server_endpoint,
             initial_epoch,
