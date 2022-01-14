@@ -23,6 +23,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { MockProvider } from "ethereum-waffle";
 import { ethers } from "hardhat";
+import { SimpleToken__factory } from "../dist/src/types/factories/SimpleToken__factory";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments } = hre;
@@ -76,6 +77,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
     const claimsMaskLibraryAddress = claimsMaskLibrary.address;
 
+    // Simple ERC20 token
+    let tokenSupply = 1000000; // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
+    let initialFeePerClaim = 10; // set initial fees per claim as 10 token
+    let deployedToken = await deployments.deploy("SimpleToken", {
+        from: await signers[0].getAddress(),
+        args: [tokenSupply],
+    });
+    let token = SimpleToken__factory.connect(deployedToken.address, signers[0]);
+
     // CartesiRollups
     const { address } = await diamond.deploy("CartesiRollupsDebug", {
         from: await signers[0].getAddress(),
@@ -90,6 +100,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             'ERC20PortalFacet',
             'SERC20PortalFacet',
             'ERC721PortalFacet',
+            'FeeManagerFacet',
             'DebugFacet', // For debug pursposes only
         ],
         libraries: {
@@ -103,8 +114,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 INPUT_DURATION,
                 CHALLENGE_PERIOD,
                 INPUT_LOG2_SIZE,
+                initialFeePerClaim,
                 validators,
                 CTSI_ADDRESS,
+                token,
             ],
         },
     });

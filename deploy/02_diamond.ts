@@ -34,6 +34,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const CHALLENGE_PERIOD = 7 * DAY;
     const INPUT_LOG2_SIZE = 25;
     const CTSI_ADDRESS = "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
+    const initialFeePerClaim = 10; // set initial fees per claim as 10 token
 
     let signers = await ethers.getSigners();
 
@@ -85,6 +86,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             'ERC20PortalFacet',
             'SERC20PortalFacet',
             'ERC721PortalFacet',
+            'FeeManagerFacet',
         ],
         libraries: {
             ClaimsMaskLibrary: claimsMaskLibraryAddress,
@@ -97,7 +99,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 INPUT_DURATION,
                 CHALLENGE_PERIOD,
                 INPUT_LOG2_SIZE,
+                initialFeePerClaim,
                 validators,
+                CTSI_ADDRESS,
                 CTSI_ADDRESS,
             ],
         },

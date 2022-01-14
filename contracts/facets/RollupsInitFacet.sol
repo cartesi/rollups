@@ -21,8 +21,9 @@ import {LibRollups} from "../libraries/LibRollups.sol";
 import {LibInput} from "../libraries/LibInput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibSERC20Portal} from "../libraries/LibSERC20Portal.sol";
-
 import {ClaimsMaskLibrary} from "../ClaimsMaskLibrary.sol";
+import {LibFeeManager} from "../libraries/LibFeeManager.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract RollupsInitFacet is IRollupsInit {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
@@ -31,8 +32,10 @@ contract RollupsInitFacet is IRollupsInit {
     // @param _inputDuration duration of input accumulation phase in seconds
     // @param _challengePeriod duration of challenge period in seconds
     // @param _inputLog2Size size of the input drive in this machine
+    // @param _feePerClaim fee per claim to reward the validators
     // @param _validators initial validator set
     // @param _erc20Contract specific ERC-20 contract address used by the portal
+    // @param _erc20ForFee the ERC-20 used as rewards for validators
     // @dev validators have to be unique, if the same validator is added twice
     //      consensus will never be reached
     function init(
@@ -41,10 +44,14 @@ contract RollupsInitFacet is IRollupsInit {
         uint256 _challengePeriod,
         // input constructor variables
         uint256 _inputLog2Size,
+        // fee per claim to reward the validators
+        uint256 _feePerClaim,
         // validator manager constructor variables
         address payable[] memory _validators,
         // specific ERC-20 portal constructor variables
-        address _erc20Contract
+        address _erc20Contract,
+        // the ERC-20 used as rewards for validators
+        address _erc20ForFee
     ) public override {
         LibRollupsInit.DiamondStorage storage rollupsInitDS =
             LibRollupsInit.diamondStorage();
@@ -55,6 +62,7 @@ contract RollupsInitFacet is IRollupsInit {
         initValidatorManager(_validators);
         initRollups(_inputDuration, _challengePeriod);
         initSERC20Portal(_erc20Contract);
+        initFeeManager(_feePerClaim, _erc20ForFee);
 
         rollupsInitDS.initialized = true;
 
@@ -117,5 +125,15 @@ contract RollupsInitFacet is IRollupsInit {
             LibSERC20Portal.diamondStorage();
 
         serc20DS.erc20Contract = _erc20Contract;
+    }
+
+    // @notice initalize the Fee Manager facet
+    // @param _feePerClaim fee per claim to reward the validators
+    // @param _erc20ForFee the ERC-20 used as rewards for validators
+    function initFeeManager(uint256 _feePerClaim, address _erc20ForFee) private {
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager.diamondStorage();
+        feeManagerDS.feePerClaim = _feePerClaim;
+        feeManagerDS.token = IERC20(_erc20ForFee);
+        emit FeeManagerInitialized(_feePerClaim, _erc20ForFee);
     }
 }
