@@ -20,6 +20,7 @@ import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {ClaimsMaskLibrary, ClaimsMask} from "../ClaimsMaskLibrary.sol";
 
 contract ValidatorManagerFacet is IValidatorManager {
+    using LibValidatorManager for LibValidatorManager.DiamondStorage;
     using ClaimsMaskLibrary for ClaimsMask;
 
     // @notice get agreement mask
@@ -44,5 +45,40 @@ contract ValidatorManagerFacet is IValidatorManager {
         LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
         return vmDS.currentClaim;
+    }
+
+    // @notice get number of claims the sender has made
+    // @params validator address
+    // @return #claims
+    function getNumberOfClaimsByAddress(address payable _sender)
+        public
+        view
+        returns (uint256)
+    {
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
+        return vmDS.getNumberOfClaimsByAddress(_sender);
+    }
+
+    // @notice find the validator and return the index or revert
+    // @params validator address
+    // @return validator index or revert
+    function getValidatorIndex(address _sender) public view returns (uint256) {
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
+        return vmDS.getValidatorIndex(_sender);
+    }
+
+    // @notice get number of claims by the index in the validator set
+    // @params the index in validator set
+    // @return #claims
+    function getNumberOfClaimsByIndex(uint256 _index)
+        public
+        view
+        returns (uint256)
+    {
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
+        return vmDS.getNumberOfClaimsByIndex(_index);
     }
 }

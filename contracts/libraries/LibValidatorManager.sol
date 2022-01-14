@@ -259,7 +259,8 @@ library LibValidatorManager {
     }
 
     // @notice removes a validator
-    // @params address of validator to be removed
+    // @params ds pointer to diamond storage
+    // @params validator address of validator to be removed
     function removeValidator(DiamondStorage storage ds, address validator)
         internal
     {
@@ -335,6 +336,7 @@ library LibValidatorManager {
     }
 
     // @notice find the validator and return the index or revert
+    // @params ds pointer to diamond storage
     // @params validator address
     // @return validator index or revert
     function getValidatorIndex(DiamondStorage storage ds, address sender)
@@ -347,5 +349,34 @@ library LibValidatorManager {
             if (sender == ds.validators[i]) return i;
         }
         revert("validator not found");
+    }
+
+    // @notice get number of claims the sender has made
+    // @params ds pointer to diamond storage
+    // @params validator address
+    // @return #claims
+    function getNumberOfClaimsByAddress(
+        DiamondStorage storage ds,
+        address payable _sender
+    ) internal view returns (uint256) {
+        for (uint256 i; i < ds.validators.length; i++) {
+            if (_sender == ds.validators[i]) {
+                return getNumberOfClaimsByIndex(ds, i);
+            }
+        }
+        // if validator not found
+        return 0;
+    }
+
+    // @notice get number of claims by the index in the validator set
+    // @params ds pointer to diamond storage
+    // @params index the index in validator set
+    // @return #claims
+    function getNumberOfClaimsByIndex(DiamondStorage storage ds, uint256 index)
+        internal
+        view
+        returns (uint256)
+    {
+        return ds.claimsMask.getNumClaims(index);
     }
 }
