@@ -65,8 +65,6 @@ contract RollupsInitFacet is IRollupsInit {
         initFeeManager(_feePerClaim, _erc20ForFee);
 
         rollupsInitDS.initialized = true;
-
-        emit RollupsInitialized(_inputDuration, _challengePeriod);
     }
 
     // @notice initalize the Input facet
@@ -118,6 +116,8 @@ contract RollupsInitFacet is IRollupsInit {
         rollupsDS.challengePeriod = uint32(_challengePeriod);
         rollupsDS.inputAccumulationStart = uint32(block.timestamp);
         rollupsDS.currentPhase_int = uint32(Phase.InputAccumulation);
+
+        emit RollupsInitialized(_inputDuration, _challengePeriod);
     }
 
     function initSERC20Portal(address _erc20Contract) private {
@@ -134,6 +134,7 @@ contract RollupsInitFacet is IRollupsInit {
         LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager.diamondStorage();
         feeManagerDS.feePerClaim = _feePerClaim;
         feeManagerDS.token = IERC20(_erc20ForFee);
+        feeManagerDS.owner = msg.sender;
         emit FeeManagerInitialized(_feePerClaim, _erc20ForFee);
     }
 }

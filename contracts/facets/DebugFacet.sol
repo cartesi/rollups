@@ -25,6 +25,7 @@ import {LibInput} from "../libraries/LibInput.sol";
 import {LibOutput} from "../libraries/LibOutput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibSERC20Portal} from "../libraries/LibSERC20Portal.sol";
+import {LibFeeManager} from "../libraries/LibFeeManager.sol";
 
 contract DebugFacet {
     using LibRollups for LibRollups.DiamondStorage;
@@ -32,6 +33,7 @@ contract DebugFacet {
     using LibOutput for LibOutput.DiamondStorage;
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
     using LibSERC20Portal for LibSERC20Portal.DiamondStorage;
+    using LibFeeManager for LibFeeManager.DiamondStorage;
 
     function _setInputAccumulationStart(uint32 _inputAccumulationStart) public {
         LibRollups.DiamondStorage storage rollupsDS =
@@ -143,6 +145,11 @@ contract DebugFacet {
     function _erc721Withdrawal(bytes calldata _data) public returns (bool) {
         IERC721Portal erc721Portal = IERC721Portal(address(this));
         return erc721Portal.erc721Withdrawal(_data);
+    }
+
+    function _getFeePerClaim() public view returns (uint256) {
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager.diamondStorage();
+        return feeManagerDS.feePerClaim;
     }
 
     // @notice emitted on Claim received

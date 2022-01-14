@@ -25,6 +25,7 @@ library LibFeeManager {
         keccak256("FeeManager.diamond.storage");
 
     struct DiamondStorage {
+        address owner; // owner of Fee Manager
         uint256 feePerClaim;
         IERC20 token; // the token that is used for paying fees to validators
         bool lock; // reentrancy lock
@@ -45,6 +46,14 @@ library LibFeeManager {
         assembly {
             feeManagerDS.slot := position
         }
+    }
+
+    function _msgSender() internal view returns (address) {
+        return msg.sender;
+    }
+
+    function onlyOwner(DiamondStorage storage ds) internal view {
+        require(ds.owner == _msgSender(), "caller is not the owner");
     }
 
     /// @notice this function can be called to check the number of claims that's redeemable for the validator

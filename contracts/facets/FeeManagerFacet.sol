@@ -15,9 +15,8 @@ pragma solidity >=0.8.8;
 
 import {IFeeManager} from "../interfaces/IFeeManager.sol";
 import {LibFeeManager} from "../libraries/LibFeeManager.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract FeeManagerFacet is IFeeManager, Ownable {
+contract FeeManagerFacet is IFeeManager {
     using LibFeeManager for LibFeeManager.DiamondStorage;
 
     /// @notice functions modified by noReentrancy are not subject to recursion
@@ -55,8 +54,9 @@ contract FeeManagerFacet is IFeeManager, Ownable {
 
     /// @notice contract owner can reset the value of fee per claim
     /// @param  _value the new value of fee per claim
-    function resetFeePerClaim(uint256 _value) public override onlyOwner {
+    function resetFeePerClaim(uint256 _value) public override {
         LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager.diamondStorage();
+        feeManagerDS.onlyOwner();
         feeManagerDS.resetFeePerClaim(_value);
     }
 

@@ -117,7 +117,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 initialFeePerClaim,
                 validators,
                 CTSI_ADDRESS,
-                token,
+                token.address,
             ],
         },
     });
