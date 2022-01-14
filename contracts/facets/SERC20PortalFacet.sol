@@ -62,14 +62,14 @@ contract SERC20PortalFacet is ISERC20Portal {
         override
         returns (bool)
     {
+        // Delegate calls preserve msg.sender, msg.value and address(this)
+        require(msg.sender == address(this), "only itself");
+
         LibSERC20Portal.DiamondStorage storage serc20DS =
             LibSERC20Portal.diamondStorage();
 
         // Specific ERC-20 contract
         IERC20 erc20Contract = IERC20(serc20DS.erc20Contract);
-
-        // Delegate calls preserve msg.sender, msg.value and address(this)
-        require(msg.sender == address(this), "only itself");
 
         (address payable receiver, uint256 value) =
             abi.decode(_data, (address, uint256));

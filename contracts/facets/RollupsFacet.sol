@@ -144,15 +144,13 @@ contract RollupsFacet is IRollups {
     function getCurrentPhase() public view returns (Phase) {
         LibRollups.DiamondStorage storage rollupsDS =
             LibRollups.diamondStorage();
-        Phase currentPhase = Phase(rollupsDS.currentPhase_int);
-        return currentPhase;
+        return Phase(rollupsDS.currentPhase_int);
     }
 
     /// @notice returns the input accumulation start timestamp
     function getInputAccumulationStart() public view returns (uint256) {
         LibRollups.DiamondStorage storage rollupsDS =
             LibRollups.diamondStorage();
-        uint256 inputAccumulationStart = rollupsDS.inputAccumulationStart;
-        return inputAccumulationStart;
+        return uint256(rollupsDS.inputAccumulationStart);
     }
 }
