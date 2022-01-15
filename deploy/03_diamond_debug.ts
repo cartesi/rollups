@@ -32,20 +32,22 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const HOUR = 60 * MINUTE; // seconds in an hour
     const DAY = 24 * HOUR; // seconds in a day
 
+    let signers = await ethers.getSigners();
+
     const INPUT_DURATION = 1 * DAY;
     const CHALLENGE_PERIOD = 7 * DAY;
     const INPUT_LOG2_SIZE = 8;
     const CTSI_ADDRESS = "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
-
-    let signers = await ethers.getSigners();
+    const INITIAL_FEE_PER_CLAIM = 10; // set initial fees per claim as 10 token
+    const FEE_MANAGER_OWNER = await signers[0].getAddress();
 
     const provider = new MockProvider();
     const wallets = provider.getWallets();
     var validators: string[] = [];
 
     // add up to 8 wallets as validators
-    for (var wallet of wallets) {
-        let address = await wallet.getAddress();
+    for (var signer of signers) {
+        let address = await signer.getAddress();
         validators.push(address);
         if (validators.length == 8) break;
     }
@@ -79,7 +81,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     // Simple ERC20 token
     let tokenSupply = 1000000; // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
-    let initialFeePerClaim = 10; // set initial fees per claim as 10 token
     let deployedToken = await deployments.deploy("SimpleToken", {
         from: await signers[0].getAddress(),
         args: [tokenSupply],
@@ -91,33 +92,34 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         from: await signers[0].getAddress(),
         owner: await signers[0].getAddress(),
         facets: [
-            'InputFacet',
-            'RollupsFacet',
-            'RollupsInitFacet',
-            'ValidatorManagerFacet',
-            'OutputFacet',
-            'EtherPortalFacet',
-            'ERC20PortalFacet',
-            'SERC20PortalFacet',
-            'ERC721PortalFacet',
-            'FeeManagerFacet',
-            'DebugFacet', // For debug pursposes only
+            "InputFacet",
+            "RollupsFacet",
+            "RollupsInitFacet",
+            "ValidatorManagerFacet",
+            "OutputFacet",
+            "EtherPortalFacet",
+            "ERC20PortalFacet",
+            "SERC20PortalFacet",
+            "ERC721PortalFacet",
+            "FeeManagerFacet",
+            "DebugFacet", // For debug pursposes only
         ],
         libraries: {
             ClaimsMaskLibrary: claimsMaskLibraryAddress,
             Bitmask: bitMaskAddress,
             Merkle: merkleAddress,
         },
-        execute : {
-            methodName: 'init',
+        execute: {
+            methodName: "init",
             args: [
                 INPUT_DURATION,
                 CHALLENGE_PERIOD,
                 INPUT_LOG2_SIZE,
-                initialFeePerClaim,
+                INITIAL_FEE_PER_CLAIM,
+                token.address,
+                FEE_MANAGER_OWNER,
                 validators,
                 CTSI_ADDRESS,
-                token.address,
             ],
         },
     });

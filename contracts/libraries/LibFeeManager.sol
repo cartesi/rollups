@@ -48,12 +48,8 @@ library LibFeeManager {
         }
     }
 
-    function _msgSender() internal view returns (address) {
-        return msg.sender;
-    }
-
     function onlyOwner(DiamondStorage storage ds) internal view {
-        require(ds.owner == _msgSender(), "caller is not the owner");
+        require(ds.owner == msg.sender, "caller is not the owner");
     }
 
     /// @notice this function can be called to check the number of claims that's redeemable for the validator

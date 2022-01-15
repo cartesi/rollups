@@ -176,12 +176,12 @@ describe("FeeManager Implementation", () => {
             "now there are 10 claims redeemable"
         ).to.equal(10);
 
-        // if signers[1] has claimed fees, then there's no redeemable claims again
-        // first, owner should fund the FeeManager
+        // owner funds the FeeManager and signers[1] redeem fees
         let amount = 10000;
         await token.transfer(feeManager.address, amount);
         await feeManager.redeemFee(await signers[1].getAddress());
 
+        // after having redeemed, no more redeemable claims
         expect(
             await feeManager.callStatic.numClaimsRedeemable(
                 await signers[1].getAddress()

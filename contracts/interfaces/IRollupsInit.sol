@@ -19,25 +19,26 @@ interface IRollupsInit {
     // @param _challengePeriod duration of challenge period in seconds
     // @param _inputLog2Size size of the input drive in this machine
     // @param _feePerClaim fee per claim to reward the validators
+    // @param _erc20ForFee the ERC-20 used as rewards for validators
+    // @param _feeManagerOwner fee manager owner address
     // @param _validators initial validator set
     // @param _erc20Contract specific ERC-20 contract address used by the portal
-    // @param _erc20ForFee the ERC-20 used as rewards for validators
     // @dev validators have to be unique, if the same validator is added twice
     //      consensus will never be reached
     function init(
-        // rollups contructor variables
+        // rollups init variables
         uint256 _inputDuration,
         uint256 _challengePeriod,
-        // input constructor variables
+        // input init variables
         uint256 _inputLog2Size,
-        // fee per claim to reward the validators
+        // fee manager init variables
         uint256 _feePerClaim,
-        // validator manager constructor variables
+        address _erc20ForFee,
+        address _feeManagerOwner,
+        // validator manager init variables
         address payable[] memory _validators,
-        // specific ERC-20 portal constructor variables
-        address _erc20Contract,
-        // the ERC-20 used as rewards for validators
-        address _erc20ForFee
+        // specific ERC-20 portal init variables
+        address _erc20Contract
     ) external;
 
     /// @notice rollups contract initialized
@@ -48,5 +49,10 @@ interface IRollupsInit {
     /// @notice FeeManagerImpl contract initialized
     // @param _feePerClaim fee per claim to reward the validators
     // @param _erc20ForFee the ERC-20 used as rewards for validators
-    event FeeManagerInitialized(uint256 _feePerClaim, address _erc20ForFee);
+    // @param _feeManagerOwner fee manager owner address
+    event FeeManagerInitialized(
+        uint256 _feePerClaim,
+        address _erc20ForFee,
+        address _feeManagerOwner
+    );
 }

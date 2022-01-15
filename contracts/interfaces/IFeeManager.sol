@@ -35,4 +35,10 @@ interface IFeeManager {
     /// @notice this function can be called to redeem fees for validators
     /// @param  _validator address of the validator that is redeeming
     function redeemFee(address _validator) external;
+
+    /// @notice emitted on resetting feePerClaim
+    event FeePerClaimReset(uint256 _value);
+
+    /// @notice emitted on ERC20 funds redeemed by validator
+    event FeeRedeemed(address _validator, uint256 _amount);
 }

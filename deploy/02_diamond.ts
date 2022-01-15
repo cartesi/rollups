@@ -30,13 +30,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const HOUR = 60 * MINUTE; // seconds in an hour
     const DAY = 24 * HOUR; // seconds in a day
 
+    let signers = await ethers.getSigners();
+
     const INPUT_DURATION = 1 * DAY;
     const CHALLENGE_PERIOD = 7 * DAY;
     const INPUT_LOG2_SIZE = 25;
     const CTSI_ADDRESS = "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
-    const initialFeePerClaim = 10; // set initial fees per claim as 10 token
-
-    let signers = await ethers.getSigners();
+    const INITIAL_FEE_PER_CLAIM = 10; // set initial fees per claim as 10 token
+    const FEE_MANAGER_OWNER = await signers[0].getAddress();
 
     let validators: string[] = [];
 
@@ -77,31 +78,32 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         from: await signers[0].getAddress(),
         owner: await signers[0].getAddress(),
         facets: [
-            'InputFacet',
-            'RollupsFacet',
-            'RollupsInitFacet',
-            'ValidatorManagerFacet',
-            'OutputFacet',
-            'EtherPortalFacet',
-            'ERC20PortalFacet',
-            'SERC20PortalFacet',
-            'ERC721PortalFacet',
-            'FeeManagerFacet',
+            "InputFacet",
+            "RollupsFacet",
+            "RollupsInitFacet",
+            "ValidatorManagerFacet",
+            "OutputFacet",
+            "EtherPortalFacet",
+            "ERC20PortalFacet",
+            "SERC20PortalFacet",
+            "ERC721PortalFacet",
+            "FeeManagerFacet",
         ],
         libraries: {
             ClaimsMaskLibrary: claimsMaskLibraryAddress,
             Bitmask: bitMaskAddress,
             Merkle: merkleAddress,
         },
-        execute : {
-            methodName: 'init',
+        execute: {
+            methodName: "init",
             args: [
                 INPUT_DURATION,
                 CHALLENGE_PERIOD,
                 INPUT_LOG2_SIZE,
-                initialFeePerClaim,
-                validators,
+                INITIAL_FEE_PER_CLAIM,
                 CTSI_ADDRESS,
+                FEE_MANAGER_OWNER,
+                validators,
                 CTSI_ADDRESS,
             ],
         },

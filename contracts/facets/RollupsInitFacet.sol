@@ -33,25 +33,26 @@ contract RollupsInitFacet is IRollupsInit {
     // @param _challengePeriod duration of challenge period in seconds
     // @param _inputLog2Size size of the input drive in this machine
     // @param _feePerClaim fee per claim to reward the validators
+    // @param _erc20ForFee the ERC-20 used as rewards for validators
+    // @param _feeManagerOwner fee manager owner address
     // @param _validators initial validator set
     // @param _erc20Contract specific ERC-20 contract address used by the portal
-    // @param _erc20ForFee the ERC-20 used as rewards for validators
     // @dev validators have to be unique, if the same validator is added twice
     //      consensus will never be reached
     function init(
-        // rollups contructor variables
+        // rollups init variables
         uint256 _inputDuration,
         uint256 _challengePeriod,
-        // input constructor variables
+        // input init variables
         uint256 _inputLog2Size,
-        // fee per claim to reward the validators
+        // fee manager init variables
         uint256 _feePerClaim,
-        // validator manager constructor variables
+        address _erc20ForFee,
+        address _feeManagerOwner,
+        // validator manager init variables
         address payable[] memory _validators,
-        // specific ERC-20 portal constructor variables
-        address _erc20Contract,
-        // the ERC-20 used as rewards for validators
-        address _erc20ForFee
+        // specific ERC-20 portal init variables
+        address _erc20Contract
     ) public override {
         LibRollupsInit.DiamondStorage storage rollupsInitDS =
             LibRollupsInit.diamondStorage();
@@ -62,7 +63,7 @@ contract RollupsInitFacet is IRollupsInit {
         initValidatorManager(_validators);
         initRollups(_inputDuration, _challengePeriod);
         initSERC20Portal(_erc20Contract);
-        initFeeManager(_feePerClaim, _erc20ForFee);
+        initFeeManager(_feePerClaim, _erc20ForFee, _feeManagerOwner);
 
         rollupsInitDS.initialized = true;
     }
@@ -130,11 +131,21 @@ contract RollupsInitFacet is IRollupsInit {
     // @notice initalize the Fee Manager facet
     // @param _feePerClaim fee per claim to reward the validators
     // @param _erc20ForFee the ERC-20 used as rewards for validators
-    function initFeeManager(uint256 _feePerClaim, address _erc20ForFee) private {
-        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager.diamondStorage();
+    // @param _feeManagerOwner fee manager owner address
+    function initFeeManager(
+        uint256 _feePerClaim,
+        address _erc20ForFee,
+        address _feeManagerOwner
+    ) private {
+        LibFeeManager.DiamondStorage storage feeManagerDS =
+            LibFeeManager.diamondStorage();
         feeManagerDS.feePerClaim = _feePerClaim;
         feeManagerDS.token = IERC20(_erc20ForFee);
-        feeManagerDS.owner = msg.sender;
-        emit FeeManagerInitialized(_feePerClaim, _erc20ForFee);
+        feeManagerDS.owner = _feeManagerOwner;
+        emit FeeManagerInitialized(
+            _feePerClaim,
+            _erc20ForFee,
+            _feeManagerOwner
+        );
     }
 }
