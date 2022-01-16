@@ -1,4 +1,4 @@
-// Copyright 2021 Cartesi Pte. Ltd.
+// Copyright 2022 Cartesi Pte. Ltd.
 
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -14,8 +14,8 @@
 pragma solidity ^0.8.0;
 
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../ClaimsMaskLibrary.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ClaimsMaskLibrary, ClaimsMask} from "../ClaimsMaskLibrary.sol";
 
 library LibFeeManager {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;

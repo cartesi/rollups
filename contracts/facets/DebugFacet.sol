@@ -156,9 +156,9 @@ contract DebugFacet {
     }
 
     function _setNumClaims(uint256 _validatorIndex, uint256 _value) public {
-        LibValidatorManager.DiamondStorage storage vmds =
+        LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
-        vmds.claimsMask = vmds.claimsMask.setNumClaims(_validatorIndex, _value);
+        vmDS.claimsMask = vmDS.claimsMask.setNumClaims(_validatorIndex, _value);
     }
 
     // @notice emitted on Claim received

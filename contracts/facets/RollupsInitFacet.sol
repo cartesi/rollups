@@ -23,7 +23,7 @@ import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibSERC20Portal} from "../libraries/LibSERC20Portal.sol";
 import {ClaimsMaskLibrary} from "../ClaimsMaskLibrary.sol";
 import {LibFeeManager} from "../libraries/LibFeeManager.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract RollupsInitFacet is IRollupsInit {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
