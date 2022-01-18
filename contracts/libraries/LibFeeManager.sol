@@ -20,6 +20,7 @@ import {ClaimsMaskLibrary, ClaimsMask} from "../ClaimsMaskLibrary.sol";
 library LibFeeManager {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
     using LibFeeManager for LibFeeManager.DiamondStorage;
+    using ClaimsMaskLibrary for ClaimsMask;
 
     bytes32 constant DIAMOND_STORAGE_POSITION =
         keccak256("FeeManager.diamond.storage");
@@ -65,15 +66,9 @@ library LibFeeManager {
             LibValidatorManager.diamondStorage();
         uint256 valIndex = ValidatorManagerDS.getValidatorIndex(_validator); // will revert if not found
         uint256 totalClaims =
-            ClaimsMaskLibrary.getNumClaims(
-                ValidatorManagerDS.claimsMask,
-                valIndex
-            );
+            ValidatorManagerDS.claimsMask.getNumClaims(valIndex);
         uint256 redeemedClaims =
-            ClaimsMaskLibrary.getNumClaims(
-                feeManagerDS.numClaimsRedeemed,
-                valIndex
-            );
+            feeManagerDS.numClaimsRedeemed.getNumClaims(valIndex);
 
         return totalClaims - redeemedClaims; // underflow checked by default with sol0.8
     }
@@ -91,10 +86,7 @@ library LibFeeManager {
             LibValidatorManager.diamondStorage();
         uint256 valIndex = ValidatorManagerDS.getValidatorIndex(_validator); // will revert if not found
         uint256 redeemedClaims =
-            ClaimsMaskLibrary.getNumClaims(
-                feeManagerDS.numClaimsRedeemed,
-                valIndex
-            );
+            feeManagerDS.numClaimsRedeemed.getNumClaims(valIndex);
 
         return redeemedClaims;
     }
@@ -139,11 +131,9 @@ library LibFeeManager {
         LibValidatorManager.DiamondStorage storage ValidatorManagerDS =
             LibValidatorManager.diamondStorage();
         uint256 valIndex = ValidatorManagerDS.getValidatorIndex(_validator); // will revert if not found
-        feeManagerDS.numClaimsRedeemed = ClaimsMaskLibrary.increaseNumClaims(
-            feeManagerDS.numClaimsRedeemed,
-            valIndex,
-            nowRedeemingClaims
-        );
+        feeManagerDS.numClaimsRedeemed = feeManagerDS
+            .numClaimsRedeemed
+            .increaseNumClaims(valIndex, nowRedeemingClaims);
 
         // ** interactions **
         uint256 feesToSend = nowRedeemingClaims * feeManagerDS.feePerClaim; // number of erc20 tokens to send

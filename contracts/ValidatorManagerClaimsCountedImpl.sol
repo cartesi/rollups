@@ -29,6 +29,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     // | agreement mask | consensus mask | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |
     // |     8 bits     |     8 bits     |      30 bits       |      30 bits       | ... |      30 bits       |
     ClaimsMask claimsMask;
+    using ClaimsMaskLibrary for ClaimsMask;
 
     // @notice functions modified by onlyRollups will only be executed if
     // they're called by Rollups contract, otherwise it will throw an exception
@@ -146,7 +147,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
 
         // if first claim lost, and other validators have agreed with it
         // there is a new dispute to be played
-        if (ClaimsMaskLibrary.getAgreementMask(claimsMask) != 0) {
+        if (claimsMask.getAgreementMask() != 0) {
             return
                 emitDisputeEndedAndReturn(
                     Result.Conflict,
@@ -186,7 +187,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         // clear current claim
         currentClaim = bytes32(0);
         // clear validator agreement bit mask
-        claimsMask = ClaimsMaskLibrary.clearAgreementMask(claimsMask);
+        claimsMask = claimsMask.clearAgreementMask();
 
         emit NewEpoch(tmpClaim);
         return tmpClaim;
@@ -195,13 +196,13 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     // @notice get agreement mask
     // @return current state of agreement mask
     function getAgreementMask() public view returns (uint256) {
-        return ClaimsMaskLibrary.getAgreementMask(claimsMask);
+        return claimsMask.getAgreementMask();
     }
 
     // @notice get consensus goal mask
     // @return current consensus goal mask
     function getConsensusGoalMask() public view returns (uint256) {
-        return ClaimsMaskLibrary.getConsensusGoalMask(claimsMask);
+        return claimsMask.getConsensusGoalMask();
     }
 
     // @notice get current claim
@@ -246,7 +247,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         view
         returns (uint256)
     {
-        return ClaimsMaskLibrary.getNumClaims(claimsMask, index);
+        return claimsMask.getNumClaims(index);
     }
 
     // BELOW ARE INTERNAL FUNCTIONS
@@ -254,16 +255,12 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     // @notice only call this function when a claim has been finalized
     // Either a consensus has been reached or challenge period has past
     function claimFinalizedIncreaseCounts() internal {
-        uint256 agreementMask = ClaimsMaskLibrary.getAgreementMask(claimsMask);
+        uint256 agreementMask = claimsMask.getAgreementMask();
         for (uint256 i; i < validators.length; i++) {
             // if a validator agrees with the current claim
             if ((agreementMask & (1 << i)) != 0) {
                 // increase #claims by 1
-                claimsMask = ClaimsMaskLibrary.increaseNumClaims(
-                    claimsMask,
-                    i,
-                    1
-                );
+                claimsMask = claimsMask.increaseNumClaims(i, 1);
             }
         }
     }
@@ -320,7 +317,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         // TODO: we are always getting the first validator
         // on the array that agrees with the current claim to enter a dispute
         // should this be random?
-        uint256 agreementMask = ClaimsMaskLibrary.getAgreementMask(claimsMask);
+        uint256 agreementMask = claimsMask.getAgreementMask();
         for (uint256 i; i < validators.length; i++) {
             if (agreementMask & (1 << i) != 0) {
                 return validators[i];
@@ -333,10 +330,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     // @params _sender address of validator that will be included in mask
     function updateClaimAgreementMask(address payable _sender) internal {
         uint256 validatorIndex = getValidatorIndex(_sender);
-        claimsMask = ClaimsMaskLibrary.setAgreementMask(
-            claimsMask,
-            validatorIndex
-        );
+        claimsMask = claimsMask.setAgreementMask(validatorIndex);
     }
 
     // @notice removes a validator
@@ -347,7 +341,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
                 // put address(0) in validators position
                 validators[i] = payable(0);
                 // remove the validator from claimsMask
-                claimsMask = ClaimsMaskLibrary.removeValidator(claimsMask, i);
+                claimsMask = claimsMask.removeValidator(i);
                 break;
             }
         }
@@ -366,7 +360,6 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     // @notice check if consensus has been reached
     function isConsensus() internal view returns (bool) {
         return
-            ClaimsMaskLibrary.getAgreementMask(claimsMask) ==
-            ClaimsMaskLibrary.getConsensusGoalMask(claimsMask);
+            claimsMask.getAgreementMask() == claimsMask.getConsensusGoalMask();
     }
 }

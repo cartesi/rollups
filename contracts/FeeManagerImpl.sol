@@ -32,6 +32,7 @@ contract FeeManagerImpl is FeeManager, Ownable {
     // |     not used    | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |
     // |     16 bits     |      30 bits       |      30 bits       | ... |      30 bits       |
     ClaimsMask numClaimsRedeemed;
+    using ClaimsMaskLibrary for ClaimsMask;
 
     /// @notice functions modified by noReentrancy are not subject to recursion
     modifier noReentrancy() {
@@ -70,8 +71,7 @@ contract FeeManagerImpl is FeeManager, Ownable {
         uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
         uint256 totalClaims =
             ValidatorManagerCCI.getNumberOfClaimsByIndex(valIndex);
-        uint256 redeemedClaims =
-            ClaimsMaskLibrary.getNumClaims(numClaimsRedeemed, valIndex);
+        uint256 redeemedClaims = numClaimsRedeemed.getNumClaims(valIndex);
 
         return totalClaims - redeemedClaims; // underflow checked by default with sol0.8
     }
@@ -86,8 +86,7 @@ contract FeeManagerImpl is FeeManager, Ownable {
     {
         require(_validator != address(0), "address should not be 0");
         uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
-        uint256 redeemedClaims =
-            ClaimsMaskLibrary.getNumClaims(numClaimsRedeemed, valIndex);
+        uint256 redeemedClaims = numClaimsRedeemed.getNumClaims(valIndex);
 
         return redeemedClaims;
     }
@@ -117,8 +116,7 @@ contract FeeManagerImpl is FeeManager, Ownable {
 
         // ** effects **
         uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
-        numClaimsRedeemed = ClaimsMaskLibrary.increaseNumClaims(
-            numClaimsRedeemed,
+        numClaimsRedeemed = numClaimsRedeemed.increaseNumClaims(
             valIndex,
             nowRedeemingClaims
         );
