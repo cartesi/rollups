@@ -108,15 +108,12 @@ impl DbEpochInputState {
         for input in &self.db_inputs {
             inputs.push(input.insert(conn, self.id)?);
         }
-        let input_contract_address_string =
-            val_to_hex_str(&self.epoch_input_state.input_contract_address);
         let timestamp = SystemTime::now();
         let query = sql_query(
-            "INSERT INTO \"EpochInputStates\" VALUES ($1, $2, $3, $4, $5);;",
+            "INSERT INTO \"EpochInputStates\" VALUES ($1, $2, $3, $4);;",
         )
         .bind::<Uuid, _>(self.id)
         .bind::<Integer, _>(epoch_number_i32)
-        .bind::<VarChar, _>(input_contract_address_string)
         //.bind::<Array<Uuid>, _>(inputs)
         .bind::<Timestamp, _>(timestamp)
         .bind::<Timestamp, _>(timestamp);
@@ -268,20 +265,17 @@ impl DbFinalizedEpochs {
     ) -> Result<uuid::Uuid> {
         let intial_epoch_string =
             U256::to_string(&self.finalized_epochs.initial_epoch);
-        let input_contract_address_string =
-            val_to_hex_str(&self.finalized_epochs.input_contract_address);
-        let rollups_contract_address_string =
-            val_to_hex_str(&self.finalized_epochs.rollups_contract_address);
+        let dapp_contract_address_string =
+            val_to_hex_str(&self.finalized_epochs.dapp_contract_address);
 
         let timestamp = SystemTime::now();
 
         let query = sql_query(
-            "INSERT INTO \"FinalizedEpochs\" VALUES ($1, $2, $3, $4, $5, $6, $7);;",
+            "INSERT INTO \"FinalizedEpochs\" VALUES ($1, $2, $3, $4, $5, $6);;",
         )
         .bind::<Uuid, _>(self.id)
         .bind::<VarChar, _>(intial_epoch_string)
-        .bind::<VarChar, _>(input_contract_address_string)
-        .bind::<VarChar, _>(rollups_contract_address_string)
+        .bind::<VarChar, _>(dapp_contract_address_string)
         .bind::<Uuid, _>(rollups_hash)
         .bind::<Timestamp, _>(timestamp)
         .bind::<Timestamp, _>(timestamp);
@@ -334,22 +328,19 @@ impl DbAccumulatingEpoch {
         let epoch_number_string =
             U256::to_string(&self.accumulating_epoch.epoch_number);
 
-        let input_contract_address_string =
-            val_to_hex_str(&self.accumulating_epoch.input_contract_address);
-        let rollups_contract_address_string =
-            val_to_hex_str(&self.accumulating_epoch.rollups_contract_address);
+        let dapp_contract_address_string =
+            val_to_hex_str(&self.accumulating_epoch.dapp_contract_address);
         let epoch_input_state = self.db_epoch_input_state.insert(conn)?;
 
         let timestamp = SystemTime::now();
 
         let query = sql_query(
             "INSERT INTO \"AccumulatingEpoches\" VALUES ($1, $2, $3, $4, $5, \
-                                                            $6, $7, $8);;",
+                                                            $6, $7);;",
         )
         .bind::<Uuid, _>(self.id)
         .bind::<VarChar, _>(epoch_number_string)
-        .bind::<VarChar, _>(rollups_contract_address_string)
-        .bind::<VarChar, _>(input_contract_address_string)
+        .bind::<VarChar, _>(dapp_contract_address_string)
         .bind::<Uuid, _>(epoch_input_state)
         .bind::<Uuid, _>(rollups_uuid)
         .bind::<Timestamp, _>(timestamp)
@@ -403,8 +394,6 @@ impl DbImmutableState {
         let contract_creation_timestamp =
             SystemTime::UNIX_EPOCH + contract_creation_duration;
 
-        let input_contract_address_string =
-            val_to_hex_str(&self.immutable_state.input_contract_address);
         let output_contract_address_string =
             val_to_hex_str(&self.immutable_state.output_contract_address);
         let validator_contract_address_string =
@@ -416,12 +405,11 @@ impl DbImmutableState {
 
         let timestamp = SystemTime::now();
         let query = sql_query("INSERT INTO \"ImmutableStates\" VALUES ($1, $2, $3, $4, $5, \
-                                                            $6, $7, $8, $9, $10, $11, $12);;")
+                                                            $6, $7, $8, $9, $10, $11);;")
             .bind::<Uuid, _>(self.id)
             .bind::<VarChar, _>(input_duration_string)
             .bind::<VarChar, _>(challenge_period_string)
             .bind::<Timestamp, _>(contract_creation_timestamp)
-            .bind::<VarChar, _>(input_contract_address_string)
             .bind::<VarChar, _>(output_contract_address_string)
             .bind::<VarChar, _>(validator_contract_address_string)
             .bind::<VarChar, _>(dispute_contract_address_string)

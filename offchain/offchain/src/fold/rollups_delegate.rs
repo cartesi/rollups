@@ -398,7 +398,6 @@ fn convert_raw_to_logical(
     let current_epoch = if let Some(epoch_number) = current_epoch_no_inputs {
         AccumulatingEpoch::new(
             constants.rollups_contract_address,
-            constants.input_contract_address,
             epoch_number,
         )
     } else {
@@ -425,7 +424,6 @@ impl From<&(RollupsCreatedFilter, U256, Address)> for ImmutableState {
             input_duration: ev.input_duration,
             challenge_period: ev.challenge_period,
             contract_creation_timestamp: ts.clone(),
-            input_contract_address: ev.input,
             output_contract_address: ev.output,
             validator_contract_address: ev.validator_manager,
             dispute_contract_address: ev.dispute_manager,

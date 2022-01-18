@@ -37,11 +37,11 @@ impl StateFoldDelegate for InputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (input_contract_address, epoch_number) = initial_state.clone();
+        let (dapp_contract_address, epoch_number) = initial_state.clone();
 
         let contract = access
             .build_sync_contract(
-                input_contract_address,
+                dapp_contract_address,
                 block.number,
                 InputImpl::new,
             )
@@ -65,7 +65,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         Ok(EpochInputState {
             epoch_number,
             inputs,
-            input_contract_address,
+            dapp_contract_address,
         })
     }
 
@@ -75,11 +75,11 @@ impl StateFoldDelegate for InputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let input_contract_address = previous_state.input_contract_address;
+        let dapp_contract_address = previous_state.dapp_contract_address;
         // If not in bloom copy previous state
         if !(fold_utils::contains_address(
             &block.logs_bloom,
-            &input_contract_address,
+            &dapp_contract_address,
         ) && fold_utils::contains_topic(
             &block.logs_bloom,
             &InputAddedFilter::signature(),
@@ -89,7 +89,7 @@ impl StateFoldDelegate for InputFoldDelegate {
 
         let contract = access
             .build_fold_contract(
-                input_contract_address,
+                dapp_contract_address,
                 block.hash,
                 InputImpl::new,
             )
@@ -112,7 +112,7 @@ impl StateFoldDelegate for InputFoldDelegate {
         Ok(EpochInputState {
             epoch_number: previous_state.epoch_number,
             inputs,
-            input_contract_address,
+            dapp_contract_address,
         })
     }
 

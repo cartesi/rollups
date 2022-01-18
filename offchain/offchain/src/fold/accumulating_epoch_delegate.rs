@@ -1,6 +1,5 @@
 use offchain_core::ethers;
 
-use super::input_contract_address_delegate::InputContractAddressFoldDelegate;
 use super::input_delegate::InputFoldDelegate;
 use super::types::{AccumulatingEpoch, EpochInputState};
 
@@ -20,20 +19,14 @@ use ethers::types::{Address, H256, U256};
 /// Accumulating epoch StateFold Delegate
 pub struct AccumulatingEpochFoldDelegate<DA: DelegateAccess> {
     input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
-    input_contract_address_fold:
-        Arc<StateFold<InputContractAddressFoldDelegate, DA>>,
 }
 
 impl<DA: DelegateAccess> AccumulatingEpochFoldDelegate<DA> {
     pub fn new(
         input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
-        input_contract_address_fold: Arc<
-            StateFold<InputContractAddressFoldDelegate, DA>,
-        >,
     ) -> Self {
         Self {
             input_fold,
-            input_contract_address_fold,
         }
     }
 }
@@ -52,25 +45,17 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         _access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (rollups_contract_address, epoch_number) = *initial_state;
-
-        let input_contract_address = self
-            .get_input_contract_address_sync(
-                rollups_contract_address,
-                block.hash,
-            )
-            .await?;
+        let (dapp_contract_address, epoch_number) = *initial_state;
 
         // Inputs of epoch
         let inputs = self
-            .get_inputs_sync(input_contract_address, epoch_number, block.hash)
+            .get_inputs_sync(dapp_contract_address, epoch_number, block.hash)
             .await?;
 
         Ok(AccumulatingEpoch {
             inputs,
             epoch_number,
-            rollups_contract_address,
-            input_contract_address,
+            dapp_contract_address,
         })
     }
 
@@ -81,21 +66,18 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         _access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         let epoch_number = previous_state.epoch_number.clone();
-        let rollups_contract_address =
-            previous_state.rollups_contract_address.clone();
-        let input_contract_address =
-            previous_state.input_contract_address.clone();
+        let dapp_contract_address =
+            previous_state.dapp_contract_address.clone();
 
         // Inputs of epoch
         let inputs = self
-            .get_inputs_fold(input_contract_address, epoch_number, block.hash)
+            .get_inputs_fold(dapp_contract_address, epoch_number, block.hash)
             .await?;
 
         Ok(AccumulatingEpoch {
             epoch_number,
             inputs,
-            rollups_contract_address,
-            input_contract_address,
+            dapp_contract_address,
         })
     }
 
@@ -110,40 +92,16 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 impl<DA: DelegateAccess + Send + Sync + 'static>
     AccumulatingEpochFoldDelegate<DA>
 {
-    async fn get_input_contract_address_sync<
-        A: SyncAccess + Send + Sync + 'static,
-    >(
-        &self,
-        rollups_contract_address: Address,
-        block_hash: H256,
-    ) -> SyncResult<Address, A> {
-        Ok(self
-            .input_contract_address_fold
-            .get_state_for_block(&rollups_contract_address, Some(block_hash))
-            .await
-            .map_err(|e| {
-                SyncDelegateError {
-                    err: format!(
-                        "input contract address state fold error: {:?}",
-                        e
-                    ),
-                }
-                .build()
-            })?
-            .state
-            .input_contract_address)
-    }
-
     async fn get_inputs_sync<A: SyncAccess + Send + Sync + 'static>(
         &self,
-        input_contract_address: Address,
+        dapp_contract_address: Address,
         epoch: U256,
         block_hash: H256,
     ) -> SyncResult<EpochInputState, A> {
         Ok(self
             .input_fold
             .get_state_for_block(
-                &(input_contract_address, epoch),
+                &(dapp_contract_address, epoch),
                 Some(block_hash),
             )
             .await
@@ -158,14 +116,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
 
     async fn get_inputs_fold<A: FoldAccess + Send + Sync + 'static>(
         &self,
-        input_contract_address: Address,
+        dapp_contract_address: Address,
         epoch: U256,
         block_hash: H256,
     ) -> FoldResult<EpochInputState, A> {
         Ok(self
             .input_fold
             .get_state_for_block(
-                &(input_contract_address, epoch),
+                &(dapp_contract_address, epoch),
                 Some(block_hash),
             )
             .await
