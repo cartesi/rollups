@@ -65,8 +65,7 @@ The middleware can be used by anyone who's interested in the rollups state of af
 ## Experimenting
 To get a taste on how to use Cartesi to develop your DApp, check the following resources:
 See Cartesi Rollups in action with the [Simple Echo Example](https://github.com/cartesi/rollups-examples/tree/main/echo).
-To have a glimpse on how to develop your DApp locally using your favorite IDE and tools check our [Host Environment](https://github.com/cartesi/rollups-examples/tree/main/host) repo.
-
+To have a glimpse on how to develop your DApp locally using your favorite IDE and tools check our [Host Environment](https://github.com/cartesi/rollups-examples/tree/main/echo#running-the-environment-in-host-mode) repo.
 
 ## Talk with us
 If you’re interested in developing with Cartesi, working with the team, or hanging out in our community, don’t forget to [join us on Discord and follow along](https://discordapp.com/invite/Pt2NrnS).
