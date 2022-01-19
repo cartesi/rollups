@@ -30,7 +30,7 @@ library LibFeeManager {
         IERC20 token; // the token that is used for paying fees to validators
         bool lock; // reentrancy lock
         // A bit set used for up to 8 validators.
-        // The first 16 bits are not used.
+        // The first 16 bits are not used to keep compatibility with the validator manager contract.
         // The following every 30 bits are used to indicate the number of total claims each validator has made
         // |     not used    | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |
         // |     16 bits     |      30 bits       |      30 bits       | ... |      30 bits       |
