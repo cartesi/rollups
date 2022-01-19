@@ -53,7 +53,7 @@ impl EpochInputState {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OutputState {
-    pub output_address: Address,
+    pub dapp_contract_address: Address,
     pub vouchers: HashMap<usize, HashMap<usize, HashMap<usize, bool>>>,
 }
 

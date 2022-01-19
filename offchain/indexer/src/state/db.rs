@@ -213,8 +213,8 @@ impl DbOutputState {
         conn: &Connection,
         rollups_hash: uuid::Uuid,
     ) -> Result<uuid::Uuid> {
-        let output_address_str =
-            val_to_hex_str(&self.output_state.output_address);
+        let dapp_contract_address_str =
+            val_to_hex_str(&self.output_state.dapp_contract_address);
         let vouchers_str =
             serde_json::to_string(&self.output_state.vouchers).unwrap();
         let vouchers_json = serde_json::Value::from_str(&vouchers_str).unwrap();
@@ -223,7 +223,7 @@ impl DbOutputState {
             "INSERT INTO \"OutputStates\" VALUES ($1, $2, $3, $4, $5, $6);;",
         )
         .bind::<Uuid, _>(self.id)
-        .bind::<VarChar, _>(output_address_str)
+        .bind::<VarChar, _>(dapp_contract_address_str)
         .bind::<Json, _>(vouchers_json)
         .bind::<Uuid, _>(rollups_hash)
         .bind::<Timestamp, _>(timestamp)

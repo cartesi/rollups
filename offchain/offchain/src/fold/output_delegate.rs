@@ -54,12 +54,14 @@ impl StateFoldDelegate for OutputFoldDelegate {
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
-        output_address: &Address,
+        initial_state: &Address,
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
+        let dapp_contract_address = initial_state;
+
         let contract = access
-            .build_sync_contract(*output_address, block.number, OutputImpl::new)
+            .build_sync_contract(*dapp_contract_address, block.number, OutputImpl::new)
             .await;
 
         // Retrieve `VoucherExecuted` events
@@ -85,7 +87,7 @@ impl StateFoldDelegate for OutputFoldDelegate {
 
         Ok(OutputState {
             vouchers,
-            output_address: *output_address,
+            dapp_contract_address: *dapp_contract_address,
         })
     }
 
@@ -95,10 +97,10 @@ impl StateFoldDelegate for OutputFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let output_address = previous_state.output_address;
+        let dapp_contract_address = previous_state.dapp_contract_address;
 
         // If not in bloom copy previous state
-        if !(fold_utils::contains_address(&block.logs_bloom, &output_address)
+        if !(fold_utils::contains_address(&block.logs_bloom, &dapp_contract_address)
             && fold_utils::contains_topic(
                 &block.logs_bloom,
                 &VoucherExecutedFilter::signature(),
@@ -108,7 +110,7 @@ impl StateFoldDelegate for OutputFoldDelegate {
         }
 
         let contract = access
-            .build_fold_contract(output_address, block.hash, OutputImpl::new)
+            .build_fold_contract(dapp_contract_address, block.hash, OutputImpl::new)
             .await;
 
         let events = contract.voucher_executed_filter().query().await.context(
@@ -132,7 +134,7 @@ impl StateFoldDelegate for OutputFoldDelegate {
 
         Ok(OutputState {
             vouchers,
-            output_address: output_address,
+            dapp_contract_address,
         })
     }
 
