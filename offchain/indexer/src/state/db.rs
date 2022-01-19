@@ -394,26 +394,17 @@ impl DbImmutableState {
         let contract_creation_timestamp =
             SystemTime::UNIX_EPOCH + contract_creation_duration;
 
-        let output_contract_address_string =
-            val_to_hex_str(&self.immutable_state.output_contract_address);
-        let validator_contract_address_string =
-            val_to_hex_str(&self.immutable_state.validator_contract_address);
-        let dispute_contract_address_string =
-            val_to_hex_str(&self.immutable_state.dispute_contract_address);
-        let rollups_contract_address_string =
-            val_to_hex_str(&self.immutable_state.rollups_contract_address);
+        let dapp_contract_address_string =
+            val_to_hex_str(&self.immutable_state.dapp_contract_address);
 
         let timestamp = SystemTime::now();
         let query = sql_query("INSERT INTO \"ImmutableStates\" VALUES ($1, $2, $3, $4, $5, \
-                                                            $6, $7, $8, $9, $10, $11);;")
+                                                            $6, $7, $8);;")
             .bind::<Uuid, _>(self.id)
             .bind::<VarChar, _>(input_duration_string)
             .bind::<VarChar, _>(challenge_period_string)
             .bind::<Timestamp, _>(contract_creation_timestamp)
-            .bind::<VarChar, _>(output_contract_address_string)
-            .bind::<VarChar, _>(validator_contract_address_string)
-            .bind::<VarChar, _>(dispute_contract_address_string)
-            .bind::<VarChar, _>(rollups_contract_address_string)
+            .bind::<VarChar, _>(dapp_contract_address_string)
             .bind::<Uuid, _>(rollups_uuid)
             .bind::<Timestamp, _>(timestamp)
             .bind::<Timestamp, _>(timestamp);

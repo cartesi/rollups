@@ -281,20 +281,8 @@ pub struct ImmutableState {
     /// timestamp of the contract creation
     pub contract_creation_timestamp: U256,
 
-    /// contract responsible for outputs
-    pub output_contract_address: Address,
-
-    /// contract responsible for validators
-    pub validator_contract_address: Address,
-
-    /// contract responsible for dispute resolution
-    pub dispute_contract_address: Address,
-
-    /// contract responsible for fee management
-    pub fee_manager_contract_address: Address,
-
-    /// rollups contract address
-    pub rollups_contract_address: Address,
+    /// decentralized application contract address
+    pub dapp_contract_address: Address,
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
