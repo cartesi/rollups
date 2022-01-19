@@ -28,17 +28,17 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract RollupsInitFacet is IRollupsInit {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
 
-    // @notice initialize the Rollups contract
-    // @param _inputDuration duration of input accumulation phase in seconds
-    // @param _challengePeriod duration of challenge period in seconds
-    // @param _inputLog2Size size of the input drive in this machine
-    // @param _feePerClaim fee per claim to reward the validators
-    // @param _erc20ForFee the ERC-20 used as rewards for validators
-    // @param _feeManagerOwner fee manager owner address
-    // @param _validators initial validator set
-    // @param _erc20Contract specific ERC-20 contract address used by the portal
-    // @dev validators have to be unique, if the same validator is added twice
-    //      consensus will never be reached
+    /// @notice initialize the Rollups contract
+    /// @param _inputDuration duration of input accumulation phase in seconds
+    /// @param _challengePeriod duration of challenge period in seconds
+    /// @param _inputLog2Size size of the input drive in this machine
+    /// @param _feePerClaim fee per claim to reward the validators
+    /// @param _erc20ForFee the ERC-20 used as rewards for validators
+    /// @param _feeManagerOwner fee manager owner address
+    /// @param _validators initial validator set
+    /// @param _erc20Contract specific ERC-20 contract address used by the portal
+    /// @dev validators have to be unique, if the same validator is added twice
+    ///      consensus will never be reached
     function init(
         // rollups init variables
         uint256 _inputDuration,
@@ -68,8 +68,8 @@ contract RollupsInitFacet is IRollupsInit {
         rollupsInitDS.initialized = true;
     }
 
-    // @notice initalize the Input facet
-    // @param _inputLog2Size size of the input drive in this machine
+    /// @notice initalize the Input facet
+    /// @param _inputLog2Size size of the input drive in this machine
     function initInput(uint256 _inputLog2Size) private {
         LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
 
@@ -81,8 +81,8 @@ contract RollupsInitFacet is IRollupsInit {
         inputDS.inputDriveSize = (1 << _inputLog2Size);
     }
 
-    // @notice initialize the Validator Manager facet
-    // @param _validators initial validator set
+    /// @notice initialize the Validator Manager facet
+    /// @param _validators initial validator set
     function initValidatorManager(address payable[] memory _validators)
         private
     {
@@ -103,9 +103,9 @@ contract RollupsInitFacet is IRollupsInit {
         );
     }
 
-    // @notice initialize the Rollups facet
-    // @param _inputDuration duration of input accumulation phase in seconds
-    // @param _challengePeriod duration of challenge period in seconds
+    /// @notice initialize the Rollups facet
+    /// @param _inputDuration duration of input accumulation phase in seconds
+    /// @param _challengePeriod duration of challenge period in seconds
     function initRollups(uint256 _inputDuration, uint256 _challengePeriod)
         private
     {
@@ -128,10 +128,10 @@ contract RollupsInitFacet is IRollupsInit {
         serc20DS.erc20Contract = _erc20Contract;
     }
 
-    // @notice initalize the Fee Manager facet
-    // @param _feePerClaim fee per claim to reward the validators
-    // @param _erc20ForFee the ERC-20 used as rewards for validators
-    // @param _feeManagerOwner fee manager owner address
+    /// @notice initalize the Fee Manager facet
+    /// @param _feePerClaim fee per claim to reward the validators
+    /// @param _erc20ForFee the ERC-20 used as rewards for validators
+    /// @param _feeManagerOwner fee manager owner address
     function initFeeManager(
         uint256 _feePerClaim,
         address _erc20ForFee,

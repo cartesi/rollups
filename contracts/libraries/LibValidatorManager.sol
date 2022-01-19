@@ -36,21 +36,21 @@ library LibValidatorManager {
         ClaimsMask claimsMask;
     }
 
-    // @notice emitted on Claim received
+    /// @notice emitted on Claim received
     event ClaimReceived(
         Result result,
         bytes32[2] claims,
         address payable[2] validators
     );
 
-    // @notice emitted on Dispute end
+    /// @notice emitted on Dispute end
     event DisputeEnded(
         Result result,
         bytes32[2] claims,
         address payable[2] validators
     );
 
-    // @notice emitted on new Epoch
+    /// @notice emitted on new Epoch
     event NewEpoch(bytes32 claim);
 
     function diamondStorage()
@@ -64,11 +64,12 @@ library LibValidatorManager {
         }
     }
 
-    // @notice called when a dispute ends in rollups
-    // @param ds diamond storage pointer
-    // @params winner address of dispute winner
-    // @params loser address of dispute loser
-    // @returns result of dispute being finished
+    /// @notice called when a dispute ends in rollups
+    /// @param ds diamond storage pointer
+    /// @param winner address of dispute winner
+    /// @param loser address of dispute loser
+    /// @param winningClaim the winnning claim
+    /// @return result of dispute being finished
     function onDisputeEnd(
         DiamondStorage storage ds,
         address payable winner,
@@ -129,9 +130,9 @@ library LibValidatorManager {
                 );
     }
 
-    // @notice called when a new epoch starts
-    // @param ds diamond storage pointer
-    // @return current claim
+    /// @notice called when a new epoch starts
+    /// @param ds diamond storage pointer
+    /// @return current claim
     function onNewEpoch(DiamondStorage storage ds) internal returns (bytes32) {
         // reward validators who has made the correct claim by increasing their #claims
         claimFinalizedIncreaseCounts(ds);
@@ -147,17 +148,17 @@ library LibValidatorManager {
         return tmpClaim;
     }
 
-    // @notice called when a claim is received by rollups
-    // @param ds diamond storage pointer
-    // @params sender address of sender of that claim
-    // @params claim claim received by rollups
-    // @return result of claim, Consensus | NoConflict | Conflict
-    // @return [currentClaim, conflicting claim] if there is Conflict
-    //         [currentClaim, bytes32(0)] if there is Consensus
-    //         [bytes32(0), bytes32(0)] if there is NoConflcit
-    // @return [claimer1, claimer2] if there is  Conflcit
-    //         [claimer1, address(0)] if there is Consensus
-    //         [address(0), address(0)] if there is NoConflcit
+    /// @notice called when a claim is received by rollups
+    /// @param ds diamond storage pointer
+    /// @param sender address of sender of that claim
+    /// @param claim claim received by rollups
+    /// @return result of claim, Consensus | NoConflict | Conflict
+    /// @return [currentClaim, conflicting claim] if there is Conflict
+    ///         [currentClaim, bytes32(0)] if there is Consensus
+    ///         [bytes32(0), bytes32(0)] if there is NoConflcit
+    /// @return [claimer1, claimer2] if there is  Conflcit
+    ///         [claimer1, address(0)] if there is Consensus
+    ///         [address(0), address(0)] if there is NoConflcit
     function onClaim(
         DiamondStorage storage ds,
         address payable sender,
@@ -202,11 +203,11 @@ library LibValidatorManager {
                 );
     }
 
-    // @notice emits dispute ended event and then return
-    // @param result to be emitted and returned
-    // @param claims to be emitted and returned
-    // @param validators to be emitted and returned
-    // @dev this function existis to make code more clear/concise
+    /// @notice emits dispute ended event and then return
+    /// @param result to be emitted and returned
+    /// @param claims to be emitted and returned
+    /// @param validators to be emitted and returned
+    /// @dev this function existis to make code more clear/concise
     function emitDisputeEndedAndReturn(
         Result result,
         bytes32[2] memory claims,
@@ -223,11 +224,11 @@ library LibValidatorManager {
         return (result, claims, validators);
     }
 
-    // @notice emits claim received event and then return
-    // @param result to be emitted and returned
-    // @param claims to be emitted and returned
-    // @param validators to be emitted and returned
-    // @dev this function existis to make code more clear/concise
+    /// @notice emits claim received event and then return
+    /// @param result to be emitted and returned
+    /// @param claims to be emitted and returned
+    /// @param validators to be emitted and returned
+    /// @dev this function existis to make code more clear/concise
     function emitClaimReceivedAndReturn(
         Result result,
         bytes32[2] memory claims,
@@ -244,9 +245,9 @@ library LibValidatorManager {
         return (result, claims, validators);
     }
 
-    // @notice only call this function when a claim has been finalized
-    // @param ds pointer to diamond storage
-    // Either a consensus has been reached or challenge period has past
+    /// @notice only call this function when a claim has been finalized
+    ///         Either a consensus has been reached or challenge period has past
+    /// @param ds pointer to diamond storage
     function claimFinalizedIncreaseCounts(DiamondStorage storage ds) internal {
         uint256 agreementMask = ds.claimsMask.getAgreementMask();
         for (uint256 i; i < ds.validators.length; i++) {
@@ -258,9 +259,9 @@ library LibValidatorManager {
         }
     }
 
-    // @notice removes a validator
-    // @params ds pointer to diamond storage
-    // @params validator address of validator to be removed
+    /// @notice removes a validator
+    /// @param ds diamond storage pointer
+    /// @param validator address of validator to be removed
     function removeValidator(DiamondStorage storage ds, address validator)
         internal
     {
@@ -275,8 +276,8 @@ library LibValidatorManager {
         }
     }
 
-    // @notice check if consensus has been reached
-    // @param ds pointer to diamond storage
+    /// @notice check if consensus has been reached
+    /// @param ds pointer to diamond storage
     function isConsensus(DiamondStorage storage ds)
         internal
         view
@@ -287,9 +288,9 @@ library LibValidatorManager {
             claimsMask.getAgreementMask() == claimsMask.getConsensusGoalMask();
     }
 
-    // @notice get one of the validators that agreed with current claim
-    // @param ds diamond storage pointer
-    // @return validator that agreed with current claim
+    /// @notice get one of the validators that agreed with current claim
+    /// @param ds diamond storage pointer
+    /// @return validator that agreed with current claim
     function getClaimerOfCurrentClaim(DiamondStorage storage ds)
         internal
         view
@@ -307,9 +308,9 @@ library LibValidatorManager {
         revert("Agreeing validator not found");
     }
 
-    // @notice updates mask of validators that agreed with current claim
-    // @param ds diamond storage pointer
-    // @params sender address of validator that will be included in mask
+    /// @notice updates mask of validators that agreed with current claim
+    /// @param ds diamond storage pointer
+    /// @param sender address of validator that will be included in mask
     function updateClaimAgreementMask(
         DiamondStorage storage ds,
         address payable sender
@@ -318,9 +319,9 @@ library LibValidatorManager {
         ds.claimsMask = ds.claimsMask.setAgreementMask(validatorIndex);
     }
 
-    // @notice check if the sender is a validator
-    // @param ds pointer to diamond storage
-    // @params sender address
+    /// @notice check if the sender is a validator
+    /// @param ds pointer to diamond storage
+    /// @param sender sender address
     function isValidator(DiamondStorage storage ds, address sender)
         internal
         view
@@ -335,10 +336,10 @@ library LibValidatorManager {
         return false;
     }
 
-    // @notice find the validator and return the index or revert
-    // @params ds pointer to diamond storage
-    // @params validator address
-    // @return validator index or revert
+    /// @notice find the validator and return the index or revert
+    /// @param ds pointer to diamond storage
+    /// @param sender validator address
+    /// @return validator index or revert
     function getValidatorIndex(DiamondStorage storage ds, address sender)
         internal
         view

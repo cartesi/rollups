@@ -20,10 +20,10 @@ interface ValidatorManager {
     // Conflict - Claim is conflicting with previous one
     enum Result {NoConflict, Consensus, Conflict}
 
-    // @notice called when a claim is received by rollups
-    // @params _sender address of sender of that claim
-    // @params _claim claim received by rollups
-    // @returns result of claim, signaling current state of claims
+    /// @notice called when a claim is received by rollups
+    /// @param _sender address of sender of that claim
+    /// @param _claim claim received by rollups
+    /// @return result of claim, signaling current state of claims
     function onClaim(address payable _sender, bytes32 _claim)
         external
         returns (
@@ -32,10 +32,11 @@ interface ValidatorManager {
             address payable[2] memory claimers
         );
 
-    // @notice called when a dispute ends in rollups
-    // @params _winner address of dispute winner
-    // @params _loser address of dispute loser
-    // @returns result of dispute being finished
+    /// @notice called when a dispute ends in rollups
+    /// @param _winner address of dispute winner
+    /// @param _loser address of dispute loser
+    /// @param _winningClaim the winning claim
+    /// @return result of dispute being finished
     function onDisputeEnd(
         address payable _winner,
         address payable _loser,
@@ -48,26 +49,26 @@ interface ValidatorManager {
             address payable[2] memory claimers
         );
 
-    // @notice called when a new epoch starts
+    /// @notice called when a new epoch starts
     function onNewEpoch() external returns (bytes32);
 
-    // @notice get current claim
+    /// @notice get current claim
     function getCurrentClaim() external view returns (bytes32);
 
-    // @notice emitted on Claim received
+    /// @notice emitted on Claim received
     event ClaimReceived(
         Result result,
         bytes32[2] claims,
         address payable[2] validators
     );
 
-    // @notice emitted on Dispute end
+    /// @notice emitted on Dispute end
     event DisputeEnded(
         Result result,
         bytes32[2] claims,
         address payable[2] validators
     );
 
-    // @notice emitted on new Epoch
+    /// @notice emitted on new Epoch
     event NewEpoch(bytes32 claim);
 }

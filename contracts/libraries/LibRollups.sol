@@ -173,8 +173,8 @@ library LibRollups {
     /// @param ds diamond storage pointer
     /// @return index of current epoch
     /// @dev if phase is input accumulation, then the epoch number is length
-    //       of finalized epochs array, else there are two non finalized epochs,
-    //       one awaiting consensus/dispute and another accumulating input
+    ///      of finalized epochs array, else there are two non finalized epochs,
+    ///      one awaiting consensus/dispute and another accumulating input
     function getCurrentEpoch(DiamondStorage storage ds)
         internal
         view

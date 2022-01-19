@@ -59,14 +59,14 @@ interface MockPortal {
         external
         returns (bool);
 
-    // @notice emitted on Ether deposited
+    /// @notice emitted on Ether deposited
     event EtherDeposited(
         address[] _L2receivers,
         uint256[] _amounts,
         bytes _data
     );
 
-    // @notice emitted on ERC20 deposited
+    /// @notice emitted on ERC20 deposited
     event ERC20Deposited(
         address _ERC20,
         address _L1Sender,
@@ -75,10 +75,10 @@ interface MockPortal {
         bytes _data
     );
 
-    // @notice emitted on Ether withdrawal
+    /// @notice emitted on Ether withdrawal
     event EtherWithdrawn(address payable _receiver, uint256 _amount);
 
-    // @notice emitted on ERC20 withdrawal
+    /// @notice emitted on ERC20 withdrawal
     event ERC20Withdrawn(
         address _ERC20,
         address payable _receiver,

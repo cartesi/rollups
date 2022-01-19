@@ -49,23 +49,22 @@ contract OutputImpl is Output {
     }
 
     /// @notice functions modified by onlyRollups will only be executed if
-    // they're called by Rollups contract, otherwise it will throw an exception
+    /// they're called by Rollups contract, otherwise it will throw an exception
     modifier onlyRollups {
         require(msg.sender == rollups, "Only rollups");
         _;
     }
 
-    // @notice creates OutputImpl contract
-    // @params _rollups address of rollupscontract
+    /// @notice creates OutputImpl contract
+    /// @param _rollups address of rollupscontract
     constructor(address _rollups)
     {
         rollups = _rollups;
     }
 
     /// @notice executes voucher
-    /// @param _encodedVoucher encoded voucher mocking the behaviour
-    //          of abi.encode(address _destination, bytes _payload)
-    /// @param _v validity proof for this encoded voucher
+    /// @param _destination address that will execute the payload
+    /// @param _payload payload to be executed by destination
     /// @return true if voucher was executed successfully
     /// @dev  vouchers can only be executed once
     function executeVoucher(
@@ -106,10 +105,10 @@ contract OutputImpl is Output {
         epochHashes.push(_epochHash);
     }
 
-    /// @notice functions modified by isValidProof will only be executed if
-    //  the validity proof is valid
-    //  @dev _epochOutputDriveHash must be _v.epochVoucherDriveHash or
-    //                                  or _v.epochNoticeDriveHash
+    ///  @notice functions modified by isValidProof will only be executed if
+    ///  the validity proof is valid
+    ///  @dev _epochOutputDriveHash must be _v.epochVoucherDriveHash or
+    ///                                  or _v.epochNoticeDriveHash
     function isValidProof(
         bytes memory _encodedOutput,
         bytes32 _epochHash,
@@ -182,7 +181,7 @@ contract OutputImpl is Output {
     }
 
     /// @notice functions modified by isValidVoucherProof will only be executed if
-    //  the validity proof is valid
+    ///         the validity proof is valid
     function isValidVoucherProof(
         bytes memory _encodedVoucher,
         bytes32 _epochHash,
@@ -203,7 +202,7 @@ contract OutputImpl is Output {
     }
 
     /// @notice functions modified by isValidNoticeProof will only be executed if
-    //  the validity proof is valid
+    ///         the validity proof is valid
     function isValidNoticeProof(
         bytes memory _encodedNotice,
         bytes32 _epochHash,
@@ -239,7 +238,7 @@ contract OutputImpl is Output {
     }
 
     /// @notice returns the position of a intra drive on a drive
-    //          with  contents with the same size
+    ///         with  contents with the same size
     /// @param _index index of intra drive
     /// @param _log2Size of intra drive
     function getIntraDrivePosition(uint256 _index, uint256 _log2Size)

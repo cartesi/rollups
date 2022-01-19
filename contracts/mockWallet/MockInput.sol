@@ -23,7 +23,7 @@ interface MockInput {
     // Withdraw - withdraw from an L2 address to an L1 address
     enum Transaction {Deposit, Transfer, Withdraw}
 
-    // @notice emitted on adding Ether input
+    /// @notice emitted on adding Ether input
     event EtherInputAdded(
         Operation _operation,
         Transaction _transaction,

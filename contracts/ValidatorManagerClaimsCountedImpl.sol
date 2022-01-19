@@ -31,17 +31,17 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     ClaimsMask claimsMask;
     using ClaimsMaskLibrary for ClaimsMask;
 
-    // @notice functions modified by onlyRollups will only be executed if
-    // they're called by Rollups contract, otherwise it will throw an exception
+    /// @notice functions modified by onlyRollups will only be executed if
+    ///         they're called by Rollups contract, otherwise it will throw an exception
     function onlyRollups() internal view {
         require(msg.sender == rollups, "Only rollups");
     }
 
-    // @notice populates validators array and creates a consensus mask
-    // @params _rollups address of rollupscontract
-    // @params _validators initial validator set
-    // @dev validators have to be unique, if the same validator is added twice
-    //      consensus will never be reached
+    /// @notice populates validators array and creates a consensus mask
+    /// @param _rollups address of rollupscontract
+    /// @param _validators initial validator set
+    /// @dev validators have to be unique, if the same validator is added twice
+    ///      consensus will never be reached
     constructor(address _rollups, address payable[] memory _validators) {
         rollups = _rollups;
 
@@ -56,16 +56,16 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         );
     }
 
-    // @notice called when a claim is received by rollups
-    // @params _sender address of sender of that claim
-    // @params _claim claim received by rollups
-    // @return result of claim, Consensus | NoConflict | Conflict
-    // @return [currentClaim, conflicting claim] if there is Conflict
-    //         [currentClaim, bytes32(0)] if there is Consensus
-    //         [bytes32(0), bytes32(0)] if there is NoConflcit
-    // @return [claimer1, claimer2] if there is  Conflcit
-    //         [claimer1, address(0)] if there is Consensus
-    //         [address(0), address(0)] if there is NoConflcit
+    /// @notice called when a claim is received by rollups
+    /// @param _sender address of sender of that claim
+    /// @param _claim claim received by rollups
+    /// @return result of claim, Consensus | NoConflict | Conflict
+    /// @return [currentClaim, conflicting claim] if there is Conflict
+    ///         [currentClaim, bytes32(0)] if there is Consensus
+    ///         [bytes32(0), bytes32(0)] if there is NoConflcit
+    /// @return [claimer1, claimer2] if there is  Conflcit
+    ///         [claimer1, address(0)] if there is Consensus
+    ///         [address(0), address(0)] if there is NoConflcit
     function onClaim(address payable _sender, bytes32 _claim)
         public
         override
@@ -108,10 +108,10 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
                 );
     }
 
-    // @notice called when a dispute ends in rollups
-    // @params _winner address of dispute winner
-    // @params _loser address of dispute loser
-    // @returns result of dispute being finished
+    /// @notice called when a dispute ends in rollups
+    /// @param _winner address of dispute winner
+    /// @param _loser address of dispute loser
+    /// @return result of dispute being finished
     function onDisputeEnd(
         address payable _winner,
         address payable _loser,
@@ -174,8 +174,8 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
                 );
     }
 
-    // @notice called when a new epoch starts
-    // @return current claim
+    /// @notice called when a new epoch starts
+    /// @return current claim
     function onNewEpoch() public override returns (bytes32) {
         onlyRollups();
 
@@ -193,27 +193,27 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         return tmpClaim;
     }
 
-    // @notice get agreement mask
-    // @return current state of agreement mask
+    /// @notice get agreement mask
+    /// @return current state of agreement mask
     function getAgreementMask() public view returns (uint256) {
         return claimsMask.getAgreementMask();
     }
 
-    // @notice get consensus goal mask
-    // @return current consensus goal mask
+    /// @notice get consensus goal mask
+    /// @return current consensus goal mask
     function getConsensusGoalMask() public view returns (uint256) {
         return claimsMask.getConsensusGoalMask();
     }
 
-    // @notice get current claim
-    // @return current claim
+    /// @notice get current claim
+    /// @return current claim
     function getCurrentClaim() public view override returns (bytes32) {
         return currentClaim;
     }
 
-    // @notice get number of claims the sender has made
-    // @params validator address
-    // @return #claims
+    /// @notice get number of claims the sender has made
+    /// @param _sender address
+    /// @return #claims
     function getNumberOfClaimsByAddress(address payable _sender)
         public
         view
@@ -228,9 +228,9 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         return 0;
     }
 
-    // @notice find the validator and return the index or revert
-    // @params validator address
-    // @return validator index or revert
+    /// @notice find the validator and return the index or revert
+    /// @param _sender address
+    /// @return validator index or revert
     function getValidatorIndex(address _sender) public view returns (uint256) {
         require(_sender != address(0), "address 0");
         for (uint256 i; i < validators.length; i++) {
@@ -239,9 +239,9 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         revert("validator not found");
     }
 
-    // @notice get number of claims by the index in the validator set
-    // @params the index in validator set
-    // @return #claims
+    /// @notice get number of claims by the index in the validator set
+    /// @param index the index in validator set
+    /// @return #claims
     function getNumberOfClaimsByIndex(uint256 index)
         public
         view
@@ -265,11 +265,11 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         }
     }
 
-    // @notice emits dispute ended event and then return
-    // @param _result to be emitted and returned
-    // @param _claims to be emitted and returned
-    // @param _validators to be emitted and returned
-    // @dev this function existis to make code more clear/concise
+    /// @notice emits dispute ended event and then return
+    /// @param _result to be emitted and returned
+    /// @param _claims to be emitted and returned
+    /// @param _validators to be emitted and returned
+    /// @dev this function existis to make code more clear/concise
     function emitDisputeEndedAndReturn(
         Result _result,
         bytes32[2] memory _claims,
@@ -286,11 +286,11 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         return (_result, _claims, _validators);
     }
 
-    // @notice emits claim received event and then return
-    // @param _result to be emitted and returned
-    // @param _claims to be emitted and returned
-    // @param _validators to be emitted and returned
-    // @dev this function existis to make code more clear/concise
+    /// @notice emits claim received event and then return
+    /// @param _result to be emitted and returned
+    /// @param _claims to be emitted and returned
+    /// @param _validators to be emitted and returned
+    /// @dev this function existis to make code more clear/concise
     function emitClaimReceivedAndReturn(
         Result _result,
         bytes32[2] memory _claims,
@@ -307,8 +307,8 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         return (_result, _claims, _validators);
     }
 
-    // @notice get one of the validators that agreed with current claim
-    // @return validator that agreed with current claim
+    /// @notice get one of the validators that agreed with current claim
+    /// @return validator that agreed with current claim
     function getClaimerOfCurrentClaim()
         internal
         view
@@ -326,15 +326,15 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         revert("Agreeing validator not found");
     }
 
-    // @notice updates mask of validators that agreed with current claim
-    // @params _sender address of validator that will be included in mask
+    /// @notice updates mask of validators that agreed with current claim
+    /// @param _sender address of validator that will be included in mask
     function updateClaimAgreementMask(address payable _sender) internal {
         uint256 validatorIndex = getValidatorIndex(_sender);
         claimsMask = claimsMask.setAgreementMask(validatorIndex);
     }
 
-    // @notice removes a validator
-    // @params address of validator to be removed
+    /// @notice removes a validator
+    /// @param _validator address of validator to be removed
     function removeValidator(address _validator) internal {
         for (uint256 i; i < validators.length; i++) {
             if (_validator == validators[i]) {
@@ -347,8 +347,8 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         }
     }
 
-    // @notice check if the sender is a validator
-    // @params sender address
+    /// @notice check if the sender is a validator
+    /// @param _sender sender address
     function isValidator(address _sender) internal view returns (bool) {
         require(_sender != address(0), "address 0");
         for (uint256 i; i < validators.length; i++) {
@@ -357,7 +357,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
         return false;
     }
 
-    // @notice check if consensus has been reached
+    /// @notice check if consensus has been reached
     function isConsensus() internal view returns (bool) {
         return
             claimsMask.getAgreementMask() == claimsMask.getConsensusGoalMask();

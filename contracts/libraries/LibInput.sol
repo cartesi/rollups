@@ -77,7 +77,7 @@ library LibInput {
     /// @param input input to be understood by offchain machine
     /// @dev offchain code is responsible for making sure
     ///      that input size is power of 2 and multiple of 8 since
-    //       the offchain machine has a 8 byte word
+    ///      the offchain machine has a 8 byte word
     function addInput(DiamondStorage storage ds, bytes memory input)
         internal
         returns (bytes32)

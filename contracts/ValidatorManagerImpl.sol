@@ -28,17 +28,17 @@ contract ValidatorManagerImpl is ValidatorManager {
     // This mask is updated if a validator is added or removed
     uint32 consensusGoalMask;
 
-    // @notice functions modified by onlyRollups will only be executed if
-    // they're called by Rollups contract, otherwise it will throw an exception
+    /// @notice functions modified by onlyRollups will only be executed if
+    ///         they're called by Rollups contract, otherwise it will throw an exception
     function onlyRollups() internal view {
         require(msg.sender == rollups, "Only rollups");
     }
 
-    // @notice populates validators array and creates a consensus mask
-    // @params _rollups address of rollupscontract
-    // @params _validators initial validator set
-    // @dev validators have to be unique, if the same validator is added twice
-    //      consensus will never be reached
+    /// @notice populates validators array and creates a consensus mask
+    /// @param _rollups address of rollupscontract
+    /// @param _validators initial validator set
+    /// @dev validators have to be unique, if the same validator is added twice
+    ///      consensus will never be reached
     constructor(address _rollups, address payable[] memory _validators) {
         rollups = _rollups;
         validators = _validators;
@@ -48,16 +48,16 @@ contract ValidatorManagerImpl is ValidatorManager {
         consensusGoalMask = updateConsensusGoalMask();
     }
 
-    // @notice called when a claim is received by rollups
-    // @params _sender address of sender of that claim
-    // @params _claim claim received by rollups
-    // @return result of claim, Consensus | NoConflict | Conflict
-    // @return [currentClaim, conflicting claim] if there is Conflict
-    //         [currentClaim, bytes32(0)] if there is Consensus
-    //         [bytes32(0), bytes32(0)] if there is NoConflcit
-    // @return [claimer1, claimer2] if there is  Conflcit
-    //         [claimer1, address(0)] if there is Consensus
-    //         [address(0), address(0)] if there is NoConflcit
+    /// @notice called when a claim is received by rollups
+    /// @param _sender address of sender of that claim
+    /// @param _claim claim received by rollups
+    /// @return result of claim, Consensus | NoConflict | Conflict
+    /// @return [currentClaim, conflicting claim] if there is Conflict
+    ///         [currentClaim, bytes32(0)] if there is Consensus
+    ///         [bytes32(0), bytes32(0)] if there is NoConflcit
+    /// @return [claimer1, claimer2] if there is  Conflcit
+    ///         [claimer1, address(0)] if there is Consensus
+    ///         [address(0), address(0)] if there is NoConflcit
     function onClaim(address payable _sender, bytes32 _claim)
         public
         override
@@ -100,10 +100,11 @@ contract ValidatorManagerImpl is ValidatorManager {
                 );
     }
 
-    // @notice called when a dispute ends in rollups
-    // @params _winner address of dispute winner
-    // @params _loser address of dispute loser
-    // @returns result of dispute being finished
+    /// @notice called when a dispute ends in rollups
+    /// @param _winner address of dispute winner
+    /// @param _loser address of dispute loser
+    /// @param _winningClaim the winning claim
+    /// @return result of dispute being finished
     function onDisputeEnd(
         address payable _winner,
         address payable _loser,
@@ -167,8 +168,8 @@ contract ValidatorManagerImpl is ValidatorManager {
                 );
     }
 
-    // @notice called when a new epoch starts
-    // @return current claim
+    /// @notice called when a new epoch starts
+    /// @return current claim
     function onNewEpoch() public override returns (bytes32) {
         onlyRollups();
 
@@ -183,31 +184,31 @@ contract ValidatorManagerImpl is ValidatorManager {
         return tmpClaim;
     }
 
-    // @notice get agreement mask
-    // @return current state of agreement mask
+    /// @notice get agreement mask
+    /// @return current state of agreement mask
     function getCurrentAgreementMask() public view returns (uint32) {
         return claimAgreementMask;
     }
 
-    // @notice get consensus goal mask
-    // @return current consensus goal mask
+    /// @notice get consensus goal mask
+    /// @return current consensus goal mask
     function getConsensusGoalMask() public view returns (uint32) {
         return consensusGoalMask;
     }
 
-    // @notice get current claim
-    // @return current claim
+    /// @notice get current claim
+    /// @return current claim
     function getCurrentClaim() public view override returns (bytes32) {
         return currentClaim;
     }
 
     // INTERNAL FUNCTIONS
 
-    // @notice emits dispute ended event and then return
-    // @param _result to be emitted and returned
-    // @param _claims to be emitted and returned
-    // @param _validators to be emitted and returned
-    // @dev this function existis to make code more clear/concise
+    /// @notice emits dispute ended event and then return
+    /// @param _result to be emitted and returned
+    /// @param _claims to be emitted and returned
+    /// @param _validators to be emitted and returned
+    /// @dev this function existis to make code more clear/concise
     function emitDisputeEndedAndReturn(
         Result _result,
         bytes32[2] memory _claims,
@@ -224,11 +225,11 @@ contract ValidatorManagerImpl is ValidatorManager {
         return (_result, _claims, _validators);
     }
 
-    // @notice emits claim received event and then return
-    // @param _result to be emitted and returned
-    // @param _claims to be emitted and returned
-    // @param _validators to be emitted and returned
-    // @dev this function existis to make code more clear/concise
+    /// @notice emits claim received event and then return
+    /// @param _result to be emitted and returned
+    /// @param _claims to be emitted and returned
+    /// @param _validators to be emitted and returned
+    /// @dev this function existis to make code more clear/concise
     function emitClaimReceivedAndReturn(
         Result _result,
         bytes32[2] memory _claims,
@@ -245,8 +246,8 @@ contract ValidatorManagerImpl is ValidatorManager {
         return (_result, _claims, _validators);
     }
 
-    // @notice get one of the validators that agreed with current claim
-    // @return validator that agreed with current claim
+    /// @notice get one of the validators that agreed with current claim
+    /// @return validator that agreed with current claim
     function getClaimerOfCurrentClaim()
         internal
         view
@@ -263,8 +264,8 @@ contract ValidatorManagerImpl is ValidatorManager {
         revert("Agreeing validator not found");
     }
 
-    // @notice updates the consensus goal mask
-    // @return new consensus goal mask
+    /// @notice updates the consensus goal mask
+    /// @return new consensus goal mask
     function updateConsensusGoalMask() internal view returns (uint32) {
         // consensus goal is a number where
         // all bits related to validators are turned on
@@ -272,9 +273,9 @@ contract ValidatorManagerImpl is ValidatorManager {
         return uint32(consensusMask);
     }
 
-    // @notice updates mask of validators that agreed with current claim
-    // @params _sender address that of validator that will be included in mask
-    // @return new claim agreement mask
+    /// @notice updates mask of validators that agreed with current claim
+    /// @param _sender address that of validator that will be included in mask
+    /// @return new claim agreement mask
     function updateClaimAgreementMask(address payable _sender)
         internal
         view
@@ -291,10 +292,8 @@ contract ValidatorManagerImpl is ValidatorManager {
         return uint32(tmpClaimAgreement);
     }
 
-    // @notice removes a validator
-    // @params address of validator to be removed
-    // @returns new claim agreement bitmask
-    // @returns new consensus goal bitmask
+    /// @notice removes a validator
+    /// @param  _validator address of validator to be removed
     function removeFromValidatorSetAndBothBitmasks(address _validator)
         internal
     {

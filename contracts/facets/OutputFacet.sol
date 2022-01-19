@@ -49,8 +49,8 @@ contract OutputFacet is IOutput {
     }
 
     /// @notice executes voucher
-    /// @param _encodedVoucher encoded voucher mocking the behaviour
-    //          of abi.encode(address _destination, bytes _payload)
+    /// @param _destination address that will execute the payload
+    /// @param _payload payload to be executed by destination
     /// @param _v validity proof for this encoded voucher
     /// @return true if voucher was executed successfully
     /// @dev  vouchers can only be executed once
@@ -92,9 +92,9 @@ contract OutputFacet is IOutput {
     }
 
     /// @notice functions modified by isValidProof will only be executed if
-    //  the validity proof is valid
-    //  @dev _epochOutputDriveHash must be _v.epochVoucherDriveHash or
-    //                                  or _v.epochNoticeDriveHash
+    ///         the validity proof is valid
+    ///  @dev _epochOutputDriveHash must be _v.epochVoucherDriveHash or
+    ///                                  or _v.epochNoticeDriveHash
     function isValidProof(
         bytes memory _encodedOutput,
         bytes32 _epochHash,
@@ -167,7 +167,7 @@ contract OutputFacet is IOutput {
     }
 
     /// @notice functions modified by isValidVoucherProof will only be executed if
-    //  the validity proof is valid
+    ///         the validity proof is valid
     function isValidVoucherProof(
         bytes memory _encodedVoucher,
         bytes32 _epochHash,
@@ -185,7 +185,7 @@ contract OutputFacet is IOutput {
     }
 
     /// @notice functions modified by isValidNoticeProof will only be executed if
-    //  the validity proof is valid
+    ///         the validity proof is valid
     function isValidNoticeProof(
         bytes memory _encodedNotice,
         bytes32 _epochHash,

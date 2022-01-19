@@ -14,17 +14,17 @@
 pragma solidity >=0.7.0;
 
 interface IRollupsInit {
-    // @notice initialize the Rollups contract
-    // @param _inputDuration duration of input accumulation phase in seconds
-    // @param _challengePeriod duration of challenge period in seconds
-    // @param _inputLog2Size size of the input drive in this machine
-    // @param _feePerClaim fee per claim to reward the validators
-    // @param _erc20ForFee the ERC-20 used as rewards for validators
-    // @param _feeManagerOwner fee manager owner address
-    // @param _validators initial validator set
-    // @param _erc20Contract specific ERC-20 contract address used by the portal
-    // @dev validators have to be unique, if the same validator is added twice
-    //      consensus will never be reached
+    /// @notice initialize the Rollups contract
+    /// @param _inputDuration duration of input accumulation phase in seconds
+    /// @param _challengePeriod duration of challenge period in seconds
+    /// @param _inputLog2Size size of the input drive in this machine
+    /// @param _feePerClaim fee per claim to reward the validators
+    /// @param _erc20ForFee the ERC-20 used as rewards for validators
+    /// @param _feeManagerOwner fee manager owner address
+    /// @param _validators initial validator set
+    /// @param _erc20Contract specific ERC-20 contract address used by the portal
+    /// @dev validators have to be unique, if the same validator is added twice
+    ///      consensus will never be reached
     function init(
         // rollups init variables
         uint256 _inputDuration,
@@ -47,9 +47,9 @@ interface IRollupsInit {
     event RollupsInitialized(uint256 _inputDuration, uint256 _challengePeriod);
 
     /// @notice FeeManagerImpl contract initialized
-    // @param _feePerClaim fee per claim to reward the validators
-    // @param _erc20ForFee the ERC-20 used as rewards for validators
-    // @param _feeManagerOwner fee manager owner address
+    /// @param _feePerClaim fee per claim to reward the validators
+    /// @param _erc20ForFee the ERC-20 used as rewards for validators
+    /// @param _feeManagerOwner fee manager owner address
     event FeeManagerInitialized(
         uint256 _feePerClaim,
         address _erc20ForFee,

@@ -60,7 +60,7 @@ contract MockInputImpl is MockInput {
     /// @param _input input to be understood by off-chain machine
     /// @dev off-chain code is responsible for making sure
     ///      that input size is power of 2 and multiple of 8 since
-    // the off-chain machine has a 8 byte word
+    ///      the off-chain machine has a 8 byte word
     function addInput(bytes calldata _input, uint256 _op)
         public
         override

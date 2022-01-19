@@ -25,7 +25,7 @@ interface IRollups {
     /// @notice claim the result of current epoch
     /// @param _epochHash hash of epoch
     /// @dev ValidatorManager makes sure that msg.sender is allowed
-    //       and that claim != bytes32(0)
+    ///      and that claim != bytes32(0)
     /// TODO: add signatures for aggregated claims
     function claim(bytes32 _epochHash) external;
 
@@ -36,9 +36,9 @@ interface IRollups {
     /// @notice returns index of current (accumulating) epoch
     /// @return index of current epoch
     /// @dev if phase is input accumulation, then the epoch number is length
-    //       of finalized epochs array, else there are two epochs two non
-    //       finalized epochs, one awaiting consensus/dispute and another
-    //      accumulating input
+    ///      of finalized epochs array, else there are two epochs two non
+    ///      finalized epochs, one awaiting consensus/dispute and another
+    ///      accumulating input
     function getCurrentEpoch() external view returns (uint256);
 
     /// @notice claim submitted

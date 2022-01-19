@@ -30,14 +30,14 @@ interface SERC20Portal {
         external
         returns (bool);
 
-    // @notice emitted on ERC20 deposited
+    /// @notice emitted on ERC20 deposited
     event SERC20Deposited(
         address _sender,
         uint256 _amount,
         bytes _data
     );
 
-    // @notice emitted on ERC20 withdrawal
+    /// @notice emitted on ERC20 withdrawal
     event SERC20Withdrawn(
         address payable _receiver,
         uint256 _amount

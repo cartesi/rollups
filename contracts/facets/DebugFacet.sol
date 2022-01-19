@@ -84,10 +84,11 @@ contract DebugFacet {
         return vmDS.onClaim(_sender, _claim);
     }
 
-    // @notice called when a dispute ends in rollups
-    // @params _winner address of dispute winner
-    // @params _loser address of dispute loser
-    // @returns result of dispute being finished
+    /// @notice called when a dispute ends in rollups
+    /// @param _winner address of dispute winner
+    /// @param _loser address of dispute loser
+    /// @param _winningClaim the winning claim
+    /// @return result of dispute being finished
     function _onDisputeEnd(
         address payable _winner,
         address payable _loser,
@@ -105,8 +106,8 @@ contract DebugFacet {
         return vmDS.onDisputeEnd(_winner, _loser, _winningClaim);
     }
 
-    // @notice called when a new epoch starts
-    // @return current claim
+    /// @notice called when a new epoch starts
+    /// @return current claim
     function _onNewEpochVM() public returns (bytes32) {
         LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
@@ -161,20 +162,20 @@ contract DebugFacet {
         vmDS.claimsMask = vmDS.claimsMask.setNumClaims(_validatorIndex, _value);
     }
 
-    // @notice emitted on Claim received
+    /// @notice emitted on Claim received
     event ClaimReceived(
         Result result,
         bytes32[2] claims,
         address payable[2] validators
     );
 
-    // @notice emitted on Dispute end
+    /// @notice emitted on Dispute end
     event DisputeEnded(
         Result result,
         bytes32[2] claims,
         address payable[2] validators
     );
 
-    // @notice emitted on new Epoch
+    /// @notice emitted on new Epoch
     event NewEpoch(bytes32 claim);
 }

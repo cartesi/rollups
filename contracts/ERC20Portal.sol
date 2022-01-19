@@ -32,7 +32,7 @@ interface ERC20Portal {
         external
         returns (bool);
 
-    // @notice emitted on ERC20 deposited
+    /// @notice emitted on ERC20 deposited
     event ERC20Deposited(
         address _ERC20,
         address _sender,
@@ -40,7 +40,7 @@ interface ERC20Portal {
         bytes _data
     );
 
-    // @notice emitted on ERC20 withdrawal
+    /// @notice emitted on ERC20 withdrawal
     event ERC20Withdrawn(
         address _ERC20,
         address payable _receiver,

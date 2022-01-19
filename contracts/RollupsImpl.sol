@@ -57,14 +57,14 @@ contract RollupsImpl is Rollups {
     StorageVar public storageVar;
 
     /// @notice functions modified by onlyInputContract can only be called
-    // by input contract
+    ///         by input contract
     modifier onlyInputContract {
         require(msg.sender == address(input), "only Input Contract");
         _;
     }
 
     /// @notice functions modified by onlyDisputeContract can only be called
-    // by dispute contract
+    ///         by dispute contract
     modifier onlyDisputeContract {
         require(msg.sender == address(disputeManager), "only Dispute Contract");
         _;
@@ -122,7 +122,7 @@ contract RollupsImpl is Rollups {
     /// @notice claim the result of current epoch
     /// @param _epochHash hash of epoch
     /// @dev ValidatorManager makes sure that msg.sender is allowed
-    //       and that claim != bytes32(0)
+    ///      and that claim != bytes32(0)
     /// TODO: add signatures for aggregated claims
     function claim(bytes32 _epochHash) public override {
         ValidatorManager.Result result;
@@ -285,8 +285,8 @@ contract RollupsImpl is Rollups {
     /// @notice returns index of current (accumulating) epoch
     /// @return index of current epoch
     /// @dev if phase is input accumulation, then the epoch number is length
-    //       of finalized epochs array, else there are two non finalized epochs,
-    //       one awaiting consensus/dispute and another accumulating input
+    ///      of finalized epochs array, else there are two non finalized epochs,
+    ///      one awaiting consensus/dispute and another accumulating input
 
     function getCurrentEpoch() public view override returns (uint256) {
         uint256 finalizedEpochs = output.getNumberOfFinalizedEpochs();

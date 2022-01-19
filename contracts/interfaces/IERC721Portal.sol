@@ -30,7 +30,7 @@ interface IERC721Portal {
     /// @dev can only be called by the Rollups contract
     function erc721Withdrawal(bytes calldata _data) external returns (bool);
 
-    // @notice emitted on ERC721 deposited
+    /// @notice emitted on ERC721 deposited
     event ERC721Deposited(
         address _ERC721,
         address _sender,
@@ -38,7 +38,7 @@ interface IERC721Portal {
         bytes _data
     );
 
-    // @notice emitted on ERC721 withdrawal
+    /// @notice emitted on ERC721 withdrawal
     event ERC721Withdrawn(
         address _ERC721,
         address payable _receiver,

@@ -50,7 +50,7 @@ contract RollupsFacet is IRollups {
     /// @notice claim the result of current epoch
     /// @param _epochHash hash of epoch
     /// @dev ValidatorManager makes sure that msg.sender is allowed
-    //       and that claim != bytes32(0)
+    ///      and that claim != bytes32(0)
     /// TODO: add signatures for aggregated claims
     function claim(bytes32 _epochHash) public override {
         LibRollups.DiamondStorage storage rollupsDS =
@@ -132,8 +132,8 @@ contract RollupsFacet is IRollups {
     /// @notice returns index of current (accumulating) epoch
     /// @return index of current epoch
     /// @dev if phase is input accumulation, then the epoch number is length
-    //       of finalized epochs array, else there are two non finalized epochs,
-    //       one awaiting consensus/dispute and another accumulating input
+    ///      of finalized epochs array, else there are two non finalized epochs,
+    ///      one awaiting consensus/dispute and another accumulating input
     function getCurrentEpoch() public view override returns (uint256) {
         LibRollups.DiamondStorage storage rollupsDS =
             LibRollups.diamondStorage();

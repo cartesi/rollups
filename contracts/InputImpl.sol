@@ -42,7 +42,7 @@ contract InputImpl is Input {
     /// @param _input input to be understood by offchain machine
     /// @dev offchain code is responsible for making sure
     ///      that input size is power of 2 and multiple of 8 since
-    // the offchain machine has a 8 byte word
+    ///      the offchain machine has a 8 byte word
     function addInput(bytes calldata _input) public override returns (bytes32) {
         require(
             _input.length > 0 && _input.length <= inputDriveSize,

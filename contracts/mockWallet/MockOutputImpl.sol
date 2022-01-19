@@ -38,15 +38,15 @@ contract MockOutputImpl is MockOutput {
         lock = false;
     }
 
-    // @notice functions modified by onlyRollups will only be executed if
-    // they're called by Rollups contract, otherwise it will throw an exception
+    /// @notice functions modified by onlyRollups will only be executed if
+    ///         they're called by Rollups contract, otherwise it will throw an exception
     modifier onlyRollups {
         require(msg.sender == rollups, "Only rollups can call this functions");
         _;
     }
 
-    // @notice creates OutputImpl contract
-    // @params _rollups address of rollupscontract
+    /// @notice creates OutputImpl contract
+    /// @param _rollups address of rollups contract
     constructor(address _rollups) {
         rollups = _rollups;
     }
