@@ -41,10 +41,12 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
-        fee_manager_address: &Address,
+        initial_state: &Self::InitialState,
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
+        let fee_manager_address = initial_state;
+
         let contract = access
             .build_sync_contract(
                 *fee_manager_address,

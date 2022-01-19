@@ -54,7 +54,7 @@ impl StateFoldDelegate for OutputFoldDelegate {
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
-        initial_state: &Address,
+        initial_state: &Self::InitialState,
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {

@@ -41,7 +41,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
     async fn sync<A: SyncAccess + Send + Sync>(
         &self,
-        initial_state: &(Address, U256),
+        initial_state: &Self::InitialState,
         block: &Block,
         _access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
