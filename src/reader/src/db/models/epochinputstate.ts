@@ -4,7 +4,6 @@ import { Model, UUIDV4 } from "sequelize";
 export interface EpochInputStateAttributes {
 	id: string;
 	epoch_number: number;
-	input_contract_address: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -14,7 +13,6 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		implements EpochInputStateAttributes {
 		id!: string;
 		epoch_number!: number;
-		input_contract_address!: string;
 		createdAt!: string;
 		updatedAt!: string;
 
@@ -40,10 +38,6 @@ module.exports = (sequelize: any, DataTypes: any) => {
 			},
 			epoch_number: {
 				type: DataTypes.INTEGER,
-				allowNull: false
-			},
-			input_contract_address: {
-				type: DataTypes.STRING,
 				allowNull: false
 			},
 			createdAt: {

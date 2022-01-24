@@ -12,10 +12,6 @@ module.exports = {
 				type: Sequelize.INTEGER,
 				allowNull: false
 			},
-			input_contract_address: {
-				type: Sequelize.STRING,
-				allowNull: false
-			},
 			createdAt: {
 				type: Sequelize.DATE,
 				allowNull: false

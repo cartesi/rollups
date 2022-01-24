@@ -15,17 +15,15 @@ export type Scalars = {
 
 export type AccumulatingEpoch = {
   __typename?: 'AccumulatingEpoch';
-  descartesv2_contract_address: Scalars['String'];
+  dapp_contract_address: Scalars['String'];
   epoch_number: Scalars['String'];
   id: Scalars['ID'];
-  input_contract_address: Scalars['String'];
   inputs: EpochInputState;
 };
 
 export type AccumulatingEpochInput = {
-  descartesv2_contract_address: Scalars['String'];
+  dapp_contract_address: Scalars['String'];
   epoch_number: Scalars['String'];
-  input_contract_address: Scalars['String'];
   inputs: EpochInputStateInput;
 };
 
@@ -46,13 +44,11 @@ export type EpochInputState = {
   __typename?: 'EpochInputState';
   epoch_number: Scalars['String'];
   id: Scalars['ID'];
-  input_contract_address: Scalars['String'];
   inputs: Array<Maybe<Input>>;
 };
 
 export type EpochInputStateInput = {
   epoch_number: Scalars['String'];
-  input_contract_address: Scalars['String'];
   inputs: Array<Maybe<InputData>>;
 };
 
@@ -81,18 +77,16 @@ export type FinalizedEpochInput = {
 
 export type FinalizedEpochs = {
   __typename?: 'FinalizedEpochs';
-  descartesv2_contract_address: Scalars['String'];
+  dapp_contract_address: Scalars['String'];
   finalized_epochs: Array<Maybe<FinalizedEpoch>>;
   id: Scalars['ID'];
   initial_epoch: Scalars['String'];
-  input_contract_address: Scalars['String'];
 };
 
 export type FinalizedEpochsInput = {
-  descartesv2_contract_address: Scalars['String'];
+  dapp_contract_address: Scalars['String'];
   finalized_epochs: Array<Maybe<FinalizedEpochInput>>;
   initial_epoch: Scalars['String'];
-  input_contract_address: Scalars['String'];
 };
 
 export type GetEpochStatusRequest = {
@@ -146,23 +140,15 @@ export type ImmutableState = {
   __typename?: 'ImmutableState';
   challenge_period: Scalars['String'];
   contract_creation_timestamp: Scalars['String'];
-  descartesv2_contract_address: Scalars['String'];
-  dispute_contract_address: Scalars['String'];
+  dapp_contract_address: Scalars['String'];
   id: Scalars['ID'];
-  input_contract_address: Scalars['String'];
   input_duration: Scalars['String'];
-  validator_contract_address: Scalars['String'];
-  voucher_contract_address: Scalars['String'];
 };
 
 export type ImmutableStateInput = {
   challenge_period: Scalars['String'];
-  descartesv2_contract_address: Scalars['String'];
-  dispute_contract_address: Scalars['String'];
-  input_contract_address: Scalars['String'];
+  dapp_contract_address: Scalars['String'];
   input_duration: Scalars['String'];
-  validator_contract_address: Scalars['String'];
-  voucher_contract_address: Scalars['String'];
 };
 
 export type Input = {
@@ -229,9 +215,18 @@ export type MerkleTreeProof = {
   log2_root_size: Scalars['String'];
   log2_target_size: Scalars['String'];
   root_hash: Scalars['String'];
-  sibling_hashes: Array<Maybe<Hash>>;
+  sibling_hashes: Array<Maybe<Array<Maybe<Scalars['Int']>>>>;
   target_address: Scalars['String'];
   target_hash: Scalars['String'];
+};
+
+export type Metrics = {
+  __typename?: 'Metrics';
+  block_hash?: Maybe<Scalars['String']>;
+  block_number?: Maybe<Scalars['String']>;
+  dapp_contract_address?: Maybe<Scalars['String']>;
+  number_of_processed_inputs?: Maybe<Scalars['Int']>;
+  prometheus_metrics?: Maybe<Scalars['String']>;
 };
 
 export type Mutation = {
@@ -334,6 +329,7 @@ export type Query = {
   current_epoch: Array<Maybe<AccumulatingEpoch>>;
   current_phase: Array<Maybe<PhaseState>>;
   finalized_epochs: Array<Maybe<FinalizedEpochs>>;
+  getMetrics?: Maybe<Metrics>;
   initial_epoch: Scalars['String'];
   voucher_state: Array<Maybe<VoucherState>>;
 };
@@ -534,6 +530,7 @@ export type ResolversTypes = {
   IntegerObjectInput: IntegerObjectInput;
   Keys: Keys;
   MerkleTreeProof: ResolverTypeWrapper<MerkleTreeProof>;
+  Metrics: ResolverTypeWrapper<Metrics>;
   Mutation: ResolverTypeWrapper<{}>;
   Notice: ResolverTypeWrapper<Notice>;
   NoticeKeys: NoticeKeys;
@@ -586,6 +583,7 @@ export type ResolversParentTypes = {
   IntegerObjectInput: IntegerObjectInput;
   Keys: Keys;
   MerkleTreeProof: MerkleTreeProof;
+  Metrics: Metrics;
   Mutation: {};
   Notice: Notice;
   NoticeKeys: NoticeKeys;
@@ -604,10 +602,9 @@ export type ResolversParentTypes = {
 };
 
 export type AccumulatingEpochResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccumulatingEpoch'] = ResolversParentTypes['AccumulatingEpoch']> = {
-  descartesv2_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dapp_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   epoch_number?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  input_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   inputs?: Resolver<ResolversTypes['EpochInputState'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -620,7 +617,6 @@ export type CartesiMachineHashResolvers<ContextType = any, ParentType extends Re
 export type EpochInputStateResolvers<ContextType = any, ParentType extends ResolversParentTypes['EpochInputState'] = ResolversParentTypes['EpochInputState']> = {
   epoch_number?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  input_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   inputs?: Resolver<Array<Maybe<ResolversTypes['Input']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -636,11 +632,10 @@ export type FinalizedEpochResolvers<ContextType = any, ParentType extends Resolv
 };
 
 export type FinalizedEpochsResolvers<ContextType = any, ParentType extends ResolversParentTypes['FinalizedEpochs'] = ResolversParentTypes['FinalizedEpochs']> = {
-  descartesv2_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dapp_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   finalized_epochs?: Resolver<Array<Maybe<ResolversTypes['FinalizedEpoch']>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   initial_epoch?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  input_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -685,13 +680,9 @@ export type HashResolvers<ContextType = any, ParentType extends ResolversParentT
 export type ImmutableStateResolvers<ContextType = any, ParentType extends ResolversParentTypes['ImmutableState'] = ResolversParentTypes['ImmutableState']> = {
   challenge_period?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   contract_creation_timestamp?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  descartesv2_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  dispute_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dapp_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  input_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   input_duration?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  validator_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  voucher_contract_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -734,9 +725,18 @@ export type MerkleTreeProofResolvers<ContextType = any, ParentType extends Resol
   log2_root_size?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   log2_target_size?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   root_hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  sibling_hashes?: Resolver<Array<Maybe<ResolversTypes['Hash']>>, ParentType, ContextType>;
+  sibling_hashes?: Resolver<Array<Maybe<Array<Maybe<ResolversTypes['Int']>>>>, ParentType, ContextType>;
   target_address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   target_hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['Metrics'] = ResolversParentTypes['Metrics']> = {
+  block_hash?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  block_number?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  dapp_contract_address?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  number_of_processed_inputs?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  prometheus_metrics?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -787,6 +787,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   current_epoch?: Resolver<Array<Maybe<ResolversTypes['AccumulatingEpoch']>>, ParentType, ContextType>;
   current_phase?: Resolver<Array<Maybe<ResolversTypes['PhaseState']>>, ParentType, ContextType>;
   finalized_epochs?: Resolver<Array<Maybe<ResolversTypes['FinalizedEpochs']>>, ParentType, ContextType>;
+  getMetrics?: Resolver<Maybe<ResolversTypes['Metrics']>, ParentType, ContextType>;
   initial_epoch?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   voucher_state?: Resolver<Array<Maybe<ResolversTypes['VoucherState']>>, ParentType, ContextType>;
 };
@@ -856,6 +857,7 @@ export type Resolvers<ContextType = any> = {
   IntegerInnerObject?: IntegerInnerObjectResolvers<ContextType>;
   IntegerObject?: IntegerObjectResolvers<ContextType>;
   MerkleTreeProof?: MerkleTreeProofResolvers<ContextType>;
+  Metrics?: MetricsResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Notice?: NoticeResolvers<ContextType>;
   ProcessedInput?: ProcessedInputResolvers<ContextType>;

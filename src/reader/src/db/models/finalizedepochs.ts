@@ -4,8 +4,7 @@ import { Model, UUIDV4 } from "sequelize";
 interface FinalizedEpochsAttributes {
 	id: string;
 	initial_epoch: string;
-	descartesv2_contract_address: string;
-	input_contract_address: string;
+	dapp_contract_address: string;
 	rollups_hash: string;
 	createdAt: string;
 	updatedAt: string;
@@ -16,8 +15,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		implements FinalizedEpochsAttributes {
 		id!: string;
 		initial_epoch!: string;
-		descartesv2_contract_address!: string;
-		input_contract_address!: string;
+		dapp_contract_address!: string;
 		rollups_hash!: string;
 		createdAt!: string;
 		updatedAt!: string;
@@ -40,11 +38,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				type: DataTypes.STRING,
 				allowNull: false
 			},
-			descartesv2_contract_address: {
-				type: DataTypes.STRING,
-				allowNull: false
-			},
-			input_contract_address: {
+			dapp_contract_address: {
 				type: DataTypes.STRING,
 				allowNull: false
 			},

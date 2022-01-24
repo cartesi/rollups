@@ -30,11 +30,7 @@ module.exports = {
 					input_duration: 123,
 					challenge_period: 1234567890,
 					contract_creation_timestamp: new Date(),
-					input_contract_address: "Address 1",
-					voucher_contract_address: "Address 1",
-					validator_contract_address: "Address 1",
-					dispute_contract_address: "Address 1",
-					descartesv2_contract_address: "Address 1",
+					dapp_contract_address: "Address 1",
 					rollups_hash,
 					createdAt: new Date(),
 					updatedAt: new Date()
@@ -44,11 +40,7 @@ module.exports = {
 					input_duration: 123,
 					challenge_period: 1234567890,
 					contract_creation_timestamp: new Date(),
-					input_contract_address: "Address 2",
-					voucher_contract_address: "Address 2",
-					validator_contract_address: "Address 2",
-					dispute_contract_address: "Address 2",
-					descartesv2_contract_address: "Address 2",
+					dapp_contract_address: "Address 2",
 					rollups_hash,
 					createdAt: new Date(),
 					updatedAt: new Date()
@@ -88,14 +80,12 @@ module.exports = {
 				{
 					id: epochInputId1,
 					epoch_number: "1",
-					input_contract_address: "Address 1",
 					createdAt: new Date(),
 					updatedAt: new Date()
 				},
 				{
 					id: epochInputId2,
 					epoch_number: "1",
-					input_contract_address: "Address 2",
 					createdAt: new Date(),
 					updatedAt: new Date()
 				}
@@ -109,8 +99,7 @@ module.exports = {
 				{
 					id: accumulatingEpochId,
 					epoch_number: 500,
-					descartesv2_contract_address: "Address 1",
-					input_contract_address: "Address 1",
+					dapp_contract_address: "Address 1",
 					epochInputStateId: epochInputId1,
 					rollups_hash: rollups_hash,
 					createdAt: new Date(),

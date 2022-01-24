@@ -4,12 +4,8 @@ query constants {
     id
     input_duration
     challenge_period
-    input_contract_address
     contract_creation_timestamp
-    voucher_contract_address
-    validator_contract_address
-    dispute_contract_address
-    descartesv2_contract_address
+    dapp_contract_address
   }
 }
 
@@ -29,14 +25,12 @@ query finalized_epochs {
           timestamp
           payload
         }
-        input_contract_address
       }
       finalized_block_hash
       finalized_block_number
     }
     initial_epoch
-    descartesv2_contract_address
-    input_contract_address
+    dapp_contract_address
   }
 }
 
@@ -53,10 +47,8 @@ query current_epoch {
         timestamp
         payload
       }
-      input_contract_address
     }
-    descartesv2_contract_address
-    input_contract_address
+    dapp_contract_address
   }
 }
 
@@ -82,12 +74,8 @@ query rollups {
       id
       input_duration
       challenge_period
-      input_contract_address
       contract_creation_timestamp
-      voucher_contract_address
-      validator_contract_address
-      dispute_contract_address
-      descartesv2_contract_address
+      dapp_contract_address
     }
     initial_epoch
     current_epoch {
@@ -102,10 +90,8 @@ query rollups {
           timestamp
           payload
         }
-        input_contract_address
       }
-      descartesv2_contract_address
-      input_contract_address
+      dapp_contract_address
     }
     voucher_state {
       id
@@ -168,9 +154,7 @@ query getEpochStatus {
         target_address
         log2_target_size
         target_hash
-        sibling_hashes {
-          data
-        }
+        sibling_hashes
       }
       notice_hashes_in_epoch {
         target_address
@@ -197,9 +181,7 @@ query getEpochStatus {
             target_hash
             log2_root_size
             root_hash
-            sibling_hashes {
-              data
-            }
+            sibling_hashes
           }
         }
         notice_hashes_in_machine {
@@ -217,9 +199,7 @@ query getEpochStatus {
             target_hash
             log2_root_size
             root_hash
-            sibling_hashes {
-              data
-            }
+            sibling_hashes
           }
         }
       }
@@ -247,9 +227,7 @@ query getProcessedInput {
       target_address
       log2_target_size
       target_hash
-      sibling_hashes {
-        data
-      }
+      sibling_hashes
     }
     notice_hashes_in_epoch {
       target_address
@@ -276,9 +254,7 @@ query getProcessedInput {
           target_hash
           log2_root_size
           root_hash
-          sibling_hashes {
-            data
-          }
+          sibling_hashes
         }
       }
       notice_hashes_in_machine {
@@ -296,9 +272,7 @@ query getProcessedInput {
           target_hash
           log2_root_size
           root_hash
-          sibling_hashes {
-            data
-          }
+          sibling_hashes
         }
       }
     }
@@ -328,9 +302,7 @@ query getVoucher {
       target_hash
       log2_root_size
       root_hash
-      sibling_hashes {
-        data
-      }
+      sibling_hashes
     }
   }
 }
@@ -356,9 +328,17 @@ query getNotice {
       target_hash
       log2_root_size
       root_hash
-      sibling_hashes {
-        data
-      }
+      sibling_hashes
     }
+  }
+}
+
+query getMetrics {
+  getMetrics {
+    block_number
+    block_hash
+    number_of_processed_inputs
+    dapp_contract_address
+    prometheus_metrics
   }
 }

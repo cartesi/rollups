@@ -4,8 +4,7 @@ import { Model, UUIDV4 } from "sequelize";
 interface AccumulatingEpochAttributes {
 	id: string;
 	epoch_number: string;
-	descartesv2_contract_address: string;
-	input_contract_address: string;
+	dapp_contract_address: string;
 	epochInputStateId: string;
 	rollups_hash: string;
 	createdAt: string;
@@ -17,8 +16,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 		implements AccumulatingEpochAttributes {
 		id!: string;
 		epoch_number!: string;
-		descartesv2_contract_address!: string;
-		input_contract_address!: string;
+		dapp_contract_address!: string;
 		epochInputStateId!: string;
 		rollups_hash!: string;
 		createdAt!: string;
@@ -36,11 +34,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
 				type: DataTypes.INTEGER,
 				allowNull: false
 			},
-			descartesv2_contract_address: {
-				type: DataTypes.STRING,
-				allowNull: false
-			},
-			input_contract_address: {
+			dapp_contract_address: {
 				type: DataTypes.STRING,
 				allowNull: false
 			},

@@ -40,14 +40,12 @@ module.exports = {
 				{
 					id: epochInputId1,
 					epoch_number: "1",
-					input_contract_address: "Address 1",
 					createdAt: new Date(),
 					updatedAt: new Date()
 				},
 				{
 					id: epochInputId2,
 					epoch_number: "1",
-					input_contract_address: "Address 2",
 					createdAt: new Date(),
 					updatedAt: new Date()
 				}
@@ -61,8 +59,7 @@ module.exports = {
 				{
 					id: uuidv4(),
 					epoch_number: 500,
-					descartesv2_contract_address: "Address 1",
-					input_contract_address: "Address 1",
+					dapp_contract_address: "Address 1",
 					epochInputStateId: epochInputId1,
 					createdAt: new Date(),
 					updatedAt: new Date()
@@ -70,8 +67,7 @@ module.exports = {
 				{
 					id: uuidv4(),
 					epoch_number: 600,
-					descartesv2_contract_address: "Address 2",
-					input_contract_address: "Address 2",
+					dapp_contract_address: "Address 2",
 					epochInputStateId: epochInputId2,
 					createdAt: new Date(),
 					updatedAt: new Date()

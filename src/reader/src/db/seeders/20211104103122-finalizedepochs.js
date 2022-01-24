@@ -42,14 +42,12 @@ module.exports = {
 				{
 					id: epochInputId1,
 					epoch_number: "1",
-					input_contract_address: "Address 1",
 					createdAt: new Date(),
 					updatedAt: new Date()
 				},
 				{
 					id: epochInputId2,
 					epoch_number: "1",
-					input_contract_address: "Address 2",
 					createdAt: new Date(),
 					updatedAt: new Date()
 				}
@@ -63,16 +61,14 @@ module.exports = {
 				{
 					id: parentId1,
 					initial_epoch: "40",
-					descartesv2_contract_address: "Address 1",
-					input_contract_address: "Address 1",
+					dapp_contract_address: "Address 1",
 					createdAt: new Date(),
 					updatedAt: new Date()
 				},
 				{
 					id: parentId2,
 					initial_epoch: "80",
-					descartesv2_contract_address: "Address 2",
-					input_contract_address: "Address 2",
+					dapp_contract_address: "Address 2",
 					createdAt: new Date(),
 					updatedAt: new Date()
 				}
@@ -86,9 +82,9 @@ module.exports = {
 				{
 					id: uuidv4(),
 					epoch_number: "10",
-					hash: 'Some hash I guess',
+					hash: "Some hash I guess",
 					finalized_block_hash: "Hash",
-					finalized_block_number: '30',
+					finalized_block_number: "30",
 					epochInputStateId: epochInputId1,
 					FinalizedEpochId: parentId1,
 					createdAt: new Date(),
@@ -97,9 +93,9 @@ module.exports = {
 				{
 					id: uuidv4(),
 					epoch_number: "50",
-					hash: 'Some hash I guess',
+					hash: "Some hash I guess",
 					finalized_block_hash: "Hash",
-					finalized_block_number: '70',
+					finalized_block_number: "70",
 					FinalizedEpochId: parentId2,
 					epochInputStateId: epochInputId2,
 					createdAt: new Date(),

@@ -12,11 +12,7 @@ module.exports = {
 				type: Sequelize.STRING,
 				allowNull: false
 			},
-			descartesv2_contract_address: {
-				type: Sequelize.STRING,
-				allowNull: false
-			},
-			input_contract_address: {
+			dapp_contract_address: {
 				type: Sequelize.STRING,
 				allowNull: false
 			},
