@@ -96,8 +96,8 @@ library LibValidatorManager {
                     )
                     : emitDisputeEndedAndReturn(
                         Result.NoConflict,
-                        [bytes32(0), bytes32(0)],
-                        [payable(0), payable(0)]
+                        [winningClaim, bytes32(0)],
+                        [winner, payable(0)]
                     );
         }
 
@@ -125,8 +125,8 @@ library LibValidatorManager {
                 )
                 : emitDisputeEndedAndReturn(
                     Result.NoConflict,
-                    [bytes32(0), bytes32(0)],
-                    [payable(0), payable(0)]
+                    [winningClaim, bytes32(0)],
+                    [winner, payable(0)]
                 );
     }
 
@@ -154,11 +154,9 @@ library LibValidatorManager {
     /// @param claim claim received by rollups
     /// @return result of claim, Consensus | NoConflict | Conflict
     /// @return [currentClaim, conflicting claim] if there is Conflict
-    ///         [currentClaim, bytes32(0)] if there is Consensus
-    ///         [bytes32(0), bytes32(0)] if there is NoConflcit
+    ///         [currentClaim, bytes32(0)] if there is Consensus or NoConflcit
     /// @return [claimer1, claimer2] if there is  Conflcit
-    ///         [claimer1, address(0)] if there is Consensus
-    ///         [address(0), address(0)] if there is NoConflcit
+    ///         [claimer1, address(0)] if there is Consensus or NoConflcit
     function onClaim(
         DiamondStorage storage ds,
         address payable sender,
@@ -205,8 +203,8 @@ library LibValidatorManager {
                 )
                 : emitClaimReceivedAndReturn(
                     Result.NoConflict,
-                    [bytes32(0), bytes32(0)],
-                    [payable(0), payable(0)]
+                    [claim, bytes32(0)],
+                    [sender, payable(0)]
                 );
     }
 

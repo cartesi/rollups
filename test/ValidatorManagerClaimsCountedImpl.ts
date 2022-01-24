@@ -186,8 +186,8 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             ).to.equal(
                 JSON.stringify([
                     Result.NoConflict,
-                    [hash_zero, hash_zero],
-                    [address_zero, address_zero],
+                    [claim, hash_zero],
+                    [validators[i], address_zero],
                 ])
             );
 
@@ -199,8 +199,8 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
                 .to.emit(VMCC, "ClaimReceived")
                 .withArgs(
                     Result.NoConflict,
-                    [hash_zero, hash_zero],
-                    [address_zero, address_zero]
+                    [claim, hash_zero],
+                    [validators[i], address_zero]
                 );
 
             // check updated currentAgreementMask
@@ -263,8 +263,8 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             .to.emit(VMCC, "ClaimReceived")
             .withArgs(
                 Result.NoConflict,
-                [hash_zero, hash_zero],
-                [address_zero, address_zero]
+                [claim, hash_zero],
+                [validators[0], address_zero]
             );
 
         // callStatic: check return value
@@ -321,8 +321,8 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         ).to.equal(
             JSON.stringify([
                 Result.NoConflict,
-                [hash_zero, hash_zero],
-                [address_zero, address_zero],
+                [claim, hash_zero],
+                [validators[0], address_zero],
             ])
         );
 
@@ -334,8 +334,8 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             .to.emit(VMCC, "DisputeEnded")
             .withArgs(
                 Result.NoConflict,
-                [hash_zero, hash_zero],
-                [address_zero, address_zero]
+                [claim, hash_zero],
+                [validators[0], address_zero]
             );
 
         // check currentAgreementMask
@@ -505,8 +505,8 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         ).to.equal(
             JSON.stringify([
                 Result.NoConflict,
-                [hash_zero, hash_zero],
-                [address_zero, address_zero],
+                [claim2, hash_zero],
+                [lastValidator, address_zero],
             ])
         );
         // check emitted event
@@ -521,8 +521,8 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             .to.emit(VMCC, "DisputeEnded")
             .withArgs(
                 Result.NoConflict,
-                [hash_zero, hash_zero],
-                [address_zero, address_zero]
+                [claim2, hash_zero],
+                [lastValidator, address_zero]
             );
 
         // now the second last validator can finalize the consensus

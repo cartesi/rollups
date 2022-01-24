@@ -61,11 +61,9 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     /// @param _claim claim received by rollups
     /// @return result of claim, Consensus | NoConflict | Conflict
     /// @return [currentClaim, conflicting claim] if there is Conflict
-    ///         [currentClaim, bytes32(0)] if there is Consensus
-    ///         [bytes32(0), bytes32(0)] if there is NoConflcit
+    ///         [currentClaim, bytes32(0)] if there is Consensus or NoConflcit
     /// @return [claimer1, claimer2] if there is  Conflcit
-    ///         [claimer1, address(0)] if there is Consensus
-    ///         [address(0), address(0)] if there is NoConflcit
+    ///         [claimer1, address(0)] if there is Consensus or NoConflcit
     function onClaim(address payable _sender, bytes32 _claim)
         public
         override
@@ -103,8 +101,8 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
                 )
                 : emitClaimReceivedAndReturn(
                     Result.NoConflict,
-                    [bytes32(0), bytes32(0)],
-                    [payable(0), payable(0)]
+                    [_claim, bytes32(0)],
+                    [_sender, payable(0)]
                 );
     }
 
@@ -140,8 +138,8 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
                     )
                     : emitDisputeEndedAndReturn(
                         Result.NoConflict,
-                        [bytes32(0), bytes32(0)],
-                        [payable(0), payable(0)]
+                        [_winningClaim, bytes32(0)],
+                        [_winner, payable(0)]
                     );
         }
 
@@ -169,8 +167,8 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
                 )
                 : emitDisputeEndedAndReturn(
                     Result.NoConflict,
-                    [bytes32(0), bytes32(0)],
-                    [payable(0), payable(0)]
+                    [_winningClaim, bytes32(0)],
+                    [_winner, payable(0)]
                 );
     }
 
