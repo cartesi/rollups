@@ -31,6 +31,20 @@ DELEGATE_TEST=1 npx hardhat test test/OutputImpl.ts --network localhost
 pkill -P "$delegate_server_pid"
 
 
+## testing validator manager delegate
+
+./scripts/run_validator_manager_server.sh --sf-safety-margin 0 >> /dev/null 2>&1 &
+delegate_server_pid=$!
+sleep 3
+
+DELEGATE_TEST=1 npx hardhat test test/ValidatorManagerImpl.ts --network localhost
+
+
+# kill validator manager server
+
+pkill -P "$delegate_server_pid"
+
+
 ## testing fee manager delegate
 
 ./scripts/run_fee_manager_server.sh --sf-safety-margin 0 >> /dev/null 2>&1 &

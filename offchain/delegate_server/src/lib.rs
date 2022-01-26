@@ -1,11 +1,12 @@
 pub mod input_server;
 pub mod output_server;
+pub mod validator_manager_server;
 pub mod fee_manager_server;
 pub mod rollups_server;
 
 use offchain::fold::setup::{
-    create_rollups_state_fold, create_input, create_output, create_fee_manager,
-    RollupsStateFold, InputStateFold, OutputStateFold, FeeManagerStateFold,
+    create_rollups_state_fold, create_input, create_output, create_validator_manager, create_fee_manager,
+    RollupsStateFold, InputStateFold, OutputStateFold, ValidatorManagerStateFold, FeeManagerStateFold,
 };
 use offchain::logic::instantiate_state_fold::{create_access, RollupsAccess};
 
@@ -27,6 +28,15 @@ pub fn instantiate_output_fold_delegate(
     let access = create_access(config, url).unwrap();
 
     create_output(access, &config)
+}
+
+pub fn instantiate_validator_manager_fold_delegate(
+    config: &SFConfig,
+    url: String,
+) -> ValidatorManagerStateFold<RollupsAccess> {
+    let access = create_access(config, url).unwrap();
+
+    create_validator_manager(access, &config)
 }
 
 pub fn instantiate_fee_manager_fold_delegate(

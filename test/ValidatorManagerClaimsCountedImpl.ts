@@ -25,10 +25,13 @@ import { solidity, MockProvider } from "ethereum-waffle";
 import { ValidatorManagerClaimsCountedImpl__factory } from "../dist/src/types/factories/ValidatorManagerClaimsCountedImpl__factory";
 import { Signer } from "ethers";
 import { ValidatorManagerClaimsCountedImpl } from "../dist/src/types/ValidatorManagerClaimsCountedImpl";
+import { getState } from "./getState";
 
 use(solidity);
 
 describe("Validator Manager With Claims Counted Implementation", async () => {
+    let enableDelegate = process.env["DELEGATE_TEST"];
+
     var rollups: Signer;
     var signer: Signer;
     var VMCC: ValidatorManagerClaimsCountedImpl;
@@ -250,6 +253,17 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             await VMCC.getAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
+
+        // test delegate
+        if (enableDelegate) {
+            let initialState = JSON.stringify({
+                validator_manager_address: VMCC.address,
+            });
+
+            let state = JSON.parse(await getState(initialState));
+
+            console.log(state);
+        }
     });
 
     it("onClaim with different claims should return conflict", async () => {

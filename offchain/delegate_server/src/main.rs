@@ -25,6 +25,7 @@ struct ServerConfig {
 enum DelegateServerType {
     Input,
     Output,
+    ValidatorManager,
     FeeManager,
     Rollups,
 }
@@ -66,6 +67,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 SERVER_ADDRESS,
                 delegate_server::output_server::OutputDelegateManager {
                     fold: output_fold,
+                },
+                shutdown_rx,
+            )
+            .await
+        }
+        DelegateServerType::ValidatorManager => {
+            let validator_manager_fold = delegate_server::instantiate_validator_manager_fold_delegate(
+                &sf_config,
+                basic_config.url.clone(),
+            );
+
+            serve_delegate_manager(
+                SERVER_ADDRESS,
+                delegate_server::validator_manager_server::ValidatorManagerDelegateManager {
+                    fold: validator_manager_fold,
                 },
                 shutdown_rx,
             )

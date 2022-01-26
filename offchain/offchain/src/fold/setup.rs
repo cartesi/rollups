@@ -1,24 +1,29 @@
 use super::*;
 use state_fold::{config::SFConfig, DelegateAccess, StateFold};
 
-use std::sync::Arc;
 use crate::fold::fee_manager_delegate::FeeManagerFoldDelegate;
+use crate::fold::validator_manager_delegate::ValidatorManagerFoldDelegate;
+use std::sync::Arc;
 
-pub type RollupsStateFold<DA> =
-    Arc<StateFold<RollupsFoldDelegate<DA>, DA>>;
+pub type RollupsStateFold<DA> = Arc<StateFold<RollupsFoldDelegate<DA>, DA>>;
 
 /// Creates Rollups State Fold
-pub fn create_rollups_state_fold<
-    DA: DelegateAccess + Send + Sync + 'static,
->(
+pub fn create_rollups_state_fold<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SFConfig,
 ) -> RollupsStateFold<DA> {
     let epoch_fold = create_epoch(Arc::clone(&access), config);
     let output_fold = create_output(Arc::clone(&access), config);
+    let validator_manager_fold =
+        create_validator_manager(Arc::clone(&access), config);
     let fee_manager_fold = create_fee_manager(Arc::clone(&access), config);
 
-    let delegate = RollupsFoldDelegate::new(epoch_fold, output_fold, fee_manager_fold);
+    let delegate = RollupsFoldDelegate::new(
+        epoch_fold,
+        output_fold,
+        validator_manager_fold,
+        fee_manager_fold,
+    );
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
@@ -50,6 +55,17 @@ pub fn create_output<DA: DelegateAccess + Send + Sync + 'static>(
     config: &SFConfig,
 ) -> OutputStateFold<DA> {
     let delegate = OutputFoldDelegate::default();
+    let state_fold = StateFold::new(delegate, access, config.safety_margin);
+    Arc::new(state_fold)
+}
+
+pub type ValidatorManagerStateFold<DA> =
+    Arc<StateFold<ValidatorManagerFoldDelegate, DA>>;
+pub fn create_validator_manager<DA: DelegateAccess + Send + Sync + 'static>(
+    access: Arc<DA>,
+    config: &SFConfig,
+) -> ValidatorManagerStateFold<DA> {
+    let delegate = ValidatorManagerFoldDelegate::default();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }

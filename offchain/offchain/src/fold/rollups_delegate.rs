@@ -6,8 +6,7 @@ use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
 use super::output_delegate::OutputFoldDelegate;
 use super::sealed_epoch_delegate::SealedEpochState;
 use super::types::{
-    AccumulatingEpoch, RollupsState, ImmutableState, OutputState,
-    PhaseState,
+    AccumulatingEpoch, ImmutableState, OutputState, PhaseState, RollupsState,
 };
 
 use offchain_core::types::Block;
@@ -22,15 +21,18 @@ use async_trait::async_trait;
 use snafu::ResultExt;
 use std::sync::Arc;
 
-use ethers::providers::Middleware;
-use ethers::types::{Address, U256};
 use crate::fold::fee_manager_delegate::FeeManagerFoldDelegate;
 use crate::fold::types::FeeManagerState;
+use crate::fold::types::ValidatorManagerState;
+use crate::fold::validator_manager_delegate::ValidatorManagerFoldDelegate;
+use ethers::providers::Middleware;
+use ethers::types::{Address, U256};
 
 /// Rollups StateActor Delegate, which implements `sync` and `fold`.
 pub struct RollupsFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
     epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
     output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
+    validator_manager_fold: Arc<StateFold<ValidatorManagerFoldDelegate, DA>>,
     fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate, DA>>,
 }
 
@@ -38,11 +40,15 @@ impl<DA: DelegateAccess + Send + Sync + 'static> RollupsFoldDelegate<DA> {
     pub fn new(
         epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
         output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
+        validator_manager_fold: Arc<
+            StateFold<ValidatorManagerFoldDelegate, DA>,
+        >,
         fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate, DA>>,
     ) -> Self {
         Self {
             epoch_fold,
             output_fold,
+            validator_manager_fold,
             fee_manager_fold,
         }
     }
@@ -68,10 +74,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let (rollups_contract_address, epoch_number) = *initial_state;
 
-        let contract = RollupsImpl::new(
-            rollups_contract_address,
-            Arc::clone(&middleware),
-        );
+        let contract =
+            RollupsImpl::new(rollups_contract_address, Arc::clone(&middleware));
 
         // Retrieve constants from contract creation event
         let constants = {
@@ -144,9 +148,27 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
+        let validator_manager_state = self
+            .validator_manager_fold
+            .get_state_for_block(
+                &constants.validator_manager_contract_address,
+                Some(block.hash),
+            )
+            .await
+            .map_err(|e| {
+                SyncDelegateError {
+                    err: format!("Validator Manager state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
         let fee_manager_state = self
             .fee_manager_fold
-            .get_state_for_block(&constants.fee_manager_contract_address, Some(block.hash))
+            .get_state_for_block(
+                &constants.fee_manager_contract_address,
+                Some(block.hash),
+            )
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -162,6 +184,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             block,
             &epoch_number,
             output_state,
+            validator_manager_state,
             fee_manager_state,
         ))
     }
@@ -174,6 +197,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     ) -> FoldResult<Self::Accumulator, A> {
         let constants = previous_state.constants.clone();
         let output_address = constants.output_contract_address;
+        let validator_manager_address =
+            constants.validator_manager_contract_address;
         let fee_manager_address = constants.fee_manager_contract_address;
 
         // get raw state from EpochFoldDelegate
@@ -207,6 +232,18 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
+        let validator_manager_state = self
+            .validator_manager_fold
+            .get_state_for_block(&validator_manager_address, Some(block.hash))
+            .await
+            .map_err(|e| {
+                FoldDelegateError {
+                    err: format!("Validator manager fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
         let fee_manager_state = self
             .fee_manager_fold
             .get_state_for_block(&fee_manager_address, Some(block.hash))
@@ -225,7 +262,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             block,
             &previous_state.initial_epoch,
             output_state,
-            fee_manager_state
+            validator_manager_state,
+            fee_manager_state,
         ))
     }
 
@@ -246,6 +284,7 @@ fn convert_raw_to_logical(
     block: &Block,
     initial_epoch: &U256,
     output_state: OutputState,
+    validator_manager_state: ValidatorManagerState,
     fee_manager_state: FeeManagerState,
 ) -> RollupsState {
     // If the raw state is InputAccumulation but it has expired, then the raw
@@ -365,6 +404,7 @@ fn convert_raw_to_logical(
         finalized_epochs: contract_state.finalized_epochs,
         current_epoch,
         output_state,
+        validator_manager_state,
         fee_manager_state,
     }
 }
@@ -381,6 +421,7 @@ impl From<&(RollupsCreatedFilter, U256, Address)> for ImmutableState {
             output_contract_address: ev.output,
             validator_contract_address: ev.validator_manager,
             dispute_contract_address: ev.dispute_manager,
+            validator_manager_contract_address: ev.validator_manager,
             fee_manager_contract_address: ev.fee_manager,
             rollups_contract_address: *rollups_contract_address,
         }

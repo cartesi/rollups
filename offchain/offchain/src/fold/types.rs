@@ -308,6 +308,15 @@ pub struct ImmutableState {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ValidatorManagerState {
+    prev_epoch_claim: Option<H256>,
+    // each tuple containing (validator_address, #claims_made_so_far)
+    // note that when a validator gets removed, its address becomes 0
+    // this 0 address can appear anywhere in the array
+    num_claims: [Option<(Address, U256)>; 8],
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FeeManagerState {
     pub validator_manager_address: Address,
     pub erc20_address: Address,
@@ -331,6 +340,6 @@ pub struct RollupsState {
     pub current_phase: PhaseState,
 
     pub output_state: OutputState,
-
+    pub validator_manager_state: ValidatorManagerState,
     pub fee_manager_state: FeeManagerState,
 }
