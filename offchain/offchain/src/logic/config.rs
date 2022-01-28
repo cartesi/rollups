@@ -6,6 +6,7 @@ use offchain_core::ethers;
 
 use serde::Deserialize;
 use snafu::ResultExt;
+use std::fs;
 use std::str::FromStr;
 use structopt::StructOpt;
 
@@ -15,9 +16,12 @@ pub struct LogicEnvCLIConfig {
     /// Path to logic .toml config
     #[structopt(long, env)]
     pub logic_config_path: Option<String>,
-    /// Signer Mnemonic
+    /// Signer mnemonic
     #[structopt(long, env = "MNEMONIC")]
     pub mnemonic: Option<String>,
+    /// Signer mnemonic file path
+    #[structopt(long, env = "MNEMONIC_FILE")]
+    pub mnemonic_file: Option<String>,
     /// Chain ID
     #[structopt(long, env)]
     pub chain_id: Option<u64>,
@@ -59,6 +63,7 @@ pub struct LogicEnvCLIConfig {
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct LogicFileConfig {
     pub mnemonic: Option<String>,
+    pub mnemonic_file: Option<String>,
     pub chain_id: Option<u64>,
     pub rollups_contract_address: Option<String>,
     pub provider_http_endpoint: Option<String>,
@@ -122,13 +127,28 @@ impl LogicConfig {
             c.logic_config
         };
 
-        let mnemonic: String = env_cli_config
-            .mnemonic
-            .or(file_config.mnemonic)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specify mnemonic",
+        let mnemonic: String = if let Some(m) =
+            env_cli_config.mnemonic.or(file_config.mnemonic)
+        {
+            m
+        } else {
+            let path = env_cli_config
+                .mnemonic_file
+                .or(file_config.mnemonic_file)
+                .ok_or(snafu::NoneError)
+                .context(config_error::FileError {
+                    err: "Must specify either mnemonic or mnemonic_file",
+                })?;
+
+            let contents = fs::read_to_string(path.clone()).map_err(|e| {
+                config_error::FileError {
+                    err: format!("Could not read file at path {}: {}", path, e),
+                }
+                .build()
             })?;
+
+            contents.trim().to_string()
+        };
 
         let chain_id = env_cli_config
             .chain_id
