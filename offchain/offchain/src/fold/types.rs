@@ -309,11 +309,17 @@ pub struct ImmutableState {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ValidatorManagerState {
-    prev_epoch_claim: Option<H256>,
     // each tuple containing (validator_address, #claims_made_so_far)
-    // note that when a validator gets removed, its address becomes 0
-    // this 0 address can appear anywhere in the array
-    num_claims: [Option<(Address, U256)>; 8],
+    // note that when a validator gets removed, the corresponding option 
+    // becomes `None` and this `None` can appear anywhere in the array
+    pub num_claims: [Option<(Address, U256)>; 8],
+    // validators that have claimed in the current unfinalized epoch
+    pub claiming: Vec<Address>, 
+    // validators that lost the disputes
+    pub validators_removed: Vec<Address>, 
+    pub num_finalized_epochs: U256,
+    pub validator_manager_address: Address,
+    pub rollups_address: Address,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

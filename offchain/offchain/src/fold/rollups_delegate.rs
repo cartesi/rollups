@@ -151,7 +151,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let validator_manager_state = self
             .validator_manager_fold
             .get_state_for_block(
-                &constants.validator_manager_contract_address,
+                &(
+                    constants.validator_contract_address,
+                    constants.rollups_contract_address,
+                ),
                 Some(block.hash),
             )
             .await
@@ -197,8 +200,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     ) -> FoldResult<Self::Accumulator, A> {
         let constants = previous_state.constants.clone();
         let output_address = constants.output_contract_address;
-        let validator_manager_address =
-            constants.validator_manager_contract_address;
+        let validator_manager_address = constants.validator_contract_address;
         let fee_manager_address = constants.fee_manager_contract_address;
 
         // get raw state from EpochFoldDelegate
@@ -234,7 +236,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let validator_manager_state = self
             .validator_manager_fold
-            .get_state_for_block(&validator_manager_address, Some(block.hash))
+            .get_state_for_block(
+                &(
+                    validator_manager_address,
+                    constants.rollups_contract_address,
+                ),
+                Some(block.hash),
+            )
             .await
             .map_err(|e| {
                 FoldDelegateError {
@@ -421,7 +429,6 @@ impl From<&(RollupsCreatedFilter, U256, Address)> for ImmutableState {
             output_contract_address: ev.output,
             validator_contract_address: ev.validator_manager,
             dispute_contract_address: ev.dispute_manager,
-            validator_manager_contract_address: ev.validator_manager,
             fee_manager_contract_address: ev.fee_manager,
             rollups_contract_address: *rollups_contract_address,
         }

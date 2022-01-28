@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 struct InitialState {
     validator_manager_address: Address,
+    rollups_address: Address,
 }
 
 pub struct ValidatorManagerDelegateManager {
@@ -45,7 +46,13 @@ impl DelegateManager for ValidatorManagerDelegateManager {
 
         let contract_state = self
             .fold
-            .get_state_for_block(&initial_state.validator_manager_address, None)
+            .get_state_for_block(
+                &(
+                    initial_state.validator_manager_address,
+                    initial_state.rollups_address,
+                ),
+                None,
+            )
             .await
             .map_err(|e| Status::new(Code::Unavailable, format!("{}", e)))?
             .state;

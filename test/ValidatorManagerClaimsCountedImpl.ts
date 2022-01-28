@@ -23,6 +23,8 @@ import { expect, use } from "chai";
 import { deployments, ethers } from "hardhat";
 import { solidity, MockProvider } from "ethereum-waffle";
 import { ValidatorManagerClaimsCountedImpl__factory } from "../dist/src/types/factories/ValidatorManagerClaimsCountedImpl__factory";
+import { RollupsImpl } from "../dist/src/types/RollupsImpl";
+import { RollupsImpl__factory } from "../dist/src/types/factories/RollupsImpl__factory";
 import { Signer } from "ethers";
 import { ValidatorManagerClaimsCountedImpl } from "../dist/src/types/ValidatorManagerClaimsCountedImpl";
 import { getState } from "./getState";
@@ -38,6 +40,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
     const provider = new MockProvider();
     var validators: string[] = [];
     let claimsMaskLibraryAddress: any;
+    let rollupsImpl: RollupsImpl;
 
     let hash_zero = ethers.constants.HashZero;
     let address_zero = "0x0000000000000000000000000000000000000000";
@@ -79,6 +82,13 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         );
         VMCC = ValidatorManagerClaimsCountedImpl__factory.connect(
             deployedVMCC.address,
+            rollups
+        );
+
+        // for delegate test only
+        const dAddress = (await deployments.get("RollupsImpl")).address;
+        rollupsImpl = RollupsImpl__factory.connect(
+            dAddress,
             rollups
         );
     });
@@ -258,6 +268,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
         if (enableDelegate) {
             let initialState = JSON.stringify({
                 validator_manager_address: VMCC.address,
+                rollups_address: rollupsImpl.address,
             });
 
             let state = JSON.parse(await getState(initialState));

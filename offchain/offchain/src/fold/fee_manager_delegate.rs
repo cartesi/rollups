@@ -126,10 +126,17 @@ impl StateFoldDelegate for FeeManagerFoldDelegate {
 
         // If not in bloom copy previous state
         if !(fold_utils::contains_address(&block.logs_bloom, &fee_manager_address)
-            && fold_utils::contains_topic(
+            && (fold_utils::contains_topic(
                 &block.logs_bloom,
-                &VoucherExecutedFilter::signature(),
-            ))
+                &FeeManagerCreatedFilter::signature(),
+            ) || fold_utils::contains_topic(
+                &block.logs_bloom,
+                &FeePerClaimResetFilter::signature(),
+            ) || fold_utils::contains_topic(
+                &block.logs_bloom,
+                &FeeRedeemedFilter::signature(),
+            )
+        ))
         {
             return Ok(previous_state.clone());
         }

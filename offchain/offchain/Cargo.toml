@@ -43,6 +43,8 @@ uuid = { version = "0.8.2", features = ["v5"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
+num_enum = "0.5.6"
+
 [build-dependencies]
 ethers = { version = "0.5.3", features = [ "legacy", "ws" ] }
 serde_json = "1.0"
