@@ -17,8 +17,6 @@ use snafu::ResultExt;
 use ethers::prelude::EthEvent;
 use ethers::types::{Address, H256, U256};
 
-use num_enum::IntoPrimitive;
-
 /// Validator Manager Delegate
 #[derive(Default)]
 pub struct ValidatorManagerFoldDelegate {}
@@ -262,7 +260,6 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             state.claiming.clear();
         }
 
-        // step 3&4:
         for ev in rollups_claim_events.iter() {
             let claim_epoch_num = ev.epoch_number;
             let v = ev.claimer;
