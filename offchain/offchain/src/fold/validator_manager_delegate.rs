@@ -1,8 +1,3 @@
-// the following must be true:
-// 1. a validator cannot claim multiple times in a single epoch
-// 2. in any epoch, there is at least 1 claim
-
-use crate::contracts::erc20_contract::*;
 use crate::contracts::rollups_contract::*;
 use crate::contracts::validator_manager_contract::*;
 
@@ -27,14 +22,6 @@ use num_enum::IntoPrimitive;
 /// Validator Manager Delegate
 #[derive(Default)]
 pub struct ValidatorManagerFoldDelegate {}
-
-#[derive(IntoPrimitive)]
-#[repr(u8)]
-enum Result {
-    NoConflict,
-    Consensus,
-    Conflict,
-}
 
 #[async_trait]
 impl StateFoldDelegate for ValidatorManagerFoldDelegate {
@@ -64,7 +51,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             )
             .await;
 
-        // declare variable types
+        // declare variables
         let mut num_claims: [Option<(Address, U256)>; 8] = [None; 8];
         let mut validators_removed: Vec<Address> = Vec::new();
         let mut claiming: Vec<Address> = Vec::new(); // validators that have claimed in the current unfinalized epoch
@@ -109,7 +96,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         // step 1: `dispute_ended_events`. For validator lost dispute, add to removal list; for validator won, do nothing
         // step 2: for every finalized epoch, if a validator made a claim, and its address has not been removed, then #claims++.
         //          Those who made a false claim have been removed in step 1 already.
-        // step 3: for epoch that hasn't been finalized (no more than 1 such epoch), store which validators have claimed
+        // step 3: for epoch that hasn't been finalized (no more than 1 such epoch), store which honest validators have claimed
         //          No need to store the claim content. Because the dishonest will be removed before epoch finalized
 
         // step 1:
@@ -118,30 +105,29 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             validators_removed.push(losing_validator);
         }
 
-        // step 2&3:
         let num_finalized_epochs = U256::from(new_epoch_events.len());
         for ev in rollups_claim_events.iter() {
             let claim_epoch_num = ev.epoch_number;
+            let claimer = ev.claimer;
+            if validators_removed.contains(&claimer) {
+                continue;
+            }
             if claim_epoch_num < num_finalized_epochs {
                 // step 2
-                let claimer = ev.claimer;
-                if !validators_removed.contains(&claimer) {
-                    for i in 0..8 {
-                        if let Some((addr, num)) = num_claims[i] {
-                            if addr == claimer {
-                                num_claims[i] = Some((addr, num + 1));
-                                break;
-                            } else {
-                                continue;
-                            }
-                        }
-                        if let None = num_claims[i] {
-                            // at this stage, there's no `None` between `Some`
-                            num_claims[i] = Some((claimer, U256::one()));
+                for i in 0..8 {
+                    // find claimer in `num_claims`
+                    if let Some((addr, num)) = num_claims[i] {
+                        if addr == claimer {
+                            num_claims[i] = Some((addr, num + 1));
+                            break;
+                        } else {
+                            continue;
                         }
                     }
-                } else {
-                    continue;
+                    if let None = num_claims[i] {
+                        // at this stage, there's no `None` between `Some`
+                        num_claims[i] = Some((claimer, U256::one()));
+                    }
                 }
             } else {
                 // step 3
@@ -168,7 +154,9 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         let validator_manager_address =
             previous_state.validator_manager_address;
         let rollups_address = previous_state.rollups_address;
-        // If not in bloom copy previous state
+        // the following logic is: if `validator_manager_address` and any of its events are in the bloom,
+        // or if `rollups_address` and `ClaimFilter` event are in the bloom, then skip this `if` statement and do the logic below.
+        // Otherwise, return the previous state
         if !((fold_utils::contains_address(
             &block.logs_bloom,
             &validator_manager_address,
@@ -233,12 +221,12 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
                 },
             )?;
 
-        // step 1: `dispute_ended_events`. For validator lost dispute, add to removal list and remove address and #claims;
+        // step 1: `dispute_ended_events`. For validator lost dispute, add to removal list and also remove address and #claims;
         //          for validator won, do nothing
         // step 2: if there are new_epoch_events, increase #claims for those in `claiming` but not in `validators_removed`.
         //          And clear `claiming`
         // step 3: for every finalized epoch, if a validator made a claim, and its address has not been removed, then #claims++
-        // step 4: for epoch that hasn't been finalized (no more than 1 such epoch), store which validators have claimed
+        // step 4: for epoch that hasn't been finalized (no more than 1 such epoch), store which honest validators have claimed
 
         // step 1:
         for ev in dispute_ended_events.iter() {
@@ -268,7 +256,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
                 if state.validators_removed.contains(v) {
                     continue;
                 }
-                state = find_validator_and_increase(*v, state);
+                find_validator_and_increase(*v, &mut state);
             }
 
             state.claiming.clear();
@@ -277,16 +265,16 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         // step 3&4:
         for ev in rollups_claim_events.iter() {
             let claim_epoch_num = ev.epoch_number;
+            let v = ev.claimer;
+            if state.validators_removed.contains(&v) {
+                continue;
+            }
             if claim_epoch_num < state.num_finalized_epochs {
                 // step 3
-                let v = ev.claimer;
-                if state.validators_removed.contains(&v) {
-                    continue;
-                }
-                state = find_validator_and_increase(v, state);
+                find_validator_and_increase(v, &mut state);
             } else {
                 // step 4
-                state.claiming.push(ev.claimer);
+                state.claiming.push(v);
             }
         }
 
@@ -303,8 +291,8 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
 
 fn find_validator_and_increase(
     v: Address,
-    mut state: ValidatorManagerState,
-) -> ValidatorManagerState {
+    state: &mut ValidatorManagerState,
+) {
     // there can be `None` between `Some`
     let mut found = false;
     for i in 0..8 {
@@ -317,6 +305,7 @@ fn find_validator_and_increase(
         }
     }
     if !found {
+        // if not found, add to `num_claims`
         for i in 0..8 {
             if let None = state.num_claims[i] {
                 state.num_claims[i] = Some((v, U256::one()));
@@ -324,5 +313,4 @@ fn find_validator_and_increase(
             }
         }
     }
-    state
 }
