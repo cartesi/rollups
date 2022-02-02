@@ -52,9 +52,13 @@ describe("Validator Manager Facet", async () => {
     beforeEach(async () => {
         await deployments.fixture(["DebugDiamond"]);
         [, signer] = await ethers.getSigners();
-        const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
+        const diamondAddress = (await deployments.get("CartesiRollupsDebug"))
+            .address;
         rollupsFacet = RollupsFacet__factory.connect(diamondAddress, signer);
-        validatorManagerFacet = ValidatorManagerFacet__factory.connect(diamondAddress, signer);
+        validatorManagerFacet = ValidatorManagerFacet__factory.connect(
+            diamondAddress,
+            signer
+        );
         debugFacet = DebugFacet__factory.connect(diamondAddress, signer);
         validators = await debugFacet._getValidators();
     });
@@ -102,6 +106,26 @@ describe("Validator Manager Facet", async () => {
             debugFacet._onClaim(address_one, claim),
             "should revert if sender is not in validators array"
         ).to.be.revertedWith("sender not allowed");
+    });
+
+    it("onClaim should revert if sender has already claimed before", async () => {
+        var claim = "0x" + "1".repeat(64);
+        for (var i = 0; i < validators.length; i++) {
+            // let validators all make a claim
+            await debugFacet._onClaim(validators[i], claim);
+
+            // they should not be able to claim again in the same epoch
+            await expect(
+                debugFacet._onClaim(validators[i], claim),
+                "should revert since validator has already claimed before"
+            ).to.be.revertedWith("sender had claimed in this epoch before");
+        }
+
+        // after entering into a new epoch, validators should be able to claim again
+        await debugFacet._onNewEpochVM();
+        for (var i = 0; i < validators.length; i++) {
+            await debugFacet._onClaim(validators[i], claim);
+        }
     });
 
     it("onClaim NoConflict and Consensus", async () => {
@@ -154,7 +178,9 @@ describe("Validator Manager Facet", async () => {
         // callStatic: check return value
         var lastValidator = validators[validators.length - 1];
         expect(
-            JSON.stringify(await debugFacet.callStatic._onClaim(lastValidator, claim)),
+            JSON.stringify(
+                await debugFacet.callStatic._onClaim(lastValidator, claim)
+            ),
             "use callStatic to check return value of onClaim() when Consensus"
         ).to.equal(
             JSON.stringify([
@@ -180,7 +206,7 @@ describe("Validator Manager Facet", async () => {
         currentAgreementMask =
             currentAgreementMask | (1 << (validators.length - 1));
         expect(
-                await validatorManagerFacet.getAgreementMask(),
+            await validatorManagerFacet.getAgreementMask(),
             "check currentAgreementMask"
         ).to.equal(currentAgreementMask);
     });
@@ -202,7 +228,9 @@ describe("Validator Manager Facet", async () => {
 
         // callStatic: check return value
         expect(
-            JSON.stringify(await debugFacet.callStatic._onClaim(validators[1], claim2)),
+            JSON.stringify(
+                await debugFacet.callStatic._onClaim(validators[1], claim2)
+            ),
             "use callStatic to check return value of onClaim() when conflict"
         ).to.equal(
             JSON.stringify([
@@ -368,7 +396,11 @@ describe("Validator Manager Facet", async () => {
 
         // make all other validators but last defending the losing dispute
         for (var i = 1; i < validators.length - 2; i++) {
-            await debugFacet._onDisputeEnd(lastValidator, validators[i], claim2);
+            await debugFacet._onDisputeEnd(
+                lastValidator,
+                validators[i],
+                claim2
+            );
         }
 
         // honest validator by himself can generate consensus
@@ -420,7 +452,11 @@ describe("Validator Manager Facet", async () => {
 
         // make all other validators but the last two defending the losing dispute
         for (var i = 0; i < validators.length - 3; i++) {
-            await debugFacet._onDisputeEnd(lastValidator, validators[i], claim2);
+            await debugFacet._onDisputeEnd(
+                lastValidator,
+                validators[i],
+                claim2
+            );
         }
         // honest validator winning the last dispute
         // callStatic: check return value
@@ -460,7 +496,10 @@ describe("Validator Manager Facet", async () => {
         // callStatic: check return value
         expect(
             JSON.stringify(
-                await debugFacet.callStatic._onClaim(secondLastValidator, claim2)
+                await debugFacet.callStatic._onClaim(
+                    secondLastValidator,
+                    claim2
+                )
             ),
             "use callStatic to check return value of onClaim() to finalize consensus"
         ).to.equal(

@@ -174,6 +174,13 @@ library LibValidatorManager {
         require(claim != bytes32(0), "empty claim");
         require(isValidator(ds, sender), "sender not allowed");
 
+        // require the validator hasn't claimed in the same epoch before
+        uint256 index = getValidatorIndex(ds, sender);
+        require(
+            !ds.claimsMask.hasAgreed(index),
+            "sender had claimed in this epoch before"
+        );
+
         // cant return because a single claim might mean consensus
         if (ds.currentClaim == bytes32(0)) {
             ds.currentClaim = claim;

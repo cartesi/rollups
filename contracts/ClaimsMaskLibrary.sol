@@ -116,6 +116,20 @@ library ClaimsMaskLibrary {
         return (ClaimsMask.unwrap(_claimsMask) >> 248); // get the first 8 bits
     }
 
+    /// @notice check if a validator has agreed with the current claim
+    /// @param  _claimsMask the ClaimsMask value
+    /// @param  _validatorIndex index of the validator in the validator array, starting from 0
+    function hasAgreed(ClaimsMask _claimsMask, uint256 _validatorIndex)
+        public
+        pure
+        returns (bool)
+    {
+        // get the first 8 bits. Then & operation on the validator's bit to see if it's set
+        return
+            (((ClaimsMask.unwrap(_claimsMask) >> 248) >> _validatorIndex) &
+                1) != 0;
+    }
+
     /// @notice set agreement mask for the specified validator
     /// @param  _claimsMask the ClaimsMask value
     /// @param  _validatorIndex index of the validator in the validator array, starting from 0

@@ -258,6 +258,40 @@ describe("Test ClaimsMaskLibrary", () => {
         ).to.equal(4);
     });
 
+    it("check if a validator has agreed", async () => {
+        // let agreement mask initially be 00000000, which means no validator has agreed yet
+        let claimsMask = await claimsMaskLibrary.newClaimsMask(0);
+        for (let i = 0; i < 8; i++) {
+            expect(
+                await claimsMaskLibrary.hasAgreed(claimsMask, i),
+                "initial no one has agreed"
+            ).to.equal(false);
+        }
+
+        // let agreement mask initially be 00000001
+        //                            then 00000011
+        //                            then 00000111
+        //                           until 11111111
+        claimsMask = BigNumber.from(2).pow(256 - 8); // 1 << 248
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                if (j <= i) {
+                    expect(
+                        await claimsMaskLibrary.hasAgreed(claimsMask, j),
+                        "validator j has agreed"
+                    ).to.equal(true);
+                } else {
+                    expect(
+                        await claimsMaskLibrary.hasAgreed(claimsMask, j),
+                        "validator j has not agreed"
+                    ).to.equal(false);
+                }
+            }
+            // let 0x1 become 0x11 then 0x111 and so on until 0x11111111
+            claimsMask = claimsMask.mul(2).add(BigNumber.from(2).pow(256 - 8));
+        }
+    });
+
     it("clear agreement mask", async () => {
         // let agreement mask be 11111111
         let claimsMask = ethers.constants.MaxUint256;
