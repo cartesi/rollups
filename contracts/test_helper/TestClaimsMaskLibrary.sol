@@ -79,12 +79,12 @@ contract TestClaimsMaskLibrary {
         return ClaimsMaskLibrary.getAgreementMask(_claimsMask);
     }
 
-    function hasAgreed(ClaimsMask _claimsMask, uint256 _validatorIndex)
+    function alreadyClaimed(ClaimsMask _claimsMask, uint256 _validatorIndex)
         public
         pure
         returns (bool)
     {
-        return ClaimsMaskLibrary.hasAgreed(_claimsMask, _validatorIndex);
+        return ClaimsMaskLibrary.alreadyClaimed(_claimsMask, _validatorIndex);
     }
 
     function setAgreementMask(ClaimsMask _claimsMask, uint256 _validatorIndex)

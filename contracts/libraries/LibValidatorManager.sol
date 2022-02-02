@@ -177,7 +177,7 @@ library LibValidatorManager {
         // require the validator hasn't claimed in the same epoch before
         uint256 index = getValidatorIndex(ds, sender);
         require(
-            !ds.claimsMask.hasAgreed(index),
+            !ds.claimsMask.alreadyClaimed(index),
             "sender had claimed in this epoch before"
         );
 

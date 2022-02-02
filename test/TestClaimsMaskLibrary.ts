@@ -263,8 +263,8 @@ describe("Test ClaimsMaskLibrary", () => {
         let claimsMask = await claimsMaskLibrary.newClaimsMask(0);
         for (let i = 0; i < 8; i++) {
             expect(
-                await claimsMaskLibrary.hasAgreed(claimsMask, i),
-                "initial no one has agreed"
+                await claimsMaskLibrary.alreadyClaimed(claimsMask, i),
+                "initial no one has claimed"
             ).to.equal(false);
         }
 
@@ -277,13 +277,13 @@ describe("Test ClaimsMaskLibrary", () => {
             for (let j = 0; j < 8; j++) {
                 if (j <= i) {
                     expect(
-                        await claimsMaskLibrary.hasAgreed(claimsMask, j),
-                        "validator j has agreed"
+                        await claimsMaskLibrary.alreadyClaimed(claimsMask, j),
+                        "validator j has already claimed"
                     ).to.equal(true);
                 } else {
                     expect(
-                        await claimsMaskLibrary.hasAgreed(claimsMask, j),
-                        "validator j has not agreed"
+                        await claimsMaskLibrary.alreadyClaimed(claimsMask, j),
+                        "validator j has not claimed"
                     ).to.equal(false);
                 }
             }

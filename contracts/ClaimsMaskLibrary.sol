@@ -116,10 +116,10 @@ library ClaimsMaskLibrary {
         return (ClaimsMask.unwrap(_claimsMask) >> 248); // get the first 8 bits
     }
 
-    /// @notice check if a validator has agreed with the current claim
+    /// @notice check if a validator has already claimed
     /// @param  _claimsMask the ClaimsMask value
     /// @param  _validatorIndex index of the validator in the validator array, starting from 0
-    function hasAgreed(ClaimsMask _claimsMask, uint256 _validatorIndex)
+    function alreadyClaimed(ClaimsMask _claimsMask, uint256 _validatorIndex)
         public
         pure
         returns (bool)
