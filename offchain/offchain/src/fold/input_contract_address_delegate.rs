@@ -40,10 +40,8 @@ impl StateFoldDelegate for InputContractAddressFoldDelegate {
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract = RollupsImpl::new(
-            rollups_contract_address,
-            Arc::clone(&middleware),
-        );
+        let contract =
+            RollupsImpl::new(rollups_contract_address, Arc::clone(&middleware));
 
         let input_contract_address =
             contract.get_input_address().call().await.ok().unwrap();

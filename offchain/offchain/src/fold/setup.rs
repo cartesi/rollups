@@ -1,6 +1,7 @@
 use super::*;
 use state_fold::{config::SFConfig, DelegateAccess, StateFold};
 
+use crate::fold::erc20_token_delegate::ERC20BalanceFoldDelegate;
 use crate::fold::fee_manager_delegate::FeeManagerFoldDelegate;
 use crate::fold::validator_manager_delegate::ValidatorManagerFoldDelegate;
 use std::sync::Arc;
@@ -70,12 +71,25 @@ pub fn create_validator_manager<DA: DelegateAccess + Send + Sync + 'static>(
     Arc::new(state_fold)
 }
 
-pub type FeeManagerStateFold<DA> = Arc<StateFold<FeeManagerFoldDelegate, DA>>;
+pub type FeeManagerStateFold<DA> =
+    Arc<StateFold<FeeManagerFoldDelegate<DA>, DA>>;
 pub fn create_fee_manager<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SFConfig,
 ) -> FeeManagerStateFold<DA> {
-    let delegate = FeeManagerFoldDelegate::default();
+    let erc20_balance_fold = create_erc20_balance(Arc::clone(&access), config);
+    let delegate = FeeManagerFoldDelegate::new(erc20_balance_fold);
+    let state_fold = StateFold::new(delegate, access, config.safety_margin);
+    Arc::new(state_fold)
+}
+
+pub type ERC20BalanceStateFold<DA> =
+    Arc<StateFold<ERC20BalanceFoldDelegate, DA>>;
+pub fn create_erc20_balance<DA: DelegateAccess + Send + Sync + 'static>(
+    access: Arc<DA>,
+    config: &SFConfig,
+) -> ERC20BalanceStateFold<DA> {
+    let delegate = ERC20BalanceFoldDelegate::default();
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }

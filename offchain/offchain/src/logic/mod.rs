@@ -1,6 +1,6 @@
 pub mod config;
-pub mod rollups_logic;
 pub mod instantiate_state_fold;
+pub mod rollups_logic;
 
 // pub use super::error;
 // pub use super::fold;

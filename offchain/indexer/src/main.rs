@@ -6,8 +6,7 @@ use indexer::error::BadConfiguration;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    let indexer_config = IndexerConfig::initialize()
-        .map_err(|e| {
+    let indexer_config = IndexerConfig::initialize().map_err(|e| {
         BadConfiguration {
             err: format!("Fail to intialize indexer config: {}", e),
         }

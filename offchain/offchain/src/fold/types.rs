@@ -307,19 +307,38 @@ pub struct ImmutableState {
     pub rollups_contract_address: Address,
 }
 
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+pub struct NumClaims {
+    pub validator_address: Address,
+    pub num_claims_mades: U256,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ValidatorManagerState {
     // each tuple containing (validator_address, #claims_made_so_far)
-    // note that when a validator gets removed, the corresponding option 
+    // note that when a validator gets removed, the corresponding option
     // becomes `None` and this `None` can appear anywhere in the array
-    pub num_claims: [Option<(Address, U256)>; 8],
+    pub num_claims: [Option<NumClaims>; 8],
     // validators that have claimed in the current unfinalized epoch
-    pub claiming: Vec<Address>, 
+    pub claiming: Vec<Address>,
     // validators that lost the disputes
-    pub validators_removed: Vec<Address>, 
+    pub validators_removed: Vec<Address>,
     pub num_finalized_epochs: U256,
     pub validator_manager_address: Address,
     pub rollups_address: Address,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ERC20BalanceState {
+    pub erc20_address: Address,
+    pub owner_address: Address,
+    pub balance: U256,
+}
+
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+pub struct NumRedeemed {
+    pub validator_address: Address,
+    pub num_claims_redeemed: U256,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -328,7 +347,7 @@ pub struct FeeManagerState {
     pub erc20_address: Address,
     pub fee_per_claim: U256, // only the current value
     /// Tuple containing (validator, #claims_redeemed_so_far)
-    pub validator_redeemed: [Option<(Address, U256)>; 8],
+    pub validator_redeemed: [Option<NumRedeemed>; 8],
     pub fee_manager_balance: U256,
     /// Balance of fee manager contract minus amount of to-be-redeemed fees
     // pub leftover_balance: I256, // implement this after validator manager delegeate

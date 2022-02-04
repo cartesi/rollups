@@ -119,17 +119,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (rollups_contract_address, epoch_number) =
-            initial_state.clone();
+        let (rollups_contract_address, epoch_number) = initial_state.clone();
 
         let middleware = access
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract = RollupsImpl::new(
-            rollups_contract_address,
-            Arc::clone(&middleware),
-        );
+        let contract =
+            RollupsImpl::new(rollups_contract_address, Arc::clone(&middleware));
 
         let input_contract_address = self
             .get_input_contract_address_sync(
@@ -312,10 +309,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> SealedEpochFoldDelegate<DA> {
     ) -> SyncResult<Address, A> {
         Ok(self
             .input_contract_address_fold
-            .get_state_for_block(
-                &rollups_contract_address,
-                Some(block_hash),
-            )
+            .get_state_for_block(&rollups_contract_address, Some(block_hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {

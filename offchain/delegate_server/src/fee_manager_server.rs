@@ -18,7 +18,9 @@ struct InitialState {
 pub struct FeeManagerDelegateManager {
     pub fold: Arc<
         StateFold<
-            offchain::fold::fee_manager_delegate::FeeManagerFoldDelegate,
+            offchain::fold::fee_manager_delegate::FeeManagerFoldDelegate<
+                Access<Provider<Http>>,
+            >,
             Access<Provider<Http>>,
         >,
     >,

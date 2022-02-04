@@ -104,10 +104,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract = RollupsImpl::new(
-            rollups_contract_address,
-            Arc::clone(&middleware),
-        );
+        let contract =
+            RollupsImpl::new(rollups_contract_address, Arc::clone(&middleware));
 
         // retrieve list of finalized epochs from FinalizedEpochFoldDelegate
         let finalized_epochs = self
@@ -271,8 +269,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let rollups_contract_address =
-            previous_state.rollups_contract_address;
+        let rollups_contract_address = previous_state.rollups_contract_address;
         // Check if there was (possibly) some log emited on this block.
         if !(fold_utils::contains_address(
             &block.logs_bloom,

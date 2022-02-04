@@ -33,7 +33,7 @@ pub struct RollupsFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
     epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
     output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
     validator_manager_fold: Arc<StateFold<ValidatorManagerFoldDelegate, DA>>,
-    fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate, DA>>,
+    fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate<DA>, DA>>,
 }
 
 impl<DA: DelegateAccess + Send + Sync + 'static> RollupsFoldDelegate<DA> {
@@ -43,7 +43,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> RollupsFoldDelegate<DA> {
         validator_manager_fold: Arc<
             StateFold<ValidatorManagerFoldDelegate, DA>,
         >,
-        fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate, DA>>,
+        fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate<DA>, DA>>,
     ) -> Self {
         Self {
             epoch_fold,

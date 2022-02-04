@@ -127,8 +127,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let rollups_contract_address =
-            previous_state.rollups_contract_address;
+        let rollups_contract_address = previous_state.rollups_contract_address;
 
         // Check if there was (possibly) some log emited on this block.
         // As finalized epochs' inputs will not change, we can return early
@@ -218,10 +217,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
     ) -> SyncResult<Address, A> {
         Ok(self
             .input_contract_address_fold
-            .get_state_for_block(
-                &rollups_contract_address,
-                Some(block_hash),
-            )
+            .get_state_for_block(&rollups_contract_address, Some(block_hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {

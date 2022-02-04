@@ -1,31 +1,40 @@
 use crate::contracts::fee_manager_contract::*;
-use crate::contracts::erc20_contract::*;
 
-use super::types::FeeManagerState;
+use super::types::{FeeManagerState, NumRedeemed};
 
 use offchain_core::types::Block;
 use state_fold::{
     delegate_access::{FoldAccess, SyncAccess},
     error::*,
     types::*,
-    utils as fold_utils,
+    utils as fold_utils, DelegateAccess, StateFold,
 };
 
+use crate::fold::erc20_token_delegate::ERC20BalanceFoldDelegate;
 use async_trait::async_trait;
-use snafu::ResultExt;
-
 use ethers::prelude::EthEvent;
 use ethers::types::{Address, U256};
-
 use im::HashMap;
-use crate::contracts::output_contract::VoucherExecutedFilter;
+use snafu::ResultExt;
+use std::sync::Arc;
 
 /// Fee Manager Delegate
-#[derive(Default)]
-pub struct FeeManagerFoldDelegate {}
+pub struct FeeManagerFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
+    erc20_balance_fold: Arc<StateFold<ERC20BalanceFoldDelegate, DA>>,
+}
+
+impl<DA: DelegateAccess + Send + Sync + 'static> FeeManagerFoldDelegate<DA> {
+    pub fn new(
+        erc20_balance_fold: Arc<StateFold<ERC20BalanceFoldDelegate, DA>>,
+    ) -> Self {
+        Self { erc20_balance_fold }
+    }
+}
 
 #[async_trait]
-impl StateFoldDelegate for FeeManagerFoldDelegate {
+impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
+    for FeeManagerFoldDelegate<DA>
+{
     type InitialState = Address;
     type Accumulator = FeeManagerState;
     type State = BlockState<Self::Accumulator>;
@@ -37,23 +46,31 @@ impl StateFoldDelegate for FeeManagerFoldDelegate {
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
         let contract = access
-            .build_sync_contract(*fee_manager_address, block.number, FeeManagerImpl::new)
+            .build_sync_contract(
+                *fee_manager_address,
+                block.number,
+                FeeManagerImpl::new,
+            )
             .await;
 
         // `fee_manager_created` event
-        let events = contract.fee_manager_created_filter().query().await.context(
-            SyncContractError {
+        let events = contract
+            .fee_manager_created_filter()
+            .query()
+            .await
+            .context(SyncContractError {
                 err: "Error querying for fee manager created events",
-            },
-        )?;
+            })?;
         let created_event = events.first().unwrap();
 
         // `FeePerClaimReset` event
-        let events = contract.fee_per_claim_reset_filter().query().await.context(
-            SyncContractError {
+        let events = contract
+            .fee_per_claim_reset_filter()
+            .query()
+            .await
+            .context(SyncContractError {
                 err: "Error querying for fee_per_claim reset events",
-            },
-        )?;
+            })?;
         // only need the last event to set to the current value
         let fee_per_claim = if let Some(e) = events.iter().last() {
             e.value
@@ -67,44 +84,42 @@ impl StateFoldDelegate for FeeManagerFoldDelegate {
                 err: "Error querying for fee redeemed events",
             },
         )?;
-        let mut validator_redeemed: [Option<(Address, U256)>; 8] = [None; 8];
-        let mut validator_redeemed_sums: HashMap<Address, U256> = HashMap::new();
+        let mut validator_redeemed: [Option<NumRedeemed>; 8] = [None; 8];
+        let mut validator_redeemed_sums: HashMap<Address, U256> =
+            HashMap::new();
         for ev in events.iter() {
             match validator_redeemed_sums.get(&ev.validator) {
-                Some(amount) => validator_redeemed_sums[&ev.validator] = amount + ev.amount,
+                Some(amount) => {
+                    validator_redeemed_sums[&ev.validator] = amount + ev.amount
+                }
                 None => validator_redeemed_sums[&ev.validator] = ev.amount,
             }
         }
         for (index, sum) in validator_redeemed_sums.iter().enumerate() {
-            validator_redeemed[index] = Some((*sum.0, *sum.1));
+            validator_redeemed[index] = Some(NumRedeemed {
+                validator_address: *sum.0,
+                num_claims_redeemed: *sum.1,
+            });
         }
 
         // obtain fee manager balance
         let erc20_address = created_event.erc20;
-        let erc20_contract = access
-            .build_sync_contract(erc20_address, block.number, ERC20::new)
-            .await;
-        // `Transfer` events
-        let erc20_events = erc20_contract.transfer_filter().query().await.context(
-            SyncContractError {
-                err: "Error querying for erc20 transfer events",
-            },
-        )?;
-        // balance = income - expense
-        let mut income: U256 = U256::zero();
-        let mut expense: U256 = U256::zero();
-        for ev in erc20_events.iter() {
-            if ev.to == erc20_address {
-                income = income + ev.value;
-            } 
-            if ev.from == erc20_address {
-                expense = expense + ev.value;
-            }
-        }
-        if expense > income {
-            panic!("spend more than fee manager has!");
-        }
-        let fee_manager_balance = income - expense;
+        let erc20_balance_state = self
+            .erc20_balance_fold
+            .get_state_for_block(
+                &(erc20_address, *fee_manager_address),
+                Some(block.hash),
+            )
+            .await
+            .map_err(|e| {
+                SyncDelegateError {
+                    err: format!("ERC20 balance state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
+        let fee_manager_balance = erc20_balance_state.balance;
 
         Ok(FeeManagerState {
             validator_manager_address: created_event.validator_manager_cci,
@@ -125,34 +140,40 @@ impl StateFoldDelegate for FeeManagerFoldDelegate {
         let fee_manager_address = previous_state.fee_manager_address;
 
         // If not in bloom copy previous state
-        if !(fold_utils::contains_address(&block.logs_bloom, &fee_manager_address)
-            && (fold_utils::contains_topic(
-                &block.logs_bloom,
-                &FeeManagerCreatedFilter::signature(),
-            ) || fold_utils::contains_topic(
-                &block.logs_bloom,
-                &FeePerClaimResetFilter::signature(),
-            ) || fold_utils::contains_topic(
-                &block.logs_bloom,
-                &FeeRedeemedFilter::signature(),
-            )
-        ))
-        {
+        if !(fold_utils::contains_address(
+            &block.logs_bloom,
+            &fee_manager_address,
+        ) && (fold_utils::contains_topic(
+            &block.logs_bloom,
+            &FeeManagerCreatedFilter::signature(),
+        ) || fold_utils::contains_topic(
+            &block.logs_bloom,
+            &FeePerClaimResetFilter::signature(),
+        ) || fold_utils::contains_topic(
+            &block.logs_bloom,
+            &FeeRedeemedFilter::signature(),
+        ))) {
             return Ok(previous_state.clone());
         }
 
         let contract = access
-            .build_fold_contract(fee_manager_address, block.hash, FeeManagerImpl::new)
+            .build_fold_contract(
+                fee_manager_address,
+                block.hash,
+                FeeManagerImpl::new,
+            )
             .await;
 
         let mut state = previous_state.clone();
 
         // `FeePerClaimReset` event
-        let events = contract.fee_per_claim_reset_filter().query().await.context(
-            FoldContractError {
+        let events = contract
+            .fee_per_claim_reset_filter()
+            .query()
+            .await
+            .context(FoldContractError {
                 err: "Error querying for fee_per_claim reset events",
-            },
-        )?;
+            })?;
         // only need the last event to set to the current value
         if let Some(e) = events.iter().last() {
             state.fee_per_claim = e.value;
@@ -165,22 +186,34 @@ impl StateFoldDelegate for FeeManagerFoldDelegate {
             },
         )?;
         // newly redeemed
-        let mut validator_redeemed_sums: HashMap<Address, U256> = HashMap::new();
+        let mut validator_redeemed_sums: HashMap<Address, U256> =
+            HashMap::new();
         for ev in events.iter() {
-            let amount = validator_redeemed_sums.get(&ev.validator)
+            let amount = validator_redeemed_sums
+                .get(&ev.validator)
                 .map(|v| *v)
                 .unwrap_or(U256::zero());
 
             validator_redeemed_sums.insert(ev.validator, amount + ev.amount);
-        };
+        }
         // update to the state.validator_redeemed array
-        for (&validator_address, &newly_redeemed) in validator_redeemed_sums.iter() {
+        for (&validator_address, &newly_redeemed) in
+            validator_redeemed_sums.iter()
+        {
             let mut found = false;
             // find if address exist in the array
             for index in 0..8 {
-                if let Some((address, pre_redeemed)) = state.validator_redeemed[index] {
-                    if address == validator_address { // found validator, update #redeemed
-                        state.validator_redeemed[index] = Some((address, pre_redeemed+newly_redeemed));
+                if let Some(num_redeemed_struct) =
+                    &state.validator_redeemed[index]
+                {
+                    let address = num_redeemed_struct.validator_address;
+                    let pre_redeemed = num_redeemed_struct.num_claims_redeemed;
+                    if address == validator_address {
+                        // found validator, update #redeemed
+                        state.validator_redeemed[index] = Some(NumRedeemed {
+                            validator_address: address,
+                            num_claims_redeemed: pre_redeemed + newly_redeemed,
+                        });
                         found = true;
                         break;
                     }
@@ -192,7 +225,10 @@ impl StateFoldDelegate for FeeManagerFoldDelegate {
 
                 for index in 0..8 {
                     if let None = state.validator_redeemed[index] {
-                        state.validator_redeemed[index] = Some((validator_address, newly_redeemed));
+                        state.validator_redeemed[index] = Some(NumRedeemed {
+                            validator_address: validator_address,
+                            num_claims_redeemed: newly_redeemed,
+                        });
                         create_new = true;
                         break;
                     };
@@ -202,34 +238,25 @@ impl StateFoldDelegate for FeeManagerFoldDelegate {
                     panic!("no space for validator {}", validator_address);
                 }
             }
-        };
+        }
 
         // update fee manager balance
-        let erc20_address = previous_state.erc20_address;
-        let erc20_contract = access
-            .build_fold_contract(erc20_address, block.hash, ERC20::new)
-            .await;
-        // `Transfer` events
-        let erc20_events = erc20_contract.transfer_filter().query().await.context(
-            FoldContractError {
-                err: "Error querying for erc20 transfer events",
-            },
-        )?;
-        // balance change = income - expense
-        let mut income: U256 = U256::zero();
-        let mut expense: U256 = U256::zero();
-        for ev in erc20_events.iter() {
-            if ev.to == erc20_address {
-                income = income + ev.value;
-            }
-            if ev.from == erc20_address {
-                expense = expense + ev.value;
-            }
-        }
-        if expense > income + state.fee_manager_balance {
-            panic!("spend more than fee manager has!");
-        }
-        state.fee_manager_balance = state.fee_manager_balance + income - expense;
+        let erc20_balance_state = self
+            .erc20_balance_fold
+            .get_state_for_block(
+                &(state.erc20_address, state.fee_manager_address),
+                Some(block.hash),
+            )
+            .await
+            .map_err(|e| {
+                FoldDelegateError {
+                    err: format!("ERC20 balance state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
+        state.fee_manager_balance = erc20_balance_state.balance;
 
         Ok(state)
     }

@@ -1,6 +1,6 @@
-use configuration::error as config_error;
-use configuration::config::EnvCLIConfig;
 use configuration::config::Config;
+use configuration::config::EnvCLIConfig;
+use configuration::error as config_error;
 
 use serde::Deserialize;
 use snafu::ResultExt;

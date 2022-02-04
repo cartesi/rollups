@@ -79,7 +79,7 @@ describe("FeeManager Implementation", () => {
 
             let state = JSON.parse(await getState(initialState));
 
-            // console.log(state);
+            console.log(state);
         }
     });
 

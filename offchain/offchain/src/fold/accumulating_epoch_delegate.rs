@@ -119,10 +119,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static>
     ) -> SyncResult<Address, A> {
         Ok(self
             .input_contract_address_fold
-            .get_state_for_block(
-                &rollups_contract_address,
-                Some(block_hash),
-            )
+            .get_state_for_block(&rollups_contract_address, Some(block_hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {

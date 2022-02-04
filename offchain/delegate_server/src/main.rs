@@ -73,10 +73,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await
         }
         DelegateServerType::ValidatorManager => {
-            let validator_manager_fold = delegate_server::instantiate_validator_manager_fold_delegate(
-                &sf_config,
-                basic_config.url.clone(),
-            );
+            let validator_manager_fold =
+                delegate_server::instantiate_validator_manager_fold_delegate(
+                    &sf_config,
+                    basic_config.url.clone(),
+                );
 
             serve_delegate_manager(
                 SERVER_ADDRESS,
@@ -88,10 +89,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await
         }
         DelegateServerType::FeeManager => {
-            let fee_manager_fold = delegate_server::instantiate_fee_manager_fold_delegate(
-                &sf_config,
-                basic_config.url.clone(),
-            );
+            let fee_manager_fold =
+                delegate_server::instantiate_fee_manager_fold_delegate(
+                    &sf_config,
+                    basic_config.url.clone(),
+                );
 
             serve_delegate_manager(
                 SERVER_ADDRESS,

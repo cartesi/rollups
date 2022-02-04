@@ -1,7 +1,7 @@
 use crate::contracts::rollups_contract::*;
 use crate::contracts::validator_manager_contract::*;
 
-use super::types::ValidatorManagerState;
+use super::types::{NumClaims, ValidatorManagerState};
 
 use offchain_core::types::Block;
 use state_fold::{
@@ -15,7 +15,7 @@ use async_trait::async_trait;
 use snafu::ResultExt;
 
 use ethers::prelude::EthEvent;
-use ethers::types::{Address, H256, U256};
+use ethers::types::{Address, U256};
 
 /// Validator Manager Delegate
 #[derive(Default)]
@@ -50,14 +50,14 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             .await;
 
         // declare variables
-        let mut num_claims: [Option<(Address, U256)>; 8] = [None; 8];
+        let mut num_claims: [Option<NumClaims>; 8] = [None; 8];
         let mut validators_removed: Vec<Address> = Vec::new();
         let mut claiming: Vec<Address> = Vec::new(); // validators that have claimed in the current unfinalized epoch
 
         // retrive events
 
         // DisputeEnded event
-        let mut dispute_ended_events = validator_manager_contract
+        let dispute_ended_events = validator_manager_contract
             .dispute_ended_filter()
             .query()
             .await
@@ -66,22 +66,13 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             })?;
 
         // NewEpoch event
-        let mut new_epoch_events = validator_manager_contract
+        let new_epoch_events = validator_manager_contract
             .new_epoch_filter()
             .query()
             .await
             .context(SyncContractError {
                 err: "Error querying for new epoch events",
             })?;
-
-        // // ClaimReceived event (not needed, use rollups_claim_events instead)
-        // let claim_received_events = validator_manager_contract
-        //     .claim_received_filter()
-        //     .query()
-        //     .await
-        //     .context(SyncContractError {
-        //         err: "Error querying for claim received events",
-        //     })?;
 
         // RollupsImpl Claim event
         let rollups_claim_events =
@@ -114,9 +105,14 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
                 // step 2
                 for i in 0..8 {
                     // find claimer in `num_claims`
-                    if let Some((addr, num)) = num_claims[i] {
+                    if let Some(num_claims_struct) = &num_claims[i] {
+                        let addr = num_claims_struct.validator_address;
+                        let num = num_claims_struct.num_claims_mades;
                         if addr == claimer {
-                            num_claims[i] = Some((addr, num + 1));
+                            num_claims[i] = Some(NumClaims {
+                                validator_address: addr,
+                                num_claims_mades: num + 1,
+                            });
                             break;
                         } else {
                             continue;
@@ -124,7 +120,10 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
                     }
                     if let None = num_claims[i] {
                         // at this stage, there's no `None` between `Some`
-                        num_claims[i] = Some((claimer, U256::one()));
+                        num_claims[i] = Some(NumClaims {
+                            validator_address: claimer,
+                            num_claims_mades: U256::one(),
+                        });
                     }
                 }
             } else {
@@ -194,7 +193,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         // retrive events
 
         // DisputeEnded event
-        let mut dispute_ended_events = validator_manager_contract
+        let dispute_ended_events = validator_manager_contract
             .dispute_ended_filter()
             .query()
             .await
@@ -203,7 +202,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             })?;
 
         // NewEpoch event
-        let mut new_epoch_events = validator_manager_contract
+        let new_epoch_events = validator_manager_contract
             .new_epoch_filter()
             .query()
             .await
@@ -232,7 +231,8 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             state.validators_removed.push(losing_validator);
             // also need to clear it in num_claims
             for i in 0..8 {
-                if let Some((addr, num)) = state.num_claims[i] {
+                if let Some(num_claims_struct) = &state.num_claims[i] {
+                    let addr = num_claims_struct.validator_address;
                     if addr == losing_validator {
                         state.num_claims[i] = None;
                         break;
@@ -286,16 +286,18 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
     }
 }
 
-fn find_validator_and_increase(
-    v: Address,
-    state: &mut ValidatorManagerState,
-) {
+fn find_validator_and_increase(v: Address, state: &mut ValidatorManagerState) {
     // there can be `None` between `Some`
     let mut found = false;
     for i in 0..8 {
-        if let Some((addr, num)) = state.num_claims[i] {
+        if let Some(num_claims_struct) = &state.num_claims[i] {
+            let addr = num_claims_struct.validator_address;
+            let num = num_claims_struct.num_claims_mades;
             if addr == v {
-                state.num_claims[i] = Some((addr, num + 1));
+                state.num_claims[i] = Some(NumClaims {
+                    validator_address: addr,
+                    num_claims_mades: num + 1,
+                });
                 found = true;
                 break;
             }
@@ -305,7 +307,10 @@ fn find_validator_and_increase(
         // if not found, add to `num_claims`
         for i in 0..8 {
             if let None = state.num_claims[i] {
-                state.num_claims[i] = Some((v, U256::one()));
+                state.num_claims[i] = Some(NumClaims {
+                    validator_address: v,
+                    num_claims_mades: U256::one(),
+                });
                 break;
             }
         }

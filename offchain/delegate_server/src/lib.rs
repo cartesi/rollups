@@ -1,12 +1,13 @@
+pub mod fee_manager_server;
 pub mod input_server;
 pub mod output_server;
-pub mod validator_manager_server;
-pub mod fee_manager_server;
 pub mod rollups_server;
+pub mod validator_manager_server;
 
 use offchain::fold::setup::{
-    create_rollups_state_fold, create_input, create_output, create_validator_manager, create_fee_manager,
-    RollupsStateFold, InputStateFold, OutputStateFold, ValidatorManagerStateFold, FeeManagerStateFold,
+    create_fee_manager, create_input, create_output, create_rollups_state_fold,
+    create_validator_manager, FeeManagerStateFold, InputStateFold,
+    OutputStateFold, RollupsStateFold, ValidatorManagerStateFold,
 };
 use offchain::logic::instantiate_state_fold::{create_access, RollupsAccess};
 
