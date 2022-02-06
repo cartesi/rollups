@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::rollups_contract::*;
+use crate::contracts::rollups_init_facet::*;
 
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
 use super::output_delegate::OutputFoldDelegate;
@@ -75,22 +75,22 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let (dapp_contract_address, epoch_number) = *initial_state;
 
         let contract =
-            RollupsImpl::new(dapp_contract_address, Arc::clone(&middleware));
+            RollupsInitFacet::new(dapp_contract_address, Arc::clone(&middleware));
 
         // Retrieve constants from contract creation event
         let constants = {
             let (create_event, meta) = {
                 let e = contract
-                    .rollups_created_filter()
+                    .rollups_initialized_filter()
                     .query_with_meta()
                     .await
                     .context(SyncContractError {
-                        err: "Error querying for rollups created",
+                        err: "Error querying for rollups initialized",
                     })?;
 
                 if e.is_empty() {
                     return SyncDelegateError {
-                        err: "Rollups create event not found",
+                        err: "Rollups initialization event not found",
                     }
                     .fail();
                 }
@@ -150,13 +150,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let validator_manager_state = self
             .validator_manager_fold
-            .get_state_for_block(
-                &(
-                    dapp_contract_address,
-                    dapp_contract_address,
-                ),
-                Some(block.hash),
-            )
+            .get_state_for_block(&dapp_contract_address, Some(block.hash))
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -198,14 +192,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         _access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         let constants = previous_state.constants.clone();
-        let dapp_address = constants.dapp_contract_address;
+        let dapp_contract_address = constants.dapp_contract_address;
 
         // get raw state from EpochFoldDelegate
         let raw_contract_state = self
             .epoch_fold
             .get_state_for_block(
                 &(
-                    dapp_address,
+                    dapp_contract_address,
                     previous_state.initial_epoch,
                 ),
                 Some(block.hash),
@@ -221,7 +215,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let output_state = self
             .output_fold
-            .get_state_for_block(&dapp_address, Some(block.hash))
+            .get_state_for_block(&dapp_contract_address, Some(block.hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {
@@ -233,13 +227,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let validator_manager_state = self
             .validator_manager_fold
-            .get_state_for_block(
-                &(
-                    dapp_address,
-                    dapp_address,
-                ),
-                Some(block.hash),
-            )
+            .get_state_for_block(&dapp_contract_address, Some(block.hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {
@@ -251,7 +239,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let fee_manager_state = self
             .fee_manager_fold
-            .get_state_for_block(&dapp_address, Some(block.hash))
+            .get_state_for_block(&dapp_contract_address, Some(block.hash))
             .await
             .map_err(|e| {
                 FoldDelegateError {
@@ -414,8 +402,8 @@ fn convert_raw_to_logical(
 }
 
 // Fetches the Rollups constants from the contract creation event
-impl From<&(RollupsCreatedFilter, U256, Address)> for ImmutableState {
-    fn from(src: &(RollupsCreatedFilter, U256, Address)) -> Self {
+impl From<&(RollupsInitializedFilter, U256, Address)> for ImmutableState {
+    fn from(src: &(RollupsInitializedFilter, U256, Address)) -> Self {
         let (ev, ts, dapp_contract_address) = src;
         Self {
             input_duration: ev.input_duration,

@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::rollups_contract::*;
+use crate::contracts::rollups_facet::*;
 
 use super::input_delegate::InputFoldDelegate;
 use super::types::{
@@ -108,7 +108,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract = RollupsImpl::new(
+        let contract = RollupsFacet::new(
             dapp_contract_address,
             Arc::clone(&middleware),
         );
@@ -210,7 +210,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .build_fold_contract(
                 dapp_contract_address,
                 block.hash,
-                RollupsImpl::new,
+                RollupsFacet::new,
             )
             .await;
 

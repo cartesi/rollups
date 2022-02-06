@@ -1,4 +1,5 @@
-use crate::contracts::fee_manager_contract::*;
+use crate::contracts::fee_manager_facet::*;
+use crate::contracts::rollups_init_facet::*;
 
 use super::types::{FeeManagerState, NumRedeemed};
 
@@ -45,28 +46,36 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let fee_manager_address = initial_state;
+        let dapp_contract_address = initial_state;
 
-        let contract = access
+        let rollups_init_facet = access
             .build_sync_contract(
-                *fee_manager_address,
+                *dapp_contract_address,
                 block.number,
-                FeeManagerImpl::new,
+                RollupsInitFacet::new,
             )
             .await;
 
         // `fee_manager_created` event
-        let events = contract
-            .fee_manager_created_filter()
+        let events = rollups_init_facet.
+            fee_manager_initialized_filter()
             .query()
             .await
             .context(SyncContractError {
-                err: "Error querying for fee manager created events",
+                err: "Error querying for fee manager initialized events",
             })?;
         let created_event = events.first().unwrap();
 
+        let fee_manager_facet = access
+            .build_sync_contract(
+                *dapp_contract_address,
+                block.number,
+                FeeManagerFacet::new,
+            )
+            .await;
+
         // `FeePerClaimReset` event
-        let events = contract
+        let events = fee_manager_facet
             .fee_per_claim_reset_filter()
             .query()
             .await
@@ -81,7 +90,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         };
 
         // `fee_redeemed` events
-        let events = contract.fee_redeemed_filter().query().await.context(
+        let events = fee_manager_facet.fee_redeemed_filter().query().await.context(
             SyncContractError {
                 err: "Error querying for fee redeemed events",
             },
@@ -105,11 +114,11 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         }
 
         // obtain fee manager balance
-        let erc20_address = created_event.erc20;
+        let erc20_address = created_event.erc_20_for_fee;
         let erc20_balance_state = self
             .erc20_balance_fold
             .get_state_for_block(
-                &(erc20_address, *fee_manager_address),
+                &(erc20_address, *dapp_contract_address),
                 Some(block.hash),
             )
             .await
@@ -124,12 +133,11 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let fee_manager_balance = erc20_balance_state.balance;
 
         Ok(FeeManagerState {
-            validator_manager_address: created_event.validator_manager_cci,
+            dapp_contract_address: *dapp_contract_address,
             erc20_address,
             fee_per_claim,
             validator_redeemed,
             fee_manager_balance,
-            fee_manager_address: *fee_manager_address,
         })
     }
 
@@ -139,15 +147,15 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let fee_manager_address = previous_state.fee_manager_address;
+        let dapp_contract_address = previous_state.dapp_contract_address;
 
         // If not in bloom copy previous state
         if !(fold_utils::contains_address(
             &block.logs_bloom,
-            &fee_manager_address,
+            &dapp_contract_address,
         ) && (fold_utils::contains_topic(
             &block.logs_bloom,
-            &FeeManagerCreatedFilter::signature(),
+            &FeeManagerInitializedFilter::signature(),
         ) || fold_utils::contains_topic(
             &block.logs_bloom,
             &FeePerClaimResetFilter::signature(),
@@ -160,9 +168,9 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let contract = access
             .build_fold_contract(
-                fee_manager_address,
+                dapp_contract_address,
                 block.hash,
-                FeeManagerImpl::new,
+                FeeManagerFacet::new,
             )
             .await;
 
@@ -246,7 +254,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let erc20_balance_state = self
             .erc20_balance_fold
             .get_state_for_block(
-                &(state.erc20_address, state.fee_manager_address),
+                &(state.erc20_address, state.dapp_contract_address),
                 Some(block.hash),
             )
             .await

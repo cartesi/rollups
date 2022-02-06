@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::rollups_contract::*;
+use crate::contracts::rollups_facet::*;
 
 use super::input_delegate::InputFoldDelegate;
 use super::types::{EpochInputState, FinalizedEpoch, FinalizedEpochs};
@@ -55,7 +55,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .build_sync_contract(
                 dapp_contract_address,
                 block.number,
-                RollupsImpl::new,
+                RollupsFacet::new,
             )
             .await;
 
@@ -135,7 +135,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .build_fold_contract(
                 dapp_contract_address,
                 block.hash,
-                RollupsImpl::new,
+                RollupsFacet::new,
             )
             .await;
 

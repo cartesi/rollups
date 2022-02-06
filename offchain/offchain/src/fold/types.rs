@@ -302,8 +302,7 @@ pub struct ValidatorManagerState {
     // validators that lost the disputes
     pub validators_removed: Vec<Address>,
     pub num_finalized_epochs: U256,
-    pub validator_manager_address: Address,
-    pub rollups_address: Address,
+    pub dapp_contract_address: Address,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -321,15 +320,14 @@ pub struct NumRedeemed {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FeeManagerState {
-    pub validator_manager_address: Address,
+    pub dapp_contract_address: Address,
     pub erc20_address: Address,
     pub fee_per_claim: U256, // only the current value
     /// Tuple containing (validator, #claims_redeemed_so_far)
     pub validator_redeemed: [Option<NumRedeemed>; 8],
     pub fee_manager_balance: U256,
-    /// Balance of fee manager contract minus amount of to-be-redeemed fees
+    // /// Balance of fee manager contract minus amount of to-be-redeemed fees
     // pub leftover_balance: I256, // implement this after validator manager delegeate
-    pub fee_manager_address: Address,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

@@ -1,5 +1,5 @@
-use crate::contracts::rollups_contract::*;
-use crate::contracts::validator_manager_contract::*;
+use crate::contracts::rollups_facet::*;
+use crate::contracts::validator_manager_facet::*;
 
 use super::types::{NumClaims, ValidatorManagerState};
 
@@ -23,7 +23,7 @@ pub struct ValidatorManagerFoldDelegate {}
 
 #[async_trait]
 impl StateFoldDelegate for ValidatorManagerFoldDelegate {
-    type InitialState = (Address, Address); // (validator manager address, rollups address)
+    type InitialState = Address;
     type Accumulator = ValidatorManagerState;
     type State = BlockState<Self::Accumulator>;
 
@@ -33,19 +33,19 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (validator_manager_address, rollups_address) = *initial_state;
-        let validator_manager_contract = access
+        let dapp_contract_address = *initial_state;
+        let validator_manager_facet = access
             .build_sync_contract(
-                validator_manager_address,
+                dapp_contract_address,
                 block.number,
-                ValidatorManagerClaimsCountedImpl::new,
+                ValidatorManagerFacet::new,
             )
             .await;
-        let rollups_contract = access
+        let rollups_facet = access
             .build_sync_contract(
-                rollups_address,
+                dapp_contract_address,
                 block.number,
-                RollupsImpl::new,
+                RollupsFacet::new,
             )
             .await;
 
@@ -57,7 +57,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         // retrive events
 
         // DisputeEnded event
-        let dispute_ended_events = validator_manager_contract
+        let dispute_ended_events = validator_manager_facet
             .dispute_ended_filter()
             .query()
             .await
@@ -66,7 +66,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             })?;
 
         // NewEpoch event
-        let new_epoch_events = validator_manager_contract
+        let new_epoch_events = validator_manager_facet
             .new_epoch_filter()
             .query()
             .await
@@ -76,7 +76,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
 
         // RollupsImpl Claim event
         let rollups_claim_events =
-            rollups_contract.claim_filter().query().await.context(
+            rollups_facet.claim_filter().query().await.context(
                 SyncContractError {
                     err: "Error querying for Rollups claim events",
                 },
@@ -137,8 +137,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             claiming,
             validators_removed,
             num_finalized_epochs,
-            validator_manager_address,
-            rollups_address,
+            dapp_contract_address,
         })
     }
 
@@ -148,15 +147,15 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let validator_manager_address =
-            previous_state.validator_manager_address;
-        let rollups_address = previous_state.rollups_address;
-        // the following logic is: if `validator_manager_address` and any of its events are in the bloom,
-        // or if `rollups_address` and `ClaimFilter` event are in the bloom, then skip this `if` statement and do the logic below.
+        let dapp_contract_address =
+            previous_state.dapp_contract_address;
+        // the following logic is: if `dapp_contract_address` and any of the Validator Manager
+        // Facet events are in the bloom, or if `dapp_contract_address` and `ClaimFilter` event are in the bloom,
+        // then skip this `if` statement and do the logic below.
         // Otherwise, return the previous state
-        if !((fold_utils::contains_address(
+        if !(fold_utils::contains_address(
             &block.logs_bloom,
-            &validator_manager_address,
+            &dapp_contract_address,
         ) && (fold_utils::contains_topic(
             &block.logs_bloom,
             &ClaimReceivedFilter::signature(), // this event can be ignored
@@ -166,26 +165,27 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         ) || fold_utils::contains_topic(
             &block.logs_bloom,
             &NewEpochFilter::signature(),
-        ))) || (fold_utils::contains_address(
-            &block.logs_bloom,
-            &rollups_address,
-        ) && (fold_utils::contains_topic(
+        ) || fold_utils::contains_topic(
             &block.logs_bloom,
             &ClaimFilter::signature(),
-        )))) {
+        ))) {
             return Ok(previous_state.clone());
         }
 
-        let validator_manager_contract = access
+        let validator_manager_facet = access
             .build_fold_contract(
-                validator_manager_address,
+                dapp_contract_address,
                 block.hash,
-                ValidatorManagerClaimsCountedImpl::new,
+                ValidatorManagerFacet::new,
             )
             .await;
 
-        let rollups_contract = access
-            .build_fold_contract(rollups_address, block.hash, RollupsImpl::new)
+        let rollups_facet = access
+            .build_fold_contract(
+                dapp_contract_address,
+                block.hash,
+                RollupsFacet::new,
+            )
             .await;
 
         let mut state = previous_state.clone();
@@ -193,7 +193,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         // retrive events
 
         // DisputeEnded event
-        let dispute_ended_events = validator_manager_contract
+        let dispute_ended_events = validator_manager_facet
             .dispute_ended_filter()
             .query()
             .await
@@ -202,7 +202,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             })?;
 
         // NewEpoch event
-        let new_epoch_events = validator_manager_contract
+        let new_epoch_events = validator_manager_facet
             .new_epoch_filter()
             .query()
             .await
@@ -211,12 +211,13 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             })?;
 
         // RollupsImpl Claim event
-        let rollups_claim_events =
-            rollups_contract.claim_filter().query().await.context(
-                FoldContractError {
-                    err: "Error querying for Rollups claim events",
-                },
-            )?;
+        let rollups_claim_events = rollups_facet
+            .claim_filter()
+            .query()
+            .await
+            .context(FoldContractError {
+                err: "Error querying for Rollups claim events",
+            })?;
 
         // step 1: `dispute_ended_events`. For validator lost dispute, add to removal list and also remove address and #claims;
         //          for validator won, do nothing

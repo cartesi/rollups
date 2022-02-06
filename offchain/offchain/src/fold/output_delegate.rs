@@ -1,4 +1,4 @@
-use crate::contracts::output_contract::*;
+use crate::contracts::output_facet::*;
 
 use super::types::OutputState;
 
@@ -61,7 +61,7 @@ impl StateFoldDelegate for OutputFoldDelegate {
         let dapp_contract_address = initial_state;
 
         let contract = access
-            .build_sync_contract(*dapp_contract_address, block.number, OutputImpl::new)
+            .build_sync_contract(*dapp_contract_address, block.number, OutputFacet::new)
             .await;
 
         // Retrieve `VoucherExecuted` events
@@ -110,7 +110,7 @@ impl StateFoldDelegate for OutputFoldDelegate {
         }
 
         let contract = access
-            .build_fold_contract(dapp_contract_address, block.hash, OutputImpl::new)
+            .build_fold_contract(dapp_contract_address, block.hash, OutputFacet::new)
             .await;
 
         let events = contract.voucher_executed_filter().query().await.context(

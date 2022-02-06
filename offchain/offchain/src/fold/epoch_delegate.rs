@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::rollups_contract::*;
+use crate::contracts::rollups_facet::*;
 
 use super::types::{AccumulatingEpoch, EpochWithClaims, FinalizedEpochs};
 
@@ -105,7 +105,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .await;
 
         let contract =
-            RollupsImpl::new(rollups_contract_address, Arc::clone(&middleware));
+            RollupsFacet::new(rollups_contract_address, Arc::clone(&middleware));
 
         // retrieve list of finalized epochs from FinalizedEpochFoldDelegate
         let finalized_epochs = self
@@ -355,7 +355,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .build_fold_contract(
                 rollups_contract_address,
                 block.hash,
-                RollupsImpl::new,
+                RollupsFacet::new,
             )
             .await;
 

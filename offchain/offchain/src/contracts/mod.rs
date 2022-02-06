@@ -1,6 +1,11 @@
 pub mod erc20_contract;
-pub mod fee_manager_contract;
-pub mod input_contract;
-pub mod output_contract;
-pub mod rollups_contract;
-pub mod validator_manager_contract;
+pub mod erc20_portal_facet;
+pub mod erc721_portal_facet;
+pub mod ether_portal_facet;
+pub mod fee_manager_facet;
+pub mod input_facet;
+pub mod output_facet;
+pub mod rollups_facet;
+pub mod rollups_init_facet;
+pub mod serc20_portal_facet;
+pub mod validator_manager_facet;

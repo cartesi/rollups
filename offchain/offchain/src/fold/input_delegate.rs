@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::input_contract::*;
+use crate::contracts::input_facet::*;
 
 use super::types::{EpochInputState, Input};
 
@@ -43,7 +43,7 @@ impl StateFoldDelegate for InputFoldDelegate {
             .build_sync_contract(
                 dapp_contract_address,
                 block.number,
-                InputImpl::new,
+                InputFacet::new,
             )
             .await;
 
@@ -91,7 +91,7 @@ impl StateFoldDelegate for InputFoldDelegate {
             .build_fold_contract(
                 dapp_contract_address,
                 block.hash,
-                InputImpl::new,
+                InputFacet::new,
             )
             .await;
 

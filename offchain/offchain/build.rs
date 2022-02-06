@@ -23,19 +23,16 @@ fn write_contract(
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contracts = vec![
-        ("RollupsImpl", "RollupsImpl", "rollups_contract.rs"),
-        ("InputImpl", "InputImpl", "input_contract.rs"),
-        ("OutputImpl", "OutputImpl", "output_contract.rs"),
-        (
-            "ValidatorManagerClaimsCountedImpl",
-            "ValidatorManagerClaimsCountedImpl",
-            "validator_manager_contract.rs",
-        ),
-        (
-            "FeeManagerImpl",
-            "FeeManagerImpl",
-            "fee_manager_contract.rs",
-        ),
+        ("ERC20PortalFacet", "facets/ERC20PortalFacet", "erc20_portal_facet.rs"),
+        ("ERC721PortalFacet", "facets/ERC721PortalFacet", "erc721_portal_facet.rs"),
+        ("EtherPortalFacet", "facets/EtherPortalFacet", "ether_portal_facet.rs"),
+        ("FeeManagerFacet", "facets/FeeManagerFacet", "fee_manager_facet.rs"),
+        ("InputFacet", "facets/InputFacet", "input_facet.rs"),
+        ("OutputFacet", "facets/OutputFacet", "output_facet.rs"),
+        ("RollupsFacet", "facets/RollupsFacet", "rollups_facet.rs"),
+        ("RollupsInitFacet", "facets/RollupsInitFacet", "rollups_init_facet.rs"),
+        ("SERC20PortalFacet", "facets/SERC20PortalFacet", "serc20_portal_facet.rs"),
+        ("ValidatorManagerFacet", "facets/ValidatorManagerFacet", "validator_manager_facet.rs"),
     ];
 
     for (name, file, rs) in contracts {

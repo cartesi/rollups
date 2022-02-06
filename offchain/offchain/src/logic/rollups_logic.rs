@@ -5,7 +5,7 @@ use super::instantiate_tx_manager::{instantiate_tx_manager, RollupsTxManager};
 
 use super::config::LogicConfig;
 use crate::config::ApplicationConfig;
-use crate::contracts::rollups_contract::RollupsImpl;
+use crate::contracts::rollups_facet::RollupsFacet;
 use crate::error::*;
 use crate::fold::types::*;
 use crate::machine::{rollup_server, EpochStatus, MachineInterface};
@@ -66,7 +66,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     );
 
     let (provider, _mock) = Provider::mocked();
-    let rollups_contract = RollupsImpl::new(
+    let rollups_contract = RollupsFacet::new(
         config.logic_config.rollups_contract_address,
         Arc::new(provider),
     );
@@ -160,7 +160,7 @@ async fn react<MM: MachineInterface + Sync>(
     config: &TxConfig,
     state: RollupsState,
     tx_manager: &RollupsTxManager,
-    rollups_contract: &RollupsImpl<Provider<MockProvider>>,
+    rollups_contract: &RollupsFacet<Provider<MockProvider>>,
     machine_manager: &MM,
 ) -> Result<()> {
     info!("Querying machine manager for current epoch status");
@@ -614,7 +614,7 @@ async fn send_claim_tx(
     epoch_number: U256,
     config: &TxConfig,
     tx_manager: &RollupsTxManager,
-    rollups_contract: &RollupsImpl<Provider<MockProvider>>,
+    rollups_contract: &RollupsFacet<Provider<MockProvider>>,
 ) {
     let claim_tx = rollups_contract.claim(claim.to_fixed_bytes()).from(sender);
     info!("Built claim transaction: `{:?}`", claim_tx);
@@ -644,7 +644,7 @@ async fn send_finalize_tx(
     epoch_number: U256,
     config: &TxConfig,
     tx_manager: &RollupsTxManager,
-    rollups_contract: &RollupsImpl<Provider<MockProvider>>,
+    rollups_contract: &RollupsFacet<Provider<MockProvider>>,
 ) {
     let finalize_tx = rollups_contract.finalize_epoch().from(sender);
     info!("Built finalize transaction: `{:?}`", finalize_tx);

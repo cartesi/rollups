@@ -1,1 +1,2 @@
-*contract.rs
+*.rs
+!mod.rs
