@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 struct InitialState {
     initial_epoch: U256,
-    rollups_address: Address,
+    dapp_contract_address: Address,
 }
 
 pub struct RollupsDelegateManager {
@@ -45,12 +45,12 @@ impl DelegateManager for RollupsDelegateManager {
             .map_err(|e| {
                 Status::new(Code::InvalidArgument, format!("{}", e))
             })?;
-        let rollups_address = initial_state.rollups_address;
+        let dapp_contract_address = initial_state.dapp_contract_address;
         let initial_epoch = initial_state.initial_epoch;
 
         let contract_state = self
             .fold
-            .get_state_for_block(&(rollups_address, initial_epoch), None)
+            .get_state_for_block(&(dapp_contract_address, initial_epoch), None)
             .await
             .map_err(|e| Status::new(Code::Unavailable, format!("{}", e)))?;
 

@@ -52,7 +52,7 @@ pub struct EpochState {
     // Timestamp of last contract phase change
     pub phase_change_timestamp: Option<U256>,
 
-    rollups_contract_address: Address,
+    dapp_contract_address: Address,
 }
 
 type AccumulatingEpochStateFold<DA> =
@@ -98,20 +98,22 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (rollups_contract_address, initial_epoch) = *(initial_state);
+        let (dapp_contract_address, initial_epoch) = *(initial_state);
 
         let middleware = access
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract =
-            RollupsFacet::new(rollups_contract_address, Arc::clone(&middleware));
+        let contract = RollupsFacet::new(
+            dapp_contract_address,
+            Arc::clone(&middleware),
+        );
 
         // retrieve list of finalized epochs from FinalizedEpochFoldDelegate
         let finalized_epochs = self
             .finalized_epoch_fold
             .get_state_for_block(
-                &(rollups_contract_address, initial_epoch),
+                &(dapp_contract_address, initial_epoch),
                 Some(block.hash),
             )
             .await
@@ -160,7 +162,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             Some((PhaseChangeFilter { new_phase: 0 }, _)) | None => {
                 let current_epoch = self
                     .get_acc_sync(
-                        rollups_contract_address,
+                        dapp_contract_address,
                         next_epoch,
                         block.hash,
                     )
@@ -173,14 +175,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             Some((PhaseChangeFilter { new_phase: 1 }, _)) => {
                 let sealed_epoch = self
                     .get_sealed_sync(
-                        rollups_contract_address,
+                        dapp_contract_address,
                         next_epoch,
                         block.hash,
                     )
                     .await?;
                 let current_epoch = self
                     .get_acc_sync(
-                        rollups_contract_address,
+                        dapp_contract_address,
                         next_epoch + 1,
                         block.hash,
                     )
@@ -203,14 +205,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             Some((PhaseChangeFilter { new_phase: 2 }, _)) => {
                 let sealed_epoch = self
                     .get_sealed_sync(
-                        rollups_contract_address,
+                        dapp_contract_address,
                         next_epoch,
                         block.hash,
                     )
                     .await?;
                 let current_epoch = self
                     .get_acc_sync(
-                        rollups_contract_address,
+                        dapp_contract_address,
                         next_epoch + 1,
                         block.hash,
                     )
@@ -259,7 +261,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             initial_epoch,
             finalized_epochs,
             current_epoch,
-            rollups_contract_address,
+            dapp_contract_address,
         })
     }
 
@@ -269,11 +271,12 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let rollups_contract_address = previous_state.rollups_contract_address;
+        let dapp_contract_address =
+            previous_state.dapp_contract_address;
         // Check if there was (possibly) some log emited on this block.
         if !(fold_utils::contains_address(
             &block.logs_bloom,
-            &rollups_contract_address,
+            &dapp_contract_address,
         ) && fold_utils::contains_topic(
             &block.logs_bloom,
             &PhaseChangeFilter::signature(),
@@ -282,7 +285,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             // sub-states.
             let current_epoch = self
                 .get_acc_fold(
-                    rollups_contract_address,
+                    dapp_contract_address,
                     previous_state.current_epoch.epoch_number,
                     block.hash,
                 )
@@ -299,7 +302,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 } => {
                     let sealed_epoch = self
                         .get_sealed_fold(
-                            rollups_contract_address,
+                            dapp_contract_address,
                             sealed_epoch.epoch_number(),
                             block.hash,
                         )
@@ -314,7 +317,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 ContractPhase::AwaitingDispute { sealed_epoch } => {
                     let sealed_epoch = self
                         .get_sealed_fold(
-                            rollups_contract_address,
+                            dapp_contract_address,
                             sealed_epoch.epoch_number,
                             block.hash,
                         )
@@ -347,13 +350,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 phase_change_timestamp: previous_state.phase_change_timestamp,
                 initial_epoch: previous_state.initial_epoch,
                 finalized_epochs: previous_state.finalized_epochs.clone(),
-                rollups_contract_address,
+                dapp_contract_address,
             });
         }
 
         let contract = access
             .build_fold_contract(
-                rollups_contract_address,
+                dapp_contract_address,
                 block.hash,
                 RollupsFacet::new,
             )
@@ -362,7 +365,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let finalized_epochs = self
             .finalized_epoch_fold
             .get_state_for_block(
-                &(rollups_contract_address, previous_state.initial_epoch),
+                &(dapp_contract_address, previous_state.initial_epoch),
                 Some(block.hash),
             )
             .await
@@ -388,7 +391,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             Some(PhaseChangeFilter { new_phase: 0 }) | None => {
                 let current_epoch = self
                     .get_acc_fold(
-                        rollups_contract_address,
+                        dapp_contract_address,
                         next_epoch,
                         block.hash,
                     )
@@ -403,14 +406,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 // inputs and one active, accumulating new inputs
                 let sealed_epoch = self
                     .get_sealed_fold(
-                        rollups_contract_address,
+                        dapp_contract_address,
                         next_epoch,
                         block.hash,
                     )
                     .await?;
                 let current_epoch = self
                     .get_acc_fold(
-                        rollups_contract_address,
+                        dapp_contract_address,
                         next_epoch + 1,
                         block.hash,
                     )
@@ -435,14 +438,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 // inputs and one active, accumulating new inputs
                 let sealed_epoch = self
                     .get_sealed_fold(
-                        rollups_contract_address,
+                        dapp_contract_address,
                         next_epoch,
                         block.hash,
                     )
                     .await?;
                 let current_epoch = self
                     .get_acc_fold(
-                        rollups_contract_address,
+                        dapp_contract_address,
                         next_epoch + 1,
                         block.hash,
                     )
@@ -495,7 +498,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             phase_change_timestamp,
             initial_epoch: previous_state.initial_epoch,
             finalized_epochs,
-            rollups_contract_address,
+            dapp_contract_address,
         })
     }
 
@@ -511,14 +514,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> EpochFoldDelegate<DA> {
     // Get result of AccumulatingEpoch sync call
     async fn get_acc_sync<A: SyncAccess + Send + Sync + 'static>(
         &self,
-        rollups_contract_address: Address,
+        dapp_contract_address: Address,
         epoch: U256,
         block_hash: H256,
     ) -> SyncResult<AccumulatingEpoch, A> {
         Ok(self
             .accumulating_epoch_fold
             .get_state_for_block(
-                &(rollups_contract_address, epoch),
+                &(dapp_contract_address, epoch),
                 Some(block_hash),
             )
             .await
@@ -537,14 +540,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> EpochFoldDelegate<DA> {
     // get result of AccumulatingEpoch fold call
     async fn get_acc_fold<A: FoldAccess + Send + Sync + 'static>(
         &self,
-        rollups_contract_address: Address,
+        dapp_contract_address: Address,
         epoch: U256,
         block_hash: H256,
     ) -> FoldResult<AccumulatingEpoch, A> {
         Ok(self
             .accumulating_epoch_fold
             .get_state_for_block(
-                &(rollups_contract_address, epoch),
+                &(dapp_contract_address, epoch),
                 Some(block_hash),
             )
             .await
@@ -563,14 +566,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> EpochFoldDelegate<DA> {
     // Get result of SealedEpoch sync call
     async fn get_sealed_sync<A: SyncAccess + Send + Sync + 'static>(
         &self,
-        rollups_contract_address: Address,
+        dapp_contract_address: Address,
         epoch: U256,
         block_hash: H256,
     ) -> SyncResult<SealedEpochState, A> {
         Ok(self
             .sealed_epoch_fold
             .get_state_for_block(
-                &(rollups_contract_address, epoch),
+                &(dapp_contract_address, epoch),
                 Some(block_hash),
             )
             .await
@@ -586,14 +589,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> EpochFoldDelegate<DA> {
     // Get result of SealedEpoch fold call
     async fn get_sealed_fold<A: FoldAccess + Send + Sync + 'static>(
         &self,
-        rollups_contract_address: Address,
+        dapp_contract_address: Address,
         epoch: U256,
         block_hash: H256,
     ) -> FoldResult<SealedEpochState, A> {
         Ok(self
             .sealed_epoch_fold
             .get_state_for_block(
-                &(rollups_contract_address, epoch),
+                &(dapp_contract_address, epoch),
                 Some(block_hash),
             )
             .await

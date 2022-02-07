@@ -21,7 +21,7 @@ pub struct ApplicationCLIConfig {
 #[structopt(name = "indexer_config", about = "Configuration for indexer")]
 pub struct IndexerEnvCLIConfig {
     #[structopt(long, env)]
-    pub rollups_contract_address: Option<String>,
+    pub dapp_contract_address: Option<String>,
     #[structopt(long, env)]
     pub indexer_config_path: Option<String>,
     #[structopt(long)]
@@ -40,7 +40,7 @@ pub struct IndexerEnvCLIConfig {
 
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct IndexerFileConfig {
-    pub rollups_contract_address: Option<String>,
+    pub dapp_contract_address: Option<String>,
     pub state_server_endpoint: Option<String>,
     pub interval: Option<u64>,
     pub initial_epoch: Option<u64>,
@@ -56,7 +56,7 @@ pub struct FileConfig {
 
 #[derive(Clone, Debug)]
 pub struct IndexerConfig {
-    pub rollups_contract_address: Address,
+    pub dapp_contract_address: Address,
     pub state_server_endpoint: String,
     pub initial_epoch: U256,
 
@@ -81,7 +81,7 @@ impl IndexerConfig {
         };
         let basic_config = Config::initialize(base_cli_config)?;
 
-        let rollups_contract_address = basic_config.contracts["RollupsImpl"];
+        let dapp_contract_address = basic_config.contracts["RollupsImpl"];
 
         let state_server_endpoint: String = env_cli_config
             .state_server_endpoint
@@ -134,7 +134,7 @@ impl IndexerConfig {
             })?;
 
         Ok(IndexerConfig {
-            rollups_contract_address,
+            dapp_contract_address,
             state_server_endpoint,
             initial_epoch,
             interval,

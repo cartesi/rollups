@@ -61,13 +61,13 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     info!("Dispatcher running with validator address `{}`", sender);
 
     info!(
-        "Instantiating rollups contract at address `{}`",
-        config.logic_config.rollups_contract_address,
+        "Instantiating rollups facet at address `{}`",
+        config.logic_config.dapp_contract_address,
     );
 
     let (provider, _mock) = Provider::mocked();
-    let rollups_contract = RollupsFacet::new(
-        config.logic_config.rollups_contract_address,
+    let rollups_facet = RollupsFacet::new(
+        config.logic_config.dapp_contract_address,
         Arc::new(provider),
     );
 
@@ -126,7 +126,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
                         &block.hash,
                         &(
                             config.logic_config.initial_epoch,
-                            config.logic_config.rollups_contract_address,
+                            config.logic_config.dapp_contract_address,
                         ),
                     )
                     .await?;
@@ -138,7 +138,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
                     &tx_config,
                     state,
                     &tx_manager,
-                    &rollups_contract,
+                    &rollups_facet,
                     &machine_manager,
                 )
                 .await?;
@@ -160,7 +160,7 @@ async fn react<MM: MachineInterface + Sync>(
     config: &TxConfig,
     state: RollupsState,
     tx_manager: &RollupsTxManager,
-    rollups_contract: &RollupsFacet<Provider<MockProvider>>,
+    rollups_facet: &RollupsFacet<Provider<MockProvider>>,
     machine_manager: &MM,
 ) -> Result<()> {
     info!("Querying machine manager for current epoch status");
@@ -258,7 +258,7 @@ async fn react<MM: MachineInterface + Sync>(
                 sealed_epoch_number,
                 config,
                 tx_manager,
-                rollups_contract,
+                rollups_facet,
             )
             .await;
 
@@ -320,7 +320,7 @@ async fn react<MM: MachineInterface + Sync>(
                     sealed_epoch_number,
                     config,
                     tx_manager,
-                    rollups_contract,
+                    rollups_facet,
                 )
                 .await;
 
@@ -393,7 +393,7 @@ async fn react<MM: MachineInterface + Sync>(
                     sealed_epoch_number,
                     config,
                     tx_manager,
-                    rollups_contract,
+                    rollups_facet,
                 )
                 .await;
 
@@ -408,7 +408,7 @@ async fn react<MM: MachineInterface + Sync>(
                     sealed_epoch_number,
                     config,
                     tx_manager,
-                    rollups_contract,
+                    rollups_facet,
                 )
                 .await;
 
@@ -614,9 +614,9 @@ async fn send_claim_tx(
     epoch_number: U256,
     config: &TxConfig,
     tx_manager: &RollupsTxManager,
-    rollups_contract: &RollupsFacet<Provider<MockProvider>>,
+    rollups_facet: &RollupsFacet<Provider<MockProvider>>,
 ) {
-    let claim_tx = rollups_contract.claim(claim.to_fixed_bytes()).from(sender);
+    let claim_tx = rollups_facet.claim(claim.to_fixed_bytes()).from(sender);
     info!("Built claim transaction: `{:?}`", claim_tx);
 
     let label = format!("claim_for_epoch:{}", epoch_number);
@@ -644,9 +644,9 @@ async fn send_finalize_tx(
     epoch_number: U256,
     config: &TxConfig,
     tx_manager: &RollupsTxManager,
-    rollups_contract: &RollupsFacet<Provider<MockProvider>>,
+    rollups_facet: &RollupsFacet<Provider<MockProvider>>,
 ) {
-    let finalize_tx = rollups_contract.finalize_epoch().from(sender);
+    let finalize_tx = rollups_facet.finalize_epoch().from(sender);
     info!("Built finalize transaction: `{:?}`", finalize_tx);
 
     let label = format!("finalize_epoch:{}", epoch_number);

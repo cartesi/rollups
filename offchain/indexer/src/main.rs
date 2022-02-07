@@ -13,10 +13,10 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         .build()
     })?;
 
-    let rollups_address = indexer_config.rollups_contract_address;
+    let dapp_contract_address = indexer_config.dapp_contract_address;
     let poll_interval = std::time::Duration::from_secs(indexer_config.interval);
     let initial_state =
-        (U256::from(indexer_config.initial_epoch), rollups_address);
+        (U256::from(indexer_config.initial_epoch), dapp_contract_address);
 
     let postgres_endpoint = indexer_config.postgres_endpoint;
     let pool = create_pool(postgres_endpoint.clone())?;

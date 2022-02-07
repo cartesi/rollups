@@ -25,9 +25,9 @@ pub struct LogicEnvCLIConfig {
     /// Chain ID
     #[structopt(long, env)]
     pub chain_id: Option<u64>,
-    /// Address of deployed rollups contract
+    /// Address of deployed DApp contract
     #[structopt(long, env)]
-    pub rollups_contract_address: Option<String>,
+    pub dapp_contract_address: Option<String>,
     /// URL of provider http endpoint
     #[structopt(long, env)]
     pub provider_http_endpoint: Option<String>,
@@ -65,7 +65,7 @@ pub struct LogicFileConfig {
     pub mnemonic: Option<String>,
     pub mnemonic_file: Option<String>,
     pub chain_id: Option<u64>,
-    pub rollups_contract_address: Option<String>,
+    pub dapp_contract_address: Option<String>,
     pub provider_http_endpoint: Option<String>,
     pub ws_endpoint: Option<String>,
     pub state_fold_grpc_endpoint: Option<String>,
@@ -87,7 +87,7 @@ pub struct FileConfig {
 pub struct LogicConfig {
     pub mnemonic: String,
     pub chain_id: u64,
-    pub rollups_contract_address: Address,
+    pub dapp_contract_address: Address,
     pub initial_epoch: U256,
 
     pub provider_http_endpoint: String,
@@ -158,19 +158,19 @@ impl LogicConfig {
                 err: "Must specify chain_id",
             })?;
 
-        let rollups_contract_address: Address = Address::from_str(
+        let dapp_contract_address: Address = Address::from_str(
             &env_cli_config
-                .rollups_contract_address
-                .or(file_config.rollups_contract_address)
+                .dapp_contract_address
+                .or(file_config.dapp_contract_address)
                 .ok_or(snafu::NoneError)
                 .context(config_error::FileError {
-                    err: "Must specify rollups contract address",
+                    err: "Must specify DApp contract address",
                 })?,
         )
         .map_err(|e| {
             config_error::FileError {
                 err: format!(
-                    "Rollups contract address string ill-formed: {}",
+                    "DApp contract address string ill-formed: {}",
                     e
                 ),
             }
@@ -229,7 +229,7 @@ impl LogicConfig {
         Ok(LogicConfig {
             mnemonic,
             chain_id,
-            rollups_contract_address,
+            dapp_contract_address,
             initial_epoch,
 
             provider_http_endpoint,
