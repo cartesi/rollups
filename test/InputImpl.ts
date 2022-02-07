@@ -29,8 +29,7 @@ import { solidity } from "ethereum-waffle";
 import { InputImpl__factory } from "../dist/src/types/factories/InputImpl__factory";
 import { Signer } from "ethers";
 import { InputImpl } from "../dist/src/types/InputImpl";
-import { getState } from "./getState";
-import { getInputHash } from "./getInputHash";
+import { getState, getInputHash } from "./utils";
 
 use(solidity);
 

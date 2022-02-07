@@ -10,7 +10,7 @@ import { SimpleToken } from "../dist/src/types/SimpleToken";
 import { SimpleToken__factory } from "../dist/src/types/factories/SimpleToken__factory";
 import { RollupsInitFacet } from "../dist/src/types/RollupsInitFacet";
 import { RollupsInitFacet__factory } from "../dist/src/types/factories/RollupsInitFacet__factory";
-import { getState } from "./getState";
+import { getState } from "./utils";
 
 use(solidity);
 

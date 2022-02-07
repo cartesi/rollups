@@ -31,8 +31,7 @@ import { InputFacet } from "../dist/src/types/InputFacet";
 import { InputFacet__factory } from "../dist/src/types/factories/InputFacet__factory";
 import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
-import { getState } from "./getState";
-import { getInputHash } from "./getInputHash";
+import { getState, getInputHash } from "./utils";
 
 use(solidity);
 

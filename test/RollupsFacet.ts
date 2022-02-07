@@ -6,7 +6,7 @@ import { RollupsFacet } from "../dist/src/types/RollupsFacet";
 import { RollupsFacet__factory } from "../dist/src/types/factories/RollupsFacet__factory";
 import { RollupsInitFacet } from "../dist/src/types/RollupsInitFacet";
 import { RollupsInitFacet__factory } from "../dist/src/types/factories/RollupsInitFacet__factory";
-import { getState } from "./getState";
+import { getState } from "./utils";
 
 use(solidity);
 

@@ -4,7 +4,7 @@ import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import { RollupsImpl } from "../dist/src/types/RollupsImpl";
 import { RollupsImpl__factory } from "../dist/src/types/factories/RollupsImpl__factory";
-import { getState } from "./getState";
+import { getState } from "./utils";
 
 use(solidity);
 

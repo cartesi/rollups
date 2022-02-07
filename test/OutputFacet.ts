@@ -8,7 +8,7 @@ import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { BytesLike } from "@ethersproject/bytes";
 import { keccak256 } from "ethers/lib/utils";
-import { getState } from "./getState";
+import { getState } from "./utils";
 
 use(solidity);
 

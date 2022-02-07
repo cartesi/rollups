@@ -12,7 +12,7 @@ import { Merkle } from "../dist/src/types/Merkle";
 import { CartesiMath } from "../dist/src/types/CartesiMath";
 import { Bytes, BytesLike } from "@ethersproject/bytes";
 import { keccak256 } from "ethers/lib/utils";
-import { getState } from "./getState";
+import { getState } from "./utils";
 
 use(solidity);
 

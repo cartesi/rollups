@@ -33,7 +33,7 @@ import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { IERC721 } from "../dist/src/types/IERC721";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
-import { getInputHash } from "./getInputHash";
+import { getInputHash } from "./utils";
 
 use(solidity);
 
