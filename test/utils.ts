@@ -24,6 +24,7 @@ import { GetStateRequest } from '../src/proto/stateserver_pb'
 import { keccak256, defaultAbiCoder } from "ethers/lib/utils";
 import { deployments } from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { BigNumber } from "ethers";
 
 // Calculate input hash based on
 // input: data itself interpreted by L2
@@ -76,7 +77,15 @@ export const getState = async (initialState: string) => {
 };
 
 export interface DiamondOptions {
-    debug: boolean
+    inputDuration?: BigNumber, // defaults to 1 day
+    challengePeriod?: BigNumber, // defaults to 7 days
+    inputLog2Size?: BigNumber, // defaults to 8 (thus, 2^8)
+    feePerClaim?: BigNumber, // defaults to 10 tokens
+    erc20ForFee?: string, // defaults to a SimpleToken
+    feeManagerOwner?: string, // defaults to the first signer
+    validators?: string[], // defaults to the 8 first signers
+    erc20ForPortal?: string, // defaults to the CTSI token
+    debug?: boolean, // defaults to false
 }
 
 enum FacetCutAction {
@@ -91,10 +100,14 @@ interface FacetCut {
     functionSelectors: string[],
 }
 
+export const MINUTE = 60; // seconds in a minute
+export const HOUR = 60 * MINUTE; // seconds in an hour
+export const DAY = 24 * HOUR; // seconds in a day
+
 export const deployDiamond = deployments.createFixture(
     async (
         hre: HardhatRuntimeEnvironment,
-        options: DiamondOptions = {debug: false},
+        options: DiamondOptions = {},
     ) => {
         const { deployments, ethers } = hre;
         const signers = await ethers.getSigners();
@@ -113,6 +126,17 @@ export const deployDiamond = deployments.createFixture(
                 },
             });
             console.log(`[${ debugFacet.address }] Deployed DebugFacet`);
+        }
+
+        // deploy SimpleToken if `erc20ForFree` is undefined
+        if (typeof options.erc20ForFee == 'undefined') {
+            // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
+            let tokenSupply = 1000000; 
+            let deployedToken = await deployments.deploy("SimpleToken", {
+                from: await signers[0].getAddress(),
+                args: [tokenSupply],
+            });
+            console.log(`[${ deployedToken.address }] Deployed SimpleToken`);
         }
 
         console.log();
@@ -177,11 +201,47 @@ export const deployDiamond = deployments.createFixture(
         console.log();
         console.log("===> Executing diamond cut");
 
+        let inputDuration = options.inputDuration ? options.inputDuration : (1 * DAY);
+        let challengePeriod = options.challengePeriod ? options.challengePeriod : (7 * DAY);
+        let inputLog2Size = options.inputLog2Size ? options.inputLog2Size : 8;
+        let feePerClaim = options.feePerClaim ? options.feePerClaim : 10;
+        let feeManagerOwner = options.feeManagerOwner ? options.feeManagerOwner : contractOwnerAddress;
+        let erc20ForPortal = options.erc20ForPortal ? options.erc20ForPortal : "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
+
+        let erc20ForFee;
+        if (options.erc20ForFee) {
+            erc20ForFee = options.erc20ForFee;
+        } else {
+            const token = await deployments.get('SimpleToken');
+            erc20ForFee = token.address;
+        }
+
+        let validators : string[] = [];
+        if (options.validators) {
+            validators = options.validators;
+        } else {
+            // add up to 8 signers to `validators`
+            for (const signer of signers) {
+                const signerAddress = await signer.getAddress();
+                validators.push(signerAddress);
+                if (validators.length == 8) break;
+            }
+        }
+
         // make diamond cut
         const diamondCutFacet = await ethers.getContractAt('IDiamondCut', diamond.address);
         const diamondInitDeployment = await deployments.get('DiamondInit');
         const diamondInit = await ethers.getContractAt('DiamondInit', diamondInitDeployment.address);
-        const functionCall = diamondInit.interface.encodeFunctionData('init', []);
+        const functionCall = diamondInit.interface.encodeFunctionData('init', [
+            inputDuration,
+            challengePeriod,
+            inputLog2Size,
+            feePerClaim,
+            erc20ForFee,
+            feeManagerOwner,
+            validators,
+            erc20ForPortal,
+        ]);
         const tx = await diamondCutFacet.diamondCut(facetCuts, diamondInit.address, functionCall);
         const receipt = await tx.wait();
         if (!receipt.status) {

@@ -231,6 +231,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // DiamondInit
     const diamondInit = await deployments.deploy("DiamondInit", {
         from: contractOwnerAddress,
+        libraries: {
+            ClaimsMaskLibrary: claimsMaskLibrary.address,
+        },
     });
     console.log(`[${ diamondInit.address }] Deployed DiamondInit`);
 };
