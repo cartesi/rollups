@@ -22,6 +22,8 @@
 import client from './client';
 import { GetStateRequest } from '../src/proto/stateserver_pb'
 import { keccak256, defaultAbiCoder } from "ethers/lib/utils";
+import { deployments } from "hardhat";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 // Calculate input hash based on
 // input: data itself interpreted by L2
@@ -72,3 +74,122 @@ export const getState = async (initialState: string) => {
         });
     });
 };
+
+export interface DiamondOptions {
+    debug: boolean
+}
+
+enum FacetCutAction {
+    Add = 0,
+    Replace = 1,
+    Remove = 2,
+}
+
+interface FacetCut {
+    facetAddress: string,
+    action: FacetCutAction,
+    functionSelectors: string[],
+}
+
+export const deployDiamond = deployments.createFixture(
+    async (
+        hre: HardhatRuntimeEnvironment,
+        options: DiamondOptions = {debug: false},
+    ) => {
+        const { deployments, ethers } = hre;
+        const signers = await ethers.getSigners();
+        const contractOwnerAddress = await signers[0].getAddress();
+
+        // ensure facets are deployed
+        await deployments.fixture(['RollupsDiamond']);
+
+        // deploy the debug facet if `debug` is true
+        if (options.debug) {
+            const claimsMaskLibrary = await deployments.get('ClaimsMaskLibrary');
+            const debugFacet = await deployments.deploy("DebugFacet", {
+                from: contractOwnerAddress,
+                libraries: {
+                    ClaimsMaskLibrary: claimsMaskLibrary.address,
+                },
+            });
+            console.log(`[${ debugFacet.address }] Deployed DebugFacet`);
+        }
+
+        console.log();
+        console.log("===> Deploying diamond");
+
+        // deploy raw diamond with diamond cut facet
+        const diamond = await deployments.deploy("Diamond", {
+            from: contractOwnerAddress,
+            args: [
+                contractOwnerAddress,
+                (await deployments.get('DiamondCutFacet')).address,
+            ],
+        });
+        console.log(`[${ diamond.address }] Deployed Diamond`);
+
+        // list all facets to add in a diamond cut
+        const facetNames : string[] = [
+            // essential facets
+            "DiamondLoupeFacet",
+            "OwnershipFacet",
+            // rollups-related facets
+            "ERC20PortalFacet",
+            "ERC721PortalFacet",
+            "EtherPortalFacet",
+            "FeeManagerFacet",
+            "InputFacet",
+            "OutputFacet",
+            "RollupsFacet",
+            "SERC20PortalFacet",
+            "ValidatorManagerFacet",
+        ];
+
+        // add the debug facet to the diamond if `debug` is true
+        if (options.debug) {
+            facetNames.push("DebugFacet")
+        }
+
+        console.log();
+        console.log("===> Listing diamond facets");
+
+        // list all facet cuts to be made
+        const facetCuts : FacetCut[] = [];
+
+        for (const facetName of facetNames) {
+            const facetDeployment = await deployments.get(facetName);
+            const facet = await ethers.getContractAt(facetName, facetDeployment.address);
+            const signatures = Object.keys(facet.interface.functions);
+            const selectors = signatures.reduce((acc: string[], val: string) => {
+                if (val !== 'init(bytes') {
+                    acc.push(facet.interface.getSighash(val))
+                }
+                return acc;
+            }, []);
+            facetCuts.push({
+                facetAddress: facet.address,
+                action: FacetCutAction.Add,
+                functionSelectors: selectors,
+            });
+            console.log(`[${ facet.address }] Adding ${ facetName }`);
+        }
+
+        console.log();
+        console.log("===> Executing diamond cut");
+
+        // make diamond cut
+        const diamondCutFacet = await ethers.getContractAt('IDiamondCut', diamond.address);
+        const diamondInitDeployment = await deployments.get('DiamondInit');
+        const diamondInit = await ethers.getContractAt('DiamondInit', diamondInitDeployment.address);
+        const functionCall = diamondInit.interface.encodeFunctionData('init', []);
+        const tx = await diamondCutFacet.diamondCut(facetCuts, diamondInit.address, functionCall);
+        const receipt = await tx.wait();
+        if (!receipt.status) {
+            throw Error(`Diamond cut failed: ${tx.hash}`)
+        }
+
+        console.log(`Diamond cut succeeded!`)
+
+        return diamond;
+    }
+);
