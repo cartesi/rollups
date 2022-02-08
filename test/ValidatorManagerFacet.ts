@@ -85,6 +85,13 @@ describe("Validator Manager Facet", async () => {
         ).to.equal(hash_zero);
     });
 
+    it("check initial maximum number of validators", async () => {
+        expect(
+            await validatorManagerFacet.getMaxNumValidators(),
+            "get maximum number of validators"
+        ).to.equal(validators.length);
+    });
+
     it("onClaim should revert if claim is 0x00", async () => {
         await expect(
             debugFacet._onClaim(validators[0], hash_zero),
@@ -551,5 +558,141 @@ describe("Validator Manager Facet", async () => {
             await validatorManagerFacet.getCurrentClaim(),
             "current claim should reset"
         ).to.equal(hash_zero);
+    });
+
+    it("test #claims", async () => {
+        // check initial #claims
+        for (var i = 0; i < validators.length; i++) {
+            expect(
+                await validatorManagerFacet.getNumberOfClaimsByAddress(
+                    validators[i]
+                ),
+                "initial #claims"
+            ).to.equal(0);
+
+            expect(
+                await validatorManagerFacet.getNumberOfClaimsByIndex(i),
+                "initial #claims (for index)"
+            ).to.equal(0);
+        }
+
+        // all validators make the same claim
+        var claim = "0x" + "1".repeat(64);
+        for (var i = 0; i < validators.length; i++) {
+            await debugFacet._onClaim(validators[i], claim);
+            expect(
+                await validatorManagerFacet.getNumberOfClaimsByAddress(
+                    validators[i]
+                ),
+                "still 0 because claim hasn't finalized"
+            ).to.equal(0);
+
+            expect(
+                await validatorManagerFacet.getNumberOfClaimsByIndex(i),
+                "still 0 because claim hasn't finalized (for index)"
+            ).to.equal(0);
+        }
+        // wait until claim finalized (either consensus or timeout)
+        // new epoch begins and #claims increases
+        await debugFacet._onNewEpochVM();
+        for (var i = 0; i < validators.length; i++) {
+            expect(
+                await validatorManagerFacet.getNumberOfClaimsByAddress(
+                    validators[i]
+                ),
+                "now #claims increased"
+            ).to.equal(1);
+
+            expect(
+                await validatorManagerFacet.getNumberOfClaimsByIndex(i),
+                "now #claims increased (for index)"
+            ).to.equal(1);
+        }
+
+        // keep skipping to new epoches
+        for (let epoch = 1; epoch < 20; epoch++) {
+            // 1st validator keeps making claims
+            await debugFacet._onClaim(validators[0], claim);
+            await debugFacet._onNewEpochVM();
+            // check how #claims is increasing
+            expect(
+                await validatorManagerFacet.getNumberOfClaimsByAddress(
+                    validators[0]
+                ),
+                "check increasing #claims"
+            ).to.equal(epoch + 1);
+
+            expect(
+                await validatorManagerFacet.getNumberOfClaimsByIndex(0),
+                "check increasing #claims (for index)"
+            ).to.equal(epoch + 1);
+        }
+
+        // currently, #claims gets cleared once a validator makes a wrong claim
+        await debugFacet._onClaim(validators[0], claim);
+        var claim2 = "0x" + "2".repeat(64);
+        await debugFacet._onClaim(validators[1], claim2);
+        // let the 2nd validator win the dispute
+        await debugFacet._onDisputeEnd(validators[1], validators[0], claim2);
+        await debugFacet._onNewEpochVM();
+        expect(
+            await validatorManagerFacet.getNumberOfClaimsByAddress(
+                validators[0]
+            ),
+            "now the #claims for validator0 should get cleared"
+        ).to.equal(0);
+        expect(
+            await validatorManagerFacet.getNumberOfClaimsByAddress(
+                validators[1]
+            ),
+            "#claims for validator1 should increase by 1"
+        ).to.equal(2);
+
+        // same for index methods
+        expect(
+            await validatorManagerFacet.getNumberOfClaimsByIndex(0),
+            "now the #claims for validator0 should get cleared (for index)"
+        ).to.equal(0);
+        expect(
+            await validatorManagerFacet.getNumberOfClaimsByIndex(1),
+            "#claims for validator1 should increase by 1 (for index)"
+        ).to.equal(2);
+    });
+
+    it("test getValidatorIndex() and its revert behavior", async () => {
+        for (let i = 0; i < 8; i++) {
+            expect(
+                await validatorManagerFacet.getValidatorIndex(validators[i]),
+                "check the return value of getValidatorIndex()"
+            ).to.equal(i);
+        }
+
+        // now test for an outsider
+        await expect(
+            validatorManagerFacet.getValidatorIndex(address_zero),
+            "address 0, should revert"
+        ).to.be.revertedWith("address 0");
+        await expect(
+            validatorManagerFacet.getValidatorIndex(address_one),
+            "address not in the validator set"
+        ).to.be.revertedWith("validator not found");
+
+        // now test when some validator gets kicked out
+        var claim = "0x" + "1".repeat(64);
+        var claim2 = "0x" + "2".repeat(64);
+        await debugFacet._onClaim(validators[0], claim);
+        await debugFacet._onClaim(validators[1], claim2);
+        // let the 2nd validator lose the dispute
+        await debugFacet._onDisputeEnd(validators[0], validators[1], claim);
+        await expect(
+            validatorManagerFacet.getValidatorIndex(validators[1]),
+            "nvalidators[1] gets kicked out, should revert"
+        ).to.be.revertedWith("validator not found");
+        for (let i = 0; i < 8 && i != 1; i++) {
+            expect(
+                await validatorManagerFacet.getValidatorIndex(validators[i]),
+                "other validators should still work fine"
+            ).to.equal(i);
+        }
     });
 });

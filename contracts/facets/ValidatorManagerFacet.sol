@@ -47,9 +47,9 @@ contract ValidatorManagerFacet is IValidatorManager {
         return vmDS.currentClaim;
     }
 
-    // @notice get number of claims the sender has made
-    // @params validator address
-    // @return #claims
+    /// @notice get number of claims the sender has made
+    /// @param _sender validator address
+    /// @return #claims
     function getNumberOfClaimsByAddress(address payable _sender)
         public
         view
@@ -60,18 +60,18 @@ contract ValidatorManagerFacet is IValidatorManager {
         return vmDS.getNumberOfClaimsByAddress(_sender);
     }
 
-    // @notice find the validator and return the index or revert
-    // @params validator address
-    // @return validator index or revert
+    /// @notice find the validator and return the index or revert
+    /// @param _sender validator address
+    /// @return validator index or revert
     function getValidatorIndex(address _sender) public view returns (uint256) {
         LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
         return vmDS.getValidatorIndex(_sender);
     }
 
-    // @notice get number of claims by the index in the validator set
-    // @params the index in validator set
-    // @return #claims
+    /// @notice get number of claims by the index in the validator set
+    /// @param _index the index in validator set
+    /// @return #claims
     function getNumberOfClaimsByIndex(uint256 _index)
         public
         view
@@ -80,5 +80,13 @@ contract ValidatorManagerFacet is IValidatorManager {
         LibValidatorManager.DiamondStorage storage vmDS =
             LibValidatorManager.diamondStorage();
         return vmDS.getNumberOfClaimsByIndex(_index);
+    }
+
+    /// @notice get the maximum number of validators defined in validator manager
+    /// @return the maximum number of validators
+    function getMaxNumValidators() public view returns (uint256) {
+        LibValidatorManager.DiamondStorage storage vmDS =
+            LibValidatorManager.diamondStorage();
+        return vmDS.getMaxNumValidators();
     }
 }

@@ -359,10 +359,10 @@ library LibValidatorManager {
         revert("validator not found");
     }
 
-    // @notice get number of claims the sender has made
-    // @params ds pointer to diamond storage
-    // @params validator address
-    // @return #claims
+    /// @notice get number of claims the sender has made
+    /// @param ds pointer to diamond storage
+    /// @param _sender validator address
+    /// @return #claims
     function getNumberOfClaimsByAddress(
         DiamondStorage storage ds,
         address payable _sender
@@ -376,15 +376,26 @@ library LibValidatorManager {
         return 0;
     }
 
-    // @notice get number of claims by the index in the validator set
-    // @params ds pointer to diamond storage
-    // @params index the index in validator set
-    // @return #claims
+    /// @notice get number of claims by the index in the validator set
+    /// @param ds pointer to diamond storage
+    /// @param index the index in validator set
+    /// @return #claims
     function getNumberOfClaimsByIndex(DiamondStorage storage ds, uint256 index)
         internal
         view
         returns (uint256)
     {
         return ds.claimsMask.getNumClaims(index);
+    }
+
+    /// @notice get the maximum number of validators defined in validator manager
+    /// @param ds pointer to diamond storage
+    /// @return the maximum number of validators
+    function getMaxNumValidators(DiamondStorage storage ds)
+        internal
+        view
+        returns (uint256)
+    {
+        return ds.maxNumValidators;
     }
 }
