@@ -74,7 +74,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
                 err: "Error querying for new epoch events",
             })?;
 
-        // RollupsImpl Claim event
+        // RollupsFacet Claim event
         let rollups_claim_events =
             rollups_facet.claim_filter().query().await.context(
                 SyncContractError {
@@ -210,7 +210,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
                 err: "Error querying for new epoch events",
             })?;
 
-        // RollupsImpl Claim event
+        // RollupsFacet Claim event
         let rollups_claim_events = rollups_facet
             .claim_filter()
             .query()
