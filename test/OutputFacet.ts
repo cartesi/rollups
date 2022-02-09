@@ -8,7 +8,7 @@ import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { BytesLike } from "@ethersproject/bytes";
 import { keccak256 } from "ethers/lib/utils";
-import { getState } from "./utils";
+import { deployDiamond, getState } from "./utils";
 
 use(solidity);
 
@@ -41,11 +41,10 @@ describe("Output Facet", () => {
     let encodedNotice: string;
 
     beforeEach(async () => {
-        await deployments.fixture("DebugDiamond");
+        const diamond = await deployDiamond({ debug: true });
         signers = await ethers.getSigners();
-        const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
-        outputFacet = OutputFacet__factory.connect(diamondAddress, signers[0]);
-        debugFacet = DebugFacet__factory.connect(diamondAddress, signers[0]);
+        outputFacet = OutputFacet__factory.connect(diamond.address, signers[0]);
+        debugFacet = DebugFacet__factory.connect(diamond.address, signers[0]);
 
         // deploy a simple contract to execute
         const simpleContract = await deployments.deploy("SimpleContract", {

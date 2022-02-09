@@ -33,7 +33,7 @@ import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { IERC721 } from "../dist/src/types/IERC721";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
-import { getInputHash } from "./utils";
+import { deployDiamond, getInputHash } from "./utils";
 
 use(solidity);
 
@@ -45,11 +45,10 @@ describe("ERC721Portal Facet", async () => {
     let mockERC721: MockContract; //mock erc721
 
     beforeEach(async () => {
-        await deployments.fixture(["DebugDiamond"]);
+        const diamond = await deployDiamond({ debug: true });
         [signer, signer2] = await ethers.getSigners();
-        const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
-        portalFacet = ERC721PortalFacet__factory.connect(diamondAddress, signer);
-        debugFacet = DebugFacet__factory.connect(diamondAddress, signer);
+        portalFacet = ERC721PortalFacet__factory.connect(diamond.address, signer);
+        debugFacet = DebugFacet__factory.connect(diamond.address, signer);
 
         // Deploy a mock ERC-721 contract
         const IERC721 = await deployments.getArtifact("IERC721");

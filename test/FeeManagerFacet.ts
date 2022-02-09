@@ -8,9 +8,9 @@ import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { SimpleToken } from "../dist/src/types/SimpleToken";
 import { SimpleToken__factory } from "../dist/src/types/factories/SimpleToken__factory";
-import { RollupsInitFacet } from "../dist/src/types/RollupsInitFacet";
-import { RollupsInitFacet__factory } from "../dist/src/types/factories/RollupsInitFacet__factory";
-import { getState } from "./utils";
+import { DiamondInit } from "../dist/src/types/DiamondInit";
+import { DiamondInit__factory } from "../dist/src/types/factories/DiamondInit__factory";
+import { deployDiamond, getState } from "./utils";
 
 use(solidity);
 
@@ -20,7 +20,7 @@ describe("FeeManager Facet", () => {
     let signers: Signer[];
     let token: SimpleToken;
     let feeManagerFacet: FeeManagerFacet;
-    let rollupsInitFacet: RollupsInitFacet;
+    let diamondInit: DiamondInit;
     let debugFacet: DebugFacet;
     let tokenSupply = 1000000; // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
     let initialFeePerClaim = 10; // set initial fees per claim as 10 token
@@ -29,17 +29,15 @@ describe("FeeManager Facet", () => {
         // get signers
         signers = await ethers.getSigners();
 
-        await deployments.fixture(["DebugDiamond"]);
+        const diamond = await deployDiamond({ debug: true });
 
-        const diamondAddress = (await deployments.get("CartesiRollupsDebug"))
-            .address;
-        debugFacet = DebugFacet__factory.connect(diamondAddress, signers[0]);
+        debugFacet = DebugFacet__factory.connect(diamond.address, signers[0]);
         feeManagerFacet = FeeManagerFacet__factory.connect(
-            diamondAddress,
+            diamond.address,
             signers[0]
         );
-        rollupsInitFacet = RollupsInitFacet__factory.connect(
-            diamondAddress,
+        diamondInit = DiamondInit__factory.connect(
+            diamond.address,
             signers[0]
         );
         const tokenAddress = (await deployments.get("SimpleToken")).address;
@@ -65,12 +63,12 @@ describe("FeeManager Facet", () => {
     });
 
     it("test constructor event FeeManagerCreated", async () => {
-        let eventFilter = rollupsInitFacet.filters.FeeManagerInitialized(
+        let eventFilter = diamondInit.filters.FeeManagerInitialized(
             null,
             null,
             null
         );
-        let event = await rollupsInitFacet.queryFilter(eventFilter);
+        let event = await diamondInit.queryFilter(eventFilter);
         let eventArgs = event[0]["args"];
 
         expect(eventArgs["_feePerClaim"], "feePerClaim").to.equal(

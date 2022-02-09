@@ -31,7 +31,7 @@ import { InputFacet } from "../dist/src/types/InputFacet";
 import { InputFacet__factory } from "../dist/src/types/factories/InputFacet__factory";
 import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
-import { getState, getInputHash } from "./utils";
+import { deployDiamond, getState, getInputHash } from "./utils";
 
 use(solidity);
 
@@ -50,12 +50,11 @@ describe("Input Facet", () => {
     }
 
     beforeEach(async () => {
-        await deployments.fixture(["DebugDiamond"]);
+        const diamond = await deployDiamond({ debug: true });
         [signer] = await ethers.getSigners();
 
-        const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
-        debugFacet = DebugFacet__factory.connect(diamondAddress, signer);
-        inputFacet = InputFacet__factory.connect(diamondAddress, signer);
+        debugFacet = DebugFacet__factory.connect(diamond.address, signer);
+        inputFacet = InputFacet__factory.connect(diamond.address, signer);
     });
 
     it("addInput should revert if input length == 0", async () => {

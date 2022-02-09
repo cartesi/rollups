@@ -6,7 +6,7 @@ import { RollupsFacet } from "../dist/src/types/RollupsFacet";
 import { RollupsFacet__factory } from "../dist/src/types/factories/RollupsFacet__factory";
 import { RollupsInitFacet } from "../dist/src/types/RollupsInitFacet";
 import { RollupsInitFacet__factory } from "../dist/src/types/factories/RollupsInitFacet__factory";
-import { getState } from "./utils";
+import { deployDiamond, getState } from "./utils";
 
 use(solidity);
 
@@ -58,14 +58,23 @@ describe("Rollups Facet", () => {
     beforeEach(async () => {
         signers = await ethers.getSigners();
 
-        await deployments.fixture(["Diamond"]);
-        const dAddress = (await deployments.get("CartesiRollups")).address;
+        let validators: string[] = [];
+
+        for (let i = 0; i < 3; i++) {
+            let address = await signers[i].getAddress();
+            validators.push(address);
+        }
+
+        const diamond = await deployDiamond({
+            inputLog2Size: INPUT_LOG2_SIZE,
+            validators: validators,
+        });
         rollupsFacet = RollupsFacet__factory.connect(
-            dAddress,
+            diamond.address,
             signers[0]
         );
         rollupsInitFacet = RollupsInitFacet__factory.connect(
-            dAddress,
+            diamond.address,
             signers[0]
         );
         // get the timestamp of the second last block, because after deploying rollups, portalImpl was deployed
@@ -75,7 +84,7 @@ describe("Rollups Facet", () => {
         initialEpoch = "0x0";
         initialState = JSON.stringify({
             initial_epoch: initialEpoch,
-            rollups_address: rollupsFacet.address,
+            rollups_address: diamond.address,
         });
     });
 

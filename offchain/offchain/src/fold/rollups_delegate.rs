@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::rollups_init_facet::*;
+use crate::contracts::diamond_init::*;
 
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
 use super::output_delegate::OutputFoldDelegate;
@@ -74,13 +74,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let (dapp_contract_address, epoch_number) = *initial_state;
 
-        let contract =
-            RollupsInitFacet::new(dapp_contract_address, Arc::clone(&middleware));
+        let diamond_init =
+            DiamondInit::new(dapp_contract_address, Arc::clone(&middleware));
 
         // Retrieve constants from contract creation event
         let constants = {
             let (create_event, meta) = {
-                let e = contract
+                let e = diamond_init
                     .rollups_initialized_filter()
                     .query_with_meta()
                     .await

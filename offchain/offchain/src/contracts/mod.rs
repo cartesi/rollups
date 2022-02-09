@@ -1,3 +1,6 @@
+pub mod diamond_cut_facet;
+pub mod diamond_init;
+pub mod diamond_loupe_facet;
 pub mod erc20_contract;
 pub mod erc20_portal_facet;
 pub mod erc721_portal_facet;
@@ -6,6 +9,5 @@ pub mod fee_manager_facet;
 pub mod input_facet;
 pub mod output_facet;
 pub mod rollups_facet;
-pub mod rollups_init_facet;
 pub mod serc20_portal_facet;
 pub mod validator_manager_facet;

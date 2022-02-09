@@ -1,5 +1,5 @@
 use crate::contracts::fee_manager_facet::*;
-use crate::contracts::rollups_init_facet::*;
+use crate::contracts::diamond_init::*;
 
 use super::types::{FeeManagerState, NumRedeemed};
 
@@ -48,16 +48,16 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     ) -> SyncResult<Self::Accumulator, A> {
         let dapp_contract_address = initial_state;
 
-        let rollups_init_facet = access
+        let diamond_init = access
             .build_sync_contract(
                 *dapp_contract_address,
                 block.number,
-                RollupsInitFacet::new,
+                DiamondInit::new,
             )
             .await;
 
         // `fee_manager_created` event
-        let events = rollups_init_facet.
+        let events = diamond_init.
             fee_manager_initialized_filter()
             .query()
             .await

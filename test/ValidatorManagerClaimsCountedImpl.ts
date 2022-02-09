@@ -27,7 +27,7 @@ import { RollupsImpl } from "../dist/src/types/RollupsImpl";
 import { RollupsImpl__factory } from "../dist/src/types/factories/RollupsImpl__factory";
 import { Signer } from "ethers";
 import { ValidatorManagerClaimsCountedImpl } from "../dist/src/types/ValidatorManagerClaimsCountedImpl";
-import { getState } from "./getState";
+import { getState } from "./utils";
 
 use(solidity);
 

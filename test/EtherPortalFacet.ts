@@ -28,7 +28,7 @@ import { EtherPortalFacet__factory } from "../dist/src/types/factories/EtherPort
 import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
-import { getInputHash } from "./utils";
+import { deployDiamond, getInputHash } from "./utils";
 
 use(solidity);
 
@@ -39,11 +39,10 @@ describe("EtherPortal Facet", async () => {
     var debugFacet: DebugFacet;
 
     beforeEach(async () => {
-        await deployments.fixture(["DebugDiamond"]);
+        const diamond = await deployDiamond({ debug: true });
         [signer, signer2] = await ethers.getSigners();
-        const diamondAddress = (await deployments.get("CartesiRollupsDebug")).address;
-        portalFacet = EtherPortalFacet__factory.connect(diamondAddress, signer);
-        debugFacet = DebugFacet__factory.connect(diamondAddress, signer);
+        portalFacet = EtherPortalFacet__factory.connect(diamond.address, signer);
+        debugFacet = DebugFacet__factory.connect(diamond.address, signer);
     });
 
     it("etherDeposit should emit events", async () => {

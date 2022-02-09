@@ -29,6 +29,7 @@ import { DebugFacet } from "../dist/src/types/DebugFacet";
 import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
 import { ValidatorManagerFacet } from "../dist/src/types/ValidatorManagerFacet";
 import { ValidatorManagerFacet__factory } from "../dist/src/types/factories/ValidatorManagerFacet__factory";
+import { deployDiamond } from "./utils";
 
 use(solidity);
 
@@ -50,16 +51,14 @@ describe("Validator Manager Facet", async () => {
     }
 
     beforeEach(async () => {
-        await deployments.fixture(["DebugDiamond"]);
         [, signer] = await ethers.getSigners();
-        const diamondAddress = (await deployments.get("CartesiRollupsDebug"))
-            .address;
-        rollupsFacet = RollupsFacet__factory.connect(diamondAddress, signer);
+        const diamond = await deployDiamond({ debug: true });
+        rollupsFacet = RollupsFacet__factory.connect(diamond.address, signer);
         validatorManagerFacet = ValidatorManagerFacet__factory.connect(
-            diamondAddress,
+            diamond.address,
             signer
         );
-        debugFacet = DebugFacet__factory.connect(diamondAddress, signer);
+        debugFacet = DebugFacet__factory.connect(diamond.address, signer);
         validators = await debugFacet._getValidators();
     });
 

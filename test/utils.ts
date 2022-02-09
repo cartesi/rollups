@@ -77,10 +77,10 @@ export const getState = async (initialState: string) => {
 };
 
 export interface DiamondOptions {
-    inputDuration?: BigNumber, // defaults to 1 day
-    challengePeriod?: BigNumber, // defaults to 7 days
-    inputLog2Size?: BigNumber, // defaults to 8 (thus, 2^8)
-    feePerClaim?: BigNumber, // defaults to 10 tokens
+    inputDuration?: number | BigNumber, // defaults to 1 day
+    challengePeriod?: number | BigNumber, // defaults to 7 days
+    inputLog2Size?: number | BigNumber, // defaults to 8 (thus, 2^8)
+    feePerClaim?: number | BigNumber, // defaults to 10 tokens
     erc20ForFee?: string, // defaults to a SimpleToken
     feeManagerOwner?: string, // defaults to the first signer
     validators?: string[], // defaults to the 8 first signers
@@ -201,6 +201,7 @@ export const deployDiamond = deployments.createFixture(
         console.log();
         console.log("===> Executing diamond cut");
 
+        // Default option values
         let inputDuration = options.inputDuration ? options.inputDuration : (1 * DAY);
         let challengePeriod = options.challengePeriod ? options.challengePeriod : (7 * DAY);
         let inputLog2Size = options.inputLog2Size ? options.inputLog2Size : 8;
