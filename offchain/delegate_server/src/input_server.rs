@@ -20,7 +20,7 @@ pub struct InputDelegateManager {
 #[derive(Deserialize, Serialize)]
 struct InitialState {
     pub epoch_number: U256,
-    pub input_address: Address,
+    pub dapp_contract_address: Address,
 }
 
 #[tonic::async_trait]
@@ -45,7 +45,7 @@ impl DelegateManager for InputDelegateManager {
         let contract_state = self
             .fold
             .get_state_for_block(
-                &(initial_state.input_address, initial_state.epoch_number),
+                &(initial_state.dapp_contract_address, initial_state.epoch_number),
                 None,
             )
             .await

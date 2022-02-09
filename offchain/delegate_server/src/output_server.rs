@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 struct InitialState {
-    output_address: Address,
+    dapp_contract_address: Address,
 }
 
 pub struct OutputDelegateManager {
@@ -45,7 +45,7 @@ impl DelegateManager for OutputDelegateManager {
 
         let contract_state = self
             .fold
-            .get_state_for_block(&initial_state.output_address, None)
+            .get_state_for_block(&initial_state.dapp_contract_address, None)
             .await
             .map_err(|e| Status::new(Code::Unavailable, format!("{}", e)))?
             .state;
