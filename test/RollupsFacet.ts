@@ -4,8 +4,8 @@ import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import { RollupsFacet } from "../dist/src/types/RollupsFacet";
 import { RollupsFacet__factory } from "../dist/src/types/factories/RollupsFacet__factory";
-import { RollupsInitFacet } from "../dist/src/types/RollupsInitFacet";
-import { RollupsInitFacet__factory } from "../dist/src/types/factories/RollupsInitFacet__factory";
+import { DiamondInit } from "../dist/src/types/DiamondInit";
+import { DiamondInit__factory } from "../dist/src/types/factories/DiamondInit__factory";
 import { deployDiamond, getState } from "./utils";
 
 use(solidity);
@@ -18,7 +18,7 @@ describe("Rollups Facet", () => {
     let enableDelegate = process.env["DELEGATE_TEST"];
 
     let rollupsFacet: RollupsFacet;
-    let rollupsInitFacet: RollupsInitFacet;
+    let diamondInit: DiamondInit;
 
     const MINUTE = 60; // seconds in a minute
     const HOUR = 60 * MINUTE; // seconds in an hour
@@ -73,7 +73,7 @@ describe("Rollups Facet", () => {
             diamond.address,
             signers[0]
         );
-        rollupsInitFacet = RollupsInitFacet__factory.connect(
+        diamondInit = DiamondInit__factory.connect(
             diamond.address,
             signers[0]
         );
@@ -254,11 +254,11 @@ describe("Rollups Facet", () => {
     it("event RollupsInitialized", async () => {
         // we use ethers.js to query historic events
         // ref: https://docs.ethers.io/v5/single-page/#/v5/getting-started/-%23-getting-started--history
-        let eventFilter = rollupsInitFacet.filters.RollupsInitialized(
+        let eventFilter = diamondInit.filters.RollupsInitialized(
             null,
             null,
         );
-        let event = await rollupsInitFacet.queryFilter(eventFilter);
+        let event = await diamondInit.queryFilter(eventFilter);
         let eventArgs = event[0]["args"]; // get 'args' from the first RollupsInitialized event
 
         expect(eventArgs["_inputDuration"], "Input Duration").to.equal(

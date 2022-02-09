@@ -1,12 +1,17 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+// Copyright 2021 Cartesi Pte. Ltd.
 
-/******************************************************************************\
-* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
-* EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
-*
-* Implementation of a diamond.
-/******************************************************************************/
+// SPDX-License-Identifier: Apache-2.0
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+// CONDITIONS OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the License.
+
+// @title Diamond Initialization Contract
+pragma solidity ^0.8.0;
 
 // Rollups-related dependencies
 import {Phase} from "../interfaces/IRollups.sol";
@@ -25,12 +30,6 @@ import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IERC173} from "../interfaces/IERC173.sol"; // not in openzeppelin-contracts yet
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-// Initializes the diamond contract
-// EIP-2535 specifies that the `diamondCut` function takes two optional
-// arguments: address _init and bytes calldata _calldata
-// These arguments are used to execute an arbitrary function using delegatecall
-// in order to set state variables in the diamond during deployment or an upgrade
-// More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface
 contract DiamondInit {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
 
