@@ -43,15 +43,15 @@ describe("FeeManager Implementation", () => {
         let deployedToken = await deployments.get("SimpleToken");
         token = SimpleToken__factory.connect(deployedToken.address, signers[0]);
 
-        // deploy ClaimsMaskLibrary
-        let claimsMaskLibrary = await deployments.get("ClaimsMaskLibrary");
-        const claimsMaskLibraryAddress = claimsMaskLibrary.address;
+        // deploy LibClaimsMask
+        let libClaimsMask = await deployments.get("LibClaimsMask");
+        const libClaimsMaskAddress = libClaimsMask.address;
 
         // deploy Fee Manager
         let deployedFeeManager = await deployments.deploy("FeeManagerImpl", {
             from: await signers[0].getAddress(),
             libraries: {
-                ClaimsMaskLibrary: claimsMaskLibraryAddress,
+                LibClaimsMask: libClaimsMaskAddress,
             },
             args: [
                 mockValidatorManager.address,

@@ -92,11 +92,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
     console.log(`[${ merkle.address }] Deployed Merkle`);
 
-    // ClaimsMaskLibrary
-    const claimsMaskLibrary = await deployments.deploy("ClaimsMaskLibrary", {
+    // LibClaimsMask
+    const libClaimsMask = await deployments.deploy("LibClaimsMask", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ claimsMaskLibrary.address }] Deployed ClaimsMaskLibrary`);
+    console.log(`[${ libClaimsMask.address }] Deployed LibClaimsMask`);
 
     // Rollups libraries
     // =================
@@ -120,7 +120,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const libValidatorManager = await deployments.deploy("LibValidatorManager", {
         from: contractOwnerAddress,
         libraries: {
-            ClaimsMaskLibrary: claimsMaskLibrary.address,
+            LibClaimsMask: libClaimsMask.address,
         },
     });
     console.log(`[${ libValidatorManager.address }] Deployed LibValidatorManager`);
@@ -177,7 +177,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const feeManagerFacet = await deployments.deploy("FeeManagerFacet", {
         from: contractOwnerAddress,
         libraries: {
-            ClaimsMaskLibrary: claimsMaskLibrary.address,
+            LibClaimsMask: libClaimsMask.address,
         },
     });
     console.log(`[${ feeManagerFacet.address }] Deployed FeeManagerFacet`);
@@ -202,7 +202,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const rollupsFacet = await deployments.deploy("RollupsFacet", {
         from: contractOwnerAddress,
         libraries: {
-            ClaimsMaskLibrary: claimsMaskLibrary.address,
+            LibClaimsMask: libClaimsMask.address,
         },
     });
     console.log(`[${ rollupsFacet.address }] Deployed RollupsFacet`);
@@ -217,7 +217,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const validatorManagerFacet = await deployments.deploy("ValidatorManagerFacet", {
         from: contractOwnerAddress,
         libraries: {
-            ClaimsMaskLibrary: claimsMaskLibrary.address,
+            LibClaimsMask: libClaimsMask.address,
         },
     });
     console.log(`[${ validatorManagerFacet.address }] Deployed ValidatorManagerFacet`);
@@ -232,7 +232,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const diamondInit = await deployments.deploy("DiamondInit", {
         from: contractOwnerAddress,
         libraries: {
-            ClaimsMaskLibrary: claimsMaskLibrary.address,
+            LibClaimsMask: libClaimsMask.address,
         },
     });
     console.log(`[${ diamondInit.address }] Deployed DiamondInit`);

@@ -26,7 +26,7 @@ import {LibOutput} from "../libraries/LibOutput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibSERC20Portal} from "../libraries/LibSERC20Portal.sol";
 import {LibFeeManager} from "../libraries/LibFeeManager.sol";
-import {ClaimsMaskLibrary, ClaimsMask} from "../ClaimsMaskLibrary.sol";
+import {LibClaimsMask, ClaimsMask} from "../libraries/LibClaimsMask.sol";
 
 contract DebugFacet {
     using LibRollups for LibRollups.DiamondStorage;
@@ -35,7 +35,7 @@ contract DebugFacet {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
     using LibSERC20Portal for LibSERC20Portal.DiamondStorage;
     using LibFeeManager for LibFeeManager.DiamondStorage;
-    using ClaimsMaskLibrary for ClaimsMask;
+    using LibClaimsMask for ClaimsMask;
 
     function _setInputAccumulationStart(uint32 _inputAccumulationStart) public {
         LibRollups.DiamondStorage storage rollupsDS =

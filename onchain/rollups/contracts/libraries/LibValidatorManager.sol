@@ -15,10 +15,10 @@ pragma solidity ^0.8.0;
 
 import {Result} from "../interfaces/IValidatorManager.sol";
 
-import {ClaimsMaskLibrary, ClaimsMask} from "../ClaimsMaskLibrary.sol";
+import {LibClaimsMask, ClaimsMask} from "../libraries/LibClaimsMask.sol";
 
 library LibValidatorManager {
-    using ClaimsMaskLibrary for ClaimsMask;
+    using LibClaimsMask for ClaimsMask;
 
     bytes32 constant DIAMOND_STORAGE_POSITION =
         keccak256("ValidatorManager.diamond.storage");

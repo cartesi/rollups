@@ -14,7 +14,7 @@
 pragma solidity >=0.8.8;
 
 import "./ValidatorManager.sol";
-import "./ClaimsMaskLibrary.sol";
+import "./libraries/LibClaimsMask.sol";
 
 contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     address immutable rollups; // rollups contract using this validator
@@ -29,7 +29,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
     // | agreement mask | consensus mask | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |
     // |     8 bits     |     8 bits     |      30 bits       |      30 bits       | ... |      30 bits       |
     ClaimsMask claimsMask;
-    using ClaimsMaskLibrary for ClaimsMask;
+    using LibClaimsMask for ClaimsMask;
 
     /// @notice functions modified by onlyRollups will only be executed if
     ///         they're called by Rollups contract, otherwise it will throw an exception
@@ -51,7 +51,7 @@ contract ValidatorManagerClaimsCountedImpl is ValidatorManager {
 
         // create a new ClaimsMask, with only the consensus goal set,
         //      according to the number of validators
-        claimsMask = ClaimsMaskLibrary.newClaimsMaskWithConsensusGoalSet(
+        claimsMask = LibClaimsMask.newClaimsMaskWithConsensusGoalSet(
             maxNumValidators
         );
     }

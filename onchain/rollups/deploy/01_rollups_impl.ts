@@ -66,14 +66,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         args: [tokenSupply],
     });
     let token = SimpleToken__factory.connect(deployedToken.address, signers[0]);
-    // deploy ClaimsMaskLibrary that will be used for FeeManager
-    const claimsMaskLibrary = await deployments.deploy(
-        "ClaimsMaskLibrary",
-        {
-            from: await signers[0].getAddress(),
-        }
-    );
-    const claimsMaskLibraryAddress = claimsMaskLibrary.address;
+    // deploy LibClaimsMask that will be used for FeeManager
+    const libClaimsMask = await deployments.deploy("LibClaimsMask", {
+        from: await signers[0].getAddress(),
+    });
+    const libClaimsMaskAddress = libClaimsMask.address;
 
     // RollupsImpl
     const { address } = await deployments.deploy("RollupsImpl", {
@@ -81,7 +78,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         libraries: {
             Bitmask: bitMaskAddress,
             Merkle: merkleAddress,
-            ClaimsMaskLibrary: claimsMaskLibraryAddress,
+            LibClaimsMask: libClaimsMaskAddress,
         },
         args: [
             INPUT_DURATION,

@@ -19,7 +19,7 @@ import {LibRollups} from "../libraries/LibRollups.sol";
 import {LibInput} from "../libraries/LibInput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibSERC20Portal} from "../libraries/LibSERC20Portal.sol";
-import {ClaimsMaskLibrary} from "../ClaimsMaskLibrary.sol";
+import {LibClaimsMask} from "../libraries/LibClaimsMask.sol";
 import {LibFeeManager} from "../libraries/LibFeeManager.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -104,7 +104,7 @@ contract DiamondInit {
 
         // create a new ClaimsMask, with only the consensus goal set,
         //      according to the number of validators
-        vmDS.claimsMask = ClaimsMaskLibrary.newClaimsMaskWithConsensusGoalSet(
+        vmDS.claimsMask = LibClaimsMask.newClaimsMaskWithConsensusGoalSet(
             maxNumValidators
         );
     }

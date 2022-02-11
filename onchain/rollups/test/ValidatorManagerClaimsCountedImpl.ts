@@ -39,7 +39,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
     var VMCC: ValidatorManagerClaimsCountedImpl;
     const provider = new MockProvider();
     var validators: string[] = [];
-    let claimsMaskLibraryAddress: any;
+    let libClaimsMaskAddress: any;
     let rollupsImpl: RollupsImpl;
 
     let hash_zero = ethers.constants.HashZero;
@@ -65,9 +65,9 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             validators.push(address);
         }
 
-        // deploy ClaimsMaskLibrary
-        let claimsMaskLibrary = await deployments.get("ClaimsMaskLibrary");
-        claimsMaskLibraryAddress = claimsMaskLibrary.address;
+        // deploy LibClaimsMask
+        let libClaimsMask = await deployments.get("LibClaimsMask");
+        libClaimsMaskAddress = libClaimsMask.address;
 
         // deploy ValidatorManagerClaimsCountedImpl
         let deployedVMCC = await deployments.deploy(
@@ -75,7 +75,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             {
                 from: await rollups.getAddress(),
                 libraries: {
-                    ClaimsMaskLibrary: claimsMaskLibraryAddress,
+                    LibClaimsMask: libClaimsMaskAddress,
                 },
                 args: [await rollups.getAddress(), validators],
             }
@@ -104,7 +104,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
             deployments.deploy("ValidatorManagerClaimsCountedImpl", {
                 from: await rollups.getAddress(),
                 libraries: {
-                    ClaimsMaskLibrary: claimsMaskLibraryAddress,
+                    LibClaimsMask: libClaimsMaskAddress,
                 },
                 args: [await rollups.getAddress(), wrongValidators],
             })

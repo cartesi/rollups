@@ -22,7 +22,7 @@ pragma solidity >=0.8.8;
 
 type ClaimsMask is uint256;
 
-library ClaimsMaskLibrary {
+library LibClaimsMask {
     uint256 constant claimsBitLen = 30; // #bits used for each #claims
 
     /// @notice this function creates a new ClaimsMask variable with value _value

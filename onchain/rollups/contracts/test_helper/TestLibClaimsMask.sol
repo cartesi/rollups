@@ -13,11 +13,11 @@
 /// @title Test ClaimsMask library
 pragma solidity >=0.8.8;
 
-import "../ClaimsMaskLibrary.sol";
+import "../libraries/LibClaimsMask.sol";
 
-contract TestClaimsMaskLibrary {
+contract TestLibClaimsMask {
     function newClaimsMask(uint256 _value) public pure returns (ClaimsMask) {
-        return ClaimsMaskLibrary.newClaimsMask(_value);
+        return LibClaimsMask.newClaimsMask(_value);
     }
 
     function newClaimsMaskWithConsensusGoalSet(uint256 _numValidators)
@@ -25,8 +25,7 @@ contract TestClaimsMaskLibrary {
         pure
         returns (ClaimsMask)
     {
-        return
-            ClaimsMaskLibrary.newClaimsMaskWithConsensusGoalSet(_numValidators);
+        return LibClaimsMask.newClaimsMaskWithConsensusGoalSet(_numValidators);
     }
 
     function getNumClaims(ClaimsMask _claimsMask, uint256 _validatorIndex)
@@ -34,7 +33,7 @@ contract TestClaimsMaskLibrary {
         pure
         returns (uint256)
     {
-        return ClaimsMaskLibrary.getNumClaims(_claimsMask, _validatorIndex);
+        return LibClaimsMask.getNumClaims(_claimsMask, _validatorIndex);
     }
 
     function increaseNumClaims(
@@ -43,7 +42,7 @@ contract TestClaimsMaskLibrary {
         uint256 _value
     ) public pure returns (ClaimsMask) {
         return
-            ClaimsMaskLibrary.increaseNumClaims(
+            LibClaimsMask.increaseNumClaims(
                 _claimsMask,
                 _validatorIndex,
                 _value
@@ -55,12 +54,7 @@ contract TestClaimsMaskLibrary {
         uint256 _validatorIndex,
         uint256 _value
     ) public pure returns (ClaimsMask) {
-        return
-            ClaimsMaskLibrary.setNumClaims(
-                _claimsMask,
-                _validatorIndex,
-                _value
-            );
+        return LibClaimsMask.setNumClaims(_claimsMask, _validatorIndex, _value);
     }
 
     function clearAgreementMask(ClaimsMask _claimsMask)
@@ -68,7 +62,7 @@ contract TestClaimsMaskLibrary {
         pure
         returns (ClaimsMask)
     {
-        return ClaimsMaskLibrary.clearAgreementMask(_claimsMask);
+        return LibClaimsMask.clearAgreementMask(_claimsMask);
     }
 
     function getAgreementMask(ClaimsMask _claimsMask)
@@ -76,7 +70,7 @@ contract TestClaimsMaskLibrary {
         pure
         returns (uint256)
     {
-        return ClaimsMaskLibrary.getAgreementMask(_claimsMask);
+        return LibClaimsMask.getAgreementMask(_claimsMask);
     }
 
     function alreadyClaimed(ClaimsMask _claimsMask, uint256 _validatorIndex)
@@ -84,7 +78,7 @@ contract TestClaimsMaskLibrary {
         pure
         returns (bool)
     {
-        return ClaimsMaskLibrary.alreadyClaimed(_claimsMask, _validatorIndex);
+        return LibClaimsMask.alreadyClaimed(_claimsMask, _validatorIndex);
     }
 
     function setAgreementMask(ClaimsMask _claimsMask, uint256 _validatorIndex)
@@ -92,7 +86,7 @@ contract TestClaimsMaskLibrary {
         pure
         returns (ClaimsMask)
     {
-        return ClaimsMaskLibrary.setAgreementMask(_claimsMask, _validatorIndex);
+        return LibClaimsMask.setAgreementMask(_claimsMask, _validatorIndex);
     }
 
     function getConsensusGoalMask(ClaimsMask _claimsMask)
@@ -100,7 +94,7 @@ contract TestClaimsMaskLibrary {
         pure
         returns (uint256)
     {
-        return ClaimsMaskLibrary.getConsensusGoalMask(_claimsMask);
+        return LibClaimsMask.getConsensusGoalMask(_claimsMask);
     }
 
     function removeValidator(ClaimsMask _claimsMask, uint256 _validatorIndex)
@@ -108,6 +102,6 @@ contract TestClaimsMaskLibrary {
         pure
         returns (ClaimsMask)
     {
-        return ClaimsMaskLibrary.removeValidator(_claimsMask, _validatorIndex);
+        return LibClaimsMask.removeValidator(_claimsMask, _validatorIndex);
     }
 }

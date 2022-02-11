@@ -118,11 +118,11 @@ export const deployDiamond = deployments.createFixture(
 
         // deploy the debug facet if `debug` is true
         if (options.debug) {
-            const claimsMaskLibrary = await deployments.get('ClaimsMaskLibrary');
+            const libClaimsMask = await deployments.get("LibClaimsMask");
             const debugFacet = await deployments.deploy("DebugFacet", {
                 from: contractOwnerAddress,
                 libraries: {
-                    ClaimsMaskLibrary: claimsMaskLibrary.address,
+                    LibClaimsMask: libClaimsMask.address,
                 },
             });
             console.log(`[${ debugFacet.address }] Deployed DebugFacet`);

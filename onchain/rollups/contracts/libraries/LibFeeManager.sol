@@ -15,12 +15,12 @@ pragma solidity ^0.8.0;
 
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ClaimsMaskLibrary, ClaimsMask} from "../ClaimsMaskLibrary.sol";
+import {LibClaimsMask, ClaimsMask} from "../libraries/LibClaimsMask.sol";
 
 library LibFeeManager {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
     using LibFeeManager for LibFeeManager.DiamondStorage;
-    using ClaimsMaskLibrary for ClaimsMask;
+    using LibClaimsMask for ClaimsMask;
 
     bytes32 constant DIAMOND_STORAGE_POSITION =
         keccak256("FeeManager.diamond.storage");

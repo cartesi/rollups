@@ -14,7 +14,7 @@
 pragma solidity >=0.8.8;
 
 import "./FeeManager.sol";
-import "./ClaimsMaskLibrary.sol";
+import "./libraries/LibClaimsMask.sol";
 import "./ValidatorManagerClaimsCountedImpl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -32,7 +32,7 @@ contract FeeManagerImpl is FeeManager, Ownable {
     // |     not used    | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |
     // |     16 bits     |      30 bits       |      30 bits       | ... |      30 bits       |
     ClaimsMask numClaimsRedeemed;
-    using ClaimsMaskLibrary for ClaimsMask;
+    using LibClaimsMask for ClaimsMask;
 
     /// @notice functions modified by noReentrancy are not subject to recursion
     modifier noReentrancy() {

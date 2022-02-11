@@ -17,11 +17,11 @@ import {IValidatorManager} from "../interfaces/IValidatorManager.sol";
 
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 
-import {ClaimsMaskLibrary, ClaimsMask} from "../ClaimsMaskLibrary.sol";
+import {LibClaimsMask, ClaimsMask} from "../libraries/LibClaimsMask.sol";
 
 contract ValidatorManagerFacet is IValidatorManager {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
-    using ClaimsMaskLibrary for ClaimsMask;
+    using LibClaimsMask for ClaimsMask;
 
     /// @notice get agreement mask
     /// @return current state of agreement mask
