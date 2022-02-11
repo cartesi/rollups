@@ -13,7 +13,7 @@ describe("Test ClaimsMaskLibrary", () => {
     let claimsMaskLibrary: TestClaimsMaskLibrary;
 
     beforeEach(async () => {
-        await deployments.fixture(["RollupsImpl"]);
+        await deployments.fixture(["RollupsDiamond"]);
 
         // get signers
         signers = await ethers.getSigners();
