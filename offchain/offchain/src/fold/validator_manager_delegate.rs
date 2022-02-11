@@ -56,13 +56,13 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
 
         // retrive events
 
-        // DisputeEnded event
-        let dispute_ended_events = validator_manager_facet
-            .dispute_ended_filter()
+        // RollupsFacet ResolveDispute event
+        let resolve_dispute_events = rollups_facet
+            .resolve_dispute_filter()
             .query()
             .await
             .context(SyncContractError {
-                err: "Error querying for dispute ended events",
+                err: "Error querying for resolve dispute events",
             })?;
 
         // NewEpoch event
@@ -82,15 +82,15 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
                 },
             )?;
 
-        // step 1: `dispute_ended_events`. For validator lost dispute, add to removal list; for validator won, do nothing
+        // step 1: `resolve_dispute_events`. For validator lost dispute, add to removal list; for validator won, do nothing
         // step 2: for every finalized epoch, if a validator made a claim, and its address has not been removed, then #claims++.
         //          Those who made a false claim have been removed in step 1 already.
         // step 3: for epoch that hasn't been finalized (no more than 1 such epoch), store which honest validators have claimed
         //          No need to store the claim content. Because the dishonest will be removed before epoch finalized
 
         // step 1:
-        for ev in dispute_ended_events.iter() {
-            let losing_validator = ev.validators[1];
+        for ev in resolve_dispute_events.iter() {
+            let losing_validator = ev.loser;
             validators_removed.push(losing_validator);
         }
 
@@ -147,8 +147,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let dapp_contract_address =
-            previous_state.dapp_contract_address;
+        let dapp_contract_address = previous_state.dapp_contract_address;
         // the following logic is: if `dapp_contract_address` and any of the Validator Manager
         // Facet events are in the bloom, or if `dapp_contract_address` and `ClaimFilter` event are in the bloom,
         // then skip this `if` statement and do the logic below.
@@ -192,13 +191,13 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
 
         // retrive events
 
-        // DisputeEnded event
-        let dispute_ended_events = validator_manager_facet
-            .dispute_ended_filter()
+        // RollupsFacet ResolveDispute event
+        let resolve_dispute_events = rollups_facet
+            .resolve_dispute_filter()
             .query()
             .await
             .context(FoldContractError {
-                err: "Error querying for dispute ended events",
+                err: "Error querying for resolve dispute events",
             })?;
 
         // NewEpoch event
@@ -211,15 +210,14 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             })?;
 
         // RollupsFacet Claim event
-        let rollups_claim_events = rollups_facet
-            .claim_filter()
-            .query()
-            .await
-            .context(FoldContractError {
-                err: "Error querying for Rollups claim events",
-            })?;
+        let rollups_claim_events =
+            rollups_facet.claim_filter().query().await.context(
+                FoldContractError {
+                    err: "Error querying for Rollups claim events",
+                },
+            )?;
 
-        // step 1: `dispute_ended_events`. For validator lost dispute, add to removal list and also remove address and #claims;
+        // step 1: `resolve_dispute_events`. For validator lost dispute, add to removal list and also remove address and #claims;
         //          for validator won, do nothing
         // step 2: if there are new_epoch_events, increase #claims for those in `claiming` but not in `validators_removed`.
         //          And clear `claiming`
@@ -227,8 +225,8 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
         // step 4: for epoch that hasn't been finalized (no more than 1 such epoch), store which honest validators have claimed
 
         // step 1:
-        for ev in dispute_ended_events.iter() {
-            let losing_validator = ev.validators[1];
+        for ev in resolve_dispute_events.iter() {
+            let losing_validator = ev.loser;
             state.validators_removed.push(losing_validator);
             // also need to clear it in num_claims
             for i in 0..8 {

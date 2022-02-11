@@ -43,6 +43,13 @@ contract DebugFacet {
         rollupsDS.inputAccumulationStart = _inputAccumulationStart;
     }
 
+    function _passChallangePeriod() public {
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        rollupsDS.sealingEpochTimestamp = 0;
+        rollupsDS.challengePeriod = 0;
+    }
+
     function _setCurrentPhase(Phase _phase) public {
         LibRollups.DiamondStorage storage rollupsDS =
             LibRollups.diamondStorage();

@@ -37,7 +37,7 @@ pkill -P "$delegate_server_pid"
 delegate_server_pid=$!
 sleep 3
 
-DELEGATE_TEST=1 npx hardhat test test/ValidatorManagerClaimsCountedImpl.ts --network localhost
+DELEGATE_TEST=1 npx hardhat test test/ValidatorManagerFacet.ts  --network localhost
 
 
 # kill validator manager server
