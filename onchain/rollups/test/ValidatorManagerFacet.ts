@@ -29,8 +29,7 @@ import { DebugFacet } from "../src/types/DebugFacet";
 import { DebugFacet__factory } from "../src/types/factories/DebugFacet__factory";
 import { ValidatorManagerFacet } from "../src/types/ValidatorManagerFacet";
 import { ValidatorManagerFacet__factory } from "../src/types/factories/ValidatorManagerFacet__factory";
-import { deployDiamond } from "./utils";
-import { getState } from "./utils";
+import { deployDiamond, getState } from "./utils";
 
 use(solidity);
 
@@ -276,7 +275,7 @@ describe("Validator Manager Facet", async () => {
         } else {
             // test delegate
             for (var i = 0; i < validators.length - 1; i++) {
-                await debugFacet._setInputAccumulationStart(0);
+                await debugFacet._passInputAccumulationPeriod();
                 await rollupsFacet.connect(signers[i]).claim(claim);
                 let state = JSON.parse(await getState(initialState));
 
@@ -395,7 +394,7 @@ describe("Validator Manager Facet", async () => {
             ).to.equal(currentAgreementMask);
         } else {
             // test delegate
-            await debugFacet._setInputAccumulationStart(0);
+            await debugFacet._passInputAccumulationPeriod();
             await rollupsFacet.connect(signers[0]).claim(claim);
             await rollupsFacet.connect(signers[1]).claim(claim2); // conflict
             let state = JSON.parse(await getState(initialState));
@@ -535,7 +534,7 @@ describe("Validator Manager Facet", async () => {
                 );
         } else {
             // test delegate
-            await debugFacet._setInputAccumulationStart(0);
+            await debugFacet._passInputAccumulationPeriod();
             for (let i = 0; i < 8 - 1; i++) {
                 await rollupsFacet.connect(signers[i]).claim(claim);
             }
@@ -670,7 +669,7 @@ describe("Validator Manager Facet", async () => {
                 );
         } else {
             // test delegate
-            await debugFacet._setInputAccumulationStart(0);
+            await debugFacet._passInputAccumulationPeriod();
             // let signers[0] have the correct claim and all others have false claim
             await rollupsFacet.connect(signers[0]).claim(claim);
             for (let i = 1; i < 8 - 1; i++) {
@@ -854,7 +853,7 @@ describe("Validator Manager Facet", async () => {
             ).to.equal(hash_zero);
         } else {
             // test delegate
-            await debugFacet._setInputAccumulationStart(0);
+            await debugFacet._passInputAccumulationPeriod();
             await rollupsFacet.connect(signers[0]).claim(claim);
 
             // only signers[0] claimed and new epoch begins
@@ -863,7 +862,7 @@ describe("Validator Manager Facet", async () => {
             // so that Rollups will emit claim events with the correct epoch value
             await debugFacet._passChallangePeriod();
             await rollupsFacet.finalizeEpoch();
-            await debugFacet._setInputAccumulationStart(0);
+            await debugFacet._passInputAccumulationPeriod();
 
             let state = JSON.parse(await getState(initialState));
 
@@ -1007,7 +1006,7 @@ describe("Validator Manager Facet", async () => {
             ).to.equal(2);
         } else {
             // test delegate
-            await debugFacet._setInputAccumulationStart(0);
+            await debugFacet._passInputAccumulationPeriod();
             for (let i = 0; i < 7; i++) {
                 await rollupsFacet.connect(signers[i]).claim(claim);
             }
@@ -1025,7 +1024,7 @@ describe("Validator Manager Facet", async () => {
             // so that Rollups will emit claim events with the correct epoch value
             await debugFacet._passChallangePeriod();
             await rollupsFacet.finalizeEpoch();
-            await debugFacet._setInputAccumulationStart(0);
+            await debugFacet._passInputAccumulationPeriod();
             state = JSON.parse(await getState(initialState));
 
             for (let i = 0; i < 7; i++) {
@@ -1066,7 +1065,7 @@ describe("Validator Manager Facet", async () => {
                 // so that Rollups will emit claim events with the correct epoch value
                 await debugFacet._passChallangePeriod();
                 await rollupsFacet.finalizeEpoch();
-                await debugFacet._setInputAccumulationStart(0);
+                await debugFacet._passInputAccumulationPeriod();
 
                 state = JSON.parse(await getState(initialState));
                 // check how #claims is increasing

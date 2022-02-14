@@ -37,10 +37,10 @@ contract DebugFacet {
     using LibFeeManager for LibFeeManager.DiamondStorage;
     using LibClaimsMask for ClaimsMask;
 
-    function _setInputAccumulationStart(uint32 _inputAccumulationStart) public {
+    function _passInputAccumulationPeriod() public {
         LibRollups.DiamondStorage storage rollupsDS =
             LibRollups.diamondStorage();
-        rollupsDS.inputAccumulationStart = _inputAccumulationStart;
+        rollupsDS.inputAccumulationStart = 0;
     }
 
     function _passChallangePeriod() public {

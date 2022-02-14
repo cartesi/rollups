@@ -124,7 +124,7 @@ describe("Input Facet", () => {
         ).to.equal(0);
 
         // Enough time has passed...
-        await debugFacet._setInputAccumulationStart(0);
+        await debugFacet._passInputAccumulationPeriod();
 
         await inputFacet.addInput(input);
 
@@ -160,14 +160,13 @@ describe("Input Facet", () => {
         await expect(
             inputFacet.addInput(input),
             "should emit event InputAdded"
-        )
-            .to.emit(inputFacet, "InputAdded");
-//            .withArgs(
-//                0,
-//                await signer.getAddress(),
-//                (await ethers.provider.getBlock("latest")).timestamp + 1, // this is unstable
-//                "0x" + input.toString("hex")
-//            );
+        ).to.emit(inputFacet, "InputAdded");
+        //            .withArgs(
+        //                0,
+        //                await signer.getAddress(),
+        //                (await ethers.provider.getBlock("latest")).timestamp + 1, // this is unstable
+        //                "0x" + input.toString("hex")
+        //            );
 
         // test delegate
         if (enableDelegate) {
@@ -192,7 +191,8 @@ describe("Input Facet", () => {
             block.number,
             block.timestamp,
             0x0,
-            0x0);
+            0x0
+        );
 
         expect(
             await inputFacet.callStatic.addInput(input),
@@ -243,10 +243,11 @@ describe("Input Facet", () => {
             block.number,
             block.timestamp,
             0x0,
-            0x0);
+            0x0
+        );
 
         // Enough time has passed...
-        await debugFacet._setInputAccumulationStart(0);
+        await debugFacet._passInputAccumulationPeriod();
 
         // switch input boxes before testing getInput()
         await inputFacet.addInput(input);
@@ -267,11 +268,12 @@ describe("Input Facet", () => {
             block.number,
             block.timestamp,
             0x1,
-            0x0);
+            0x0
+        );
 
         // We're accumulating inputs and enough time has passed...
         await debugFacet._setCurrentPhase(0);
-        await debugFacet._setInputAccumulationStart(0);
+        await debugFacet._passInputAccumulationPeriod();
 
         // switch input boxes before testing getInput()
         await inputFacet.addInput(input);
@@ -320,7 +322,7 @@ describe("Input Facet", () => {
         ).to.equal(0);
 
         // Enough time has passed...
-        await debugFacet._setInputAccumulationStart(0);
+        await debugFacet._passInputAccumulationPeriod();
 
         await inputFacet.addInput(input);
 
