@@ -7,20 +7,20 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
 ENV BASE /opt/cartesi
 
 WORKDIR $BASE/share/blockchain
-COPY package.json .
-COPY tsconfig.json .
-COPY yarn.lock .
+COPY onchain/rollups/package.json onchain/rollups/package.json
+COPY onchain/rollups/tsconfig.json onchain/rollups/tsconfig.json
+COPY onchain/rollups/yarn.lock onchain/rollups/yarn.lock
 
 COPY grpc-interfaces ./grpc-interfaces
 
-ADD wait-for-file.sh /
+ADD onchain/rollups/wait-for-file.sh /
 RUN chmod +x /wait-for-file.sh
 
-COPY hardhat.config.ts .
-COPY contracts ./contracts
-COPY src/tasks ./src/tasks
+COPY onchain/rollups/hardhat.config.ts onchain/rollups/hardhat.config.ts
+COPY onchain/rollups/contracts onchain/rollups/contracts
+COPY onchain/rollups/src/tasks onchain/rollups/src/tasks
 
-RUN mkdir -p src/proto/
+RUN mkdir -p onchain/rollups/src/proto/
 
 RUN yarn install --non-interactive
 
