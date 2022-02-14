@@ -23,29 +23,67 @@ fn write_contract(
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contracts = vec![
-        ("DiamondInit", "upgradeInitializers/DiamondInit", "diamond_init.rs"),
-        ("DiamondCutFacet", "facets/DiamondCutFacet", "diamond_cut_facet.rs"),
-        ("DiamondLoupeFacet", "facets/DiamondLoupeFacet", "diamond_loupe_facet.rs"),
-        ("ERC20PortalFacet", "facets/ERC20PortalFacet", "erc20_portal_facet.rs"),
-        ("ERC721PortalFacet", "facets/ERC721PortalFacet", "erc721_portal_facet.rs"),
-        ("EtherPortalFacet", "facets/EtherPortalFacet", "ether_portal_facet.rs"),
-        ("FeeManagerFacet", "facets/FeeManagerFacet", "fee_manager_facet.rs"),
+        (
+            "DiamondInit",
+            "upgradeInitializers/DiamondInit",
+            "diamond_init.rs",
+        ),
+        (
+            "DiamondCutFacet",
+            "facets/DiamondCutFacet",
+            "diamond_cut_facet.rs",
+        ),
+        (
+            "DiamondLoupeFacet",
+            "facets/DiamondLoupeFacet",
+            "diamond_loupe_facet.rs",
+        ),
+        (
+            "ERC20PortalFacet",
+            "facets/ERC20PortalFacet",
+            "erc20_portal_facet.rs",
+        ),
+        (
+            "ERC721PortalFacet",
+            "facets/ERC721PortalFacet",
+            "erc721_portal_facet.rs",
+        ),
+        (
+            "EtherPortalFacet",
+            "facets/EtherPortalFacet",
+            "ether_portal_facet.rs",
+        ),
+        (
+            "FeeManagerFacet",
+            "facets/FeeManagerFacet",
+            "fee_manager_facet.rs",
+        ),
         ("InputFacet", "facets/InputFacet", "input_facet.rs"),
         ("OutputFacet", "facets/OutputFacet", "output_facet.rs"),
         ("RollupsFacet", "facets/RollupsFacet", "rollups_facet.rs"),
-        ("SERC20PortalFacet", "facets/SERC20PortalFacet", "serc20_portal_facet.rs"),
-        ("ValidatorManagerFacet", "facets/ValidatorManagerFacet", "validator_manager_facet.rs"),
+        (
+            "SERC20PortalFacet",
+            "facets/SERC20PortalFacet",
+            "serc20_portal_facet.rs",
+        ),
+        (
+            "ValidatorManagerFacet",
+            "facets/ValidatorManagerFacet",
+            "validator_manager_facet.rs",
+        ),
     ];
 
     for (name, file, rs) in contracts {
-        let path =
-            format!("../../artifacts/contracts/{}.sol/{}.json", file, name);
+        let path = format!(
+            "../../onchain/rollups/artifacts/contracts/{}.sol/{}.json",
+            file, name
+        );
         let destination = format!("./src/contracts/{}", rs);
         write_contract(name, &path, &destination)?;
     }
 
     // create types for ERC20
-    let path ="../../artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json";
+    let path ="../../onchain/rollups/artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json";
     let destination = "./src/contracts/erc20_contract.rs";
     write_contract("ERC20", &path, &destination)?;
 
