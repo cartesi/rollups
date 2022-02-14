@@ -22,8 +22,8 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
-import { RollupsImpl__factory } from "../dist/src/types/factories/RollupsImpl__factory";
-import { SimpleToken__factory } from "../dist/src/types/factories/SimpleToken__factory";
+import { RollupsImpl__factory } from "../src/types/factories/RollupsImpl__factory";
+import { SimpleToken__factory } from "../src/types/factories/SimpleToken__factory";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments } = hre;

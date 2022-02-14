@@ -27,10 +27,10 @@ import {
 } from "@ethereum-waffle/mock-contract";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { InputFacet } from "../dist/src/types/InputFacet";
-import { InputFacet__factory } from "../dist/src/types/factories/InputFacet__factory";
-import { DebugFacet } from "../dist/src/types/DebugFacet";
-import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
+import { InputFacet } from "../src/types/InputFacet";
+import { InputFacet__factory } from "../src/types/factories/InputFacet__factory";
+import { DebugFacet } from "../src/types/DebugFacet";
+import { DebugFacet__factory } from "../src/types/factories/DebugFacet__factory";
 import { deployDiamond, getState, getInputHash } from "./utils";
 
 use(solidity);

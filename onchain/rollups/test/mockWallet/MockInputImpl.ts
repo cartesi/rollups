@@ -26,9 +26,9 @@ import {
     MockContract,
 } from "@ethereum-waffle/mock-contract";
 import { solidity } from "ethereum-waffle";
-import { MockInputImpl__factory } from "../../dist/src/types/factories/MockInputImpl__factory";
+import { MockInputImpl__factory } from "../../src/types/factories/MockInputImpl__factory";
 import { Signer } from "ethers";
-import { MockInputImpl } from "../../dist/src/types/MockInputImpl";
+import { MockInputImpl } from "../../src/types/MockInputImpl";
 
 use(solidity);
 

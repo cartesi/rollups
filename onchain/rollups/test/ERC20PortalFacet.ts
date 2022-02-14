@@ -27,11 +27,11 @@ import {
 } from "@ethereum-waffle/mock-contract";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { ERC20PortalFacet } from "../dist/src/types/ERC20PortalFacet";
-import { ERC20PortalFacet__factory } from "../dist/src/types/factories/ERC20PortalFacet__factory";
-import { DebugFacet } from "../dist/src/types/DebugFacet";
-import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
-import { IERC20 } from "../dist/src/types/IERC20";
+import { ERC20PortalFacet } from "../src/types/ERC20PortalFacet";
+import { ERC20PortalFacet__factory } from "../src/types/factories/ERC20PortalFacet__factory";
+import { DebugFacet } from "../src/types/DebugFacet";
+import { DebugFacet__factory } from "../src/types/factories/DebugFacet__factory";
+import { IERC20 } from "../src/types/IERC20";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 import { deployDiamond, getInputHash } from "./utils";
 

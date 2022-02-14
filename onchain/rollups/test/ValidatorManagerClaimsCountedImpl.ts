@@ -22,11 +22,11 @@
 import { expect, use } from "chai";
 import { deployments, ethers } from "hardhat";
 import { solidity, MockProvider } from "ethereum-waffle";
-import { ValidatorManagerClaimsCountedImpl__factory } from "../dist/src/types/factories/ValidatorManagerClaimsCountedImpl__factory";
-import { RollupsImpl } from "../dist/src/types/RollupsImpl";
-import { RollupsImpl__factory } from "../dist/src/types/factories/RollupsImpl__factory";
+import { ValidatorManagerClaimsCountedImpl__factory } from "../src/types/factories/ValidatorManagerClaimsCountedImpl__factory";
+import { RollupsImpl } from "../src/types/RollupsImpl";
+import { RollupsImpl__factory } from "../src/types/factories/RollupsImpl__factory";
 import { Signer } from "ethers";
-import { ValidatorManagerClaimsCountedImpl } from "../dist/src/types/ValidatorManagerClaimsCountedImpl";
+import { ValidatorManagerClaimsCountedImpl } from "../src/types/ValidatorManagerClaimsCountedImpl";
 import { getState } from "./utils";
 
 use(solidity);

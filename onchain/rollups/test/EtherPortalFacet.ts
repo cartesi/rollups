@@ -23,10 +23,10 @@ import { expect, use } from "chai";
 import { deployments, ethers } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { EtherPortalFacet } from "../dist/src/types/EtherPortalFacet";
-import { EtherPortalFacet__factory } from "../dist/src/types/factories/EtherPortalFacet__factory";
-import { DebugFacet } from "../dist/src/types/DebugFacet";
-import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
+import { EtherPortalFacet } from "../src/types/EtherPortalFacet";
+import { EtherPortalFacet__factory } from "../src/types/factories/EtherPortalFacet__factory";
+import { DebugFacet } from "../src/types/DebugFacet";
+import { DebugFacet__factory } from "../src/types/factories/DebugFacet__factory";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 import { deployDiamond, getInputHash } from "./utils";
 

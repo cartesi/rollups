@@ -23,12 +23,12 @@ import { expect, use } from "chai";
 import { deployments, ethers } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { RollupsFacet } from "../dist/src/types/RollupsFacet";
-import { RollupsFacet__factory } from "../dist/src/types/factories/RollupsFacet__factory";
-import { DebugFacet } from "../dist/src/types/DebugFacet";
-import { DebugFacet__factory } from "../dist/src/types/factories/DebugFacet__factory";
-import { ValidatorManagerFacet } from "../dist/src/types/ValidatorManagerFacet";
-import { ValidatorManagerFacet__factory } from "../dist/src/types/factories/ValidatorManagerFacet__factory";
+import { RollupsFacet } from "../src/types/RollupsFacet";
+import { RollupsFacet__factory } from "../src/types/factories/RollupsFacet__factory";
+import { DebugFacet } from "../src/types/DebugFacet";
+import { DebugFacet__factory } from "../src/types/factories/DebugFacet__factory";
+import { ValidatorManagerFacet } from "../src/types/ValidatorManagerFacet";
+import { ValidatorManagerFacet__factory } from "../src/types/factories/ValidatorManagerFacet__factory";
 import { deployDiamond } from "./utils";
 
 use(solidity);

@@ -2,10 +2,10 @@ import { deployments, ethers, network } from "hardhat";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { RollupsFacet } from "../dist/src/types/RollupsFacet";
-import { RollupsFacet__factory } from "../dist/src/types/factories/RollupsFacet__factory";
-import { DiamondInit } from "../dist/src/types/DiamondInit";
-import { DiamondInit__factory } from "../dist/src/types/factories/DiamondInit__factory";
+import { RollupsFacet } from "../src/types/RollupsFacet";
+import { RollupsFacet__factory } from "../src/types/factories/RollupsFacet__factory";
+import { DiamondInit } from "../src/types/DiamondInit";
+import { DiamondInit__factory } from "../src/types/factories/DiamondInit__factory";
 import { deployDiamond, getState } from "./utils";
 
 use(solidity);

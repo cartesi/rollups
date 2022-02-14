@@ -26,11 +26,11 @@ import {
     MockContract,
 } from "@ethereum-waffle/mock-contract";
 import { solidity, MockProvider, deployContract } from "ethereum-waffle";
-import { ERC20PortalImpl__factory } from "../dist/src/types/factories/ERC20PortalImpl__factory";
+import { ERC20PortalImpl__factory } from "../src/types/factories/ERC20PortalImpl__factory";
 import { Signer } from "ethers";
-import { ERC20PortalImpl } from "../dist/src/types/ERC20PortalImpl";
+import { ERC20PortalImpl } from "../src/types/ERC20PortalImpl";
 import { keccak256 } from "ethers/lib/utils";
-import { IERC20 } from "../dist/src/types/IERC20";
+import { IERC20 } from "../src/types/IERC20";
 
 use(solidity);
 

@@ -16,7 +16,7 @@
         "deploy:bsc_testnet": "hardhat deploy --network bsc_testnet --export export/abi/bsc_testnet.json",
         "export": "hardhat export-artifacts export/artifacts",
         "info": "npm-scripts-info",
-        "prebuild": "grpc_tools_node_protoc --plugin=protoc-gen-ts=node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:src/proto --js_out=import_style=commonjs,binary:src/proto --grpc_out=grpc_js:src/proto -I grpc-interfaces grpc-interfaces/stateserver.proto",
+        "prebuild": "grpc_tools_node_protoc --plugin=protoc-gen-ts=node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:src/proto --js_out=import_style=commonjs,binary:src/proto --grpc_out=grpc_js:src/proto -I ../../grpc-interfaces ../../grpc-interfaces/stateserver.proto",
         "prepack": "run-s clean deploy:testnet",
         "prepare": "run-s build copy-dts export",
         "pretest": "run-s prepare",
