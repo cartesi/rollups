@@ -4,6 +4,9 @@ on: [push]
 jobs:
     build:
         runs-on: ubuntu-20.04
+        defaults:
+            run:
+                working-directory: onchain/rollups
         steps:
             - uses: actions/checkout@v2
               with:
@@ -12,15 +15,12 @@ jobs:
             - uses: actions/setup-node@v1
               with:
                   node-version: "16"
-            - run: yarn --cwd src/reader/ install
             - run: yarn install
             - run: yarn prettier
             - run: yarn test
-
             - name: Set up Docker Buildx
               id: buildx
               uses: docker/setup-buildx-action@v1
-
             - name: Docker meta
               id: docker_meta
               uses: docker/metadata-action@v3
@@ -34,17 +34,15 @@ jobs:
               with:
                   username: ${{ secrets.DOCKER_USERNAME }}
                   password: ${{ secrets.DOCKER_PASSWORD }}
-
             - name: Build and push docker image
               id: docker_build
               uses: docker/build-push-action@v2
               with:
-                  context: .
+                  context: ./onchain/rollups
                   builder: ${{ steps.buildx.outputs.name }}
                   platforms: linux/amd64
                   tags: ${{ steps.docker_meta.outputs.tags }}
                   push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
-
     docker-delegate-server:
         name: Build and push docker image [delegate-server]
         runs-on: ubuntu-20.04
@@ -53,21 +51,14 @@ jobs:
               with:
                   submodules: recursive
                   token: ${{ secrets.CI_TOKEN }}
-
-            - uses: actions/setup-node@v1
-              with:
-                  node-version: "16"
-            - run: yarn --cwd src/reader/ install
-
             - uses: actions/setup-node@v1
               with:
                   node-version: "16"
             - run: yarn install
-
+              working-directory: onchain/rollups
             - name: Set up Docker Buildx
               id: buildx
               uses: docker/setup-buildx-action@v1
-
             - name: Docker meta
               id: docker_meta
               uses: docker/metadata-action@v3
@@ -81,7 +72,6 @@ jobs:
               with:
                   username: ${{ secrets.DOCKER_USERNAME }}
                   password: ${{ secrets.DOCKER_PASSWORD }}
-
             - name: Build and push docker image
               id: docker_build
               uses: docker/build-push-action@v2
@@ -92,7 +82,6 @@ jobs:
                   platforms: linux/amd64
                   tags: ${{ steps.docker_meta.outputs.tags }}
                   push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
-
     docker-rollups-dispatcher:
         name: Build and push docker image [rollups-dispatcher]
         runs-on: ubuntu-20.04
@@ -101,21 +90,14 @@ jobs:
               with:
                   submodules: recursive
                   token: ${{ secrets.CI_TOKEN }}
-
-            - uses: actions/setup-node@v1
-              with:
-                  node-version: "16"
-            - run: yarn --cwd src/reader/ install
-
             - uses: actions/setup-node@v1
               with:
                   node-version: "16"
             - run: yarn install
-
+              working-directory: onchain/rollups
             - name: Set up Docker Buildx
               id: buildx
               uses: docker/setup-buildx-action@v1
-
             - name: Docker meta
               id: docker_meta
               uses: docker/metadata-action@v3
@@ -129,7 +111,6 @@ jobs:
               with:
                   username: ${{ secrets.DOCKER_USERNAME }}
                   password: ${{ secrets.DOCKER_PASSWORD }}
-
             - name: Build and push docker image
               id: docker_build
               uses: docker/build-push-action@v2
@@ -140,7 +121,6 @@ jobs:
                   platforms: linux/amd64
                   tags: ${{ steps.docker_meta.outputs.tags }}
                   push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
-
     docker-query-server:
         name: Build and push docker image [query-server]
         runs-on: ubuntu-20.04
@@ -149,21 +129,13 @@ jobs:
               with:
                   submodules: recursive
                   token: ${{ secrets.CI_TOKEN }}
-
             - uses: actions/setup-node@v1
               with:
                   node-version: "16"
-            - run: yarn --cwd src/reader/ install
-
-            - uses: actions/setup-node@v1
-              with:
-                  node-version: "16"
-            - run: yarn install
-
+            - run: yarn --cwd reader/ install
             - name: Set up Docker Buildx
               id: buildx
               uses: docker/setup-buildx-action@v1
-
             - name: Docker meta
               id: docker_meta
               uses: docker/metadata-action@v3
@@ -177,18 +149,16 @@ jobs:
               with:
                   username: ${{ secrets.DOCKER_USERNAME }}
                   password: ${{ secrets.DOCKER_PASSWORD }}
-
             - name: Build and push docker image
               id: docker_build
               uses: docker/build-push-action@v2
               with:
-                  context: ./src/reader
-                  file: ./src/reader/Dockerfile
+                  context: ./reader
+                  file: ./reader/Dockerfile
                   builder: ${{ steps.buildx.outputs.name }}
                   platforms: linux/amd64
                   tags: ${{ steps.docker_meta.outputs.tags }}
                   push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
-
     docker-rollups-indexer:
         name: Build and push docker image [rollups-indexer]
         runs-on: ubuntu-20.04
@@ -197,21 +167,14 @@ jobs:
               with:
                   submodules: recursive
                   token: ${{ secrets.CI_TOKEN }}
-
-            - uses: actions/setup-node@v1
-              with:
-                  node-version: "16"
-            - run: yarn --cwd src/reader/ install
-
             - uses: actions/setup-node@v1
               with:
                   node-version: "16"
             - run: yarn install
-
+              working-directory: onchain/rollups
             - name: Set up Docker Buildx
               id: buildx
               uses: docker/setup-buildx-action@v1
-
             - name: Docker meta
               id: docker_meta
               uses: docker/metadata-action@v3
@@ -225,7 +188,6 @@ jobs:
               with:
                   username: ${{ secrets.DOCKER_USERNAME }}
                   password: ${{ secrets.DOCKER_PASSWORD }}
-
             - name: Build and push docker image
               id: docker_build
               uses: docker/build-push-action@v2
