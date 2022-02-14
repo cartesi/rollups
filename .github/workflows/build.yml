@@ -37,7 +37,8 @@ jobs:
               id: docker_build
               uses: docker/build-push-action@v2
               with:
-                  context: ./onchain/rollups
+                  context: .
+                  file: ./onchain/rollups/Dockerfile
                   builder: ${{ steps.buildx.outputs.name }}
                   platforms: linux/amd64
                   tags: ${{ steps.docker_meta.outputs.tags }}
