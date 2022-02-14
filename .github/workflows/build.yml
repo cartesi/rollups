@@ -16,7 +16,6 @@ jobs:
               with:
                   node-version: "16"
             - run: yarn install
-            - run: yarn prettier
             - run: yarn test
             - name: Set up Docker Buildx
               id: buildx
