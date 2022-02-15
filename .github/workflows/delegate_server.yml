@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Delegate Server
+on:
+    pull_request:
+        paths:
+            - offchain/delegate_server/**
+            - offchain/offchain/**
+            - .github/workflows/delegate-server.yml
+    push:
+        tags:
+            - v*
+jobs:
+    build:
+        runs-on: ubuntu-20.04
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  submodules: recursive
+                  token: ${{ secrets.CI_TOKEN }}
+            
+            - name: Set up Docker Buildx
+              id: buildx
+              uses: docker/setup-buildx-action@v1
+            
+            - name: Docker meta
+              id: docker_meta
+              uses: docker/metadata-action@v3
+              with:
+                  images: ${{ secrets.DOCKER_ORGANIZATION }}/delegate-server
+                  tags: |
+                      type=ref,event=branch
+                      type=semver,pattern={{version}}
+            
+            - name: Login to Docker Hub
+              uses: docker/login-action@v1
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
+            
+            - name: Build and push docker image
+              id: docker_build
+              uses: docker/build-push-action@v2
+              with:
+                  context: .
+                  file: ./offchain/delegate_server/Dockerfile
+                  builder: ${{ steps.buildx.outputs.name }}
+                  platforms: linux/amd64
+                  tags: ${{ steps.docker_meta.outputs.tags }}
+                  push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
