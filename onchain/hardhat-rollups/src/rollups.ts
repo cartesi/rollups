@@ -69,7 +69,7 @@ createParams(
                 log: args.log,
             });
 
-            const { inputContract, outputContract } = await connect(
+            const { inputFacet, outputFacet } = await connect(
                 { rollups: RollupsImpl.address },
                 hre
             );
@@ -79,7 +79,7 @@ createParams(
                 "EtherPortalImpl",
                 {
                     from: deployer,
-                    args: [inputContract.address, outputContract.address],
+                    args: [inputFacet.address, outputFacet.address],
                     log: args.log,
                 }
             );
@@ -89,7 +89,7 @@ createParams(
                 "ERC20PortalImpl",
                 {
                     from: deployer,
-                    args: [inputContract.address, outputContract.address],
+                    args: [inputFacet.address, outputFacet.address],
                     log: args.log,
                 }
             );
@@ -109,10 +109,10 @@ rollupsParams(
         task<ClaimArgs>(
             TASK_CLAIM,
             taskDefs[TASK_CLAIM].description,
-            connected(async (args, { rollupsContract }) => {
-                const tx = await rollupsContract.claim(args.claim);
+            connected(async (args, { rollupsFacet }) => {
+                const tx = await rollupsFacet.claim(args.claim);
                 console.log(
-                    `Claim ${args.claim} sent to rollups ${rollupsContract.address}`
+                    `Claim ${args.claim} sent to rollups ${rollupsFacet.address}`
                 );
                 return tx;
             })
@@ -125,10 +125,10 @@ rollupsParams(
         task<RollupsArgs>(
             TASK_FINALIZE_EPOCH,
             taskDefs[TASK_FINALIZE_EPOCH].description,
-            connected(async (_args, { rollupsContract }) => {
-                const tx = await rollupsContract.finalizeEpoch();
+            connected(async (_args, { rollupsFacet }) => {
+                const tx = await rollupsFacet.finalizeEpoch();
                 console.log(
-                    `Finalized epoch for rollups ${rollupsContract.address}`
+                    `Finalized epoch for rollups ${rollupsFacet.address}`
                 );
                 return tx;
             })
@@ -140,7 +140,7 @@ rollupsParams(
     task<RollupsArgs>(
         TASK_GET_STATE,
         taskDefs[TASK_GET_STATE].description,
-        connected(async (_args, { rollupsContract }, hre) => {
+        connected(async (_args, { rollupsFacet }, hre) => {
             const { ethers } = hre;
 
             enum Phases {
@@ -148,8 +148,8 @@ rollupsParams(
                 AwaitingConsensus,
                 AwaitingDispute,
             }
-            const storageVar = await rollupsContract.storageVar();
-            const currentEpoch = await rollupsContract.getCurrentEpoch();
+            const storageVar = await rollupsFacet.storageVar();
+            const currentEpoch = await rollupsFacet.getCurrentEpoch();
             const block = await ethers.provider.getBlock("latest");
 
             const result = {

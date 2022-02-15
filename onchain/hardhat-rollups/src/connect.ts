@@ -12,14 +12,20 @@
 
 import { ActionType, HardhatRuntimeEnvironment } from "hardhat/types";
 import {
-    InputImpl,
-    OutputImpl,
-    RollupsImpl,
-    InputImpl__factory,
-    OutputImpl__factory,
-    RollupsImpl__factory,
+    OutputFacet__factory,
+    RollupsFacet__factory,
+    InputFacet__factory,
+    RollupsFacet,
+    InputFacet,
+    OutputFacet,
 } from "@cartesi/rollups";
 import { RollupsArgs } from "./args";
+
+type RollupsFacets = {
+    rollupsFacet: RollupsFacet;
+    inputFacet: InputFacet;
+    outputFacet: OutputFacet;
+};
 
 /**
  * Connects to a Rollups contract and its Input and Output contracts.
@@ -30,7 +36,7 @@ import { RollupsArgs } from "./args";
 export const connect = async (
     args: RollupsArgs,
     hre: HardhatRuntimeEnvironment
-) => {
+): Promise<RollupsFacets> => {
     const { ethers } = hre;
 
     // choose a signer based on MNEMONIC and account index
@@ -43,37 +49,25 @@ export const connect = async (
     }
     const signer = signers[index];
 
-    // connect to RollupsImpl
-    const rollupsContract = RollupsImpl__factory.connect(args.rollups, signer);
+    // connect to RollupsFacet
+    const rollupsFacet = RollupsFacet__factory.connect(args.rollups, signer);
 
-    // connect to InputImpl
-    const inputContract = InputImpl__factory.connect(
-        await rollupsContract.getInputAddress(),
-        signer
-    );
+    // connect to InputFacet
+    const inputFacet = InputFacet__factory.connect(args.rollups, signer);
 
-    // connect to OutputImpl
-    const outputContract = OutputImpl__factory.connect(
-        await rollupsContract.getOutputAddress(),
-        signer
-    );
+    // connect to OutputFacet
+    const outputFacet = OutputFacet__factory.connect(args.rollups, signer);
 
     return {
-        rollupsContract,
-        inputContract,
-        outputContract,
+        rollupsFacet,
+        inputFacet,
+        outputFacet,
     };
-};
-
-type RollupsContracts = {
-    rollupsContract: RollupsImpl;
-    inputContract: InputImpl;
-    outputContract: OutputImpl;
 };
 
 type RollupsAction<TArgs extends RollupsArgs> = (
     args: TArgs,
-    rollups: RollupsContracts,
+    rollups: RollupsFacets,
     hre: HardhatRuntimeEnvironment
 ) => Promise<any>;
 

@@ -22,13 +22,13 @@ rollupsParams(
         task<AddInputArgs>(
             TASK_ADD_INPUT,
             taskDefs[TASK_ADD_INPUT].description,
-            connected(async (args, { inputContract }) => {
-                const signer = await inputContract.signer.getAddress();
-                const tx = await inputContract.addInput(args.input);
+            connected(async (args, { inputFacet }) => {
+                const signer = await inputFacet.signer.getAddress();
+                const tx = await inputFacet.addInput(args.input);
                 const events = (await tx.wait()).events ?? [];
                 const inputAddedEvent = getEvent(
                     "InputAdded",
-                    inputContract,
+                    inputFacet,
                     events
                 );
                 if (!inputAddedEvent) {

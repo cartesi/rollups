@@ -23,11 +23,11 @@ rollupsParams(
         task<ExecuteVoucherArgs>(
             TASK_EXECUTE_VOUCHER,
             taskDefs[TASK_EXECUTE_VOUCHER].description,
-            connected(async (args, { outputContract }) => {
-                const signer = await outputContract.signer.getAddress();
+            connected(async (args, { outputFacet }) => {
+                const signer = await outputFacet.signer.getAddress();
                 const proof = JSON.parse(args.proof); // string to JSON object
 
-                const tx = await outputContract.executeVoucher(
+                const tx = await outputFacet.executeVoucher(
                     args.destination,
                     args.payload,
                     proof
@@ -35,7 +35,7 @@ rollupsParams(
                 const events = (await tx.wait()).events!;
                 const voucherExecutedEvent = getEvent(
                     "VoucherExecuted",
-                    outputContract,
+                    outputFacet,
                     events
                 );
 
