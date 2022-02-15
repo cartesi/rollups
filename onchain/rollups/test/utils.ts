@@ -20,7 +20,7 @@
 // rewritten, the entire component will be released under the Apache v2 license.
 
 import client from './client';
-import { GetStateRequest } from '../src/proto/stateserver_pb'
+import { GetStateRequest } from '../generated-src/proto/stateserver_pb'
 import { keccak256, defaultAbiCoder } from "ethers/lib/utils";
 import { deployments } from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
