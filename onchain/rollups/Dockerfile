@@ -7,9 +7,10 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
 ENV BASE /opt/cartesi
 
 WORKDIR $BASE/share/blockchain
+COPY onchain/package.json onchain/package.json
+COPY onchain/yarn.lock onchain/yarn.lock
 COPY onchain/rollups/package.json onchain/rollups/package.json
 COPY onchain/rollups/tsconfig.json onchain/rollups/tsconfig.json
-COPY onchain/rollups/yarn.lock onchain/rollups/yarn.lock
 
 COPY grpc-interfaces ./grpc-interfaces
 

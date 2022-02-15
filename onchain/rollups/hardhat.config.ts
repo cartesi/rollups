@@ -19,6 +19,7 @@
 // be used independently under the Apache v2 license. After this component is
 // rewritten, the entire component will be released under the Apache v2 license.
 
+import path from "path";
 import { HardhatUserConfig } from "hardhat/config";
 import { HttpNetworkUserConfig } from "hardhat/types";
 
@@ -27,10 +28,13 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-deploy";
 import "@tenderly/hardhat-tenderly";
-import "./src/tasks";
 
 // read MNEMONIC from env variable
 let mnemonic = process.env.MNEMONIC;
+
+const ppath = (packageName: string, pathname: string) => {
+    return path.join(path.dirname(require.resolve(`${packageName}/package.json`)), pathname);
+};
 
 const infuraNetwork = (
     network: string,
@@ -56,11 +60,7 @@ const config: HardhatUserConfig = {
         rinkeby: infuraNetwork("rinkeby", 4, 6283185),
         kovan: infuraNetwork("kovan", 42, 6283185),
         goerli: infuraNetwork("goerli", 5, 6283185),
-        matic_testnet: {
-            url: "https://rpc-mumbai.matic.today",
-            chainId: 80001,
-            accounts: mnemonic ? { mnemonic } : undefined,
-        },
+        polygon_mumbai: infuraNetwork("polygon-mumbai", 80001),
         bsc_testnet: {
             url: "https://data-seed-prebsc-1-s1.binance.org:8545",
             chainId: 97,
@@ -87,20 +87,20 @@ const config: HardhatUserConfig = {
     external: {
         contracts: [
             {
-                artifacts: "node_modules/@cartesi/util/export/artifacts",
-                deploy: "node_modules/@cartesi/util/dist/deploy",
+                artifacts: ppath("@cartesi/util", "/export/artifacts"),
+                deploy: ppath("@cartesi/util", "/dist/deploy"),
             },
         ],
         deployments: {
             localhost: ["deployments/localhost"],
-            ropsten: ["node_modules/@cartesi/util/deployments/ropsten"],
-            rinkeby: ["node_modules/@cartesi/util/deployments/rinkeby"],
-            kovan: ["node_modules/@cartesi/util/deployments/kovan"],
-            goerli: ["node_modules/@cartesi/util/deployments/goerli"],
-            matic_testnet: [
-                "node_modules/@cartesi/util/deployments/matic_testnet",
+            ropsten: [ppath("@cartesi/util", "/deployments/ropsten")],
+            rinkeby: [ppath("@cartesi/util", "/deployments/rinkeby")],
+            kovan: [ppath("@cartesi/util", "/deployments/kovan")],
+            goerli: [ppath("@cartesi/util", "/deployments/goerli")],
+            polygon_mumbai: [
+                ppath("@cartesi/util", "/deployments/matic_testnet"),
             ],
-            bsc_testnet: ["node_modules/@cartesi/util/deployments/bsc_testnet"],
+            bsc_testnet: [ppath("@cartesi/util", "/deployments/bsc_testnet")],
         },
     },
     namedAccounts: {

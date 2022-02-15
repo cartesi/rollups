@@ -1,0 +1,9 @@
+{
+    "private": true,
+    "workspaces": [
+        "rollups"
+    ],
+    "devDependencies": {
+        "prettier": "^2.5.1"
+    }
+}
