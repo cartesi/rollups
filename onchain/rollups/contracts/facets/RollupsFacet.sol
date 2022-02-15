@@ -1,4 +1,4 @@
-// Copyright 2021 Cartesi Pte. Ltd.
+// Copyright 2022 Cartesi Pte. Ltd.
 
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -152,5 +152,26 @@ contract RollupsFacet is IRollups {
         LibRollups.DiamondStorage storage rollupsDS =
             LibRollups.diamondStorage();
         return uint256(rollupsDS.inputAccumulationStart);
+    }
+
+    /// @notice returns the sealing epoch timestamp
+    function getSealingEpochTimestamp() public view returns (uint256) {
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        return uint256(rollupsDS.sealingEpochTimestamp);
+    }
+
+    /// @notice returns the input duration in seconds
+    function getInputDuration() public view returns (uint256) {
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        return uint256(rollupsDS.inputDuration);
+    }
+
+    /// @notice returns the challenge period in seconds
+    function getChallengePeriod() public view returns (uint256) {
+        LibRollups.DiamondStorage storage rollupsDS =
+            LibRollups.diamondStorage();
+        return uint256(rollupsDS.challengePeriod);
     }
 }

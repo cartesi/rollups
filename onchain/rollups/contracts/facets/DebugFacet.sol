@@ -49,18 +49,6 @@ contract DebugFacet {
         rollupsDS.currentPhase_int = uint32(_phase);
     }
 
-    function _getCurrentPhase() public view returns (Phase _phase) {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
-        return Phase(rollupsDS.currentPhase_int);
-    }
-
-    function _getCurrentEpoch() public view returns (uint256) {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
-        return rollupsDS.getCurrentEpoch();
-    }
-
     function _getValidators()
         public
         view
