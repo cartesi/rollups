@@ -1,5 +1,9 @@
 {
     "private": true,
+    "scripts": {
+        "prettier:rollups": "yarn workspace @cartesi/rollups prettier",
+        "prettier:hardhat-rollups": "yarn workspace @cartesi/hardhat-rollups prettier"
+    },
     "workspaces": [
         "hardhat-rollups",
         "rollups"

@@ -2,7 +2,8 @@
     "name": "@cartesi/hardhat-rollups",
     "version": "0.2.0",
     "scripts": {
-        "prepack": "yarn run tsc"
+        "prepack": "yarn run tsc",
+        "prettier": "prettier --check ."
     },
     "dependencies": {},
     "devDependencies": {

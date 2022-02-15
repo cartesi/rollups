@@ -1,2 +1,7 @@
+artifacts
+cache
+deployments
+dist
+export
+generated-src
 src/types
-generated-src/proto
