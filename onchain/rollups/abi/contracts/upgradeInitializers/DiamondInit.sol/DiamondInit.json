@@ -1,0 +1,94 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_feePerClaim",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_erc20ForFee",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_feeManagerOwner",
+        "type": "address"
+      }
+    ],
+    "name": "FeeManagerInitialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_inputDuration",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_challengePeriod",
+        "type": "uint256"
+      }
+    ],
+    "name": "RollupsInitialized",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_inputDuration",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_challengePeriod",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_inputLog2Size",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_feePerClaim",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_erc20ForFee",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_feeManagerOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "address payable[]",
+        "name": "_validators",
+        "type": "address[]"
+      },
+      {
+        "internalType": "address",
+        "name": "_erc20ForPortal",
+        "type": "address"
+      }
+    ],
+    "name": "init",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

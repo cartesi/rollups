@@ -1,15 +1,11 @@
 use ethers::contract::Abigen;
-use serde_json::Value;
 
 fn write_contract(
     contract_name: &str,
     source: &str,
     destination: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let s = std::fs::read_to_string(source)?;
-    let v: Value = serde_json::from_str(&s)?;
-    let abi_str = serde_json::to_string(&v["abi"])?;
-
+    let abi_str = std::fs::read_to_string(source)?;
     let bindings = Abigen::new(&contract_name, abi_str)?.generate()?;
 
     bindings.write_to_file(destination)?;
@@ -75,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (name, file, rs) in contracts {
         let path = format!(
-            "../../onchain/rollups/artifacts/contracts/{}.sol/{}.json",
+            "../../onchain/rollups/abi/contracts/{}.sol/{}.json",
             file, name
         );
         let destination = format!("./src/contracts/{}", rs);
@@ -83,7 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // create types for ERC20
-    let path ="../../onchain/rollups/artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json";
+    let path ="../../onchain/rollups/abi/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json";
     let destination = "./src/contracts/erc20_contract.rs";
     write_contract("ERC20", &path, &destination)?;
 

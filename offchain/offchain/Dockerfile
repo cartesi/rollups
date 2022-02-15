@@ -19,7 +19,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 # cargo chef cook stage
 FROM chef AS builder
-COPY onchain/rollups/artifacts onchain/rollups/artifacts
+COPY onchain/rollups/abi onchain/rollups/abi
 COPY grpc-interfaces grpc-interfaces
 WORKDIR offchain
 COPY --from=planner rollups/offchain/recipe.json recipe.json

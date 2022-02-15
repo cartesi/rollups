@@ -28,6 +28,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-deploy";
 import "@tenderly/hardhat-tenderly";
+import "hardhat-abi-exporter";
 
 // read MNEMONIC from env variable
 let mnemonic = process.env.MNEMONIC;
@@ -79,6 +80,10 @@ const config: HardhatUserConfig = {
         artifacts: "artifacts",
         deploy: "deploy",
         deployments: "deployments",
+    },
+    abiExporter: {
+        runOnCompile: true,
+        clear: true,
     },
     typechain: {
         outDir: "src/types",

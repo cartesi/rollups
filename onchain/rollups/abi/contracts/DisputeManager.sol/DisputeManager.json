@@ -1,0 +1,20 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[2]",
+        "name": "_claims",
+        "type": "bytes32[2]"
+      },
+      {
+        "internalType": "address payable[2]",
+        "name": "_claimers",
+        "type": "address[2]"
+      }
+    ],
+    "name": "initiateDispute",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

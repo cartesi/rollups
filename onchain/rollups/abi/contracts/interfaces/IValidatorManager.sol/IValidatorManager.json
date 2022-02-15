@@ -1,0 +1,78 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "enum Result",
+        "name": "result",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32[2]",
+        "name": "claims",
+        "type": "bytes32[2]"
+      },
+      {
+        "indexed": false,
+        "internalType": "address payable[2]",
+        "name": "validators",
+        "type": "address[2]"
+      }
+    ],
+    "name": "ClaimReceived",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "enum Result",
+        "name": "result",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32[2]",
+        "name": "claims",
+        "type": "bytes32[2]"
+      },
+      {
+        "indexed": false,
+        "internalType": "address payable[2]",
+        "name": "validators",
+        "type": "address[2]"
+      }
+    ],
+    "name": "DisputeEnded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "claim",
+        "type": "bytes32"
+      }
+    ],
+    "name": "NewEpoch",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "getCurrentClaim",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

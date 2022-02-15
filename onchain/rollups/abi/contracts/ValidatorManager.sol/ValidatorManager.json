@@ -1,0 +1,164 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "enum ValidatorManager.Result",
+        "name": "result",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32[2]",
+        "name": "claims",
+        "type": "bytes32[2]"
+      },
+      {
+        "indexed": false,
+        "internalType": "address payable[2]",
+        "name": "validators",
+        "type": "address[2]"
+      }
+    ],
+    "name": "ClaimReceived",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "enum ValidatorManager.Result",
+        "name": "result",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32[2]",
+        "name": "claims",
+        "type": "bytes32[2]"
+      },
+      {
+        "indexed": false,
+        "internalType": "address payable[2]",
+        "name": "validators",
+        "type": "address[2]"
+      }
+    ],
+    "name": "DisputeEnded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "claim",
+        "type": "bytes32"
+      }
+    ],
+    "name": "NewEpoch",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "getCurrentClaim",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address payable",
+        "name": "_sender",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_claim",
+        "type": "bytes32"
+      }
+    ],
+    "name": "onClaim",
+    "outputs": [
+      {
+        "internalType": "enum ValidatorManager.Result",
+        "name": "",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes32[2]",
+        "name": "claims",
+        "type": "bytes32[2]"
+      },
+      {
+        "internalType": "address payable[2]",
+        "name": "claimers",
+        "type": "address[2]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address payable",
+        "name": "_winner",
+        "type": "address"
+      },
+      {
+        "internalType": "address payable",
+        "name": "_loser",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_winningClaim",
+        "type": "bytes32"
+      }
+    ],
+    "name": "onDisputeEnd",
+    "outputs": [
+      {
+        "internalType": "enum ValidatorManager.Result",
+        "name": "",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes32[2]",
+        "name": "claims",
+        "type": "bytes32[2]"
+      },
+      {
+        "internalType": "address payable[2]",
+        "name": "claimers",
+        "type": "address[2]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "onNewEpoch",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

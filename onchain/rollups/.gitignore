@@ -11,11 +11,5 @@ src/types
 test/*/
 .vscode
 .node*
-*.bin
-*.abi
-/out
-build
 .env
-.venv
-offchain/**/target
 .DS_Store
