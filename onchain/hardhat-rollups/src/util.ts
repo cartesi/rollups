@@ -1,4 +1,4 @@
-// Copyright 2021 Cartesi Pte. Ltd.
+// Copyright 2022 Cartesi Pte. Ltd.
 
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -10,8 +10,19 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-import "./rollups";
-import "./input";
-import "./util";
-import "./output";
-import "./testTask";
+import { task } from "hardhat/config";
+import { AdvanceTimeArgs } from "./args";
+import { advanceTimeParams } from "./params";
+
+advanceTimeParams(
+    task<AdvanceTimeArgs>(
+        "util:advanceTime",
+        "Advances time in private blockchain",
+        async (args, hre) => {
+            await hre.network.provider.send("evm_increaseTime", [
+                Number(args.seconds),
+            ]);
+            await hre.network.provider.send("evm_mine");
+        }
+    )
+);

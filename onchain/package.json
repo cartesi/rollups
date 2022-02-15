@@ -1,6 +1,7 @@
 {
     "private": true,
     "workspaces": [
+        "hardhat-rollups",
         "rollups"
     ],
     "devDependencies": {

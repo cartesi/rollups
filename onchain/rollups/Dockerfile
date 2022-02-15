@@ -19,7 +19,6 @@ RUN chmod +x /wait-for-file.sh
 
 COPY onchain/rollups/hardhat.config.ts onchain/rollups/hardhat.config.ts
 COPY onchain/rollups/contracts onchain/rollups/contracts
-COPY onchain/rollups/src/tasks onchain/rollups/src/tasks
 
 RUN mkdir -p onchain/rollups/src/proto/
 
