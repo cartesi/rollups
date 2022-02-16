@@ -67,7 +67,10 @@ pub fn create_fee_manager<DA: DelegateAccess + Send + Sync + 'static>(
     config: &SFConfig,
 ) -> FeeManagerStateFold<DA> {
     let erc20_balance_fold = create_erc20_balance(Arc::clone(&access), config);
-    let delegate = FeeManagerFoldDelegate::new(erc20_balance_fold);
+    let validator_manager_fold =
+        create_validator_manager(Arc::clone(&access), config);
+    let delegate =
+        FeeManagerFoldDelegate::new(erc20_balance_fold, validator_manager_fold);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }

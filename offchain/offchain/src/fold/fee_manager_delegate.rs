@@ -1,7 +1,10 @@
 use crate::contracts::diamond_init::*;
+use crate::contracts::erc20_contract::*;
 use crate::contracts::fee_manager_facet::*;
+use crate::contracts::rollups_facet::*;
+use crate::contracts::validator_manager_facet::*;
 
-use super::types::{FeeManagerState, NumRedeemed};
+use super::types::{FeeManagerState, NumClaims, NumRedeemed};
 
 use offchain_core::types::Block;
 use state_fold::{
@@ -12,6 +15,7 @@ use state_fold::{
 };
 
 use crate::fold::erc20_token_delegate::ERC20BalanceFoldDelegate;
+use crate::fold::validator_manager_delegate::ValidatorManagerFoldDelegate;
 use async_trait::async_trait;
 use ethers::prelude::EthEvent;
 use ethers::types::{Address, U256};
@@ -22,13 +26,20 @@ use std::sync::Arc;
 /// Fee Manager Delegate
 pub struct FeeManagerFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
     erc20_balance_fold: Arc<StateFold<ERC20BalanceFoldDelegate, DA>>,
+    validator_manager_fold: Arc<StateFold<ValidatorManagerFoldDelegate, DA>>,
 }
 
 impl<DA: DelegateAccess + Send + Sync + 'static> FeeManagerFoldDelegate<DA> {
     pub fn new(
         erc20_balance_fold: Arc<StateFold<ERC20BalanceFoldDelegate, DA>>,
+        validator_manager_fold: Arc<
+            StateFold<ValidatorManagerFoldDelegate, DA>,
+        >,
     ) -> Self {
-        Self { erc20_balance_fold }
+        Self {
+            erc20_balance_fold,
+            validator_manager_fold,
+        }
     }
 }
 
@@ -103,9 +114,9 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         for ev in events.iter() {
             match validator_redeemed_sums.get(&ev.validator) {
                 Some(amount) => {
-                    validator_redeemed_sums[&ev.validator] = amount + ev.amount
+                    validator_redeemed_sums[&ev.validator] = amount + ev.claims
                 }
-                None => validator_redeemed_sums[&ev.validator] = ev.amount,
+                None => validator_redeemed_sums[&ev.validator] = ev.claims,
             }
         }
         for (index, sum) in validator_redeemed_sums.iter().enumerate() {
@@ -134,12 +145,34 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         let fee_manager_balance = erc20_balance_state.balance;
 
+        // obtain #claims validators made from Validator Manager
+        let validator_manager_state = self
+            .validator_manager_fold
+            .get_state_for_block(&dapp_contract_address, Some(block.hash))
+            .await
+            .map_err(|e| {
+                SyncDelegateError {
+                    err: format!("Validator Manager state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
+        // leftover balance
+        let leftover_balance = calculate_leftover_balance(
+            &validator_redeemed,
+            &validator_manager_state.num_claims,
+            &fee_per_claim,
+            &fee_manager_balance,
+        );
+
         Ok(FeeManagerState {
             dapp_contract_address: *dapp_contract_address,
             erc20_address,
             fee_per_claim,
             validator_redeemed,
             fee_manager_balance,
+            leftover_balance,
         })
     }
 
@@ -152,7 +185,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let dapp_contract_address = previous_state.dapp_contract_address;
 
         // If not in bloom copy previous state
-        if !(fold_utils::contains_address(
+        if !((fold_utils::contains_address(
             &block.logs_bloom,
             &dapp_contract_address,
         ) && (fold_utils::contains_topic(
@@ -164,7 +197,27 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         ) || fold_utils::contains_topic(
             &block.logs_bloom,
             &FeeRedeemedFilter::signature(),
-        ))) {
+        ))) || (fold_utils::contains_address(
+            // erc20 events
+            &block.logs_bloom,
+            &previous_state.erc20_address,
+        ) && fold_utils::contains_topic(
+            &block.logs_bloom,
+            &TransferFilter::signature(),
+        )) || (fold_utils::contains_address(
+            // validator manager and rollups events
+            &block.logs_bloom,
+            &dapp_contract_address,
+        ) && (fold_utils::contains_topic(
+            &block.logs_bloom,
+            &DisputeEndedFilter::signature(),
+        ) || fold_utils::contains_topic(
+            &block.logs_bloom,
+            &NewEpochFilter::signature(),
+        ) || fold_utils::contains_topic(
+            &block.logs_bloom,
+            &ClaimFilter::signature(),
+        )))) {
             return Ok(previous_state.clone());
         }
 
@@ -206,7 +259,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 .map(|v| *v)
                 .unwrap_or(U256::zero());
 
-            validator_redeemed_sums.insert(ev.validator, amount + ev.amount);
+            validator_redeemed_sums.insert(ev.validator, amount + ev.claims);
         }
         // update to the state.validator_redeemed array
         for (&validator_address, &newly_redeemed) in
@@ -270,6 +323,26 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         state.fee_manager_balance = erc20_balance_state.balance;
 
+        let validator_manager_state = self
+            .validator_manager_fold
+            .get_state_for_block(&dapp_contract_address, Some(block.hash))
+            .await
+            .map_err(|e| {
+                FoldDelegateError {
+                    err: format!("Validator manager fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
+        // leftover balance
+        state.leftover_balance = calculate_leftover_balance(
+            &state.validator_redeemed,
+            &validator_manager_state.num_claims,
+            &state.fee_per_claim,
+            &state.fee_manager_balance,
+        );
+
         Ok(state)
     }
 
@@ -279,4 +352,34 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     ) -> Self::State {
         accumulator.clone()
     }
+}
+
+fn calculate_leftover_balance(
+    validator_redeemed: &[Option<NumRedeemed>; 8],
+    num_claims: &[Option<NumClaims>; 8],
+    fee_per_claim: &U256,
+    fee_manager_balance: &U256,
+) -> i128 {
+    // calculate total number of claims made by all validators
+    let mut total_claims = U256::zero();
+    for i in 0..8 {
+        if let Some(num_claims_struct) = num_claims[i] {
+            total_claims = total_claims + num_claims_struct.num_claims_mades;
+        }
+    }
+    // calculate total number of claims redeemed by all validators
+    let mut total_redeems = U256::zero();
+    for i in 0..8 {
+        if let Some(num_redeemed_struct) = validator_redeemed[i] {
+            total_redeems =
+                total_redeems + num_redeemed_struct.num_claims_redeemed;
+        }
+    }
+
+    // calculate leftover balance for fee manager
+    // leftover_balance = current_balance - to_be_redeemed_fees
+    let to_be_redeemed_fees = (total_claims - total_redeems) * fee_per_claim;
+    let leftover_balance = fee_manager_balance.as_u128() as i128
+        - to_be_redeemed_fees.as_u128() as i128;
+    leftover_balance
 }

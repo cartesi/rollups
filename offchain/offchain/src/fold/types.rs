@@ -320,8 +320,8 @@ pub struct FeeManagerState {
     /// Tuple containing (validator, #claims_redeemed_so_far)
     pub validator_redeemed: [Option<NumRedeemed>; 8],
     pub fee_manager_balance: U256,
-    // /// Balance of fee manager contract minus amount of to-be-redeemed fees
-    // pub leftover_balance: I256, // implement this after validator manager delegeate
+    /// Balance of fee manager contract minus amount of to-be-redeemed fees
+    pub leftover_balance: i128,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

@@ -157,9 +157,6 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             &dapp_contract_address,
         ) && (fold_utils::contains_topic(
             &block.logs_bloom,
-            &ClaimReceivedFilter::signature(), // this event can be ignored
-        ) || fold_utils::contains_topic(
-            &block.logs_bloom,
             &DisputeEndedFilter::signature(),
         ) || fold_utils::contains_topic(
             &block.logs_bloom,

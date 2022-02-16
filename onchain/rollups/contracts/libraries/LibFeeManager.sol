@@ -71,7 +71,10 @@ library LibFeeManager {
         );
         uint256 redeemedClaims = ds.numClaimsRedeemed.getNumClaims(valIndex);
 
-        return totalClaims - redeemedClaims; // underflow checked by default with sol0.8
+        // underflow checked by default with sol0.8
+        // which means if a validator is removed, calling this function will
+        // either return 0 or revert
+        return totalClaims - redeemedClaims;
     }
 
     /// @notice this function can be called to check the number of claims that has been redeemed for the validator
@@ -138,7 +141,8 @@ library LibFeeManager {
             ds.token.transfer(_validator, feesToSend),
             "Failed to redeem fees"
         );
-        emit FeeRedeemed(_validator, feesToSend);
+        // emit the number of claimed being redeemed, instead of the amount of tokens
+        emit FeeRedeemed(_validator, nowRedeemingClaims);
     }
 
     /// @notice emitted on resetting feePerClaim
