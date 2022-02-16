@@ -18,6 +18,8 @@ export type ParamsBuilder = (
 ) => ConfigurableTaskDefinition;
 
 export const createParams: ParamsBuilder = (task) => {
+    const CTSI_address = "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
+
     return task
         .addOptionalParam<boolean>(
             "log",
@@ -46,10 +48,38 @@ export const createParams: ParamsBuilder = (task) => {
             types.int,
             true
         )
+        .addParam<number>(
+            "feePerClaim",
+            "Fee to reward validators for claims",
+            10,
+            types.int,
+            true
+        )
+        .addParam<string>(
+            "erc20ForFee",
+            "Address of ERC-20 token used to reward validators",
+            CTSI_address,
+            types.string,
+            true
+        )
+        .addParam<number>(
+            "feeManagerOwner",
+            "Address of Fee Manager owner. Defaults to the address of the deployer.",
+            undefined,
+            types.string,
+            true
+        )
         .addParam<string>(
             "validators",
             "Comma separated list of validator nodes addresses. If item is a number consider as an account index of the defined MNEMONIC",
             "0,1,2",
+            types.string,
+            true
+        )
+        .addParam<string>(
+            "erc20ForPortal",
+            "Address of ERC-20 token used by the Portal Facet",
+            CTSI_address,
             types.string,
             true
         );

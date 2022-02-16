@@ -28,7 +28,7 @@ type RollupsFacets = {
 };
 
 /**
- * Connects to a Rollups contract and its Input and Output contracts.
+ * Connects to a Rollups diamond contract and its Rollups, Input and Output facets.
  * @param args arguments with information about which rollups to connect
  * @param hre Hardhat Runtime Environment
  * @returns three connected contracts, Rollups, Input and Output

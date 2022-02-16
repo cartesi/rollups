@@ -33,7 +33,7 @@ export const TASK_EXECUTE_VOUCHER = "rollups:executeVoucher";
 
 export const taskDefs: Record<string, TaskDefinition> = {
     [TASK_CREATE]: {
-        description: "Create a set of Rollups contracts",
+        description: "Create a Rollups diamond contract",
         params: createParams,
     },
     [TASK_CLAIM]: {

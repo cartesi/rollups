@@ -31,6 +31,18 @@ import {
 const isIndex = (str: string): boolean =>
     str.match(/^[0-9]+$/) ? true : false;
 
+enum FacetCutAction {
+    Add = 0,
+    Replace = 1,
+    Remove = 2,
+}
+
+interface FacetCut {
+    facetAddress: string,
+    action: FacetCutAction,
+    functionSelectors: string[],
+}
+
 createParams(
     task<CreateArgs>(
         TASK_CREATE,
@@ -38,10 +50,6 @@ createParams(
         async (args, hre) => {
             const { deployments, ethers } = hre;
             const { deployer } = await hre.getNamedAccounts();
-
-            // get util contracts
-            const Bitmask = await deployments.get("Bitmask");
-            const Merkle = await deployments.get("Merkle");
 
             // process list of validators from config. If item is a number consider as an account index of the defined MNEMONIC
             const signers = await ethers.getSigners();
@@ -53,53 +61,75 @@ createParams(
                         : address
                 );
 
-            // RollupsImpl
-            const RollupsImpl = await deployments.deploy("RollupsImpl", {
+            // deploy raw diamond with only the diamond cut facet
+            const diamondCutFacetDeployment = await deployments.get('DiamondCutFacet');
+            const diamond = await deployments.deploy("Diamond", {
                 from: deployer,
-                libraries: {
-                    Bitmask: Bitmask.address,
-                    Merkle: Merkle.address,
-                },
                 args: [
-                    args.inputDuration,
-                    args.challengePeriod,
-                    args.inputLog2Size,
-                    validators,
+                    deployer,
+                    diamondCutFacetDeployment.address,
                 ],
                 log: args.log,
             });
 
-            const { inputFacet, outputFacet } = await connect(
-                { rollups: RollupsImpl.address },
-                hre
-            );
+            // list all facets to add in a diamond cut
+            const facetNames : string[] = [
+                // essential facets
+                "DiamondLoupeFacet",
+                "OwnershipFacet",
+                // rollups-related facets
+                "ERC20PortalFacet",
+                "ERC721PortalFacet",
+                "EtherPortalFacet",
+                "FeeManagerFacet",
+                "InputFacet",
+                "OutputFacet",
+                "RollupsFacet",
+                "SERC20PortalFacet",
+                "ValidatorManagerFacet",
+            ];
 
-            // deploy ETH portal
-            const EtherPortalImpl = await deployments.deploy(
-                "EtherPortalImpl",
-                {
-                    from: deployer,
-                    args: [inputFacet.address, outputFacet.address],
-                    log: args.log,
-                }
-            );
+            // list all facet cuts to be made
+            const facetCuts : FacetCut[] = [];
 
-            // deploy ERC20 portal
-            const ERC20PortalImpl = await deployments.deploy(
-                "ERC20PortalImpl",
-                {
-                    from: deployer,
-                    args: [inputFacet.address, outputFacet.address],
-                    log: args.log,
-                }
-            );
+            for (const facetName of facetNames) {
+                const facetDeployment = await deployments.get(facetName);
+                const facet = await ethers.getContractAt(facetName, facetDeployment.address);
+                const signatures = Object.keys(facet.interface.functions);
+                const selectors = signatures.reduce((acc: string[], val: string) => {
+                    if (val !== 'init(bytes') {
+                        acc.push(facet.interface.getSighash(val));
+                    }
+                    return acc;
+                }, []);
+                facetCuts.push({
+                    facetAddress: facet.address,
+                    action: FacetCutAction.Add,
+                    functionSelectors: selectors,
+                });
+            }
 
-            const result = {
-                RollupsImpl,
-                EtherPortalImpl,
-                ERC20PortalImpl,
-            };
-            return result;
+            // make diamond cut
+            const diamondCutFacet = await ethers.getContractAt('IDiamondCut', diamond.address);
+            const diamondInitDeployment = await deployments.get('DiamondInit');
+            const diamondInit = await ethers.getContractAt('DiamondInit', diamondInitDeployment.address);
+            const calldata = diamondInit.interface.encodeFunctionData('init', [
+                args.inputDuration,
+                args.challengePeriod,
+                args.inputLog2Size,
+                args.feePerClaim,
+                args.erc20ForFee,
+                args.feeManagerOwner || deployer,
+                validators,
+                args.erc20ForPortal,
+            ]);
+            const tx = await diamondCutFacet.diamondCut(facetCuts, diamondInit.address, calldata);
+            const receipt = await tx.wait();
+            if (!receipt.status) {
+                throw Error(`Diamond cut failed: ${tx.hash}`);
+            }
+
+            return diamond;
         }
     )
 );
@@ -148,18 +178,23 @@ rollupsParams(
                 AwaitingConsensus,
                 AwaitingDispute,
             }
-            const storageVar = await rollupsFacet.storageVar();
+
+            const inputDuration = await rollupsFacet.getInputDuration();
+            const challengePeriod = await rollupsFacet.getChallengePeriod();
             const currentEpoch = await rollupsFacet.getCurrentEpoch();
+            const inputAccumulationStart = await rollupsFacet.getInputAccumulationStart();
+            const sealingEpochTimestamp = await rollupsFacet.getSealingEpochTimestamp();
+            const currentPhase = await rollupsFacet.getCurrentPhase();
             const block = await ethers.provider.getBlock("latest");
 
             const result = {
                 currentTimestamp: block.timestamp,
-                inputDuration: storageVar.inputDuration,
-                challengePeriod: storageVar.challengePeriod,
+                inputDuration: inputDuration,
+                challengePeriod: challengePeriod,
                 currentEpoch: currentEpoch.toNumber(),
-                accumulationStart: storageVar.inputAccumulationStart,
-                sealingEpochTimestamp: storageVar.sealingEpochTimestamp,
-                currentPhase: Phases[storageVar.currentPhase_int],
+                accumulationStart: inputAccumulationStart,
+                sealingEpochTimestamp: sealingEpochTimestamp,
+                currentPhase: Phases[currentPhase],
             };
             console.log(JSON.stringify(result, null, 2));
             return result;
