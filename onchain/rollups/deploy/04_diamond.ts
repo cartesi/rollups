@@ -39,7 +39,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const libDiamond = await deployments.deploy("LibDiamond", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ libDiamond.address }] Deployed LibDiamond`);
+    console.log(`[${libDiamond.address}] Deployed LibDiamond`);
 
     // Diamond facets
     // ==============
@@ -51,19 +51,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const diamondCutFacet = await deployments.deploy("DiamondCutFacet", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ diamondCutFacet.address }] Deployed DiamondCutFacet`);
+    console.log(`[${diamondCutFacet.address}] Deployed DiamondCutFacet`);
 
     // DiamondLoupeFacet
     const diamondLoupeFacet = await deployments.deploy("DiamondLoupeFacet", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ diamondLoupeFacet.address }] Deployed DiamondLoupeFacet`);
+    console.log(`[${diamondLoupeFacet.address}] Deployed DiamondLoupeFacet`);
 
     // OwnershipFacet
     const ownershipFacet = await deployments.deploy("OwnershipFacet", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ ownershipFacet.address }] Deployed OwnershipFacet`);
+    console.log(`[${ownershipFacet.address}] Deployed OwnershipFacet`);
 
     // Utility libraries
     // =================
@@ -75,13 +75,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const bitmask = await deployments.deploy("Bitmask", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ bitmask.address }] Deployed Bitmask`);
+    console.log(`[${bitmask.address}] Deployed Bitmask`);
 
     // CartesiMath
     const cartesiMath = await deployments.deploy("CartesiMath", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ cartesiMath.address }] Deployed CartesiMath`);
+    console.log(`[${cartesiMath.address}] Deployed CartesiMath`);
 
     // Merkle
     const merkle = await deployments.deploy("Merkle", {
@@ -90,13 +90,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             CartesiMath: cartesiMath.address,
         },
     });
-    console.log(`[${ merkle.address }] Deployed Merkle`);
+    console.log(`[${merkle.address}] Deployed Merkle`);
 
     // LibClaimsMask
     const libClaimsMask = await deployments.deploy("LibClaimsMask", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ libClaimsMask.address }] Deployed LibClaimsMask`);
+    console.log(`[${libClaimsMask.address}] Deployed LibClaimsMask`);
 
     // Rollups libraries
     // =================
@@ -108,46 +108,51 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const libInput = await deployments.deploy("LibInput", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ libInput.address }] Deployed LibInput`);
+    console.log(`[${libInput.address}] Deployed LibInput`);
 
     // LibOutput
     const libOutput = await deployments.deploy("LibOutput", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ libOutput.address }] Deployed LibOutput`);
+    console.log(`[${libOutput.address}] Deployed LibOutput`);
 
     // LibValidatorManager
-    const libValidatorManager = await deployments.deploy("LibValidatorManager", {
-        from: contractOwnerAddress,
-        libraries: {
-            LibClaimsMask: libClaimsMask.address,
-        },
-    });
-    console.log(`[${ libValidatorManager.address }] Deployed LibValidatorManager`);
+    const libValidatorManager = await deployments.deploy(
+        "LibValidatorManager",
+        {
+            from: contractOwnerAddress,
+            libraries: {
+                LibClaimsMask: libClaimsMask.address,
+            },
+        }
+    );
+    console.log(
+        `[${libValidatorManager.address}] Deployed LibValidatorManager`
+    );
 
     // LibDisputeManager
     const libDisputeManager = await deployments.deploy("LibDisputeManager", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ libDisputeManager.address }] Deployed LibDisputeManager`);
+    console.log(`[${libDisputeManager.address}] Deployed LibDisputeManager`);
 
     // LibSERC20Portal
     const libSERC20Portal = await deployments.deploy("LibSERC20Portal", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ libSERC20Portal.address }] Deployed LibSERC20Portal`);
+    console.log(`[${libSERC20Portal.address}] Deployed LibSERC20Portal`);
 
     // LibFeeManager
     const libFeeManager = await deployments.deploy("LibFeeManager", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ libFeeManager.address }] Deployed LibFeeManager`);
+    console.log(`[${libFeeManager.address}] Deployed LibFeeManager`);
 
     // LibRollups
     const libRollups = await deployments.deploy("LibRollups", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ libRollups.address }] Deployed LibRollups`);
+    console.log(`[${libRollups.address}] Deployed LibRollups`);
 
     // Rollups facets
     // ==============
@@ -159,19 +164,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const erc20PortalFacet = await deployments.deploy("ERC20PortalFacet", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ erc20PortalFacet.address }] Deployed ERC20PortalFacet`);
+    console.log(`[${erc20PortalFacet.address}] Deployed ERC20PortalFacet`);
 
     // ERC721PortalFacet
     const erc721PortalFacet = await deployments.deploy("ERC721PortalFacet", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ erc721PortalFacet.address }] Deployed ERC721PortalFacet`);
+    console.log(`[${erc721PortalFacet.address}] Deployed ERC721PortalFacet`);
 
     // EtherPortalFacet
     const etherPortalFacet = await deployments.deploy("EtherPortalFacet", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ etherPortalFacet.address }] Deployed EtherPortalFacet`);
+    console.log(`[${etherPortalFacet.address}] Deployed EtherPortalFacet`);
 
     // FeeManagerFacet
     const feeManagerFacet = await deployments.deploy("FeeManagerFacet", {
@@ -180,13 +185,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             LibClaimsMask: libClaimsMask.address,
         },
     });
-    console.log(`[${ feeManagerFacet.address }] Deployed FeeManagerFacet`);
+    console.log(`[${feeManagerFacet.address}] Deployed FeeManagerFacet`);
 
     // InputFacet
     const inputFacet = await deployments.deploy("InputFacet", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ inputFacet.address }] Deployed InputFacet`);
+    console.log(`[${inputFacet.address}] Deployed InputFacet`);
 
     // OutputFacet
     const outputFacet = await deployments.deploy("OutputFacet", {
@@ -196,7 +201,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             Merkle: merkle.address,
         },
     });
-    console.log(`[${ outputFacet.address }] Deployed OutputFacet`);
+    console.log(`[${outputFacet.address}] Deployed OutputFacet`);
 
     // RollupsFacet
     const rollupsFacet = await deployments.deploy("RollupsFacet", {
@@ -205,22 +210,27 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             LibClaimsMask: libClaimsMask.address,
         },
     });
-    console.log(`[${ rollupsFacet.address }] Deployed RollupsFacet`);
+    console.log(`[${rollupsFacet.address}] Deployed RollupsFacet`);
 
     // SERC20PortalFacet
     const serc20PortalFacet = await deployments.deploy("SERC20PortalFacet", {
         from: contractOwnerAddress,
     });
-    console.log(`[${ serc20PortalFacet.address }] Deployed SERC20PortalFacet`);
+    console.log(`[${serc20PortalFacet.address}] Deployed SERC20PortalFacet`);
 
     // ValidatorManagerFacet
-    const validatorManagerFacet = await deployments.deploy("ValidatorManagerFacet", {
-        from: contractOwnerAddress,
-        libraries: {
-            LibClaimsMask: libClaimsMask.address,
-        },
-    });
-    console.log(`[${ validatorManagerFacet.address }] Deployed ValidatorManagerFacet`);
+    const validatorManagerFacet = await deployments.deploy(
+        "ValidatorManagerFacet",
+        {
+            from: contractOwnerAddress,
+            libraries: {
+                LibClaimsMask: libClaimsMask.address,
+            },
+        }
+    );
+    console.log(
+        `[${validatorManagerFacet.address}] Deployed ValidatorManagerFacet`
+    );
 
     // Diamond initialization contract
     // ===============================
@@ -235,7 +245,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             LibClaimsMask: libClaimsMask.address,
         },
     });
-    console.log(`[${ diamondInit.address }] Deployed DiamondInit`);
+    console.log(`[${diamondInit.address}] Deployed DiamondInit`);
 };
 
 export default func;

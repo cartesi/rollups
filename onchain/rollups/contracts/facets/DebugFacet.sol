@@ -51,8 +51,8 @@ contract DebugFacet {
     }
 
     function _setCurrentPhase(Phase _phase) public {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
         rollupsDS.currentPhase_int = uint32(_phase);
     }
 
@@ -61,8 +61,8 @@ contract DebugFacet {
         view
         returns (address payable[] memory validators)
     {
-        LibValidatorManager.DiamondStorage storage vmDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
+            .diamondStorage();
         return vmDS.validators;
     }
 
@@ -74,8 +74,8 @@ contract DebugFacet {
             address payable[2] memory
         )
     {
-        LibValidatorManager.DiamondStorage storage vmDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
+            .diamondStorage();
         return vmDS.onClaim(_sender, _claim);
     }
 
@@ -96,16 +96,16 @@ contract DebugFacet {
             address payable[2] memory
         )
     {
-        LibValidatorManager.DiamondStorage storage vmDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
+            .diamondStorage();
         return vmDS.onDisputeEnd(_winner, _loser, _winningClaim);
     }
 
     /// @notice called when a new epoch starts
     /// @return current claim
     function _onNewEpochVM() public returns (bytes32) {
-        LibValidatorManager.DiamondStorage storage vmDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
+            .diamondStorage();
         return vmDS.onNewEpoch();
     }
 
@@ -130,8 +130,8 @@ contract DebugFacet {
     }
 
     function _setSERC20Address(address _erc20Contract) public {
-        LibSERC20Portal.DiamondStorage storage serc20DS =
-            LibSERC20Portal.diamondStorage();
+        LibSERC20Portal.DiamondStorage storage serc20DS = LibSERC20Portal
+            .diamondStorage();
         serc20DS.erc20Contract = _erc20Contract;
     }
 
@@ -146,14 +146,14 @@ contract DebugFacet {
     }
 
     function _getFeePerClaim() public view returns (uint256) {
-        LibFeeManager.DiamondStorage storage feeManagerDS =
-            LibFeeManager.diamondStorage();
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
         return feeManagerDS.feePerClaim;
     }
 
     function _setNumClaims(uint256 _validatorIndex, uint256 _value) public {
-        LibValidatorManager.DiamondStorage storage vmDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
+            .diamondStorage();
         vmDS.claimsMask = vmDS.claimsMask.setNumClaims(_validatorIndex, _value);
     }
 

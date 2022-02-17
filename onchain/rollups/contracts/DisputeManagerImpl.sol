@@ -21,7 +21,7 @@ contract DisputeManagerImpl is DisputeManager {
 
     /// @notice functions modified by onlyRollups will only be executed if
     //  they're called by Rollups contract, otherwise it will throw an exception
-    modifier onlyRollups {
+    modifier onlyRollups() {
         require(
             msg.sender == address(rollups),
             "Only rollups can call this functions"

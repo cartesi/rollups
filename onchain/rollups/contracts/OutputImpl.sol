@@ -50,15 +50,14 @@ contract OutputImpl is Output {
 
     /// @notice functions modified by onlyRollups will only be executed if
     /// they're called by Rollups contract, otherwise it will throw an exception
-    modifier onlyRollups {
+    modifier onlyRollups() {
         require(msg.sender == rollups, "Only rollups");
         _;
     }
 
     /// @notice creates OutputImpl contract
     /// @param _rollups address of rollupscontract
-    constructor(address _rollups)
-    {
+    constructor(address _rollups) {
         rollups = _rollups;
     }
 
@@ -77,8 +76,11 @@ contract OutputImpl is Output {
         // check if validity proof matches the voucher provided
         isValidVoucherProof(encodedVoucher, epochHashes[_v.epochIndex], _v);
 
-        uint256 voucherPosition =
-            getBitMaskPosition(_v.outputIndex, _v.inputIndex, _v.epochIndex);
+        uint256 voucherPosition = getBitMaskPosition(
+            _v.outputIndex,
+            _v.inputIndex,
+            _v.epochIndex
+        );
 
         // check if voucher has been executed
         require(
@@ -158,11 +160,10 @@ contract OutputImpl is Output {
         //     )
         // is contained in it. We can't simply use hashOfOutput because the
         // log2size of the leaf is three (8 bytes) not  five (32 bytes)
-        bytes32 merkleRootOfHashOfOutput =
-            Merkle.getMerkleRootFromBytes(
-                abi.encodePacked(keccak256(_encodedOutput)),
-                KECCAK_LOG2_SIZE
-            );
+        bytes32 merkleRootOfHashOfOutput = Merkle.getMerkleRootFromBytes(
+            abi.encodePacked(keccak256(_encodedOutput)),
+            KECCAK_LOG2_SIZE
+        );
 
         // prove that merkle root hash of bytes(hashOfOutput) is contained
         // in the output metadata array drive
@@ -186,19 +187,16 @@ contract OutputImpl is Output {
         bytes memory _encodedVoucher,
         bytes32 _epochHash,
         OutputValidityProof calldata _v
-    )
-        public
-        pure
-        returns (bool)
-    {
-        return isValidProof(
-            _encodedVoucher,
-            _epochHash,
-            _v.epochVoucherDriveHash,
-            EPOCH_VOUCHER_LOG2_SIZE,
-            VOUCHER_METADATA_LOG2_SIZE,
-            _v
-        );
+    ) public pure returns (bool) {
+        return
+            isValidProof(
+                _encodedVoucher,
+                _epochHash,
+                _v.epochVoucherDriveHash,
+                EPOCH_VOUCHER_LOG2_SIZE,
+                VOUCHER_METADATA_LOG2_SIZE,
+                _v
+            );
     }
 
     /// @notice functions modified by isValidNoticeProof will only be executed if
@@ -207,19 +205,16 @@ contract OutputImpl is Output {
         bytes memory _encodedNotice,
         bytes32 _epochHash,
         OutputValidityProof calldata _v
-    )
-        public
-        pure
-        returns (bool)
-    {
-        return isValidProof(
-            _encodedNotice,
-            _epochHash,
-            _v.epochNoticeDriveHash,
-            EPOCH_NOTICE_LOG2_SIZE,
-            NOTICE_METADATA_LOG2_SIZE,
-            _v
-        );
+    ) public pure returns (bool) {
+        return
+            isValidProof(
+                _encodedNotice,
+                _epochHash,
+                _v.epochNoticeDriveHash,
+                EPOCH_NOTICE_LOG2_SIZE,
+                NOTICE_METADATA_LOG2_SIZE,
+                _v
+            );
     }
 
     /// @notice get voucher position on bitmask
@@ -270,12 +265,7 @@ contract OutputImpl is Output {
     }
 
     /// @notice get log2 size of epoch voucher drive
-    function getEpochVoucherLog2Size()
-        public
-        pure
-        override
-        returns (uint256)
-    {
+    function getEpochVoucherLog2Size() public pure override returns (uint256) {
         return EPOCH_VOUCHER_LOG2_SIZE;
     }
 
@@ -290,12 +280,7 @@ contract OutputImpl is Output {
     }
 
     /// @notice get log2 size of epoch notice drive
-    function getEpochNoticeLog2Size()
-        public
-        pure
-        override
-        returns (uint256)
-    {
+    function getEpochNoticeLog2Size() public pure override returns (uint256) {
         return EPOCH_NOTICE_LOG2_SIZE;
     }
 }

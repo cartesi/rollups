@@ -56,8 +56,8 @@ library LibClaimsMask {
         require(_validatorIndex < 8, "index out of range");
         uint256 bitmask = (1 << claimsBitLen) - 1;
         return
-            (ClaimsMask.unwrap(_claimsMask) >> (claimsBitLen * _validatorIndex)) &
-            bitmask;
+            (ClaimsMask.unwrap(_claimsMask) >>
+                (claimsBitLen * _validatorIndex)) & bitmask;
     }
 
     /// @notice this function increases the #claims for the specified validator
@@ -86,8 +86,8 @@ library LibClaimsMask {
     ) public pure returns (ClaimsMask) {
         require(_validatorIndex < 8, "index out of range");
         require(_value <= ((1 << claimsBitLen) - 1), "ClaimsMask Overflow");
-        uint256 bitmask =
-            ~(((1 << claimsBitLen) - 1) << (claimsBitLen * _validatorIndex));
+        uint256 bitmask = ~(((1 << claimsBitLen) - 1) <<
+            (claimsBitLen * _validatorIndex));
         uint256 clearedClaimsMask = ClaimsMask.unwrap(_claimsMask) & bitmask;
         _claimsMask = ClaimsMask.wrap(
             clearedClaimsMask | (_value << (claimsBitLen * _validatorIndex))
@@ -139,8 +139,8 @@ library LibClaimsMask {
         returns (ClaimsMask)
     {
         require(_validatorIndex < 8, "index out of range");
-        uint256 setMask =
-            (ClaimsMask.unwrap(_claimsMask) | (1 << (248 + _validatorIndex))); // 256 - 8 = 248
+        uint256 setMask = (ClaimsMask.unwrap(_claimsMask) |
+            (1 << (248 + _validatorIndex))); // 256 - 8 = 248
         return ClaimsMask.wrap(setMask);
     }
 
@@ -171,6 +171,7 @@ library LibClaimsMask {
         zeroMask = ~(1 << (_validatorIndex + 240)); // 256 - 8 - 8 = 240
         claimsMaskValue = (claimsMaskValue & zeroMask);
         // remove validator from #claims
-        return setNumClaims(ClaimsMask.wrap(claimsMaskValue), _validatorIndex, 0);
+        return
+            setNumClaims(ClaimsMask.wrap(claimsMaskValue), _validatorIndex, 0);
     }
 }

@@ -56,10 +56,7 @@ describe("Input Implementation", () => {
 
         const inputFactory = new InputImpl__factory(signer);
 
-        inputImpl = await inputFactory.deploy(
-            mockRollups.address,
-            log2Size
-        );
+        inputImpl = await inputFactory.deploy(mockRollups.address, log2Size);
     });
 
     it("test constructor", async () => {
@@ -199,10 +196,7 @@ describe("Input Implementation", () => {
         await mockRollups.mock.notifyInput.returns(false);
         await mockRollups.mock.getCurrentEpoch.returns(0);
 
-        await expect(
-            inputImpl.addInput(input),
-            "should emit event InputAdded"
-        )
+        await expect(inputImpl.addInput(input), "should emit event InputAdded")
             .to.emit(inputImpl, "InputAdded")
             .withArgs(
                 0,
@@ -238,7 +232,8 @@ describe("Input Implementation", () => {
             block.number,
             block.timestamp,
             0x0,
-            0x0);
+            0x0
+        );
 
         expect(
             await inputImpl.callStatic.addInput(input),
@@ -291,7 +286,8 @@ describe("Input Implementation", () => {
             block.number,
             block.timestamp,
             0x0,
-            0x0);
+            0x0
+        );
 
         // switch input boxes before testing getInput()
         await mockRollups.mock.notifyInput.returns(true);
@@ -314,7 +310,8 @@ describe("Input Implementation", () => {
             block.number,
             block.timestamp,
             0x1,
-            0x0);
+            0x0
+        );
 
         // switch input boxes before testing getInput()
         await mockRollups.mock.getCurrentEpoch.returns(2);

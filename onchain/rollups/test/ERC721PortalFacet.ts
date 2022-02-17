@@ -47,7 +47,10 @@ describe("ERC721Portal Facet", async () => {
     beforeEach(async () => {
         const diamond = await deployDiamond({ debug: true });
         [signer, signer2] = await ethers.getSigners();
-        portalFacet = ERC721PortalFacet__factory.connect(diamond.address, signer);
+        portalFacet = ERC721PortalFacet__factory.connect(
+            diamond.address,
+            signer
+        );
         debugFacet = DebugFacet__factory.connect(diamond.address, signer);
 
         // Deploy a mock ERC-721 contract
@@ -57,24 +60,24 @@ describe("ERC721Portal Facet", async () => {
 
     it("erc721Deposit should revert if safeTransferFrom reverts", async () => {
         const reason = "This cryptokitty is not available";
-        await mockERC721.mock['safeTransferFrom(address,address,uint256)'].revertsWithReason(reason);
+        await mockERC721.mock[
+            "safeTransferFrom(address,address,uint256)"
+        ].revertsWithReason(reason);
 
         const erc721 = mockERC721.address;
         const tokenId = 50;
         const data = "0x00";
 
         await expect(
-            portalFacet.erc721Deposit(
-                erc721,
-                tokenId,
-                data
-            ),
+            portalFacet.erc721Deposit(erc721, tokenId, data),
             "ERC721 deposit should revert if ERC721 safeTransferFrom fails"
         ).to.be.revertedWith(reason);
     });
 
     it("erc721Deposit should emit events", async () => {
-        await mockERC721.mock['safeTransferFrom(address,address,uint256)'].returns();
+        await mockERC721.mock[
+            "safeTransferFrom(address,address,uint256)"
+        ].returns();
 
         const erc721 = mockERC721.address;
         const sender = await signer.getAddress();
@@ -90,7 +93,9 @@ describe("ERC721Portal Facet", async () => {
     });
 
     it("erc721Deposit should return LibInput.addInput(...)", async () => {
-        await mockERC721.mock['safeTransferFrom(address,address,uint256)'].returns();
+        await mockERC721.mock[
+            "safeTransferFrom(address,address,uint256)"
+        ].returns();
 
         const header = keccak256(toUtf8Bytes("ERC721_Transfer"));
         const erc721 = mockERC721.address;
@@ -106,7 +111,14 @@ describe("ERC721Portal Facet", async () => {
 
         // Calculate the input hash
         const block = await ethers.provider.getBlock("latest");
-        const inputHash = getInputHash(input, sender, block.number, block.timestamp, 0x0, 0x0);
+        const inputHash = getInputHash(
+            input,
+            sender,
+            block.number,
+            block.timestamp,
+            0x0,
+            0x0
+        );
 
         expect(
             await portalFacet.callStatic.erc721Deposit(erc721, tokenId, data),
@@ -121,11 +133,7 @@ describe("ERC721Portal Facet", async () => {
 
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint", "uint"],
-            [
-                erc721,
-                receiver,
-                tokenId,
-            ]
+            [erc721, receiver, tokenId]
         );
         await expect(
             portalFacet.connect(signer2).erc721Withdrawal(data)
@@ -133,7 +141,9 @@ describe("ERC721Portal Facet", async () => {
     });
 
     it("erc721Withdrawal should emit ERC721Withdrawn and return true", async () => {
-        await mockERC721.mock['safeTransferFrom(address,address,uint256)'].returns();
+        await mockERC721.mock[
+            "safeTransferFrom(address,address,uint256)"
+        ].returns();
 
         const erc721 = mockERC721.address;
         const receiver = await signer.getAddress();
@@ -145,9 +155,9 @@ describe("ERC721Portal Facet", async () => {
         );
 
         // callStatic check return value
-        expect(
-            await debugFacet.callStatic._erc721Withdrawal(data)
-        ).to.equal(true);
+        expect(await debugFacet.callStatic._erc721Withdrawal(data)).to.equal(
+            true
+        );
 
         // check emitted event
         await expect(debugFacet._erc721Withdrawal(data))

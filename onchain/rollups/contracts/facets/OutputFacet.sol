@@ -70,8 +70,11 @@ contract OutputFacet is IOutput {
             _v
         );
 
-        uint256 voucherPosition =
-            getBitMaskPosition(_v.outputIndex, _v.inputIndex, _v.epochIndex);
+        uint256 voucherPosition = getBitMaskPosition(
+            _v.outputIndex,
+            _v.inputIndex,
+            _v.epochIndex
+        );
 
         // check if voucher has been executed
         require(
@@ -144,11 +147,10 @@ contract OutputFacet is IOutput {
         //     )
         // is contained in it. We can't simply use hashOfOutput because the
         // log2size of the leaf is three (8 bytes) not  five (32 bytes)
-        bytes32 merkleRootOfHashOfOutput =
-            Merkle.getMerkleRootFromBytes(
-                abi.encodePacked(keccak256(_encodedOutput)),
-                KECCAK_LOG2_SIZE
-            );
+        bytes32 merkleRootOfHashOfOutput = Merkle.getMerkleRootFromBytes(
+            abi.encodePacked(keccak256(_encodedOutput)),
+            KECCAK_LOG2_SIZE
+        );
 
         // prove that merkle root hash of bytes(hashOfOutput) is contained
         // in the output metadata array drive

@@ -47,7 +47,10 @@ describe("ERC20Portal Facet", async () => {
     beforeEach(async () => {
         const diamond = await deployDiamond({ debug: true });
         [signer, signer2] = await ethers.getSigners();
-        portalFacet = ERC20PortalFacet__factory.connect(diamond.address, signer);
+        portalFacet = ERC20PortalFacet__factory.connect(
+            diamond.address,
+            signer
+        );
         debugFacet = DebugFacet__factory.connect(diamond.address, signer);
 
         // Deploy a mock ERC-20 contract
@@ -59,11 +62,7 @@ describe("ERC20Portal Facet", async () => {
         await mockERC20.mock.transferFrom.returns(false);
 
         await expect(
-            portalFacet.erc20Deposit(
-                mockERC20.address,
-                50,
-                "0x00"
-            ),
+            portalFacet.erc20Deposit(mockERC20.address, 50, "0x00"),
             "ERC20 deposit should revert if ERC20 transferFrom fails"
         ).to.be.revertedWith("ERC20 transferFrom failed");
     });
@@ -101,7 +100,14 @@ describe("ERC20Portal Facet", async () => {
 
         // Calculate the input hash
         const block = await ethers.provider.getBlock("latest");
-        const inputHash = getInputHash(input, sender, block.number, block.timestamp, 0x0, 0x0);
+        const inputHash = getInputHash(
+            input,
+            sender,
+            block.number,
+            block.timestamp,
+            0x0,
+            0x0
+        );
 
         expect(
             await portalFacet.callStatic.erc20Deposit(erc20, value, data),
@@ -112,11 +118,7 @@ describe("ERC20Portal Facet", async () => {
     it("erc20Withdrawal should revert if not called by the Rollups contract", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint", "uint"],
-            [
-                mockERC20.address,
-                await signer.getAddress(),
-                10,
-            ]
+            [mockERC20.address, await signer.getAddress(), 10]
         );
         await expect(
             portalFacet.connect(signer2).erc20Withdrawal(data)
@@ -136,9 +138,9 @@ describe("ERC20Portal Facet", async () => {
         );
 
         // callStatic check return value
-        expect(
-            await debugFacet.callStatic._erc20Withdrawal(data)
-        ).to.equal(true);
+        expect(await debugFacet.callStatic._erc20Withdrawal(data)).to.equal(
+            true
+        );
 
         // check emitted event
         await expect(debugFacet._erc20Withdrawal(data))

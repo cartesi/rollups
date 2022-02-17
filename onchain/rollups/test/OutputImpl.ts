@@ -50,7 +50,7 @@ describe("Output Implementation", () => {
 
     beforeEach(async () => {
         await deployments.fixture(["RollupsImpl"]);
-        
+
         // get signers
         signers = await ethers.getSigners();
 

@@ -22,7 +22,7 @@ contract ERC20PortalImpl is ERC20Portal {
     address immutable outputContract;
     Input immutable inputContract;
 
-    modifier onlyOutputContract {
+    modifier onlyOutputContract() {
         require(msg.sender == outputContract, "only outputContract");
         _;
     }
@@ -49,13 +49,7 @@ contract ERC20PortalImpl is ERC20Portal {
             "ERC20 transferFrom failed"
         );
 
-        bytes memory input =
-            abi.encode(
-                msg.sender,
-                _ERC20,
-                _amount,
-                _data
-            );
+        bytes memory input = abi.encode(msg.sender, _ERC20, _amount, _data);
 
         emit ERC20Deposited(_ERC20, msg.sender, _amount, _data);
         return inputContract.addInput(input);
@@ -70,11 +64,8 @@ contract ERC20PortalImpl is ERC20Portal {
         onlyOutputContract
         returns (bool)
     {
-        (
-            address tokenAddr,
-            address payable receiver,
-            uint256 value
-        ) = abi.decode(_data, (address, address, uint256));
+        (address tokenAddr, address payable receiver, uint256 value) = abi
+            .decode(_data, (address, address, uint256));
 
         IERC20 token = IERC20(tokenAddr);
 

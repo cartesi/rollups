@@ -19,7 +19,11 @@ pragma solidity >=0.7.0;
 // inputs received during InputAccumulation will be included in the
 // current epoch. Inputs received while WaitingClaims or ChallengesInProgress
 // are accumulated for the next epoch
-enum Phase {InputAccumulation, AwaitingConsensus, AwaitingDispute}
+enum Phase {
+    InputAccumulation,
+    AwaitingConsensus,
+    AwaitingDispute
+}
 
 interface IRollups {
     /// @notice claim the result of current epoch

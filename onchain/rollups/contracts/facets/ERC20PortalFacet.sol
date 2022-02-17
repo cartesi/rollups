@@ -42,8 +42,13 @@ contract ERC20PortalFacet is IERC20Portal {
             "ERC20 transferFrom failed"
         );
 
-        bytes memory input =
-            abi.encode(INPUT_HEADER, msg.sender, _ERC20, _amount, _data);
+        bytes memory input = abi.encode(
+            INPUT_HEADER,
+            msg.sender,
+            _ERC20,
+            _amount,
+            _data
+        );
 
         emit ERC20Deposited(_ERC20, msg.sender, _amount, _data);
         return inputDS.addInput(input);
@@ -60,8 +65,8 @@ contract ERC20PortalFacet is IERC20Portal {
         // Delegate calls preserve msg.sender, msg.value and address(this)
         require(msg.sender == address(this), "only itself");
 
-        (address tokenAddr, address payable receiver, uint256 value) =
-            abi.decode(_data, (address, address, uint256));
+        (address tokenAddr, address payable receiver, uint256 value) = abi
+            .decode(_data, (address, address, uint256));
 
         IERC20 token = IERC20(tokenAddr);
 

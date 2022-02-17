@@ -34,7 +34,10 @@ import "hardhat-abi-exporter";
 let mnemonic = process.env.MNEMONIC;
 
 const ppath = (packageName: string, pathname: string) => {
-    return path.join(path.dirname(require.resolve(`${packageName}/package.json`)), pathname);
+    return path.join(
+        path.dirname(require.resolve(`${packageName}/package.json`)),
+        pathname
+    );
 };
 
 const infuraNetwork = (

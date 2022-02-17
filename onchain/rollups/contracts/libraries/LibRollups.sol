@@ -100,8 +100,8 @@ library LibRollups {
         Result result;
         bytes32[2] memory claims;
         address payable[2] memory claimers;
-        LibValidatorManager.DiamondStorage storage vmDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
+            .diamondStorage();
 
         (result, claims, claimers) = vmDS.onDisputeEnd(
             winner,
@@ -151,8 +151,8 @@ library LibRollups {
     function startNewEpoch(DiamondStorage storage ds) internal {
         LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
         LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
-        LibValidatorManager.DiamondStorage storage vmDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
+            .diamondStorage();
 
         // reset input accumulation start and deactivate challenge period start
         ds.currentPhase_int = uint32(Phase.InputAccumulation);

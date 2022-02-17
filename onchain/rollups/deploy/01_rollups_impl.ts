@@ -110,8 +110,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     console.log("Rollups Impl address: " + rollupsImpl.address);
     console.log(
-        "Rollups Impl getCurrentEpoch: " +
-            (await rollupsImpl.getCurrentEpoch())
+        "Rollups Impl getCurrentEpoch: " + (await rollupsImpl.getCurrentEpoch())
     );
     console.log(
         "Rollups accumulation start: " +

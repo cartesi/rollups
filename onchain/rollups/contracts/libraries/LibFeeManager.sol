@@ -62,13 +62,15 @@ library LibFeeManager {
     ) internal view returns (uint256) {
         require(_validator != address(0), "address should not be 0");
 
-        LibValidatorManager.DiamondStorage storage ValidatorManagerDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage
+            storage ValidatorManagerDS = LibValidatorManager.diamondStorage();
         uint256 valIndex = ValidatorManagerDS.getValidatorIndex(_validator); // will revert if not found
-        uint256 totalClaims =
-            ValidatorManagerDS.claimsMask.getNumClaims(valIndex);
-        uint256 redeemedClaims =
-            feeManagerDS.numClaimsRedeemed.getNumClaims(valIndex);
+        uint256 totalClaims = ValidatorManagerDS.claimsMask.getNumClaims(
+            valIndex
+        );
+        uint256 redeemedClaims = feeManagerDS.numClaimsRedeemed.getNumClaims(
+            valIndex
+        );
 
         return totalClaims - redeemedClaims; // underflow checked by default with sol0.8
     }
@@ -82,11 +84,12 @@ library LibFeeManager {
     ) internal view returns (uint256) {
         require(_validator != address(0), "address should not be 0");
 
-        LibValidatorManager.DiamondStorage storage ValidatorManagerDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage
+            storage ValidatorManagerDS = LibValidatorManager.diamondStorage();
         uint256 valIndex = ValidatorManagerDS.getValidatorIndex(_validator); // will revert if not found
-        uint256 redeemedClaims =
-            feeManagerDS.numClaimsRedeemed.getNumClaims(valIndex);
+        uint256 redeemedClaims = feeManagerDS.numClaimsRedeemed.getNumClaims(
+            valIndex
+        );
 
         return redeemedClaims;
     }
@@ -99,8 +102,8 @@ library LibFeeManager {
         uint256 _value
     ) internal {
         // before resetting the feePerClaim, pay fees for all validators as per current rates
-        LibValidatorManager.DiamondStorage storage ValidatorManagerDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage
+            storage ValidatorManagerDS = LibValidatorManager.diamondStorage();
         for (uint256 i; i < ValidatorManagerDS.maxNumValidators; i++) {
             address validator = ValidatorManagerDS.validators[i];
             if (
@@ -123,13 +126,14 @@ library LibFeeManager {
         // follow the Checks-Effects-Interactions pattern for security
 
         // ** checks **
-        uint256 nowRedeemingClaims =
-            feeManagerDS.numClaimsRedeemable(_validator);
+        uint256 nowRedeemingClaims = feeManagerDS.numClaimsRedeemable(
+            _validator
+        );
         require(nowRedeemingClaims > 0, "nothing to redeem yet");
 
         // ** effects **
-        LibValidatorManager.DiamondStorage storage ValidatorManagerDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage
+            storage ValidatorManagerDS = LibValidatorManager.diamondStorage();
         uint256 valIndex = ValidatorManagerDS.getValidatorIndex(_validator); // will revert if not found
         feeManagerDS.numClaimsRedeemed = feeManagerDS
             .numClaimsRedeemed

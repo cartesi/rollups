@@ -73,10 +73,7 @@ describe("Rollups Facet", () => {
             diamond.address,
             signers[0]
         );
-        diamondInit = DiamondInit__factory.connect(
-            diamond.address,
-            signers[0]
-        );
+        diamondInit = DiamondInit__factory.connect(diamond.address, signers[0]);
         // get the timestamp of the second last block, because after deploying rollups, portalImpl was deployed
         contract_creation_time =
             (await ethers.provider.getBlock("latest")).timestamp - 1;
@@ -254,10 +251,7 @@ describe("Rollups Facet", () => {
     it("event RollupsInitialized", async () => {
         // we use ethers.js to query historic events
         // ref: https://docs.ethers.io/v5/single-page/#/v5/getting-started/-%23-getting-started--history
-        let eventFilter = diamondInit.filters.RollupsInitialized(
-            null,
-            null,
-        );
+        let eventFilter = diamondInit.filters.RollupsInitialized(null, null);
         let event = await diamondInit.queryFilter(eventFilter);
         let eventArgs = event[0]["args"]; // get 'args' from the first RollupsInitialized event
 
@@ -661,9 +655,7 @@ describe("Rollups Facet", () => {
 
             // *** EPOCH 0: claim when the input duration has not past ***
             await expect(
-                rollupsFacet.claim(
-                    ethers.utils.formatBytes32String("hello")
-                ),
+                rollupsFacet.claim(ethers.utils.formatBytes32String("hello")),
                 "phase incorrect because inputDuration not over"
             ).to.be.revertedWith("Phase != AwaitingConsensus");
             await network.provider.send("evm_increaseTime", [
@@ -671,9 +663,7 @@ describe("Rollups Facet", () => {
             ]);
             await network.provider.send("evm_mine");
             await expect(
-                rollupsFacet.claim(
-                    ethers.utils.formatBytes32String("hello")
-                ),
+                rollupsFacet.claim(ethers.utils.formatBytes32String("hello")),
                 "phase incorrect because inputDuration not over"
             ).to.be.revertedWith("Phase != AwaitingConsensus");
 
@@ -685,9 +675,7 @@ describe("Rollups Facet", () => {
                 inputDuration / 2 + 1,
             ]);
             await network.provider.send("evm_mine");
-            await rollupsFacet.claim(
-                ethers.utils.formatBytes32String("hello")
-            );
+            await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
             state = JSON.parse(await getState(initialState)); // update state
             checkCurrentEpochNum(state, "0x1");

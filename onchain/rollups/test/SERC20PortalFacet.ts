@@ -52,7 +52,10 @@ describe("SERC20Portal Facet", async () => {
         // needed. Instead, we inject the address of the mock contract via
         // the `_setSERC20Address` function of the Debug facet.
         const diamond = await deployDiamond({ debug: true });
-        portalFacet = SERC20PortalFacet__factory.connect(diamond.address, signer);
+        portalFacet = SERC20PortalFacet__factory.connect(
+            diamond.address,
+            signer
+        );
         debugFacet = DebugFacet__factory.connect(diamond.address, signer);
 
         // Deploy a mock ERC-20 contract
@@ -67,10 +70,7 @@ describe("SERC20Portal Facet", async () => {
         await mockERC20.mock.transferFrom.returns(false);
 
         await expect(
-            portalFacet.serc20Deposit(
-                50,
-                "0x00"
-            ),
+            portalFacet.serc20Deposit(50, "0x00"),
             "Specific ERC20 deposit should revert if ERC20 transferFrom fails"
         ).to.be.revertedWith("ERC20 transferFrom failed");
     });
@@ -106,7 +106,14 @@ describe("SERC20Portal Facet", async () => {
 
         // Calculate the input hash
         const block = await ethers.provider.getBlock("latest");
-        const inputHash = getInputHash(input, sender, block.number, block.timestamp, 0x0, 0x0);
+        const inputHash = getInputHash(
+            input,
+            sender,
+            block.number,
+            block.timestamp,
+            0x0,
+            0x0
+        );
 
         expect(
             await portalFacet.callStatic.serc20Deposit(value, data),
@@ -117,10 +124,7 @@ describe("SERC20Portal Facet", async () => {
     it("serc20Withdrawal should revert if not called by the Rollups contract", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint"],
-            [
-                await signer.getAddress(),
-                10,
-            ]
+            [await signer.getAddress(), 10]
         );
         await expect(
             portalFacet.connect(signer2).serc20Withdrawal(data)
@@ -139,15 +143,13 @@ describe("SERC20Portal Facet", async () => {
         );
 
         // callStatic check return value
-        expect(
-            await debugFacet.callStatic._serc20Withdrawal(data)
-        ).to.equal(true);
+        expect(await debugFacet.callStatic._serc20Withdrawal(data)).to.equal(
+            true
+        );
 
         // check emitted event
         await expect(debugFacet._serc20Withdrawal(data))
             .to.emit(portalFacet, "SERC20Withdrawn")
             .withArgs(sender, value);
     });
-
-
 });

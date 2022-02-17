@@ -18,7 +18,11 @@ interface ValidatorManager {
     // NoConflict - No conflicting claims or consensus
     // Consensus - All validators had equal claims
     // Conflict - Claim is conflicting with previous one
-    enum Result {NoConflict, Consensus, Conflict}
+    enum Result {
+        NoConflict,
+        Consensus,
+        Conflict
+    }
 
     /// @notice called when a claim is received by rollups
     /// @param _sender address of sender of that claim

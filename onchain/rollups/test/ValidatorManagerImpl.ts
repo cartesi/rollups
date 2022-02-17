@@ -59,10 +59,7 @@ describe("Validator Manager Implementation", async () => {
             validators.push(address);
         }
 
-        VMI = await vmiFactory.deploy(
-            await rollups.getAddress(),
-            validators
-        );
+        VMI = await vmiFactory.deploy(await rollups.getAddress(), validators);
     });
 
     it("check initial consensusGoalMask", async () => {

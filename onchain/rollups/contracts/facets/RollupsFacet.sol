@@ -53,12 +53,12 @@ contract RollupsFacet is IRollups {
     ///      and that claim != bytes32(0)
     /// TODO: add signatures for aggregated claims
     function claim(bytes32 _epochHash) public override {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
         LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
         LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
-        LibValidatorManager.DiamondStorage storage vmDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
+            .diamondStorage();
 
         Result result;
         bytes32[2] memory claims;
@@ -106,10 +106,10 @@ contract RollupsFacet is IRollups {
     /// @notice finalize epoch after timeout
     /// @dev can only be called if challenge period is over
     function finalizeEpoch() public override {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
-        LibValidatorManager.DiamondStorage storage vmDS =
-            LibValidatorManager.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
+            .diamondStorage();
 
         Phase currentPhase = Phase(rollupsDS.currentPhase_int);
         require(
@@ -135,43 +135,43 @@ contract RollupsFacet is IRollups {
     ///      of finalized epochs array, else there are two non finalized epochs,
     ///      one awaiting consensus/dispute and another accumulating input
     function getCurrentEpoch() public view override returns (uint256) {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
         return rollupsDS.getCurrentEpoch();
     }
 
     /// @notice returns the current phase
     function getCurrentPhase() public view returns (Phase) {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
         return Phase(rollupsDS.currentPhase_int);
     }
 
     /// @notice returns the input accumulation start timestamp
     function getInputAccumulationStart() public view returns (uint256) {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
         return uint256(rollupsDS.inputAccumulationStart);
     }
 
     /// @notice returns the sealing epoch timestamp
     function getSealingEpochTimestamp() public view returns (uint256) {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
         return uint256(rollupsDS.sealingEpochTimestamp);
     }
 
     /// @notice returns the input duration in seconds
     function getInputDuration() public view returns (uint256) {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
         return uint256(rollupsDS.inputDuration);
     }
 
     /// @notice returns the challenge period in seconds
     function getChallengePeriod() public view returns (uint256) {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
         return uint256(rollupsDS.challengePeriod);
     }
 }

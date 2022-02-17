@@ -41,16 +41,19 @@ describe("EtherPortal Facet", async () => {
     beforeEach(async () => {
         const diamond = await deployDiamond({ debug: true });
         [signer, signer2] = await ethers.getSigners();
-        portalFacet = EtherPortalFacet__factory.connect(diamond.address, signer);
+        portalFacet = EtherPortalFacet__factory.connect(
+            diamond.address,
+            signer
+        );
         debugFacet = DebugFacet__factory.connect(diamond.address, signer);
     });
 
     it("etherDeposit should emit events", async () => {
         const data = "0x00";
         const value = ethers.utils.parseEther("60");
-        
+
         expect(
-            await portalFacet.etherDeposit(data, {value: value}),
+            await portalFacet.etherDeposit(data, { value: value }),
             "expect etherDeposit function to emit EtherDeposited event"
         )
             .to.emit(portalFacet, "EtherDeposited")
@@ -60,10 +63,7 @@ describe("EtherPortal Facet", async () => {
     it("etherWithdrawal should revert if not called by the Rollups contract", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint"],
-            [
-                await signer.getAddress(),
-                10,
-            ]
+            [await signer.getAddress(), 10]
         );
         await expect(
             portalFacet.connect(signer2).etherWithdrawal(data)
@@ -72,25 +72,19 @@ describe("EtherPortal Facet", async () => {
 
     it("etherWithdrawal should emit EtherWithdrawn and return true", async () => {
         // deposit ethers to portalFacet for enough balance to a successful transfer in etherWithdrawal()
-        await portalFacet.etherDeposit(
-            "0x00",
-            {
-                value: ethers.utils.parseEther("10"),
-            }
-        );
+        await portalFacet.etherDeposit("0x00", {
+            value: ethers.utils.parseEther("10"),
+        });
 
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint"],
-            [
-                await signer.getAddress(),
-                10,
-            ]
+            [await signer.getAddress(), 10]
         );
 
         // callStatic check return value
-        expect(
-            await debugFacet.callStatic._etherWithdrawal(data)
-        ).to.equal(true);
+        expect(await debugFacet.callStatic._etherWithdrawal(data)).to.equal(
+            true
+        );
 
         // check emitted event
         await expect(debugFacet._etherWithdrawal(data))
@@ -112,20 +106,26 @@ describe("EtherPortal Facet", async () => {
             [
                 header, // keccak256("Ether_Transfer")
                 sender, // msg.sender
-                value,  // msg.value
-                data,   // _data
+                value, // msg.value
+                data, // _data
             ]
         );
 
         // Calculate the input hash
         let block = await ethers.provider.getBlock("latest");
-        let inputHash = getInputHash(input, sender, block.number, block.timestamp, 0x0, 0x0);
+        let inputHash = getInputHash(
+            input,
+            sender,
+            block.number,
+            block.timestamp,
+            0x0,
+            0x0
+        );
 
         // check if input hashes are identical
         expect(
-            await portalFacet.callStatic.etherDeposit(data, {value: value}),
+            await portalFacet.callStatic.etherDeposit(data, { value: value }),
             "callStatic to check return value"
         ).to.equal(inputHash);
     });
-
 });

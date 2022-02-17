@@ -36,10 +36,7 @@ describe("FeeManager Facet", () => {
             diamond.address,
             signers[0]
         );
-        diamondInit = DiamondInit__factory.connect(
-            diamond.address,
-            signers[0]
-        );
+        diamondInit = DiamondInit__factory.connect(diamond.address, signers[0]);
         const tokenAddress = (await deployments.get("SimpleToken")).address;
         token = SimpleToken__factory.connect(tokenAddress, signers[0]);
     });

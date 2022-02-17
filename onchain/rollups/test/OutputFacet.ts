@@ -300,15 +300,18 @@ describe("Output Facet", () => {
     it("executeVoucher() should revert if proof is not valid", async () => {
         await debugFacet._onNewEpochOutput(epochHashForVoucher);
         let _payload_new = iface.encodeFunctionData("nonExistent()");
-        await expect(
-            outputFacet.executeVoucher(_destination, _payload_new, v)
-        ).to.be.reverted;
+        await expect(outputFacet.executeVoucher(_destination, _payload_new, v))
+            .to.be.reverted;
     });
 
     /// ***test function isValidVoucherProof()///
     it("testing function isValidVoucherProof()", async () => {
         expect(
-            await outputFacet.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
+            await outputFacet.isValidVoucherProof(
+                encodedVoucher,
+                epochHashForVoucher,
+                v
+            )
         ).to.equal(true);
     });
 
@@ -326,7 +329,11 @@ describe("Output Facet", () => {
         let tempInputIndex = v.inputIndex;
         v.inputIndex = 10;
         await expect(
-            outputFacet.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
+            outputFacet.isValidVoucherProof(
+                encodedVoucher,
+                epochHashForVoucher,
+                v
+            )
         ).to.be.revertedWith("epochOutputDriveHash incorrect");
         // restore v
         v.inputIndex = tempInputIndex;
@@ -336,7 +343,11 @@ describe("Output Facet", () => {
         let tempVoucherIndex = v.outputIndex;
         v.outputIndex = 10;
         await expect(
-            outputFacet.isValidVoucherProof(encodedVoucher, epochHashForVoucher, v)
+            outputFacet.isValidVoucherProof(
+                encodedVoucher,
+                epochHashForVoucher,
+                v
+            )
         ).to.be.revertedWith("outputMetadataArrayDriveHash incorrect");
         // restore v
         v.outputIndex = tempVoucherIndex;
@@ -345,7 +356,11 @@ describe("Output Facet", () => {
     /// ***test function isValidNoticeProof()///
     it("testing function isValidNoticeProof()", async () => {
         expect(
-            await outputFacet.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
+            await outputFacet.isValidNoticeProof(
+                encodedNotice,
+                epochHashForNotice,
+                n
+            )
         ).to.equal(true);
     });
 
@@ -399,7 +414,7 @@ describe("Output Facet", () => {
         const _log2Size = 4;
         expect(
             await outputFacet.getIntraDrivePosition(_index, _log2Size)
-        ).to.equal(_index * (2 ** _log2Size));
+        ).to.equal(_index * 2 ** _log2Size);
     });
 
     /// ***test function getNumberOfFinalizedEpochs() and onNewEpoch()*** ///
@@ -489,11 +504,7 @@ describe("Output Facet", () => {
             );
 
             await debugFacet._onNewEpochOutput(epochHash_new);
-            await outputFacet.executeVoucher(
-                _destination,
-                _payload_new,
-                v_new
-            );
+            await outputFacet.executeVoucher(_destination, _payload_new, v_new);
 
             state = JSON.parse(await getState(initialState));
 
@@ -527,11 +538,7 @@ describe("Output Facet", () => {
             );
 
             await debugFacet._onNewEpochOutput(epochHash_new);
-            await outputFacet.executeVoucher(
-                _destination,
-                _payload_new,
-                v_new
-            );
+            await outputFacet.executeVoucher(_destination, _payload_new, v_new);
 
             state = JSON.parse(await getState(initialState));
 

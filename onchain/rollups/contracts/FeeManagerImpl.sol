@@ -69,8 +69,9 @@ contract FeeManagerImpl is FeeManager, Ownable {
     {
         require(_validator != address(0), "address should not be 0");
         uint256 valIndex = ValidatorManagerCCI.getValidatorIndex(_validator); // will revert if not found
-        uint256 totalClaims =
-            ValidatorManagerCCI.getNumberOfClaimsByIndex(valIndex);
+        uint256 totalClaims = ValidatorManagerCCI.getNumberOfClaimsByIndex(
+            valIndex
+        );
         uint256 redeemedClaims = numClaimsRedeemed.getNumClaims(valIndex);
 
         return totalClaims - redeemedClaims; // underflow checked by default with sol0.8

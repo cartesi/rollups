@@ -56,19 +56,20 @@ contract InputImpl is Input {
         }
 
         // points to correct inputBox
-        bytes32[] storage inputBox = currentInputBox == 0 ? inputBox0 : inputBox1;
+        bytes32[] storage inputBox = currentInputBox == 0
+            ? inputBox0
+            : inputBox1;
 
         // keccak 64 bytes into 32 bytes
-        bytes32 keccakMetadata =
-            keccak256(
-                abi.encode(
-                    msg.sender,
-                    block.number,
-                    block.timestamp,
-                    rollups.getCurrentEpoch(), // epoch index
-                    inputBox.length // input index
-                )
-            );
+        bytes32 keccakMetadata = keccak256(
+            abi.encode(
+                msg.sender,
+                block.number,
+                block.timestamp,
+                rollups.getCurrentEpoch(), // epoch index
+                inputBox.length // input index
+            )
+        );
 
         bytes32 keccakInput = keccak256(_input);
 

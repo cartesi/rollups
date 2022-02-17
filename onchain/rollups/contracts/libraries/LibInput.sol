@@ -82,8 +82,8 @@ library LibInput {
         internal
         returns (bytes32)
     {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
 
         require(
             input.length > 0 && input.length <= ds.inputDriveSize,
@@ -97,23 +97,23 @@ library LibInput {
         }
 
         // points to correct inputBox
-        bytes32[] storage inputBox =
-            ds.currentInputBox == 0 ? ds.inputBox0 : ds.inputBox1;
+        bytes32[] storage inputBox = ds.currentInputBox == 0
+            ? ds.inputBox0
+            : ds.inputBox1;
 
         // get current epoch index
         uint256 currentEpoch = rollupsDS.getCurrentEpoch();
 
         // keccak 64 bytes into 32 bytes
-        bytes32 keccakMetadata =
-            keccak256(
-                abi.encode(
-                    msg.sender,
-                    block.number,
-                    block.timestamp,
-                    currentEpoch, // epoch index
-                    inputBox.length // input index
-                )
-            );
+        bytes32 keccakMetadata = keccak256(
+            abi.encode(
+                msg.sender,
+                block.number,
+                block.timestamp,
+                currentEpoch, // epoch index
+                inputBox.length // input index
+            )
+        );
 
         bytes32 keccakInput = keccak256(input);
 

@@ -63,11 +63,7 @@ describe("ERC20Portal Implementation", async () => {
         await mockERC20.mock.transferFrom.returns(false);
 
         await expect(
-            portalImpl.erc20Deposit(
-                mockERC20.address,
-                50,
-                "0x00"
-            ),
+            portalImpl.erc20Deposit(mockERC20.address, 50, "0x00"),
             "ether deposit should revert if ERC20 transferFrom fails"
         ).to.be.revertedWith("ERC20 transferFrom failed");
     });
@@ -78,27 +74,14 @@ describe("ERC20Portal Implementation", async () => {
         await mockInput.mock.addInput.returns(B32str);
 
         expect(
-            await portalImpl.erc20Deposit(
-                mockERC20.address,
-                15,
-                "0x00"
-            ),
+            await portalImpl.erc20Deposit(mockERC20.address, 15, "0x00"),
             "expect erc20Deposit function to emit ERC20Deposited event"
         )
             .to.emit(portalImpl, "ERC20Deposited")
-            .withArgs(
-                mockERC20.address,
-                await signer.getAddress(),
-                15,
-                "0x00"
-            );
+            .withArgs(mockERC20.address, await signer.getAddress(), 15, "0x00");
 
         expect(
-            await portalImpl.erc20Deposit(
-                mockERC20.address,
-                1000000,
-                "0x00"
-            ),
+            await portalImpl.erc20Deposit(mockERC20.address, 1000000, "0x00"),
             "expect erc20Deposit function to emit ERC20Deposited event"
         )
             .to.emit(portalImpl, "ERC20Deposited")
@@ -128,11 +111,7 @@ describe("ERC20Portal Implementation", async () => {
     it("executeRollupsVoucher should revert if not called from output", async () => {
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint", "uint"],
-            [
-                mockERC20.address,
-                await signer.getAddress(),
-                10,
-            ]
+            [mockERC20.address, await signer.getAddress(), 10]
         );
         await expect(
             portalImpl.connect(signer2).executeRollupsVoucher(data)
@@ -144,11 +123,7 @@ describe("ERC20Portal Implementation", async () => {
 
         let data = ethers.utils.defaultAbiCoder.encode(
             ["uint", "uint", "uint"],
-            [
-                mockERC20.address,
-                await signer.getAddress(),
-                10,
-            ]
+            [mockERC20.address, await signer.getAddress(), 10]
         );
 
         // callStatic check return value

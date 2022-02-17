@@ -32,8 +32,12 @@ contract EtherPortalFacet is IEtherPortal {
         returns (bytes32)
     {
         LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
-        bytes memory input =
-            abi.encode(INPUT_HEADER, msg.sender, msg.value, _data);
+        bytes memory input = abi.encode(
+            INPUT_HEADER,
+            msg.sender,
+            msg.value,
+            _data
+        );
 
         emit EtherDeposited(msg.sender, msg.value, _data);
         return inputDS.addInput(input);
@@ -50,8 +54,10 @@ contract EtherPortalFacet is IEtherPortal {
         // Delegate calls preserve msg.sender, msg.value and address(this)
         require(msg.sender == address(this), "only itself");
 
-        (address payable receiver, uint256 value) =
-            abi.decode(_data, (address, uint256));
+        (address payable receiver, uint256 value) = abi.decode(
+            _data,
+            (address, uint256)
+        );
 
         // We used to call receiver.transfer(value) but it's no
         // longer considered safe, as it assumes gas costs are

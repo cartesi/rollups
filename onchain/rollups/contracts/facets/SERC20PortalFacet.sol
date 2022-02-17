@@ -35,8 +35,8 @@ contract SERC20PortalFacet is ISERC20Portal {
         override
         returns (bytes32)
     {
-        LibSERC20Portal.DiamondStorage storage serc20DS =
-            LibSERC20Portal.diamondStorage();
+        LibSERC20Portal.DiamondStorage storage serc20DS = LibSERC20Portal
+            .diamondStorage();
         LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
 
         // Specific ERC-20 contract
@@ -47,8 +47,12 @@ contract SERC20PortalFacet is ISERC20Portal {
             "ERC20 transferFrom failed"
         );
 
-        bytes memory input =
-            abi.encode(INPUT_HEADER, msg.sender, _amount, _data);
+        bytes memory input = abi.encode(
+            INPUT_HEADER,
+            msg.sender,
+            _amount,
+            _data
+        );
 
         emit SERC20Deposited(msg.sender, _amount, _data);
         return inputDS.addInput(input);
@@ -65,14 +69,16 @@ contract SERC20PortalFacet is ISERC20Portal {
         // Delegate calls preserve msg.sender, msg.value and address(this)
         require(msg.sender == address(this), "only itself");
 
-        LibSERC20Portal.DiamondStorage storage serc20DS =
-            LibSERC20Portal.diamondStorage();
+        LibSERC20Portal.DiamondStorage storage serc20DS = LibSERC20Portal
+            .diamondStorage();
 
         // Specific ERC-20 contract
         IERC20 erc20Contract = IERC20(serc20DS.erc20Contract);
 
-        (address payable receiver, uint256 value) =
-            abi.decode(_data, (address, uint256));
+        (address payable receiver, uint256 value) = abi.decode(
+            _data,
+            (address, uint256)
+        );
 
         // transfer reverts on failure
         erc20Contract.transfer(receiver, value);

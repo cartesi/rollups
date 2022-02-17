@@ -16,7 +16,11 @@ pragma solidity >=0.7.0;
 // NoConflict - No conflicting claims or consensus
 // Consensus - All validators had equal claims
 // Conflict - Claim is conflicting with previous one
-enum Result {NoConflict, Consensus, Conflict}
+enum Result {
+    NoConflict,
+    Consensus,
+    Conflict
+}
 
 // TODO: What is the incentive for validators to not just copy the first claim that arrived?
 interface IValidatorManager {

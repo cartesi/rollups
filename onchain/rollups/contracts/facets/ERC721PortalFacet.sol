@@ -14,9 +14,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {
-    IERC721Receiver
-} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 import {IERC721Portal} from "../interfaces/IERC721Portal.sol";
 
@@ -43,8 +41,13 @@ contract ERC721PortalFacet is IERC721Portal, IERC721Receiver {
         // transfer reverts on failure
         token.safeTransferFrom(msg.sender, address(this), _tokenId);
 
-        bytes memory input =
-            abi.encode(INPUT_HEADER, msg.sender, _ERC721, _tokenId, _data);
+        bytes memory input = abi.encode(
+            INPUT_HEADER,
+            msg.sender,
+            _ERC721,
+            _tokenId,
+            _data
+        );
 
         emit ERC721Deposited(_ERC721, msg.sender, _tokenId, _data);
         return inputDS.addInput(input);
@@ -61,8 +64,8 @@ contract ERC721PortalFacet is IERC721Portal, IERC721Receiver {
         // Delegate calls preserve msg.sender, msg.value and address(this)
         require(msg.sender == address(this), "only itself");
 
-        (address tokenAddr, address payable receiver, uint256 tokenId) =
-            abi.decode(_data, (address, address, uint256));
+        (address tokenAddr, address payable receiver, uint256 tokenId) = abi
+            .decode(_data, (address, address, uint256));
 
         IERC721 token = IERC721(tokenAddr);
 

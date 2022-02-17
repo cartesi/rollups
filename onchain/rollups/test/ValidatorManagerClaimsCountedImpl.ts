@@ -87,10 +87,7 @@ describe("Validator Manager With Claims Counted Implementation", async () => {
 
         // for delegate test only
         const dAddress = (await deployments.get("RollupsImpl")).address;
-        rollupsImpl = RollupsImpl__factory.connect(
-            dAddress,
-            rollups
-        );
+        rollupsImpl = RollupsImpl__factory.connect(dAddress, rollups);
     });
 
     it("should revert if more than 8 validators", async () => {

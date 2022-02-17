@@ -92,8 +92,8 @@ contract DiamondInit {
     function initValidatorManager(address payable[] memory _validators)
         private
     {
-        LibValidatorManager.DiamondStorage storage vmDS =
-            LibValidatorManager.diamondStorage();
+        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
+            .diamondStorage();
 
         uint256 maxNumValidators = _validators.length;
 
@@ -120,8 +120,8 @@ contract DiamondInit {
     function initRollups(uint256 _inputDuration, uint256 _challengePeriod)
         private
     {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
 
         rollupsDS.inputDuration = uint32(_inputDuration);
         rollupsDS.challengePeriod = uint32(_challengePeriod);
@@ -134,8 +134,8 @@ contract DiamondInit {
     /// @notice initialize the specific ERC-20 portal
     /// @param _erc20ForPortal ERC-20 contract address used by the portal
     function initSERC20Portal(address _erc20ForPortal) private {
-        LibSERC20Portal.DiamondStorage storage serc20DS =
-            LibSERC20Portal.diamondStorage();
+        LibSERC20Portal.DiamondStorage storage serc20DS = LibSERC20Portal
+            .diamondStorage();
 
         serc20DS.erc20Contract = _erc20ForPortal;
     }
@@ -159,8 +159,8 @@ contract DiamondInit {
         address _erc20ForFee,
         address _feeManagerOwner
     ) private {
-        LibFeeManager.DiamondStorage storage feeManagerDS =
-            LibFeeManager.diamondStorage();
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
 
         feeManagerDS.feePerClaim = _feePerClaim;
         feeManagerDS.token = IERC20(_erc20ForFee);

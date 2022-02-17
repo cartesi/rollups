@@ -24,7 +24,11 @@ interface Rollups {
     // inputs received during InputAccumulation will be included in the
     // current epoch. Inputs received while WaitingClaims or ChallengesInProgress
     // are accumulated for the next epoch
-    enum Phase {InputAccumulation, AwaitingConsensus, AwaitingDispute}
+    enum Phase {
+        InputAccumulation,
+        AwaitingConsensus,
+        AwaitingDispute
+    }
 
     /// @notice claim the result of current epoch
     /// @param _epochHash hash of epoch
@@ -95,7 +99,11 @@ interface Rollups {
     /// @param _epochHash claim being submitted by this epoch
     /// @param _claimer address of current claimer
     /// @param _epochNumber number of the epoch being submitted
-    event Claim(uint256 indexed _epochNumber, address _claimer, bytes32 _epochHash);
+    event Claim(
+        uint256 indexed _epochNumber,
+        address _claimer,
+        bytes32 _epochHash
+    );
 
     /// @notice epoch finalized
     /// @param _epochNumber number of the epoch being finalized

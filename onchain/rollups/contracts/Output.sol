@@ -56,28 +56,16 @@ interface Output {
     function getNumberOfFinalizedEpochs() external view returns (uint256);
 
     /// @notice get log2 size of voucher metadata drive
-    function getVoucherMetadataLog2Size()
-        external
-        pure
-        returns (uint256);
+    function getVoucherMetadataLog2Size() external pure returns (uint256);
 
     /// @notice get log2 size of epoch voucher drive
-    function getEpochVoucherLog2Size()
-        external
-        pure
-        returns (uint256);
+    function getEpochVoucherLog2Size() external pure returns (uint256);
 
     /// @notice get log2 size of notice metadata drive
-    function getNoticeMetadataLog2Size()
-        external
-        pure
-        returns (uint256);
+    function getNoticeMetadataLog2Size() external pure returns (uint256);
 
     /// @notice get log2 size of epoch notice drive
-    function getEpochNoticeLog2Size()
-        external
-        pure
-        returns (uint256);
+    function getEpochNoticeLog2Size() external pure returns (uint256);
 
     event VoucherExecuted(uint256 voucherPosition);
 }

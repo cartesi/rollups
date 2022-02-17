@@ -58,14 +58,14 @@ contract RollupsImpl is Rollups {
 
     /// @notice functions modified by onlyInputContract can only be called
     ///         by input contract
-    modifier onlyInputContract {
+    modifier onlyInputContract() {
         require(msg.sender == address(input), "only Input Contract");
         _;
     }
 
     /// @notice functions modified by onlyDisputeContract can only be called
     ///         by dispute contract
-    modifier onlyDisputeContract {
+    modifier onlyDisputeContract() {
         require(msg.sender == address(disputeManager), "only Dispute Contract");
         _;
     }
@@ -159,11 +159,7 @@ contract RollupsImpl is Rollups {
         // emit the claim event before processing it
         // so if the epoch is finalized in this claim (consensus)
         // the number of final epochs doesnt gets contaminated
-        emit Claim(
-            output.getNumberOfFinalizedEpochs(),
-            msg.sender,
-            _epochHash
-        );
+        emit Claim(output.getNumberOfFinalizedEpochs(), msg.sender, _epochHash);
 
         resolveValidatorResult(result, claims, claimers);
     }

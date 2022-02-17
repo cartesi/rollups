@@ -21,24 +21,24 @@ contract ValidatorManagerFacet1 is IValidatorManager {
     /// @notice get agreement mask
     /// @return current state of agreement mask
     function getCurrentAgreementMask() public view returns (uint32) {
-        LibValidatorManager1.DiamondStorage storage vmDS =
-            LibValidatorManager1.diamondStorage();
+        LibValidatorManager1.DiamondStorage storage vmDS = LibValidatorManager1
+            .diamondStorage();
         return vmDS.claimAgreementMask;
     }
 
     /// @notice get consensus goal mask
     /// @return current consensus goal mask
     function getConsensusGoalMask() public view returns (uint32) {
-        LibValidatorManager1.DiamondStorage storage vmDS =
-            LibValidatorManager1.diamondStorage();
+        LibValidatorManager1.DiamondStorage storage vmDS = LibValidatorManager1
+            .diamondStorage();
         return vmDS.consensusGoalMask;
     }
 
     /// @notice get current claim
     /// @return current claim
     function getCurrentClaim() public view override returns (bytes32) {
-        LibValidatorManager1.DiamondStorage storage vmDS =
-            LibValidatorManager1.diamondStorage();
+        LibValidatorManager1.DiamondStorage storage vmDS = LibValidatorManager1
+            .diamondStorage();
         return vmDS.currentClaim;
     }
 }

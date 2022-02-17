@@ -21,8 +21,8 @@ contract FeeManagerFacet is IFeeManager {
 
     /// @notice functions modified by noReentrancy are not subject to recursion
     modifier noReentrancy() {
-        LibFeeManager.DiamondStorage storage feeManagerDS =
-            LibFeeManager.diamondStorage();
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
         require(!feeManagerDS.lock, "reentrancy not allowed");
         feeManagerDS.lock = true;
         _;
@@ -37,8 +37,8 @@ contract FeeManagerFacet is IFeeManager {
         override
         returns (uint256)
     {
-        LibFeeManager.DiamondStorage storage feeManagerDS =
-            LibFeeManager.diamondStorage();
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
         return feeManagerDS.numClaimsRedeemable(_validator);
     }
 
@@ -50,16 +50,16 @@ contract FeeManagerFacet is IFeeManager {
         override
         returns (uint256)
     {
-        LibFeeManager.DiamondStorage storage feeManagerDS =
-            LibFeeManager.diamondStorage();
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
         return feeManagerDS.getNumClaimsRedeemed(_validator);
     }
 
     /// @notice contract owner can reset the value of fee per claim
     /// @param  _value the new value of fee per claim
     function resetFeePerClaim(uint256 _value) public override {
-        LibFeeManager.DiamondStorage storage feeManagerDS =
-            LibFeeManager.diamondStorage();
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
         feeManagerDS.onlyOwner();
         feeManagerDS.resetFeePerClaim(_value);
     }
@@ -67,8 +67,8 @@ contract FeeManagerFacet is IFeeManager {
     /// @notice this function can be called to redeem fees for validators
     /// @param  _validator address of the validator that is redeeming
     function redeemFee(address _validator) public override noReentrancy {
-        LibFeeManager.DiamondStorage storage feeManagerDS =
-            LibFeeManager.diamondStorage();
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
         feeManagerDS.redeemFee(_validator);
     }
 }
