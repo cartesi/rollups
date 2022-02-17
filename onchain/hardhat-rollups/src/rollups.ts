@@ -41,9 +41,9 @@ enum FacetCutAction {
 }
 
 interface FacetCut {
-    facetAddress: string,
-    action: FacetCutAction,
-    functionSelectors: string[],
+    facetAddress: string;
+    action: FacetCutAction;
+    functionSelectors: string[];
 }
 
 createParams(
@@ -65,18 +65,17 @@ createParams(
                 );
 
             // deploy raw diamond with only the diamond cut facet
-            const diamondCutFacetDeployment = await deployments.get('DiamondCutFacet');
+            const diamondCutFacetDeployment = await deployments.get(
+                "DiamondCutFacet"
+            );
             const diamond = await deployments.deploy("Diamond", {
                 from: deployer,
-                args: [
-                    deployer,
-                    diamondCutFacetDeployment.address,
-                ],
+                args: [deployer, diamondCutFacetDeployment.address],
                 log: args.log,
             });
 
             // list all facets to add in a diamond cut
-            const facetNames : string[] = [
+            const facetNames: string[] = [
                 // essential facets
                 "DiamondLoupeFacet",
                 "OwnershipFacet",
@@ -93,19 +92,25 @@ createParams(
             ];
 
             // list all facet cuts to be made
-            const facetCuts : FacetCut[] = [];
+            const facetCuts: FacetCut[] = [];
 
             for (const facetName of facetNames) {
                 const facetDeployment = await deployments.get(facetName);
                 const facetArtifact = await deployments.getArtifact(facetName);
-                const facet = await ethers.getContractAt(facetArtifact.abi, facetDeployment.address);
+                const facet = await ethers.getContractAt(
+                    facetArtifact.abi,
+                    facetDeployment.address
+                );
                 const signatures = Object.keys(facet.interface.functions);
-                const selectors = signatures.reduce((acc: string[], val: string) => {
-                    if (val !== 'init(bytes') {
-                        acc.push(facet.interface.getSighash(val));
-                    }
-                    return acc;
-                }, []);
+                const selectors = signatures.reduce(
+                    (acc: string[], val: string) => {
+                        if (val !== "init(bytes") {
+                            acc.push(facet.interface.getSighash(val));
+                        }
+                        return acc;
+                    },
+                    []
+                );
                 facetCuts.push({
                     facetAddress: facet.address,
                     action: FacetCutAction.Add,
@@ -114,11 +119,19 @@ createParams(
             }
 
             // make diamond cut
-            const diamondCutArtifact = await deployments.getArtifact('IDiamondCut');
-            const diamondCutFacet = await ethers.getContractAt(diamondCutArtifact.abi, diamond.address);
-            const diamondInitDeployment = await deployments.get('DiamondInit');
-            const diamondInit = await ethers.getContractAt(diamondInitDeployment.abi, diamondInitDeployment.address);
-            const calldata = diamondInit.interface.encodeFunctionData('init', [
+            const diamondCutArtifact = await deployments.getArtifact(
+                "IDiamondCut"
+            );
+            const diamondCutFacet = await ethers.getContractAt(
+                diamondCutArtifact.abi,
+                diamond.address
+            );
+            const diamondInitDeployment = await deployments.get("DiamondInit");
+            const diamondInit = await ethers.getContractAt(
+                diamondInitDeployment.abi,
+                diamondInitDeployment.address
+            );
+            const calldata = diamondInit.interface.encodeFunctionData("init", [
                 args.inputDuration,
                 args.challengePeriod,
                 args.inputLog2Size,
@@ -128,7 +141,11 @@ createParams(
                 validators,
                 args.erc20ForPortal,
             ]);
-            const tx = await diamondCutFacet.diamondCut(facetCuts, diamondInit.address, calldata);
+            const tx = await diamondCutFacet.diamondCut(
+                facetCuts,
+                diamondInit.address,
+                calldata
+            );
             const receipt = await tx.wait();
             if (!receipt.status) {
                 throw Error(`Diamond cut failed: ${tx.hash}`);
@@ -187,8 +204,10 @@ rollupsParams(
             const inputDuration = await rollupsFacet.getInputDuration();
             const challengePeriod = await rollupsFacet.getChallengePeriod();
             const currentEpoch = await rollupsFacet.getCurrentEpoch();
-            const inputAccumulationStart = await rollupsFacet.getInputAccumulationStart();
-            const sealingEpochTimestamp = await rollupsFacet.getSealingEpochTimestamp();
+            const inputAccumulationStart =
+                await rollupsFacet.getInputAccumulationStart();
+            const sealingEpochTimestamp =
+                await rollupsFacet.getSealingEpochTimestamp();
             const currentPhase = await rollupsFacet.getCurrentPhase();
             const block = await ethers.provider.getBlock("latest");
 
