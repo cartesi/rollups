@@ -258,6 +258,20 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "_passChallangePeriod",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "_passInputAccumulationPeriod",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes",
@@ -285,19 +299,6 @@
       }
     ],
     "name": "_setCurrentPhase",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_inputAccumulationStart",
-        "type": "uint32"
-      }
-    ],
-    "name": "_setInputAccumulationStart",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

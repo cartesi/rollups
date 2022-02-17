@@ -38,14 +38,14 @@ contract DebugFacet {
     using LibClaimsMask for ClaimsMask;
 
     function _passInputAccumulationPeriod() public {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
         rollupsDS.inputAccumulationStart = 0;
     }
 
     function _passChallangePeriod() public {
-        LibRollups.DiamondStorage storage rollupsDS =
-            LibRollups.diamondStorage();
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
         rollupsDS.sealingEpochTimestamp = 0;
         rollupsDS.challengePeriod = 0;
     }
