@@ -11,6 +11,9 @@
 // specific language governing permissions and limitations under the License.
 
 import { task } from "hardhat/config";
+import "@nomiclabs/hardhat-ethers/internal/type-extensions";
+import "hardhat-deploy/dist/src/type-extensions";
+
 import { RollupsArgs, CreateArgs, ClaimArgs } from "./args";
 import {
     accountIndexParam,
@@ -18,7 +21,7 @@ import {
     createParams,
     rollupsParams,
 } from "./params";
-import { connect, connected } from "./connect";
+import { connected } from "./connect";
 import {
     taskDefs,
     TASK_CLAIM,
@@ -94,7 +97,8 @@ createParams(
 
             for (const facetName of facetNames) {
                 const facetDeployment = await deployments.get(facetName);
-                const facet = await ethers.getContractAt(facetName, facetDeployment.address);
+                const facetArtifact = await deployments.getArtifact(facetName);
+                const facet = await ethers.getContractAt(facetArtifact.abi, facetDeployment.address);
                 const signatures = Object.keys(facet.interface.functions);
                 const selectors = signatures.reduce((acc: string[], val: string) => {
                     if (val !== 'init(bytes') {
@@ -110,9 +114,10 @@ createParams(
             }
 
             // make diamond cut
-            const diamondCutFacet = await ethers.getContractAt('IDiamondCut', diamond.address);
+            const diamondCutArtifact = await deployments.getArtifact('IDiamondCut');
+            const diamondCutFacet = await ethers.getContractAt(diamondCutArtifact.abi, diamond.address);
             const diamondInitDeployment = await deployments.get('DiamondInit');
-            const diamondInit = await ethers.getContractAt('DiamondInit', diamondInitDeployment.address);
+            const diamondInit = await ethers.getContractAt(diamondInitDeployment.abi, diamondInitDeployment.address);
             const calldata = diamondInit.interface.encodeFunctionData('init', [
                 args.inputDuration,
                 args.challengePeriod,
