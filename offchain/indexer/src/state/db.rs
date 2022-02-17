@@ -398,16 +398,18 @@ impl DbImmutableState {
             val_to_hex_str(&self.immutable_state.dapp_contract_address);
 
         let timestamp = SystemTime::now();
-        let query = sql_query("INSERT INTO \"ImmutableStates\" VALUES ($1, $2, $3, $4, $5, \
-                                                            $6, $7, $8);;")
-            .bind::<Uuid, _>(self.id)
-            .bind::<VarChar, _>(input_duration_string)
-            .bind::<VarChar, _>(challenge_period_string)
-            .bind::<Timestamp, _>(contract_creation_timestamp)
-            .bind::<VarChar, _>(dapp_contract_address_string)
-            .bind::<Uuid, _>(rollups_uuid)
-            .bind::<Timestamp, _>(timestamp)
-            .bind::<Timestamp, _>(timestamp);
+        let query = sql_query(
+            "INSERT INTO \"ImmutableStates\" VALUES ($1, $2, $3, $4, $5, \
+                                                            $6, $7, $8);;",
+        )
+        .bind::<Uuid, _>(self.id)
+        .bind::<VarChar, _>(input_duration_string)
+        .bind::<VarChar, _>(challenge_period_string)
+        .bind::<Timestamp, _>(contract_creation_timestamp)
+        .bind::<VarChar, _>(dapp_contract_address_string)
+        .bind::<Uuid, _>(rollups_uuid)
+        .bind::<Timestamp, _>(timestamp)
+        .bind::<Timestamp, _>(timestamp);
 
         let _rows_created = query.execute(conn).unwrap();
         Ok(self.id)
