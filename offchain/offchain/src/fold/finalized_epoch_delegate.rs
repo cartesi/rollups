@@ -26,12 +26,8 @@ pub struct FinalizedEpochFoldDelegate<DA: DelegateAccess> {
 }
 
 impl<DA: DelegateAccess> FinalizedEpochFoldDelegate<DA> {
-    pub fn new(
-        input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
-    ) -> Self {
-        Self {
-            input_fold,
-        }
+    pub fn new(input_fold: Arc<StateFold<InputFoldDelegate, DA>>) -> Self {
+        Self { input_fold }
     }
 }
 
@@ -68,10 +64,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 err: "Error querying for rollups finalized epochs",
             })?;
 
-        let mut finalized_epochs = FinalizedEpochs::new(
-            initial_epoch,
-            dapp_contract_address,
-        );
+        let mut finalized_epochs =
+            FinalizedEpochs::new(initial_epoch, dapp_contract_address);
 
         // If number of epoch finalized events is smaller than the specified
         // `inital_epoch` then no update is needed
@@ -112,8 +106,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let dapp_contract_address =
-            previous_state.dapp_contract_address;
+        let dapp_contract_address = previous_state.dapp_contract_address;
 
         // Check if there was (possibly) some log emited on this block.
         // As finalized epochs' inputs will not change, we can return early

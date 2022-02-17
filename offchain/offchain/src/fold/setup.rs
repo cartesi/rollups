@@ -90,8 +90,7 @@ fn create_accumulating_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SFConfig,
 ) -> AccumulatingEpochStateFold<DA> {
-    let delegate =
-        AccumulatingEpochFoldDelegate::new(input_fold);
+    let delegate = AccumulatingEpochFoldDelegate::new(input_fold);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
@@ -102,8 +101,7 @@ fn create_sealed_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SFConfig,
 ) -> SealedEpochStateFold<DA> {
-    let delegate =
-        SealedEpochFoldDelegate::new(input_fold);
+    let delegate = SealedEpochFoldDelegate::new(input_fold);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }
@@ -115,8 +113,7 @@ fn create_finalized_epoch<DA: DelegateAccess + Send + Sync + 'static>(
     access: Arc<DA>,
     config: &SFConfig,
 ) -> FinalizedEpochStateFold<DA> {
-    let delegate =
-        FinalizedEpochFoldDelegate::new(input_fold);
+    let delegate = FinalizedEpochFoldDelegate::new(input_fold);
     let state_fold = StateFold::new(delegate, access, config.safety_margin);
     Arc::new(state_fold)
 }

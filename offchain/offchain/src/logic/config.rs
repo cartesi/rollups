@@ -169,10 +169,7 @@ impl LogicConfig {
         )
         .map_err(|e| {
             config_error::FileError {
-                err: format!(
-                    "DApp contract address string ill-formed: {}",
-                    e
-                ),
+                err: format!("DApp contract address string ill-formed: {}", e),
             }
             .build()
         })?;

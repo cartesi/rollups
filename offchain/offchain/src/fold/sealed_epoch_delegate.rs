@@ -78,12 +78,8 @@ pub struct SealedEpochFoldDelegate<DA: DelegateAccess> {
 }
 
 impl<DA: DelegateAccess> SealedEpochFoldDelegate<DA> {
-    pub fn new(
-        input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
-    ) -> Self {
-        Self {
-            input_fold,
-        }
+    pub fn new(input_fold: Arc<StateFold<InputFoldDelegate, DA>>) -> Self {
+        Self { input_fold }
     }
 }
 
@@ -101,17 +97,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> SyncResult<Self::Accumulator, A> {
-        let (dapp_contract_address, epoch_number) =
-            initial_state.clone();
+        let (dapp_contract_address, epoch_number) = initial_state.clone();
 
         let middleware = access
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract = RollupsFacet::new(
-            dapp_contract_address,
-            Arc::clone(&middleware),
-        );
+        let contract =
+            RollupsFacet::new(dapp_contract_address, Arc::clone(&middleware));
 
         // Inputs of epoch
         let inputs = self

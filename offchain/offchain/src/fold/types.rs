@@ -163,10 +163,7 @@ pub struct FinalizedEpochs {
 }
 
 impl FinalizedEpochs {
-    pub fn new(
-        initial_epoch: U256,
-        dapp_contract_address: Address,
-    ) -> Self {
+    pub fn new(initial_epoch: U256, dapp_contract_address: Address) -> Self {
         Self {
             finalized_epochs: Vector::new(),
             initial_epoch,
@@ -223,10 +220,7 @@ pub struct AccumulatingEpoch {
 }
 
 impl AccumulatingEpoch {
-    pub fn new(
-        dapp_contract_address: Address,
-        epoch_number: U256,
-    ) -> Self {
+    pub fn new(dapp_contract_address: Address, epoch_number: U256) -> Self {
         Self {
             epoch_number,
             inputs: EpochInputState::new(epoch_number, dapp_contract_address),

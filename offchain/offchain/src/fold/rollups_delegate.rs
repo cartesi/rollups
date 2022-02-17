@@ -164,7 +164,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .fee_manager_fold
             .get_state_for_block(
                 &constants.dapp_contract_address,
-                Some(block.hash))
+                Some(block.hash),
+            )
             .await
             .map_err(|e| {
                 SyncDelegateError {
@@ -198,10 +199,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let raw_contract_state = self
             .epoch_fold
             .get_state_for_block(
-                &(
-                    dapp_contract_address,
-                    previous_state.initial_epoch,
-                ),
+                &(dapp_contract_address, previous_state.initial_epoch),
                 Some(block.hash),
             )
             .await
@@ -381,10 +379,7 @@ fn convert_raw_to_logical(
     // was previously created. The distinction comes from the two possible
     // transitions to AwaitingConsensus, either a new input or a claim
     let current_epoch = if let Some(epoch_number) = current_epoch_no_inputs {
-        AccumulatingEpoch::new(
-            constants.dapp_contract_address,
-            epoch_number,
-        )
+        AccumulatingEpoch::new(constants.dapp_contract_address, epoch_number)
     } else {
         contract_state.current_epoch
     };

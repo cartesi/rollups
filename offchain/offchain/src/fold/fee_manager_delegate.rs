@@ -1,5 +1,5 @@
-use crate::contracts::fee_manager_facet::*;
 use crate::contracts::diamond_init::*;
+use crate::contracts::fee_manager_facet::*;
 
 use super::types::{FeeManagerState, NumRedeemed};
 
@@ -57,8 +57,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .await;
 
         // `fee_manager_created` event
-        let events = diamond_init.
-            fee_manager_initialized_filter()
+        let events = diamond_init
+            .fee_manager_initialized_filter()
             .query()
             .await
             .context(SyncContractError {
@@ -90,11 +90,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         };
 
         // `fee_redeemed` events
-        let events = fee_manager_facet.fee_redeemed_filter().query().await.context(
-            SyncContractError {
+        let events = fee_manager_facet
+            .fee_redeemed_filter()
+            .query()
+            .await
+            .context(SyncContractError {
                 err: "Error querying for fee redeemed events",
-            },
-        )?;
+            })?;
         let mut validator_redeemed: [Option<NumRedeemed>; 8] = [None; 8];
         let mut validator_redeemed_sums: HashMap<Address, U256> =
             HashMap::new();

@@ -104,10 +104,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .build_sync_contract(Address::zero(), block.number, |_, m| m)
             .await;
 
-        let contract = RollupsFacet::new(
-            dapp_contract_address,
-            Arc::clone(&middleware),
-        );
+        let contract =
+            RollupsFacet::new(dapp_contract_address, Arc::clone(&middleware));
 
         // retrieve list of finalized epochs from FinalizedEpochFoldDelegate
         let finalized_epochs = self
@@ -161,11 +159,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             // either accumulating inputs or sealed epoch with no claims/new inputs
             Some((PhaseChangeFilter { new_phase: 0 }, _)) | None => {
                 let current_epoch = self
-                    .get_acc_sync(
-                        dapp_contract_address,
-                        next_epoch,
-                        block.hash,
-                    )
+                    .get_acc_sync(dapp_contract_address, next_epoch, block.hash)
                     .await?;
                 (ContractPhase::InputAccumulation {}, current_epoch)
             }
@@ -271,8 +265,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         block: &Block,
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
-        let dapp_contract_address =
-            previous_state.dapp_contract_address;
+        let dapp_contract_address = previous_state.dapp_contract_address;
         // Check if there was (possibly) some log emited on this block.
         if !(fold_utils::contains_address(
             &block.logs_bloom,
@@ -390,11 +383,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             // InputAccumulation
             Some(PhaseChangeFilter { new_phase: 0 }) | None => {
                 let current_epoch = self
-                    .get_acc_fold(
-                        dapp_contract_address,
-                        next_epoch,
-                        block.hash,
-                    )
+                    .get_acc_fold(dapp_contract_address, next_epoch, block.hash)
                     .await?;
                 (ContractPhase::InputAccumulation {}, current_epoch)
             }

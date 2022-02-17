@@ -61,7 +61,11 @@ impl StateFoldDelegate for OutputFoldDelegate {
         let dapp_contract_address = initial_state;
 
         let contract = access
-            .build_sync_contract(*dapp_contract_address, block.number, OutputFacet::new)
+            .build_sync_contract(
+                *dapp_contract_address,
+                block.number,
+                OutputFacet::new,
+            )
             .await;
 
         // Retrieve `VoucherExecuted` events
@@ -100,17 +104,22 @@ impl StateFoldDelegate for OutputFoldDelegate {
         let dapp_contract_address = previous_state.dapp_contract_address;
 
         // If not in bloom copy previous state
-        if !(fold_utils::contains_address(&block.logs_bloom, &dapp_contract_address)
-            && fold_utils::contains_topic(
-                &block.logs_bloom,
-                &VoucherExecutedFilter::signature(),
-            ))
-        {
+        if !(fold_utils::contains_address(
+            &block.logs_bloom,
+            &dapp_contract_address,
+        ) && fold_utils::contains_topic(
+            &block.logs_bloom,
+            &VoucherExecutedFilter::signature(),
+        )) {
             return Ok(previous_state.clone());
         }
 
         let contract = access
-            .build_fold_contract(dapp_contract_address, block.hash, OutputFacet::new)
+            .build_fold_contract(
+                dapp_contract_address,
+                block.hash,
+                OutputFacet::new,
+            )
             .await;
 
         let events = contract.voucher_executed_filter().query().await.context(

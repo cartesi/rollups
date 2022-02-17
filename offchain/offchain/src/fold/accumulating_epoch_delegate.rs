@@ -22,12 +22,8 @@ pub struct AccumulatingEpochFoldDelegate<DA: DelegateAccess> {
 }
 
 impl<DA: DelegateAccess> AccumulatingEpochFoldDelegate<DA> {
-    pub fn new(
-        input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
-    ) -> Self {
-        Self {
-            input_fold,
-        }
+    pub fn new(input_fold: Arc<StateFold<InputFoldDelegate, DA>>) -> Self {
+        Self { input_fold }
     }
 }
 
