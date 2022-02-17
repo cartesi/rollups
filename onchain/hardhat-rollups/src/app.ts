@@ -12,6 +12,8 @@
 
 import { task } from "hardhat/config";
 import { ActionType, HardhatRuntimeEnvironment } from "hardhat/types";
+import "hardhat-deploy/dist/src/type-extensions";
+
 import {
     taskDefs,
     TASK_ADD_INPUT,

@@ -11,6 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 import { ActionType, HardhatRuntimeEnvironment } from "hardhat/types";
+import "@nomiclabs/hardhat-ethers/internal/type-extensions";
 import {
     OutputFacet__factory,
     RollupsFacet__factory,

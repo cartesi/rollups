@@ -10,9 +10,6 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-import "@nomiclabs/hardhat-ethers";
-import "hardhat-deploy";
-
 export * from "./args";
 export * from "./constants";
 export * from "./params";
