@@ -591,10 +591,10 @@ describe("FeeManager Facet", () => {
                 parseInt(state.fee_per_claim, 16),
                 "now the fee_per_claim should be `newFeePerClaim`"
             ).to.equal(newFeePerClaim);
-            // signers[1] should automatically be redeeded fees
+            // signers[1] should automatically be redeemed fees
             expect(
                 state.validator_redeemed[0].validator_address,
-                "signers[1] should automatically be redeeded fees"
+                "signers[1] should automatically be redeemed fees"
             ).to.equal((await signers[1].getAddress()).toLowerCase());
             expect(
                 parseInt(state.validator_redeemed[0].num_claims_redeemed, 16),

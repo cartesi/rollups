@@ -72,7 +72,7 @@ library LibFeeManager {
         uint256 redeemedClaims = ds.numClaimsRedeemed.getNumClaims(valIndex);
 
         // underflow checked by default with sol0.8
-        // which means if a validator is removed, calling this function will
+        // which means if the validator is removed, calling this function will
         // either return 0 or revert
         return totalClaims - redeemedClaims;
     }
