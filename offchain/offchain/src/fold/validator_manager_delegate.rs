@@ -210,12 +210,13 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             })?;
 
         // RollupsFacet Claim event
-        let rollups_claim_events =
-            rollups_facet.claim_filter().query().await.context(
-                FoldContractError {
-                    err: "Error querying for Rollups claim events",
-                },
-            )?;
+        let rollups_claim_events = rollups_facet
+            .claim_filter()
+            .query()
+            .await
+            .context(FoldContractError {
+                err: "Error querying for Rollups claim events",
+            })?;
 
         // step 1: `resolve_dispute_events`. For validator lost dispute, add to removal list and also remove address and #claims;
         //          for validator won, do nothing
