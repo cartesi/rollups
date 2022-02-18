@@ -25,6 +25,7 @@ import { keccak256, defaultAbiCoder } from "ethers/lib/utils";
 import { deployments } from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { BigNumber } from "ethers";
+import { DeployOptions } from "hardhat-deploy/types";
 
 // Calculate input hash based on
 // input: data itself interpreted by L2
@@ -107,46 +108,46 @@ export const DAY = 24 * HOUR; // seconds in a day
 
 export const deployDiamond = deployments.createFixture(
     async (hre: HardhatRuntimeEnvironment, options: DiamondOptions = {}) => {
-        const { deployments, ethers } = hre;
+        const { deployments, ethers, getNamedAccounts } = hre;
         const signers = await ethers.getSigners();
-        const contractOwnerAddress = await signers[0].getAddress();
+        const { deployer } = await getNamedAccounts();
 
         // ensure facets are deployed
-        await deployments.fixture(["RollupsDiamond"]);
+        await deployments.fixture();
+
+        const opts: DeployOptions = {
+            from: deployer,
+            log: true,
+        };
 
         // deploy the debug facet if `debug` is true
         if (options.debug) {
-            const libClaimsMask = await deployments.get("LibClaimsMask");
-            const debugFacet = await deployments.deploy("DebugFacet", {
-                from: contractOwnerAddress,
+            const LibClaimsMask = await deployments.get("LibClaimsMask");
+            await deployments.deploy("DebugFacet", {
+                ...opts,
                 libraries: {
-                    LibClaimsMask: libClaimsMask.address,
+                    LibClaimsMask: LibClaimsMask.address,
                 },
             });
-            console.log(`[${debugFacet.address}] Deployed DebugFacet`);
         }
 
         // deploy SimpleToken if `erc20ForFree` is undefined
         if (typeof options.erc20ForFee == "undefined") {
             // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
             let tokenSupply = 1000000;
-            let deployedToken = await deployments.deploy("SimpleToken", {
-                from: await signers[0].getAddress(),
+            await deployments.deploy("SimpleToken", {
+                ...opts,
                 args: [tokenSupply],
             });
-            console.log(`[${deployedToken.address}] Deployed SimpleToken`);
         }
 
-        console.log();
         console.log("===> Deploying diamond");
 
         // deploy raw diamond with diamond cut facet
+        const DiamondCutFacet = await deployments.get("DiamondCutFacet");
         const diamond = await deployments.deploy("Diamond", {
-            from: contractOwnerAddress,
-            args: [
-                contractOwnerAddress,
-                (await deployments.get("DiamondCutFacet")).address,
-            ],
+            ...opts,
+            args: [deployer, DiamondCutFacet.address],
         });
         console.log(`[${diamond.address}] Deployed Diamond`);
 
@@ -172,7 +173,6 @@ export const deployDiamond = deployments.createFixture(
             facetNames.push("DebugFacet");
         }
 
-        console.log();
         console.log("===> Listing diamond facets");
 
         // list all facet cuts to be made
@@ -202,7 +202,6 @@ export const deployDiamond = deployments.createFixture(
             console.log(`[${facet.address}] Adding ${facetName}`);
         }
 
-        console.log();
         console.log("===> Executing diamond cut");
 
         // Default option values
@@ -216,7 +215,7 @@ export const deployDiamond = deployments.createFixture(
         let feePerClaim = options.feePerClaim ? options.feePerClaim : 10;
         let feeManagerOwner = options.feeManagerOwner
             ? options.feeManagerOwner
-            : contractOwnerAddress;
+            : deployer;
         let erc20ForPortal = options.erc20ForPortal
             ? options.erc20ForPortal
             : "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
