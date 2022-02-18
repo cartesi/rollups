@@ -115,15 +115,6 @@ const config: HardhatUserConfig = {
         deployer: {
             default: 0,
         },
-        alice: {
-            default: 0,
-        },
-        bob: {
-            default: 1,
-        },
-        beneficiary: {
-            default: 1,
-        },
     },
 };
 
