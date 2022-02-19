@@ -73,7 +73,7 @@ describe("Input Facet", () => {
         // test delegate
         if (enableDelegate) {
             let initialState = JSON.stringify({
-                input_address: inputFacet.address,
+                dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
             });
 
@@ -105,7 +105,7 @@ describe("Input Facet", () => {
         // test delegate
         if (enableDelegate) {
             let initialState = JSON.stringify({
-                input_address: inputFacet.address,
+                dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
             });
 
@@ -144,7 +144,7 @@ describe("Input Facet", () => {
         // test delegate
         if (enableDelegate) {
             let initialState = JSON.stringify({
-                input_address: inputFacet.address,
+                dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
             });
             let state = JSON.parse(await getState(initialState));
@@ -154,7 +154,7 @@ describe("Input Facet", () => {
             ).to.equal(numOfInputsToAdd + NUM_OF_INITIAL_INPUTS);
 
             initialState = JSON.stringify({
-                input_address: inputFacet.address,
+                dapp_contract_address: inputFacet.address,
                 epoch_number: "0x1",
             });
             state = JSON.parse(await getState(initialState));
@@ -180,7 +180,7 @@ describe("Input Facet", () => {
         // test delegate
         if (enableDelegate) {
             let initialState = JSON.stringify({
-                input_address: inputFacet.address,
+                dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
             });
 
@@ -215,7 +215,7 @@ describe("Input Facet", () => {
             await addInputAndIncreaseCounter(input);
 
             let initialState = JSON.stringify({
-                input_address: inputFacet.address,
+                dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
             });
 
@@ -304,7 +304,7 @@ describe("Input Facet", () => {
         // test delegate for epoch 1
         if (enableDelegate) {
             let initialState = JSON.stringify({
-                input_address: inputFacet.address,
+                dapp_contract_address: inputFacet.address,
                 epoch_number: "0x1",
             });
 

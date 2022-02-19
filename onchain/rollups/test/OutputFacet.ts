@@ -450,7 +450,7 @@ describe("Output Facet", () => {
         it("testing output delegate", async () => {
             /// ***test case 1 - initial check
             let initialState = JSON.stringify({
-                output_address: outputFacet.address,
+                dapp_contract_address: outputFacet.address,
             });
             let state = JSON.parse(await getState(initialState));
 
@@ -489,9 +489,9 @@ describe("Output Facet", () => {
             let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
             v_new.epochIndex = 1; // we use the same outputIndex and inputIndex
             v_new.outputMetadataArrayDriveHash =
-                "0xc26ccca0f2995d3584e183ff7d8e2cd9f6ac01e263a3beb8f1a2345638d2bc9c";
+                "0xe5be80823befc1f1a95536be35387f028135c20f994b55f4d7f8c5d03b93f79b";
             v_new.epochVoucherDriveHash =
-                "0x4ddc5a9a0f46871a08135296b981b86a8bca580c7f7d7de7c473089f234abab1";
+                "0xab6efb5e6cdc2a7e23180afe47e47e0eb2b410359f27e55dbd0945d368aaa25e";
             let epochHash_new = keccak256(
                 ethers.utils.defaultAbiCoder.encode(
                     ["uint", "uint", "uint"],
@@ -523,9 +523,9 @@ describe("Output Facet", () => {
             v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
             v_new.epochIndex = 2;
             v_new.outputMetadataArrayDriveHash =
-                "0x9bfa174d480e37b808e0bf8ac3f2c5e4e25113c435dec2e353370fe956c3cb10";
+                "0x3baf948555a6992a67b094e5139eeb80747c554edbe32e97b10bbc8fc27f6506";
             v_new.epochVoucherDriveHash =
-                "0x5b0d4f6b91fdfe5eebe393a19ee03426def24e061f78b6cb57dd19ac9e5404e8";
+                "0xefc144b11a003dbd9858588cb72309fae9b2556dc29a654624153a2f4fcabb61";
             epochHash_new = keccak256(
                 ethers.utils.defaultAbiCoder.encode(
                     ["uint", "uint", "uint"],

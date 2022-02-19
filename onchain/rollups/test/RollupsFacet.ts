@@ -74,14 +74,14 @@ describe("Rollups Facet", () => {
             signers[0]
         );
         diamondInit = DiamondInit__factory.connect(diamond.address, signers[0]);
-        // get the timestamp of the second last block, because after deploying rollups, portalImpl was deployed
-        contract_creation_time =
-            (await ethers.provider.getBlock("latest")).timestamp - 1;
+
+        contract_creation_time = (await ethers.provider.getBlock("latest"))
+            .timestamp;
 
         initialEpoch = "0x0";
         initialState = JSON.stringify({
             initial_epoch: initialEpoch,
-            rollups_address: diamond.address,
+            dapp_contract_address: diamond.address,
         });
     });
 
@@ -555,40 +555,57 @@ describe("Rollups Facet", () => {
             constants: {
                 input_duration: '0x15180',
                 challenge_period: '0x93a80',
-                contract_creation_timestamp: '0x616e3ac3',
-                input_contract_address: '0xd8058efe0198ae9dd7d563e1b4938dcbc86a1f81',
-                output_contract_address: '0x6d544390eb535d61e196c87d6b9c80dcd8628acd',
-                validator_contract_address: '0xb1ede3f5ac8654124cb5124adf0fd3885cbdd1f7',
-                dispute_contract_address: '0xa6d6d7c556ce6ada136ba32dbe530993f128ca44',
-                rollups_contract_address: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9'
+                contract_creation_timestamp: '0x6210664d',
+                dapp_contract_address: '0x2aa12f98795e7a65072950afba9d1e023d398241'
             },
             initial_epoch: '0x0',
             finalized_epochs: {
                 finalized_epochs: [],
                 initial_epoch: '0x0',
-                rollups_contract_address: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9',
-                input_contract_address: '0xd8058efe0198ae9dd7d563e1b4938dcbc86a1f81'
+                dapp_contract_address: '0x2aa12f98795e7a65072950afba9d1e023d398241'
             },
             current_epoch: {
                 epoch_number: '0x0',
                 inputs: {
                 epoch_number: '0x0',
                 inputs: [],
-                input_contract_address: '0xd8058efe0198ae9dd7d563e1b4938dcbc86a1f81'
+                dapp_contract_address: '0x2aa12f98795e7a65072950afba9d1e023d398241'
                 },
-                rollups_contract_address: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9',
-                input_contract_address: '0xd8058efe0198ae9dd7d563e1b4938dcbc86a1f81'
+                dapp_contract_address: '0x2aa12f98795e7a65072950afba9d1e023d398241'
             },
             current_phase: { InputAccumulation: {} },
             output_state: {
-                output_address: '0x6d544390eb535d61e196c87d6b9c80dcd8628acd',
+                dapp_contract_address: '0x2aa12f98795e7a65072950afba9d1e023d398241',
                 vouchers: {}
+            },
+            validator_manager_state: {
+                num_claims: [
+                null, null, null,
+                null, null, null,
+                null, null
+                ],
+                claiming: [],
+                validators_removed: [],
+                num_finalized_epochs: '0x0',
+                dapp_contract_address: '0x2aa12f98795e7a65072950afba9d1e023d398241'
+            },
+            fee_manager_state: {
+                dapp_contract_address: '0x2aa12f98795e7a65072950afba9d1e023d398241',
+                erc20_address: '0xaaf0f531b7947e8492f21862471d61d5305f7538',
+                fee_per_claim: '0xa',
+                validator_redeemed: [
+                null, null, null,
+                null, null, null,
+                null, null
+                ],
+                fee_manager_balance: '0x0',
+                leftover_balance: 0
             }
         }
         */
 
         it("test delegate", async () => {
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await getState(initialState)).state;
 
             // *** initial test ***
 
@@ -606,7 +623,7 @@ describe("Rollups Facet", () => {
                 "contract creation timestamp does not match"
             ).to.equal(contract_creation_time);
             expect(
-                state.constants.rollups_contract_address,
+                state.constants.dapp_contract_address,
                 "rollups contract address does not match"
             ).to.equal(rollupsFacet.address.toLowerCase());
 
@@ -626,8 +643,8 @@ describe("Rollups Facet", () => {
                 "finalized_epochs.initial_epoch does not match"
             ).to.equal(initialEpoch);
             expect(
-                state.finalized_epochs.rollups_contract_address,
-                "finalized_epochs.rollups_contract_address does not match"
+                state.finalized_epochs.dapp_contract_address,
+                "finalized_epochs.dapp_contract_address does not match"
             ).to.equal(rollupsFacet.address.toLowerCase());
 
             // test initial current_epoch
@@ -641,8 +658,8 @@ describe("Rollups Facet", () => {
                 "initially there's no inputs"
             ).to.equal(0);
             expect(
-                state.current_epoch.rollups_contract_address,
-                "current_epoch.rollups_contract_address does not match"
+                state.current_epoch.dapp_contract_address,
+                "current_epoch.dapp_contract_address does not match"
             ).to.equal(rollupsFacet.address.toLowerCase());
             expect(
                 JSON.stringify(state.current_phase.InputAccumulation) == "{}",
@@ -667,7 +684,7 @@ describe("Rollups Facet", () => {
                 "phase incorrect because inputDuration not over"
             ).to.be.revertedWith("Phase != AwaitingConsensus");
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await getState(initialState)).state; // update state
             checkCurrentPhase(state, "InputAccumulation");
 
             // *** EPOCH 0: input duration has past, now make a claim ***
@@ -677,7 +694,7 @@ describe("Rollups Facet", () => {
             await network.provider.send("evm_mine");
             await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await getState(initialState)).state; // update state
             checkCurrentEpochNum(state, "0x1");
             checkCurrentPhase(state, "AwaitingConsensusNoConflict");
             expect(
@@ -716,7 +733,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await getState(initialState)).state; // update state
             expect(
                 state.current_phase.AwaitingConsensusNoConflict.claimed_epoch
                     .claims.claims[ethers.utils.formatBytes32String("hello")]
@@ -740,7 +757,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await getState(initialState)).state; // update state
             await checkFinalizedEpoch(
                 state,
                 0,
@@ -755,7 +772,7 @@ describe("Rollups Facet", () => {
             ]);
             await network.provider.send("evm_mine");
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await getState(initialState)).state; // update state
             checkCurrentEpochNum(state, "0x2");
             checkCurrentPhase(state, "EpochSealedAwaitingFirstClaim");
             expect(
@@ -775,7 +792,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("not hello1"));
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await getState(initialState)).state; // update state
             expect(
                 state.current_phase.AwaitingConsensusAfterConflict.claimed_epoch
                     .epoch_number,
@@ -818,7 +835,7 @@ describe("Rollups Facet", () => {
             ]);
             await network.provider.send("evm_mine");
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await getState(initialState)).state; // update state
             checkCurrentPhase(state, "ConsensusTimeout");
             expect(
                 state.current_phase.ConsensusTimeout.claimed_epoch.epoch_number,
@@ -828,7 +845,7 @@ describe("Rollups Facet", () => {
             // *** EPOCH 1 -> 2: finalize after consensus times out ***
             await rollupsFacet.finalizeEpoch();
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await getState(initialState)).state; // update state
             // now can test the finalized epoch 1
             await checkFinalizedEpoch(
                 state,
@@ -851,7 +868,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("not hello2"));
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await getState(initialState)).state; // update state
             checkCurrentEpochNum(state, "0x3");
             checkCurrentPhase(state, "InputAccumulation");
             await checkFinalizedEpoch(
