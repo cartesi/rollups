@@ -81,7 +81,7 @@ impl IndexerConfig {
         };
         let basic_config = Config::initialize(base_cli_config)?;
 
-        let dapp_contract_address = basic_config.contracts["Diamond"];
+        let dapp_contract_address = basic_config.contracts["CartesiDApp"];
 
         let state_server_endpoint: String = env_cli_config
             .state_server_endpoint

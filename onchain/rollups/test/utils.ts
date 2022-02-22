@@ -141,15 +141,15 @@ export const deployDiamond = deployments.createFixture(
             });
         }
 
-        console.log("===> Deploying diamond");
+        console.log("===> Deploying CartesiDApp");
 
         // deploy raw diamond with diamond cut facet
         const DiamondCutFacet = await deployments.get("DiamondCutFacet");
-        const diamond = await deployments.deploy("Diamond", {
+        const diamond = await deployments.deploy("CartesiDApp", {
             ...opts,
             args: [deployer, DiamondCutFacet.address],
         });
-        console.log(`[${diamond.address}] Deployed Diamond`);
+        console.log(`[${diamond.address}] Deployed CartesiDApp`);
 
         // list all facets to add in a diamond cut
         const facetNames: string[] = [

@@ -31,7 +31,7 @@ import {
 const rollupsAction = (taskName: string): ActionType<any> => {
     return async (args: any, hre: HardhatRuntimeEnvironment) => {
         const { deployments, run } = hre;
-        const Rollups = await deployments.get("Diamond");
+        const Rollups = await deployments.get("CartesiDApp");
         return run(taskName, { rollups: Rollups.address, ...args });
     };
 };

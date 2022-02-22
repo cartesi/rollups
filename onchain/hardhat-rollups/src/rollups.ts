@@ -68,7 +68,7 @@ createParams(
             const diamondCutFacetDeployment = await deployments.get(
                 "DiamondCutFacet"
             );
-            const diamond = await deployments.deploy("Diamond", {
+            const diamond = await deployments.deploy("CartesiDApp", {
                 from: deployer,
                 args: [deployer, diamondCutFacetDeployment.address],
                 log: args.log,

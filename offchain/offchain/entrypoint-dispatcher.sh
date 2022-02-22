@@ -2,7 +2,7 @@
 
 # addresses
 dockerize -wait file://${DEPLOYMENT_PATH} -timeout 300s
-DAPP_CONTRACT_ADDRESS=$(jq -r ".contracts.Diamond.address" ${DEPLOYMENT_PATH})
+DAPP_CONTRACT_ADDRESS=$(jq -r ".contracts.CartesiDApp.address" ${DEPLOYMENT_PATH})
 
 # wait for services
 dockerize -wait tcp://${STATE_SERVER_HOSTNAME}:${STATE_SERVER_PORT} \
