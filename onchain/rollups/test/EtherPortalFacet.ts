@@ -115,7 +115,7 @@ describe("EtherPortal Facet", async () => {
         let block = await ethers.provider.getBlock("latest");
         let inputHash = getInputHash(
             input,
-            sender,
+            portalFacet.address,
             block.number,
             block.timestamp,
             0x0,

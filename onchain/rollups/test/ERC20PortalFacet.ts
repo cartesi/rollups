@@ -102,7 +102,7 @@ describe("ERC20Portal Facet", async () => {
         const block = await ethers.provider.getBlock("latest");
         const inputHash = getInputHash(
             input,
-            sender,
+            portalFacet.address,
             block.number,
             block.timestamp,
             0x0,
