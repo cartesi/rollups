@@ -50,7 +50,7 @@ contract ERC721PortalFacet is IERC721Portal, IERC721Receiver {
         );
 
         emit ERC721Deposited(_ERC721, msg.sender, _tokenId, _data);
-        return inputDS.addInputFromSender(input, address(this));
+        return inputDS.addInternalInput(input);
     }
 
     /// @notice withdraw an ERC721 token from the portal

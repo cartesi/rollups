@@ -40,7 +40,7 @@ contract EtherPortalFacet is IEtherPortal {
         );
 
         emit EtherDeposited(msg.sender, msg.value, _data);
-        return inputDS.addInputFromSender(input, address(this));
+        return inputDS.addInternalInput(input);
     }
 
     /// @notice withdraw an amount of Ether from the portal

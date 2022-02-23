@@ -85,6 +85,21 @@ library LibInput {
         return addInputFromSender(ds, input, msg.sender);
     }
 
+    /// @notice add internal input to processed by next epoch
+    /// @notice this function is to be reserved for internal usage only
+    /// @notice for normal inputs, call `addInput` instead
+    /// @param ds diamond storage pointer
+    /// @param input input to be understood by offchain machine
+    /// @dev offchain code is responsible for making sure
+    ///      that input size is power of 2 and multiple of 8 since
+    ///      the offchain machine has a 8 byte word
+    function addInternalInput(DiamondStorage storage ds, bytes memory input)
+        internal
+        returns (bytes32)
+    {
+        return addInputFromSender(ds, input, address(this));
+    }
+
     /// @notice add input from a specific sender to processed by next epoch
     /// @notice this function is to be reserved for internal usage only
     /// @notice for normal inputs, call `addInput` instead

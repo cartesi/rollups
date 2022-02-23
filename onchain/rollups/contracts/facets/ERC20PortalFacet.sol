@@ -51,7 +51,7 @@ contract ERC20PortalFacet is IERC20Portal {
         );
 
         emit ERC20Deposited(_ERC20, msg.sender, _amount, _data);
-        return inputDS.addInputFromSender(input, address(this));
+        return inputDS.addInternalInput(input);
     }
 
     /// @notice withdraw an amount of a generic ERC20 from the portal
