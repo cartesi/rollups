@@ -55,7 +55,7 @@ contract SERC20PortalFacet is ISERC20Portal {
         );
 
         emit SERC20Deposited(msg.sender, _amount, _data);
-        return inputDS.addInput(input);
+        return inputDS.addInputFromSender(input, address(this));
     }
 
     /// @notice withdraw an amount of the specific ERC20 token from the portal
