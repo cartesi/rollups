@@ -7,6 +7,8 @@ This repository contains the on-chain and off-chain pieces that are used to depl
 - [Experimenting](#experimenting)
 - [Talk with us](#talk-with-us)
 - [Contributing](#contributing)
+- [Setting up](#setting-up)
+- [Testing](#testing)
 - [License](#license)
 
 ## Documentation
@@ -78,6 +80,62 @@ Want to stay up to date? Make sure to join our [announcements channel on Telegra
 Thank you for your interest in Cartesi! Head over to our [Contributing Guidelines](CONTRIBUTING.md) for instructions on how to sign our Contributors Agreement and get started with Cartesi!
 
 Please note we have a [Code of Conduct](CODE_OF_CONDUCT.md), please follow it in all your interactions with the project.
+
+## Setting up
+
+### Initialize submodules recursively
+
+In order to also clone submodules like `grpc-interfaces` and `state-fold`, you need to run the following command.
+
+```sh
+git submodule update --init --recursive
+```
+
+### Compile on-chain code
+
+The on-chain part is mainly written in Solidity and Typescript. For that, you'll need `yarn` to install dependencies and to run build scripts.
+
+```sh
+cd onchain
+yarn
+cd rollups
+yarn build
+```
+
+### Compile off-chain code
+
+The off-chain code is written in Rust. For that, you'll need `cargo`. See the [Rust documentation](https://doc.rust-lang.org/cargo/getting-started/installation.html) for instructions on how to install `cargo` on your system.
+
+```sh
+cd offchain
+cargo build
+```
+
+## Testing
+
+Once you've setup the repository, you can test the different pieces that compose Cartesi Rollups individually.
+
+### Testing the on-chain code
+
+```sh
+cd onchain/rollups
+yarn test
+```
+
+### Testing the delegate server
+
+In order to generate the `.proto` files for Typescript, run the following commands once.
+
+```sh
+cd onchain/rollups
+yarn test:protoc
+```
+
+Now you can run the delegate test bench script.
+
+```sh
+./scripts/delegate_tests.sh
+```
 
 # License
 
