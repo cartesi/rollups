@@ -82,6 +82,23 @@ library LibInput {
         internal
         returns (bytes32)
     {
+        return addInputFromSender(ds, input, msg.sender);
+    }
+
+    /// @notice add input from a specific sender to processed by next epoch
+    /// @notice this function is to be reserved for internal usage only
+    /// @notice for normal inputs, call `addInput` instead
+    /// @param ds diamond storage pointer
+    /// @param input input to be understood by offchain machine
+    /// @param sender input sender address
+    /// @dev offchain code is responsible for making sure
+    ///      that input size is power of 2 and multiple of 8 since
+    ///      the offchain machine has a 8 byte word
+    function addInputFromSender(
+        DiamondStorage storage ds,
+        bytes memory input,
+        address sender
+    ) internal returns (bytes32) {
         LibRollups.DiamondStorage storage rollupsDS = LibRollups
             .diamondStorage();
 
@@ -107,7 +124,7 @@ library LibInput {
         // keccak 64 bytes into 32 bytes
         bytes32 keccakMetadata = keccak256(
             abi.encode(
-                msg.sender,
+                sender,
                 block.number,
                 block.timestamp,
                 currentEpoch, // epoch index
