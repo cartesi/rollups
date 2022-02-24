@@ -325,6 +325,44 @@ pub struct FeeManagerState {
     pub leftover_balance: i128,
 }
 
+pub struct FeeIncentiveStrategy {
+    pub max_num_validators: i128,
+    pub num_buffer_epochs: i128,
+}
+
+impl Default for FeeIncentiveStrategy {
+    fn default() -> Self {
+        FeeIncentiveStrategy {
+            // by default there are at most 8 validators
+            max_num_validators: 8,
+            // ideally fee manager should have leftover balance enough for at least 4 epochs
+            num_buffer_epochs: 4,
+        }
+    }
+}
+
+impl FeeManagerState {
+    pub fn sufficient_leftover_balance(
+        &self,
+        validator_manager_state: &ValidatorManagerState,
+    ) -> bool {
+        // fee manager should have sufficient leftover balance
+        // ideally enough for the a number (e.g. 4) of future epochs
+        let strategy: FeeIncentiveStrategy = Default::default();
+        let current_num_validators = strategy.max_num_validators
+            - validator_manager_state.validators_removed.len() as i128;
+        assert!(
+            current_num_validators >= 0
+                && current_num_validators <= strategy.max_num_validators,
+            "current_num_validators out of range"
+        );
+        let fee_per_claim = self.fee_per_claim.as_u128() as i128;
+        let balance_buffer =
+            fee_per_claim * current_num_validators * strategy.num_buffer_epochs;
+        self.leftover_balance >= balance_buffer
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RollupsState {
     pub constants: ImmutableState,

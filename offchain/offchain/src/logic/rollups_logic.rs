@@ -163,17 +163,11 @@ async fn react<MM: MachineInterface + Sync>(
     rollups_facet: &RollupsFacet<Provider<MockProvider>>,
     machine_manager: &MM,
 ) -> Result<()> {
-    // will not work if fee manager has less than 4 epochs' rewards as leftover_balance
-    let leftover_balance = &state.fee_manager_state.leftover_balance;
-    let fee_per_claim =
-        &(state.fee_manager_state.fee_per_claim.as_u128() as i128);
-    let max_num_validators = 8; // assume there are at most 8 validators
-    let current_num_validators = max_num_validators
-        - state.validator_manager_state.validators_removed.len() as i128;
-    let num_buffer_epochs = 4; // leftover balance should be enough for 4 more epochs
-    if *leftover_balance
-        < *fee_per_claim * current_num_validators * num_buffer_epochs
-    {
+    // will not work if fee manager has enough buffered leftover_balance
+    let should_i_work = state
+        .fee_manager_state
+        .sufficient_leftover_balance(&state.validator_manager_state);
+    if !should_i_work {
         info!("Fee Manager has insufficient leftover balance");
         return Ok(());
     }
