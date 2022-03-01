@@ -45,10 +45,12 @@ rollupsParams(
                 } else {
                     const epochNumber =
                         inputAddedEvent.args._epochNumber.toString();
+                    const inputIndex =
+                        inputAddedEvent.args._inputIndex.toString();
                     const timestamp =
                         inputAddedEvent.args._timestamp.toString();
                     console.log(
-                        `Added input '${args.input}' to epoch '${epochNumber}' (timestamp: ${timestamp}, signer: ${signer}, tx: ${tx.hash})`
+                        `Added input '${args.input}' to epoch '${epochNumber}' (timestamp: ${timestamp}, signer: ${signer}, tx: ${tx.hash}, index: ${inputIndex})`
                     );
                 }
             })

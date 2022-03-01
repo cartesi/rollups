@@ -79,6 +79,7 @@ contract InputImpl is Input {
 
         emit InputAdded(
             rollups.getCurrentEpoch(),
+            inputBox.length - 1,
             msg.sender,
             block.timestamp,
             _input

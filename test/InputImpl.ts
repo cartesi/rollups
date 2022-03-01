@@ -134,6 +134,7 @@ describe("Input Implementation", () => {
             .to.emit(inputImpl, "InputAdded")
             .withArgs(
                 0,
+                0,
                 await signer.getAddress(),
                 (await ethers.provider.getBlock("latest")).timestamp + 1,
                 "0x" + input_64_bytes.toString("hex")
