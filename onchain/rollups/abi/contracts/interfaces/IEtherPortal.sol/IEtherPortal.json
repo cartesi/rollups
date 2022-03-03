@@ -5,19 +5,19 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_sender",
+        "name": "sender",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_amount",
+        "name": "amount",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "bytes",
-        "name": "_data",
+        "name": "data",
         "type": "bytes"
       }
     ],
@@ -30,13 +30,13 @@
       {
         "indexed": false,
         "internalType": "address payable",
-        "name": "_receiver",
+        "name": "receiver",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_amount",
+        "name": "amount",
         "type": "uint256"
       }
     ],

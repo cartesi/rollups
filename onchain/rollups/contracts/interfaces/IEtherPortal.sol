@@ -28,8 +28,8 @@ interface IEtherPortal {
     function etherWithdrawal(bytes calldata _data) external returns (bool);
 
     /// @notice emitted on Ether deposited
-    event EtherDeposited(address _sender, uint256 _amount, bytes _data);
+    event EtherDeposited(address sender, uint256 amount, bytes data);
 
     /// @notice emitted on Ether withdrawal
-    event EtherWithdrawn(address payable _receiver, uint256 _amount);
+    event EtherWithdrawn(address payable receiver, uint256 amount);
 }

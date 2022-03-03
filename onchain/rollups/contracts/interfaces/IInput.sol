@@ -35,14 +35,14 @@ interface IInput {
     function getCurrentInbox() external view returns (uint256);
 
     /// @notice input added
-    /// @param _epochNumber which epoch this input belongs to
-    /// @param _sender msg.sender
-    /// @param _timestamp block.timestamp
-    /// @param _input input data
+    /// @param epochNumber which epoch this input belongs to
+    /// @param sender msg.sender
+    /// @param timestamp block.timestamp
+    /// @param input input data
     event InputAdded(
-        uint256 indexed _epochNumber,
-        address _sender,
-        uint256 _timestamp,
-        bytes _input
+        uint256 indexed epochNumber,
+        address sender,
+        uint256 timestamp,
+        bytes input
     );
 }

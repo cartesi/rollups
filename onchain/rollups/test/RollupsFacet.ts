@@ -255,11 +255,11 @@ describe("Rollups Facet", () => {
         let event = await diamondInit.queryFilter(eventFilter);
         let eventArgs = event[0]["args"]; // get 'args' from the first RollupsInitialized event
 
-        expect(eventArgs["_inputDuration"], "Input Duration").to.equal(
+        expect(eventArgs["inputDuration"], "Input Duration").to.equal(
             inputDuration
         );
 
-        expect(eventArgs["_challengePeriod"], "Challenge Period").to.equal(
+        expect(eventArgs["challengePeriod"], "Challenge Period").to.equal(
             challengePeriod
         );
     });

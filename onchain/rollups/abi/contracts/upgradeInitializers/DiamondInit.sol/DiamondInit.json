@@ -5,19 +5,19 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_feePerClaim",
+        "name": "feePerClaim",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_erc20ForFee",
+        "name": "erc20ForFee",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_feeManagerOwner",
+        "name": "feeManagerOwner",
         "type": "address"
       }
     ],
@@ -30,13 +30,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_inputDuration",
+        "name": "inputDuration",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_challengePeriod",
+        "name": "challengePeriod",
         "type": "uint256"
       }
     ],

@@ -56,11 +56,7 @@ contract DebugFacet {
         rollupsDS.currentPhase_int = uint32(_phase);
     }
 
-    function _getValidators()
-        public
-        view
-        returns (address payable[] memory validators)
-    {
+    function _getValidators() public view returns (address payable[] memory) {
         LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
             .diamondStorage();
         return vmDS.validators;

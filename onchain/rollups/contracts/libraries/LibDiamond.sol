@@ -63,9 +63,9 @@ library LibDiamond {
     }
 
     event DiamondCut(
-        IDiamondCut.FacetCut[] _diamondCut,
-        address _init,
-        bytes _calldata
+        IDiamondCut.FacetCut[] diamondCut,
+        address init,
+        bytes callData
     );
 
     bytes32 constant CLEAR_ADDRESS_MASK =

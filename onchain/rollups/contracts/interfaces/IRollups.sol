@@ -46,31 +46,27 @@ interface IRollups {
     function getCurrentEpoch() external view returns (uint256);
 
     /// @notice claim submitted
-    /// @param _epochHash claim being submitted by this epoch
-    /// @param _claimer address of current claimer
-    /// @param _epochNumber number of the epoch being submitted
+    /// @param epochHash claim being submitted by this epoch
+    /// @param claimer address of current claimer
+    /// @param epochNumber number of the epoch being submitted
     event Claim(
-        uint256 indexed _epochNumber,
-        address _claimer,
-        bytes32 _epochHash
+        uint256 indexed epochNumber,
+        address claimer,
+        bytes32 epochHash
     );
 
     /// @notice epoch finalized
-    /// @param _epochNumber number of the epoch being finalized
-    /// @param _epochHash claim being submitted by this epoch
-    event FinalizeEpoch(uint256 indexed _epochNumber, bytes32 _epochHash);
+    /// @param epochNumber number of the epoch being finalized
+    /// @param epochHash claim being submitted by this epoch
+    event FinalizeEpoch(uint256 indexed epochNumber, bytes32 epochHash);
 
     /// @notice dispute resolved
-    /// @param _winner winner of dispute
-    /// @param _loser loser of dispute
-    /// @param _winningClaim initial claim of winning validator
-    event ResolveDispute(
-        address _winner,
-        address _loser,
-        bytes32 _winningClaim
-    );
+    /// @param winner winner of dispute
+    /// @param loser loser of dispute
+    /// @param winningClaim initial claim of winning validator
+    event ResolveDispute(address winner, address loser, bytes32 winningClaim);
 
     /// @notice phase change
-    /// @param _newPhase new phase
-    event PhaseChange(Phase _newPhase);
+    /// @param newPhase new phase
+    event PhaseChange(Phase newPhase);
 }

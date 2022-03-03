@@ -37,8 +37,8 @@ interface IFeeManager {
     function redeemFee(address _validator) external;
 
     /// @notice emitted on resetting feePerClaim
-    event FeePerClaimReset(uint256 _value);
+    event FeePerClaimReset(uint256 value);
 
     /// @notice emitted on ERC20 funds redeemed by validator
-    event FeeRedeemed(address _validator, uint256 _amount);
+    event FeeRedeemed(address validator, uint256 amount);
 }

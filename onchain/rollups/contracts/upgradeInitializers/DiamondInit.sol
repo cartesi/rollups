@@ -110,9 +110,9 @@ contract DiamondInit {
     }
 
     /// @notice rollups contract initialized
-    /// @param _inputDuration duration of input accumulation phase in seconds
-    /// @param _challengePeriod duration of challenge period in seconds
-    event RollupsInitialized(uint256 _inputDuration, uint256 _challengePeriod);
+    /// @param inputDuration duration of input accumulation phase in seconds
+    /// @param challengePeriod duration of challenge period in seconds
+    event RollupsInitialized(uint256 inputDuration, uint256 challengePeriod);
 
     /// @notice initialize the Rollups facet
     /// @param _inputDuration duration of input accumulation phase in seconds
@@ -141,13 +141,13 @@ contract DiamondInit {
     }
 
     /// @notice FeeManagerImpl contract initialized
-    /// @param _feePerClaim fee per claim to reward the validators
-    /// @param _erc20ForFee the ERC-20 used as rewards for validators
-    /// @param _feeManagerOwner fee manager owner address
+    /// @param feePerClaim fee per claim to reward the validators
+    /// @param erc20ForFee the ERC-20 used as rewards for validators
+    /// @param feeManagerOwner fee manager owner address
     event FeeManagerInitialized(
-        uint256 _feePerClaim,
-        address _erc20ForFee,
-        address _feeManagerOwner
+        uint256 feePerClaim,
+        address erc20ForFee,
+        address feeManagerOwner
     );
 
     /// @notice initalize the Fee Manager facet

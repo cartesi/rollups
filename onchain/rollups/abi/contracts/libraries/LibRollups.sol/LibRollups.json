@@ -5,13 +5,13 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "_epochNumber",
+        "name": "epochNumber",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "_epochHash",
+        "name": "epochHash",
         "type": "bytes32"
       }
     ],
@@ -24,7 +24,7 @@
       {
         "indexed": false,
         "internalType": "enum Phase",
-        "name": "_newPhase",
+        "name": "newPhase",
         "type": "uint8"
       }
     ],
@@ -37,19 +37,19 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_winner",
+        "name": "winner",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_loser",
+        "name": "loser",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "_winningClaim",
+        "name": "winningClaim",
         "type": "bytes32"
       }
     ],

@@ -22,19 +22,19 @@
         ],
         "indexed": false,
         "internalType": "struct IDiamondCut.FacetCut[]",
-        "name": "_diamondCut",
+        "name": "diamondCut",
         "type": "tuple[]"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_init",
+        "name": "init",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "bytes",
-        "name": "_calldata",
+        "name": "callData",
         "type": "bytes"
       }
     ],

@@ -68,14 +68,14 @@ describe("FeeManager Facet", () => {
         let event = await diamondInit.queryFilter(eventFilter);
         let eventArgs = event[0]["args"];
 
-        expect(eventArgs["_feePerClaim"], "feePerClaim").to.equal(
+        expect(eventArgs["feePerClaim"], "feePerClaim").to.equal(
             initialFeePerClaim
         );
-        expect(eventArgs["_erc20ForFee"], "ERC20 token address").to.equal(
+        expect(eventArgs["erc20ForFee"], "ERC20 token address").to.equal(
             token.address
         );
         expect(
-            eventArgs["_feeManagerOwner"],
+            eventArgs["feeManagerOwner"],
             "fee manager owner address"
         ).to.equal(await signers[0].getAddress());
     });

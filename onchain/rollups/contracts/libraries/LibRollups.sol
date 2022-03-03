@@ -38,23 +38,19 @@ library LibRollups {
     }
 
     /// @notice epoch finalized
-    /// @param _epochNumber number of the epoch being finalized
-    /// @param _epochHash claim being submitted by this epoch
-    event FinalizeEpoch(uint256 indexed _epochNumber, bytes32 _epochHash);
+    /// @param epochNumber number of the epoch being finalized
+    /// @param epochHash claim being submitted by this epoch
+    event FinalizeEpoch(uint256 indexed epochNumber, bytes32 epochHash);
 
     /// @notice dispute resolved
-    /// @param _winner winner of dispute
-    /// @param _loser loser of dispute
-    /// @param _winningClaim initial claim of winning validator
-    event ResolveDispute(
-        address _winner,
-        address _loser,
-        bytes32 _winningClaim
-    );
+    /// @param winner winner of dispute
+    /// @param loser loser of dispute
+    /// @param winningClaim initial claim of winning validator
+    event ResolveDispute(address winner, address loser, bytes32 winningClaim);
 
     /// @notice phase change
-    /// @param _newPhase new phase
-    event PhaseChange(Phase _newPhase);
+    /// @param newPhase new phase
+    event PhaseChange(Phase newPhase);
 
     function diamondStorage()
         internal

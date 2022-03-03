@@ -28,8 +28,8 @@ interface ISERC20Portal {
     function serc20Withdrawal(bytes calldata _data) external returns (bool);
 
     /// @notice emitted on ERC20 deposited
-    event SERC20Deposited(address _sender, uint256 _amount, bytes _data);
+    event SERC20Deposited(address sender, uint256 amount, bytes data);
 
     /// @notice emitted on ERC20 withdrawal
-    event SERC20Withdrawn(address payable _receiver, uint256 _amount);
+    event SERC20Withdrawn(address payable receiver, uint256 amount);
 }

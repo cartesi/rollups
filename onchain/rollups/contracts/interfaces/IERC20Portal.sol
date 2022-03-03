@@ -32,16 +32,16 @@ interface IERC20Portal {
 
     /// @notice emitted on ERC20 deposited
     event ERC20Deposited(
-        address _ERC20,
-        address _sender,
-        uint256 _amount,
-        bytes _data
+        address ERC20,
+        address sender,
+        uint256 amount,
+        bytes data
     );
 
     /// @notice emitted on ERC20 withdrawal
     event ERC20Withdrawn(
-        address _ERC20,
-        address payable _receiver,
-        uint256 _amount
+        address ERC20,
+        address payable receiver,
+        uint256 amount
     );
 }

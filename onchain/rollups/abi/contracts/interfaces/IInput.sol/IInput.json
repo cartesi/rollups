@@ -5,25 +5,25 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "_epochNumber",
+        "name": "epochNumber",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_sender",
+        "name": "sender",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_timestamp",
+        "name": "timestamp",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "bytes",
-        "name": "_input",
+        "name": "input",
         "type": "bytes"
       }
     ],

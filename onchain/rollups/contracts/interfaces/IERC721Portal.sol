@@ -32,16 +32,16 @@ interface IERC721Portal {
 
     /// @notice emitted on ERC721 deposited
     event ERC721Deposited(
-        address _ERC721,
-        address _sender,
-        uint256 _tokenId,
-        bytes _data
+        address ERC721,
+        address sender,
+        uint256 tokenId,
+        bytes data
     );
 
     /// @notice emitted on ERC721 withdrawal
     event ERC721Withdrawn(
-        address _ERC721,
-        address payable _receiver,
-        uint256 _tokenId
+        address ERC721,
+        address payable receiver,
+        uint256 tokenId
     );
 }
