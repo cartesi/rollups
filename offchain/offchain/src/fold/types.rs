@@ -4,6 +4,7 @@ use ethers::abi::{encode, Token};
 use ethers::types::{Address, H256, U256, U64};
 use im::{HashMap, HashSet, Vector};
 use serde::{Deserialize, Serialize};
+use std::convert::TryFrom;
 use std::sync::Arc;
 
 /// Single input from Input.sol contract
@@ -356,7 +357,8 @@ impl FeeManagerState {
                 && current_num_validators <= strategy.max_num_validators,
             "current_num_validators out of range"
         );
-        let fee_per_claim = self.fee_per_claim.as_u128() as i128;
+        let fee_per_claim =
+            i128::try_from(self.fee_per_claim.as_u128()).unwrap();
         let balance_buffer =
             fee_per_claim * current_num_validators * strategy.num_buffer_epochs;
         self.leftover_balance >= balance_buffer

@@ -20,6 +20,7 @@ use ethers::prelude::EthEvent;
 use ethers::types::{Address, U256};
 use im::HashMap;
 use snafu::ResultExt;
+use std::convert::TryFrom;
 use std::sync::Arc;
 
 /// Fee Manager Delegate
@@ -186,6 +187,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let mut state = previous_state.clone();
 
         // update fee manager balance
+        // other events (if any) will be handled after the bloom filter
         let erc20_balance_state = self
             .erc20_balance_fold
             .get_state_for_block(
@@ -203,8 +205,9 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         state.fee_manager_balance = erc20_balance_state.balance;
         state.leftover_balance = state.leftover_balance
-            + (state.fee_manager_balance.as_u128() as i128
-                - previous_state.fee_manager_balance.as_u128() as i128);
+            + (i128::try_from(state.fee_manager_balance.as_u128()).unwrap()
+                - i128::try_from(previous_state.fee_manager_balance.as_u128())
+                    .unwrap());
 
         // If not in bloom copy previous state
         if !(fold_utils::contains_address(
@@ -373,7 +376,8 @@ fn calculate_leftover_balance(
     // leftover_balance = current_balance - to_be_redeemed_fees
     // un-finalized claims are not considered
     let to_be_redeemed_fees = (total_claims - total_redeems) * fee_per_claim;
-    let leftover_balance = fee_manager_balance.as_u128() as i128
-        - to_be_redeemed_fees.as_u128() as i128;
+    let leftover_balance = i128::try_from(fee_manager_balance.as_u128())
+        .unwrap()
+        - i128::try_from(to_be_redeemed_fees.as_u128()).unwrap();
     leftover_balance
 }
