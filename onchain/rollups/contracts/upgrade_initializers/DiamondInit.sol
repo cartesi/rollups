@@ -31,6 +31,7 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract DiamondInit {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
+    using LibInput for LibInput.DiamondStorage;
 
     /// @notice initialize the Rollups contract
     /// @param _inputDuration duration of input accumulation phase in seconds
@@ -57,10 +58,10 @@ contract DiamondInit {
     ) external {
         // initializing facets
         initERC165();
-        initInput(_inputLog2Size);
         initValidatorManager(_validators);
         initRollups(_inputDuration, _challengePeriod);
         initFeeManager(_feePerClaim, _erc20ForFee, _feeManagerOwner);
+        initInput(_inputLog2Size);
     }
 
     /// @notice initialize ERC165 data
@@ -83,6 +84,10 @@ contract DiamondInit {
         );
 
         inputDS.inputDriveSize = (1 << _inputLog2Size);
+
+        // input box gets initialized with one empty input
+        // so that the L2 DApp knows it's own address
+        inputDS.addInternalInput("");
     }
 
     /// @notice initialize the Validator Manager facet
