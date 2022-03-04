@@ -117,10 +117,7 @@ library LibInput {
         LibRollups.DiamondStorage storage rollupsDS = LibRollups
             .diamondStorage();
 
-        require(
-            input.length > 0 && input.length <= ds.inputDriveSize,
-            "input len: (0,driveSize]"
-        );
+        require(input.length <= ds.inputDriveSize, "input len: [0,driveSize]");
 
         // notifyInput returns true if that input
         // belongs to a new epoch
