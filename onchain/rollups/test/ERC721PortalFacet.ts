@@ -43,6 +43,7 @@ describe("ERC721Portal Facet", async () => {
     var portalFacet: ERC721PortalFacet;
     var debugFacet: DebugFacet;
     let mockERC721: MockContract; //mock erc721
+    var numberOfInputs = 0x1; // the machine starts with one input
 
     beforeEach(async () => {
         const diamond = await deployDiamond({ debug: true });
@@ -117,7 +118,7 @@ describe("ERC721Portal Facet", async () => {
             block.number,
             block.timestamp,
             0x0,
-            0x0
+            numberOfInputs
         );
 
         expect(

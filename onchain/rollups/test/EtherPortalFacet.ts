@@ -37,6 +37,7 @@ describe("EtherPortal Facet", async () => {
     let signer2: Signer;
     var portalFacet: EtherPortalFacet;
     var debugFacet: DebugFacet;
+    var numberOfInputs = 0x1; // the machine starts with one input
 
     beforeEach(async () => {
         const diamond = await deployDiamond({ debug: true });
@@ -119,7 +120,7 @@ describe("EtherPortal Facet", async () => {
             block.number,
             block.timestamp,
             0x0,
-            0x0
+            numberOfInputs
         );
 
         // check if input hashes are identical

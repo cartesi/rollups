@@ -44,6 +44,8 @@ describe("ERC20Portal Facet", async () => {
     var debugFacet: DebugFacet;
     let mockERC20: MockContract; //mock erc20
 
+    var numberOfInputs = 0x1; // the machine starts with one input
+
     beforeEach(async () => {
         const diamond = await deployDiamond({ debug: true });
         [signer, signer2] = await ethers.getSigners();
@@ -106,7 +108,7 @@ describe("ERC20Portal Facet", async () => {
             block.number,
             block.timestamp,
             0x0,
-            0x0
+            numberOfInputs
         );
 
         expect(

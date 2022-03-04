@@ -26,7 +26,7 @@ import {
     MockContract,
 } from "@ethereum-waffle/mock-contract";
 import { solidity } from "ethereum-waffle";
-import { Signer } from "ethers";
+import { BytesLike, ContractTransaction, Signer } from "ethers";
 import { InputFacet } from "../src/types/InputFacet";
 import { InputFacet__factory } from "../src/types/factories/InputFacet__factory";
 import { DebugFacet } from "../src/types/DebugFacet";
@@ -42,6 +42,9 @@ describe("Input Facet", () => {
     let inputFacet: InputFacet;
     let debugFacet: DebugFacet;
 
+    const NUM_OF_INITIAL_INPUTS = 1; // machine starts with one input
+    var numberOfInputs: number;
+
     ///let enum starts from 0
     enum Phase {
         InputAccumulation = 0,
@@ -49,7 +52,14 @@ describe("Input Facet", () => {
         AwaitingDispute = 2,
     }
 
+    async function addInputAndIncreaseCounter(input: BytesLike) {
+        await inputFacet.addInput(input);
+        numberOfInputs++;
+    }
+
     beforeEach(async () => {
+        numberOfInputs = NUM_OF_INITIAL_INPUTS;
+
         const diamond = await deployDiamond({ debug: true });
         [signer] = await ethers.getSigners();
 
@@ -57,11 +67,8 @@ describe("Input Facet", () => {
         inputFacet = InputFacet__factory.connect(diamond.address, signer);
     });
 
-    it("addInput should revert if input length == 0", async () => {
-        await expect(
-            inputFacet.addInput([]),
-            "empty input should revert"
-        ).to.be.revertedWith("input len: (0,driveSize]");
+    it("addInput should not revert if input length == 0", async () => {
+        await addInputAndIncreaseCounter([]);
 
         // test delegate
         if (enableDelegate) {
@@ -75,7 +82,7 @@ describe("Input Facet", () => {
             expect(
                 state.inputs.length,
                 "shouldn't have any inputs when adding empty inputs"
-            ).to.equal(0);
+            ).to.equal(numberOfInputs);
         }
     });
 
@@ -87,13 +94,13 @@ describe("Input Facet", () => {
         await expect(
             inputFacet.addInput(input_300_bytes),
             "input cant be bigger than drive"
-        ).to.be.revertedWith("input len: (0,driveSize]");
+        ).to.be.revertedWith("input len: [0,driveSize]");
 
         // input shouldnt fit because of one extra byte
         await expect(
             inputFacet.addInput(input_257_bytes),
             "input should still revert because metadata doesnt fit"
-        ).to.be.revertedWith("input len: (0,driveSize]");
+        ).to.be.revertedWith("input len: [0,driveSize]");
 
         // test delegate
         if (enableDelegate) {
@@ -106,17 +113,18 @@ describe("Input Facet", () => {
 
             expect(
                 state.inputs.length,
-                "shouldn't have any inputs when adding inputs larger than the drive"
-            ).to.equal(0);
+                "should not increase the number of inputs when adding inputs larger than the drive"
+            ).to.equal(numberOfInputs);
         }
     });
 
     it("addInput should add input to inbox", async () => {
         var input = Buffer.from("a".repeat(64), "utf-8");
+        var numOfInputsToAdd = 3;
 
-        await inputFacet.addInput(input);
-        await inputFacet.addInput(input);
-        await inputFacet.addInput(input);
+        for (var i = 0; i < numOfInputsToAdd; i++) {
+            await addInputAndIncreaseCounter(input);
+        }
 
         expect(
             await inputFacet.getNumberOfInputs(),
@@ -126,12 +134,12 @@ describe("Input Facet", () => {
         // Enough time has passed...
         await debugFacet._passInputAccumulationPeriod();
 
-        await inputFacet.addInput(input);
+        await addInputAndIncreaseCounter(input);
 
         expect(
             await inputFacet.getNumberOfInputs(),
-            "Number of inputs should be 3, because last addition changes the inbox"
-        ).to.equal(3);
+            "Number of inputs doesnt match the last additions to the inbox"
+        ).to.equal(numOfInputsToAdd + NUM_OF_INITIAL_INPUTS);
 
         // test delegate
         if (enableDelegate) {
@@ -158,7 +166,7 @@ describe("Input Facet", () => {
         var input = Buffer.from("a".repeat(64), "utf-8");
 
         await expect(
-            inputFacet.addInput(input),
+            await inputFacet.addInput(input),
             "should emit event InputAdded"
         ).to.emit(inputFacet, "InputAdded");
         //            .withArgs(
@@ -177,7 +185,9 @@ describe("Input Facet", () => {
 
             let state = JSON.parse(await getState(initialState));
 
-            expect(state.inputs.length, "only one input").to.equal(1);
+            expect(state.inputs.length, "initial input + new input").to.equal(
+                numberOfInputs
+            );
         }
     });
 
@@ -191,7 +201,7 @@ describe("Input Facet", () => {
             block.number,
             block.timestamp,
             0x0,
-            0x0
+            numberOfInputs
         );
 
         expect(
@@ -230,8 +240,7 @@ describe("Input Facet", () => {
 
     it("test getInput()", async () => {
         var input = Buffer.from("a".repeat(64), "utf-8");
-
-        await inputFacet.addInput(input);
+        await addInputAndIncreaseCounter(input);
 
         // test for input box 0
         // calculate input hash again
@@ -243,24 +252,27 @@ describe("Input Facet", () => {
             block.number,
             block.timestamp,
             0x0,
-            0x0
+            NUM_OF_INITIAL_INPUTS
         );
 
         // Enough time has passed...
         await debugFacet._passInputAccumulationPeriod();
 
         // switch input boxes before testing getInput()
-        await inputFacet.addInput(input);
+        await addInputAndIncreaseCounter(input);
         let block_epoch1 = await ethers.provider.getBlock("latest");
 
         expect(
-            await inputFacet.getInput(0),
-            "get the first value in input box 0"
+            await inputFacet.getInput(NUM_OF_INITIAL_INPUTS),
+            "get first added input in inbox 0"
         ).to.equal(inputHash);
 
         // test for input box 1
         // calculate input hash
         block = await ethers.provider.getBlock("latest");
+
+        // input box 1 is empty
+        numberOfInputs = 0;
 
         inputHash = getInputHash(
             input,
@@ -268,19 +280,19 @@ describe("Input Facet", () => {
             block.number,
             block.timestamp,
             0x1,
-            0x0
+            numberOfInputs
         );
 
         // We're accumulating inputs and enough time has passed...
         await debugFacet._setCurrentPhase(0);
         await debugFacet._passInputAccumulationPeriod();
 
-        // switch input boxes before testing getInput()
+        // add input just to switch input boxes before testing getInput()
         await inputFacet.addInput(input);
 
         expect(
-            await inputFacet.getInput(0),
-            "get the first value in input box 1"
+            await inputFacet.getInput(numberOfInputs),
+            "get the first input in input box 1"
         ).to.equal(inputHash);
 
         // test delegate for epoch 1
