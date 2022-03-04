@@ -57,9 +57,9 @@ contract DebugFacet {
     }
 
     function _getValidators() public view returns (address payable[] memory) {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.validators;
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.validators;
     }
 
     function _onClaim(address payable _sender, bytes32 _claim)
@@ -70,9 +70,9 @@ contract DebugFacet {
             address payable[2] memory
         )
     {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.onClaim(_sender, _claim);
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.onClaim(_sender, _claim);
     }
 
     /// @notice called when a dispute ends in rollups
@@ -92,17 +92,17 @@ contract DebugFacet {
             address payable[2] memory
         )
     {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.onDisputeEnd(_winner, _loser, _winningClaim);
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.onDisputeEnd(_winner, _loser, _winningClaim);
     }
 
     /// @notice called when a new epoch starts
     /// @return current claim
     function _onNewEpochVM() public returns (bytes32) {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.onNewEpoch();
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.onNewEpoch();
     }
 
     function _getInputDriveSize() public view returns (uint256) {
@@ -126,9 +126,9 @@ contract DebugFacet {
     }
 
     function _setSERC20Address(address _erc20Contract) public {
-        LibSERC20Portal.DiamondStorage storage serc20DS = LibSERC20Portal
+        LibSERC20Portal.DiamondStorage storage sERC20PortalDS = LibSERC20Portal
             .diamondStorage();
-        serc20DS.erc20Contract = _erc20Contract;
+        sERC20PortalDS.erc20Contract = _erc20Contract;
     }
 
     function _serc20Withdrawal(bytes calldata _data) public returns (bool) {
@@ -148,9 +148,11 @@ contract DebugFacet {
     }
 
     function _setNumClaims(uint256 _validatorIndex, uint256 _value) public {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        vmDS.claimsMask = vmDS.claimsMask.setNumClaims(_validatorIndex, _value);
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        validatorManagerDS.claimsMask = validatorManagerDS
+            .claimsMask
+            .setNumClaims(_validatorIndex, _value);
     }
 
     /// @notice emitted on Claim received

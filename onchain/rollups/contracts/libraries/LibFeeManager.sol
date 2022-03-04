@@ -41,11 +41,11 @@ library LibFeeManager {
     function diamondStorage()
         internal
         pure
-        returns (DiamondStorage storage feeManagerDS)
+        returns (DiamondStorage storage ds)
     {
         bytes32 position = DIAMOND_STORAGE_POSITION;
         assembly {
-            feeManagerDS.slot := position
+            ds.slot := position
         }
     }
 
@@ -54,95 +54,88 @@ library LibFeeManager {
     }
 
     /// @notice this function can be called to check the number of claims that's redeemable for the validator
-    /// @param  feeManagerDS pointer to FeeManager's diamond storage
+    /// @param  ds pointer to FeeManager's diamond storage
     /// @param  _validator address of the validator
-    function numClaimsRedeemable(
-        DiamondStorage storage feeManagerDS,
-        address _validator
-    ) internal view returns (uint256) {
+    function numClaimsRedeemable(DiamondStorage storage ds, address _validator)
+        internal
+        view
+        returns (uint256)
+    {
         require(_validator != address(0), "address should not be 0");
 
         LibValidatorManager.DiamondStorage
-            storage ValidatorManagerDS = LibValidatorManager.diamondStorage();
-        uint256 valIndex = ValidatorManagerDS.getValidatorIndex(_validator); // will revert if not found
-        uint256 totalClaims = ValidatorManagerDS.claimsMask.getNumClaims(
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        uint256 valIndex = validatorManagerDS.getValidatorIndex(_validator); // will revert if not found
+        uint256 totalClaims = validatorManagerDS.claimsMask.getNumClaims(
             valIndex
         );
-        uint256 redeemedClaims = feeManagerDS.numClaimsRedeemed.getNumClaims(
-            valIndex
-        );
+        uint256 redeemedClaims = ds.numClaimsRedeemed.getNumClaims(valIndex);
 
         return totalClaims - redeemedClaims; // underflow checked by default with sol0.8
     }
 
     /// @notice this function can be called to check the number of claims that has been redeemed for the validator
-    /// @param  feeManagerDS pointer to FeeManager's diamond storage
+    /// @param  ds pointer to FeeManager's diamond storage
     /// @param  _validator address of the validator
-    function getNumClaimsRedeemed(
-        DiamondStorage storage feeManagerDS,
-        address _validator
-    ) internal view returns (uint256) {
+    function getNumClaimsRedeemed(DiamondStorage storage ds, address _validator)
+        internal
+        view
+        returns (uint256)
+    {
         require(_validator != address(0), "address should not be 0");
 
         LibValidatorManager.DiamondStorage
-            storage ValidatorManagerDS = LibValidatorManager.diamondStorage();
-        uint256 valIndex = ValidatorManagerDS.getValidatorIndex(_validator); // will revert if not found
-        uint256 redeemedClaims = feeManagerDS.numClaimsRedeemed.getNumClaims(
-            valIndex
-        );
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        uint256 valIndex = validatorManagerDS.getValidatorIndex(_validator); // will revert if not found
+        uint256 redeemedClaims = ds.numClaimsRedeemed.getNumClaims(valIndex);
 
         return redeemedClaims;
     }
 
     /// @notice contract owner can reset the value of fee per claim
-    /// @param  feeManagerDS pointer to FeeManager's diamond storage
+    /// @param  ds pointer to FeeManager's diamond storage
     /// @param  _value the new value of fee per claim
-    function resetFeePerClaim(
-        DiamondStorage storage feeManagerDS,
-        uint256 _value
-    ) internal {
+    function resetFeePerClaim(DiamondStorage storage ds, uint256 _value)
+        internal
+    {
         // before resetting the feePerClaim, pay fees for all validators as per current rates
         LibValidatorManager.DiamondStorage
-            storage ValidatorManagerDS = LibValidatorManager.diamondStorage();
-        for (uint256 i; i < ValidatorManagerDS.maxNumValidators; i++) {
-            address validator = ValidatorManagerDS.validators[i];
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        for (uint256 i; i < validatorManagerDS.maxNumValidators; i++) {
+            address validator = validatorManagerDS.validators[i];
             if (
-                validator != address(0) &&
-                feeManagerDS.numClaimsRedeemable(validator) > 0
+                validator != address(0) && ds.numClaimsRedeemable(validator) > 0
             ) {
-                feeManagerDS.redeemFee(validator);
+                ds.redeemFee(validator);
             }
         }
-        feeManagerDS.feePerClaim = _value;
+        ds.feePerClaim = _value;
         emit FeePerClaimReset(_value);
     }
 
     /// @notice this function can be called to redeem fees for validators
-    /// @param  feeManagerDS pointer to FeeManager's diamond storage
+    /// @param  ds pointer to FeeManager's diamond storage
     /// @param  _validator address of the validator that is redeeming
-    function redeemFee(DiamondStorage storage feeManagerDS, address _validator)
-        internal
-    {
+    function redeemFee(DiamondStorage storage ds, address _validator) internal {
         // follow the Checks-Effects-Interactions pattern for security
 
         // ** checks **
-        uint256 nowRedeemingClaims = feeManagerDS.numClaimsRedeemable(
-            _validator
-        );
+        uint256 nowRedeemingClaims = ds.numClaimsRedeemable(_validator);
         require(nowRedeemingClaims > 0, "nothing to redeem yet");
 
         // ** effects **
         LibValidatorManager.DiamondStorage
-            storage ValidatorManagerDS = LibValidatorManager.diamondStorage();
-        uint256 valIndex = ValidatorManagerDS.getValidatorIndex(_validator); // will revert if not found
-        feeManagerDS.numClaimsRedeemed = feeManagerDS
-            .numClaimsRedeemed
-            .increaseNumClaims(valIndex, nowRedeemingClaims);
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        uint256 valIndex = validatorManagerDS.getValidatorIndex(_validator); // will revert if not found
+        ds.numClaimsRedeemed = ds.numClaimsRedeemed.increaseNumClaims(
+            valIndex,
+            nowRedeemingClaims
+        );
 
         // ** interactions **
-        uint256 feesToSend = nowRedeemingClaims * feeManagerDS.feePerClaim; // number of erc20 tokens to send
+        uint256 feesToSend = nowRedeemingClaims * ds.feePerClaim; // number of erc20 tokens to send
         require(
-            feeManagerDS.token.transfer(_validator, feesToSend),
+            ds.token.transfer(_validator, feesToSend),
             "Failed to redeem fees"
         );
         emit FeeRedeemed(_validator, feesToSend);

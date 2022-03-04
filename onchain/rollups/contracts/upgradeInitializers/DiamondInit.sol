@@ -59,19 +59,22 @@ contract DiamondInit {
         // specific ERC-20 portal init variables
         address _erc20ForPortal
     ) external {
-        // adding ERC165 data
-        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        ds.supportedInterfaces[type(IERC165).interfaceId] = true;
-        ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
-        ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
-        ds.supportedInterfaces[type(IERC173).interfaceId] = true;
-
         // initializing facets
+        initERC165();
         initInput(_inputLog2Size);
         initValidatorManager(_validators);
         initRollups(_inputDuration, _challengePeriod);
         initSERC20Portal(_erc20ForPortal);
         initFeeManager(_feePerClaim, _erc20ForFee, _feeManagerOwner);
+    }
+
+    /// @notice initialize ERC165 data
+    function initERC165() private {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        ds.supportedInterfaces[type(IERC165).interfaceId] = true;
+        ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
+        ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC173).interfaceId] = true;
     }
 
     /// @notice initalize the Input facet
@@ -92,21 +95,20 @@ contract DiamondInit {
     function initValidatorManager(address payable[] memory _validators)
         private
     {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
 
         uint256 maxNumValidators = _validators.length;
 
         require(maxNumValidators <= 8, "up to 8 validators");
 
-        vmDS.validators = _validators;
-        vmDS.maxNumValidators = maxNumValidators;
+        validatorManagerDS.validators = _validators;
+        validatorManagerDS.maxNumValidators = maxNumValidators;
 
         // create a new ClaimsMask, with only the consensus goal set,
         //      according to the number of validators
-        vmDS.claimsMask = LibClaimsMask.newClaimsMaskWithConsensusGoalSet(
-            maxNumValidators
-        );
+        validatorManagerDS.claimsMask = LibClaimsMask
+            .newClaimsMaskWithConsensusGoalSet(maxNumValidators);
     }
 
     /// @notice rollups contract initialized
@@ -134,10 +136,10 @@ contract DiamondInit {
     /// @notice initialize the specific ERC-20 portal
     /// @param _erc20ForPortal ERC-20 contract address used by the portal
     function initSERC20Portal(address _erc20ForPortal) private {
-        LibSERC20Portal.DiamondStorage storage serc20DS = LibSERC20Portal
+        LibSERC20Portal.DiamondStorage storage sERC20PortalDS = LibSERC20Portal
             .diamondStorage();
 
-        serc20DS.erc20Contract = _erc20ForPortal;
+        sERC20PortalDS.erc20Contract = _erc20ForPortal;
     }
 
     /// @notice FeeManagerImpl contract initialized

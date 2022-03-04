@@ -57,8 +57,8 @@ contract RollupsFacet is IRollups {
             .diamondStorage();
         LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
         LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
 
         Result result;
         bytes32[2] memory claims;
@@ -86,7 +86,7 @@ contract RollupsFacet is IRollups {
             currentPhase == Phase.AwaitingConsensus,
             "Phase != AwaitingConsensus"
         );
-        (result, claims, claimers) = vmDS.onClaim(
+        (result, claims, claimers) = validatorManagerDS.onClaim(
             payable(msg.sender),
             _epochHash
         );
@@ -108,8 +108,8 @@ contract RollupsFacet is IRollups {
     function finalizeEpoch() public override {
         LibRollups.DiamondStorage storage rollupsDS = LibRollups
             .diamondStorage();
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
 
         Phase currentPhase = Phase(rollupsDS.currentPhase_int);
         require(
@@ -124,7 +124,10 @@ contract RollupsFacet is IRollups {
             "Challenge period not over"
         );
 
-        require(vmDS.currentClaim != bytes32(0), "No Claim to be finalized");
+        require(
+            validatorManagerDS.currentClaim != bytes32(0),
+            "No Claim to be finalized"
+        );
 
         rollupsDS.startNewEpoch();
     }

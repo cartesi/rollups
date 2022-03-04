@@ -26,25 +26,25 @@ contract ValidatorManagerFacet is IValidatorManager {
     /// @notice get agreement mask
     /// @return current state of agreement mask
     function getAgreementMask() public view returns (uint256) {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.claimsMask.getAgreementMask();
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.claimsMask.getAgreementMask();
     }
 
     /// @notice get consensus goal mask
     /// @return current consensus goal mask
     function getConsensusGoalMask() public view returns (uint256) {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.claimsMask.getConsensusGoalMask();
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.claimsMask.getConsensusGoalMask();
     }
 
     /// @notice get current claim
     /// @return current claim
     function getCurrentClaim() public view override returns (bytes32) {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.currentClaim;
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.currentClaim;
     }
 
     /// @notice get number of claims the sender has made
@@ -55,18 +55,18 @@ contract ValidatorManagerFacet is IValidatorManager {
         view
         returns (uint256)
     {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.getNumberOfClaimsByAddress(_sender);
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.getNumberOfClaimsByAddress(_sender);
     }
 
     /// @notice find the validator and return the index or revert
     /// @param _sender validator address
     /// @return validator index or revert
     function getValidatorIndex(address _sender) public view returns (uint256) {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.getValidatorIndex(_sender);
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.getValidatorIndex(_sender);
     }
 
     /// @notice get number of claims by the index in the validator set
@@ -77,16 +77,16 @@ contract ValidatorManagerFacet is IValidatorManager {
         view
         returns (uint256)
     {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.getNumberOfClaimsByIndex(_index);
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.getNumberOfClaimsByIndex(_index);
     }
 
     /// @notice get the maximum number of validators defined in validator manager
     /// @return the maximum number of validators
     function getMaxNumValidators() public view returns (uint256) {
-        LibValidatorManager.DiamondStorage storage vmDS = LibValidatorManager
-            .diamondStorage();
-        return vmDS.getMaxNumValidators();
+        LibValidatorManager.DiamondStorage
+            storage validatorManagerDS = LibValidatorManager.diamondStorage();
+        return validatorManagerDS.getMaxNumValidators();
     }
 }
