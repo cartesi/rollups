@@ -16,6 +16,8 @@ import { connected } from "./connect";
 import { AddInputArgs } from "./args";
 import { addInputParams, rollupsParams } from "./params";
 import { TASK_ADD_INPUT, taskDefs } from "./constants";
+import { ethers } from "ethers";
+import { BytesLike } from "ethers";
 
 rollupsParams(
     addInputParams(
@@ -23,8 +25,13 @@ rollupsParams(
             TASK_ADD_INPUT,
             taskDefs[TASK_ADD_INPUT].description,
             connected(async (args, { inputContract }) => {
+                let inputBytes: BytesLike = args.input;
+                if (!args.input.startsWith("0x")) {
+                    // if input is a regular string (not a hex string), converts it to bytes assuming UTF-8
+                    inputBytes = ethers.utils.toUtf8Bytes(args.input);
+                }
                 const signer = await inputContract.signer.getAddress();
-                const tx = await inputContract.addInput(args.input);
+                const tx = await inputContract.addInput(inputBytes);
                 const events = (await tx.wait()).events ?? [];
                 const inputAddedEvent = getEvent(
                     "InputAdded",
