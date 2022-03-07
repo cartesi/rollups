@@ -86,7 +86,6 @@ export interface DiamondOptions {
     erc20ForFee?: string; // defaults to a SimpleToken
     feeManagerOwner?: string; // defaults to the first signer
     validators?: string[]; // defaults to the 8 first signers
-    erc20ForPortal?: string; // defaults to the CTSI token
     debug?: boolean; // defaults to false
 }
 
@@ -164,7 +163,6 @@ export const deployDiamond = deployments.createFixture(
             "InputFacet",
             "OutputFacet",
             "RollupsFacet",
-            "SERC20PortalFacet",
             "ValidatorManagerFacet",
         ];
 
@@ -216,9 +214,6 @@ export const deployDiamond = deployments.createFixture(
         let feeManagerOwner = options.feeManagerOwner
             ? options.feeManagerOwner
             : deployer;
-        let erc20ForPortal = options.erc20ForPortal
-            ? options.erc20ForPortal
-            : "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
 
         let erc20ForFee;
         if (options.erc20ForFee) {
@@ -258,7 +253,6 @@ export const deployDiamond = deployments.createFixture(
             erc20ForFee,
             feeManagerOwner,
             validators,
-            erc20ForPortal,
         ]);
         const tx = await diamondCutFacet.diamondCut(
             facetCuts,

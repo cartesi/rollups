@@ -87,7 +87,6 @@ createParams(
                 "InputFacet",
                 "OutputFacet",
                 "RollupsFacet",
-                "SERC20PortalFacet",
                 "ValidatorManagerFacet",
             ];
 

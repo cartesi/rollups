@@ -34,7 +34,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
 
     await deployments.deploy("LibDisputeManager", opts);
-    await deployments.deploy("LibSERC20Portal", opts);
     await deployments.deploy("LibFeeManager", opts);
     await deployments.deploy("LibRollups", opts);
 };

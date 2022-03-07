@@ -18,7 +18,6 @@ import {Phase} from "../interfaces/IRollups.sol";
 import {LibRollups} from "../libraries/LibRollups.sol";
 import {LibInput} from "../libraries/LibInput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
-import {LibSERC20Portal} from "../libraries/LibSERC20Portal.sol";
 import {LibClaimsMask} from "../libraries/LibClaimsMask.sol";
 import {LibFeeManager} from "../libraries/LibFeeManager.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -41,7 +40,6 @@ contract DiamondInit {
     /// @param _erc20ForFee the ERC-20 used as rewards for validators
     /// @param _feeManagerOwner fee manager owner address
     /// @param _validators initial validator set
-    /// @param _erc20ForPortal ERC-20 contract address used by the portal
     /// @dev validators have to be unique, if the same validator is added twice
     ///      consensus will never be reached
     function init(
@@ -55,16 +53,13 @@ contract DiamondInit {
         address _erc20ForFee,
         address _feeManagerOwner,
         // validator manager init variables
-        address payable[] memory _validators,
-        // specific ERC-20 portal init variables
-        address _erc20ForPortal
+        address payable[] memory _validators
     ) external {
         // initializing facets
         initERC165();
         initInput(_inputLog2Size);
         initValidatorManager(_validators);
         initRollups(_inputDuration, _challengePeriod);
-        initSERC20Portal(_erc20ForPortal);
         initFeeManager(_feePerClaim, _erc20ForFee, _feeManagerOwner);
     }
 
@@ -131,15 +126,6 @@ contract DiamondInit {
         rollupsDS.currentPhase_int = uint32(Phase.InputAccumulation);
 
         emit RollupsInitialized(_inputDuration, _challengePeriod);
-    }
-
-    /// @notice initialize the specific ERC-20 portal
-    /// @param _erc20ForPortal ERC-20 contract address used by the portal
-    function initSERC20Portal(address _erc20ForPortal) private {
-        LibSERC20Portal.DiamondStorage storage sERC20PortalDS = LibSERC20Portal
-            .diamondStorage();
-
-        sERC20PortalDS.erc20Contract = _erc20ForPortal;
     }
 
     /// @notice FeeManagerImpl contract initialized

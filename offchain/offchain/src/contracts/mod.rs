@@ -32,7 +32,4 @@ pub mod output_facet;
 pub mod rollups_facet;
 
 #[rustfmt::skip]
-pub mod serc20_portal_facet;
-
-#[rustfmt::skip]
 pub mod validator_manager_facet;

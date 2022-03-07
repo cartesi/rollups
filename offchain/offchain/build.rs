@@ -58,11 +58,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("OutputFacet", "facets/OutputFacet", "output_facet.rs"),
         ("RollupsFacet", "facets/RollupsFacet", "rollups_facet.rs"),
         (
-            "SERC20PortalFacet",
-            "facets/SERC20PortalFacet",
-            "serc20_portal_facet.rs",
-        ),
-        (
             "ValidatorManagerFacet",
             "facets/ValidatorManagerFacet",
             "validator_manager_facet.rs",

@@ -50,7 +50,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             LibClaimsMask: LibClaimsMask.address,
         },
     });
-    await deployments.deploy("SERC20PortalFacet", opts);
     await deployments.deploy("ValidatorManagerFacet", {
         ...opts,
         libraries: {

@@ -79,11 +79,6 @@
         "internalType": "address payable[]",
         "name": "_validators",
         "type": "address[]"
-      },
-      {
-        "internalType": "address",
-        "name": "_erc20ForPortal",
-        "type": "address"
       }
     ],
     "name": "init",
