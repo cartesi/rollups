@@ -39,6 +39,10 @@ The on-chain contracts often have two concurrent epochs: a sealed but unfinalize
 
 Portal, as the name suggests, is used to teleport assets from the Ethereum blockchain to DApps running on Cartesi Rollups. Once deposited, those Layer-1 assets gain a representation in Layer-2 and are owned, there, by whomever the depositor assigned them to. After being teleported, Layer-2 assets can be moved around in a significantly cheaper way, using simple inputs that are understood by the Linux logic. When an asset is deposited, the Portal contract sends an input to the DApp’s inbox, describing the type of asset, amount, receivers, and some data the depositor might want the DApp to read. This allows deposits and instructions to be sent as a single Layer-1 interaction.
 One could think of the Portal as a bank account, owned by the off-chain machine. Anyone can deposit assets there but only the DApp — through its Output contract — can decide on withdrawals. The withdrawal process is quite simple from a user perspective. They send an input requesting a withdrawal, which gets processed and interpreted off-chain. If everything is correct, the machine creates a voucher destined to the Portal contract, ordering and finalizing that withdrawal request.
+Currently, we support the following types of assets:
+- [Ether](https://ethereum.org/en/eth/) (ETH)
+- [ERC-20](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/)
+- [ERC-721](https://ethereum.org/en/developers/docs/standards/tokens/erc-721/) (NFTs)
 
 ## Voucher
 
