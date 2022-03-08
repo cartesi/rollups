@@ -17,8 +17,7 @@ use ethers::utils::keccak256;
 use tonic::transport::Channel;
 
 use cartesi_machine::{
-    machine_request::MachineOneof, ConcurrencyConfig, DhdRuntimeConfig,
-    MachineRequest, MachineRuntimeConfig, Void,
+    ConcurrencyConfig, DhdRuntimeConfig, MachineRuntimeConfig, Void,
 };
 use cartesi_server_manager::server_manager_client::ServerManagerClient;
 use cartesi_server_manager::{
@@ -55,7 +54,8 @@ pub struct Config {
     session_id: String,
 
     storage_directory_prefix: String,
-    machine: MachineRequest,
+    machine_directory: String,
+    machine_runtime: MachineRuntimeConfig,
     active_epoch_index: u64,
     server_deadline: DeadlineConfig,
     server_cycles: CyclesConfig,
@@ -64,19 +64,16 @@ pub struct Config {
 impl Config {
     // TODO
     pub fn new_with_default(endpoint: String, session_id: String) -> Self {
-        let machine = MachineRequest {
-            runtime: Some(MachineRuntimeConfig {
-                dhd: Some(DhdRuntimeConfig {
-                    source_address: "".to_owned(),
-                }),
-                concurrency: Some(ConcurrencyConfig {
-                    update_merkle_tree: 1000 * 60 * 2,
-                }),
+        let machine_directory = "/opt/cartesi/share/dapp-bin".to_owned();
+
+        let machine_runtime = MachineRuntimeConfig {
+            dhd: Some(DhdRuntimeConfig {
+                source_address: "".to_owned(),
             }),
 
-            machine_oneof: Some(MachineOneof::Directory(
-                "/opt/cartesi/share/dapp-bin".to_owned(),
-            )),
+            concurrency: Some(ConcurrencyConfig {
+                update_merkle_tree: 1000 * 60 * 2,
+            }),
         };
 
         let server_deadline = DeadlineConfig {
@@ -103,7 +100,8 @@ impl Config {
             session_id,
             storage_directory_prefix: "default_storage_directory".to_owned(), // TODO
             active_epoch_index: 0,
-            machine,
+            machine_directory,
+            machine_runtime,
             server_cycles,
             server_deadline,
         }
@@ -138,7 +136,8 @@ impl MachineManager {
             let new_session_request =
                 tonic::Request::new(StartSessionRequest {
                     session_id: config.session_id.clone(),
-                    machine: Some(config.machine),
+                    machine_directory: config.machine_directory.clone(),
+                    runtime: Some(config.machine_runtime.clone()),
                     active_epoch_index: config.active_epoch_index,
                     server_cycles: Some(config.server_cycles),
                     server_deadline: Some(config.server_deadline),
@@ -205,7 +204,7 @@ impl MachineInterface for MachineManager {
                     data: input.sender.as_bytes().to_vec(),
                 }),
                 block_number: input.block_number.as_u64(),
-                time_stamp: input.timestamp.as_u64(),
+                timestamp: input.timestamp.as_u64(),
                 epoch_index: epoch_index,
                 input_index: input_index,
             };
