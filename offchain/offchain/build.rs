@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contracts = vec![
         (
             "DiamondInit",
-            "upgradeInitializers/DiamondInit",
+            "upgrade_initializers/DiamondInit",
             "diamond_init.rs",
         ),
         (
