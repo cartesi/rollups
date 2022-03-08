@@ -29,9 +29,15 @@ import { solidity } from "ethereum-waffle";
 import { BytesLike, Signer } from "ethers";
 import { InputFacet } from "../src/types/InputFacet";
 import { InputFacet__factory } from "../src/types/factories/InputFacet__factory";
+import { RollupsFacet__factory } from "../src/types/factories/RollupsFacet__factory";
 import { DebugFacet } from "../src/types/DebugFacet";
 import { DebugFacet__factory } from "../src/types/factories/DebugFacet__factory";
-import { deployDiamond, getState, getInputHash } from "./utils";
+import {
+    deployDiamond,
+    getState,
+    getInputHash,
+    increaseTimeAndMine,
+} from "./utils";
 
 use(solidity);
 
@@ -41,6 +47,7 @@ describe("Input Facet", () => {
     let signer: Signer;
     let inputFacet: InputFacet;
     let debugFacet: DebugFacet;
+    let inputDuration: number;
 
     const NUM_OF_INITIAL_INPUTS = 1; // machine starts with one input
     var numberOfInputs: number;
@@ -57,6 +64,12 @@ describe("Input Facet", () => {
         numberOfInputs++;
     }
 
+    // Increase the current time in the network by just above
+    // the input duration and force a block to be mined
+    async function passInputAccumulationPeriod() {
+        await increaseTimeAndMine(inputDuration + 1);
+    }
+
     beforeEach(async () => {
         numberOfInputs = NUM_OF_INITIAL_INPUTS;
 
@@ -65,6 +78,12 @@ describe("Input Facet", () => {
 
         debugFacet = DebugFacet__factory.connect(diamond.address, signer);
         inputFacet = InputFacet__factory.connect(diamond.address, signer);
+
+        const rollupsFacet = RollupsFacet__factory.connect(
+            diamond.address,
+            signer
+        );
+        inputDuration = (await rollupsFacet.getInputDuration()).toNumber();
     });
 
     it("addInput should not revert if input length == 0", async () => {
@@ -132,7 +151,7 @@ describe("Input Facet", () => {
         ).to.equal(0);
 
         // Enough time has passed...
-        await debugFacet._passInputAccumulationPeriod();
+        await passInputAccumulationPeriod();
 
         await addInputAndIncreaseCounter(input);
 
@@ -264,7 +283,7 @@ describe("Input Facet", () => {
         );
 
         // Enough time has passed...
-        await debugFacet._passInputAccumulationPeriod();
+        await passInputAccumulationPeriod();
 
         // switch input boxes before testing getInput()
         await addInputAndIncreaseCounter(input);
@@ -291,7 +310,7 @@ describe("Input Facet", () => {
 
         // We're accumulating inputs and enough time has passed...
         await debugFacet._setCurrentPhase(0);
-        await debugFacet._passInputAccumulationPeriod();
+        await passInputAccumulationPeriod();
 
         // add input just to switch input boxes before testing getInput()
         await inputFacet.addInput(input);
@@ -343,7 +362,7 @@ describe("Input Facet", () => {
         ).to.equal(0);
 
         // Enough time has passed...
-        await debugFacet._passInputAccumulationPeriod();
+        await passInputAccumulationPeriod();
 
         await inputFacet.addInput(input);
 

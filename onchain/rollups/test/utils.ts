@@ -22,7 +22,7 @@
 import client from "./client";
 import { GetStateRequest } from "../generated-src/proto/stateserver_pb";
 import { keccak256, defaultAbiCoder } from "ethers/lib/utils";
-import { deployments } from "hardhat";
+import { deployments, network } from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { BigNumber } from "ethers";
 import { DeployOptions } from "hardhat-deploy/types";
@@ -269,3 +269,8 @@ export const deployDiamond = deployments.createFixture(
         return diamond;
     }
 );
+
+export const increaseTimeAndMine = async (duration: number) => {
+    await network.provider.send("evm_increaseTime", [duration]);
+    await network.provider.send("evm_mine");
+};

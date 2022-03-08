@@ -6,7 +6,7 @@ import { RollupsFacet } from "../src/types/RollupsFacet";
 import { RollupsFacet__factory } from "../src/types/factories/RollupsFacet__factory";
 import { DiamondInit } from "../src/types/DiamondInit";
 import { DiamondInit__factory } from "../src/types/factories/DiamondInit__factory";
-import { deployDiamond, getState } from "./utils";
+import { deployDiamond, getState, increaseTimeAndMine } from "./utils";
 
 use(solidity);
 
@@ -101,8 +101,7 @@ describe("Rollups Facet", () => {
             "phase incorrect because inputDuration not over"
         ).to.be.revertedWith("Phase != AwaitingConsensus");
 
-        await network.provider.send("evm_increaseTime", [inputDuration / 2]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration / 2);
 
         await expect(
             rollupsFacet.claim(ethers.utils.formatBytes32String("hello")),
@@ -111,8 +110,7 @@ describe("Rollups Facet", () => {
     });
 
     it("should claim() and enter into AwaitingConsensus phase", async () => {
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
         expect(
@@ -122,8 +120,7 @@ describe("Rollups Facet", () => {
     });
 
     it("should claim() and enter into InputAccumulation phase", async () => {
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         // all validators agree with claim
         await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
@@ -142,8 +139,7 @@ describe("Rollups Facet", () => {
     });
 
     it("conflicting claims by validators should end in AwaitingConsensus phase if not all validators claimed", async () => {
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
         await rollupsFacet
@@ -160,8 +156,7 @@ describe("Rollups Facet", () => {
 
     it("conflicting claims by validators should end in InputAccumulation, if all other validators had claimed beforehand", async () => {
         ///make two different claims///
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
@@ -191,8 +186,7 @@ describe("Rollups Facet", () => {
     // The phase is never AwaitingDispute in the end of at transaction, in this version
     //it("finalizeEpoch(): should revert if currentPhase is AwaitingDispute", async () => {
     //    ///make two different claims///
-    //    await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-    //    await network.provider.send("evm_mine");
+    //    await increaseTimeAndMine(inputDuration + 1);
 
     //    await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
@@ -208,8 +202,7 @@ describe("Rollups Facet", () => {
     //});
 
     it("finalizeEpoch(): should revert if challengePeriod is not over", async () => {
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
@@ -221,8 +214,7 @@ describe("Rollups Facet", () => {
 
     it("claim(): should revert if the current claim is null", async () => {
         let currentClaim = ethers.utils.formatBytes32String("\0");
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         await expect(
             rollupsFacet.claim(currentClaim),
@@ -232,13 +224,11 @@ describe("Rollups Facet", () => {
 
     it("after finalizeEpoch(), current phase should be InputAccumulation", async () => {
         let currentClaim = ethers.utils.formatBytes32String("hello");
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         await rollupsFacet.claim(currentClaim);
 
-        await network.provider.send("evm_increaseTime", [challengePeriod + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(challengePeriod + 1);
 
         await rollupsFacet.finalizeEpoch();
 
@@ -266,8 +256,7 @@ describe("Rollups Facet", () => {
     });
 
     it("event Claim for NoConflict and Conflict", async () => {
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         await expect(
             rollupsFacet.claim(ethers.utils.formatBytes32String("hello"))
@@ -293,8 +282,7 @@ describe("Rollups Facet", () => {
     });
 
     it("event Claim for Consensus", async () => {
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
@@ -315,8 +303,7 @@ describe("Rollups Facet", () => {
             );
 
         // skip input duration
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         // claim epoch 1
         await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
@@ -340,12 +327,11 @@ describe("Rollups Facet", () => {
 
     it("event PhaseChange", async () => {
         //advance input duration from input accumulation start
-        await network.provider.send("evm_increaseTime", [
-            (await rollupsFacet.getInputAccumulationStart()).toNumber() +
-                inputDuration +
-                1,
-        ]);
-        await network.provider.send("evm_mine");
+        const inputAccumulationStart =
+            await rollupsFacet.getInputAccumulationStart();
+        await increaseTimeAndMine(
+            inputAccumulationStart.toNumber() + inputDuration + 1
+        );
 
         await expect(
             rollupsFacet.claim(ethers.utils.formatBytes32String("hello"))
@@ -378,8 +364,7 @@ describe("Rollups Facet", () => {
     });
 
     it("event FinalizeEpoch", async () => {
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
 
         await rollupsFacet
             .connect(signers[2])
@@ -411,10 +396,7 @@ describe("Rollups Facet", () => {
             // input accumulation over
             // ***epoch increases by 1***
             // but output.getNumberOfFinalizedEpochs() stays the same temporarily
-            await network.provider.send("evm_increaseTime", [
-                inputDuration + 1,
-            ]);
-            await network.provider.send("evm_mine");
+            await increaseTimeAndMine(inputDuration + 1);
             epochNum++;
 
             await expect(
@@ -463,8 +445,7 @@ describe("Rollups Facet", () => {
         // input accumulation over
         // ***epoch increases by 1***
         // but output.getNumberOfFinalizedEpochs() stays the same temporarily
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
         epochNum++;
 
         // first claim
@@ -510,8 +491,7 @@ describe("Rollups Facet", () => {
         expect(await rollupsFacet.getCurrentEpoch()).to.equal(epochNum);
 
         // in this epoch, signers[1] is already deleted
-        await network.provider.send("evm_increaseTime", [inputDuration + 1]);
-        await network.provider.send("evm_mine");
+        await increaseTimeAndMine(inputDuration + 1);
         epochNum++;
         // first claim
         await expect(
@@ -676,10 +656,7 @@ describe("Rollups Facet", () => {
                 rollupsFacet.claim(ethers.utils.formatBytes32String("hello")),
                 "phase incorrect because inputDuration not over"
             ).to.be.revertedWith("Phase != AwaitingConsensus");
-            await network.provider.send("evm_increaseTime", [
-                inputDuration / 2,
-            ]);
-            await network.provider.send("evm_mine");
+            await increaseTimeAndMine(inputDuration / 2);
             await expect(
                 rollupsFacet.claim(ethers.utils.formatBytes32String("hello")),
                 "phase incorrect because inputDuration not over"
@@ -689,10 +666,7 @@ describe("Rollups Facet", () => {
             checkCurrentPhase(state, "InputAccumulation");
 
             // *** EPOCH 0: input duration has past, now make a claim ***
-            await network.provider.send("evm_increaseTime", [
-                inputDuration / 2 + 1,
-            ]);
-            await network.provider.send("evm_mine");
+            await increaseTimeAndMine(inputDuration / 2 + 1);
             await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
             state = JSON.parse(await getState(initialState)).state; // update state
@@ -768,10 +742,7 @@ describe("Rollups Facet", () => {
             checkCurrentPhase(state, "InputAccumulation");
 
             // *** EPOCH 1: sealed epoch ***
-            await network.provider.send("evm_increaseTime", [
-                inputDuration + 1,
-            ]);
-            await network.provider.send("evm_mine");
+            await increaseTimeAndMine(inputDuration + 1);
 
             state = JSON.parse(await getState(initialState)).state; // update state
             checkCurrentEpochNum(state, "0x2");
@@ -831,10 +802,7 @@ describe("Rollups Facet", () => {
             ).to.equal((await ethers.provider.getBlock("latest")).timestamp);
 
             // *** EPOCH 1: consensus waiting period times out ***
-            await network.provider.send("evm_increaseTime", [
-                challengePeriod + 1,
-            ]);
-            await network.provider.send("evm_mine");
+            await increaseTimeAndMine(challengePeriod + 1);
 
             state = JSON.parse(await getState(initialState)).state; // update state
             checkCurrentPhase(state, "ConsensusTimeout");
@@ -857,10 +825,7 @@ describe("Rollups Facet", () => {
             checkCurrentPhase(state, "InputAccumulation");
 
             // *** EPOCH 2 -> 3: conflicting claims but reach consensus once conflict is resolved ***
-            await network.provider.send("evm_increaseTime", [
-                inputDuration + 1,
-            ]);
-            await network.provider.send("evm_mine");
+            await increaseTimeAndMine(inputDuration + 1);
 
             await rollupsFacet.claim(
                 ethers.utils.formatBytes32String("hello2")
