@@ -191,6 +191,7 @@ describe("Input Facet", () => {
         ).to.emit(inputFacet, "InputAdded");
         //            .withArgs(
         //                0,
+        //                0,
         //                await signer.getAddress(),
         //                (await ethers.provider.getBlock("latest")).timestamp + 1, // this is unstable
         //                "0x" + input.toString("hex")

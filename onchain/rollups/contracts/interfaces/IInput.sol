@@ -36,11 +36,13 @@ interface IInput {
 
     /// @notice input added
     /// @param epochNumber which epoch this input belongs to
+    /// @param inputIndex index of the input just added
     /// @param sender msg.sender
     /// @param timestamp block.timestamp
     /// @param input input data
     event InputAdded(
         uint256 indexed epochNumber,
+        uint256 indexed inputIndex,
         address sender,
         uint256 timestamp,
         bytes input
