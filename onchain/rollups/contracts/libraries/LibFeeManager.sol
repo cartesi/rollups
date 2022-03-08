@@ -149,5 +149,5 @@ library LibFeeManager {
     event FeePerClaimReset(uint256 value);
 
     /// @notice emitted on ERC20 funds redeemed by validator
-    event FeeRedeemed(address validator, uint256 amount);
+    event FeeRedeemed(address validator, uint256 claims);
 }

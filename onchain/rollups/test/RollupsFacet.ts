@@ -28,6 +28,7 @@ describe("Rollups Facet", () => {
     const challengePeriod = 7 * DAY;
     const INPUT_LOG2_SIZE = 25;
     const VOUCHER_METADATA_LOG2_SIZE = 21;
+    const NUM_OF_INITIAL_INPUTS = 1; // machine starts with one input
 
     let signers: Signer[];
 
@@ -655,8 +656,8 @@ describe("Rollups Facet", () => {
             ).to.equal(initialEpoch);
             expect(
                 state.current_epoch.inputs.inputs.length,
-                "initially there's no inputs"
-            ).to.equal(0);
+                "only initial inputs"
+            ).to.equal(NUM_OF_INITIAL_INPUTS);
             expect(
                 state.current_epoch.dapp_contract_address,
                 "current_epoch.dapp_contract_address does not match"

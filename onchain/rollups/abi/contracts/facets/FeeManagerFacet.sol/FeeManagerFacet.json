@@ -24,7 +24,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "amount",
+        "name": "claims",
         "type": "uint256"
       }
     ],
