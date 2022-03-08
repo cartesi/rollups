@@ -258,20 +258,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "_passChallangePeriod",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "_passInputAccumulationPeriod",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "enum Phase",
