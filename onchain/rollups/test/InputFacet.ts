@@ -26,7 +26,7 @@ import {
     MockContract,
 } from "@ethereum-waffle/mock-contract";
 import { solidity } from "ethereum-waffle";
-import { BytesLike, ContractTransaction, Signer } from "ethers";
+import { BytesLike, Signer } from "ethers";
 import { InputFacet } from "../src/types/InputFacet";
 import { InputFacet__factory } from "../src/types/factories/InputFacet__factory";
 import { DebugFacet } from "../src/types/DebugFacet";
