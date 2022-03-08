@@ -120,7 +120,7 @@ describe("Input Facet", () => {
 
     it("addInput should add input to inbox", async () => {
         var input = Buffer.from("a".repeat(64), "utf-8");
-        var numOfInputsToAdd = 3;
+        const numOfInputsToAdd = 3;
 
         for (var i = 0; i < numOfInputsToAdd; i++) {
             await addInputAndIncreaseCounter(input);
