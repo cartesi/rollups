@@ -81,7 +81,7 @@ describe("Input Facet", () => {
 
             expect(
                 state.inputs.length,
-                "shouldn't have any inputs when adding empty inputs"
+                "incorrect number of inputs after adding empty input"
             ).to.equal(numberOfInputs);
         }
     });
@@ -114,7 +114,7 @@ describe("Input Facet", () => {
             expect(
                 state.inputs.length,
                 "should not increase the number of inputs when adding inputs larger than the drive"
-            ).to.equal(numberOfInputs);
+            ).to.equal(NUM_OF_INITIAL_INPUTS);
         }
     });
 
@@ -138,7 +138,7 @@ describe("Input Facet", () => {
 
         expect(
             await inputFacet.getNumberOfInputs(),
-            "Number of inputs doesnt match the last additions to the inbox"
+            "Now it's epoch 1, getNumberOfInputs() returns the number of inputs from epoch 0"
         ).to.equal(numOfInputsToAdd + NUM_OF_INITIAL_INPUTS);
 
         // test delegate
@@ -150,8 +150,8 @@ describe("Input Facet", () => {
             let state = JSON.parse(await getState(initialState));
             expect(
                 state.inputs.length,
-                "now receiving inputs for epoch 1, getNumberOfInputs() reflects epoch 0"
-            ).to.equal(3);
+                "number of inputs doesn't match for epoch 0"
+            ).to.equal(numOfInputsToAdd + NUM_OF_INITIAL_INPUTS);
 
             initialState = JSON.stringify({
                 input_address: inputFacet.address,
@@ -164,6 +164,7 @@ describe("Input Facet", () => {
 
     it("emit event InputAdded", async () => {
         var input = Buffer.from("a".repeat(64), "utf-8");
+        const numOfInputsToAdd = 1;
 
         await expect(
             await inputFacet.addInput(input),
@@ -186,7 +187,7 @@ describe("Input Facet", () => {
             let state = JSON.parse(await getState(initialState));
 
             expect(state.inputs.length, "initial input + new input").to.equal(
-                numberOfInputs
+                numOfInputsToAdd + NUM_OF_INITIAL_INPUTS
             );
         }
     });
@@ -211,7 +212,7 @@ describe("Input Facet", () => {
 
         // test delegate
         if (enableDelegate) {
-            await inputFacet.addInput(input);
+            await addInputAndIncreaseCounter(input);
 
             let initialState = JSON.stringify({
                 input_address: inputFacet.address,
@@ -223,16 +224,23 @@ describe("Input Facet", () => {
             // checking the input hash is essentially checking the
             // sender address, block timestamp, and payload
             // otherwise if hash is needed, follow the calculations above
+            // during epoch 0, state.inputs[0] is an initial/default input
+
+            // index of the lastly(newly) added input for epoch 0
+            let index_input_epoch0 = NUM_OF_INITIAL_INPUTS;
             expect(
-                state.inputs[0].sender,
+                state.inputs[index_input_epoch0].sender,
                 "check the recorded sender address"
             ).to.equal((await signer.getAddress()).toLowerCase());
             expect(
-                parseInt(state.inputs[0].timestamp, 16), // from hex to dec
+                parseInt(state.inputs[index_input_epoch0].timestamp, 16), // from hex to dec
                 "check the recorded timestamp"
             ).to.equal((await ethers.provider.getBlock("latest")).timestamp);
             expect(
-                Buffer.from(state.inputs[0].payload, "utf-8").toString(),
+                Buffer.from(
+                    state.inputs[index_input_epoch0].payload,
+                    "utf-8"
+                ).toString(),
                 "check the recorded payload"
             ).to.equal(input.toString());
         }
@@ -262,25 +270,23 @@ describe("Input Facet", () => {
         await addInputAndIncreaseCounter(input);
         let block_epoch1 = await ethers.provider.getBlock("latest");
 
+        // index of the lastly(newly) added input for epoch 0
+        let index_input_epoch0 = NUM_OF_INITIAL_INPUTS;
         expect(
-            await inputFacet.getInput(NUM_OF_INITIAL_INPUTS),
-            "get first added input in inbox 0"
+            await inputFacet.getInput(index_input_epoch0),
+            "input hash doesn't match for the newly added input in epoch 0"
         ).to.equal(inputHash);
 
         // test for input box 1
         // calculate input hash
-        block = await ethers.provider.getBlock("latest");
-
-        // input box 1 is empty
-        numberOfInputs = 0;
-
+        let index_input_epoch1 = 0;
         inputHash = getInputHash(
             input,
             await signer.getAddress(),
-            block.number,
-            block.timestamp,
+            block_epoch1.number,
+            block_epoch1.timestamp,
             0x1,
-            numberOfInputs
+            index_input_epoch1
         );
 
         // We're accumulating inputs and enough time has passed...
@@ -291,7 +297,7 @@ describe("Input Facet", () => {
         await inputFacet.addInput(input);
 
         expect(
-            await inputFacet.getInput(numberOfInputs),
+            await inputFacet.getInput(index_input_epoch1),
             "get the first input in input box 1"
         ).to.equal(inputHash);
 
@@ -304,15 +310,18 @@ describe("Input Facet", () => {
 
             let state = JSON.parse(await getState(initialState));
             expect(
-                state.inputs[0].sender,
+                state.inputs[index_input_epoch1].sender,
                 "check the recorded sender address for epoch 1"
             ).to.equal((await signer.getAddress()).toLowerCase());
             expect(
-                parseInt(state.inputs[0].timestamp, 16), // from hex to dec
+                parseInt(state.inputs[index_input_epoch1].timestamp, 16), // from hex to dec
                 "check the recorded timestamp for epoch 1"
             ).to.equal(block_epoch1.timestamp);
             expect(
-                Buffer.from(state.inputs[0].payload, "utf-8").toString(),
+                Buffer.from(
+                    state.inputs[index_input_epoch1].payload,
+                    "utf-8"
+                ).toString(),
                 "check the recorded payload for epoch 1"
             ).to.equal(input.toString());
         }
