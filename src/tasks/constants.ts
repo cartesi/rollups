@@ -16,6 +16,7 @@ import {
     claimParams,
     createParams,
     executeVoucherParams,
+    noticesParams,
     ParamsBuilder,
 } from "./params";
 
@@ -30,6 +31,7 @@ export const TASK_FINALIZE_EPOCH = "rollups:finalizeEpoch";
 export const TASK_GET_STATE = "rollups:getState";
 export const TASK_ADD_INPUT = "rollups:addInput";
 export const TASK_EXECUTE_VOUCHER = "rollups:executeVoucher";
+export const TASK_GET_NOTICES = "rollups:getNotices";
 
 export const taskDefs: Record<string, TaskDefinition> = {
     [TASK_CREATE]: {
@@ -55,5 +57,9 @@ export const taskDefs: Record<string, TaskDefinition> = {
     [TASK_EXECUTE_VOUCHER]: {
         description: "Execute a voucher",
         params: executeVoucherParams,
+    },
+    [TASK_GET_NOTICES]: {
+        description: "Get notices for an epoch",
+        params: noticesParams,
     },
 };
