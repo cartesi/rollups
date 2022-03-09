@@ -11,7 +11,7 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "erc20ForFee",
+        "name": "feeManagerBank",
         "type": "address"
       },
       {
@@ -72,7 +72,7 @@
       },
       {
         "internalType": "address",
-        "name": "_erc20ForFee",
+        "name": "_feeManagerBank",
         "type": "address"
       },
       {

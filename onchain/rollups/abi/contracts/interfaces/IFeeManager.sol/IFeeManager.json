@@ -32,6 +32,19 @@
     "type": "event"
   },
   {
+    "inputs": [],
+    "name": "getFeeManagerBank",
+    "outputs": [
+      {
+        "internalType": "contract IBank",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",

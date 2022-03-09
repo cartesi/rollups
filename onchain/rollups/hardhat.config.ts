@@ -98,22 +98,49 @@ const config: HardhatUserConfig = {
                 artifacts: ppath("@cartesi/util", "/export/artifacts"),
                 deploy: ppath("@cartesi/util", "/dist/deploy"),
             },
+            {
+                artifacts: ppath("@cartesi/token", "/export/artifacts"),
+                deploy: ppath("@cartesi/token", "/dist/deploy"),
+            },
         ],
         deployments: {
             localhost: ["deployments/localhost"],
-            ropsten: [ppath("@cartesi/util", "/deployments/ropsten")],
-            rinkeby: [ppath("@cartesi/util", "/deployments/rinkeby")],
-            kovan: [ppath("@cartesi/util", "/deployments/kovan")],
-            goerli: [ppath("@cartesi/util", "/deployments/goerli")],
+            mainnet: [
+                ppath("@cartesi/util", "/deployments/mainnet"),
+                ppath("@cartesi/token", "/deployments/mainnet"),
+            ],
+            ropsten: [
+                ppath("@cartesi/util", "/deployments/ropsten"),
+                ppath("@cartesi/token", "/deployments/ropsten"),
+            ],
+            rinkeby: [
+                ppath("@cartesi/util", "/deployments/rinkeby"),
+                ppath("@cartesi/token", "/deployments/rinkeby"),
+            ],
+            kovan: [
+                ppath("@cartesi/util", "/deployments/kovan"),
+                ppath("@cartesi/token", "/deployments/kovan"),
+            ],
+            goerli: [
+                ppath("@cartesi/util", "/deployments/goerli"),
+                ppath("@cartesi/token", "/deployments/goerli"),
+            ],
             polygon_mumbai: [
                 ppath("@cartesi/util", "/deployments/matic_testnet"),
+                ppath("@cartesi/token", "/deployments/matic_testnet"),
             ],
-            bsc_testnet: [ppath("@cartesi/util", "/deployments/bsc_testnet")],
+            bsc_testnet: [
+                ppath("@cartesi/util", "/deployments/bsc_testnet"),
+                ppath("@cartesi/token", "/deployments/bsc_testnet"),
+            ],
         },
     },
     namedAccounts: {
         deployer: {
             default: 0,
+        },
+        beneficiary: {
+            default: 1,
         },
     },
 };

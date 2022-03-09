@@ -19,6 +19,7 @@ import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 import {IOutput, OutputValidityProof} from "../interfaces/IOutput.sol";
 
 import {LibOutput} from "../libraries/LibOutput.sol";
+import {LibFeeManager} from "../libraries/LibFeeManager.sol";
 
 contract OutputFacet is IOutput {
     using LibOutput for LibOutput.DiamondStorage;
@@ -60,6 +61,11 @@ contract OutputFacet is IOutput {
         OutputValidityProof calldata _v
     ) public override noReentrancy returns (bool) {
         LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
+
+        // avoid a malicious DApp developer from draining the Fee Manager's bank account
+        require(_destination != address(feeManagerDS.bank), "bad destination");
 
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
 

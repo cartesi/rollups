@@ -13,6 +13,7 @@
 /// @title Fee Manager facet
 pragma solidity >=0.8.8;
 
+import {IBank} from "../IBank.sol";
 import {IFeeManager} from "../interfaces/IFeeManager.sol";
 import {LibFeeManager} from "../libraries/LibFeeManager.sol";
 
@@ -70,5 +71,12 @@ contract FeeManagerFacet is IFeeManager {
         LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
             .diamondStorage();
         feeManagerDS.redeemFee(_validator);
+    }
+
+    /// @notice returns the bank used to manage fees
+    function getFeeManagerBank() public view override returns (IBank) {
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
+        return feeManagerDS.bank;
     }
 }

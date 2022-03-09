@@ -29,6 +29,7 @@
         "tsc": "tsc"
     },
     "dependencies": {
+        "@cartesi/token": "^1.3.0",
         "@cartesi/logger": "^0.7.4",
         "@cartesi/util": "^3.1.2",
         "@openzeppelin/contracts": "^4.5.0"

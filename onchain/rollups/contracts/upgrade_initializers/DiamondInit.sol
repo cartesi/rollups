@@ -20,7 +20,7 @@ import {LibInput} from "../libraries/LibInput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibClaimsMask} from "../libraries/LibClaimsMask.sol";
 import {LibFeeManager} from "../libraries/LibFeeManager.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Bank} from "../Bank.sol";
 
 // Diamond-related dependencies
 import {LibDiamond} from "../libraries/LibDiamond.sol";
@@ -39,7 +39,7 @@ contract DiamondInit {
     /// @param _challengePeriod duration of challenge period in seconds
     /// @param _inputLog2Size size of the input drive in this machine
     /// @param _feePerClaim fee per claim to reward the validators
-    /// @param _erc20ForFee the ERC-20 used as rewards for validators
+    /// @param _feeManagerBank fee manager bank address
     /// @param _feeManagerOwner fee manager owner address
     /// @param _validators initial validator set
     /// @dev validators have to be unique, if the same validator is added twice
@@ -53,7 +53,7 @@ contract DiamondInit {
         uint256 _inputLog2Size,
         // fee manager init variables
         uint256 _feePerClaim,
-        address _erc20ForFee,
+        address _feeManagerBank,
         address _feeManagerOwner,
         // validator manager init variables
         address payable[] memory _validators
@@ -62,7 +62,7 @@ contract DiamondInit {
         initERC165();
         initValidatorManager(_validators);
         initRollups(_templateHash, _inputDuration, _challengePeriod);
-        initFeeManager(_feePerClaim, _erc20ForFee, _feeManagerOwner);
+        initFeeManager(_feePerClaim, _feeManagerBank, _feeManagerOwner);
         initInput(_inputLog2Size);
     }
 
@@ -141,33 +141,33 @@ contract DiamondInit {
 
     /// @notice FeeManagerImpl contract initialized
     /// @param feePerClaim fee per claim to reward the validators
-    /// @param erc20ForFee the ERC-20 used as rewards for validators
+    /// @param feeManagerBank fee manager bank address
     /// @param feeManagerOwner fee manager owner address
     event FeeManagerInitialized(
         uint256 feePerClaim,
-        address erc20ForFee,
+        address feeManagerBank,
         address feeManagerOwner
     );
 
     /// @notice initalize the Fee Manager facet
     /// @param _feePerClaim fee per claim to reward the validators
-    /// @param _erc20ForFee the ERC-20 used as rewards for validators
+    /// @param _feeManagerBank fee manager bank address
     /// @param _feeManagerOwner fee manager owner address
     function initFeeManager(
         uint256 _feePerClaim,
-        address _erc20ForFee,
+        address _feeManagerBank,
         address _feeManagerOwner
     ) private {
         LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
             .diamondStorage();
 
         feeManagerDS.feePerClaim = _feePerClaim;
-        feeManagerDS.token = IERC20(_erc20ForFee);
+        feeManagerDS.bank = Bank(_feeManagerBank);
         feeManagerDS.owner = _feeManagerOwner;
 
         emit FeeManagerInitialized(
             _feePerClaim,
-            _erc20ForFee,
+            _feeManagerBank,
             _feeManagerOwner
         );
     }

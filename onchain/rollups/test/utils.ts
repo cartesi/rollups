@@ -84,7 +84,8 @@ export interface DiamondOptions {
     challengePeriod?: number | BigNumber; // defaults to 7 days
     inputLog2Size?: number | BigNumber; // defaults to 8 (thus, 2^8)
     feePerClaim?: number | BigNumber; // defaults to 10 tokens
-    erc20ForFee?: string; // defaults to a SimpleToken
+    feeManagerBank?: string; // defaults to Bank that uses CTSI
+    simpleFeeManagerBank?: boolean; // if true, deploys Bank with SimpleToken
     feeManagerOwner?: string; // defaults to the first signer
     validators?: string[]; // defaults to the 8 first signers
     debug?: boolean; // defaults to false
@@ -128,16 +129,6 @@ export const deployDiamond = deployments.createFixture(
                 libraries: {
                     LibClaimsMask: LibClaimsMask.address,
                 },
-            });
-        }
-
-        // deploy SimpleToken if `erc20ForFree` is undefined
-        if (typeof options.erc20ForFee == "undefined") {
-            // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
-            let tokenSupply = 1000000;
-            await deployments.deploy("SimpleToken", {
-                ...opts,
-                args: [tokenSupply],
             });
         }
 
@@ -219,12 +210,23 @@ export const deployDiamond = deployments.createFixture(
             ? options.feeManagerOwner
             : deployer;
 
-        let erc20ForFee;
-        if (options.erc20ForFee) {
-            erc20ForFee = options.erc20ForFee;
+        let feeManagerBank;
+        if (options.feeManagerBank) {
+            feeManagerBank = options.feeManagerBank;
+        } else if (options.simpleFeeManagerBank) {
+            let tokenSupply = 1000000;
+            const tokenDeployment = await deployments.deploy("SimpleToken", {
+                ...opts,
+                args: [tokenSupply],
+            });
+            const bankDeployment = await deployments.deploy("Bank", {
+                ...opts,
+                args: [tokenDeployment.address],
+            });
+            feeManagerBank = bankDeployment.address;
         } else {
-            const token = await deployments.get("SimpleToken");
-            erc20ForFee = token.address;
+            const { Bank } = await deployments.all();
+            feeManagerBank = Bank.address;
         }
 
         let validators: string[] = [];
@@ -255,7 +257,7 @@ export const deployDiamond = deployments.createFixture(
             challengePeriod,
             inputLog2Size,
             feePerClaim,
-            erc20ForFee,
+            feeManagerBank,
             feeManagerOwner,
             validators,
         ]);

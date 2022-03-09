@@ -14,8 +14,8 @@
 pragma solidity ^0.8.0;
 
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LibClaimsMask, ClaimsMask} from "../libraries/LibClaimsMask.sol";
+import {Bank} from "../Bank.sol";
 
 library LibFeeManager {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
@@ -28,7 +28,7 @@ library LibFeeManager {
     struct DiamondStorage {
         address owner; // owner of Fee Manager
         uint256 feePerClaim;
-        IERC20 token; // the token that is used for paying fees to validators
+        Bank bank; // bank that holds the tokens to pay validators
         bool lock; // reentrancy lock
         // A bit set used for up to 8 validators.
         // The first 16 bits are not used to keep compatibility with the validator manager contract.
@@ -137,10 +137,7 @@ library LibFeeManager {
 
         // ** interactions **
         uint256 feesToSend = nowRedeemingClaims * ds.feePerClaim; // number of erc20 tokens to send
-        require(
-            ds.token.transfer(_validator, feesToSend),
-            "Failed to redeem fees"
-        );
+        ds.bank.transfer(_validator, feesToSend); // will revert if transfer fails
         // emit the number of claimed being redeemed, instead of the amount of tokens
         emit FeeRedeemed(_validator, nowRedeemingClaims);
     }

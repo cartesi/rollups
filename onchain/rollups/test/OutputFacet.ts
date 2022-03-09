@@ -4,6 +4,8 @@ import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import { OutputFacet } from "../src/types/OutputFacet";
 import { OutputFacet__factory } from "../src/types/factories/OutputFacet__factory";
+import { FeeManagerFacet } from "../src/types/FeeManagerFacet";
+import { FeeManagerFacet__factory } from "../src/types/factories/FeeManagerFacet__factory";
 import { DebugFacet } from "../src/types/DebugFacet";
 import { DebugFacet__factory } from "../src/types/factories/DebugFacet__factory";
 import { BytesLike } from "@ethersproject/bytes";
@@ -32,6 +34,7 @@ describe("Output Facet", () => {
 
     let signers: Signer[];
     let outputFacet: OutputFacet;
+    let feeManagerFacet: FeeManagerFacet;
     var debugFacet: DebugFacet;
 
     let simpleContractAddress: string;
@@ -45,6 +48,10 @@ describe("Output Facet", () => {
         signers = await ethers.getSigners();
         outputFacet = OutputFacet__factory.connect(diamond.address, signers[0]);
         debugFacet = DebugFacet__factory.connect(diamond.address, signers[0]);
+        feeManagerFacet = FeeManagerFacet__factory.connect(
+            diamond.address,
+            signers[0]
+        );
 
         // deploy a simple contract to execute
         const simpleContract = await deployments.deploy("SimpleContract", {
@@ -443,6 +450,15 @@ describe("Output Facet", () => {
     /// ***test function getEpochVoucherLog2Size()*** ///
     it("testing function getEpochVoucherLog2Size()", async () => {
         expect(await outputFacet.getEpochVoucherLog2Size()).to.equal(37);
+    });
+
+    /// ***test function executeVoucher() for bad destination*** ///
+    it("test function executeVoucher() for bad destination", async () => {
+        const bankAddress = await feeManagerFacet.getFeeManagerBank();
+        await expect(
+            outputFacet.executeVoucher(bankAddress, _payload, v),
+            "executing voucher for bank"
+        ).to.be.revertedWith("bad destination");
     });
 
     /// ***test delegate*** ///

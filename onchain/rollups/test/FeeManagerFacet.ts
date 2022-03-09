@@ -6,6 +6,8 @@ import { RollupsFacet } from "../src/types/RollupsFacet";
 import { RollupsFacet__factory } from "../src/types/factories/RollupsFacet__factory";
 import { FeeManagerFacet } from "../src/types/FeeManagerFacet";
 import { FeeManagerFacet__factory } from "../src/types/factories/FeeManagerFacet__factory";
+import { Bank } from "../src/types/Bank";
+import { Bank__factory } from "../src/types/factories/Bank__factory";
 import { DebugFacet } from "../src/types/DebugFacet";
 import { DebugFacet__factory } from "../src/types/factories/DebugFacet__factory";
 import { SimpleToken } from "../src/types/SimpleToken";
@@ -22,6 +24,7 @@ describe("FeeManager Facet", () => {
     let signers: Signer[];
     let token: SimpleToken;
     let feeManagerFacet: FeeManagerFacet;
+    let bank: Bank;
     let rollupsFacet: RollupsFacet;
     let diamondInit: DiamondInit;
     let debugFacet: DebugFacet;
@@ -43,26 +46,72 @@ describe("FeeManager Facet", () => {
         await increaseTimeAndMine(challengePeriod + 1);
     }
 
+    // Deposits `amount` tokens in Fee Manager's bank account
+    async function fundFeeManager(amount: number) {
+        const [tokenOwner] = signers;
+        const tokenOwnerAddress = await tokenOwner.getAddress();
+
+        // get balance before funding
+        const ownerTokenBalance = await token.balanceOf(tokenOwnerAddress);
+        const bankTokenBalance = await token.balanceOf(bank.address);
+        const dappBankBalance = await bank.balanceOf(feeManagerFacet.address);
+
+        // approve bank to withdraw `amount` from tokenOwner's account
+        expect(await token.approve(bank.address, amount))
+            .to.emit(token, "Approval")
+            .withArgs(tokenOwnerAddress, bank.address, amount);
+
+        // deposit `amount` tokens in Fee Manager's bank account
+        expect(await bank.deposit(feeManagerFacet.address, amount))
+            .to.emit(bank, "Deposit")
+            .withArgs(tokenOwnerAddress, feeManagerFacet.address, amount);
+
+        // check balances after funding
+        expect(
+            await token.balanceOf(bank.address),
+            "bank received `amount` tokens"
+        ).to.equal(bankTokenBalance.add(amount));
+        expect(
+            await token.balanceOf(tokenOwnerAddress),
+            "token owner deposited `amount` tokens"
+        ).to.equal(ownerTokenBalance.sub(amount));
+        expect(
+            await bank.balanceOf(feeManagerFacet.address),
+            "feeManager's balance increased by `amount`"
+        ).to.equal(dappBankBalance.add(amount));
+    }
+
     beforeEach(async () => {
         // get signers
         signers = await ethers.getSigners();
 
-        const diamond = await deployDiamond({ debug: true });
+        const diamond = await deployDiamond({
+            debug: true,
+            simpleFeeManagerBank: true,
+        });
 
         debugFacet = DebugFacet__factory.connect(diamond.address, signers[0]);
+
         feeManagerFacet = FeeManagerFacet__factory.connect(
             diamond.address,
             signers[0]
         );
+
         rollupsFacet = RollupsFacet__factory.connect(
             diamond.address,
             signers[0]
         );
+
         diamondInit = DiamondInit__factory.connect(diamond.address, signers[0]);
-        const tokenAddress = (await deployments.get("SimpleToken")).address;
-        token = SimpleToken__factory.connect(tokenAddress, signers[0]);
+
         inputDuration = (await rollupsFacet.getInputDuration()).toNumber();
         challengePeriod = (await rollupsFacet.getChallengePeriod()).toNumber();
+
+        const bankAddress = await feeManagerFacet.getFeeManagerBank();
+        bank = Bank__factory.connect(bankAddress, signers[0]);
+
+        const tokenAddress = await bank.getToken();
+        token = SimpleToken__factory.connect(tokenAddress, signers[0]);
 
         // for delegate
         initialState = JSON.stringify({
@@ -112,39 +161,25 @@ describe("FeeManager Facet", () => {
         expect(eventArgs["feePerClaim"], "feePerClaim").to.equal(
             initialFeePerClaim
         );
-        expect(eventArgs["erc20ForFee"], "ERC20 token address").to.equal(
-            token.address
-        );
         expect(
             eventArgs["feeManagerOwner"],
             "fee manager owner address"
         ).to.equal(await signers[0].getAddress());
+        expect(
+            eventArgs["feeManagerBank"],
+            "fee manager bank address"
+        ).to.equal(bank.address);
     });
 
     it("fund the FeeManager contract and emit event", async () => {
         expect(
-            await token.balanceOf(feeManagerFacet.address),
+            await token.balanceOf(bank.address),
             "initially the contract has no erc20 tokens"
         ).to.equal(0);
 
         // fund 10000 tokens
         let amount = 10000;
-        expect(await token.transfer(feeManagerFacet.address, amount))
-            .to.emit(token, "Transfer")
-            .withArgs(
-                await signers[0].getAddress(),
-                feeManagerFacet.address,
-                amount
-            );
-
-        expect(
-            await token.balanceOf(feeManagerFacet.address),
-            "feeManager now has 10k erc20 tokens"
-        ).to.equal(amount);
-        expect(
-            await token.balanceOf(await signers[0].getAddress()),
-            "owner has 10k less tokens"
-        ).to.equal(tokenSupply - amount);
+        await fundFeeManager(amount);
 
         // test delegate
         if (enableDelegate) {
@@ -164,22 +199,7 @@ describe("FeeManager Facet", () => {
         }
 
         // again, fund 10000 tokens
-        expect(await token.transfer(feeManagerFacet.address, amount))
-            .to.emit(token, "Transfer")
-            .withArgs(
-                await signers[0].getAddress(),
-                feeManagerFacet.address,
-                amount
-            );
-
-        expect(
-            await token.balanceOf(feeManagerFacet.address),
-            "feeManager now has 20k erc20 tokens"
-        ).to.equal(amount * 2);
-        expect(
-            await token.balanceOf(await signers[0].getAddress()),
-            "owner has 20k less tokens"
-        ).to.equal(tokenSupply - amount * 2);
+        await fundFeeManager(amount);
 
         // test delegate
         if (enableDelegate) {
@@ -226,8 +246,7 @@ describe("FeeManager Facet", () => {
         ).to.equal(10);
 
         // owner funds the FeeManager and signers[1] redeem fees
-        let amount = 10000;
-        await token.transfer(feeManagerFacet.address, amount);
+        await fundFeeManager(10000);
         await feeManagerFacet.redeemFee(await signers[1].getAddress());
 
         // after having redeemed, no more redeemable claims
@@ -265,8 +284,7 @@ describe("FeeManager Facet", () => {
 
         // assume signers[1] redeems 10 claims
         await debugFacet._setNumClaims(1, 10);
-        let amount = 10000;
-        await token.transfer(feeManagerFacet.address, amount);
+        await fundFeeManager(10000);
         await feeManagerFacet.redeemFee(await signers[1].getAddress());
 
         expect(
@@ -290,7 +308,7 @@ describe("FeeManager Facet", () => {
         if (!enableDelegate) {
             //owner funds FeeManager
             let amount = 10000;
-            await token.transfer(feeManagerFacet.address, amount);
+            await fundFeeManager(amount);
 
             // assume signers[1] makes 10 claims
             await debugFacet._setNumClaims(1, 10);
@@ -306,8 +324,12 @@ describe("FeeManager Facet", () => {
 
             // check balances
             expect(
-                await token.balanceOf(feeManagerFacet.address),
-                "feeManager now has 10*initialFeePerClaim less tokens"
+                await token.balanceOf(bank.address),
+                "bank now has 10*initialFeePerClaim less tokens"
+            ).to.equal(amount - 10 * initialFeePerClaim);
+            expect(
+                await bank.balanceOf(feeManagerFacet.address),
+                "feeManager's bank balance got decreased by 10*initialFeePerClaim"
             ).to.equal(amount - 10 * initialFeePerClaim);
             expect(
                 await token.balanceOf(await signers[1].getAddress()),
@@ -334,8 +356,12 @@ describe("FeeManager Facet", () => {
                 .withArgs(await signers[1].getAddress(), 20);
             // check balances
             expect(
-                await token.balanceOf(feeManagerFacet.address),
-                "feeManager now has totally 30*initialFeePerClaim less tokens"
+                await token.balanceOf(bank.address),
+                "bank now has totally 30*initialFeePerClaim less tokens"
+            ).to.equal(amount - 30 * initialFeePerClaim);
+            expect(
+                await bank.balanceOf(feeManagerFacet.address),
+                "feeManager's bank balance got decreased by 30*initialFeePerClaim"
             ).to.equal(amount - 30 * initialFeePerClaim);
             expect(
                 await token.balanceOf(await signers[1].getAddress()),
@@ -366,7 +392,7 @@ describe("FeeManager Facet", () => {
 
             // we now make a deposit to cover the neg leftover
             let amount = state.leftover_balance * -1;
-            await token.transfer(feeManagerFacet.address, amount);
+            await fundFeeManager(amount);
             // update state
             state = JSON.parse(await getState(initialState));
             expect(
@@ -411,7 +437,7 @@ describe("FeeManager Facet", () => {
             ).to.equal("0x0");
 
             // make another deposit to fee manager
-            await token.transfer(feeManagerFacet.address, 10000);
+            await fundFeeManager(10000);
             // update state
             state = JSON.parse(await getState(initialState));
             expect(
@@ -429,7 +455,7 @@ describe("FeeManager Facet", () => {
         if (!enableDelegate) {
             //owner fund FeeManager
             let amount = 10000;
-            await token.transfer(feeManagerFacet.address, amount);
+            await fundFeeManager(amount);
 
             // assume signers[1] makes 10 claims
             await debugFacet._setNumClaims(1, 10);
@@ -444,8 +470,12 @@ describe("FeeManager Facet", () => {
 
             // check balances
             expect(
-                await token.balanceOf(feeManagerFacet.address),
-                "signers[0] helped signers[1]: feeManager now has 10*initialFeePerClaim less tokens"
+                await token.balanceOf(bank.address),
+                "signers[0] helped signers[1]: bank now has 10*initialFeePerClaim less tokens"
+            ).to.equal(amount - 10 * initialFeePerClaim);
+            expect(
+                await bank.balanceOf(feeManagerFacet.address),
+                "signers[0] helped signers[1]: feeManager's bank balance decreased by 10*initialFeePerClaim"
             ).to.equal(amount - 10 * initialFeePerClaim);
             expect(
                 await token.balanceOf(await signers[1].getAddress()),
@@ -467,7 +497,7 @@ describe("FeeManager Facet", () => {
                 await rollupsFacet.finalizeEpoch();
             }
             //deposit 10k to fee manager
-            await token.transfer(feeManagerFacet.address, 10000);
+            await fundFeeManager(10000);
             // let signers[0] help signers[1] redeem fee
             await feeManagerFacet.redeemFee(await signers[1].getAddress());
 
@@ -513,7 +543,7 @@ describe("FeeManager Facet", () => {
         if (!enableDelegate) {
             //owner fund FeeManager
             let amount = 10000;
-            await token.transfer(feeManagerFacet.address, amount);
+            await fundFeeManager(amount);
 
             // assume signers[1], signers[2], signers[3] are the validator set
             await debugFacet._setNumClaims(1, 10);
@@ -526,14 +556,18 @@ describe("FeeManager Facet", () => {
                 .redeemFee(await signers[1].getAddress());
 
             // get validators' balances before resetting fees
-            let balance1_before = await token.balanceOf(
+            let token_balance1_before = await token.balanceOf(
                 await signers[1].getAddress()
             );
-            let balance2_before = await token.balanceOf(
+            let token_balance2_before = await token.balanceOf(
                 await signers[2].getAddress()
             );
-            let balance3_before = await token.balanceOf(
+            let token_balance3_before = await token.balanceOf(
                 await signers[3].getAddress()
+            );
+            let token_balance_before = await token.balanceOf(bank.address);
+            let bank_balance_before = await bank.balanceOf(
+                feeManagerFacet.address
             );
 
             let newFeePerClaim = 30;
@@ -543,29 +577,47 @@ describe("FeeManager Facet", () => {
                 .withArgs(newFeePerClaim);
 
             // get new balances
-            let balance1_after = await token.balanceOf(
+            let token_balance1_after = await token.balanceOf(
                 await signers[1].getAddress()
             );
-            let balance2_after = await token.balanceOf(
+            let token_balance2_after = await token.balanceOf(
                 await signers[2].getAddress()
             );
-            let balance3_after = await token.balanceOf(
+            let token_balance3_after = await token.balanceOf(
                 await signers[3].getAddress()
+            );
+            let token_balance_after = await token.balanceOf(bank.address);
+            let bank_balance_after = await bank.balanceOf(
+                feeManagerFacet.address
             );
 
             // check new balances
             expect(
-                balance1_after,
+                token_balance1_after,
                 "balance of signers[1] stays the same"
-            ).to.equal(balance1_before);
+            ).to.equal(token_balance1_before);
             expect(
-                balance2_after.toNumber(),
+                token_balance2_after.toNumber(),
                 "signers[2] gets fees for 20 claims"
-            ).to.equal(balance2_before.toNumber() + 20 * initialFeePerClaim);
+            ).to.equal(
+                token_balance2_before.toNumber() + 20 * initialFeePerClaim
+            );
             expect(
-                balance3_after,
+                token_balance3_after,
                 "balance of signers[3] stays the same"
-            ).to.equal(balance3_before);
+            ).to.equal(token_balance3_before);
+            expect(
+                token_balance_after,
+                "bank pays fees for 20 claims"
+            ).to.equal(
+                token_balance_before.toNumber() - 20 * initialFeePerClaim
+            );
+            expect(
+                bank_balance_after,
+                "feeManager's bank balance is decreased by 20*initialFeePerClaim"
+            ).to.equal(
+                bank_balance_before.toNumber() - 20 * initialFeePerClaim
+            );
 
             // feePerClaim is updated
             expect(
@@ -583,6 +635,14 @@ describe("FeeManager Facet", () => {
                 await token.balanceOf(await signers[3].getAddress()),
                 "balance of signers[3] after resetting fees and making claims"
             ).to.equal(10 * newFeePerClaim);
+            expect(
+                await token.balanceOf(bank.address),
+                "bank pays fees for 10 claims"
+            ).to.equal(token_balance_after.toNumber() - 10 * newFeePerClaim);
+            expect(
+                await bank.balanceOf(feeManagerFacet.address),
+                "feeManager's bank balance is decreased by 10*newFeePerClaim"
+            ).to.equal(bank_balance_after.toNumber() - 10 * newFeePerClaim);
         } else {
             // test delegate
             var claim = "0x" + "1".repeat(64);
@@ -595,7 +655,7 @@ describe("FeeManager Facet", () => {
                 await rollupsFacet.finalizeEpoch();
             }
             // deposit 10k to fee manager
-            await token.transfer(feeManagerFacet.address, 10000);
+            await fundFeeManager(10000);
             // instead of signers[1] redeeming fee, the fee_per_claim is reset
             // reset fee from 10 -> 30
             let newFeePerClaim = 30;
@@ -661,7 +721,7 @@ describe("FeeManager Facet", () => {
         if (!enableDelegate) {
             //owner fund FeeManager
             let amount = 10000;
-            await token.transfer(feeManagerFacet.address, amount);
+            await fundFeeManager(amount);
 
             // assume signers[1] makes 10 claims and redeem them
             await debugFacet._setNumClaims(1, 10);
@@ -686,7 +746,7 @@ describe("FeeManager Facet", () => {
             var claim = "0x" + "1".repeat(64);
             var claim2 = "0x" + "2".repeat(64);
             // deposit 10k to fee manager
-            await token.transfer(feeManagerFacet.address, 10000);
+            await fundFeeManager(10000);
 
             // let all 8 validators make a claim and finalize
             await passInputAccumulationPeriod();

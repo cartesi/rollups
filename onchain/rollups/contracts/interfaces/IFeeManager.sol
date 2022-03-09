@@ -13,6 +13,8 @@
 /// @title Fee Manager interface
 pragma solidity >=0.7.0;
 
+import {IBank} from "../IBank.sol";
+
 interface IFeeManager {
     /// @notice this function can be called to check the number of claims that's redeemable for the validator
     /// @param  _validator address of the validator
@@ -35,6 +37,9 @@ interface IFeeManager {
     /// @notice this function can be called to redeem fees for validators
     /// @param  _validator address of the validator that is redeeming
     function redeemFee(address _validator) external;
+
+    /// @notice returns the bank used to manage fees
+    function getFeeManagerBank() external view returns (IBank);
 
     /// @notice emitted on resetting feePerClaim
     event FeePerClaimReset(uint256 value);

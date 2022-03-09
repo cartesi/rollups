@@ -18,7 +18,7 @@ export interface CreateArgs extends TaskArguments {
     challengePeriod: number;
     inputLog2Size: number;
     feePerClaim: string;
-    erc20ForFee: string;
+    feeManagerBank: string;
     feeManagerOwner: string;
     validators: string;
     log?: boolean;
