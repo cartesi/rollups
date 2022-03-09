@@ -30,6 +30,9 @@ describe("Rollups Facet", () => {
     const VOUCHER_METADATA_LOG2_SIZE = 21;
     const NUM_OF_INITIAL_INPUTS = 1; // machine starts with one input
 
+    const TEMPLATE_HASH =
+        "0xcb51f9ecbba6443e5d08f055ac9c937f4276c5b2210d9463efc833a66c67d40e"; // keccak(TEMPLATE_HASH)
+
     let signers: Signer[];
 
     ///each address is 20 bytes
@@ -67,6 +70,7 @@ describe("Rollups Facet", () => {
         }
 
         const diamond = await deployDiamond({
+            templateHash: TEMPLATE_HASH,
             inputLog2Size: INPUT_LOG2_SIZE,
             validators: validators,
         });
@@ -86,6 +90,13 @@ describe("Rollups Facet", () => {
         });
     });
 
+    /// ***test template hash getter*** ///
+    it("template hash should be correctly set during deployment", async () => {
+        expect(
+            await rollupsFacet.getTemplateHash(),
+            "template hash doesn't match"
+        ).to.equal(TEMPLATE_HASH);
+    });
     /// ***test public variable currentPhase*** ///
     it("initial phase should be InputAccumulation", async () => {
         expect(

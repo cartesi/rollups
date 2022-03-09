@@ -79,6 +79,7 @@ export const getState = async (initialState: string) => {
 };
 
 export interface DiamondOptions {
+    templateHash?: string; // defaults to 0x00
     inputDuration?: number | BigNumber; // defaults to 1 day
     challengePeriod?: number | BigNumber; // defaults to 7 days
     inputLog2Size?: number | BigNumber; // defaults to 8 (thus, 2^8)
@@ -203,6 +204,9 @@ export const deployDiamond = deployments.createFixture(
         console.log("===> Executing diamond cut");
 
         // Default option values
+        let templateHash = options.templateHash
+            ? options.templateHash
+            : "0x0000000000000000000000000000000000000000000000000000000000000000";
         let inputDuration = options.inputDuration
             ? options.inputDuration
             : 1 * DAY;
@@ -246,6 +250,7 @@ export const deployDiamond = deployments.createFixture(
             diamondInitDeployment.address
         );
         const functionCall = diamondInit.interface.encodeFunctionData("init", [
+            templateHash,
             inputDuration,
             challengePeriod,
             inputLog2Size,
