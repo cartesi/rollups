@@ -12,7 +12,7 @@ import { SimpleToken } from "../src/types/SimpleToken";
 import { SimpleToken__factory } from "../src/types/factories/SimpleToken__factory";
 import { DiamondInit } from "../src/types/DiamondInit";
 import { DiamondInit__factory } from "../src/types/factories/DiamondInit__factory";
-import { deployDiamond, getState } from "./utils";
+import { deployDiamond, getState, increaseTimeAndMine } from "./utils";
 
 use(solidity);
 
@@ -28,6 +28,20 @@ describe("FeeManager Facet", () => {
     let tokenSupply = 1000000; // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
     let initialFeePerClaim = 10; // set initial fees per claim as 10 token
     let initialState: string; // for delegate
+    let inputDuration: number;
+    let challengePeriod: number;
+
+    // Increase the current time in the network by just above
+    // the input duration and force a block to be mined
+    async function passInputAccumulationPeriod() {
+        await increaseTimeAndMine(inputDuration + 1);
+    }
+
+    // Increase the current time in the network by just above
+    // the challenge period and force a block to be mined
+    async function passChallengePeriod() {
+        await increaseTimeAndMine(challengePeriod + 1);
+    }
 
     beforeEach(async () => {
         // get signers
@@ -47,6 +61,8 @@ describe("FeeManager Facet", () => {
         diamondInit = DiamondInit__factory.connect(diamond.address, signers[0]);
         const tokenAddress = (await deployments.get("SimpleToken")).address;
         token = SimpleToken__factory.connect(tokenAddress, signers[0]);
+        inputDuration = (await rollupsFacet.getInputDuration()).toNumber();
+        challengePeriod = (await rollupsFacet.getChallengePeriod()).toNumber();
 
         // for delegate
         initialState = JSON.stringify({
@@ -331,9 +347,9 @@ describe("FeeManager Facet", () => {
             // let signers[1] make 10 claims
             let num_claims = 10;
             for (let i = 0; i < num_claims; i++) {
-                await debugFacet._passInputAccumulationPeriod();
+                await passInputAccumulationPeriod();
                 await rollupsFacet.connect(signers[1]).claim(claim);
-                await debugFacet._passChallangePeriod();
+                await passChallengePeriod();
                 await rollupsFacet.finalizeEpoch();
             }
 
@@ -445,9 +461,9 @@ describe("FeeManager Facet", () => {
             // let signers[1] make 10 claims
             let num_claims = 10;
             for (let i = 0; i < num_claims; i++) {
-                await debugFacet._passInputAccumulationPeriod();
+                await passInputAccumulationPeriod();
                 await rollupsFacet.connect(signers[1]).claim(claim);
-                await debugFacet._passChallangePeriod();
+                await passChallengePeriod();
                 await rollupsFacet.finalizeEpoch();
             }
             //deposit 10k to fee manager
@@ -573,9 +589,9 @@ describe("FeeManager Facet", () => {
             // let signers[1] make 10 claims
             let num_claims = 10;
             for (let i = 0; i < num_claims; i++) {
-                await debugFacet._passInputAccumulationPeriod();
+                await passInputAccumulationPeriod();
                 await rollupsFacet.connect(signers[1]).claim(claim);
-                await debugFacet._passChallangePeriod();
+                await passChallengePeriod();
                 await rollupsFacet.finalizeEpoch();
             }
             // deposit 10k to fee manager
@@ -621,9 +637,9 @@ describe("FeeManager Facet", () => {
             let current_fee_manager_balance = state.fee_manager_balance;
             let current_leftover_balance = state.leftover_balance;
             // signers[1] makes another claim
-            await debugFacet._passInputAccumulationPeriod();
+            await passInputAccumulationPeriod();
             await rollupsFacet.connect(signers[1]).claim(claim);
-            await debugFacet._passChallangePeriod();
+            await passChallengePeriod();
             await rollupsFacet.finalizeEpoch();
             // update state
             state = JSON.parse(await getState(initialState));
@@ -673,16 +689,16 @@ describe("FeeManager Facet", () => {
             await token.transfer(feeManagerFacet.address, 10000);
 
             // let all 8 validators make a claim and finalize
-            await debugFacet._passInputAccumulationPeriod();
+            await passInputAccumulationPeriod();
             for (let i = 0; i < 8; i++) {
                 await rollupsFacet.connect(signers[i]).claim(claim);
             }
             // currently every validator has 1 claim that's redeemable
             // assume next epoch, signers[0] wins a dispute over signers[1]
-            await debugFacet._passInputAccumulationPeriod();
+            await passInputAccumulationPeriod();
             await rollupsFacet.connect(signers[0]).claim(claim);
             await rollupsFacet.connect(signers[1]).claim(claim2);
-            await debugFacet._passChallangePeriod();
+            await passChallengePeriod();
             await rollupsFacet.finalizeEpoch();
 
             // there will be totally 8 claims that can be redeemed
