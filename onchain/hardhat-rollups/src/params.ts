@@ -20,12 +20,22 @@ export type ParamsBuilder = (
 export const createParams: ParamsBuilder = (task) => {
     const CTSI_address = "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
 
+    const ZERO_HASH =
+        "0x0000000000000000000000000000000000000000000000000000000000000000";
+
     return task
         .addOptionalParam<boolean>(
             "log",
             "Enable log output",
             true,
             types.boolean
+        )
+        .addParam<string>(
+            "templateHash",
+            "Template hash of the machine",
+            ZERO_HASH,
+            types.string,
+            true
         )
         .addParam<number>(
             "inputDuration",

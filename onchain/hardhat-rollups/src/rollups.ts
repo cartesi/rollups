@@ -131,6 +131,7 @@ createParams(
                 diamondInitDeployment.address
             );
             const calldata = diamondInit.interface.encodeFunctionData("init", [
+                args.templateHash,
                 args.inputDuration,
                 args.challengePeriod,
                 args.inputLog2Size,
@@ -199,6 +200,7 @@ rollupsParams(
                 AwaitingDispute,
             }
 
+            const templateHash = await rollupsFacet.getTemplateHash();
             const inputDuration = await rollupsFacet.getInputDuration();
             const challengePeriod = await rollupsFacet.getChallengePeriod();
             const currentEpoch = await rollupsFacet.getCurrentEpoch();
@@ -211,6 +213,7 @@ rollupsParams(
 
             const result = {
                 currentTimestamp: block.timestamp,
+                templateHash: templateHash,
                 inputDuration: inputDuration,
                 challengePeriod: challengePeriod,
                 currentEpoch: currentEpoch.toNumber(),
