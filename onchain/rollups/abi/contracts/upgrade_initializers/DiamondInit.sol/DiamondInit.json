@@ -46,6 +46,11 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "_templateHash",
+        "type": "bytes32"
+      },
+      {
         "internalType": "uint256",
         "name": "_inputDuration",
         "type": "uint256"

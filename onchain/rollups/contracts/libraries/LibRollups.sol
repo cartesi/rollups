@@ -30,6 +30,7 @@ library LibRollups {
         keccak256("Rollups.diamond.storage");
 
     struct DiamondStorage {
+        bytes32 templateHash; // state hash of the cartesi machine at t0
         uint32 inputDuration; // duration of input accumulation phase in seconds
         uint32 challengePeriod; // duration of challenge period in seconds
         uint32 inputAccumulationStart; // timestamp when current input accumulation phase started

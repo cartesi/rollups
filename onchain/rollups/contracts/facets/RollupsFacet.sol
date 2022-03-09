@@ -177,4 +177,11 @@ contract RollupsFacet is IRollups {
             .diamondStorage();
         return uint256(rollupsDS.challengePeriod);
     }
+
+    /// @notice returns the machine's template hash
+    function getTemplateHash() public view returns (bytes32) {
+        LibRollups.DiamondStorage storage rollupsDS = LibRollups
+            .diamondStorage();
+        return rollupsDS.templateHash;
+    }
 }

@@ -34,6 +34,7 @@ contract DiamondInit {
     using LibInput for LibInput.DiamondStorage;
 
     /// @notice initialize the Rollups contract
+    /// @param _templateHash state hash of the cartesi machine at t0
     /// @param _inputDuration duration of input accumulation phase in seconds
     /// @param _challengePeriod duration of challenge period in seconds
     /// @param _inputLog2Size size of the input drive in this machine
@@ -45,6 +46,7 @@ contract DiamondInit {
     ///      consensus will never be reached
     function init(
         // rollups init variables
+        bytes32 _templateHash,
         uint256 _inputDuration,
         uint256 _challengePeriod,
         // input init variables
@@ -59,7 +61,7 @@ contract DiamondInit {
         // initializing facets
         initERC165();
         initValidatorManager(_validators);
-        initRollups(_inputDuration, _challengePeriod);
+        initRollups(_templateHash, _inputDuration, _challengePeriod);
         initFeeManager(_feePerClaim, _erc20ForFee, _feeManagerOwner);
         initInput(_inputLog2Size);
     }
@@ -117,14 +119,18 @@ contract DiamondInit {
     event RollupsInitialized(uint256 inputDuration, uint256 challengePeriod);
 
     /// @notice initialize the Rollups facet
+    /// @param _templateHash state hash of the cartesi machine at t0
     /// @param _inputDuration duration of input accumulation phase in seconds
     /// @param _challengePeriod duration of challenge period in seconds
-    function initRollups(uint256 _inputDuration, uint256 _challengePeriod)
-        private
-    {
+    function initRollups(
+        bytes32 _templateHash,
+        uint256 _inputDuration,
+        uint256 _challengePeriod
+    ) private {
         LibRollups.DiamondStorage storage rollupsDS = LibRollups
             .diamondStorage();
 
+        rollupsDS.templateHash = _templateHash;
         rollupsDS.inputDuration = uint32(_inputDuration);
         rollupsDS.challengePeriod = uint32(_challengePeriod);
         rollupsDS.inputAccumulationStart = uint32(block.timestamp);
