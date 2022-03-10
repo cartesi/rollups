@@ -28,6 +28,7 @@ graphqlParams(
                     .query(GetNoticeDocument, {
                         query: {
                             epoch_index: args.epoch.toString(),
+                            input_index: args.input?.toString(),
                         },
                     })
                     .toPromise();
