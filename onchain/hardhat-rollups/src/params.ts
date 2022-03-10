@@ -75,13 +75,6 @@ export const createParams: ParamsBuilder = (task) => {
             "0,1,2",
             types.string,
             true
-        )
-        .addParam<string>(
-            "erc20ForPortal",
-            "Address of ERC-20 token used by the Portal Facet",
-            CTSI_address,
-            types.string,
-            true
         );
 };
 

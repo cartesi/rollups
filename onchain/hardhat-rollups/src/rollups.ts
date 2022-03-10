@@ -138,7 +138,6 @@ createParams(
                 args.erc20ForFee,
                 args.feeManagerOwner || deployer,
                 validators,
-                args.erc20ForPortal,
             ]);
             const tx = await diamondCutFacet.diamondCut(
                 facetCuts,

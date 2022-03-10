@@ -20,7 +20,6 @@ export interface CreateArgs extends TaskArguments {
     erc20ForFee: string;
     feeManagerOwner: string;
     validators: string;
-    erc20ForPortal: string;
     log?: boolean;
 }
 
