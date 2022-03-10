@@ -18,11 +18,6 @@ export type ParamsBuilder = (
 ) => ConfigurableTaskDefinition;
 
 export const createParams: ParamsBuilder = (task) => {
-    const CTSI_address = "0x491604c0FDF08347Dd1fa4Ee062a822A5DD06B5D";
-
-    const ZERO_HASH =
-        "0x0000000000000000000000000000000000000000000000000000000000000000";
-
     return task
         .addOptionalParam<boolean>(
             "log",
@@ -33,7 +28,7 @@ export const createParams: ParamsBuilder = (task) => {
         .addParam<string>(
             "templateHash",
             "Template hash of the machine",
-            ZERO_HASH,
+            undefined,
             types.string,
             true
         )
@@ -68,7 +63,7 @@ export const createParams: ParamsBuilder = (task) => {
         .addParam<string>(
             "erc20ForFee",
             "Address of ERC-20 token used to reward validators",
-            CTSI_address,
+            undefined,
             types.string,
             true
         )
