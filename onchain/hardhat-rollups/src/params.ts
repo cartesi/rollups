@@ -53,11 +53,11 @@ export const createParams: ParamsBuilder = (task) => {
             types.int,
             true
         )
-        .addParam<number>(
+        .addParam<string>(
             "feePerClaim",
             "Fee to reward validators for claims",
-            10,
-            types.int,
+            "10000000000000000000",
+            types.string,
             true
         )
         .addParam<string>(

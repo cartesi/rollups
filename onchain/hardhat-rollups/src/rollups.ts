@@ -13,6 +13,7 @@
 import { task } from "hardhat/config";
 import "@nomiclabs/hardhat-ethers/internal/type-extensions";
 import "hardhat-deploy/dist/src/type-extensions";
+import { BigNumber } from "ethers";
 
 import { RollupsArgs, CreateArgs, ClaimArgs } from "./args";
 import {
@@ -135,7 +136,7 @@ createParams(
                 args.inputDuration,
                 args.challengePeriod,
                 args.inputLog2Size,
-                args.feePerClaim,
+                BigNumber.from(args.feePerClaim),
                 args.erc20ForFee,
                 args.feeManagerOwner || deployer,
                 validators,
