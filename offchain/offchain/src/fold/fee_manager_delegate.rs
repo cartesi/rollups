@@ -1,3 +1,4 @@
+use crate::contracts::bank_contract::*;
 use crate::contracts::diamond_init::*;
 use crate::contracts::fee_manager_facet::*;
 use crate::contracts::rollups_facet::*;
@@ -13,7 +14,7 @@ use state_fold::{
     utils as fold_utils, DelegateAccess, StateFold,
 };
 
-use crate::fold::erc20_token_delegate::ERC20BalanceFoldDelegate;
+use crate::fold::bank_delegate::BankFoldDelegate;
 use crate::fold::validator_manager_delegate::ValidatorManagerFoldDelegate;
 use async_trait::async_trait;
 use ethers::prelude::EthEvent;
@@ -25,19 +26,19 @@ use std::sync::Arc;
 
 /// Fee Manager Delegate
 pub struct FeeManagerFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
-    erc20_balance_fold: Arc<StateFold<ERC20BalanceFoldDelegate, DA>>,
+    bank_fold: Arc<StateFold<BankFoldDelegate, DA>>,
     validator_manager_fold: Arc<StateFold<ValidatorManagerFoldDelegate, DA>>,
 }
 
 impl<DA: DelegateAccess + Send + Sync + 'static> FeeManagerFoldDelegate<DA> {
     pub fn new(
-        erc20_balance_fold: Arc<StateFold<ERC20BalanceFoldDelegate, DA>>,
+        bank_fold: Arc<StateFold<BankFoldDelegate, DA>>,
         validator_manager_fold: Arc<
             StateFold<ValidatorManagerFoldDelegate, DA>,
         >,
     ) -> Self {
         Self {
-            erc20_balance_fold,
+            bank_fold,
             validator_manager_fold,
         }
     }
@@ -67,7 +68,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             )
             .await;
 
-        // `fee_manager_created` event
+        // `FeeManagerInitialized` event
         let events = diamond_init
             .fee_manager_initialized_filter()
             .query()
@@ -126,24 +127,24 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             });
         }
 
-        // obtain fee manager balance
-        let erc20_address = created_event.erc_20_for_fee;
-        let erc20_balance_state = self
-            .erc20_balance_fold
+        // obtain fee manager bank balance
+        let bank_address = created_event.fee_manager_bank;
+        let bank_state = self
+            .bank_fold
             .get_state_for_block(
-                &(erc20_address, *dapp_contract_address),
+                &(bank_address, *dapp_contract_address),
                 Some(block.hash),
             )
             .await
             .map_err(|e| {
                 SyncDelegateError {
-                    err: format!("ERC20 balance state fold error: {:?}", e),
+                    err: format!("Bank state fold error: {:?}", e),
                 }
                 .build()
             })?
             .state;
 
-        let fee_manager_balance = erc20_balance_state.balance;
+        let bank_balance = bank_state.balance;
 
         // obtain #claims validators made from Validator Manager
         let validator_manager_state = self
@@ -163,15 +164,15 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             &validator_redeemed,
             &validator_manager_state.num_claims,
             &fee_per_claim,
-            &fee_manager_balance,
+            &bank_balance,
         );
 
         Ok(FeeManagerState {
             dapp_contract_address: *dapp_contract_address,
-            erc20_address,
+            bank_address,
             fee_per_claim,
             validator_redeemed,
-            fee_manager_balance,
+            bank_balance,
             leftover_balance,
         })
     }
@@ -183,34 +184,10 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         access: &A,
     ) -> FoldResult<Self::Accumulator, A> {
         let dapp_contract_address = previous_state.dapp_contract_address;
-
-        let mut state = previous_state.clone();
-
-        // update fee manager balance
-        // other events (if any) will be handled after the bloom filter
-        let erc20_balance_state = self
-            .erc20_balance_fold
-            .get_state_for_block(
-                &(state.erc20_address, state.dapp_contract_address),
-                Some(block.hash),
-            )
-            .await
-            .map_err(|e| {
-                FoldDelegateError {
-                    err: format!("ERC20 balance state fold error: {:?}", e),
-                }
-                .build()
-            })?
-            .state;
-
-        state.fee_manager_balance = erc20_balance_state.balance;
-        state.leftover_balance = state.leftover_balance
-            + (i128::try_from(state.fee_manager_balance.as_u128()).unwrap()
-                - i128::try_from(previous_state.fee_manager_balance.as_u128())
-                    .unwrap());
+        let bank_address = previous_state.bank_address;
 
         // If not in bloom copy previous state
-        if !(fold_utils::contains_address(
+        if !((fold_utils::contains_address(
             &block.logs_bloom,
             &dapp_contract_address,
         ) && (fold_utils::contains_topic(
@@ -232,9 +209,20 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         ) || fold_utils::contains_topic(
             &block.logs_bloom,
             &ClaimFilter::signature(),
-        ))) {
-            return Ok(state);
+        ))) || (fold_utils::contains_address(
+            &block.logs_bloom,
+            &bank_address,
+        ) && (fold_utils::contains_topic(
+            &block.logs_bloom,
+            &TransferFilter::signature(),
+        ) || fold_utils::contains_topic(
+            &block.logs_bloom,
+            &DepositFilter::signature(),
+        )))) {
+            return Ok(previous_state.clone());
         }
+
+        let mut state = previous_state.clone();
 
         let contract = access
             .build_fold_contract(
@@ -318,6 +306,24 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             }
         }
 
+        // update fee manager bank balance
+        let bank_state = self
+            .bank_fold
+            .get_state_for_block(
+                &(state.bank_address, state.dapp_contract_address),
+                Some(block.hash),
+            )
+            .await
+            .map_err(|e| {
+                FoldDelegateError {
+                    err: format!("Bank state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
+        state.bank_balance = bank_state.balance;
+
         let validator_manager_state = self
             .validator_manager_fold
             .get_state_for_block(&dapp_contract_address, Some(block.hash))
@@ -335,7 +341,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             &state.validator_redeemed,
             &validator_manager_state.num_claims,
             &state.fee_per_claim,
-            &state.fee_manager_balance,
+            &state.bank_balance,
         );
 
         Ok(state)
@@ -353,7 +359,7 @@ fn calculate_leftover_balance(
     validator_redeemed: &[Option<NumRedeemed>; 8],
     num_claims: &[Option<NumClaims>; 8],
     fee_per_claim: &U256,
-    fee_manager_balance: &U256,
+    bank_balance: &U256,
 ) -> i128 {
     // calculate total number of claims made by all validators
     let mut total_claims = U256::zero();
@@ -376,8 +382,7 @@ fn calculate_leftover_balance(
     // leftover_balance = current_balance - to_be_redeemed_fees
     // un-finalized claims are not considered
     let to_be_redeemed_fees = (total_claims - total_redeems) * fee_per_claim;
-    let leftover_balance = i128::try_from(fee_manager_balance.as_u128())
-        .unwrap()
+    let leftover_balance = i128::try_from(bank_balance.as_u128()).unwrap()
         - i128::try_from(to_be_redeemed_fees.as_u128()).unwrap();
     leftover_balance
 }

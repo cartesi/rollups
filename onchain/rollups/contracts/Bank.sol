@@ -18,6 +18,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Bank is IBank {
     IERC20 immutable token;
+
+    // `balances` maps account/contract addresses to balances
     mapping(address => uint256) balances;
 
     constructor(address _token) {
@@ -44,13 +46,16 @@ contract Bank is IBank {
         balances[msg.sender] = balance - _value;
 
         // interactions
+        // Note: a well-implemented ERC-20 contract should already
+        // require the recipient (in this case, `_to`) to be different
+        // than address(0), so we don't need to check it ourselves
         require(token.transfer(_to, _value), "Bank: transfer failed");
         emit Transfer(msg.sender, _to, _value);
     }
 
     function deposit(address _to, uint256 _value) public override {
         // checks
-        require(_to != address(0), "Bank: invalid receiver");
+        require(_to != address(0), "Bank: invalid recipient");
 
         // effects
         // Note: this should not overflow because `IERC20.totalSupply`
@@ -59,6 +64,8 @@ contract Bank is IBank {
         balances[_to] += _value;
 
         // interactions
+        // Note: transfers tokens to bank, but emits `Deposit` event
+        // with recipient being `_to`
         require(
             token.transferFrom(msg.sender, address(this), _value),
             "Bank: transferFrom failed"

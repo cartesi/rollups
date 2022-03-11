@@ -134,16 +134,16 @@ describe("FeeManager Facet", () => {
             expect(state.dapp_contract_address, "delegate address").to.equal(
                 feeManagerFacet.address.toLowerCase()
             );
-            // erc20_address
-            expect(state.erc20_address, "erc20 address").to.equal(
-                token.address.toLowerCase()
+            // bank_address
+            expect(state.bank_address, "bank address").to.equal(
+                bank.address.toLowerCase()
             );
             // fee_per_claim
             same_as_initial_value("fee_per_claim", state);
             // validator_redeemed
             same_as_initial_value("validator_redeemed", state);
-            // fee_manager_balance
-            same_as_initial_value("fee_manager_balance", state);
+            // bank_balance
+            same_as_initial_value("bank_balance", state);
             // leftover_balance
             same_as_initial_value("leftover_balance", state);
         });
@@ -174,7 +174,7 @@ describe("FeeManager Facet", () => {
     it("fund the FeeManager contract and emit event", async () => {
         expect(
             await token.balanceOf(bank.address),
-            "initially the contract has no erc20 tokens"
+            "initially the bank has no erc20 tokens"
         ).to.equal(0);
 
         // fund 10000 tokens
@@ -185,8 +185,8 @@ describe("FeeManager Facet", () => {
         if (enableDelegate) {
             let state = JSON.parse(await getState(initialState));
             expect(
-                parseInt(state.fee_manager_balance, 16),
-                "fee manager has 10k tokens deposited"
+                parseInt(state.bank_balance, 16),
+                "fee manager bank has 10k tokens deposited"
             ).to.equal(amount);
             expect(
                 state.leftover_balance,
@@ -205,8 +205,8 @@ describe("FeeManager Facet", () => {
         if (enableDelegate) {
             let state = JSON.parse(await getState(initialState));
             expect(
-                parseInt(state.fee_manager_balance, 16),
-                "fee manager has 20k tokens deposited"
+                parseInt(state.bank_balance, 16),
+                "fee manager bank has 20k tokens deposited"
             ).to.equal(amount * 2);
             expect(
                 state.leftover_balance,
@@ -228,7 +228,7 @@ describe("FeeManager Facet", () => {
             "should revert on address 0"
         ).to.be.revertedWith("address should not be 0");
 
-        // assume signers[1] makes 10 claims with 0 redeemable claims
+        // initially signers[1] has 0 redeemable claims
         expect(
             await feeManagerFacet.callStatic.numClaimsRedeemable(
                 await signers[1].getAddress()
@@ -274,7 +274,7 @@ describe("FeeManager Facet", () => {
             "getNumClaimsRedeemed() should revert on address 0"
         ).to.be.revertedWith("address should not be 0");
 
-        // assume signers[1] makes 10 claims with 0 redeemed claims
+        // initially signers[1] has 0 redeemed claims
         expect(
             await feeManagerFacet.callStatic.getNumClaimsRedeemed(
                 await signers[1].getAddress()
@@ -382,7 +382,7 @@ describe("FeeManager Facet", () => {
             let state = JSON.parse(await getState(initialState));
             // since fee manager doesn't have any deposit yet
             // now its balance is 0 and leftover is negative
-            expect(state.fee_manager_balance, "balance is 0").to.equal("0x0");
+            expect(state.bank_balance, "balance is 0").to.equal("0x0");
             expect(state.leftover_balance, "leftover is negative").to.equal(
                 num_claims * initialFeePerClaim * -1
             );
@@ -396,7 +396,7 @@ describe("FeeManager Facet", () => {
             // update state
             state = JSON.parse(await getState(initialState));
             expect(
-                parseInt(state.fee_manager_balance, 16),
+                parseInt(state.bank_balance, 16),
                 "balance should be 100"
             ).to.equal(100);
             expect(state.leftover_balance, "leftover is 0").to.equal(0);
@@ -430,10 +430,10 @@ describe("FeeManager Facet", () => {
                 state.leftover_balance,
                 "leftover_balance is still 0"
             ).to.equal(0);
-            // after redemption, fee_manager_balance becomes 0
+            // after redemption, bank_balance becomes 0
             expect(
-                state.fee_manager_balance,
-                "after redemption, fee_manager_balance becomes 0"
+                state.bank_balance,
+                "after redemption, bank_balance becomes 0"
             ).to.equal("0x0");
 
             // make another deposit to fee manager
@@ -441,8 +441,8 @@ describe("FeeManager Facet", () => {
             // update state
             state = JSON.parse(await getState(initialState));
             expect(
-                parseInt(state.fee_manager_balance, 16),
-                "the fee_manager_balance should be 10k"
+                parseInt(state.bank_balance, 16),
+                "the bank_balance should be 10k"
             ).to.equal(10000);
             expect(
                 state.leftover_balance,
@@ -517,15 +517,15 @@ describe("FeeManager Facet", () => {
                     "the rest in `validator_redeemed` should be null"
                 ).to.equal(null);
             }
-            // after redemption, fee_manager_balance becomes 10k - redeemedValue
+            // after redemption, bank_balance becomes 10k - redeemedValue
             expect(
-                parseInt(state.fee_manager_balance, 16),
-                "after redemption, fee_manager_balance becomes 10k - redeemedValue"
+                parseInt(state.bank_balance, 16),
+                "after redemption, bank_balance becomes 10k - redeemedValue"
             ).to.equal(10000 - num_claims * initialFeePerClaim);
-            // leftover_balance should be the same as fee_manager_balance
+            // leftover_balance should be the same as bank_balance
             expect(
                 state.leftover_balance,
-                "leftover_balance should be the same as fee_manager_balance"
+                "leftover_balance should be the same as bank_balance"
             ).to.equal(10000 - num_claims * initialFeePerClaim);
         }
     });
@@ -682,19 +682,19 @@ describe("FeeManager Facet", () => {
                     "the rest in `validator_redeemed` should be null"
                 ).to.equal(null);
             }
-            // after automatic redemption, fee_manager_balance should less some balance,
+            // after automatic redemption, bank_balance should less some balance,
             // based on the previous fee_per_claim
             expect(
-                parseInt(state.fee_manager_balance, 16),
-                "after automatic redemption, fee_manager_balance becomes 10k - redeemedValue"
+                parseInt(state.bank_balance, 16),
+                "after automatic redemption, bank_balance becomes 10k - redeemedValue"
             ).to.equal(10000 - num_claims * initialFeePerClaim);
-            // leftover_balance should be the same as fee_manager_balance
+            // leftover_balance should be the same as bank_balance
             expect(
                 state.leftover_balance,
-                "leftover_balance should be the same as fee_manager_balance"
+                "leftover_balance should be the same as bank_balance"
             ).to.equal(10000 - num_claims * initialFeePerClaim);
 
-            let current_fee_manager_balance = state.fee_manager_balance;
+            let current_bank_balance = state.bank_balance;
             let current_leftover_balance = state.leftover_balance;
             // signers[1] makes another claim
             await passInputAccumulationPeriod();
@@ -703,11 +703,11 @@ describe("FeeManager Facet", () => {
             await rollupsFacet.finalizeEpoch();
             // update state
             state = JSON.parse(await getState(initialState));
-            // fee_manager_balance should stay the same
+            // bank_balance should stay the same
             expect(
-                state.fee_manager_balance,
-                "fee_manager_balance should stay the same"
-            ).to.equal(current_fee_manager_balance);
+                state.bank_balance,
+                "bank_balance should stay the same"
+            ).to.equal(current_bank_balance);
             // leftover_balance should less the new fee_per_claim value
             expect(
                 state.leftover_balance,
@@ -769,9 +769,9 @@ describe("FeeManager Facet", () => {
                 state.leftover_balance,
                 "leftover_balance will less 8 claims"
             ).to.equal(10000 - 8 * initialFeePerClaim);
-            // fee_manager_balance should be 10k
+            // bank_balance should be 10k
             expect(
-                parseInt(state.fee_manager_balance, 16),
+                parseInt(state.bank_balance, 16),
                 "fee manager has 10k tokens deposited"
             ).to.equal(10000);
             // the rest are the same as initial
@@ -830,10 +830,10 @@ describe("FeeManager Facet", () => {
                 state.leftover_balance,
                 "leftover_balance is the same as before redemption"
             ).to.equal(10000 - 8 * initialFeePerClaim);
-            // fee_manager_balance now should be the same as leftover_balance
+            // bank_balance now should be the same as leftover_balance
             expect(
-                parseInt(state.fee_manager_balance, 16),
-                "fee_manager_balance now should be the same as leftover_balance"
+                parseInt(state.bank_balance, 16),
+                "bank_balance now should be the same as leftover_balance"
             ).to.equal(10000 - 8 * initialFeePerClaim);
         }
     });
@@ -861,9 +861,9 @@ function same_as_initial_value(s: string, state: any) {
             }
             break;
         }
-        case "fee_manager_balance": {
+        case "bank_balance": {
             expect(
-                state.fee_manager_balance,
+                state.bank_balance,
                 "fee manager should have 0 balance"
             ).to.equal("0x0");
             break;

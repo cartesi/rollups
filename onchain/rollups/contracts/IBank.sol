@@ -43,7 +43,7 @@ interface IBank {
     ///              got their balance decreased by `_value`
     /// @param _to the one that received `_value` tokens from the bank
     /// @param _value amount of tokens that were transfered
-    event Transfer(address _from, address _to, uint256 _value);
+    event Transfer(address indexed _from, address _to, uint256 _value);
 
     /// @notice `_value` tokens were transfered from `_from` to bank
     /// @notice the balance of `_to` was increased by `_value`
@@ -52,5 +52,5 @@ interface IBank {
     ///              transfered `_value` tokens to the bank
     /// @param _to the one that got their balance increased by `_value`
     /// @param _value amount of tokens that were transfered
-    event Deposit(address _from, address _to, uint256 _value);
+    event Deposit(address _from, address indexed _to, uint256 _value);
 }

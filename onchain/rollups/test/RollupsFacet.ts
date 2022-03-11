@@ -590,7 +590,7 @@ describe("Rollups Facet", () => {
                 null, null, null,
                 null, null
                 ],
-                fee_manager_balance: '0x0',
+                bank_balance: '0x0',
                 leftover_balance: 0
             }
         }

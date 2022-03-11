@@ -11,6 +11,9 @@ pub mod diamond_loupe_facet;
 pub mod erc20_contract;
 
 #[rustfmt::skip]
+pub mod bank_contract;
+
+#[rustfmt::skip]
 pub mod erc20_portal_facet;
 
 #[rustfmt::skip]

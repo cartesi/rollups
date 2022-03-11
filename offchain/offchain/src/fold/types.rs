@@ -307,6 +307,13 @@ pub struct ERC20BalanceState {
     pub balance: U256,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct BankState {
+    pub bank_address: Address,
+    pub dapp_address: Address,
+    pub balance: U256,
+}
+
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct NumRedeemed {
     pub validator_address: Address,
@@ -316,12 +323,13 @@ pub struct NumRedeemed {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FeeManagerState {
     pub dapp_contract_address: Address,
-    pub erc20_address: Address,
+    pub bank_address: Address,
     pub fee_per_claim: U256, // only the current value
     // Tuple containing (validator, #claims_redeemed_so_far)
     pub validator_redeemed: [Option<NumRedeemed>; 8],
-    pub fee_manager_balance: U256,
-    // Balance of fee manager contract minus amount of to-be-redeemed fees
+    pub bank_balance: U256,
+    // Leftover balance equals the balance of bank contract minus
+    // the amount of to-be-redeemed fees
     // un-finalized claims are not considered
     pub leftover_balance: i128,
 }

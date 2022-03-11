@@ -1,6 +1,7 @@
 pub mod types;
 pub use setup::{create_rollups_state_fold, RollupsStateFold};
 
+pub mod bank_delegate;
 mod epoch_delegate;
 pub mod erc20_token_delegate;
 pub mod fee_manager_delegate;

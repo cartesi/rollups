@@ -62,6 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "facets/ValidatorManagerFacet",
             "validator_manager_facet.rs",
         ),
+        ("Bank", "Bank", "bank_contract.rs"),
     ];
 
     for (name, file, rs) in contracts {
