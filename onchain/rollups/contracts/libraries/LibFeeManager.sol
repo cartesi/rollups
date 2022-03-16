@@ -15,7 +15,7 @@ pragma solidity ^0.8.0;
 
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibClaimsMask, ClaimsMask} from "../libraries/LibClaimsMask.sol";
-import {Bank} from "../Bank.sol";
+import {IBank} from "../IBank.sol";
 
 library LibFeeManager {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
@@ -28,7 +28,7 @@ library LibFeeManager {
     struct DiamondStorage {
         address owner; // owner of Fee Manager
         uint256 feePerClaim;
-        Bank bank; // bank that holds the tokens to pay validators
+        IBank bank; // bank that holds the tokens to pay validators
         bool lock; // reentrancy lock
         // A bit set used for up to 8 validators.
         // The first 16 bits are not used to keep compatibility with the validator manager contract.

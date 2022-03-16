@@ -20,7 +20,7 @@ import {LibInput} from "../libraries/LibInput.sol";
 import {LibValidatorManager} from "../libraries/LibValidatorManager.sol";
 import {LibClaimsMask} from "../libraries/LibClaimsMask.sol";
 import {LibFeeManager} from "../libraries/LibFeeManager.sol";
-import {Bank} from "../Bank.sol";
+import {IBank} from "../IBank.sol";
 
 // Diamond-related dependencies
 import {LibDiamond} from "../libraries/LibDiamond.sol";
@@ -162,7 +162,7 @@ contract DiamondInit {
             .diamondStorage();
 
         feeManagerDS.feePerClaim = _feePerClaim;
-        feeManagerDS.bank = Bank(_feeManagerBank);
+        feeManagerDS.bank = IBank(_feeManagerBank);
         feeManagerDS.owner = _feeManagerOwner;
 
         emit FeeManagerInitialized(
