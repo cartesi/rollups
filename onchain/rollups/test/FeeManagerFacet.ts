@@ -14,6 +14,8 @@ import { SimpleToken } from "../src/types/SimpleToken";
 import { SimpleToken__factory } from "../src/types/factories/SimpleToken__factory";
 import { DiamondInit } from "../src/types/DiamondInit";
 import { DiamondInit__factory } from "../src/types/factories/DiamondInit__factory";
+import { ERC20PortalFacet } from "../src/types/ERC20PortalFacet";
+import { ERC20PortalFacet__factory } from "../src/types/factories/ERC20PortalFacet__factory";
 import { deployDiamond, getState, increaseTimeAndMine } from "./utils";
 
 use(solidity);
@@ -28,6 +30,7 @@ describe("FeeManager Facet", () => {
     let rollupsFacet: RollupsFacet;
     let diamondInit: DiamondInit;
     let debugFacet: DebugFacet;
+    let portalFacet: ERC20PortalFacet;
     let tokenSupply = 1000000; // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
     let initialFeePerClaim = 10; // set initial fees per claim as 10 token
     let initialState: string; // for delegate
@@ -62,7 +65,7 @@ describe("FeeManager Facet", () => {
             .withArgs(tokenOwnerAddress, bank.address, amount);
 
         // deposit `amount` tokens in Fee Manager's bank account
-        expect(await bank.deposit(feeManagerFacet.address, amount))
+        expect(await bank.depositTokens(feeManagerFacet.address, amount))
             .to.emit(bank, "Deposit")
             .withArgs(tokenOwnerAddress, feeManagerFacet.address, amount);
 
@@ -98,6 +101,11 @@ describe("FeeManager Facet", () => {
         );
 
         rollupsFacet = RollupsFacet__factory.connect(
+            diamond.address,
+            signers[0]
+        );
+
+        portalFacet = ERC20PortalFacet__factory.connect(
             diamond.address,
             signers[0]
         );
@@ -836,6 +844,26 @@ describe("FeeManager Facet", () => {
                 "bank_balance now should be the same as leftover_balance"
             ).to.equal(10000 - 8 * initialFeePerClaim);
         }
+    });
+
+    it("test whether we can withdraw tokens from Bank via the ERC-20 Portal", async () => {
+        // fund 10000 tokens
+        let amount = 10000;
+        await fundFeeManager(amount);
+
+        // create fake input
+        const erc20 = bank.address;
+        const sender = await signers[0].getAddress();
+
+        let data = ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint", "uint"],
+            [erc20, sender, amount]
+        );
+
+        // check erc20Withdrawal reverts
+        await expect(debugFacet._erc20Withdrawal(data)).to.be.revertedWith(
+            "function selector was not recognized and there's no fallback function"
+        );
     });
 });
 

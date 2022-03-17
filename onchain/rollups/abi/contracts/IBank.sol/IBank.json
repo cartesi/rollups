@@ -81,7 +81,7 @@
         "type": "uint256"
       }
     ],
-    "name": "deposit",
+    "name": "depositTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -112,7 +112,7 @@
         "type": "uint256"
       }
     ],
-    "name": "transfer",
+    "name": "transferTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

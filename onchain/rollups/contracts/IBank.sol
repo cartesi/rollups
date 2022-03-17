@@ -27,19 +27,19 @@ interface IBank {
     /// @notice decrease the balance of caller by `_value`
     /// @param _to account that will receive `_value` tokens
     /// @param _value amount of tokens to be transfered
-    function transfer(address _to, uint256 _value) external;
+    function transferTokens(address _to, uint256 _value) external;
 
     /// @notice transfer `_value` tokens from caller to bank
     /// @notice increase the balance of `_to` by `_value`
     /// @dev you may need to call `token.approve(bank, _value)`
     /// @param _to account that will have their balance increased by `_value`
     /// @param _value amount of tokens to be transfered
-    function deposit(address _to, uint256 _value) external;
+    function depositTokens(address _to, uint256 _value) external;
 
     /// @notice `_value` tokens were transfered from the bank to `_to`
     /// @notice the balance of `_from` was decreased by `_value`
-    /// @dev is triggered on any successful call to `transfer`
-    /// @param _from the account/contract that called `transfer` and
+    /// @dev is triggered on any successful call to `transferTokens`
+    /// @param _from the account/contract that called `transferTokens` and
     ///              got their balance decreased by `_value`
     /// @param _to the one that received `_value` tokens from the bank
     /// @param _value amount of tokens that were transfered
@@ -47,8 +47,8 @@ interface IBank {
 
     /// @notice `_value` tokens were transfered from `_from` to bank
     /// @notice the balance of `_to` was increased by `_value`
-    /// @dev is triggered on any successful call to `deposit`
-    /// @param _from the account/contract that called `deposit` and
+    /// @dev is triggered on any successful call to `depositTokens`
+    /// @param _from the account/contract that called `depositTokens` and
     ///              transfered `_value` tokens to the bank
     /// @param _to the one that got their balance increased by `_value`
     /// @param _value amount of tokens that were transfered

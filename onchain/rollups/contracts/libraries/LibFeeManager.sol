@@ -137,7 +137,7 @@ library LibFeeManager {
 
         // ** interactions **
         uint256 feesToSend = nowRedeemingClaims * ds.feePerClaim; // number of erc20 tokens to send
-        ds.bank.transfer(_validator, feesToSend); // will revert if transfer fails
+        ds.bank.transferTokens(_validator, feesToSend); // will revert if transfer fails
         // emit the number of claimed being redeemed, instead of the amount of tokens
         emit FeeRedeemed(_validator, nowRedeemingClaims);
     }

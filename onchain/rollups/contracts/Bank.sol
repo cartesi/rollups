@@ -35,7 +35,7 @@ contract Bank is IBank {
         return balances[_owner];
     }
 
-    function transfer(address _to, uint256 _value) public override {
+    function transferTokens(address _to, uint256 _value) public override {
         // checks
         uint256 balance = balances[msg.sender];
         require(_value <= balance, "Bank: not enough balance");
@@ -53,7 +53,7 @@ contract Bank is IBank {
         emit Transfer(msg.sender, _to, _value);
     }
 
-    function deposit(address _to, uint256 _value) public override {
+    function depositTokens(address _to, uint256 _value) public override {
         // checks
         require(_to != address(0), "Bank: invalid recipient");
 
