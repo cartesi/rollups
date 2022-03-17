@@ -7,7 +7,7 @@ on:
             - offchain/offchain/**
             - grpc-interfaces/**
             - onchain/rollups/abi/**
-            - .github/workflows/delegate-server.yml
+            - .github/workflows/delegate_server.yml
     push:
         tags:
             - v*
@@ -49,3 +49,14 @@ jobs:
                   platforms: linux/amd64
                   tags: ${{ steps.docker_meta.outputs.tags }}
                   push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
+
+            - name: run delegate tests
+              run: |
+                  cd onchain/rollups
+                  yarn install
+                  yarn test:protoc
+                  cd ../..
+                  cd offchain
+                  cargo build
+                  cd ..
+                  ./scripts/delegate_tests.sh
