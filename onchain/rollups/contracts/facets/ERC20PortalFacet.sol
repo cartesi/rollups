@@ -70,8 +70,7 @@ contract ERC20PortalFacet is IERC20Portal {
 
         IERC20 token = IERC20(tokenAddr);
 
-        // transfer reverts on failure
-        token.transfer(receiver, value);
+        require(token.transfer(receiver, value), "ERC20 transfer failed");
 
         emit ERC20Withdrawn(tokenAddr, receiver, value);
 

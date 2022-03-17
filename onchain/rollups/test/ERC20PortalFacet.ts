@@ -127,6 +127,23 @@ describe("ERC20Portal Facet", async () => {
         ).to.be.revertedWith("only itself");
     });
 
+    it("erc20Withdrawal should revert if transfer returns false", async () => {
+        await mockERC20.mock.transfer.returns(false);
+
+        const erc20 = mockERC20.address;
+        const sender = await signer.getAddress();
+        const value = 42;
+
+        let data = ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint", "uint"],
+            [erc20, sender, value]
+        );
+
+        await expect(debugFacet._erc20Withdrawal(data)).to.be.revertedWith(
+            "ERC20 transfer failed"
+        );
+    });
+
     it("erc20Withdrawal should emit ERC20Withdrawn and return true", async () => {
         await mockERC20.mock.transfer.returns(true);
 
