@@ -65,14 +65,8 @@ createParams(
                         : address
                 );
 
-            // if feeManagerBank was not provided, use CTSI Bank
-            let feeManagerBank;
-            if (typeof args.feeManagerBank == "undefined") {
-                const { Bank } = await deployments.all();
-                feeManagerBank = Bank.address;
-            } else {
-                feeManagerBank = args.feeManagerBank;
-            }
+            // get bank for fee manager to pay validators
+            const { Bank } = await deployments.all();
 
             // deploy raw diamond with only the diamond cut facet
             const diamondCutFacetDeployment = await deployments.get(
@@ -146,7 +140,7 @@ createParams(
                 args.challengePeriod,
                 args.inputLog2Size,
                 BigNumber.from(args.feePerClaim),
-                feeManagerBank,
+                Bank.address,
                 args.feeManagerOwner || deployer,
                 validators,
             ]);

@@ -60,13 +60,6 @@ export const createParams: ParamsBuilder = (task) => {
             types.string,
             true
         )
-        .addParam<string>(
-            "feeManagerBank",
-            "Address of Bank to manage ERC-20 token used to reward validators",
-            undefined,
-            types.string,
-            true
-        )
         .addParam<number>(
             "feeManagerOwner",
             "Address of Fee Manager owner. Defaults to the address of the deployer.",
