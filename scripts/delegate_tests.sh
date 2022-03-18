@@ -37,10 +37,17 @@ do
     # run test
     pushd onchain/rollups >/dev/null
     DELEGATE_TEST=1 npx hardhat test "${test_script_path}" --network localhost
+    if [ "$?" -ne "0" ]; then
+        exit 1
+    fi
     popd >/dev/null
 
     # kill delegate server
     pkill -P "${delegate_server_pid}"
+    # in the case that delegate server did not launch successfully, exits with error code 1
+    if [ "$?" -ne "0" ]; then
+        exit 1
+    fi
 done
 
 # kill hardhat node
