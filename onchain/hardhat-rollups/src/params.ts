@@ -130,6 +130,16 @@ export const executeVoucherParams: ParamsBuilder = (task) => {
         );
 };
 
+export const fundBankParams: ParamsBuilder = (task) => {
+    return accountIndexParam(task).addParam<string>(
+        "amount",
+        "The number of CTSI to fund DApp's bank",
+        undefined,
+        types.string,
+        false
+    );
+};
+
 export const advanceTimeParams: ParamsBuilder = (task) => {
     return task.addParam("seconds", "Time to advance in seconds");
 };

@@ -16,9 +16,11 @@ import {
     OutputFacet__factory,
     RollupsFacet__factory,
     InputFacet__factory,
+    FeeManagerFacet__factory,
     RollupsFacet,
     InputFacet,
     OutputFacet,
+    FeeManagerFacet,
 } from "@cartesi/rollups";
 import { RollupsArgs } from "./args";
 
@@ -26,10 +28,11 @@ type RollupsFacets = {
     rollupsFacet: RollupsFacet;
     inputFacet: InputFacet;
     outputFacet: OutputFacet;
+    feeManagerFacet: FeeManagerFacet;
 };
 
 /**
- * Connects to a Rollups diamond contract and its Rollups, Input and Output facets.
+ * Connects to a Rollups diamond contract and its Rollups, Input, Output and FeeManager facets.
  * @param args arguments with information about which rollups to connect
  * @param hre Hardhat Runtime Environment
  * @returns three connected contracts, Rollups, Input and Output
@@ -59,10 +62,17 @@ export const connect = async (
     // connect to OutputFacet
     const outputFacet = OutputFacet__factory.connect(args.rollups, signer);
 
+    // connect to FeeManagerFacet
+    const feeManagerFacet = FeeManagerFacet__factory.connect(
+        args.rollups,
+        signer
+    );
+
     return {
         rollupsFacet,
         inputFacet,
         outputFacet,
+        feeManagerFacet,
     };
 };
 

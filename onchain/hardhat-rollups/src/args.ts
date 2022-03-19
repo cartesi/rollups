@@ -42,6 +42,10 @@ export interface ExecuteVoucherArgs extends RollupsArgs {
     proof: string;
 }
 
+export interface FundBankArgs extends RollupsArgs {
+    amount: string;
+}
+
 export interface AdvanceTimeArgs extends TaskArguments {
     seconds: number;
 }
