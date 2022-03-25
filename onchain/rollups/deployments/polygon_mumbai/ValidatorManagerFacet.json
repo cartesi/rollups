@@ -1,0 +1,310 @@
+{
+  "address": "0x22baF2A180B24E0eee1C06a02776A0964dAfDc20",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum Result",
+          "name": "result",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32[2]",
+          "name": "claims",
+          "type": "bytes32[2]"
+        },
+        {
+          "indexed": false,
+          "internalType": "address payable[2]",
+          "name": "validators",
+          "type": "address[2]"
+        }
+      ],
+      "name": "ClaimReceived",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum Result",
+          "name": "result",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32[2]",
+          "name": "claims",
+          "type": "bytes32[2]"
+        },
+        {
+          "indexed": false,
+          "internalType": "address payable[2]",
+          "name": "validators",
+          "type": "address[2]"
+        }
+      ],
+      "name": "DisputeEnded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "claim",
+          "type": "bytes32"
+        }
+      ],
+      "name": "NewEpoch",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "getAgreementMask",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getConsensusGoalMask",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentClaim",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getMaxNumValidators",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address payable",
+          "name": "_sender",
+          "type": "address"
+        }
+      ],
+      "name": "getNumberOfClaimsByAddress",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getNumberOfClaimsByIndex",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_sender",
+          "type": "address"
+        }
+      ],
+      "name": "getValidatorIndex",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x055147a11fe64ab66c022f37aafa8c11d2ae8ba5e743e0b9c918233d2ca73782",
+  "receipt": {
+    "to": null,
+    "from": "0x18930e8a66a1DbE21D00581216789AAB7460Afd0",
+    "contractAddress": "0x22baF2A180B24E0eee1C06a02776A0964dAfDc20",
+    "transactionIndex": 18,
+    "gasUsed": "359080",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000800000000000000000000100000000004000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000080000000000000000000200000000000000000000000000000000000000000000000000000000000004000000000000000000001000000000000000000000000000000100040000000000000000000000000000000000000000000000000000000000000024000100000",
+    "blockHash": "0x9595e3d60202456b5d2e61d2387a180ea6e2b3726341c0ba30381dd4a762d74f",
+    "transactionHash": "0x055147a11fe64ab66c022f37aafa8c11d2ae8ba5e743e0b9c918233d2ca73782",
+    "logs": [
+      {
+        "transactionIndex": 18,
+        "blockNumber": 25798470,
+        "transactionHash": "0x055147a11fe64ab66c022f37aafa8c11d2ae8ba5e743e0b9c918233d2ca73782",
+        "address": "0x0000000000000000000000000000000000001010",
+        "topics": [
+          "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63",
+          "0x0000000000000000000000000000000000000000000000000000000000001010",
+          "0x00000000000000000000000018930e8a66a1dbe21d00581216789aab7460afd0",
+          "0x000000000000000000000000be188d6641e8b680743a4815dfa0f6208038960f"
+        ],
+        "data": "0x0000000000000000000000000000000000000000000000000005a59cf5bc1938000000000000000000000000000000000000000000000000034bb5a92c74c224000000000000000000000000000000000000000000000e69f3ed5531154931b20000000000000000000000000000000000000000000000000346100c36b8a8ec000000000000000000000000000000000000000000000e69f3f2face0b054aea",
+        "logIndex": 53,
+        "blockHash": "0x9595e3d60202456b5d2e61d2387a180ea6e2b3726341c0ba30381dd4a762d74f"
+      }
+    ],
+    "blockNumber": 25798470,
+    "cumulativeGasUsed": "8496841",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 2,
+  "solcInputHash": "a2b3a8408e24625b8f869ed6c9ef20a3",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.13+commit.abaa5c0e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"enum Result\",\"name\":\"result\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes32[2]\",\"name\":\"claims\",\"type\":\"bytes32[2]\"},{\"indexed\":false,\"internalType\":\"address payable[2]\",\"name\":\"validators\",\"type\":\"address[2]\"}],\"name\":\"ClaimReceived\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"enum Result\",\"name\":\"result\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes32[2]\",\"name\":\"claims\",\"type\":\"bytes32[2]\"},{\"indexed\":false,\"internalType\":\"address payable[2]\",\"name\":\"validators\",\"type\":\"address[2]\"}],\"name\":\"DisputeEnded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"claim\",\"type\":\"bytes32\"}],\"name\":\"NewEpoch\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"getAgreementMask\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getConsensusGoalMask\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getCurrentClaim\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getMaxNumValidators\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"_sender\",\"type\":\"address\"}],\"name\":\"getNumberOfClaimsByAddress\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getNumberOfClaimsByIndex\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_sender\",\"type\":\"address\"}],\"name\":\"getValidatorIndex\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"getAgreementMask()\":{\"returns\":{\"_0\":\"current state of agreement mask\"}},\"getConsensusGoalMask()\":{\"returns\":{\"_0\":\"current consensus goal mask\"}},\"getCurrentClaim()\":{\"returns\":{\"_0\":\"current claim\"}},\"getMaxNumValidators()\":{\"returns\":{\"_0\":\"the maximum number of validators\"}},\"getNumberOfClaimsByAddress(address)\":{\"params\":{\"_sender\":\"validator address\"},\"returns\":{\"_0\":\"#claims\"}},\"getNumberOfClaimsByIndex(uint256)\":{\"params\":{\"_index\":\"the index in validator set\"},\"returns\":{\"_0\":\"#claims\"}},\"getValidatorIndex(address)\":{\"params\":{\"_sender\":\"validator address\"},\"returns\":{\"_0\":\"validator index or revert\"}}},\"version\":1},\"userdoc\":{\"events\":{\"ClaimReceived(uint8,bytes32[2],address[2])\":{\"notice\":\"emitted on Claim received\"},\"DisputeEnded(uint8,bytes32[2],address[2])\":{\"notice\":\"emitted on Dispute end\"},\"NewEpoch(bytes32)\":{\"notice\":\"emitted on new Epoch\"}},\"kind\":\"user\",\"methods\":{\"getAgreementMask()\":{\"notice\":\"get agreement mask\"},\"getConsensusGoalMask()\":{\"notice\":\"get consensus goal mask\"},\"getCurrentClaim()\":{\"notice\":\"get current claim\"},\"getMaxNumValidators()\":{\"notice\":\"get the maximum number of validators defined in validator manager\"},\"getNumberOfClaimsByAddress(address)\":{\"notice\":\"get number of claims the sender has made\"},\"getNumberOfClaimsByIndex(uint256)\":{\"notice\":\"get number of claims by the index in the validator set\"},\"getValidatorIndex(address)\":{\"notice\":\"find the validator and return the index or revert\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/facets/ValidatorManagerFacet.sol\":\"ValidatorManagerFacet\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/facets/ValidatorManagerFacet.sol\":{\"content\":\"// Copyright 2021 Cartesi Pte. Ltd.\\n\\n// SPDX-License-Identifier: Apache-2.0\\n// Licensed under the Apache License, Version 2.0 (the \\\"License\\\"); you may not use\\n// this file except in compliance with the License. You may obtain a copy of the\\n// License at http://www.apache.org/licenses/LICENSE-2.0\\n\\n// Unless required by applicable law or agreed to in writing, software distributed\\n// under the License is distributed on an \\\"AS IS\\\" BASIS, WITHOUT WARRANTIES OR\\n// CONDITIONS OF ANY KIND, either express or implied. See the License for the\\n// specific language governing permissions and limitations under the License.\\n\\n/// @title Validator Manager facet\\npragma solidity ^0.8.0;\\n\\nimport {IValidatorManager} from \\\"../interfaces/IValidatorManager.sol\\\";\\n\\nimport {LibValidatorManager} from \\\"../libraries/LibValidatorManager.sol\\\";\\n\\nimport {LibClaimsMask, ClaimsMask} from \\\"../libraries/LibClaimsMask.sol\\\";\\n\\ncontract ValidatorManagerFacet is IValidatorManager {\\n    using LibValidatorManager for LibValidatorManager.DiamondStorage;\\n    using LibClaimsMask for ClaimsMask;\\n\\n    /// @notice get agreement mask\\n    /// @return current state of agreement mask\\n    function getAgreementMask() public view returns (uint256) {\\n        LibValidatorManager.DiamondStorage\\n            storage validatorManagerDS = LibValidatorManager.diamondStorage();\\n        return validatorManagerDS.claimsMask.getAgreementMask();\\n    }\\n\\n    /// @notice get consensus goal mask\\n    /// @return current consensus goal mask\\n    function getConsensusGoalMask() public view returns (uint256) {\\n        LibValidatorManager.DiamondStorage\\n            storage validatorManagerDS = LibValidatorManager.diamondStorage();\\n        return validatorManagerDS.claimsMask.getConsensusGoalMask();\\n    }\\n\\n    /// @notice get current claim\\n    /// @return current claim\\n    function getCurrentClaim() public view override returns (bytes32) {\\n        LibValidatorManager.DiamondStorage\\n            storage validatorManagerDS = LibValidatorManager.diamondStorage();\\n        return validatorManagerDS.currentClaim;\\n    }\\n\\n    /// @notice get number of claims the sender has made\\n    /// @param _sender validator address\\n    /// @return #claims\\n    function getNumberOfClaimsByAddress(address payable _sender)\\n        public\\n        view\\n        returns (uint256)\\n    {\\n        LibValidatorManager.DiamondStorage\\n            storage validatorManagerDS = LibValidatorManager.diamondStorage();\\n        return validatorManagerDS.getNumberOfClaimsByAddress(_sender);\\n    }\\n\\n    /// @notice find the validator and return the index or revert\\n    /// @param _sender validator address\\n    /// @return validator index or revert\\n    function getValidatorIndex(address _sender) public view returns (uint256) {\\n        LibValidatorManager.DiamondStorage\\n            storage validatorManagerDS = LibValidatorManager.diamondStorage();\\n        return validatorManagerDS.getValidatorIndex(_sender);\\n    }\\n\\n    /// @notice get number of claims by the index in the validator set\\n    /// @param _index the index in validator set\\n    /// @return #claims\\n    function getNumberOfClaimsByIndex(uint256 _index)\\n        public\\n        view\\n        returns (uint256)\\n    {\\n        LibValidatorManager.DiamondStorage\\n            storage validatorManagerDS = LibValidatorManager.diamondStorage();\\n        return validatorManagerDS.getNumberOfClaimsByIndex(_index);\\n    }\\n\\n    /// @notice get the maximum number of validators defined in validator manager\\n    /// @return the maximum number of validators\\n    function getMaxNumValidators() public view returns (uint256) {\\n        LibValidatorManager.DiamondStorage\\n            storage validatorManagerDS = LibValidatorManager.diamondStorage();\\n        return validatorManagerDS.getMaxNumValidators();\\n    }\\n}\\n\",\"keccak256\":\"0x10f7fe77f1ed0f1e97927589a8b51128ace21e41fd8e4b757f82ee22a8e92abc\",\"license\":\"Apache-2.0\"},\"contracts/interfaces/IValidatorManager.sol\":{\"content\":\"// Copyright 2021 Cartesi Pte. Ltd.\\n\\n// SPDX-License-Identifier: Apache-2.0\\n// Licensed under the Apache License, Version 2.0 (the \\\"License\\\"); you may not use\\n// this file except in compliance with the License. You may obtain a copy of the\\n// License at http://www.apache.org/licenses/LICENSE-2.0\\n\\n// Unless required by applicable law or agreed to in writing, software distributed\\n// under the License is distributed on an \\\"AS IS\\\" BASIS, WITHOUT WARRANTIES OR\\n// CONDITIONS OF ANY KIND, either express or implied. See the License for the\\n// specific language governing permissions and limitations under the License.\\n\\n/// @title Validator Manager interface\\npragma solidity >=0.7.0;\\n\\n// NoConflict - No conflicting claims or consensus\\n// Consensus - All validators had equal claims\\n// Conflict - Claim is conflicting with previous one\\nenum Result {\\n    NoConflict,\\n    Consensus,\\n    Conflict\\n}\\n\\n// TODO: What is the incentive for validators to not just copy the first claim that arrived?\\ninterface IValidatorManager {\\n    /// @notice get current claim\\n    function getCurrentClaim() external view returns (bytes32);\\n\\n    /// @notice emitted on Claim received\\n    event ClaimReceived(\\n        Result result,\\n        bytes32[2] claims,\\n        address payable[2] validators\\n    );\\n\\n    /// @notice emitted on Dispute end\\n    event DisputeEnded(\\n        Result result,\\n        bytes32[2] claims,\\n        address payable[2] validators\\n    );\\n\\n    /// @notice emitted on new Epoch\\n    event NewEpoch(bytes32 claim);\\n}\\n\",\"keccak256\":\"0x7eccbaf15dc80cd402459e8c940b0012fd3d3b8d2882fa13798afe92a9ea3b86\",\"license\":\"Apache-2.0\"},\"contracts/libraries/LibClaimsMask.sol\":{\"content\":\"// Copyright 2021 Cartesi Pte. Ltd.\\n\\n// SPDX-License-Identifier: Apache-2.0\\n// Licensed under the Apache License, Version 2.0 (the \\\"License\\\"); you may not use\\n// this file except in compliance with the License. You may obtain a copy of the\\n// License at http://www.apache.org/licenses/LICENSE-2.0\\n\\n// Unless required by applicable law or agreed to in writing, software distributed\\n// under the License is distributed on an \\\"AS IS\\\" BASIS, WITHOUT WARRANTIES OR\\n// CONDITIONS OF ANY KIND, either express or implied. See the License for the\\n// specific language governing permissions and limitations under the License.\\n\\n/// @title ClaimsMask library\\npragma solidity >=0.8.8;\\n\\n// ClaimsMask is used to keep track of the number of claims for up to 8 validators\\n// | agreement mask | consensus goal mask | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |\\n// |     8 bits     |        8 bits       |      30 bits       |      30 bits       | ... |      30 bits       |\\n// In Validator Manager, #claims_validator indicates the #claims the validator has made.\\n// In Fee Manager, #claims_validator indicates the #claims the validator has redeemed. In this case,\\n//      agreement mask and consensus goal mask are not used.\\n\\ntype ClaimsMask is uint256;\\n\\nlibrary LibClaimsMask {\\n    uint256 constant claimsBitLen = 30; // #bits used for each #claims\\n\\n    /// @notice this function creates a new ClaimsMask variable with value _value\\n    /// @param  _value the value following the format of ClaimsMask\\n    function newClaimsMask(uint256 _value) public pure returns (ClaimsMask) {\\n        return ClaimsMask.wrap(_value);\\n    }\\n\\n    /// @notice this function creates a new ClaimsMask variable with the consensus goal mask set,\\n    ///         according to the number of validators\\n    /// @param  _numValidators the number of validators\\n    function newClaimsMaskWithConsensusGoalSet(uint256 _numValidators)\\n        public\\n        pure\\n        returns (ClaimsMask)\\n    {\\n        require(_numValidators <= 8, \\\"up to 8 validators\\\");\\n        uint256 consensusMask = (1 << _numValidators) - 1;\\n        return ClaimsMask.wrap(consensusMask << 240); // 256 - 8 - 8 = 240\\n    }\\n\\n    /// @notice this function returns the #claims for the specified validator\\n    /// @param  _claimsMask the ClaimsMask value\\n    /// @param  _validatorIndex index of the validator in the validator array, starting from 0\\n    ///     this index can be obtained though `getNumberOfClaimsByIndex` function in Validator Manager\\n    function getNumClaims(ClaimsMask _claimsMask, uint256 _validatorIndex)\\n        public\\n        pure\\n        returns (uint256)\\n    {\\n        require(_validatorIndex < 8, \\\"index out of range\\\");\\n        uint256 bitmask = (1 << claimsBitLen) - 1;\\n        return\\n            (ClaimsMask.unwrap(_claimsMask) >>\\n                (claimsBitLen * _validatorIndex)) & bitmask;\\n    }\\n\\n    /// @notice this function increases the #claims for the specified validator\\n    /// @param  _claimsMask the ClaimsMask value\\n    /// @param  _validatorIndex index of the validator in the validator array, starting from 0\\n    /// @param  _value the increase amount\\n    function increaseNumClaims(\\n        ClaimsMask _claimsMask,\\n        uint256 _validatorIndex,\\n        uint256 _value\\n    ) public pure returns (ClaimsMask) {\\n        require(_validatorIndex < 8, \\\"index out of range\\\");\\n        uint256 currentNum = getNumClaims(_claimsMask, _validatorIndex);\\n        uint256 newNum = currentNum + _value; // overflows checked by default with sol0.8\\n        return setNumClaims(_claimsMask, _validatorIndex, newNum);\\n    }\\n\\n    /// @notice this function sets the #claims for the specified validator\\n    /// @param  _claimsMask the ClaimsMask value\\n    /// @param  _validatorIndex index of the validator in the validator array, starting from 0\\n    /// @param  _value the set value\\n    function setNumClaims(\\n        ClaimsMask _claimsMask,\\n        uint256 _validatorIndex,\\n        uint256 _value\\n    ) public pure returns (ClaimsMask) {\\n        require(_validatorIndex < 8, \\\"index out of range\\\");\\n        require(_value <= ((1 << claimsBitLen) - 1), \\\"ClaimsMask Overflow\\\");\\n        uint256 bitmask = ~(((1 << claimsBitLen) - 1) <<\\n            (claimsBitLen * _validatorIndex));\\n        uint256 clearedClaimsMask = ClaimsMask.unwrap(_claimsMask) & bitmask;\\n        _claimsMask = ClaimsMask.wrap(\\n            clearedClaimsMask | (_value << (claimsBitLen * _validatorIndex))\\n        );\\n        return _claimsMask;\\n    }\\n\\n    /// @notice get consensus goal mask\\n    /// @param  _claimsMask the ClaimsMask value\\n    function clearAgreementMask(ClaimsMask _claimsMask)\\n        public\\n        pure\\n        returns (ClaimsMask)\\n    {\\n        uint256 clearedMask = ClaimsMask.unwrap(_claimsMask) & ((1 << 248) - 1); // 256 - 8 = 248\\n        return ClaimsMask.wrap(clearedMask);\\n    }\\n\\n    /// @notice get the entire agreement mask\\n    /// @param  _claimsMask the ClaimsMask value\\n    function getAgreementMask(ClaimsMask _claimsMask)\\n        public\\n        pure\\n        returns (uint256)\\n    {\\n        return (ClaimsMask.unwrap(_claimsMask) >> 248); // get the first 8 bits\\n    }\\n\\n    /// @notice check if a validator has already claimed\\n    /// @param  _claimsMask the ClaimsMask value\\n    /// @param  _validatorIndex index of the validator in the validator array, starting from 0\\n    function alreadyClaimed(ClaimsMask _claimsMask, uint256 _validatorIndex)\\n        public\\n        pure\\n        returns (bool)\\n    {\\n        // get the first 8 bits. Then & operation on the validator's bit to see if it's set\\n        return\\n            (((ClaimsMask.unwrap(_claimsMask) >> 248) >> _validatorIndex) &\\n                1) != 0;\\n    }\\n\\n    /// @notice set agreement mask for the specified validator\\n    /// @param  _claimsMask the ClaimsMask value\\n    /// @param  _validatorIndex index of the validator in the validator array, starting from 0\\n    function setAgreementMask(ClaimsMask _claimsMask, uint256 _validatorIndex)\\n        public\\n        pure\\n        returns (ClaimsMask)\\n    {\\n        require(_validatorIndex < 8, \\\"index out of range\\\");\\n        uint256 setMask = (ClaimsMask.unwrap(_claimsMask) |\\n            (1 << (248 + _validatorIndex))); // 256 - 8 = 248\\n        return ClaimsMask.wrap(setMask);\\n    }\\n\\n    /// @notice get the entire consensus goal mask\\n    /// @param  _claimsMask the ClaimsMask value\\n    function getConsensusGoalMask(ClaimsMask _claimsMask)\\n        public\\n        pure\\n        returns (uint256)\\n    {\\n        return ((ClaimsMask.unwrap(_claimsMask) << 8) >> 248); // get the second 8 bits\\n    }\\n\\n    /// @notice remove validator from the ClaimsMask\\n    /// @param  _claimsMask the ClaimsMask value\\n    /// @param  _validatorIndex index of the validator in the validator array, starting from 0\\n    function removeValidator(ClaimsMask _claimsMask, uint256 _validatorIndex)\\n        public\\n        pure\\n        returns (ClaimsMask)\\n    {\\n        require(_validatorIndex < 8, \\\"index out of range\\\");\\n        uint256 claimsMaskValue = ClaimsMask.unwrap(_claimsMask);\\n        // remove validator from agreement bitmask\\n        uint256 zeroMask = ~(1 << (_validatorIndex + 248)); // 256 - 8 = 248\\n        claimsMaskValue = (claimsMaskValue & zeroMask);\\n        // remove validator from consensus goal mask\\n        zeroMask = ~(1 << (_validatorIndex + 240)); // 256 - 8 - 8 = 240\\n        claimsMaskValue = (claimsMaskValue & zeroMask);\\n        // remove validator from #claims\\n        return\\n            setNumClaims(ClaimsMask.wrap(claimsMaskValue), _validatorIndex, 0);\\n    }\\n}\\n\",\"keccak256\":\"0x581915d6dcd3aa9e447f89b8bf902bc4f4a72c40b9e8575e196741a8974ea74a\",\"license\":\"Apache-2.0\"},\"contracts/libraries/LibValidatorManager.sol\":{\"content\":\"// Copyright 2021 Cartesi Pte. Ltd.\\n\\n// SPDX-License-Identifier: Apache-2.0\\n// Licensed under the Apache License, Version 2.0 (the \\\"License\\\"); you may not use\\n// this file except in compliance with the License. You may obtain a copy of the\\n// License at http://www.apache.org/licenses/LICENSE-2.0\\n\\n// Unless required by applicable law or agreed to in writing, software distributed\\n// under the License is distributed on an \\\"AS IS\\\" BASIS, WITHOUT WARRANTIES OR\\n// CONDITIONS OF ANY KIND, either express or implied. See the License for the\\n// specific language governing permissions and limitations under the License.\\n\\n/// @title Validator Manager library\\npragma solidity ^0.8.0;\\n\\nimport {Result} from \\\"../interfaces/IValidatorManager.sol\\\";\\n\\nimport {LibClaimsMask, ClaimsMask} from \\\"../libraries/LibClaimsMask.sol\\\";\\n\\nlibrary LibValidatorManager {\\n    using LibClaimsMask for ClaimsMask;\\n\\n    bytes32 constant DIAMOND_STORAGE_POSITION =\\n        keccak256(\\\"ValidatorManager.diamond.storage\\\");\\n\\n    struct DiamondStorage {\\n        bytes32 currentClaim; // current claim - first claim of this epoch\\n        address payable[] validators; // up to 8 validators\\n        uint256 maxNumValidators; // the maximum number of validators, set in the constructor\\n        // A bit set used for up to 8 validators.\\n        // The first 8 bits are used to indicate whom supports the current claim\\n        // The second 8 bits are used to indicate those should have claimed in order to reach consensus\\n        // The following every 30 bits are used to indicate the number of total claims each validator has made\\n        // | agreement mask | consensus mask | #claims_validator7 | #claims_validator6 | ... | #claims_validator0 |\\n        // |     8 bits     |     8 bits     |      30 bits       |      30 bits       | ... |      30 bits       |\\n        ClaimsMask claimsMask;\\n    }\\n\\n    /// @notice emitted on Claim received\\n    event ClaimReceived(\\n        Result result,\\n        bytes32[2] claims,\\n        address payable[2] validators\\n    );\\n\\n    /// @notice emitted on Dispute end\\n    event DisputeEnded(\\n        Result result,\\n        bytes32[2] claims,\\n        address payable[2] validators\\n    );\\n\\n    /// @notice emitted on new Epoch\\n    event NewEpoch(bytes32 claim);\\n\\n    function diamondStorage()\\n        internal\\n        pure\\n        returns (DiamondStorage storage ds)\\n    {\\n        bytes32 position = DIAMOND_STORAGE_POSITION;\\n        assembly {\\n            ds.slot := position\\n        }\\n    }\\n\\n    /// @notice called when a dispute ends in rollups\\n    /// @param ds diamond storage pointer\\n    /// @param winner address of dispute winner\\n    /// @param loser address of dispute loser\\n    /// @param winningClaim the winnning claim\\n    /// @return result of dispute being finished\\n    function onDisputeEnd(\\n        DiamondStorage storage ds,\\n        address payable winner,\\n        address payable loser,\\n        bytes32 winningClaim\\n    )\\n        internal\\n        returns (\\n            Result,\\n            bytes32[2] memory,\\n            address payable[2] memory\\n        )\\n    {\\n        removeValidator(ds, loser);\\n\\n        if (winningClaim == ds.currentClaim) {\\n            // first claim stood, dont need to update the bitmask\\n            return\\n                isConsensus(ds)\\n                    ? emitDisputeEndedAndReturn(\\n                        Result.Consensus,\\n                        [winningClaim, bytes32(0)],\\n                        [winner, payable(0)]\\n                    )\\n                    : emitDisputeEndedAndReturn(\\n                        Result.NoConflict,\\n                        [winningClaim, bytes32(0)],\\n                        [winner, payable(0)]\\n                    );\\n        }\\n\\n        // if first claim lost, and other validators have agreed with it\\n        // there is a new dispute to be played\\n        if (ds.claimsMask.getAgreementMask() != 0) {\\n            return\\n                emitDisputeEndedAndReturn(\\n                    Result.Conflict,\\n                    [ds.currentClaim, winningClaim],\\n                    [getClaimerOfCurrentClaim(ds), winner]\\n                );\\n        }\\n        // else there are no valdiators that agree with losing claim\\n        // we can update current claim and check for consensus in case\\n        // the winner is the only validator left\\n        ds.currentClaim = winningClaim;\\n        updateClaimAgreementMask(ds, winner);\\n        return\\n            isConsensus(ds)\\n                ? emitDisputeEndedAndReturn(\\n                    Result.Consensus,\\n                    [winningClaim, bytes32(0)],\\n                    [winner, payable(0)]\\n                )\\n                : emitDisputeEndedAndReturn(\\n                    Result.NoConflict,\\n                    [winningClaim, bytes32(0)],\\n                    [winner, payable(0)]\\n                );\\n    }\\n\\n    /// @notice called when a new epoch starts\\n    /// @param ds diamond storage pointer\\n    /// @return current claim\\n    function onNewEpoch(DiamondStorage storage ds) internal returns (bytes32) {\\n        // reward validators who has made the correct claim by increasing their #claims\\n        claimFinalizedIncreaseCounts(ds);\\n\\n        bytes32 tmpClaim = ds.currentClaim;\\n\\n        // clear current claim\\n        ds.currentClaim = bytes32(0);\\n        // clear validator agreement bit mask\\n        ds.claimsMask = ds.claimsMask.clearAgreementMask();\\n\\n        emit NewEpoch(tmpClaim);\\n        return tmpClaim;\\n    }\\n\\n    /// @notice called when a claim is received by rollups\\n    /// @param ds diamond storage pointer\\n    /// @param sender address of sender of that claim\\n    /// @param claim claim received by rollups\\n    /// @return result of claim, Consensus | NoConflict | Conflict\\n    /// @return [currentClaim, conflicting claim] if there is Conflict\\n    ///         [currentClaim, bytes32(0)] if there is Consensus or NoConflcit\\n    /// @return [claimer1, claimer2] if there is  Conflcit\\n    ///         [claimer1, address(0)] if there is Consensus or NoConflcit\\n    function onClaim(\\n        DiamondStorage storage ds,\\n        address payable sender,\\n        bytes32 claim\\n    )\\n        internal\\n        returns (\\n            Result,\\n            bytes32[2] memory,\\n            address payable[2] memory\\n        )\\n    {\\n        require(claim != bytes32(0), \\\"empty claim\\\");\\n        require(isValidator(ds, sender), \\\"sender not allowed\\\");\\n\\n        // require the validator hasn't claimed in the same epoch before\\n        uint256 index = getValidatorIndex(ds, sender);\\n        require(\\n            !ds.claimsMask.alreadyClaimed(index),\\n            \\\"sender had claimed in this epoch before\\\"\\n        );\\n\\n        // cant return because a single claim might mean consensus\\n        if (ds.currentClaim == bytes32(0)) {\\n            ds.currentClaim = claim;\\n        }\\n\\n        if (claim != ds.currentClaim) {\\n            return\\n                emitClaimReceivedAndReturn(\\n                    Result.Conflict,\\n                    [ds.currentClaim, claim],\\n                    [getClaimerOfCurrentClaim(ds), sender]\\n                );\\n        }\\n        updateClaimAgreementMask(ds, sender);\\n\\n        return\\n            isConsensus(ds)\\n                ? emitClaimReceivedAndReturn(\\n                    Result.Consensus,\\n                    [claim, bytes32(0)],\\n                    [sender, payable(0)]\\n                )\\n                : emitClaimReceivedAndReturn(\\n                    Result.NoConflict,\\n                    [claim, bytes32(0)],\\n                    [sender, payable(0)]\\n                );\\n    }\\n\\n    /// @notice emits dispute ended event and then return\\n    /// @param result to be emitted and returned\\n    /// @param claims to be emitted and returned\\n    /// @param validators to be emitted and returned\\n    /// @dev this function existis to make code more clear/concise\\n    function emitDisputeEndedAndReturn(\\n        Result result,\\n        bytes32[2] memory claims,\\n        address payable[2] memory validators\\n    )\\n        internal\\n        returns (\\n            Result,\\n            bytes32[2] memory,\\n            address payable[2] memory\\n        )\\n    {\\n        emit DisputeEnded(result, claims, validators);\\n        return (result, claims, validators);\\n    }\\n\\n    /// @notice emits claim received event and then return\\n    /// @param result to be emitted and returned\\n    /// @param claims to be emitted and returned\\n    /// @param validators to be emitted and returned\\n    /// @dev this function existis to make code more clear/concise\\n    function emitClaimReceivedAndReturn(\\n        Result result,\\n        bytes32[2] memory claims,\\n        address payable[2] memory validators\\n    )\\n        internal\\n        returns (\\n            Result,\\n            bytes32[2] memory,\\n            address payable[2] memory\\n        )\\n    {\\n        emit ClaimReceived(result, claims, validators);\\n        return (result, claims, validators);\\n    }\\n\\n    /// @notice only call this function when a claim has been finalized\\n    ///         Either a consensus has been reached or challenge period has past\\n    /// @param ds pointer to diamond storage\\n    function claimFinalizedIncreaseCounts(DiamondStorage storage ds) internal {\\n        uint256 agreementMask = ds.claimsMask.getAgreementMask();\\n        for (uint256 i; i < ds.validators.length; i++) {\\n            // if a validator agrees with the current claim\\n            if ((agreementMask & (1 << i)) != 0) {\\n                // increase #claims by 1\\n                ds.claimsMask = ds.claimsMask.increaseNumClaims(i, 1);\\n            }\\n        }\\n    }\\n\\n    /// @notice removes a validator\\n    /// @param ds diamond storage pointer\\n    /// @param validator address of validator to be removed\\n    function removeValidator(DiamondStorage storage ds, address validator)\\n        internal\\n    {\\n        for (uint256 i; i < ds.validators.length; i++) {\\n            if (validator == ds.validators[i]) {\\n                // put address(0) in validators position\\n                ds.validators[i] = payable(0);\\n                // remove the validator from claimsMask\\n                ds.claimsMask = ds.claimsMask.removeValidator(i);\\n                break;\\n            }\\n        }\\n    }\\n\\n    /// @notice check if consensus has been reached\\n    /// @param ds pointer to diamond storage\\n    function isConsensus(DiamondStorage storage ds)\\n        internal\\n        view\\n        returns (bool)\\n    {\\n        ClaimsMask claimsMask = ds.claimsMask;\\n        return\\n            claimsMask.getAgreementMask() == claimsMask.getConsensusGoalMask();\\n    }\\n\\n    /// @notice get one of the validators that agreed with current claim\\n    /// @param ds diamond storage pointer\\n    /// @return validator that agreed with current claim\\n    function getClaimerOfCurrentClaim(DiamondStorage storage ds)\\n        internal\\n        view\\n        returns (address payable)\\n    {\\n        // TODO: we are always getting the first validator\\n        // on the array that agrees with the current claim to enter a dispute\\n        // should this be random?\\n        uint256 agreementMask = ds.claimsMask.getAgreementMask();\\n        for (uint256 i; i < ds.validators.length; i++) {\\n            if (agreementMask & (1 << i) != 0) {\\n                return ds.validators[i];\\n            }\\n        }\\n        revert(\\\"Agreeing validator not found\\\");\\n    }\\n\\n    /// @notice updates mask of validators that agreed with current claim\\n    /// @param ds diamond storage pointer\\n    /// @param sender address of validator that will be included in mask\\n    function updateClaimAgreementMask(\\n        DiamondStorage storage ds,\\n        address payable sender\\n    ) internal {\\n        uint256 validatorIndex = getValidatorIndex(ds, sender);\\n        ds.claimsMask = ds.claimsMask.setAgreementMask(validatorIndex);\\n    }\\n\\n    /// @notice check if the sender is a validator\\n    /// @param ds pointer to diamond storage\\n    /// @param sender sender address\\n    function isValidator(DiamondStorage storage ds, address sender)\\n        internal\\n        view\\n        returns (bool)\\n    {\\n        require(sender != address(0), \\\"address 0\\\");\\n\\n        for (uint256 i; i < ds.validators.length; i++) {\\n            if (sender == ds.validators[i]) return true;\\n        }\\n\\n        return false;\\n    }\\n\\n    /// @notice find the validator and return the index or revert\\n    /// @param ds pointer to diamond storage\\n    /// @param sender validator address\\n    /// @return validator index or revert\\n    function getValidatorIndex(DiamondStorage storage ds, address sender)\\n        internal\\n        view\\n        returns (uint256)\\n    {\\n        require(sender != address(0), \\\"address 0\\\");\\n        for (uint256 i; i < ds.validators.length; i++) {\\n            if (sender == ds.validators[i]) return i;\\n        }\\n        revert(\\\"validator not found\\\");\\n    }\\n\\n    /// @notice get number of claims the sender has made\\n    /// @param ds pointer to diamond storage\\n    /// @param _sender validator address\\n    /// @return #claims\\n    function getNumberOfClaimsByAddress(\\n        DiamondStorage storage ds,\\n        address payable _sender\\n    ) internal view returns (uint256) {\\n        for (uint256 i; i < ds.validators.length; i++) {\\n            if (_sender == ds.validators[i]) {\\n                return getNumberOfClaimsByIndex(ds, i);\\n            }\\n        }\\n        // if validator not found\\n        return 0;\\n    }\\n\\n    /// @notice get number of claims by the index in the validator set\\n    /// @param ds pointer to diamond storage\\n    /// @param index the index in validator set\\n    /// @return #claims\\n    function getNumberOfClaimsByIndex(DiamondStorage storage ds, uint256 index)\\n        internal\\n        view\\n        returns (uint256)\\n    {\\n        return ds.claimsMask.getNumClaims(index);\\n    }\\n\\n    /// @notice get the maximum number of validators defined in validator manager\\n    /// @param ds pointer to diamond storage\\n    /// @return the maximum number of validators\\n    function getMaxNumValidators(DiamondStorage storage ds)\\n        internal\\n        view\\n        returns (uint256)\\n    {\\n        return ds.maxNumValidators;\\n    }\\n}\\n\",\"keccak256\":\"0xa25792dbbddcb4f5ec3ef71e463e2df9153a90fecfa4b2cd81e03a6a06a45e83\",\"license\":\"Apache-2.0\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b50610589806100206000396000f3fe608060405234801561001057600080fd5b506004361061007d5760003560e01c80638219fda41161005b5780638219fda4146100c2578063cc8a2451146100d7578063d2992f54146100ea578063f6023815146100f257600080fd5b8063101494ce146100825780631fcc449e1461009c57806355564a70146100af575b600080fd5b61008a6100fa565b60405190815260200160405180910390f35b61008a6100aa3660046104a7565b6101aa565b61008a6100bd3660046104a7565b6101cc565b6000805160206105348339815191525461008a565b61008a6100e53660046104c4565b6101e7565b61008a610202565b61008a61023c565b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1ff54604051623ea57d60ea1b815260048101919091526000906000805160206105348339815191529073dfE71bbad0ce232131dcc9e42e131ADD57ff39989063fa95f400906024015b602060405180830381865af4158015610180573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101a491906104dd565b91505090565b60006000805160206105348339815191526101c581846102aa565b9392505050565b60006000805160206105348339815191526101c58184610394565b60006000805160206105348339815191526101c58184610406565b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1fe54600090600080516020610534833981519152906101a4565b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1ff54604051636a02b7ff60e11b815260048101919091526000906000805160206105348339815191529073dfE71bbad0ce232131dcc9e42e131ADD57ff39989063d4056ffe90602401610163565b60006001600160a01b0382166102f35760405162461bcd60e51b815260206004820152600960248201526806164647265737320360bc1b60448201526064015b60405180910390fd5b60005b600184015481101561034f57836001018181548110610317576103176104f6565b6000918252602090912001546001600160a01b039081169084160361033d57905061038e565b806103478161050c565b9150506102f6565b5060405162461bcd60e51b81526020600482015260136024820152721d985b1a59185d1bdc881b9bdd08199bdd5b99606a1b60448201526064016102ea565b92915050565b6000805b60018401548110156103fc578360010181815481106103b9576103b96104f6565b6000918252602090912001546001600160a01b03908116908416036103ea576103e28482610406565b91505061038e565b806103f48161050c565b915050610398565b5060009392505050565b6003820154604051632a31763d60e21b815260009173dfE71bbad0ce232131dcc9e42e131ADD57ff39989163a8c5d8f49161044e918690600401918252602082015260400190565b602060405180830381865af415801561046b573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101c591906104dd565b6001600160a01b03811681146104a457600080fd5b50565b6000602082840312156104b957600080fd5b81356101c58161048f565b6000602082840312156104d657600080fd5b5035919050565b6000602082840312156104ef57600080fd5b5051919050565b634e487b7160e01b600052603260045260246000fd5b60006001820161052c57634e487b7160e01b600052601160045260246000fd5b506001019056fe8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1fca26469706673582212200426aa1327b37778789d0d6bd333785119170f268c687c2ccf32475fc971bea064736f6c634300080d0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061007d5760003560e01c80638219fda41161005b5780638219fda4146100c2578063cc8a2451146100d7578063d2992f54146100ea578063f6023815146100f257600080fd5b8063101494ce146100825780631fcc449e1461009c57806355564a70146100af575b600080fd5b61008a6100fa565b60405190815260200160405180910390f35b61008a6100aa3660046104a7565b6101aa565b61008a6100bd3660046104a7565b6101cc565b6000805160206105348339815191525461008a565b61008a6100e53660046104c4565b6101e7565b61008a610202565b61008a61023c565b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1ff54604051623ea57d60ea1b815260048101919091526000906000805160206105348339815191529073__$cf2fb72623b6ba225c3cfc459aec70b905$__9063fa95f400906024015b602060405180830381865af4158015610180573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101a491906104dd565b91505090565b60006000805160206105348339815191526101c581846102aa565b9392505050565b60006000805160206105348339815191526101c58184610394565b60006000805160206105348339815191526101c58184610406565b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1fe54600090600080516020610534833981519152906101a4565b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1ff54604051636a02b7ff60e11b815260048101919091526000906000805160206105348339815191529073__$cf2fb72623b6ba225c3cfc459aec70b905$__9063d4056ffe90602401610163565b60006001600160a01b0382166102f35760405162461bcd60e51b815260206004820152600960248201526806164647265737320360bc1b60448201526064015b60405180910390fd5b60005b600184015481101561034f57836001018181548110610317576103176104f6565b6000918252602090912001546001600160a01b039081169084160361033d57905061038e565b806103478161050c565b9150506102f6565b5060405162461bcd60e51b81526020600482015260136024820152721d985b1a59185d1bdc881b9bdd08199bdd5b99606a1b60448201526064016102ea565b92915050565b6000805b60018401548110156103fc578360010181815481106103b9576103b96104f6565b6000918252602090912001546001600160a01b03908116908416036103ea576103e28482610406565b91505061038e565b806103f48161050c565b915050610398565b5060009392505050565b6003820154604051632a31763d60e21b815260009173__$cf2fb72623b6ba225c3cfc459aec70b905$__9163a8c5d8f49161044e918690600401918252602082015260400190565b602060405180830381865af415801561046b573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101c591906104dd565b6001600160a01b03811681146104a457600080fd5b50565b6000602082840312156104b957600080fd5b81356101c58161048f565b6000602082840312156104d657600080fd5b5035919050565b6000602082840312156104ef57600080fd5b5051919050565b634e487b7160e01b600052603260045260246000fd5b60006001820161052c57634e487b7160e01b600052601160045260246000fd5b506001019056fe8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1fca26469706673582212200426aa1327b37778789d0d6bd333785119170f268c687c2ccf32475fc971bea064736f6c634300080d0033",
+  "libraries": {
+    "LibClaimsMask": "0xdfE71bbad0ce232131dcc9e42e131ADD57ff3998"
+  },
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getAgreementMask()": {
+        "returns": {
+          "_0": "current state of agreement mask"
+        }
+      },
+      "getConsensusGoalMask()": {
+        "returns": {
+          "_0": "current consensus goal mask"
+        }
+      },
+      "getCurrentClaim()": {
+        "returns": {
+          "_0": "current claim"
+        }
+      },
+      "getMaxNumValidators()": {
+        "returns": {
+          "_0": "the maximum number of validators"
+        }
+      },
+      "getNumberOfClaimsByAddress(address)": {
+        "params": {
+          "_sender": "validator address"
+        },
+        "returns": {
+          "_0": "#claims"
+        }
+      },
+      "getNumberOfClaimsByIndex(uint256)": {
+        "params": {
+          "_index": "the index in validator set"
+        },
+        "returns": {
+          "_0": "#claims"
+        }
+      },
+      "getValidatorIndex(address)": {
+        "params": {
+          "_sender": "validator address"
+        },
+        "returns": {
+          "_0": "validator index or revert"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ClaimReceived(uint8,bytes32[2],address[2])": {
+        "notice": "emitted on Claim received"
+      },
+      "DisputeEnded(uint8,bytes32[2],address[2])": {
+        "notice": "emitted on Dispute end"
+      },
+      "NewEpoch(bytes32)": {
+        "notice": "emitted on new Epoch"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "getAgreementMask()": {
+        "notice": "get agreement mask"
+      },
+      "getConsensusGoalMask()": {
+        "notice": "get consensus goal mask"
+      },
+      "getCurrentClaim()": {
+        "notice": "get current claim"
+      },
+      "getMaxNumValidators()": {
+        "notice": "get the maximum number of validators defined in validator manager"
+      },
+      "getNumberOfClaimsByAddress(address)": {
+        "notice": "get number of claims the sender has made"
+      },
+      "getNumberOfClaimsByIndex(uint256)": {
+        "notice": "get number of claims by the index in the validator set"
+      },
+      "getValidatorIndex(address)": {
+        "notice": "find the validator and return the index or revert"
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}
