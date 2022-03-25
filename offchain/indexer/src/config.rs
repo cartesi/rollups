@@ -130,7 +130,7 @@ impl IndexerConfig {
             .or(file_config.state_server_endpoint)
             .ok_or(snafu::NoneError)
             .context(config_error::FileError {
-                err: "Must specifify state server endpoint",
+                err: "Must specify state server endpoint",
             })?;
 
         let initial_epoch: U256 = U256::from(
@@ -139,7 +139,7 @@ impl IndexerConfig {
                 .or(file_config.initial_epoch)
                 .ok_or(snafu::NoneError)
                 .context(config_error::FileError {
-                    err: "Must specifify initial epoch",
+                    err: "Must specify initial epoch",
                 })?,
         );
 
@@ -148,7 +148,7 @@ impl IndexerConfig {
             .or(file_config.interval)
             .ok_or(snafu::NoneError)
             .context(config_error::FileError {
-                err: "Must specifify interval",
+                err: "Must specify interval",
             })?;
 
         let mm_endpoint: String = env_cli_config
@@ -156,7 +156,7 @@ impl IndexerConfig {
             .or(file_config.mm_endpoint)
             .ok_or(snafu::NoneError)
             .context(config_error::FileError {
-                err: "Must specifify machine manager endpoint",
+                err: "Must specify machine manager endpoint",
             })?;
 
         let postgres_endpoint: String = env_cli_config
@@ -164,7 +164,7 @@ impl IndexerConfig {
             .or(file_config.postgres_endpoint)
             .ok_or(snafu::NoneError)
             .context(config_error::FileError {
-                err: "Must specifify postgres endpoint",
+                err: "Must specify postgres endpoint",
             })?;
 
         let session_id: String = env_cli_config
@@ -172,7 +172,7 @@ impl IndexerConfig {
             .or(file_config.session_id)
             .ok_or(snafu::NoneError)
             .context(config_error::FileError {
-                err: "Must specifify session id endpoint",
+                err: "Must specify session id endpoint",
             })?;
 
         Ok(IndexerConfig {
