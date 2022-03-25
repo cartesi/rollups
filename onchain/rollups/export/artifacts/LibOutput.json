@@ -1,0 +1,54 @@
+{
+  "contractName": "LibOutput",
+  "sourceName": "contracts/libraries/LibOutput.sol",
+  "abi": [],
+  "bytecode": "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220b9feb0adc702e3687bbb49b753bbb4f4a9adbe0e872b8403f87aa9130e9c38e764736f6c634300080d0033",
+  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220b9feb0adc702e3687bbb49b753bbb4f4a9adbe0e872b8403f87aa9130e9c38e764736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "bytecode": {
+      "functionDebugData": {},
+      "generatedSources": [],
+      "linkReferences": {},
+      "opcodes": "PUSH1 0x56 PUSH1 0x37 PUSH1 0xB DUP3 DUP3 DUP3 CODECOPY DUP1 MLOAD PUSH1 0x0 BYTE PUSH1 0x73 EQ PUSH1 0x2A JUMPI PUSH4 0x4E487B71 PUSH1 0xE0 SHL PUSH1 0x0 MSTORE PUSH1 0x0 PUSH1 0x4 MSTORE PUSH1 0x24 PUSH1 0x0 REVERT JUMPDEST ADDRESS PUSH1 0x0 MSTORE PUSH1 0x73 DUP2 MSTORE8 DUP3 DUP2 RETURN INVALID PUSH20 0x0 ADDRESS EQ PUSH1 0x80 PUSH1 0x40 MSTORE PUSH1 0x0 DUP1 REVERT INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 0xB9 INVALID 0xB0 0xAD 0xC7 MUL 0xE3 PUSH9 0x7BBB49B753BBB4F4A9 0xAD 0xBE 0xE DUP8 0x2B DUP5 SUB 0xF8 PUSH27 0xA9130E9C38E764736F6C634300080D003300000000000000000000 ",
+      "sourceMap": "668:1114:42:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;668:1114:42;;;;;;;;;;;;;;;;;"
+    },
+    "deployedBytecode": {
+      "functionDebugData": {},
+      "generatedSources": [],
+      "immutableReferences": {},
+      "linkReferences": {},
+      "opcodes": "PUSH20 0x0 ADDRESS EQ PUSH1 0x80 PUSH1 0x40 MSTORE PUSH1 0x0 DUP1 REVERT INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 0xB9 INVALID 0xB0 0xAD 0xC7 MUL 0xE3 PUSH9 0x7BBB49B753BBB4F4A9 0xAD 0xBE 0xE DUP8 0x2B DUP5 SUB 0xF8 PUSH27 0xA9130E9C38E764736F6C634300080D003300000000000000000000 ",
+      "sourceMap": "668:1114:42:-:0;;;;;;;;"
+    },
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "17200",
+        "executionCost": "103",
+        "totalCost": "17303"
+      },
+      "internal": {
+        "diamondStorage()": "infinite",
+        "getNumberOfFinalizedEpochs(struct LibOutput.DiamondStorage storage pointer)": "infinite",
+        "onNewEpoch(struct LibOutput.DiamondStorage storage pointer,bytes32)": "infinite"
+      }
+    },
+    "methodIdentifiers": {}
+  },
+  "metadata": "{\"compiler\":{\"version\":\"0.8.13+commit.abaa5c0e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/libraries/LibOutput.sol\":\"LibOutput\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/libraries/LibOutput.sol\":{\"content\":\"// Copyright 2021 Cartesi Pte. Ltd.\\n\\n// SPDX-License-Identifier: Apache-2.0\\n// Licensed under the Apache License, Version 2.0 (the \\\"License\\\"); you may not use\\n// this file except in compliance with the License. You may obtain a copy of the\\n// License at http://www.apache.org/licenses/LICENSE-2.0\\n\\n// Unless required by applicable law or agreed to in writing, software distributed\\n// under the License is distributed on an \\\"AS IS\\\" BASIS, WITHOUT WARRANTIES OR\\n// CONDITIONS OF ANY KIND, either express or implied. See the License for the\\n// specific language governing permissions and limitations under the License.\\n\\n/// @title Output library\\npragma solidity ^0.8.0;\\n\\nlibrary LibOutput {\\n    bytes32 constant DIAMOND_STORAGE_POSITION =\\n        keccak256(\\\"Output.diamond.storage\\\");\\n\\n    struct DiamondStorage {\\n        mapping(uint256 => uint256) voucherBitmask;\\n        bytes32[] epochHashes;\\n        bool lock; //reentrancy lock\\n    }\\n\\n    function diamondStorage()\\n        internal\\n        pure\\n        returns (DiamondStorage storage ds)\\n    {\\n        bytes32 position = DIAMOND_STORAGE_POSITION;\\n        assembly {\\n            ds.slot := position\\n        }\\n    }\\n\\n    /// @notice to be called when an epoch is finalized\\n    /// @param ds diamond storage pointer\\n    /// @param epochHash hash of finalized epoch\\n    /// @dev an epoch being finalized means that its vouchers can be called\\n    function onNewEpoch(DiamondStorage storage ds, bytes32 epochHash) internal {\\n        ds.epochHashes.push(epochHash);\\n    }\\n\\n    /// @notice get number of finalized epochs\\n    /// @param ds diamond storage pointer\\n    function getNumberOfFinalizedEpochs(DiamondStorage storage ds)\\n        internal\\n        view\\n        returns (uint256)\\n    {\\n        return ds.epochHashes.length;\\n    }\\n}\\n\",\"keccak256\":\"0xd0f88e13210013e9d5bde03399bb76304d6ab4e1f06d01c7e3525adc87a2d65e\",\"license\":\"Apache-2.0\"}},\"version\":1}",
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

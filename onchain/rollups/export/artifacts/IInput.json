@@ -1,0 +1,209 @@
+{
+  "contractName": "IInput",
+  "sourceName": "contracts/interfaces/IInput.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "epochNumber",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "inputIndex",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "input",
+          "type": "bytes"
+        }
+      ],
+      "name": "InputAdded",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_input",
+          "type": "bytes"
+        }
+      ],
+      "name": "addInput",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentInbox",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getInput",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getNumberOfInputs",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "InputAdded(uint256,uint256,address,uint256,bytes)": {
+        "params": {
+          "epochNumber": "which epoch this input belongs to",
+          "input": "input data",
+          "inputIndex": "index of the input just added",
+          "sender": "msg.sender",
+          "timestamp": "block.timestamp"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "addInput(bytes)": {
+        "details": "msg.sender and timestamp are preppended log2 size       has to be calculated offchain taking that into account",
+        "params": {
+          "_input": "bytes array of input"
+        },
+        "returns": {
+          "_0": "merkle root hash of input"
+        }
+      },
+      "getCurrentInbox()": {
+        "returns": {
+          "_0": "index of current active inbox"
+        }
+      },
+      "getInput(uint256)": {
+        "params": {
+          "_index": "position of the input on inbox"
+        },
+        "returns": {
+          "_0": "root hash of input"
+        }
+      },
+      "getNumberOfInputs()": {
+        "returns": {
+          "_0": "number of inputs of non active inbox"
+        }
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "bytecode": {
+      "functionDebugData": {},
+      "generatedSources": [],
+      "linkReferences": {},
+      "object": "",
+      "opcodes": "",
+      "sourceMap": ""
+    },
+    "deployedBytecode": {
+      "functionDebugData": {},
+      "generatedSources": [],
+      "immutableReferences": {},
+      "linkReferences": {},
+      "object": "",
+      "opcodes": "",
+      "sourceMap": ""
+    },
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "addInput(bytes)": "f32078e8",
+      "getCurrentInbox()": "1ab6dcab",
+      "getInput(uint256)": "a459600e",
+      "getNumberOfInputs()": "e7955244"
+    }
+  },
+  "metadata": "{\"compiler\":{\"version\":\"0.8.13+commit.abaa5c0e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"epochNumber\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"inputIndex\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"input\",\"type\":\"bytes\"}],\"name\":\"InputAdded\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_input\",\"type\":\"bytes\"}],\"name\":\"addInput\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getCurrentInbox\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_index\",\"type\":\"uint256\"}],\"name\":\"getInput\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getNumberOfInputs\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"events\":{\"InputAdded(uint256,uint256,address,uint256,bytes)\":{\"params\":{\"epochNumber\":\"which epoch this input belongs to\",\"input\":\"input data\",\"inputIndex\":\"index of the input just added\",\"sender\":\"msg.sender\",\"timestamp\":\"block.timestamp\"}}},\"kind\":\"dev\",\"methods\":{\"addInput(bytes)\":{\"details\":\"msg.sender and timestamp are preppended log2 size       has to be calculated offchain taking that into account\",\"params\":{\"_input\":\"bytes array of input\"},\"returns\":{\"_0\":\"merkle root hash of input\"}},\"getCurrentInbox()\":{\"returns\":{\"_0\":\"index of current active inbox\"}},\"getInput(uint256)\":{\"params\":{\"_index\":\"position of the input on inbox\"},\"returns\":{\"_0\":\"root hash of input\"}},\"getNumberOfInputs()\":{\"returns\":{\"_0\":\"number of inputs of non active inbox\"}}},\"version\":1},\"userdoc\":{\"events\":{\"InputAdded(uint256,uint256,address,uint256,bytes)\":{\"notice\":\"input added\"}},\"kind\":\"user\",\"methods\":{\"addInput(bytes)\":{\"notice\":\"adds input to correct inbox\"},\"getCurrentInbox()\":{\"notice\":\"returns active current inbox index\"},\"getInput(uint256)\":{\"notice\":\"returns input from correct input inbox\"},\"getNumberOfInputs()\":{\"notice\":\"returns number of inputs on correct inbox\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/interfaces/IInput.sol\":\"IInput\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/interfaces/IInput.sol\":{\"content\":\"// Copyright 2021 Cartesi Pte. Ltd.\\n\\n// SPDX-License-Identifier: Apache-2.0\\n// Licensed under the Apache License, Version 2.0 (the \\\"License\\\"); you may not use\\n// this file except in compliance with the License. You may obtain a copy of the\\n// License at http://www.apache.org/licenses/LICENSE-2.0\\n\\n// Unless required by applicable law or agreed to in writing, software distributed\\n// under the License is distributed on an \\\"AS IS\\\" BASIS, WITHOUT WARRANTIES OR\\n// CONDITIONS OF ANY KIND, either express or implied. See the License for the\\n// specific language governing permissions and limitations under the License.\\n\\n/// @title Input interface\\npragma solidity >=0.7.0;\\n\\ninterface IInput {\\n    /// @notice adds input to correct inbox\\n    /// @param _input bytes array of input\\n    /// @return merkle root hash of input\\n    /// @dev  msg.sender and timestamp are preppended log2 size\\n    ///       has to be calculated offchain taking that into account\\n    function addInput(bytes calldata _input) external returns (bytes32);\\n\\n    /// @notice returns input from correct input inbox\\n    /// @param _index position of the input on inbox\\n    /// @return root hash of input\\n    function getInput(uint256 _index) external view returns (bytes32);\\n\\n    /// @notice returns number of inputs on correct inbox\\n    /// @return number of inputs of non active inbox\\n    function getNumberOfInputs() external view returns (uint256);\\n\\n    /// @notice returns active current inbox index\\n    /// @return index of current active inbox\\n    function getCurrentInbox() external view returns (uint256);\\n\\n    /// @notice input added\\n    /// @param epochNumber which epoch this input belongs to\\n    /// @param inputIndex index of the input just added\\n    /// @param sender msg.sender\\n    /// @param timestamp block.timestamp\\n    /// @param input input data\\n    event InputAdded(\\n        uint256 indexed epochNumber,\\n        uint256 indexed inputIndex,\\n        address sender,\\n        uint256 timestamp,\\n        bytes input\\n    );\\n}\\n\",\"keccak256\":\"0xecfc3bb2987598d5b5020c345cef7d570f757de69223d7cb16500c4d5fdd429d\",\"license\":\"Apache-2.0\"}},\"version\":1}",
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  },
+  "userdoc": {
+    "events": {
+      "InputAdded(uint256,uint256,address,uint256,bytes)": {
+        "notice": "input added"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "addInput(bytes)": {
+        "notice": "adds input to correct inbox"
+      },
+      "getCurrentInbox()": {
+        "notice": "returns active current inbox index"
+      },
+      "getInput(uint256)": {
+        "notice": "returns input from correct input inbox"
+      },
+      "getNumberOfInputs()": {
+        "notice": "returns number of inputs on correct inbox"
+      }
+    },
+    "version": 1
+  }
+}

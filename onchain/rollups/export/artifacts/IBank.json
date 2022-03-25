@@ -1,0 +1,227 @@
+{
+  "contractName": "IBank",
+  "sourceName": "contracts/IBank.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Deposit",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Transfer",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
+      "name": "depositTokens",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getToken",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
+      "name": "transferTokens",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "Deposit(address,address,uint256)": {
+        "details": "is triggered on any successful call to `depositTokens`",
+        "params": {
+          "from": "the account/contract that called `depositTokens` and              transfered `value` tokens to the bank",
+          "to": "the one that got their balance increased by `value`",
+          "value": "amount of tokens that were transfered"
+        }
+      },
+      "Transfer(address,address,uint256)": {
+        "details": "is triggered on any successful call to `transferTokens`",
+        "params": {
+          "from": "the account/contract that called `transferTokens` and              got their balance decreased by `value`",
+          "to": "the one that received `value` tokens from the bank",
+          "value": "amount of tokens that were transfered"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "balanceOf(address)": {
+        "params": {
+          "_owner": "account owner"
+        }
+      },
+      "depositTokens(address,uint256)": {
+        "details": "you may need to call `token.approve(bank, _value)`",
+        "params": {
+          "_to": "account that will have their balance increased by `_value`",
+          "_value": "amount of tokens to be transfered"
+        }
+      },
+      "transferTokens(address,uint256)": {
+        "params": {
+          "_to": "account that will receive `_value` tokens",
+          "_value": "amount of tokens to be transfered"
+        }
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "bytecode": {
+      "functionDebugData": {},
+      "generatedSources": [],
+      "linkReferences": {},
+      "object": "",
+      "opcodes": "",
+      "sourceMap": ""
+    },
+    "deployedBytecode": {
+      "functionDebugData": {},
+      "generatedSources": [],
+      "immutableReferences": {},
+      "linkReferences": {},
+      "object": "",
+      "opcodes": "",
+      "sourceMap": ""
+    },
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "balanceOf(address)": "70a08231",
+      "depositTokens(address,uint256)": "66168bd7",
+      "getToken()": "21df0da7",
+      "transferTokens(address,uint256)": "bec3fa17"
+    }
+  },
+  "metadata": "{\"compiler\":{\"version\":\"0.8.13+commit.abaa5c0e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Deposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"depositTokens\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getToken\",\"outputs\":[{\"internalType\":\"contract IERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transferTokens\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"events\":{\"Deposit(address,address,uint256)\":{\"details\":\"is triggered on any successful call to `depositTokens`\",\"params\":{\"from\":\"the account/contract that called `depositTokens` and              transfered `value` tokens to the bank\",\"to\":\"the one that got their balance increased by `value`\",\"value\":\"amount of tokens that were transfered\"}},\"Transfer(address,address,uint256)\":{\"details\":\"is triggered on any successful call to `transferTokens`\",\"params\":{\"from\":\"the account/contract that called `transferTokens` and              got their balance decreased by `value`\",\"to\":\"the one that received `value` tokens from the bank\",\"value\":\"amount of tokens that were transfered\"}}},\"kind\":\"dev\",\"methods\":{\"balanceOf(address)\":{\"params\":{\"_owner\":\"account owner\"}},\"depositTokens(address,uint256)\":{\"details\":\"you may need to call `token.approve(bank, _value)`\",\"params\":{\"_to\":\"account that will have their balance increased by `_value`\",\"_value\":\"amount of tokens to be transfered\"}},\"transferTokens(address,uint256)\":{\"params\":{\"_to\":\"account that will receive `_value` tokens\",\"_value\":\"amount of tokens to be transfered\"}}},\"version\":1},\"userdoc\":{\"events\":{\"Deposit(address,address,uint256)\":{\"notice\":\"`value` tokens were transfered from `from` to bankthe balance of `to` was increased by `value`\"},\"Transfer(address,address,uint256)\":{\"notice\":\"`value` tokens were transfered from the bank to `to`the balance of `from` was decreased by `value`\"}},\"kind\":\"user\",\"methods\":{\"balanceOf(address)\":{\"notice\":\"get balance of `_owner`\"},\"depositTokens(address,uint256)\":{\"notice\":\"transfer `_value` tokens from caller to bankincrease the balance of `_to` by `_value`\"},\"getToken()\":{\"notice\":\"returns the token used internally\"},\"transferTokens(address,uint256)\":{\"notice\":\"transfer `_value` tokens from bank to `_to`decrease the balance of caller by `_value`\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/IBank.sol\":\"IBank\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.5.0) (token/ERC20/IERC20.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Interface of the ERC20 standard as defined in the EIP.\\n */\\ninterface IERC20 {\\n    /**\\n     * @dev Returns the amount of tokens in existence.\\n     */\\n    function totalSupply() external view returns (uint256);\\n\\n    /**\\n     * @dev Returns the amount of tokens owned by `account`.\\n     */\\n    function balanceOf(address account) external view returns (uint256);\\n\\n    /**\\n     * @dev Moves `amount` tokens from the caller's account to `to`.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transfer(address to, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Returns the remaining number of tokens that `spender` will be\\n     * allowed to spend on behalf of `owner` through {transferFrom}. This is\\n     * zero by default.\\n     *\\n     * This value changes when {approve} or {transferFrom} are called.\\n     */\\n    function allowance(address owner, address spender) external view returns (uint256);\\n\\n    /**\\n     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * IMPORTANT: Beware that changing an allowance with this method brings the risk\\n     * that someone may use both the old and the new allowance by unfortunate\\n     * transaction ordering. One possible solution to mitigate this race\\n     * condition is to first reduce the spender's allowance to 0 and set the\\n     * desired value afterwards:\\n     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729\\n     *\\n     * Emits an {Approval} event.\\n     */\\n    function approve(address spender, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Moves `amount` tokens from `from` to `to` using the\\n     * allowance mechanism. `amount` is then deducted from the caller's\\n     * allowance.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transferFrom(\\n        address from,\\n        address to,\\n        uint256 amount\\n    ) external returns (bool);\\n\\n    /**\\n     * @dev Emitted when `value` tokens are moved from one account (`from`) to\\n     * another (`to`).\\n     *\\n     * Note that `value` may be zero.\\n     */\\n    event Transfer(address indexed from, address indexed to, uint256 value);\\n\\n    /**\\n     * @dev Emitted when the allowance of a `spender` for an `owner` is set by\\n     * a call to {approve}. `value` is the new allowance.\\n     */\\n    event Approval(address indexed owner, address indexed spender, uint256 value);\\n}\\n\",\"keccak256\":\"0xbbc8ac883ac3c0078ce5ad3e288fbb3ffcc8a30c3a98c0fda0114d64fc44fca2\",\"license\":\"MIT\"},\"contracts/IBank.sol\":{\"content\":\"// Copyright 2022 Cartesi Pte. Ltd.\\n\\n// SPDX-License-Identifier: Apache-2.0\\n// Licensed under the Apache License, Version 2.0 (the \\\"License\\\"); you may not use\\n// this file except in compliance with the License. You may obtain a copy of the\\n// License at http://www.apache.org/licenses/LICENSE-2.0\\n\\n// Unless required by applicable law or agreed to in writing, software distributed\\n// under the License is distributed on an \\\"AS IS\\\" BASIS, WITHOUT WARRANTIES OR\\n// CONDITIONS OF ANY KIND, either express or implied. See the License for the\\n// specific language governing permissions and limitations under the License.\\n\\n// @title Bank interface\\npragma solidity ^0.8.0;\\n\\nimport {IERC20} from \\\"@openzeppelin/contracts/token/ERC20/IERC20.sol\\\";\\n\\ninterface IBank {\\n    /// @notice returns the token used internally\\n    function getToken() external view returns (IERC20);\\n\\n    /// @notice get balance of `_owner`\\n    /// @param _owner account owner\\n    function balanceOf(address _owner) external view returns (uint256);\\n\\n    /// @notice transfer `_value` tokens from bank to `_to`\\n    /// @notice decrease the balance of caller by `_value`\\n    /// @param _to account that will receive `_value` tokens\\n    /// @param _value amount of tokens to be transfered\\n    function transferTokens(address _to, uint256 _value) external;\\n\\n    /// @notice transfer `_value` tokens from caller to bank\\n    /// @notice increase the balance of `_to` by `_value`\\n    /// @dev you may need to call `token.approve(bank, _value)`\\n    /// @param _to account that will have their balance increased by `_value`\\n    /// @param _value amount of tokens to be transfered\\n    function depositTokens(address _to, uint256 _value) external;\\n\\n    /// @notice `value` tokens were transfered from the bank to `to`\\n    /// @notice the balance of `from` was decreased by `value`\\n    /// @dev is triggered on any successful call to `transferTokens`\\n    /// @param from the account/contract that called `transferTokens` and\\n    ///              got their balance decreased by `value`\\n    /// @param to the one that received `value` tokens from the bank\\n    /// @param value amount of tokens that were transfered\\n    event Transfer(address indexed from, address to, uint256 value);\\n\\n    /// @notice `value` tokens were transfered from `from` to bank\\n    /// @notice the balance of `to` was increased by `value`\\n    /// @dev is triggered on any successful call to `depositTokens`\\n    /// @param from the account/contract that called `depositTokens` and\\n    ///              transfered `value` tokens to the bank\\n    /// @param to the one that got their balance increased by `value`\\n    /// @param value amount of tokens that were transfered\\n    event Deposit(address from, address indexed to, uint256 value);\\n}\\n\",\"keccak256\":\"0x483dc9b0c26e3a5d43148cf847bd4df2af03438a0d76d60d33549de3ca2dd77d\",\"license\":\"Apache-2.0\"}},\"version\":1}",
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  },
+  "userdoc": {
+    "events": {
+      "Deposit(address,address,uint256)": {
+        "notice": "`value` tokens were transfered from `from` to bankthe balance of `to` was increased by `value`"
+      },
+      "Transfer(address,address,uint256)": {
+        "notice": "`value` tokens were transfered from the bank to `to`the balance of `from` was decreased by `value`"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "balanceOf(address)": {
+        "notice": "get balance of `_owner`"
+      },
+      "depositTokens(address,uint256)": {
+        "notice": "transfer `_value` tokens from caller to bankincrease the balance of `_to` by `_value`"
+      },
+      "getToken()": {
+        "notice": "returns the token used internally"
+      },
+      "transferTokens(address,uint256)": {
+        "notice": "transfer `_value` tokens from bank to `_to`decrease the balance of caller by `_value`"
+      }
+    },
+    "version": 1
+  }
+}

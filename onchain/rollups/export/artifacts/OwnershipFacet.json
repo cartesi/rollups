@@ -1,0 +1,845 @@
+{
+  "contractName": "OwnershipFacet",
+  "sourceName": "contracts/facets/OwnershipFacet.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "owner_",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610248806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c80638da5cb5b1461003b578063f2fde38b1461005f575b600080fd5b610043610074565b6040516001600160a01b03909116815260200160405180910390f35b61007261006d3660046101e2565b6100ac565b005b60006100a77fc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c1320546001600160a01b031690565b905090565b6100b46100c0565b6100bd8161014d565b50565b7fc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c131c600401546001600160a01b0316331461014b5760405162461bcd60e51b815260206004820152602260248201527f4c69624469616d6f6e643a204d75737420626520636f6e7472616374206f776e60448201526132b960f11b606482015260840160405180910390fd5b565b7fc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c132080546001600160a01b031981166001600160a01b038481169182179093556040517fc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c131c939092169182907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e090600090a3505050565b6000602082840312156101f457600080fd5b81356001600160a01b038116811461020b57600080fd5b939250505056fea264697066735822122028a4df310106ca3538d88cb1b0ac2c4586b78c8eafbbc533269b52abf6654d8d64736f6c634300080d0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c80638da5cb5b1461003b578063f2fde38b1461005f575b600080fd5b610043610074565b6040516001600160a01b03909116815260200160405180910390f35b61007261006d3660046101e2565b6100ac565b005b60006100a77fc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c1320546001600160a01b031690565b905090565b6100b46100c0565b6100bd8161014d565b50565b7fc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c131c600401546001600160a01b0316331461014b5760405162461bcd60e51b815260206004820152602260248201527f4c69624469616d6f6e643a204d75737420626520636f6e7472616374206f776e60448201526132b960f11b606482015260840160405180910390fd5b565b7fc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c132080546001600160a01b031981166001600160a01b038481169182179093556040517fc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c131c939092169182907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e090600090a3505050565b6000602082840312156101f457600080fd5b81356001600160a01b038116811461020b57600080fd5b939250505056fea264697066735822122028a4df310106ca3538d88cb1b0ac2c4586b78c8eafbbc533269b52abf6654d8d64736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "owner()": {
+        "returns": {
+          "owner_": "The address of the owner."
+        }
+      },
+      "transferOwnership(address)": {
+        "details": "Set _newOwner to address(0) to renounce any ownership.",
+        "params": {
+          "_newOwner": "The address of the new owner of the contract"
+        }
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "bytecode": {
+      "functionDebugData": {},
+      "generatedSources": [],
+      "linkReferences": {},
+      "opcodes": "PUSH1 0x80 PUSH1 0x40 MSTORE CALLVALUE DUP1 ISZERO PUSH2 0x10 JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST POP PUSH2 0x248 DUP1 PUSH2 0x20 PUSH1 0x0 CODECOPY PUSH1 0x0 RETURN INVALID PUSH1 0x80 PUSH1 0x40 MSTORE CALLVALUE DUP1 ISZERO PUSH2 0x10 JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST POP PUSH1 0x4 CALLDATASIZE LT PUSH2 0x36 JUMPI PUSH1 0x0 CALLDATALOAD PUSH1 0xE0 SHR DUP1 PUSH4 0x8DA5CB5B EQ PUSH2 0x3B JUMPI DUP1 PUSH4 0xF2FDE38B EQ PUSH2 0x5F JUMPI JUMPDEST PUSH1 0x0 DUP1 REVERT JUMPDEST PUSH2 0x43 PUSH2 0x74 JUMP JUMPDEST PUSH1 0x40 MLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB SWAP1 SWAP2 AND DUP2 MSTORE PUSH1 0x20 ADD PUSH1 0x40 MLOAD DUP1 SWAP2 SUB SWAP1 RETURN JUMPDEST PUSH2 0x72 PUSH2 0x6D CALLDATASIZE PUSH1 0x4 PUSH2 0x1E2 JUMP JUMPDEST PUSH2 0xAC JUMP JUMPDEST STOP JUMPDEST PUSH1 0x0 PUSH2 0xA7 PUSH32 0xC8FCAD8DB84D3CC18B4C41D551EA0EE66DD599CDE068D998E57D5E09332C1320 SLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB AND SWAP1 JUMP JUMPDEST SWAP1 POP SWAP1 JUMP JUMPDEST PUSH2 0xB4 PUSH2 0xC0 JUMP JUMPDEST PUSH2 0xBD DUP2 PUSH2 0x14D JUMP JUMPDEST POP JUMP JUMPDEST PUSH32 0xC8FCAD8DB84D3CC18B4C41D551EA0EE66DD599CDE068D998E57D5E09332C131C PUSH1 0x4 ADD SLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB AND CALLER EQ PUSH2 0x14B JUMPI PUSH1 0x40 MLOAD PUSH3 0x461BCD PUSH1 0xE5 SHL DUP2 MSTORE PUSH1 0x20 PUSH1 0x4 DUP3 ADD MSTORE PUSH1 0x22 PUSH1 0x24 DUP3 ADD MSTORE PUSH32 0x4C69624469616D6F6E643A204D75737420626520636F6E7472616374206F776E PUSH1 0x44 DUP3 ADD MSTORE PUSH2 0x32B9 PUSH1 0xF1 SHL PUSH1 0x64 DUP3 ADD MSTORE PUSH1 0x84 ADD PUSH1 0x40 MLOAD DUP1 SWAP2 SUB SWAP1 REVERT JUMPDEST JUMP JUMPDEST PUSH32 0xC8FCAD8DB84D3CC18B4C41D551EA0EE66DD599CDE068D998E57D5E09332C1320 DUP1 SLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB NOT DUP2 AND PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB DUP5 DUP2 AND SWAP2 DUP3 OR SWAP1 SWAP4 SSTORE PUSH1 0x40 MLOAD PUSH32 0xC8FCAD8DB84D3CC18B4C41D551EA0EE66DD599CDE068D998E57D5E09332C131C SWAP4 SWAP1 SWAP3 AND SWAP2 DUP3 SWAP1 PUSH32 0x8BE0079C531659141344CD1FD0A4F28419497F9722A3DAAFE3B4186F6B6457E0 SWAP1 PUSH1 0x0 SWAP1 LOG3 POP POP POP JUMP JUMPDEST PUSH1 0x0 PUSH1 0x20 DUP3 DUP5 SUB SLT ISZERO PUSH2 0x1F4 JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST DUP2 CALLDATALOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB DUP2 AND DUP2 EQ PUSH2 0x20B JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST SWAP4 SWAP3 POP POP POP JUMP INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 0x28 LOG4 0xDF BALANCE ADD MOD 0xCA CALLDATALOAD CODESIZE 0xD8 DUP13 0xB1 0xB0 0xAC 0x2C GASLIMIT DUP7 0xB7 DUP13 DUP15 0xAF 0xBB 0xC5 CALLER 0x26 SWAP12 MSTORE 0xAB 0xF6 PUSH6 0x4D8D64736F6C PUSH4 0x4300080D STOP CALLER ",
+      "sourceMap": "165:330:22:-:0;;;;;;;;;;;;;;;;;;;"
+    },
+    "deployedBytecode": {
+      "functionDebugData": {
+        "@contractOwner_6269": {
+          "entryPoint": null,
+          "id": 6269,
+          "parameterSlots": 0,
+          "returnSlots": 1
+        },
+        "@diamondStorage_6223": {
+          "entryPoint": null,
+          "id": 6223,
+          "parameterSlots": 0,
+          "returnSlots": 1
+        },
+        "@enforceIsContractOwner_6283": {
+          "entryPoint": 192,
+          "id": 6283,
+          "parameterSlots": 0,
+          "returnSlots": 0
+        },
+        "@owner_4603": {
+          "entryPoint": 116,
+          "id": 4603,
+          "parameterSlots": 0,
+          "returnSlots": 1
+        },
+        "@setContractOwner_6257": {
+          "entryPoint": 333,
+          "id": 6257,
+          "parameterSlots": 1,
+          "returnSlots": 0
+        },
+        "@transferOwnership_4590": {
+          "entryPoint": 172,
+          "id": 4590,
+          "parameterSlots": 1,
+          "returnSlots": 0
+        },
+        "abi_decode_tuple_t_address": {
+          "entryPoint": 482,
+          "id": null,
+          "parameterSlots": 2,
+          "returnSlots": 1
+        },
+        "abi_encode_tuple_t_address__to_t_address__fromStack_reversed": {
+          "entryPoint": null,
+          "id": null,
+          "parameterSlots": 2,
+          "returnSlots": 1
+        },
+        "abi_encode_tuple_t_stringliteral_0d4ae41009c51fd276653a54d7793c24f266ddc8c56ce21f8be5e2c6595ab3ac__to_t_string_memory_ptr__fromStack_reversed": {
+          "entryPoint": null,
+          "id": null,
+          "parameterSlots": 1,
+          "returnSlots": 1
+        }
+      },
+      "generatedSources": [
+        {
+          "ast": {
+            "nodeType": "YulBlock",
+            "src": "0:913:49",
+            "statements": [
+              {
+                "nodeType": "YulBlock",
+                "src": "6:3:49",
+                "statements": []
+              },
+              {
+                "body": {
+                  "nodeType": "YulBlock",
+                  "src": "115:102:49",
+                  "statements": [
+                    {
+                      "nodeType": "YulAssignment",
+                      "src": "125:26:49",
+                      "value": {
+                        "arguments": [
+                          {
+                            "name": "headStart",
+                            "nodeType": "YulIdentifier",
+                            "src": "137:9:49"
+                          },
+                          {
+                            "kind": "number",
+                            "nodeType": "YulLiteral",
+                            "src": "148:2:49",
+                            "type": "",
+                            "value": "32"
+                          }
+                        ],
+                        "functionName": {
+                          "name": "add",
+                          "nodeType": "YulIdentifier",
+                          "src": "133:3:49"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "133:18:49"
+                      },
+                      "variableNames": [
+                        {
+                          "name": "tail",
+                          "nodeType": "YulIdentifier",
+                          "src": "125:4:49"
+                        }
+                      ]
+                    },
+                    {
+                      "expression": {
+                        "arguments": [
+                          {
+                            "name": "headStart",
+                            "nodeType": "YulIdentifier",
+                            "src": "167:9:49"
+                          },
+                          {
+                            "arguments": [
+                              {
+                                "name": "value0",
+                                "nodeType": "YulIdentifier",
+                                "src": "182:6:49"
+                              },
+                              {
+                                "arguments": [
+                                  {
+                                    "arguments": [
+                                      {
+                                        "kind": "number",
+                                        "nodeType": "YulLiteral",
+                                        "src": "198:3:49",
+                                        "type": "",
+                                        "value": "160"
+                                      },
+                                      {
+                                        "kind": "number",
+                                        "nodeType": "YulLiteral",
+                                        "src": "203:1:49",
+                                        "type": "",
+                                        "value": "1"
+                                      }
+                                    ],
+                                    "functionName": {
+                                      "name": "shl",
+                                      "nodeType": "YulIdentifier",
+                                      "src": "194:3:49"
+                                    },
+                                    "nodeType": "YulFunctionCall",
+                                    "src": "194:11:49"
+                                  },
+                                  {
+                                    "kind": "number",
+                                    "nodeType": "YulLiteral",
+                                    "src": "207:1:49",
+                                    "type": "",
+                                    "value": "1"
+                                  }
+                                ],
+                                "functionName": {
+                                  "name": "sub",
+                                  "nodeType": "YulIdentifier",
+                                  "src": "190:3:49"
+                                },
+                                "nodeType": "YulFunctionCall",
+                                "src": "190:19:49"
+                              }
+                            ],
+                            "functionName": {
+                              "name": "and",
+                              "nodeType": "YulIdentifier",
+                              "src": "178:3:49"
+                            },
+                            "nodeType": "YulFunctionCall",
+                            "src": "178:32:49"
+                          }
+                        ],
+                        "functionName": {
+                          "name": "mstore",
+                          "nodeType": "YulIdentifier",
+                          "src": "160:6:49"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "160:51:49"
+                      },
+                      "nodeType": "YulExpressionStatement",
+                      "src": "160:51:49"
+                    }
+                  ]
+                },
+                "name": "abi_encode_tuple_t_address__to_t_address__fromStack_reversed",
+                "nodeType": "YulFunctionDefinition",
+                "parameters": [
+                  {
+                    "name": "headStart",
+                    "nodeType": "YulTypedName",
+                    "src": "84:9:49",
+                    "type": ""
+                  },
+                  {
+                    "name": "value0",
+                    "nodeType": "YulTypedName",
+                    "src": "95:6:49",
+                    "type": ""
+                  }
+                ],
+                "returnVariables": [
+                  {
+                    "name": "tail",
+                    "nodeType": "YulTypedName",
+                    "src": "106:4:49",
+                    "type": ""
+                  }
+                ],
+                "src": "14:203:49"
+              },
+              {
+                "body": {
+                  "nodeType": "YulBlock",
+                  "src": "292:216:49",
+                  "statements": [
+                    {
+                      "body": {
+                        "nodeType": "YulBlock",
+                        "src": "338:16:49",
+                        "statements": [
+                          {
+                            "expression": {
+                              "arguments": [
+                                {
+                                  "kind": "number",
+                                  "nodeType": "YulLiteral",
+                                  "src": "347:1:49",
+                                  "type": "",
+                                  "value": "0"
+                                },
+                                {
+                                  "kind": "number",
+                                  "nodeType": "YulLiteral",
+                                  "src": "350:1:49",
+                                  "type": "",
+                                  "value": "0"
+                                }
+                              ],
+                              "functionName": {
+                                "name": "revert",
+                                "nodeType": "YulIdentifier",
+                                "src": "340:6:49"
+                              },
+                              "nodeType": "YulFunctionCall",
+                              "src": "340:12:49"
+                            },
+                            "nodeType": "YulExpressionStatement",
+                            "src": "340:12:49"
+                          }
+                        ]
+                      },
+                      "condition": {
+                        "arguments": [
+                          {
+                            "arguments": [
+                              {
+                                "name": "dataEnd",
+                                "nodeType": "YulIdentifier",
+                                "src": "313:7:49"
+                              },
+                              {
+                                "name": "headStart",
+                                "nodeType": "YulIdentifier",
+                                "src": "322:9:49"
+                              }
+                            ],
+                            "functionName": {
+                              "name": "sub",
+                              "nodeType": "YulIdentifier",
+                              "src": "309:3:49"
+                            },
+                            "nodeType": "YulFunctionCall",
+                            "src": "309:23:49"
+                          },
+                          {
+                            "kind": "number",
+                            "nodeType": "YulLiteral",
+                            "src": "334:2:49",
+                            "type": "",
+                            "value": "32"
+                          }
+                        ],
+                        "functionName": {
+                          "name": "slt",
+                          "nodeType": "YulIdentifier",
+                          "src": "305:3:49"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "305:32:49"
+                      },
+                      "nodeType": "YulIf",
+                      "src": "302:52:49"
+                    },
+                    {
+                      "nodeType": "YulVariableDeclaration",
+                      "src": "363:36:49",
+                      "value": {
+                        "arguments": [
+                          {
+                            "name": "headStart",
+                            "nodeType": "YulIdentifier",
+                            "src": "389:9:49"
+                          }
+                        ],
+                        "functionName": {
+                          "name": "calldataload",
+                          "nodeType": "YulIdentifier",
+                          "src": "376:12:49"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "376:23:49"
+                      },
+                      "variables": [
+                        {
+                          "name": "value",
+                          "nodeType": "YulTypedName",
+                          "src": "367:5:49",
+                          "type": ""
+                        }
+                      ]
+                    },
+                    {
+                      "body": {
+                        "nodeType": "YulBlock",
+                        "src": "462:16:49",
+                        "statements": [
+                          {
+                            "expression": {
+                              "arguments": [
+                                {
+                                  "kind": "number",
+                                  "nodeType": "YulLiteral",
+                                  "src": "471:1:49",
+                                  "type": "",
+                                  "value": "0"
+                                },
+                                {
+                                  "kind": "number",
+                                  "nodeType": "YulLiteral",
+                                  "src": "474:1:49",
+                                  "type": "",
+                                  "value": "0"
+                                }
+                              ],
+                              "functionName": {
+                                "name": "revert",
+                                "nodeType": "YulIdentifier",
+                                "src": "464:6:49"
+                              },
+                              "nodeType": "YulFunctionCall",
+                              "src": "464:12:49"
+                            },
+                            "nodeType": "YulExpressionStatement",
+                            "src": "464:12:49"
+                          }
+                        ]
+                      },
+                      "condition": {
+                        "arguments": [
+                          {
+                            "arguments": [
+                              {
+                                "name": "value",
+                                "nodeType": "YulIdentifier",
+                                "src": "421:5:49"
+                              },
+                              {
+                                "arguments": [
+                                  {
+                                    "name": "value",
+                                    "nodeType": "YulIdentifier",
+                                    "src": "432:5:49"
+                                  },
+                                  {
+                                    "arguments": [
+                                      {
+                                        "arguments": [
+                                          {
+                                            "kind": "number",
+                                            "nodeType": "YulLiteral",
+                                            "src": "447:3:49",
+                                            "type": "",
+                                            "value": "160"
+                                          },
+                                          {
+                                            "kind": "number",
+                                            "nodeType": "YulLiteral",
+                                            "src": "452:1:49",
+                                            "type": "",
+                                            "value": "1"
+                                          }
+                                        ],
+                                        "functionName": {
+                                          "name": "shl",
+                                          "nodeType": "YulIdentifier",
+                                          "src": "443:3:49"
+                                        },
+                                        "nodeType": "YulFunctionCall",
+                                        "src": "443:11:49"
+                                      },
+                                      {
+                                        "kind": "number",
+                                        "nodeType": "YulLiteral",
+                                        "src": "456:1:49",
+                                        "type": "",
+                                        "value": "1"
+                                      }
+                                    ],
+                                    "functionName": {
+                                      "name": "sub",
+                                      "nodeType": "YulIdentifier",
+                                      "src": "439:3:49"
+                                    },
+                                    "nodeType": "YulFunctionCall",
+                                    "src": "439:19:49"
+                                  }
+                                ],
+                                "functionName": {
+                                  "name": "and",
+                                  "nodeType": "YulIdentifier",
+                                  "src": "428:3:49"
+                                },
+                                "nodeType": "YulFunctionCall",
+                                "src": "428:31:49"
+                              }
+                            ],
+                            "functionName": {
+                              "name": "eq",
+                              "nodeType": "YulIdentifier",
+                              "src": "418:2:49"
+                            },
+                            "nodeType": "YulFunctionCall",
+                            "src": "418:42:49"
+                          }
+                        ],
+                        "functionName": {
+                          "name": "iszero",
+                          "nodeType": "YulIdentifier",
+                          "src": "411:6:49"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "411:50:49"
+                      },
+                      "nodeType": "YulIf",
+                      "src": "408:70:49"
+                    },
+                    {
+                      "nodeType": "YulAssignment",
+                      "src": "487:15:49",
+                      "value": {
+                        "name": "value",
+                        "nodeType": "YulIdentifier",
+                        "src": "497:5:49"
+                      },
+                      "variableNames": [
+                        {
+                          "name": "value0",
+                          "nodeType": "YulIdentifier",
+                          "src": "487:6:49"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "name": "abi_decode_tuple_t_address",
+                "nodeType": "YulFunctionDefinition",
+                "parameters": [
+                  {
+                    "name": "headStart",
+                    "nodeType": "YulTypedName",
+                    "src": "258:9:49",
+                    "type": ""
+                  },
+                  {
+                    "name": "dataEnd",
+                    "nodeType": "YulTypedName",
+                    "src": "269:7:49",
+                    "type": ""
+                  }
+                ],
+                "returnVariables": [
+                  {
+                    "name": "value0",
+                    "nodeType": "YulTypedName",
+                    "src": "281:6:49",
+                    "type": ""
+                  }
+                ],
+                "src": "222:286:49"
+              },
+              {
+                "body": {
+                  "nodeType": "YulBlock",
+                  "src": "687:224:49",
+                  "statements": [
+                    {
+                      "expression": {
+                        "arguments": [
+                          {
+                            "name": "headStart",
+                            "nodeType": "YulIdentifier",
+                            "src": "704:9:49"
+                          },
+                          {
+                            "kind": "number",
+                            "nodeType": "YulLiteral",
+                            "src": "715:2:49",
+                            "type": "",
+                            "value": "32"
+                          }
+                        ],
+                        "functionName": {
+                          "name": "mstore",
+                          "nodeType": "YulIdentifier",
+                          "src": "697:6:49"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "697:21:49"
+                      },
+                      "nodeType": "YulExpressionStatement",
+                      "src": "697:21:49"
+                    },
+                    {
+                      "expression": {
+                        "arguments": [
+                          {
+                            "arguments": [
+                              {
+                                "name": "headStart",
+                                "nodeType": "YulIdentifier",
+                                "src": "738:9:49"
+                              },
+                              {
+                                "kind": "number",
+                                "nodeType": "YulLiteral",
+                                "src": "749:2:49",
+                                "type": "",
+                                "value": "32"
+                              }
+                            ],
+                            "functionName": {
+                              "name": "add",
+                              "nodeType": "YulIdentifier",
+                              "src": "734:3:49"
+                            },
+                            "nodeType": "YulFunctionCall",
+                            "src": "734:18:49"
+                          },
+                          {
+                            "kind": "number",
+                            "nodeType": "YulLiteral",
+                            "src": "754:2:49",
+                            "type": "",
+                            "value": "34"
+                          }
+                        ],
+                        "functionName": {
+                          "name": "mstore",
+                          "nodeType": "YulIdentifier",
+                          "src": "727:6:49"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "727:30:49"
+                      },
+                      "nodeType": "YulExpressionStatement",
+                      "src": "727:30:49"
+                    },
+                    {
+                      "expression": {
+                        "arguments": [
+                          {
+                            "arguments": [
+                              {
+                                "name": "headStart",
+                                "nodeType": "YulIdentifier",
+                                "src": "777:9:49"
+                              },
+                              {
+                                "kind": "number",
+                                "nodeType": "YulLiteral",
+                                "src": "788:2:49",
+                                "type": "",
+                                "value": "64"
+                              }
+                            ],
+                            "functionName": {
+                              "name": "add",
+                              "nodeType": "YulIdentifier",
+                              "src": "773:3:49"
+                            },
+                            "nodeType": "YulFunctionCall",
+                            "src": "773:18:49"
+                          },
+                          {
+                            "hexValue": "4c69624469616d6f6e643a204d75737420626520636f6e7472616374206f776e",
+                            "kind": "string",
+                            "nodeType": "YulLiteral",
+                            "src": "793:34:49",
+                            "type": "",
+                            "value": "LibDiamond: Must be contract own"
+                          }
+                        ],
+                        "functionName": {
+                          "name": "mstore",
+                          "nodeType": "YulIdentifier",
+                          "src": "766:6:49"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "766:62:49"
+                      },
+                      "nodeType": "YulExpressionStatement",
+                      "src": "766:62:49"
+                    },
+                    {
+                      "expression": {
+                        "arguments": [
+                          {
+                            "arguments": [
+                              {
+                                "name": "headStart",
+                                "nodeType": "YulIdentifier",
+                                "src": "848:9:49"
+                              },
+                              {
+                                "kind": "number",
+                                "nodeType": "YulLiteral",
+                                "src": "859:2:49",
+                                "type": "",
+                                "value": "96"
+                              }
+                            ],
+                            "functionName": {
+                              "name": "add",
+                              "nodeType": "YulIdentifier",
+                              "src": "844:3:49"
+                            },
+                            "nodeType": "YulFunctionCall",
+                            "src": "844:18:49"
+                          },
+                          {
+                            "hexValue": "6572",
+                            "kind": "string",
+                            "nodeType": "YulLiteral",
+                            "src": "864:4:49",
+                            "type": "",
+                            "value": "er"
+                          }
+                        ],
+                        "functionName": {
+                          "name": "mstore",
+                          "nodeType": "YulIdentifier",
+                          "src": "837:6:49"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "837:32:49"
+                      },
+                      "nodeType": "YulExpressionStatement",
+                      "src": "837:32:49"
+                    },
+                    {
+                      "nodeType": "YulAssignment",
+                      "src": "878:27:49",
+                      "value": {
+                        "arguments": [
+                          {
+                            "name": "headStart",
+                            "nodeType": "YulIdentifier",
+                            "src": "890:9:49"
+                          },
+                          {
+                            "kind": "number",
+                            "nodeType": "YulLiteral",
+                            "src": "901:3:49",
+                            "type": "",
+                            "value": "128"
+                          }
+                        ],
+                        "functionName": {
+                          "name": "add",
+                          "nodeType": "YulIdentifier",
+                          "src": "886:3:49"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "886:19:49"
+                      },
+                      "variableNames": [
+                        {
+                          "name": "tail",
+                          "nodeType": "YulIdentifier",
+                          "src": "878:4:49"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "name": "abi_encode_tuple_t_stringliteral_0d4ae41009c51fd276653a54d7793c24f266ddc8c56ce21f8be5e2c6595ab3ac__to_t_string_memory_ptr__fromStack_reversed",
+                "nodeType": "YulFunctionDefinition",
+                "parameters": [
+                  {
+                    "name": "headStart",
+                    "nodeType": "YulTypedName",
+                    "src": "664:9:49",
+                    "type": ""
+                  }
+                ],
+                "returnVariables": [
+                  {
+                    "name": "tail",
+                    "nodeType": "YulTypedName",
+                    "src": "678:4:49",
+                    "type": ""
+                  }
+                ],
+                "src": "513:398:49"
+              }
+            ]
+          },
+          "contents": "{\n    { }\n    function abi_encode_tuple_t_address__to_t_address__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, and(value0, sub(shl(160, 1), 1)))\n    }\n    function abi_decode_tuple_t_address(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := calldataload(headStart)\n        if iszero(eq(value, and(value, sub(shl(160, 1), 1)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_0d4ae41009c51fd276653a54d7793c24f266ddc8c56ce21f8be5e2c6595ab3ac__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 34)\n        mstore(add(headStart, 64), \"LibDiamond: Must be contract own\")\n        mstore(add(headStart, 96), \"er\")\n        tail := add(headStart, 128)\n    }\n}",
+          "id": 49,
+          "language": "Yul",
+          "name": "#utility.yul"
+        }
+      ],
+      "immutableReferences": {},
+      "linkReferences": {},
+      "opcodes": "PUSH1 0x80 PUSH1 0x40 MSTORE CALLVALUE DUP1 ISZERO PUSH2 0x10 JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST POP PUSH1 0x4 CALLDATASIZE LT PUSH2 0x36 JUMPI PUSH1 0x0 CALLDATALOAD PUSH1 0xE0 SHR DUP1 PUSH4 0x8DA5CB5B EQ PUSH2 0x3B JUMPI DUP1 PUSH4 0xF2FDE38B EQ PUSH2 0x5F JUMPI JUMPDEST PUSH1 0x0 DUP1 REVERT JUMPDEST PUSH2 0x43 PUSH2 0x74 JUMP JUMPDEST PUSH1 0x40 MLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB SWAP1 SWAP2 AND DUP2 MSTORE PUSH1 0x20 ADD PUSH1 0x40 MLOAD DUP1 SWAP2 SUB SWAP1 RETURN JUMPDEST PUSH2 0x72 PUSH2 0x6D CALLDATASIZE PUSH1 0x4 PUSH2 0x1E2 JUMP JUMPDEST PUSH2 0xAC JUMP JUMPDEST STOP JUMPDEST PUSH1 0x0 PUSH2 0xA7 PUSH32 0xC8FCAD8DB84D3CC18B4C41D551EA0EE66DD599CDE068D998E57D5E09332C1320 SLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB AND SWAP1 JUMP JUMPDEST SWAP1 POP SWAP1 JUMP JUMPDEST PUSH2 0xB4 PUSH2 0xC0 JUMP JUMPDEST PUSH2 0xBD DUP2 PUSH2 0x14D JUMP JUMPDEST POP JUMP JUMPDEST PUSH32 0xC8FCAD8DB84D3CC18B4C41D551EA0EE66DD599CDE068D998E57D5E09332C131C PUSH1 0x4 ADD SLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB AND CALLER EQ PUSH2 0x14B JUMPI PUSH1 0x40 MLOAD PUSH3 0x461BCD PUSH1 0xE5 SHL DUP2 MSTORE PUSH1 0x20 PUSH1 0x4 DUP3 ADD MSTORE PUSH1 0x22 PUSH1 0x24 DUP3 ADD MSTORE PUSH32 0x4C69624469616D6F6E643A204D75737420626520636F6E7472616374206F776E PUSH1 0x44 DUP3 ADD MSTORE PUSH2 0x32B9 PUSH1 0xF1 SHL PUSH1 0x64 DUP3 ADD MSTORE PUSH1 0x84 ADD PUSH1 0x40 MLOAD DUP1 SWAP2 SUB SWAP1 REVERT JUMPDEST JUMP JUMPDEST PUSH32 0xC8FCAD8DB84D3CC18B4C41D551EA0EE66DD599CDE068D998E57D5E09332C1320 DUP1 SLOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB NOT DUP2 AND PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB DUP5 DUP2 AND SWAP2 DUP3 OR SWAP1 SWAP4 SSTORE PUSH1 0x40 MLOAD PUSH32 0xC8FCAD8DB84D3CC18B4C41D551EA0EE66DD599CDE068D998E57D5E09332C131C SWAP4 SWAP1 SWAP3 AND SWAP2 DUP3 SWAP1 PUSH32 0x8BE0079C531659141344CD1FD0A4F28419497F9722A3DAAFE3B4186F6B6457E0 SWAP1 PUSH1 0x0 SWAP1 LOG3 POP POP POP JUMP JUMPDEST PUSH1 0x0 PUSH1 0x20 DUP3 DUP5 SUB SLT ISZERO PUSH2 0x1F4 JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST DUP2 CALLDATALOAD PUSH1 0x1 PUSH1 0x1 PUSH1 0xA0 SHL SUB DUP2 AND DUP2 EQ PUSH2 0x20B JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST SWAP4 SWAP3 POP POP POP JUMP INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 0x28 LOG4 0xDF BALANCE ADD MOD 0xCA CALLDATALOAD CODESIZE 0xD8 DUP13 0xB1 0xB0 0xAC 0x2C GASLIMIT DUP7 0xB7 DUP13 DUP15 0xAF 0xBB 0xC5 CALLER 0x26 SWAP12 MSTORE 0xAB 0xF6 PUSH6 0x4D8D64736F6C PUSH4 0x4300080D STOP CALLER ",
+      "sourceMap": "165:330:22:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;376:117;;;:::i;:::-;;;-1:-1:-1;;;;;178:32:49;;;160:51;;148:2;133:18;376:117:22;;;;;;;206:164;;;;;;:::i;:::-;;:::i;:::-;;376:117;425:14;460:26;2017:30:38;;-1:-1:-1;;;;;2017:30:38;;1918:136;460:26:22;451:35;;376:117;:::o;206:164::-;280:35;:33;:35::i;:::-;325:38;353:9;325:27;:38::i;:::-;206:164;:::o;2060:190:38:-;498:45;2153:30;;;-1:-1:-1;;;;;2153:30:38;2139:10;:44;2118:125;;;;-1:-1:-1;;;2118:125:38;;715:2:49;2118:125:38;;;697:21:49;754:2;734:18;;;727:30;793:34;773:18;;;766:62;-1:-1:-1;;;844:18:49;;;837:32;886:19;;2118:125:38;;;;;;;;2060:190::o;1648:264::-;1790:16;;;-1:-1:-1;;;;;;1816:28:38;;-1:-1:-1;;;;;1816:28:38;;;;;;;;;1859:46;;498:45;;1790:16;;;;;;1859:46;;1712:25;;1859:46;1702:210;;1648:264;:::o;222:286:49:-;281:6;334:2;322:9;313:7;309:23;305:32;302:52;;;350:1;347;340:12;302:52;376:23;;-1:-1:-1;;;;;428:31:49;;418:42;;408:70;;474:1;471;464:12;408:70;497:5;222:286;-1:-1:-1;;;222:286:49:o"
+    },
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "116800",
+        "executionCost": "165",
+        "totalCost": "116965"
+      },
+      "external": {
+        "owner()": "2335",
+        "transferOwnership(address)": "28283"
+      }
+    },
+    "methodIdentifiers": {
+      "owner()": "8da5cb5b",
+      "transferOwnership(address)": "f2fde38b"
+    }
+  },
+  "metadata": "{\"compiler\":{\"version\":\"0.8.13+commit.abaa5c0e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"owner_\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"owner()\":{\"returns\":{\"owner_\":\"The address of the owner.\"}},\"transferOwnership(address)\":{\"details\":\"Set _newOwner to address(0) to renounce any ownership.\",\"params\":{\"_newOwner\":\"The address of the new owner of the contract\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"owner()\":{\"notice\":\"Get the address of the owner\"},\"transferOwnership(address)\":{\"notice\":\"Set the address of the new owner of the contract\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/facets/OwnershipFacet.sol\":\"OwnershipFacet\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/facets/OwnershipFacet.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nimport {LibDiamond} from \\\"../libraries/LibDiamond.sol\\\";\\nimport {IERC173} from \\\"../interfaces/IERC173.sol\\\";\\n\\ncontract OwnershipFacet is IERC173 {\\n    function transferOwnership(address _newOwner) external override {\\n        LibDiamond.enforceIsContractOwner();\\n        LibDiamond.setContractOwner(_newOwner);\\n    }\\n\\n    function owner() external view override returns (address owner_) {\\n        owner_ = LibDiamond.contractOwner();\\n    }\\n}\\n\",\"keccak256\":\"0x08a198b9541f25536ae7fa16f3de069de7450f66709605911e34834e65ad6419\",\"license\":\"MIT\"},\"contracts/interfaces/IDiamondCut.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n/******************************************************************************\\\\\\n* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)\\n* EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535\\n/******************************************************************************/\\n\\ninterface IDiamondCut {\\n    enum FacetCutAction {\\n        Add,\\n        Replace,\\n        Remove\\n    }\\n    // Add=0, Replace=1, Remove=2\\n\\n    struct FacetCut {\\n        address facetAddress;\\n        FacetCutAction action;\\n        bytes4[] functionSelectors;\\n    }\\n\\n    /// @notice Add/replace/remove any number of functions and optionally execute\\n    ///         a function with delegatecall\\n    /// @param _diamondCut Contains the facet addresses and function selectors\\n    /// @param _init The address of the contract or facet to execute _calldata\\n    /// @param _calldata A function call, including function selector and arguments\\n    ///                  _calldata is executed with delegatecall on _init\\n    function diamondCut(\\n        FacetCut[] calldata _diamondCut,\\n        address _init,\\n        bytes calldata _calldata\\n    ) external;\\n\\n    event DiamondCut(FacetCut[] diamondCut, address init, bytes callData);\\n}\\n\",\"keccak256\":\"0x6a3129be1f39b6fec871f2c94bf7debf2d6a4e665547a4d83e7f2def38359e44\",\"license\":\"MIT\"},\"contracts/interfaces/IERC173.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n/// @title ERC-173 Contract Ownership Standard\\n///  Note: the ERC-165 identifier for this interface is 0x7f5828d0\\n/* is ERC165 */\\ninterface IERC173 {\\n    /// @dev This emits when ownership of a contract changes.\\n    event OwnershipTransferred(\\n        address indexed previousOwner,\\n        address indexed newOwner\\n    );\\n\\n    /// @notice Get the address of the owner\\n    /// @return owner_ The address of the owner.\\n    function owner() external view returns (address owner_);\\n\\n    /// @notice Set the address of the new owner of the contract\\n    /// @dev Set _newOwner to address(0) to renounce any ownership.\\n    /// @param _newOwner The address of the new owner of the contract\\n    function transferOwnership(address _newOwner) external;\\n}\\n\",\"keccak256\":\"0xc47289cda9c9cdb749612eb82ccb9abf9ab08dca74bdca22292ae7f765a15a5f\",\"license\":\"MIT\"},\"contracts/libraries/LibDiamond.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n/******************************************************************************\\\\\\n* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)\\n* EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535\\n/******************************************************************************/\\nimport {IDiamondCut} from \\\"../interfaces/IDiamondCut.sol\\\";\\n\\nlibrary LibDiamond {\\n    bytes32 constant DIAMOND_STORAGE_POSITION =\\n        keccak256(\\\"diamond.standard.diamond.storage\\\");\\n\\n    struct DiamondStorage {\\n        // maps function selectors to the facets that execute the functions.\\n        // and maps the selectors to their position in the selectorSlots array.\\n        // func selector => address facet, selector position\\n        mapping(bytes4 => bytes32) facets;\\n        // array of slots of function selectors.\\n        // each slot holds 8 function selectors.\\n        mapping(uint256 => bytes32) selectorSlots;\\n        // The number of function selectors in selectorSlots\\n        uint16 selectorCount;\\n        // Used to query if a contract implements an interface.\\n        // Used to implement ERC-165.\\n        mapping(bytes4 => bool) supportedInterfaces;\\n        // owner of the contract\\n        address contractOwner;\\n    }\\n\\n    function diamondStorage()\\n        internal\\n        pure\\n        returns (DiamondStorage storage ds)\\n    {\\n        bytes32 position = DIAMOND_STORAGE_POSITION;\\n        assembly {\\n            ds.slot := position\\n        }\\n    }\\n\\n    event OwnershipTransferred(\\n        address indexed previousOwner,\\n        address indexed newOwner\\n    );\\n\\n    function setContractOwner(address _newOwner) internal {\\n        DiamondStorage storage ds = diamondStorage();\\n        address previousOwner = ds.contractOwner;\\n        ds.contractOwner = _newOwner;\\n        emit OwnershipTransferred(previousOwner, _newOwner);\\n    }\\n\\n    function contractOwner() internal view returns (address contractOwner_) {\\n        contractOwner_ = diamondStorage().contractOwner;\\n    }\\n\\n    function enforceIsContractOwner() internal view {\\n        require(\\n            msg.sender == diamondStorage().contractOwner,\\n            \\\"LibDiamond: Must be contract owner\\\"\\n        );\\n    }\\n\\n    event DiamondCut(\\n        IDiamondCut.FacetCut[] diamondCut,\\n        address init,\\n        bytes callData\\n    );\\n\\n    bytes32 constant CLEAR_ADDRESS_MASK =\\n        bytes32(uint256(0xffffffffffffffffffffffff));\\n    bytes32 constant CLEAR_SELECTOR_MASK = bytes32(uint256(0xffffffff << 224));\\n\\n    // Internal function version of diamondCut\\n    // This code is almost the same as the external diamondCut,\\n    // except it is using 'Facet[] memory _diamondCut' instead of\\n    // 'Facet[] calldata _diamondCut'.\\n    // The code is duplicated to prevent copying calldata to memory which\\n    // causes an error for a two dimensional array.\\n    function diamondCut(\\n        IDiamondCut.FacetCut[] memory _diamondCut,\\n        address _init,\\n        bytes memory _calldata\\n    ) internal {\\n        DiamondStorage storage ds = diamondStorage();\\n        uint256 originalSelectorCount = ds.selectorCount;\\n        uint256 selectorCount = originalSelectorCount;\\n        bytes32 selectorSlot;\\n        // Check if last selector slot is not full\\n        // \\\"selectorCount & 7\\\" is a gas efficient modulo by eight \\\"selectorCount % 8\\\"\\n        if (selectorCount & 7 > 0) {\\n            // get last selectorSlot\\n            // \\\"selectorSlot >> 3\\\" is a gas efficient division by 8 \\\"selectorSlot / 8\\\"\\n            selectorSlot = ds.selectorSlots[selectorCount >> 3];\\n        }\\n        // loop through diamond cut\\n        for (\\n            uint256 facetIndex;\\n            facetIndex < _diamondCut.length;\\n            facetIndex++\\n        ) {\\n            (selectorCount, selectorSlot) = addReplaceRemoveFacetSelectors(\\n                selectorCount,\\n                selectorSlot,\\n                _diamondCut[facetIndex].facetAddress,\\n                _diamondCut[facetIndex].action,\\n                _diamondCut[facetIndex].functionSelectors\\n            );\\n        }\\n        if (selectorCount != originalSelectorCount) {\\n            ds.selectorCount = uint16(selectorCount);\\n        }\\n        // If last selector slot is not full\\n        // \\\"selectorCount & 7\\\" is a gas efficient modulo by eight \\\"selectorCount % 8\\\"\\n        if (selectorCount & 7 > 0) {\\n            // \\\"selectorSlot >> 3\\\" is a gas efficient division by 8 \\\"selectorSlot / 8\\\"\\n            ds.selectorSlots[selectorCount >> 3] = selectorSlot;\\n        }\\n        emit DiamondCut(_diamondCut, _init, _calldata);\\n        initializeDiamondCut(_init, _calldata);\\n    }\\n\\n    function addReplaceRemoveFacetSelectors(\\n        uint256 _selectorCount,\\n        bytes32 _selectorSlot,\\n        address _newFacetAddress,\\n        IDiamondCut.FacetCutAction _action,\\n        bytes4[] memory _selectors\\n    ) internal returns (uint256, bytes32) {\\n        DiamondStorage storage ds = diamondStorage();\\n        require(\\n            _selectors.length > 0,\\n            \\\"LibDiamondCut: No selectors in facet to cut\\\"\\n        );\\n        if (_action == IDiamondCut.FacetCutAction.Add) {\\n            enforceHasContractCode(\\n                _newFacetAddress,\\n                \\\"LibDiamondCut: Add facet has no code\\\"\\n            );\\n            for (\\n                uint256 selectorIndex;\\n                selectorIndex < _selectors.length;\\n                selectorIndex++\\n            ) {\\n                bytes4 selector = _selectors[selectorIndex];\\n                bytes32 oldFacet = ds.facets[selector];\\n                require(\\n                    address(bytes20(oldFacet)) == address(0),\\n                    \\\"LibDiamondCut: Can't add function that already exists\\\"\\n                );\\n                // add facet for selector\\n                ds.facets[selector] =\\n                    bytes20(_newFacetAddress) |\\n                    bytes32(_selectorCount);\\n                // \\\"_selectorCount & 7\\\" is a gas efficient modulo by eight \\\"_selectorCount % 8\\\"\\n                uint256 selectorInSlotPosition = (_selectorCount & 7) << 5;\\n                // clear selector position in slot and add selector\\n                _selectorSlot =\\n                    (_selectorSlot &\\n                        ~(CLEAR_SELECTOR_MASK >> selectorInSlotPosition)) |\\n                    (bytes32(selector) >> selectorInSlotPosition);\\n                // if slot is full then write it to storage\\n                if (selectorInSlotPosition == 224) {\\n                    // \\\"_selectorSlot >> 3\\\" is a gas efficient division by 8 \\\"_selectorSlot / 8\\\"\\n                    ds.selectorSlots[_selectorCount >> 3] = _selectorSlot;\\n                    _selectorSlot = 0;\\n                }\\n                _selectorCount++;\\n            }\\n        } else if (_action == IDiamondCut.FacetCutAction.Replace) {\\n            enforceHasContractCode(\\n                _newFacetAddress,\\n                \\\"LibDiamondCut: Replace facet has no code\\\"\\n            );\\n            for (\\n                uint256 selectorIndex;\\n                selectorIndex < _selectors.length;\\n                selectorIndex++\\n            ) {\\n                bytes4 selector = _selectors[selectorIndex];\\n                bytes32 oldFacet = ds.facets[selector];\\n                address oldFacetAddress = address(bytes20(oldFacet));\\n                // only useful if immutable functions exist\\n                require(\\n                    oldFacetAddress != address(this),\\n                    \\\"LibDiamondCut: Can't replace immutable function\\\"\\n                );\\n                require(\\n                    oldFacetAddress != _newFacetAddress,\\n                    \\\"LibDiamondCut: Can't replace function with same function\\\"\\n                );\\n                require(\\n                    oldFacetAddress != address(0),\\n                    \\\"LibDiamondCut: Can't replace function that doesn't exist\\\"\\n                );\\n                // replace old facet address\\n                ds.facets[selector] =\\n                    (oldFacet & CLEAR_ADDRESS_MASK) |\\n                    bytes20(_newFacetAddress);\\n            }\\n        } else if (_action == IDiamondCut.FacetCutAction.Remove) {\\n            require(\\n                _newFacetAddress == address(0),\\n                \\\"LibDiamondCut: Remove facet address must be address(0)\\\"\\n            );\\n            // \\\"_selectorCount >> 3\\\" is a gas efficient division by 8 \\\"_selectorCount / 8\\\"\\n            uint256 selectorSlotCount = _selectorCount >> 3;\\n            // \\\"_selectorCount & 7\\\" is a gas efficient modulo by eight \\\"_selectorCount % 8\\\"\\n            uint256 selectorInSlotIndex = _selectorCount & 7;\\n            for (\\n                uint256 selectorIndex;\\n                selectorIndex < _selectors.length;\\n                selectorIndex++\\n            ) {\\n                if (_selectorSlot == 0) {\\n                    // get last selectorSlot\\n                    selectorSlotCount--;\\n                    _selectorSlot = ds.selectorSlots[selectorSlotCount];\\n                    selectorInSlotIndex = 7;\\n                } else {\\n                    selectorInSlotIndex--;\\n                }\\n                bytes4 lastSelector;\\n                uint256 oldSelectorsSlotCount;\\n                uint256 oldSelectorInSlotPosition;\\n                // adding a block here prevents stack too deep error\\n                {\\n                    bytes4 selector = _selectors[selectorIndex];\\n                    bytes32 oldFacet = ds.facets[selector];\\n                    require(\\n                        address(bytes20(oldFacet)) != address(0),\\n                        \\\"LibDiamondCut: Can't remove function that doesn't exist\\\"\\n                    );\\n                    // only useful if immutable functions exist\\n                    require(\\n                        address(bytes20(oldFacet)) != address(this),\\n                        \\\"LibDiamondCut: Can't remove immutable function\\\"\\n                    );\\n                    // replace selector with last selector in ds.facets\\n                    // gets the last selector\\n                    lastSelector = bytes4(\\n                        _selectorSlot << (selectorInSlotIndex << 5)\\n                    );\\n                    if (lastSelector != selector) {\\n                        // update last selector slot position info\\n                        ds.facets[lastSelector] =\\n                            (oldFacet & CLEAR_ADDRESS_MASK) |\\n                            bytes20(ds.facets[lastSelector]);\\n                    }\\n                    delete ds.facets[selector];\\n                    uint256 oldSelectorCount = uint16(uint256(oldFacet));\\n                    // \\\"oldSelectorCount >> 3\\\" is a gas efficient division by 8 \\\"oldSelectorCount / 8\\\"\\n                    oldSelectorsSlotCount = oldSelectorCount >> 3;\\n                    // \\\"oldSelectorCount & 7\\\" is a gas efficient modulo by eight \\\"oldSelectorCount % 8\\\"\\n                    oldSelectorInSlotPosition = (oldSelectorCount & 7) << 5;\\n                }\\n                if (oldSelectorsSlotCount != selectorSlotCount) {\\n                    bytes32 oldSelectorSlot = ds.selectorSlots[\\n                        oldSelectorsSlotCount\\n                    ];\\n                    // clears the selector we are deleting and puts the last selector in its place.\\n                    oldSelectorSlot =\\n                        (oldSelectorSlot &\\n                            ~(CLEAR_SELECTOR_MASK >>\\n                                oldSelectorInSlotPosition)) |\\n                        (bytes32(lastSelector) >> oldSelectorInSlotPosition);\\n                    // update storage with the modified slot\\n                    ds.selectorSlots[oldSelectorsSlotCount] = oldSelectorSlot;\\n                } else {\\n                    // clears the selector we are deleting and puts the last selector in its place.\\n                    _selectorSlot =\\n                        (_selectorSlot &\\n                            ~(CLEAR_SELECTOR_MASK >>\\n                                oldSelectorInSlotPosition)) |\\n                        (bytes32(lastSelector) >> oldSelectorInSlotPosition);\\n                }\\n                if (selectorInSlotIndex == 0) {\\n                    delete ds.selectorSlots[selectorSlotCount];\\n                    _selectorSlot = 0;\\n                }\\n            }\\n            _selectorCount = selectorSlotCount * 8 + selectorInSlotIndex;\\n        } else {\\n            revert(\\\"LibDiamondCut: Incorrect FacetCutAction\\\");\\n        }\\n        return (_selectorCount, _selectorSlot);\\n    }\\n\\n    function initializeDiamondCut(address _init, bytes memory _calldata)\\n        internal\\n    {\\n        if (_init == address(0)) {\\n            require(\\n                _calldata.length == 0,\\n                \\\"LibDiamondCut: _init is address(0) but_calldata is not empty\\\"\\n            );\\n        } else {\\n            require(\\n                _calldata.length > 0,\\n                \\\"LibDiamondCut: _calldata is empty but _init is not address(0)\\\"\\n            );\\n            if (_init != address(this)) {\\n                enforceHasContractCode(\\n                    _init,\\n                    \\\"LibDiamondCut: _init address has no code\\\"\\n                );\\n            }\\n            (bool success, bytes memory error) = _init.delegatecall(_calldata);\\n            if (!success) {\\n                if (error.length > 0) {\\n                    // bubble up the error\\n                    revert(string(error));\\n                } else {\\n                    revert(\\\"LibDiamondCut: _init function reverted\\\");\\n                }\\n            }\\n        }\\n    }\\n\\n    function enforceHasContractCode(\\n        address _contract,\\n        string memory _errorMessage\\n    ) internal view {\\n        uint256 contractSize;\\n        assembly {\\n            contractSize := extcodesize(_contract)\\n        }\\n        require(contractSize > 0, _errorMessage);\\n    }\\n}\\n\",\"keccak256\":\"0x740ea3845282f09bb822e66a189ed431ac799ab08184de7457ef53799b2e99d6\",\"license\":\"MIT\"}},\"version\":1}",
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "owner()": {
+        "notice": "Get the address of the owner"
+      },
+      "transferOwnership(address)": {
+        "notice": "Set the address of the new owner of the contract"
+      }
+    },
+    "version": 1
+  }
+}
