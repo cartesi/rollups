@@ -9,3 +9,8 @@ members = [
 [patch.'https://github.com/cartesi/state-fold']
 state-fold = { path = "./state-fold/state-fold" }
 state-server-grpc = { path = "./state-fold/state-server-grpc" }
+
+
+[patch.'https://github.com/cartesi/offchain-utils']
+configuration = {path = "../../offchain-utils/configuration"}
+offchain-core = {path = "../../offchain-utils/offchain-core"}

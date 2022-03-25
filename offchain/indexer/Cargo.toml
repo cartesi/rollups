@@ -1,24 +1,17 @@
 [package]
 name = "indexer"
 license = "Apache-2.0"
-version = "0.3.0"
-authors = ["victornogueira <victor.nogueira@cartesi.io>"]
+version = "0.4.0"
+authors = ["victornogueira <victor.nogueira@cartesi.io>", "marko atanasievski <marko.atanasievski@cartesi.io"]
 edition = "2018"
 
 [[bin]]
 name = "indexer_main"
 path = "src/main.rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 offchain-core = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
 configuration = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
-state-fold = { git = "https://github.com/cartesi/state-fold",  tag = "v0.1.0" }
-offchain = { path = "../offchain" }
-state-server-grpc = { git = "https://github.com/cartesi/state-fold", tag = "v0.1.0" }
-
-ethers = { version = "0.5", features = [ "legacy", "ws" ] }
 structopt = "0.3"
 snafu = "0.6"
 tokio = { version = "1.0", features = ["full"] }
@@ -26,7 +19,16 @@ tonic = "0.5"
 serde = { version = "1.0", features = ["rc"] }
 serde_json = "1.0"
 prost = "0.8"
-diesel = {version = "1.4", features = ["chrono", "postgres", "r2d2", "uuidv07", "serde_json"]}
+diesel = {version = "1.4", features = ["chrono", "postgres", "r2d2", "uuidv07", "serde_json", "numeric"]}
+uuid = { version = "0.8", features = ["v5"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+ethers = { version = "^0.6", features = [ "ws" ] }
+hex = "0.4.3"
+chrono = "0.4"
+async-mutex = "1.4"
+
+
 
 [build-dependencies]
 tonic-build = "0.5"
