@@ -328,10 +328,10 @@ pub struct FeeManagerState {
     // Tuple containing (validator, #claims_redeemed_so_far)
     pub validator_redeemed: [Option<NumRedeemed>; 8],
     pub bank_balance: U256,
-    // Leftover balance equals the balance of bank contract minus
+    // Uncommitted balance equals the balance of bank contract minus
     // the amount of to-be-redeemed fees
     // un-finalized claims are not considered
-    pub leftover_balance: i128,
+    pub uncommitted_balance: i128,
 }
 
 pub struct FeeIncentiveStrategy {
@@ -344,18 +344,18 @@ impl Default for FeeIncentiveStrategy {
         FeeIncentiveStrategy {
             // by default there are at most 8 validators
             max_num_validators: 8,
-            // ideally fee manager should have leftover balance enough for at least 4 epochs
+            // ideally fee manager should have enough uncommitted balance for at least 4 epochs
             num_buffer_epochs: 4,
         }
     }
 }
 
 impl FeeManagerState {
-    pub fn sufficient_leftover_balance(
+    pub fn sufficient_uncommitted_balance(
         &self,
         validator_manager_state: &ValidatorManagerState,
     ) -> bool {
-        // fee manager should have sufficient leftover balance
+        // fee manager should have sufficient uncommitted balance
         // ideally enough for the a number (e.g. 4) of future epochs
         let strategy: FeeIncentiveStrategy = Default::default();
         let current_num_validators = strategy.max_num_validators
@@ -369,7 +369,7 @@ impl FeeManagerState {
             i128::try_from(self.fee_per_claim.as_u128()).unwrap();
         let balance_buffer =
             fee_per_claim * current_num_validators * strategy.num_buffer_epochs;
-        self.leftover_balance >= balance_buffer
+        self.uncommitted_balance >= balance_buffer
     }
 }
 

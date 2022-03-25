@@ -159,8 +159,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
-        // leftover balance
-        let leftover_balance = calculate_leftover_balance(
+        // uncommitted balance
+        let uncommitted_balance = calculate_uncommitted_balance(
             &validator_redeemed,
             &validator_manager_state.num_claims,
             &fee_per_claim,
@@ -173,7 +173,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             fee_per_claim,
             validator_redeemed,
             bank_balance,
-            leftover_balance,
+            uncommitted_balance,
         })
     }
 
@@ -336,8 +336,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             })?
             .state;
 
-        // leftover balance
-        state.leftover_balance = calculate_leftover_balance(
+        // uncommitted balance
+        state.uncommitted_balance = calculate_uncommitted_balance(
             &state.validator_redeemed,
             &validator_manager_state.num_claims,
             &state.fee_per_claim,
@@ -355,7 +355,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     }
 }
 
-fn calculate_leftover_balance(
+fn calculate_uncommitted_balance(
     validator_redeemed: &[Option<NumRedeemed>; 8],
     num_claims: &[Option<NumClaims>; 8],
     fee_per_claim: &U256,
@@ -378,11 +378,11 @@ fn calculate_leftover_balance(
         }
     }
 
-    // calculate leftover balance for fee manager
-    // leftover_balance = current_balance - to_be_redeemed_fees
+    // calculate uncommitted balance for fee manager
+    // uncommitted_balance = current_balance - to_be_redeemed_fees
     // un-finalized claims are not considered
     let to_be_redeemed_fees = (total_claims - total_redeems) * fee_per_claim;
-    let leftover_balance = i128::try_from(bank_balance.as_u128()).unwrap()
+    let uncommitted_balance = i128::try_from(bank_balance.as_u128()).unwrap()
         - i128::try_from(to_be_redeemed_fees.as_u128()).unwrap();
-    leftover_balance
+    uncommitted_balance
 }

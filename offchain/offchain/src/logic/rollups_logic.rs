@@ -163,12 +163,12 @@ async fn react<MM: MachineInterface + Sync>(
     rollups_facet: &RollupsFacet<Provider<MockProvider>>,
     machine_manager: &MM,
 ) -> Result<()> {
-    // will not work if fee manager has enough buffered leftover_balance
+    // will not work if fee manager has insufficient uncommitted_balance
     let should_i_work = state
         .fee_manager_state
-        .sufficient_leftover_balance(&state.validator_manager_state);
+        .sufficient_uncommitted_balance(&state.validator_manager_state);
     if !should_i_work {
-        info!("Fee Manager has insufficient leftover balance");
+        info!("Fee Manager has insufficient uncommitted balance");
         return Ok(());
     }
 

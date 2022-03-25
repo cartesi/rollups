@@ -152,8 +152,8 @@ describe("FeeManager Facet", () => {
             same_as_initial_value("validator_redeemed", state);
             // bank_balance
             same_as_initial_value("bank_balance", state);
-            // leftover_balance
-            same_as_initial_value("leftover_balance", state);
+            // uncommitted_balance
+            same_as_initial_value("uncommitted_balance", state);
         });
     }
 
@@ -197,8 +197,8 @@ describe("FeeManager Facet", () => {
                 "fee manager bank has 10k tokens deposited"
             ).to.equal(amount);
             expect(
-                state.leftover_balance,
-                "no claims yet, so leftover is the same as total balance"
+                state.uncommitted_balance,
+                "no claims yet, so uncommitted balance is the same as total balance"
             ).to.equal(amount);
 
             // the rest should stay the same
@@ -217,8 +217,8 @@ describe("FeeManager Facet", () => {
                 "fee manager bank has 20k tokens deposited"
             ).to.equal(amount * 2);
             expect(
-                state.leftover_balance,
-                "no claims yet, so leftover is the same as total balance"
+                state.uncommitted_balance,
+                "no claims yet, so uncommitted balance is the same as total balance"
             ).to.equal(amount * 2);
 
             // the rest should stay the same
@@ -389,17 +389,18 @@ describe("FeeManager Facet", () => {
 
             let state = JSON.parse(await getState(initialState));
             // since fee manager doesn't have any deposit yet
-            // now its balance is 0 and leftover is negative
+            // now its balance is 0 and uncommitted balance is negative
             expect(state.bank_balance, "balance is 0").to.equal("0x0");
-            expect(state.leftover_balance, "leftover is negative").to.equal(
-                num_claims * initialFeePerClaim * -1
-            );
+            expect(
+                state.uncommitted_balance,
+                "uncommitted balance is negative"
+            ).to.equal(num_claims * initialFeePerClaim * -1);
             // other fields are the same as initial
             same_as_initial_value("fee_per_claim", state);
             same_as_initial_value("validator_redeemed", state);
 
-            // we now make a deposit to cover the neg leftover
-            let amount = state.leftover_balance * -1;
+            // we now make a deposit to cover the negative uncommitted balance
+            let amount = state.uncommitted_balance * -1;
             await fundFeeManager(amount);
             // update state
             state = JSON.parse(await getState(initialState));
@@ -407,7 +408,10 @@ describe("FeeManager Facet", () => {
                 parseInt(state.bank_balance, 16),
                 "balance should be 100"
             ).to.equal(100);
-            expect(state.leftover_balance, "leftover is 0").to.equal(0);
+            expect(
+                state.uncommitted_balance,
+                "uncommitted balance is 0"
+            ).to.equal(0);
 
             // let signers[1] redeem its fees now
             await feeManagerFacet
@@ -433,10 +437,10 @@ describe("FeeManager Facet", () => {
                 ).to.equal(null);
             }
 
-            // leftover_balance is still 0
+            // uncommitted_balance is still 0
             expect(
-                state.leftover_balance,
-                "leftover_balance is still 0"
+                state.uncommitted_balance,
+                "uncommitted_balance is still 0"
             ).to.equal(0);
             // after redemption, bank_balance becomes 0
             expect(
@@ -453,8 +457,8 @@ describe("FeeManager Facet", () => {
                 "the bank_balance should be 10k"
             ).to.equal(10000);
             expect(
-                state.leftover_balance,
-                "leftover_balance should also be 10k"
+                state.uncommitted_balance,
+                "uncommitted_balance should also be 10k"
             ).to.equal(10000);
         }
     });
@@ -530,10 +534,10 @@ describe("FeeManager Facet", () => {
                 parseInt(state.bank_balance, 16),
                 "after redemption, bank_balance becomes 10k - redeemedValue"
             ).to.equal(10000 - num_claims * initialFeePerClaim);
-            // leftover_balance should be the same as bank_balance
+            // uncommitted_balance should be the same as bank_balance
             expect(
-                state.leftover_balance,
-                "leftover_balance should be the same as bank_balance"
+                state.uncommitted_balance,
+                "uncommitted_balance should be the same as bank_balance"
             ).to.equal(10000 - num_claims * initialFeePerClaim);
         }
     });
@@ -696,14 +700,14 @@ describe("FeeManager Facet", () => {
                 parseInt(state.bank_balance, 16),
                 "after automatic redemption, bank_balance becomes 10k - redeemedValue"
             ).to.equal(10000 - num_claims * initialFeePerClaim);
-            // leftover_balance should be the same as bank_balance
+            // uncommitted_balance should be the same as bank_balance
             expect(
-                state.leftover_balance,
-                "leftover_balance should be the same as bank_balance"
+                state.uncommitted_balance,
+                "uncommitted_balance should be the same as bank_balance"
             ).to.equal(10000 - num_claims * initialFeePerClaim);
 
             let current_bank_balance = state.bank_balance;
-            let current_leftover_balance = state.leftover_balance;
+            let current_uncommitted_balance = state.uncommitted_balance;
             // signers[1] makes another claim
             await passInputAccumulationPeriod();
             await rollupsFacet.connect(signers[1]).claim(claim);
@@ -716,11 +720,11 @@ describe("FeeManager Facet", () => {
                 state.bank_balance,
                 "bank_balance should stay the same"
             ).to.equal(current_bank_balance);
-            // leftover_balance should less the new fee_per_claim value
+            // uncommitted_balance should less the new fee_per_claim value
             expect(
-                state.leftover_balance,
-                "leftover_balance should less the new fee_per_claim value"
-            ).to.equal(current_leftover_balance - newFeePerClaim);
+                state.uncommitted_balance,
+                "uncommitted_balance should less the new fee_per_claim value"
+            ).to.equal(current_uncommitted_balance - newFeePerClaim);
         }
     });
 
@@ -772,10 +776,10 @@ describe("FeeManager Facet", () => {
             // there will be totally 8 claims that can be redeemed
             // signers[0] has 2 and signers[1] has none
             let state = JSON.parse(await getState(initialState));
-            // leftover_balance will less 8 claims
+            // uncommitted_balance will less 8 claims
             expect(
-                state.leftover_balance,
-                "leftover_balance will less 8 claims"
+                state.uncommitted_balance,
+                "uncommitted_balance will less 8 claims"
             ).to.equal(10000 - 8 * initialFeePerClaim);
             // bank_balance should be 10k
             expect(
@@ -833,15 +837,15 @@ describe("FeeManager Facet", () => {
                 "signers[1] is not in `validator_redeemed`"
             ).to.equal(null);
 
-            // leftover_balance is the same as before redemption
+            // uncommitted_balance is the same as before redemption
             expect(
-                state.leftover_balance,
-                "leftover_balance is the same as before redemption"
+                state.uncommitted_balance,
+                "uncommitted_balance is the same as before redemption"
             ).to.equal(10000 - 8 * initialFeePerClaim);
-            // bank_balance now should be the same as leftover_balance
+            // bank_balance now should be the same as uncommitted_balance
             expect(
                 parseInt(state.bank_balance, 16),
-                "bank_balance now should be the same as leftover_balance"
+                "bank_balance now should be the same as uncommitted_balance"
             ).to.equal(10000 - 8 * initialFeePerClaim);
         }
     });
@@ -896,10 +900,10 @@ function same_as_initial_value(s: string, state: any) {
             ).to.equal("0x0");
             break;
         }
-        case "leftover_balance": {
+        case "uncommitted_balance": {
             expect(
-                state.leftover_balance,
-                "fee manager should have 0 leftover balance"
+                state.uncommitted_balance,
+                "fee manager should have 0 uncommitted balance"
             ).to.equal(0);
             break;
         }

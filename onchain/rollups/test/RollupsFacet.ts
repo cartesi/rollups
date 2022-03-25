@@ -591,7 +591,7 @@ describe("Rollups Facet", () => {
                 null, null
                 ],
                 bank_balance: '0x0',
-                leftover_balance: 0
+                uncommitted_balance: 0
             }
         }
         */
