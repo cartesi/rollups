@@ -143,11 +143,17 @@ fn new_balance(
 ) -> U256 {
     let mut income: U256 = U256::zero();
     for ev in deposit_events.iter() {
+        // U256 is very unlikely to overflow
+        // But developers should keep an eye on tokens
+        // that has extremely high volume and turnover rate
         income = income + ev.value;
     }
 
     let mut expense: U256 = U256::zero();
     for ev in transfer_events.iter() {
+        // U256 is very unlikely to overflow
+        // But developers should keep an eye on tokens
+        // that has extremely high volume and turnover rate
         expense = expense + ev.value;
     }
 
