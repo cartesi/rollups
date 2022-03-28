@@ -36,21 +36,21 @@ interface IBank {
     /// @param _value amount of tokens to be transfered
     function depositTokens(address _to, uint256 _value) external;
 
-    /// @notice `_value` tokens were transfered from the bank to `_to`
-    /// @notice the balance of `_from` was decreased by `_value`
+    /// @notice `value` tokens were transfered from the bank to `to`
+    /// @notice the balance of `from` was decreased by `value`
     /// @dev is triggered on any successful call to `transferTokens`
-    /// @param _from the account/contract that called `transferTokens` and
-    ///              got their balance decreased by `_value`
-    /// @param _to the one that received `_value` tokens from the bank
-    /// @param _value amount of tokens that were transfered
-    event Transfer(address indexed _from, address _to, uint256 _value);
+    /// @param from the account/contract that called `transferTokens` and
+    ///              got their balance decreased by `value`
+    /// @param to the one that received `value` tokens from the bank
+    /// @param value amount of tokens that were transfered
+    event Transfer(address indexed from, address to, uint256 value);
 
-    /// @notice `_value` tokens were transfered from `_from` to bank
-    /// @notice the balance of `_to` was increased by `_value`
+    /// @notice `value` tokens were transfered from `from` to bank
+    /// @notice the balance of `to` was increased by `value`
     /// @dev is triggered on any successful call to `depositTokens`
-    /// @param _from the account/contract that called `depositTokens` and
-    ///              transfered `_value` tokens to the bank
-    /// @param _to the one that got their balance increased by `_value`
-    /// @param _value amount of tokens that were transfered
-    event Deposit(address _from, address indexed _to, uint256 _value);
+    /// @param from the account/contract that called `depositTokens` and
+    ///              transfered `value` tokens to the bank
+    /// @param to the one that got their balance increased by `value`
+    /// @param value amount of tokens that were transfered
+    event Deposit(address from, address indexed to, uint256 value);
 }
