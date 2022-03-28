@@ -43,7 +43,9 @@ contract Bank is IBank {
         // effects
         // Note: this should not underflow because we checked that
         // `_value <= balance` in the `require` above
-        balances[msg.sender] = balance - _value;
+        unchecked {
+            balances[msg.sender] = balance - _value;
+        }
 
         // interactions
         // Note: a well-implemented ERC-20 contract should already

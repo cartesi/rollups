@@ -78,6 +78,39 @@ export const getState = async (initialState: string) => {
     });
 };
 
+export interface TestBankOptions {
+    initialSupply?: number | BigNumber; // defaults to 1000000
+}
+
+export const deployTestBank = deployments.createFixture(
+    async (hre: HardhatRuntimeEnvironment, options: TestBankOptions = {}) => {
+        const { deployments, getNamedAccounts } = hre;
+        const { deployer } = await getNamedAccounts();
+
+        // start with a fresh deployment
+        await deployments.fixture();
+
+        let initialSupply = options.initialSupply || 1000000;
+
+        // deploy token
+        const SimpleToken = await deployments.deploy("SimpleToken", {
+            from: deployer,
+            args: [initialSupply],
+        });
+
+        // deploy bank
+        const Bank = await deployments.deploy("Bank", {
+            from: deployer,
+            args: [SimpleToken.address],
+        });
+
+        return {
+            Bank,
+            SimpleToken,
+        };
+    }
+);
+
 export interface DiamondOptions {
     templateHash?: string; // defaults to 0x00
     inputDuration?: number | BigNumber; // defaults to 1 day
