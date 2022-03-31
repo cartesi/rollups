@@ -136,6 +136,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
                 react(
                     &sender,
                     &tx_config,
+                    config.logic_config.minimum_required_fee,
                     state,
                     &tx_manager,
                     &rollups_facet,
@@ -158,16 +159,19 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
 async fn react<MM: MachineInterface + Sync>(
     sender: &Address,
     config: &TxConfig,
+    minimum_required_fee: U256,
     state: RollupsState,
     tx_manager: &RollupsTxManager,
     rollups_facet: &RollupsFacet<Provider<MockProvider>>,
     machine_manager: &MM,
 ) -> Result<()> {
-    // will not work if fee manager has insufficient uncommitted_balance
-    let should_i_work = state
-        .fee_manager_state
-        .sufficient_uncommitted_balance(&state.validator_manager_state);
-    if !should_i_work {
+    // Will not work if fee manager has insufficient uncommitted_balance
+    let should_work = state.fee_manager_state.sufficient_uncommitted_balance(
+        &state.validator_manager_state,
+        minimum_required_fee,
+    );
+
+    if !should_work {
         info!("Fee Manager has insufficient uncommitted balance");
         return Ok(());
     }

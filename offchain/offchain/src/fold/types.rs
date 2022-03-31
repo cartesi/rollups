@@ -354,21 +354,35 @@ impl FeeManagerState {
     pub fn sufficient_uncommitted_balance(
         &self,
         validator_manager_state: &ValidatorManagerState,
+        minimum_required_fee: U256,
     ) -> bool {
-        // fee manager should have sufficient uncommitted balance
+        if minimum_required_fee == U256::zero() {
+            return true;
+        }
+
+        if self.fee_per_claim < minimum_required_fee {
+            return false;
+        }
+
+        // Fee manager should have sufficient uncommitted balance,
         // ideally enough for the a number (e.g. 4) of future epochs
         let strategy: FeeIncentiveStrategy = Default::default();
+
         let current_num_validators = strategy.max_num_validators
             - validator_manager_state.validators_removed.len() as i128;
+
         assert!(
             current_num_validators >= 0
                 && current_num_validators <= strategy.max_num_validators,
             "current_num_validators out of range"
         );
+
         let fee_per_claim =
             i128::try_from(self.fee_per_claim.as_u128()).unwrap();
+
         let balance_buffer =
             fee_per_claim * current_num_validators * strategy.num_buffer_epochs;
+
         self.uncommitted_balance >= balance_buffer
     }
 }

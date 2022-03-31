@@ -58,6 +58,9 @@ pub struct LogicEnvCLIConfig {
     /// Session ID for rollups machine manager
     #[structopt(long, env)]
     pub session_id: Option<String>,
+    /// Session ID for rollups machine manager
+    #[structopt(long, env)]
+    pub minimum_required_fee: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -76,6 +79,7 @@ pub struct LogicFileConfig {
     pub confirmations: Option<usize>,
     pub mm_endpoint: Option<String>,
     pub session_id: Option<String>,
+    pub minimum_required_fee: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -101,6 +105,8 @@ pub struct LogicConfig {
     pub gas_price_multiplier: Option<f64>,
     pub rate: usize,
     pub confirmations: usize,
+
+    pub minimum_required_fee: U256,
 }
 
 // default values
@@ -223,6 +229,20 @@ impl LogicConfig {
             .or(file_config.confirmations)
             .unwrap_or(DEFAULT_CONFIRMATIONS);
 
+        let minimum_required_fee: U256 = match env_cli_config
+            .minimum_required_fee
+            .or(file_config.minimum_required_fee)
+        {
+            Some(s) => U256::from_dec_str(&s).map_err(|e| {
+                config_error::FileError {
+                    err: format!("Minimum fee string ill-formed: {}", e),
+                }
+                .build()
+            })?,
+
+            None => U256::zero(),
+        };
+
         Ok(LogicConfig {
             mnemonic,
             chain_id,
@@ -240,6 +260,8 @@ impl LogicConfig {
             gas_price_multiplier,
             rate,
             confirmations,
+
+            minimum_required_fee,
         })
     }
 }
