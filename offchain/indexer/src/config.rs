@@ -23,6 +23,8 @@ pub struct IndexerEnvCLIConfig {
     #[structopt(long, env)]
     pub dapp_contract_address: Option<String>,
     #[structopt(long, env)]
+    pub contract_name: Option<String>,
+    #[structopt(long, env)]
     pub indexer_config_path: Option<String>,
     #[structopt(long)]
     pub state_server_endpoint: Option<String>,
@@ -81,7 +83,10 @@ impl IndexerConfig {
         };
         let basic_config = Config::initialize(base_cli_config)?;
 
-        let dapp_contract_address = basic_config.contracts["CartesiDApp"];
+        let contract_name = env_cli_config
+            .contract_name
+            .unwrap_or("CartesiDApp".to_string());
+        let dapp_contract_address = basic_config.contracts[&contract_name];
 
         let state_server_endpoint: String = env_cli_config
             .state_server_endpoint

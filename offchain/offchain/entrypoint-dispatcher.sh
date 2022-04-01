@@ -2,7 +2,8 @@
 
 # addresses
 dockerize -wait file://${DEPLOYMENT_PATH} -timeout 300s
-DAPP_CONTRACT_ADDRESS=$(jq -r ".contracts.CartesiDApp.address" ${DEPLOYMENT_PATH})
+echo "Extracting deployment information for contract \"${DAPP_CONTRACT_NAME}\" from ${DEPLOYMENT_PATH}"
+DAPP_CONTRACT_ADDRESS=$(jq -r ".contracts[\"${DAPP_CONTRACT_NAME:-CartesiDApp}\"].address" ${DEPLOYMENT_PATH})
 
 # wait for services
 dockerize -wait tcp://${STATE_SERVER_HOSTNAME}:${STATE_SERVER_PORT} \
