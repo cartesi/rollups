@@ -30,6 +30,7 @@ import {
     TASK_FINALIZE_EPOCH,
     TASK_GET_STATE,
 } from "./constants";
+import { DiamondInit__factory, IDiamondCut__factory } from "@cartesi/rollups";
 
 // return true if string is an unsigned integer
 const isIndex = (str: string): boolean =>
@@ -65,16 +66,14 @@ createParams(
                         : address
                 );
 
-            // get bank for fee manager to pay validators
-            const { Bank } = await deployments.all();
+            // get pre-deployed contracts artifacts
+            const { Bank, DiamondCutFacet, DiamondInit } =
+                await deployments.all();
 
             // deploy raw diamond with only the diamond cut facet
-            const diamondCutFacetDeployment = await deployments.get(
-                "DiamondCutFacet"
-            );
             const diamond = await deployments.deploy("CartesiDApp", {
                 from: deployer,
-                args: [deployer, diamondCutFacetDeployment.address],
+                args: [deployer, DiamondCutFacet.address],
                 log: args.log,
             });
 
@@ -99,9 +98,8 @@ createParams(
 
             for (const facetName of facetNames) {
                 const facetDeployment = await deployments.get(facetName);
-                const facetArtifact = await deployments.getArtifact(facetName);
                 const facet = await ethers.getContractAt(
-                    facetArtifact.abi,
+                    facetDeployment.abi,
                     facetDeployment.address
                 );
                 const signatures = Object.keys(facet.interface.functions);
@@ -122,17 +120,13 @@ createParams(
             }
 
             // make diamond cut
-            const diamondCutArtifact = await deployments.getArtifact(
-                "IDiamondCut"
+            const diamondCutFacet = IDiamondCut__factory.connect(
+                diamond.address,
+                signers[0]
             );
-            const diamondCutFacet = await ethers.getContractAt(
-                diamondCutArtifact.abi,
-                diamond.address
-            );
-            const diamondInitDeployment = await deployments.get("DiamondInit");
-            const diamondInit = await ethers.getContractAt(
-                diamondInitDeployment.abi,
-                diamondInitDeployment.address
+            const diamondInit = DiamondInit__factory.connect(
+                DiamondInit.address,
+                signers[0]
             );
             const calldata = diamondInit.interface.encodeFunctionData("init", [
                 args.templateHash,
@@ -146,7 +140,7 @@ createParams(
             ]);
             const tx = await diamondCutFacet.diamondCut(
                 facetCuts,
-                diamondInit.address,
+                DiamondInit.address,
                 calldata
             );
             const receipt = await tx.wait();
