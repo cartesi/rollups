@@ -10,6 +10,7 @@ name = "indexer_main"
 path = "src/main.rs"
 
 [dependencies]
+rollups-data = { path = "../data" }
 offchain-core = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
 configuration = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
 structopt = "0.3"

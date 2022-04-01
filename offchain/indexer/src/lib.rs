@@ -13,10 +13,6 @@
 
 pub mod config;
 pub mod data_service;
-pub mod db_schema;
 pub mod db_service;
 pub mod error;
 mod grpc;
-
-#[macro_use]
-extern crate diesel;

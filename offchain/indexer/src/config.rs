@@ -1,4 +1,4 @@
-/* Copyright 2021 Cartesi Pte. Ltd.
+/* Copyright 2022 Cartesi Pte. Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -62,6 +62,7 @@ pub struct IndexerFileConfig {
     pub postgres_endpoint: Option<String>,
     pub mm_endpoint: Option<String>,
     pub session_id: Option<String>,
+    pub contract_name: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -74,9 +75,7 @@ pub struct IndexerConfig {
     pub dapp_contract_address: Address,
     pub state_server_endpoint: String,
     pub initial_epoch: U256,
-
     pub interval: u64,
-
     pub mm_endpoint: String,
     pub postgres_endpoint: String,
     pub session_id: String,

@@ -1,0 +1,24 @@
+
+input NoticeKeys {
+	sessionId: String
+	epochIndex: Int
+	inputIndex: Int
+	noticeIndex: Int
+}
+
+type Notice {
+	sessionId: String!
+	epochIndex: Int!
+	inputIndex: Int!
+	noticeIndex: Int!
+	keccak: String!
+	payload: String!
+}
+
+type Query {
+	getNotice(query: NoticeKeys): [Notice!]! @juniper(ownership: "owned")
+}
+
+schema {
+	query: Query
+}

@@ -12,16 +12,18 @@
  */
 
 use crate::config::IndexerConfig;
-use crate::db_service::{Message, NoticeInfo};
+use chrono::Local;
+use rollups_data::database::{DbNotice, Message};
 use std::ops::Add;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, trace};
 
 use crate::grpc::{
-    cartesi_server_manager,
+    cartesi_machine, cartesi_server_manager,
     cartesi_server_manager::{
         server_manager_client::ServerManagerClient, GetEpochStatusRequest,
+        GetSessionStatusRequest,
     },
 };
 
@@ -30,11 +32,27 @@ async fn poll_epoch_status(
     message_tx: mpsc::Sender<Message>,
     mut client: ServerManagerClient<tonic::transport::Channel>,
 ) -> Result<(), crate::error::Error> {
-    debug!("Polling epoch status");
+    debug!(
+        "Polling epoch status from server manager {}",
+        &config.mm_endpoint
+    );
+    let request = GetSessionStatusRequest {
+        session_id: config.session_id.clone(),
+    };
+
+    let session_status = client
+        .get_session_status(tonic::Request::new(request.clone()))
+        .await
+        .map_err(|e| crate::error::Error::TonicStatusError { source: e })?
+        .into_inner();
+
+    debug!("Session status {:?}", session_status);
+
     let request = GetEpochStatusRequest {
         session_id: config.session_id.clone(),
-        epoch_index: 0, //todo fix
+        epoch_index: session_status.active_epoch_index,
     };
+
     let response = client
         .get_epoch_status(tonic::Request::new(request.clone()))
         .await
@@ -54,12 +72,22 @@ async fn poll_epoch_status(
                         // Send one notice
                         trace!("Sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
                                 &request.session_id, &request.epoch_index, input.input_index, &nindex);
-                        if let Err(e) = message_tx.send(Message::Notice(NoticeInfo {
+                        if let Err(e) = message_tx.send(Message::Notice(DbNotice {
                             session_id: request.session_id.clone(),
-                            epoch_index: request.epoch_index,
-                            input_index: input.input_index,
-                            notice_index: nindex as u64
-                        }, notice.clone())).await {
+                            epoch_index: request.epoch_index as i32,
+                            input_index: input.input_index  as i32,
+                            notice_index: nindex as i32,
+                            keccak: hex::encode(
+                                &notice
+                                    .keccak
+                                    .as_ref()
+                                    .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                    .data,
+                            ),
+                            payload: Some(notice.payload.clone()),
+                            timestamp: Local::now()
+
+                        })).await {
                             error!("error passing message to db {}", e.to_string())
                         }
                     }
@@ -85,7 +113,7 @@ struct Task {
 
 async fn polling_loop(
     config: IndexerConfig,
-    message_tx: mpsc::Sender<Message>,
+    message_tx: mpsc::Sender<rollups_data::database::Message>,
 ) -> Result<(), crate::error::Error> {
     let config = Arc::new(config);
     let loop_interval = std::time::Duration::from_millis(100);
@@ -98,7 +126,7 @@ async fn polling_loop(
     }];
 
     // Pooling tasks loop
-    info!("Starting data pooling loop");
+    info!("Starting data polling loop");
     loop {
         for task in tasks.iter_mut() {
             if task.next_execution <= std::time::SystemTime::now() {
@@ -153,7 +181,7 @@ async fn polling_loop(
 /// Create and run new instance of db service
 pub async fn run(
     config: IndexerConfig,
-    message_tx: mpsc::Sender<Message>,
+    message_tx: mpsc::Sender<rollups_data::database::Message>,
 ) -> Result<(), crate::error::Error> {
     polling_loop(config, message_tx).await
 }

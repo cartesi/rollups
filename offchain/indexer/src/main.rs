@@ -33,8 +33,8 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         })?;
 
     trace!("Indexer configuration {:?}", &indexer_config);
-
-    let (message_tx, message_rx) = mpsc::channel::<db_service::Message>(128);
+    let (message_tx, message_rx) =
+        mpsc::channel::<rollups_data::database::Message>(128);
     tokio::select! {
         db_service_result = db_service::run(indexer_config.clone(), message_rx) => {
             match db_service_result {

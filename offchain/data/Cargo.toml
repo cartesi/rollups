@@ -1,0 +1,13 @@
+[package]
+name = "rollups-data"
+version = "0.2.0"
+edition = "2021"
+license = "Apache-2.0"
+authors = ["marko atanasievski <marko.atanasievski@cartesi.io"]
+
+[dependencies]
+diesel = {version = "1.4.8", features = ["postgres", "chrono", "r2d2"]}
+tokio = { version = "1.0", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+chrono = "0.4"
