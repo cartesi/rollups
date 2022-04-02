@@ -7,6 +7,7 @@ on:
             - offchain/offchain/**
             - grpc-interfaces/**
             - onchain/rollups/abi/**
+            - onchain/rollups/test/**
             - .github/workflows/delegate_server.yml
     push:
         tags:
