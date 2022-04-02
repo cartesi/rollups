@@ -19,15 +19,22 @@ use(solidity);
 // Normally, the address of that contract may change on different machines, resulting in different merkle proofs.
 // That's why we deploy that contract deterministically.
 
-// In case you need to modify proofs, modify the value of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` or `epochNoticeDriveHash`
+// In case you need to modify proofs, modify the value of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` (or `epochNoticeDriveHash`)
 
 // Steps for modification are as follows:
-// 1. uncomment lines `console.log(encodedVoucher);`.
-// 2. keccak256 the value of encodedVoucher
+// (repeat 3 times as there are 3 kinds of test scenarios )
+//
+// 1. uncomment the line that has `console.log`, which prints the encoded value of a voucher
+// 2. keccak256 the value of the printed encoded voucher
+//    For example, you may use this website to calculate the keccak256:
+//    https://emn178.github.io/online-tools/keccak_256.html
+//    In our case, select input type 'hex' and do not include '0x'
 // 3. take the keccak value and replace into the variable `KeccakForVoucher0` in "shell.sh"
-//    run the shell in the Cartesi machine as we need to use `merkle-tree-hash`
+//    run the shell in the Cartesi machine emulator as we need to use `merkle-tree-hash`
 //    (the shell script can be found here: https://github.com/cartesi-corp/rollups/pull/120)
-// 4. run the script and modify values of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` or `epochNoticeDriveHash`
+// 4. run the shell script to obtain values of `outputMetadataArrayDriveHash` and `EpochOutputDriveHash`
+//    replace respectively here in the test scenario the value of `outputMetadataArrayDriveHash` and `epochVoucherDriveHash` (or `epochNoticeDriveHash`)
+//    To replace thoroughly, search for the outdated hex values and replace all
 
 describe("Output Facet", () => {
     let enableDelegate = process.env["DELEGATE_TEST"];
@@ -133,9 +140,9 @@ describe("Output Facet", () => {
         inputIndex: 1,
         outputIndex: 0,
         outputMetadataArrayDriveHash:
-            "0x8317104bc611f3bf9f3a7dfcdef769ef1e9191acdaa1fe2b175c9d8ccfb67741",
+            "0x4b4a2f8901a6d21a05b2ed3579a77fd687542503bc6f4f50e591816ba134c043",
         epochVoucherDriveHash:
-            "0xdf15833cade8d548eff4bb66990489efd2fd2f07ebec1968e521a78a191d5c62",
+            "0x87916bb97537f2b52c9ecf2d0d7eeb46001e7b1eee874ccd7260a13990c0d15e",
         epochNoticeDriveHash:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d45",
         epochMachineFinalState:
@@ -160,11 +167,11 @@ describe("Output Facet", () => {
         inputIndex: 1,
         outputIndex: 0,
         outputMetadataArrayDriveHash:
-            "0x8317104bc611f3bf9f3a7dfcdef769ef1e9191acdaa1fe2b175c9d8ccfb67741",
+            "0x4b4a2f8901a6d21a05b2ed3579a77fd687542503bc6f4f50e591816ba134c043",
         epochVoucherDriveHash:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d45",
         epochNoticeDriveHash:
-            "0xdf15833cade8d548eff4bb66990489efd2fd2f07ebec1968e521a78a191d5c62",
+            "0x87916bb97537f2b52c9ecf2d0d7eeb46001e7b1eee874ccd7260a13990c0d15e",
         epochMachineFinalState:
             "0x143ab4b3ff53d0459e30790af7010a68c2d2a1b34b6bc440c4b53e8a16286d46",
         outputMetadataProof: proof1,
@@ -238,9 +245,9 @@ describe("Output Facet", () => {
 
         let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
         v_new.outputMetadataArrayDriveHash =
-            "0xe5be80823befc1f1a95536be35387f028135c20f994b55f4d7f8c5d03b93f79b";
+            "0xc1a36c66afe08e1b359834d224974d4ffc80c3551b0d2143276c65239cc1c2c5";
         v_new.epochVoucherDriveHash =
-            "0xab6efb5e6cdc2a7e23180afe47e47e0eb2b410359f27e55dbd0945d368aaa25e";
+            "0xde83bbbd81d504f6e4ac25b7946f7e80cdf3532cb9791824340b9915a74a2a68";
         let epochHash_new = keccak256(
             ethers.utils.defaultAbiCoder.encode(
                 ["uint", "uint", "uint"],
@@ -272,9 +279,9 @@ describe("Output Facet", () => {
 
         let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
         v_new.outputMetadataArrayDriveHash =
-            "0x3baf948555a6992a67b094e5139eeb80747c554edbe32e97b10bbc8fc27f6506";
+            "0xb1d9960127a95255a29e5781b466f87a556e445ec3e2e20390ea9642d73616eb";
         v_new.epochVoucherDriveHash =
-            "0xefc144b11a003dbd9858588cb72309fae9b2556dc29a654624153a2f4fcabb61";
+            "0x2543517a18b2f67ae6781182a7042834b065be9d5f993d0bcd892ea6c9280b57";
         let epochHash_new = keccak256(
             ethers.utils.defaultAbiCoder.encode(
                 ["uint", "uint", "uint"],
@@ -505,9 +512,9 @@ describe("Output Facet", () => {
             let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
             v_new.epochIndex = 1; // we use the same outputIndex and inputIndex
             v_new.outputMetadataArrayDriveHash =
-                "0xe5be80823befc1f1a95536be35387f028135c20f994b55f4d7f8c5d03b93f79b";
+                "0xc1a36c66afe08e1b359834d224974d4ffc80c3551b0d2143276c65239cc1c2c5";
             v_new.epochVoucherDriveHash =
-                "0xab6efb5e6cdc2a7e23180afe47e47e0eb2b410359f27e55dbd0945d368aaa25e";
+                "0xde83bbbd81d504f6e4ac25b7946f7e80cdf3532cb9791824340b9915a74a2a68";
             let epochHash_new = keccak256(
                 ethers.utils.defaultAbiCoder.encode(
                     ["uint", "uint", "uint"],
@@ -539,9 +546,9 @@ describe("Output Facet", () => {
             v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
             v_new.epochIndex = 2;
             v_new.outputMetadataArrayDriveHash =
-                "0x3baf948555a6992a67b094e5139eeb80747c554edbe32e97b10bbc8fc27f6506";
+                "0xb1d9960127a95255a29e5781b466f87a556e445ec3e2e20390ea9642d73616eb";
             v_new.epochVoucherDriveHash =
-                "0xefc144b11a003dbd9858588cb72309fae9b2556dc29a654624153a2f4fcabb61";
+                "0x2543517a18b2f67ae6781182a7042834b065be9d5f993d0bcd892ea6c9280b57";
             epochHash_new = keccak256(
                 ethers.utils.defaultAbiCoder.encode(
                     ["uint", "uint", "uint"],
