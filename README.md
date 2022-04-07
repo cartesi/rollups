@@ -62,6 +62,12 @@ The Validator Manager module was created to help DApps manage their claims, clai
 - If the claim is valid, agrees with all other claims in that epoch, and is the last claim to be received, it lets Cartesi Rollups know that consensus was reached. This allows the rollups DApp to finalize the epoch and allow for the execution of its vouchers.
 Regardless of what the name might suggest, validators do not interact with this module at all.
 
+## Fee Manager and Bank
+
+The Fee Manager facet and Bank contract aim to create an economical incentive for validators to run a given DApp. When deploying their application, deployers define a fee to be paid on a claim by claim basis and an owner for the fee manager facet, who has the option to change the fee value, if needed. The value chosen, in CTSI, is reserved for a validator every time a claim is made and can be withdrawn by them whenever convenient.
+While the Fee Manager controls the fee value and the amount of claims made by each validator, the Bank stores the CTSI tokens - on a separate contract - that will be distributed to them. The code does not enforce a way for the Bank to be funded, DApps and communities are free to choose their preferred methods. Options include, but are not limited to: direct transfer, charging per input or creating a tax system on top of the portal. For convenience we added a `FundBank` hardhat task which transfers money from the signer to a DApp's bank.
+Validators configure their nodes to either be altruistic or to have a minimum retainer. Before processing inputs and submitting claims, if they're not altruistic, they check if two conditions are true: the fee paid by the DApp is bigger than their required retainer and the DApp's Bank has enough funds to pay them. If they're altruistic they'll work regardless of financial compensation.
+
 ## Dispute Resolution
 
 Disputes occur when two validators claim different state updates to the same epoch. Because of the deterministic nature of our virtual machine and the fact that the inputs that constitute an epoch are agreed upon beforehand, conflicting claims imply dishonest behavior. When a conflict occurs, the module that mediates the interactions between both validators is the dispute resolution.
