@@ -115,6 +115,12 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
 
     let tx_config = (&config.logic_config).into();
 
+    let fee_incentive_strategy = {
+        let mut r = FeeIncentiveStrategy::default();
+        r.minimum_required_fee = config.logic_config.minimum_required_fee;
+        r
+    };
+
     info!("Entering main loop...");
 
     loop {
@@ -143,7 +149,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
                 react(
                     &sender,
                     &tx_config,
-                    config.logic_config.minimum_required_fee,
+                    &fee_incentive_strategy,
                     state,
                     &tx_manager,
                     &rollups_facet,
@@ -167,7 +173,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
 async fn react<MM: MachineInterface + Sync>(
     sender: &Address,
     config: &TxConfig,
-    minimum_required_fee: U256,
+    fee_incentive_strategy: &FeeIncentiveStrategy,
     state: RollupsState,
     tx_manager: &RollupsTxManager,
     rollups_facet: &RollupsFacet<Provider<MockProvider>>,
@@ -175,10 +181,11 @@ async fn react<MM: MachineInterface + Sync>(
     machine_manager: &MM,
 ) -> Result<()> {
     // redeem fees if the number of redeemable claims has reached the trigger level
-    if state
-        .fee_manager_state
-        .should_redeem(&state.validator_manager_state, *sender)
-    {
+    if state.fee_manager_state.should_redeem(
+        &state.validator_manager_state,
+        *sender,
+        fee_incentive_strategy,
+    ) {
         let sealed_epoch_number = state.finalized_epochs.next_epoch();
         send_redeem_tx(
             sender.clone(),
@@ -193,7 +200,7 @@ async fn react<MM: MachineInterface + Sync>(
     // Will not work if fee manager has insufficient uncommitted_balance
     let should_work = state.fee_manager_state.sufficient_uncommitted_balance(
         &state.validator_manager_state,
-        minimum_required_fee,
+        fee_incentive_strategy,
     );
 
     if !should_work {

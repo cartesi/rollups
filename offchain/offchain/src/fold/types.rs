@@ -337,20 +337,20 @@ pub struct FeeManagerState {
 }
 
 pub struct FeeIncentiveStrategy {
-    pub max_num_validators: usize,
-    pub num_buffer_epochs: i128,
-    pub num_claims_triger_redeem: i128,
+    pub num_buffer_epochs: usize,
+    pub num_claims_triger_redeem: usize,
+    pub minimum_required_fee: U256,
 }
 
 impl Default for FeeIncentiveStrategy {
     fn default() -> Self {
         FeeIncentiveStrategy {
-            // by default there are at most 8 validators
-            max_num_validators: MAX_NUM_VALIDATORS,
             // ideally fee manager should have enough uncommitted balance for at least 4 epochs
             num_buffer_epochs: 4,
             // when the number of redeemable claims reaches this value, call `redeem`
             num_claims_triger_redeem: 4,
+            // zero means an altruistic validator
+            minimum_required_fee: U256::zero(),
         }
     }
 }
@@ -360,8 +360,8 @@ impl FeeManagerState {
         &self,
         validator_manager_state: &ValidatorManagerState,
         validator_address: Address,
+        strategy: &FeeIncentiveStrategy,
     ) -> bool {
-        let strategy: FeeIncentiveStrategy = Default::default();
         let num_claims_triger_redeem =
             U256::from(strategy.num_claims_triger_redeem);
 
@@ -414,19 +414,15 @@ impl FeeManagerState {
     pub fn sufficient_uncommitted_balance(
         &self,
         validator_manager_state: &ValidatorManagerState,
-        minimum_required_fee: U256,
+        strategy: &FeeIncentiveStrategy,
     ) -> bool {
-        if minimum_required_fee == U256::zero() {
+        if strategy.minimum_required_fee == U256::zero() {
             return true;
         }
 
-        if self.fee_per_claim < minimum_required_fee {
+        if self.fee_per_claim < strategy.minimum_required_fee {
             return false;
         }
-
-        // Fee manager should have sufficient uncommitted balance,
-        // ideally enough for the a number (e.g. 4) of future epochs
-        let strategy: FeeIncentiveStrategy = Default::default();
 
         let validators_removed =
             validator_manager_state.validators_removed.len();
@@ -442,8 +438,9 @@ impl FeeManagerState {
         let fee_per_claim =
             i128::try_from(self.fee_per_claim.as_u128()).unwrap();
 
-        let balance_buffer =
-            fee_per_claim * current_num_validators * strategy.num_buffer_epochs;
+        let balance_buffer = fee_per_claim
+            * current_num_validators
+            * (strategy.num_buffer_epochs as i128);
 
         self.uncommitted_balance >= balance_buffer
     }
