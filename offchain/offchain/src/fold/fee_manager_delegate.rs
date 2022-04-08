@@ -4,7 +4,9 @@ use crate::contracts::fee_manager_facet::*;
 use crate::contracts::rollups_facet::*;
 use crate::contracts::validator_manager_facet::*;
 
-use super::types::{FeeManagerState, NumClaims, NumRedeemed};
+use super::types::{
+    FeeManagerState, NumClaims, NumRedeemed, MAX_NUM_VALIDATORS,
+};
 
 use offchain_core::types::Block;
 use state_fold::{
@@ -109,8 +111,12 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .context(SyncContractError {
                 err: "Error querying for fee redeemed events",
             })?;
-        let mut num_redeemed: [Option<NumRedeemed>; 8] = [None; 8];
+
+        let mut num_redeemed: [Option<NumRedeemed>; MAX_NUM_VALIDATORS] =
+            [None; MAX_NUM_VALIDATORS];
+
         let mut num_redeemed_sums: HashMap<Address, U256> = HashMap::new();
+
         for ev in events.iter() {
             match num_redeemed_sums.get(&ev.validator) {
                 Some(amount) => {
@@ -264,7 +270,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         for (&validator_address, &newly_redeemed) in num_redeemed_sums.iter() {
             let mut found = false;
             // find if address exist in the array
-            for index in 0..8 {
+            for index in 0..MAX_NUM_VALIDATORS {
                 if let Some(num_redeemed_struct) = &state.num_redeemed[index] {
                     let address = num_redeemed_struct.validator_address;
                     let pre_redeemed = num_redeemed_struct.num_claims_redeemed;
@@ -283,7 +289,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             if found == false {
                 let mut create_new = false;
 
-                for index in 0..8 {
+                for index in 0..MAX_NUM_VALIDATORS {
                     if let None = state.num_redeemed[index] {
                         state.num_redeemed[index] = Some(NumRedeemed {
                             validator_address: validator_address,
@@ -350,14 +356,14 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 }
 
 fn calculate_uncommitted_balance(
-    num_redeemed: &[Option<NumRedeemed>; 8],
-    num_claims: &[Option<NumClaims>; 8],
+    num_redeemed: &[Option<NumRedeemed>; MAX_NUM_VALIDATORS],
+    num_claims: &[Option<NumClaims>; MAX_NUM_VALIDATORS],
     fee_per_claim: &U256,
     bank_balance: &U256,
 ) -> i128 {
     // calculate total number of claims made by all validators
     let mut total_claims = U256::zero();
-    for i in 0..8 {
+    for i in 0..MAX_NUM_VALIDATORS {
         if let Some(num_claims_struct) = num_claims[i] {
             total_claims = total_claims + num_claims_struct.num_claims_mades;
         }
@@ -365,7 +371,7 @@ fn calculate_uncommitted_balance(
 
     // calculate total number of claims redeemed by all validators
     let mut total_redeems = U256::zero();
-    for i in 0..8 {
+    for i in 0..MAX_NUM_VALIDATORS {
         if let Some(num_redeemed_struct) = num_redeemed[i] {
             total_redeems =
                 total_redeems + num_redeemed_struct.num_claims_redeemed;

@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::sync::Arc;
 
+pub const MAX_NUM_VALIDATORS: usize = 8;
+
 /// Single input from Input.sol contract
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Input {
@@ -291,7 +293,7 @@ pub struct ValidatorManagerState {
     // each tuple containing (validator_address, #claims_made_so_far)
     // note that when a validator gets removed, the corresponding option
     // becomes `None` and this `None` can appear anywhere in the array
-    pub num_claims: [Option<NumClaims>; 8],
+    pub num_claims: [Option<NumClaims>; MAX_NUM_VALIDATORS],
     // validators that have claimed in the current unfinalized epoch
     pub claiming: Vec<Address>,
     // validators that lost the disputes
@@ -326,7 +328,7 @@ pub struct FeeManagerState {
     pub bank_address: Address,
     pub fee_per_claim: U256, // only the current value
     // Tuple containing (validator, #claims_redeemed_so_far)
-    pub num_redeemed: [Option<NumRedeemed>; 8],
+    pub num_redeemed: [Option<NumRedeemed>; MAX_NUM_VALIDATORS],
     pub bank_balance: U256,
     // Uncommitted balance equals the balance of bank contract minus
     // the amount of to-be-redeemed fees
@@ -335,7 +337,7 @@ pub struct FeeManagerState {
 }
 
 pub struct FeeIncentiveStrategy {
-    pub max_num_validators: i128,
+    pub max_num_validators: usize,
     pub num_buffer_epochs: i128,
     pub num_claims_triger_redeem: i128,
 }
@@ -344,7 +346,7 @@ impl Default for FeeIncentiveStrategy {
     fn default() -> Self {
         FeeIncentiveStrategy {
             // by default there are at most 8 validators
-            max_num_validators: 8,
+            max_num_validators: MAX_NUM_VALIDATORS,
             // ideally fee manager should have enough uncommitted balance for at least 4 epochs
             num_buffer_epochs: 4,
             // when the number of redeemable claims reaches this value, call `redeem`
@@ -377,7 +379,7 @@ impl FeeManagerState {
         // number of total claims for the validator
         let num_claims = validator_manager_state.num_claims;
         let mut validator_claims = U256::zero();
-        for i in 0..8 {
+        for i in 0..MAX_NUM_VALIDATORS {
             // find validator address in `num_claims`
             if let Some(num_claims_struct) = &num_claims[i] {
                 if num_claims_struct.validator_address == validator_address {
@@ -390,7 +392,7 @@ impl FeeManagerState {
         // number of redeemed claims for the validator
         let num_redeemed = self.num_redeemed;
         let mut validator_redeemed = U256::zero();
-        for i in 0..8 {
+        for i in 0..MAX_NUM_VALIDATORS {
             // find validator address in `num_redeemed`
             if let Some(num_redeemed_struct) = &num_redeemed[i] {
                 if num_redeemed_struct.validator_address == validator_address {
@@ -426,14 +428,16 @@ impl FeeManagerState {
         // ideally enough for the a number (e.g. 4) of future epochs
         let strategy: FeeIncentiveStrategy = Default::default();
 
-        let current_num_validators = strategy.max_num_validators
-            - validator_manager_state.validators_removed.len() as i128;
+        let validators_removed =
+            validator_manager_state.validators_removed.len();
 
         assert!(
-            current_num_validators >= 0
-                && current_num_validators <= strategy.max_num_validators,
+            MAX_NUM_VALIDATORS >= validators_removed,
             "current_num_validators out of range"
         );
+
+        let current_num_validators =
+            (MAX_NUM_VALIDATORS - validators_removed) as i128;
 
         let fee_per_claim =
             i128::try_from(self.fee_per_claim.as_u128()).unwrap();

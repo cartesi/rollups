@@ -1,7 +1,7 @@
 use crate::contracts::rollups_facet::*;
 use crate::contracts::validator_manager_facet::*;
 
-use super::types::{NumClaims, ValidatorManagerState};
+use super::types::{NumClaims, ValidatorManagerState, MAX_NUM_VALIDATORS};
 
 use offchain_core::types::Block;
 use state_fold::{
@@ -50,7 +50,8 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             .await;
 
         // declare variables
-        let mut num_claims: [Option<NumClaims>; 8] = [None; 8];
+        let mut num_claims: [Option<NumClaims>; MAX_NUM_VALIDATORS] =
+            [None; MAX_NUM_VALIDATORS];
         let mut validators_removed: Vec<Address> = Vec::new();
         let mut claiming: Vec<Address> = Vec::new(); // validators that have claimed in the current unfinalized epoch
 
@@ -103,7 +104,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             }
             if claim_epoch_num < num_finalized_epochs {
                 // step 2
-                for i in 0..8 {
+                for i in 0..MAX_NUM_VALIDATORS {
                     // find claimer in `num_claims`
                     if let Some(num_claims_struct) = &num_claims[i] {
                         let addr = num_claims_struct.validator_address;
@@ -226,7 +227,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
             let losing_validator = ev.loser;
             state.validators_removed.push(losing_validator);
             // also need to clear it in num_claims
-            for i in 0..8 {
+            for i in 0..MAX_NUM_VALIDATORS {
                 if let Some(num_claims_struct) = &state.num_claims[i] {
                     let addr = num_claims_struct.validator_address;
                     if addr == losing_validator {
@@ -285,7 +286,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
 fn find_validator_and_increase(v: Address, state: &mut ValidatorManagerState) {
     // there can be `None` between `Some`
     let mut found = false;
-    for i in 0..8 {
+    for i in 0..MAX_NUM_VALIDATORS {
         if let Some(num_claims_struct) = &state.num_claims[i] {
             let addr = num_claims_struct.validator_address;
             let num = num_claims_struct.num_claims_mades;
@@ -301,7 +302,7 @@ fn find_validator_and_increase(v: Address, state: &mut ValidatorManagerState) {
     }
     if !found {
         // if not found, add to `num_claims`
-        for i in 0..8 {
+        for i in 0..MAX_NUM_VALIDATORS {
             if let None = state.num_claims[i] {
                 state.num_claims[i] = Some(NumClaims {
                     validator_address: v,
