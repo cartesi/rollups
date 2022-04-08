@@ -302,6 +302,24 @@ pub struct ValidatorManagerState {
     pub dapp_contract_address: Address,
 }
 
+impl ValidatorManagerState {
+    pub fn num_claims_for_validator(&self, validator_address: Address) -> U256 {
+        // number of total claims for the validator
+        let num_claims = self.num_claims;
+        let mut validator_claims = U256::zero();
+        for i in 0..MAX_NUM_VALIDATORS {
+            // find validator address in `num_claims`
+            if let Some(num_claims_struct) = &num_claims[i] {
+                if num_claims_struct.validator_address == validator_address {
+                    validator_claims = num_claims_struct.num_claims_mades;
+                    break;
+                }
+            }
+        }
+        validator_claims
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ERC20BalanceState {
     pub erc20_address: Address,
@@ -365,30 +383,23 @@ impl FeeManagerState {
         let num_claims_triger_redeem =
             U256::from(strategy.num_claims_triger_redeem);
 
-        let num_redeemable_claims = self
-            .num_redeemable_claims(validator_manager_state, validator_address);
+        let validator_claims =
+            validator_manager_state.num_claims_for_validator(validator_address);
+        let validator_redeemed =
+            self.num_redeemed_for_validator(validator_address);
+        assert!(
+            validator_claims >= validator_redeemed,
+            "validator_claims should be no less than validator_redeemed"
+        );
+        let num_redeemable_claims = validator_claims - validator_redeemed;
 
         num_redeemable_claims >= num_claims_triger_redeem
     }
 
-    pub fn num_redeemable_claims(
+    pub fn num_redeemed_for_validator(
         &self,
-        validator_manager_state: &ValidatorManagerState,
         validator_address: Address,
     ) -> U256 {
-        // number of total claims for the validator
-        let num_claims = validator_manager_state.num_claims;
-        let mut validator_claims = U256::zero();
-        for i in 0..MAX_NUM_VALIDATORS {
-            // find validator address in `num_claims`
-            if let Some(num_claims_struct) = &num_claims[i] {
-                if num_claims_struct.validator_address == validator_address {
-                    validator_claims = num_claims_struct.num_claims_mades;
-                    break;
-                }
-            }
-        }
-
         // number of redeemed claims for the validator
         let num_redeemed = self.num_redeemed;
         let mut validator_redeemed = U256::zero();
@@ -402,13 +413,7 @@ impl FeeManagerState {
                 }
             }
         }
-
-        assert!(
-            validator_claims >= validator_redeemed,
-            "validator_claims should be no less than validator_redeemed"
-        );
-
-        validator_claims - validator_redeemed
+        validator_redeemed
     }
 
     pub fn sufficient_uncommitted_balance(

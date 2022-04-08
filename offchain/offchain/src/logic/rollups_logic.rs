@@ -67,15 +67,16 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     );
 
     let (provider, _mock) = Provider::mocked();
+    let provider = Arc::new(provider);
+
     let rollups_facet = RollupsFacet::new(
         config.logic_config.dapp_contract_address,
-        Arc::new(provider),
+        Arc::clone(&provider),
     );
 
-    let (provider, _mock) = Provider::mocked();
     let fee_manager_facet = FeeManagerFacet::new(
         config.logic_config.dapp_contract_address,
-        Arc::new(provider),
+        Arc::clone(&provider),
     );
 
     info!(
@@ -186,10 +187,12 @@ async fn react<MM: MachineInterface + Sync>(
         *sender,
         fee_incentive_strategy,
     ) {
-        let sealed_epoch_number = state.finalized_epochs.next_epoch();
+        let validator_redeemed = state
+            .fee_manager_state
+            .num_redeemed_for_validator(sender.clone());
         send_redeem_tx(
             sender.clone(),
-            sealed_epoch_number,
+            validator_redeemed,
             config,
             tx_manager,
             fee_manager_facet,
@@ -716,7 +719,7 @@ async fn send_finalize_tx(
 #[instrument(skip_all)]
 async fn send_redeem_tx(
     sender: Address,
-    epoch_number: U256,
+    validator_redeemed: U256,
     config: &TxConfig,
     tx_manager: &RollupsTxManager,
     fee_manager_facet: &FeeManagerFacet<Provider<MockProvider>>,
@@ -724,7 +727,7 @@ async fn send_redeem_tx(
     let redeem_tx = fee_manager_facet.redeem_fee(sender).from(sender);
     info!("Built redeem transaction: `{:?}`", redeem_tx);
 
-    let label = format!("redeem_fee:{}", epoch_number);
+    let label = format!("redeem_fee:{}", validator_redeemed);
     info!("Redeem transaction label: {}", &label);
 
     info!("Sending redeem");
