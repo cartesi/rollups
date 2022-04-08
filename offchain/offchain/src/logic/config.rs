@@ -58,9 +58,18 @@ pub struct LogicEnvCLIConfig {
     /// Session ID for rollups machine manager
     #[structopt(long, env)]
     pub session_id: Option<String>,
-    /// Session ID for rollups machine manager
+    /// Minimum required fee for making claims. A value of zero means an
+    /// altruistic validator; the node will always make claims regardless
+    /// of fee.
     #[structopt(long, env)]
     pub minimum_required_fee: Option<String>,
+    /// Number of future claim fees that the fee manager should have
+    /// uncommitted.
+    #[structopt(long, env)]
+    pub num_buffer_epochs: Option<usize>,
+    /// Number of claims before validator redeems fee.
+    #[structopt(long, env)]
+    pub num_claims_triger_redeem: Option<usize>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -80,6 +89,8 @@ pub struct LogicFileConfig {
     pub mm_endpoint: Option<String>,
     pub session_id: Option<String>,
     pub minimum_required_fee: Option<String>,
+    pub num_buffer_epochs: Option<usize>,
+    pub num_claims_triger_redeem: Option<usize>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -107,6 +118,8 @@ pub struct LogicConfig {
     pub confirmations: usize,
 
     pub minimum_required_fee: U256,
+    pub num_buffer_epochs: usize,
+    pub num_claims_triger_redeem: usize,
 }
 
 // default values
@@ -121,6 +134,9 @@ const DEFAULT_SESSION_ID: &str = "DEFAULT_SESSION_ID";
 
 const DEFAULT_RATE: usize = 20;
 const DEFAULT_CONFIRMATIONS: usize = 10;
+
+const DEFAULT_NUM_BUFFER_EPOCHS: usize = 4;
+const DEFAULT_NUM_CLAIMS_TRIGGER_REDEEM: usize = 4;
 
 impl LogicConfig {
     pub fn initialize(
@@ -243,6 +259,16 @@ impl LogicConfig {
             None => U256::zero(),
         };
 
+        let num_buffer_epochs: usize = env_cli_config
+            .num_buffer_epochs
+            .or(file_config.num_buffer_epochs)
+            .unwrap_or(DEFAULT_NUM_BUFFER_EPOCHS);
+
+        let num_claims_triger_redeem: usize = env_cli_config
+            .num_claims_triger_redeem
+            .or(file_config.num_claims_triger_redeem)
+            .unwrap_or(DEFAULT_NUM_CLAIMS_TRIGGER_REDEEM);
+
         Ok(LogicConfig {
             mnemonic,
             chain_id,
@@ -262,6 +288,8 @@ impl LogicConfig {
             confirmations,
 
             minimum_required_fee,
+            num_buffer_epochs,
+            num_claims_triger_redeem,
         })
     }
 }
