@@ -599,7 +599,7 @@ describe("Rollups Facet", () => {
                 dapp_contract_address: '0x2aa12f98795e7a65072950afba9d1e023d398241',
                 erc20_address: '0xaaf0f531b7947e8492f21862471d61d5305f7538',
                 fee_per_claim: '0xa',
-                validator_redeemed: [
+                num_redeemed: [
                 null, null, null,
                 null, null, null,
                 null, null

@@ -326,7 +326,7 @@ pub struct FeeManagerState {
     pub bank_address: Address,
     pub fee_per_claim: U256, // only the current value
     // Tuple containing (validator, #claims_redeemed_so_far)
-    pub validator_redeemed: [Option<NumRedeemed>; 8],
+    pub num_redeemed: [Option<NumRedeemed>; 8],
     pub bank_balance: U256,
     // Uncommitted balance equals the balance of bank contract minus
     // the amount of to-be-redeemed fees
@@ -337,6 +337,7 @@ pub struct FeeManagerState {
 pub struct FeeIncentiveStrategy {
     pub max_num_validators: i128,
     pub num_buffer_epochs: i128,
+    pub num_claims_triger_redeem: i128,
 }
 
 impl Default for FeeIncentiveStrategy {
@@ -346,11 +347,68 @@ impl Default for FeeIncentiveStrategy {
             max_num_validators: 8,
             // ideally fee manager should have enough uncommitted balance for at least 4 epochs
             num_buffer_epochs: 4,
+            // when the number of redeemable claims reaches this value, call `redeem`
+            num_claims_triger_redeem: 4,
         }
     }
 }
 
 impl FeeManagerState {
+    pub fn should_redeem(
+        &self,
+        validator_manager_state: &ValidatorManagerState,
+        validator_address: Address,
+    ) -> bool {
+        let strategy: FeeIncentiveStrategy = Default::default();
+        let num_claims_triger_redeem =
+            U256::from(strategy.num_claims_triger_redeem);
+
+        let num_redeemable_claims = self
+            .num_redeemable_claims(validator_manager_state, validator_address);
+
+        num_redeemable_claims >= num_claims_triger_redeem
+    }
+
+    pub fn num_redeemable_claims(
+        &self,
+        validator_manager_state: &ValidatorManagerState,
+        validator_address: Address,
+    ) -> U256 {
+        // number of total claims for the validator
+        let num_claims = validator_manager_state.num_claims;
+        let mut validator_claims = U256::zero();
+        for i in 0..8 {
+            // find validator address in `num_claims`
+            if let Some(num_claims_struct) = &num_claims[i] {
+                if num_claims_struct.validator_address == validator_address {
+                    validator_claims = num_claims_struct.num_claims_mades;
+                    break;
+                }
+            }
+        }
+
+        // number of redeemed claims for the validator
+        let num_redeemed = self.num_redeemed;
+        let mut validator_redeemed = U256::zero();
+        for i in 0..8 {
+            // find validator address in `num_redeemed`
+            if let Some(num_redeemed_struct) = &num_redeemed[i] {
+                if num_redeemed_struct.validator_address == validator_address {
+                    validator_redeemed =
+                        num_redeemed_struct.num_claims_redeemed;
+                    break;
+                }
+            }
+        }
+
+        assert!(
+            validator_claims >= validator_redeemed,
+            "validator_claims should be no less than validator_redeemed"
+        );
+
+        validator_claims - validator_redeemed
+    }
+
     pub fn sufficient_uncommitted_balance(
         &self,
         validator_manager_state: &ValidatorManagerState,

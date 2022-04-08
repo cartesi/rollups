@@ -5,6 +5,7 @@ use super::instantiate_tx_manager::{instantiate_tx_manager, RollupsTxManager};
 
 use super::config::LogicConfig;
 use crate::config::ApplicationConfig;
+use crate::contracts::fee_manager_facet::FeeManagerFacet;
 use crate::contracts::rollups_facet::RollupsFacet;
 use crate::error::*;
 use crate::fold::types::*;
@@ -67,6 +68,12 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
 
     let (provider, _mock) = Provider::mocked();
     let rollups_facet = RollupsFacet::new(
+        config.logic_config.dapp_contract_address,
+        Arc::new(provider),
+    );
+
+    let (provider, _mock) = Provider::mocked();
+    let fee_manager_facet = FeeManagerFacet::new(
         config.logic_config.dapp_contract_address,
         Arc::new(provider),
     );
@@ -140,6 +147,7 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
                     state,
                     &tx_manager,
                     &rollups_facet,
+                    &fee_manager_facet,
                     &machine_manager,
                 )
                 .await?;
@@ -163,8 +171,25 @@ async fn react<MM: MachineInterface + Sync>(
     state: RollupsState,
     tx_manager: &RollupsTxManager,
     rollups_facet: &RollupsFacet<Provider<MockProvider>>,
+    fee_manager_facet: &FeeManagerFacet<Provider<MockProvider>>,
     machine_manager: &MM,
 ) -> Result<()> {
+    // redeem fees if the number of redeemable claims has reached the trigger level
+    if state
+        .fee_manager_state
+        .should_redeem(&state.validator_manager_state, *sender)
+    {
+        let sealed_epoch_number = state.finalized_epochs.next_epoch();
+        send_redeem_tx(
+            sender.clone(),
+            sealed_epoch_number,
+            config,
+            tx_manager,
+            fee_manager_facet,
+        )
+        .await;
+    }
+
     // Will not work if fee manager has insufficient uncommitted_balance
     let should_work = state.fee_manager_state.sufficient_uncommitted_balance(
         &state.validator_manager_state,
@@ -670,6 +695,36 @@ async fn send_finalize_tx(
         .send_transaction(
             label,
             finalize_tx,
+            ResubmitStrategy {
+                gas_multiplier: config.gas_multiplier,
+                gas_price_multiplier: config.gas_price_multiplier,
+                rate: config.rate,
+            },
+            config.confirmations,
+        )
+        .await
+        .expect("Transaction conversion should never fail");
+}
+
+#[instrument(skip_all)]
+async fn send_redeem_tx(
+    sender: Address,
+    epoch_number: U256,
+    config: &TxConfig,
+    tx_manager: &RollupsTxManager,
+    fee_manager_facet: &FeeManagerFacet<Provider<MockProvider>>,
+) {
+    let redeem_tx = fee_manager_facet.redeem_fee(sender).from(sender);
+    info!("Built redeem transaction: `{:?}`", redeem_tx);
+
+    let label = format!("redeem_fee:{}", epoch_number);
+    info!("Redeem transaction label: {}", &label);
+
+    info!("Sending redeem");
+    tx_manager
+        .send_transaction(
+            label,
+            redeem_tx,
             ResubmitStrategy {
                 gas_multiplier: config.gas_multiplier,
                 gas_price_multiplier: config.gas_price_multiplier,

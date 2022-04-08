@@ -154,8 +154,8 @@ describe("FeeManager Facet", () => {
             );
             // fee_per_claim
             same_as_initial_value("fee_per_claim", state);
-            // validator_redeemed
-            same_as_initial_value("validator_redeemed", state);
+            // num_redeemed
+            same_as_initial_value("num_redeemed", state);
             // bank_balance
             same_as_initial_value("bank_balance", state);
             // uncommitted_balance
@@ -205,7 +205,7 @@ describe("FeeManager Facet", () => {
 
             // the rest should stay the same
             same_as_initial_value("fee_per_claim", state);
-            same_as_initial_value("validator_redeemed", state);
+            same_as_initial_value("num_redeemed", state);
         }
 
         // again, fund 10000 tokens
@@ -225,7 +225,7 @@ describe("FeeManager Facet", () => {
 
             // the rest should stay the same
             same_as_initial_value("fee_per_claim", state);
-            same_as_initial_value("validator_redeemed", state);
+            same_as_initial_value("num_redeemed", state);
         }
     });
 
@@ -399,7 +399,7 @@ describe("FeeManager Facet", () => {
             ).to.equal(num_claims * initialFeePerClaim * -1);
             // other fields are the same as initial
             same_as_initial_value("fee_per_claim", state);
-            same_as_initial_value("validator_redeemed", state);
+            same_as_initial_value("num_redeemed", state);
 
             // we now make a deposit to cover the negative uncommitted balance
             let amount = state.uncommitted_balance * -1;
@@ -423,19 +423,19 @@ describe("FeeManager Facet", () => {
             // update state
             state = JSON.parse(await getState(initialState));
 
-            // signers[1] should be in `validator_redeemed`
+            // signers[1] should be in `num_redeemed`
             expect(
-                state.validator_redeemed[0].validator_address,
-                "signers[1] should be in `validator_redeemed`"
+                state.num_redeemed[0].validator_address,
+                "signers[1] should be in `num_redeemed`"
             ).to.equal((await signers[1].getAddress()).toLowerCase());
             expect(
-                parseInt(state.validator_redeemed[0].num_claims_redeemed, 16),
+                parseInt(state.num_redeemed[0].num_claims_redeemed, 16),
                 "#claims redeemed should be 10"
             ).to.equal(num_claims);
             for (let i = 1; i < 8; i++) {
                 expect(
-                    state.validator_redeemed[i],
-                    "the rest in `validator_redeemed` should be null"
+                    state.num_redeemed[i],
+                    "the rest in `num_redeemed` should be null"
                 ).to.equal(null);
             }
 
@@ -516,19 +516,19 @@ describe("FeeManager Facet", () => {
             await feeManagerFacet.redeemFee(await signers[1].getAddress());
 
             let state = JSON.parse(await getState(initialState));
-            // signers[1] should be in `validator_redeemed`
+            // signers[1] should be in `num_redeemed`
             expect(
-                state.validator_redeemed[0].validator_address,
-                "signers[1] should be in `validator_redeemed`"
+                state.num_redeemed[0].validator_address,
+                "signers[1] should be in `num_redeemed`"
             ).to.equal((await signers[1].getAddress()).toLowerCase());
             expect(
-                parseInt(state.validator_redeemed[0].num_claims_redeemed, 16),
+                parseInt(state.num_redeemed[0].num_claims_redeemed, 16),
                 "#claims redeemed should be 10"
             ).to.equal(num_claims);
             for (let i = 1; i < 8; i++) {
                 expect(
-                    state.validator_redeemed[i],
-                    "the rest in `validator_redeemed` should be null"
+                    state.num_redeemed[i],
+                    "the rest in `num_redeemed` should be null"
                 ).to.equal(null);
             }
             // after redemption, bank_balance becomes 10k - redeemedValue
@@ -683,17 +683,17 @@ describe("FeeManager Facet", () => {
             ).to.equal(newFeePerClaim);
             // signers[1] should automatically be redeemed fees
             expect(
-                state.validator_redeemed[0].validator_address,
+                state.num_redeemed[0].validator_address,
                 "signers[1] should automatically be redeemed fees"
             ).to.equal((await signers[1].getAddress()).toLowerCase());
             expect(
-                parseInt(state.validator_redeemed[0].num_claims_redeemed, 16),
+                parseInt(state.num_redeemed[0].num_claims_redeemed, 16),
                 "#claims redeemed should be 10"
             ).to.equal(num_claims);
             for (let i = 1; i < 8; i++) {
                 expect(
-                    state.validator_redeemed[i],
-                    "the rest in `validator_redeemed` should be null"
+                    state.num_redeemed[i],
+                    "the rest in `num_redeemed` should be null"
                 ).to.equal(null);
             }
             // after automatic redemption, bank_balance should less some balance,
@@ -790,7 +790,7 @@ describe("FeeManager Facet", () => {
             ).to.equal(10000);
             // the rest are the same as initial
             same_as_initial_value("fee_per_claim", state);
-            same_as_initial_value("validator_redeemed", state);
+            same_as_initial_value("num_redeemed", state);
 
             // let all validators redeem fees
             for (let i = 0; i < 8; i++) {
@@ -812,31 +812,28 @@ describe("FeeManager Facet", () => {
             state = JSON.parse(await getState(initialState));
             // for signers[0]
             expect(
-                state.validator_redeemed[0].validator_address,
-                "the first one in `validator_redeemed` is signers[0]"
+                state.num_redeemed[0].validator_address,
+                "the first one in `num_redeemed` is signers[0]"
             ).to.equal((await signers[0].getAddress()).toLowerCase());
             expect(
-                parseInt(state.validator_redeemed[0].num_claims_redeemed, 16),
+                parseInt(state.num_redeemed[0].num_claims_redeemed, 16),
                 "signers[0] redeems 2 claims"
             ).to.equal(2);
             // for signers[2-7]
             for (let i = 1; i < 7; i++) {
                 expect(
-                    state.validator_redeemed[i].validator_address,
-                    "signers[1] will not be in `validator_redeemed`, so i+1 to skip signers[1]"
+                    state.num_redeemed[i].validator_address,
+                    "signers[1] will not be in `num_redeemed`, so i+1 to skip signers[1]"
                 ).to.equal((await signers[i + 1].getAddress()).toLowerCase());
                 expect(
-                    parseInt(
-                        state.validator_redeemed[i].num_claims_redeemed,
-                        16
-                    ),
+                    parseInt(state.num_redeemed[i].num_claims_redeemed, 16),
                     "#claims should be 1, for validators except signers[0] and signers[1]"
                 ).to.equal(1);
             }
-            // signers[1] is not in `validator_redeemed`
+            // signers[1] is not in `num_redeemed`
             expect(
-                state.validator_redeemed[7],
-                "signers[1] is not in `validator_redeemed`"
+                state.num_redeemed[7],
+                "signers[1] is not in `num_redeemed`"
             ).to.equal(null);
 
             // uncommitted_balance is the same as before redemption
@@ -882,14 +879,13 @@ function same_as_initial_value(s: string, state: any) {
             );
             break;
         }
-        case "validator_redeemed": {
-            expect(
-                state.validator_redeemed.length,
-                "should have 8 Options"
-            ).to.equal(8);
+        case "num_redeemed": {
+            expect(state.num_redeemed.length, "should have 8 Options").to.equal(
+                8
+            );
             for (let i = 0; i < 8; i++) {
                 expect(
-                    state.validator_redeemed[i],
+                    state.num_redeemed[i],
                     "each Option should be null"
                 ).to.equal(null);
             }

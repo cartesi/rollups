@@ -109,19 +109,18 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .context(SyncContractError {
                 err: "Error querying for fee redeemed events",
             })?;
-        let mut validator_redeemed: [Option<NumRedeemed>; 8] = [None; 8];
-        let mut validator_redeemed_sums: HashMap<Address, U256> =
-            HashMap::new();
+        let mut num_redeemed: [Option<NumRedeemed>; 8] = [None; 8];
+        let mut num_redeemed_sums: HashMap<Address, U256> = HashMap::new();
         for ev in events.iter() {
-            match validator_redeemed_sums.get(&ev.validator) {
+            match num_redeemed_sums.get(&ev.validator) {
                 Some(amount) => {
-                    validator_redeemed_sums[&ev.validator] = amount + ev.claims
+                    num_redeemed_sums[&ev.validator] = amount + ev.claims
                 }
-                None => validator_redeemed_sums[&ev.validator] = ev.claims,
+                None => num_redeemed_sums[&ev.validator] = ev.claims,
             }
         }
-        for (index, sum) in validator_redeemed_sums.iter().enumerate() {
-            validator_redeemed[index] = Some(NumRedeemed {
+        for (index, sum) in num_redeemed_sums.iter().enumerate() {
+            num_redeemed[index] = Some(NumRedeemed {
                 validator_address: *sum.0,
                 num_claims_redeemed: *sum.1,
             });
@@ -161,7 +160,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         // uncommitted balance
         let uncommitted_balance = calculate_uncommitted_balance(
-            &validator_redeemed,
+            &num_redeemed,
             &validator_manager_state.num_claims,
             &fee_per_claim,
             &bank_balance,
@@ -171,7 +170,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             dapp_contract_address: *dapp_contract_address,
             bank_address,
             fee_per_claim,
-            validator_redeemed,
+            num_redeemed,
             bank_balance,
             uncommitted_balance,
         })
@@ -252,31 +251,26 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             },
         )?;
         // newly redeemed
-        let mut validator_redeemed_sums: HashMap<Address, U256> =
-            HashMap::new();
+        let mut num_redeemed_sums: HashMap<Address, U256> = HashMap::new();
         for ev in events.iter() {
-            let amount = validator_redeemed_sums
+            let amount = num_redeemed_sums
                 .get(&ev.validator)
                 .map(|v| *v)
                 .unwrap_or(U256::zero());
 
-            validator_redeemed_sums.insert(ev.validator, amount + ev.claims);
+            num_redeemed_sums.insert(ev.validator, amount + ev.claims);
         }
-        // update to the state.validator_redeemed array
-        for (&validator_address, &newly_redeemed) in
-            validator_redeemed_sums.iter()
-        {
+        // update to the state.num_redeemed array
+        for (&validator_address, &newly_redeemed) in num_redeemed_sums.iter() {
             let mut found = false;
             // find if address exist in the array
             for index in 0..8 {
-                if let Some(num_redeemed_struct) =
-                    &state.validator_redeemed[index]
-                {
+                if let Some(num_redeemed_struct) = &state.num_redeemed[index] {
                     let address = num_redeemed_struct.validator_address;
                     let pre_redeemed = num_redeemed_struct.num_claims_redeemed;
                     if address == validator_address {
                         // found validator, update #redeemed
-                        state.validator_redeemed[index] = Some(NumRedeemed {
+                        state.num_redeemed[index] = Some(NumRedeemed {
                             validator_address: address,
                             num_claims_redeemed: pre_redeemed + newly_redeemed,
                         });
@@ -290,8 +284,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 let mut create_new = false;
 
                 for index in 0..8 {
-                    if let None = state.validator_redeemed[index] {
-                        state.validator_redeemed[index] = Some(NumRedeemed {
+                    if let None = state.num_redeemed[index] {
+                        state.num_redeemed[index] = Some(NumRedeemed {
                             validator_address: validator_address,
                             num_claims_redeemed: newly_redeemed,
                         });
@@ -338,7 +332,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 
         // uncommitted balance
         state.uncommitted_balance = calculate_uncommitted_balance(
-            &state.validator_redeemed,
+            &state.num_redeemed,
             &validator_manager_state.num_claims,
             &state.fee_per_claim,
             &state.bank_balance,
@@ -356,7 +350,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
 }
 
 fn calculate_uncommitted_balance(
-    validator_redeemed: &[Option<NumRedeemed>; 8],
+    num_redeemed: &[Option<NumRedeemed>; 8],
     num_claims: &[Option<NumClaims>; 8],
     fee_per_claim: &U256,
     bank_balance: &U256,
@@ -372,7 +366,7 @@ fn calculate_uncommitted_balance(
     // calculate total number of claims redeemed by all validators
     let mut total_redeems = U256::zero();
     for i in 0..8 {
-        if let Some(num_redeemed_struct) = validator_redeemed[i] {
+        if let Some(num_redeemed_struct) = num_redeemed[i] {
             total_redeems =
                 total_redeems + num_redeemed_struct.num_claims_redeemed;
         }
