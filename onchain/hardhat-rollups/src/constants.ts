@@ -16,6 +16,7 @@ import {
     claimParams,
     createParams,
     executeVoucherParams,
+    noticesParams,
     fundBankParams,
     ParamsBuilder,
 } from "./params";
@@ -32,6 +33,7 @@ export const TASK_GET_STATE = "rollups:getState";
 export const TASK_ADD_INPUT = "rollups:addInput";
 export const TASK_EXECUTE_VOUCHER = "rollups:executeVoucher";
 export const TASK_FUND_BANK = "rollups:fundBank";
+export const TASK_GET_NOTICES = "rollups:getNotices";
 
 export const taskDefs: Record<string, TaskDefinition> = {
     [TASK_CREATE]: {
@@ -61,5 +63,9 @@ export const taskDefs: Record<string, TaskDefinition> = {
     [TASK_FUND_BANK]: {
         description: "Fund DApp's bank in order to pay validators",
         params: fundBankParams,
+    },
+    [TASK_GET_NOTICES]: {
+        description: "Get notices for an epoch",
+        params: noticesParams,
     },
 };

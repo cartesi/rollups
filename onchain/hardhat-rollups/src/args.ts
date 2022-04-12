@@ -49,3 +49,12 @@ export interface FundBankArgs extends RollupsArgs {
 export interface AdvanceTimeArgs extends TaskArguments {
     seconds: number;
 }
+
+export interface GraphQLArgs extends TaskArguments {
+    graphql: string;
+}
+
+export interface NoticesArgs extends GraphQLArgs {
+    epoch: number;
+    payload?: string;
+}

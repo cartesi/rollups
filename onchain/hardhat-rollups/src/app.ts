@@ -21,18 +21,38 @@ import {
     TASK_EXECUTE_VOUCHER,
     TASK_FINALIZE_EPOCH,
     TASK_GET_STATE,
+    TASK_GET_NOTICES,
 } from "./constants";
 
+export type GraphQLConfig = Record<string, string>;
+
 /**
- * Action wrapper that resolves the Rollups contract address from DApp deployment
+ * Action wrapper that resolves the Rollups contract address from DApp deployment and injects
+ * the appropriate graphql endpoint
  * @param taskName name of the task to be executed
  * @returns whatever the task returns
  */
-const rollupsAction = (taskName: string): ActionType<any> => {
+const rollupsAction = (
+    taskName: string,
+    graphqlConfig: GraphQLConfig
+): ActionType<any> => {
     return async (args: any, hre: HardhatRuntimeEnvironment) => {
-        const { deployments, run } = hre;
+        const { deployments, network, run } = hre;
+
+        // resolves Rollups contract
         const Rollups = await deployments.get("CartesiDApp");
-        return run(taskName, { rollups: Rollups.address, ...args });
+
+        // retrieves GraphQL endpoint for the network being used
+        let graphqlEndpoint;
+        if (network.name in graphqlConfig) {
+            graphqlEndpoint = graphqlConfig[network.name];
+        }
+
+        return run(taskName, {
+            rollups: Rollups.address,
+            graphql: graphqlEndpoint,
+            ...args,
+        });
     };
 };
 
@@ -41,12 +61,13 @@ const rollupsAction = (taskName: string): ActionType<any> => {
  * the scope of a deployed rollups contract
  * @param appName name of rollups application
  */
-export const appTasks = (appName: string) => {
+export const appTasks = (appName: string, graphqlConfig: GraphQLConfig) => {
     [
         TASK_CLAIM,
         TASK_FINALIZE_EPOCH,
         TASK_GET_STATE,
         TASK_ADD_INPUT,
+        TASK_GET_NOTICES,
         TASK_EXECUTE_VOUCHER,
     ].forEach((taskName) => {
         const taskDef = taskDefs[taskName];
@@ -56,7 +77,11 @@ export const appTasks = (appName: string) => {
 
         // define new task
         taskDef.params(
-            task(newTaskName, taskDef.description, rollupsAction(taskName))
+            task(
+                newTaskName,
+                taskDef.description,
+                rollupsAction(taskName, graphqlConfig)
+            )
         );
     });
 };

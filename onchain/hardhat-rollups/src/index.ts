@@ -20,3 +20,4 @@ import "./input";
 import "./util";
 import "./output";
 import "./bank";
+import "./notice";

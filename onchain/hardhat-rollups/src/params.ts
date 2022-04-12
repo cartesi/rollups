@@ -143,3 +143,30 @@ export const fundBankParams: ParamsBuilder = (task) => {
 export const advanceTimeParams: ParamsBuilder = (task) => {
     return task.addParam("seconds", "Time to advance in seconds");
 };
+
+export const graphqlParams: ParamsBuilder = (task) => {
+    return task.addParam(
+        "graphql",
+        "GraphQL server address",
+        undefined,
+        types.string,
+        false
+    );
+};
+
+export const noticesParams: ParamsBuilder = (task) => {
+    return task
+        .addParam("epoch", "Epoch number", undefined, types.int, false)
+        .addOptionalParam(
+            "input",
+            "Input index (optional)",
+            undefined,
+            types.int
+        )
+        .addOptionalParam(
+            "payload",
+            'Payload output format: "hex" or "string"',
+            "hex",
+            types.string
+        );
+};
