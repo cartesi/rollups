@@ -10,10 +10,27 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+import * as protoLoader from "@grpc/proto-loader";
 import * as grpc from "@grpc/grpc-js";
-import { DelegateManagerClient } from "../generated-src/proto/stateserver_grpc_pb";
 
-export default new DelegateManagerClient(
-    `0.0.0.0:50051`,
-    grpc.credentials.createInsecure()
-);
+import { ProtoGrpcType } from "../generated-src/proto/stateserver";
+
+const createClient = (address: string = "0.0.0.0:50051") => {
+    // load proto definition
+    const packageDefinition = protoLoader.loadSync(
+        "../../grpc-interfaces/stateserver.proto"
+    );
+
+    // turn into proto object
+    const proto = grpc.loadPackageDefinition(
+        packageDefinition
+    ) as unknown as ProtoGrpcType;
+
+    // create client
+    return new proto.StateServer.DelegateManager(
+        address,
+        grpc.credentials.createInsecure()
+    );
+};
+
+export default createClient;

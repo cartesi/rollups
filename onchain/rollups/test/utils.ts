@@ -10,13 +10,16 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-import client from "./client";
-import { GetStateRequest } from "../generated-src/proto/stateserver_pb";
 import { keccak256, defaultAbiCoder } from "ethers/lib/utils";
 import { deployments, network } from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { BigNumber } from "ethers";
 import { DeployOptions } from "hardhat-deploy/types";
+import { ServiceError } from "@grpc/grpc-js";
+import createClient from "./client";
+import { GetStateResponse__Output } from "../generated-src/proto/StateServer/GetStateResponse";
+
+const client = createClient();
 
 // Calculate input hash based on
 // input: data itself interpreted by L2
@@ -55,17 +58,20 @@ export const getInputHash = (
     return input_hash;
 };
 
-export const getState = async (initialState: string) => {
-    const request = new GetStateRequest();
-    request.setJsonInitialState(initialState);
-
+export const getState = async (jsonInitialState: string) => {
     return new Promise<string>((resolve, reject) => {
-        client.getState(request, (err, response) => {
-            if (err) {
-                return reject(err);
+        client.GetState(
+            { jsonInitialState },
+            (
+                err: ServiceError | null,
+                response: GetStateResponse__Output | undefined
+            ) => {
+                if (err || !response?.jsonState) {
+                    return reject(err ?? `no response`);
+                }
+                return resolve(response.jsonState);
             }
-            return resolve(response.getJsonState());
-        });
+        );
     });
 };
 
