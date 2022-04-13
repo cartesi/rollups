@@ -1,21 +1,33 @@
-import { deployments, ethers, network } from "hardhat";
+// Copyright 2022 Cartesi Pte. Ltd.
+
+// SPDX-License-Identifier: Apache-2.0
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+// CONDITIONS OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the License.
+
+import { ethers } from "hardhat";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { RollupsFacet } from "../src/types/RollupsFacet";
-import { RollupsFacet__factory } from "../src/types/factories/RollupsFacet__factory";
-import { FeeManagerFacet } from "../src/types/FeeManagerFacet";
-import { FeeManagerFacet__factory } from "../src/types/factories/FeeManagerFacet__factory";
-import { Bank } from "../src/types/Bank";
-import { Bank__factory } from "../src/types/factories/Bank__factory";
-import { DebugFacet } from "../src/types/DebugFacet";
-import { DebugFacet__factory } from "../src/types/factories/DebugFacet__factory";
-import { SimpleToken } from "../src/types/SimpleToken";
-import { SimpleToken__factory } from "../src/types/factories/SimpleToken__factory";
-import { DiamondInit } from "../src/types/DiamondInit";
-import { DiamondInit__factory } from "../src/types/factories/DiamondInit__factory";
-import { ERC20PortalFacet } from "../src/types/ERC20PortalFacet";
-import { ERC20PortalFacet__factory } from "../src/types/factories/ERC20PortalFacet__factory";
+import {
+    Bank,
+    Bank__factory,
+    FeeManagerFacet,
+    DebugFacet,
+    DebugFacet__factory,
+    DiamondInit,
+    DiamondInit__factory,
+    FeeManagerFacet__factory,
+    RollupsFacet,
+    RollupsFacet__factory,
+    SimpleToken,
+    SimpleToken__factory,
+} from "../src/types";
 import { deployDiamond, getState, increaseTimeAndMine } from "./utils";
 
 use(solidity);
@@ -30,7 +42,6 @@ describe("FeeManager Facet", () => {
     let rollupsFacet: RollupsFacet;
     let diamondInit: DiamondInit;
     let debugFacet: DebugFacet;
-    let portalFacet: ERC20PortalFacet;
     let tokenSupply = 1000000; // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
     let initialFeePerClaim = 10; // set initial fees per claim as 10 token
     let initialState: string; // for delegate
@@ -101,11 +112,6 @@ describe("FeeManager Facet", () => {
         );
 
         rollupsFacet = RollupsFacet__factory.connect(
-            diamond.address,
-            signers[0]
-        );
-
-        portalFacet = ERC20PortalFacet__factory.connect(
             diamond.address,
             signers[0]
         );

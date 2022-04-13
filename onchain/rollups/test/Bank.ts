@@ -1,16 +1,30 @@
+// Copyright 2022 Cartesi Pte. Ltd.
+
+// SPDX-License-Identifier: Apache-2.0
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+// CONDITIONS OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the License.
+
 import { deployments, ethers } from "hardhat";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { Bank } from "../src/types/Bank";
-import { Bank__factory } from "../src/types/factories/Bank__factory";
-import { SimpleToken } from "../src/types/SimpleToken";
-import { SimpleToken__factory } from "../src/types/factories/SimpleToken__factory";
-import { deployTestBank } from "./utils";
 import {
     deployMockContract,
     MockContract,
 } from "@ethereum-waffle/mock-contract";
+import {
+    Bank,
+    Bank__factory,
+    SimpleToken,
+    SimpleToken__factory,
+} from "../src/types";
+import { deployTestBank } from "./utils";
 
 use(solidity);
 

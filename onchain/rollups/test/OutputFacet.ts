@@ -1,15 +1,29 @@
+// Copyright 2022 Cartesi Pte. Ltd.
+
+// SPDX-License-Identifier: Apache-2.0
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+// CONDITIONS OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the License.
+
 import { deployments, ethers } from "hardhat";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { OutputFacet } from "../src/types/OutputFacet";
-import { OutputFacet__factory } from "../src/types/factories/OutputFacet__factory";
-import { FeeManagerFacet } from "../src/types/FeeManagerFacet";
-import { FeeManagerFacet__factory } from "../src/types/factories/FeeManagerFacet__factory";
-import { DebugFacet } from "../src/types/DebugFacet";
-import { DebugFacet__factory } from "../src/types/factories/DebugFacet__factory";
 import { BytesLike } from "@ethersproject/bytes";
 import { keccak256 } from "ethers/lib/utils";
+import {
+    DebugFacet,
+    DebugFacet__factory,
+    FeeManagerFacet,
+    FeeManagerFacet__factory,
+    OutputFacet,
+    OutputFacet__factory,
+} from "../src/types";
 import { deployDiamond, getState } from "./utils";
 
 use(solidity);
