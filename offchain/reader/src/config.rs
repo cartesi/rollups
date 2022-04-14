@@ -12,52 +12,61 @@
  */
 
 use structopt::StructOpt;
+use tracing::error;
+use tracing::log::warn;
 
 #[derive(StructOpt, Clone, Debug)]
 #[structopt(name = "reader_config", about = "Configuration for reader")]
 pub struct ReaderCliConfig {
-    /// Postgres database url
-    #[structopt(long = "--username", env = "DB_USER")]
-    pub db_username: String,
-    #[structopt(long = "--password", env = "DB_PASSWORD")]
-    pub db_password: String,
+    /// Postgres database parameters
+    /// ****************************
+    #[structopt(long = "--postgres-user", env = "POSTGRES_USER")]
+    pub postgres_user: String,
+    #[structopt(long = "--postgres-password", env = "POSTGRES_PASSWORD")]
+    pub postgres_password: Option<String>,
     #[structopt(
-        long = "--db-host",
-        env = "DB_HOST",
+        long = "--postgres-password-file",
+        env = "POSTGRES_PASSWORD_FILE"
+    )]
+    pub postgres_password_file: Option<String>,
+    #[structopt(
+        long = "--postgres-hostname",
+        env = "POSTGRES_HOSTNAME",
         default_value = "127.0.0.1"
     )]
-    pub db_host: String,
-    #[structopt(long = "--db-port", env = "DB_PORT", default_value = "5432")]
-    pub db_port: String,
+    pub postgres_hostname: String,
     #[structopt(
-        long = "--db-name",
-        env = "DB_NAME",
+        long = "--postgres-port",
+        env = "POSTGRES_PORT",
+        default_value = "5432"
+    )]
+    pub postgres_port: String,
+    #[structopt(
+        long = "--postgres-db",
+        env = "POSTGRES_DB",
         default_value = "postgres"
     )]
-    pub db_name: String,
+    pub postgres_db: String,
     #[structopt(
-        long = "--db-testname",
-        env = "DB_TEST_NAME",
-        default_value = "postgres"
-    )]
-    pub db_test_name: String,
-    #[structopt(
-        long = "--host",
+        long = "--graphql-host",
         env = "GRAPHQL_HOST",
         default_value = "127.0.0.1"
     )]
-    pub host: String,
-    #[structopt(long = "--port", env = "GRAPHQL_PORT", default_value = "4000")]
-    pub port: String,
+    pub graphql_host: String,
+    #[structopt(
+        long = "--graphql-port",
+        env = "GRAPHQL_PORT",
+        default_value = "4000"
+    )]
+    pub graphql_port: String,
 }
 
 pub struct ReaderConfig {
-    pub db_host: String,
-    pub db_port: u16,
-    pub db_username: String,
-    pub db_password: String,
-    pub db_name: String,
-    pub db_test_name: String,
+    pub postgres_hostname: String,
+    pub postgres_port: u16,
+    pub postgres_user: String,
+    pub postgres_password: String,
+    pub postgres_db: String,
     pub graphql_host: String,
     pub graphql_port: u16,
 }
@@ -68,17 +77,51 @@ impl ReaderConfig {
 
         println!("CONFIG {:?}", &reader_cli_config);
 
+        let password: String = if let Some(password_filename) =
+            reader_cli_config.postgres_password_file
+        {
+            match std::fs::read_to_string(&password_filename) {
+                Ok(password) => {
+                    // If both postgres_password and postgres_password_file arguments are used
+                    // show warning
+                    if reader_cli_config.postgres_password.is_some() {
+                        warn!(concat!("Both `postgres_password` and `postgres_password_file` arguments are set, ",
+                            " using `postgres_password_file`"));
+                    }
+                    password
+                }
+                Err(e) => {
+                    error!(
+                        "Failed to read password from file: {}",
+                        e.to_string()
+                    );
+                    String::new()
+                }
+            }
+        } else {
+            // Password not provided in file, must be provided
+            // either as command line argument or env variable
+            reader_cli_config
+                .postgres_password
+                .expect("Database postgres password is not provided")
+        };
+
         Ok(ReaderConfig {
-            db_host: reader_cli_config.db_host.clone(),
-            db_port: u16::from_str_radix(&reader_cli_config.db_port, 10)
-                .expect("valid database port"),
-            db_username: reader_cli_config.db_username.to_string(),
-            db_password: reader_cli_config.db_password.to_string(),
-            db_name: reader_cli_config.db_name.clone(),
-            db_test_name: reader_cli_config.db_test_name.clone(),
-            graphql_host: reader_cli_config.host.clone(),
-            graphql_port: u16::from_str_radix(&reader_cli_config.port, 10)
-                .expect("valid port"),
+            postgres_hostname: reader_cli_config.postgres_hostname.clone(),
+            postgres_port: u16::from_str_radix(
+                &reader_cli_config.postgres_port,
+                10,
+            )
+            .expect("valid database port"),
+            postgres_user: reader_cli_config.postgres_user.to_string(),
+            postgres_password: password,
+            postgres_db: reader_cli_config.postgres_db.clone(),
+            graphql_host: reader_cli_config.graphql_host.clone(),
+            graphql_port: u16::from_str_radix(
+                &reader_cli_config.graphql_port,
+                10,
+            )
+            .expect("valid port"),
         })
     }
 }

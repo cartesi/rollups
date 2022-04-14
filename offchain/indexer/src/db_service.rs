@@ -64,8 +64,19 @@ async fn db_loop(
     mut message_rx: mpsc::Receiver<rollups_data::database::Message>,
 ) -> Result<(), crate::error::Error> {
     info!("starting db loop");
+    let postgres_endpoint = format!(
+        "postgres://{}:{}@{}:{}/{}",
+        urlencoding::encode(&config.database.postgres_user),
+        urlencoding::encode(&config.database.postgres_password),
+        urlencoding::encode(&config.database.postgres_hostname),
+        config.database.postgres_port,
+        urlencoding::encode(&config.database.postgres_db)
+    );
+
+    println!("Postgres endpoint {}", postgres_endpoint);
+
     let mut connection_manager: ConnectionManager<PgConnection> =
-        ConnectionManager::new(&config.postgres_endpoint);
+        ConnectionManager::new(postgres_endpoint);
 
     loop {
         tokio::select! {

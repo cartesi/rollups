@@ -23,23 +23,27 @@ async fn main() -> Result<(), crate::error::Error> {
         reader_config.graphql_host, reader_config.graphql_port
     );
 
-    let database_url = "postgres://".to_string()
-        + reader_config.db_username.as_str()
-        + ":"
-        + reader_config.db_password.as_str()
-        + "@"
-        + reader_config.db_host.as_str()
-        + ":"
-        + reader_config.db_port.to_string().as_str()
-        + "/"
-        + reader_config.db_name.as_str();
+    let postgres_endpoint =
+        "postgres://".to_string()
+            + urlencoding::encode(reader_config.postgres_user.as_str()).as_ref()
+            + ":"
+            + urlencoding::encode(reader_config.postgres_password.as_str()).as_ref()
+            + "@"
+            + urlencoding::encode(reader_config.postgres_hostname.as_str()).as_ref()
+            + ":"
+            + reader_config.postgres_port.to_string().as_str()
+            + "/"
+            + urlencoding::encode(reader_config.postgres_db.as_str()).as_ref();
+
     info!(
         "Postgres database host: {}:{}/{}",
-        &reader_config.db_host, &reader_config.db_port, &reader_config.db_name
+        &reader_config.postgres_hostname,
+        &reader_config.postgres_port,
+        &reader_config.postgres_db
     );
 
     let db_pool =
-        rollups_data::database::create_db_pool_with_retry(&database_url).await;
+        rollups_data::database::create_db_pool_with_retry(&postgres_endpoint);
 
     // Start http server
     match tokio::try_join!(http::start_service(
