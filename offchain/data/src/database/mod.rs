@@ -8,7 +8,6 @@ use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, ManageConnection};
 use diesel::{Insertable, Queryable};
 use schema::notices;
-use tracing::error;
 
 #[derive(Insertable, Queryable, Debug, PartialEq)]
 #[table_name = "notices"]
@@ -48,27 +47,13 @@ pub enum Message {
     Notice(DbNotice),
 }
 
-pub const MIN_CONNECTION_RETRY_PERIOD: u64 = 1; //seconds
-pub const MAX_CONNECTION_RETRY_PERIOD: u64 = 60; //seconds
 pub const POOL_CONNECTION_SIZE: u32 = 3;
 
-fn connect(
-    connection_manager: &ConnectionManager<PgConnection>,
-    connection_retry: &mut u64,
-) -> Result<PgConnection, diesel::r2d2::Error> {
-    match connection_manager.connect() {
-        Ok(conn) => {
-            *connection_retry = MIN_CONNECTION_RETRY_PERIOD;
-            Ok(conn)
-        }
-        Err(e) => {
-            if *connection_retry < MAX_CONNECTION_RETRY_PERIOD / 2 {
-                *connection_retry = *connection_retry * 2;
-            } else {
-                *connection_retry = MAX_CONNECTION_RETRY_PERIOD;
-            }
-            Err(e)
-        }
+fn new_backoff_err<E: std::fmt::Display>(err: E) -> backoff::Error<E> {
+    // Retry according to backoff policy
+    backoff::Error::Transient {
+        err,
+        retry_after: None,
     }
 }
 
@@ -76,52 +61,22 @@ fn connect(
 pub async fn connect_to_database_with_retry(
     connection_manager: &ConnectionManager<PgConnection>,
 ) -> PgConnection {
-    let mut connection_retry_period = MIN_CONNECTION_RETRY_PERIOD; //seconds
-    loop {
-        match connect(connection_manager, &mut connection_retry_period) {
-            Ok(connection) => break connection,
-            Err(e) => {
-                error!(
-                    "Unable to connect to database, error {}",
-                    e.to_string()
-                );
-                tokio::time::sleep(std::time::Duration::from_secs(
-                    connection_retry_period,
-                ))
-                .await;
-                continue;
-            }
-        };
-    }
+    let op = || connection_manager.connect().map_err(new_backoff_err);
+    backoff::retry(backoff::ExponentialBackoff::default(), op)
+        .expect("Failed to connect")
 }
 
 /// Create pool, wait until database server is available with backoff strategy
-pub async fn create_db_pool_with_retry(
+pub fn create_db_pool_with_retry(
     database_url: &str,
 ) -> diesel::r2d2::Pool<ConnectionManager<PgConnection>> {
-    let mut connection_retry_period = MIN_CONNECTION_RETRY_PERIOD; //seconds
-    loop {
-        match diesel::r2d2::Pool::builder()
+    let op = || {
+        diesel::r2d2::Pool::builder()
             .max_size(POOL_CONNECTION_SIZE)
             .build(ConnectionManager::<PgConnection>::new(database_url))
-        {
-            Ok(pool) => break pool,
-            Err(e) => {
-                error!(
-                    "Unable to connect to database, error {}",
-                    e.to_string()
-                );
-                tokio::time::sleep(std::time::Duration::from_secs(
-                    connection_retry_period,
-                ))
-                .await;
-                if connection_retry_period < MAX_CONNECTION_RETRY_PERIOD / 2 {
-                    connection_retry_period = connection_retry_period * 2;
-                } else {
-                    connection_retry_period = MAX_CONNECTION_RETRY_PERIOD;
-                }
-                continue;
-            }
-        };
-    }
+            .map_err(new_backoff_err)
+    };
+
+    backoff::retry(backoff::ExponentialBackoff::default(), op)
+        .expect("error creating pool")
 }

@@ -23,17 +23,18 @@ async fn main() -> Result<(), crate::error::Error> {
         reader_config.graphql_host, reader_config.graphql_port
     );
 
-    let postgres_endpoint =
-        "postgres://".to_string()
-            + urlencoding::encode(reader_config.postgres_user.as_str()).as_ref()
-            + ":"
-            + urlencoding::encode(reader_config.postgres_password.as_str()).as_ref()
-            + "@"
-            + urlencoding::encode(reader_config.postgres_hostname.as_str()).as_ref()
-            + ":"
-            + reader_config.postgres_port.to_string().as_str()
-            + "/"
-            + urlencoding::encode(reader_config.postgres_db.as_str()).as_ref();
+    let postgres_endpoint = "postgres://".to_string()
+        + urlencoding::encode(reader_config.postgres_user.as_str()).as_ref()
+        + ":"
+        + urlencoding::encode(reader_config.postgres_password.as_str())
+            .as_ref()
+        + "@"
+        + urlencoding::encode(reader_config.postgres_hostname.as_str())
+            .as_ref()
+        + ":"
+        + reader_config.postgres_port.to_string().as_str()
+        + "/"
+        + urlencoding::encode(reader_config.postgres_db.as_str()).as_ref();
 
     info!(
         "Postgres database host: {}:{}/{}",
