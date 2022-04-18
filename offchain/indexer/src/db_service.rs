@@ -14,12 +14,52 @@
 use crate::config::IndexerConfig;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use diesel::r2d2::ConnectionManager;
-use rollups_data::database::{schema::notices::dsl::*, DbNotice, Message};
+use rollups_data::database::{
+    schema::notices::dsl::*, schema::state::dsl::*, DbNotice, Message,
+};
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, trace, warn};
 
-// Insert notice to database if it not exists
+pub fn format_endpoint(config: &IndexerConfig) -> String {
+    format!(
+        "postgres://{}:{}@{}:{}/{}",
+        urlencoding::encode(&config.database.postgres_user),
+        urlencoding::encode(&config.database.postgres_password),
+        urlencoding::encode(&config.database.postgres_hostname),
+        config.database.postgres_port,
+        urlencoding::encode(&config.database.postgres_db)
+    )
+}
+
+/// Update current epoch index if smaller than db stored epoch index
+/// Return new epoch index in database
+fn update_current_epoch_index(
+    conn: &PgConnection,
+    new_epoch_index: i32,
+) -> Result<i32, crate::error::Error> {
+    let current_db_epoch_index = state
+        .filter(name.eq(rollups_data::database::CURRENT_EPOCH_INDEX))
+        .select(value_i32)
+        .get_result::<i32>(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })?;
+
+    if current_db_epoch_index < new_epoch_index {
+        let (_, new_db_index): (String, i32) = diesel::update(
+            state
+                .filter(name.eq(rollups_data::database::CURRENT_EPOCH_INDEX))
+                .filter(value_i32.lt(new_epoch_index)),
+        )
+        .set(value_i32.eq(new_epoch_index))
+        .get_result(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })?;
+        debug!("New epoch index written to database: {}", new_db_index);
+        Ok(new_db_index)
+    } else {
+        Ok(current_db_epoch_index)
+    }
+}
+
+/// Insert notice to database if it not exists
 fn insert_notice(
     db_notice: &DbNotice,
     conn: &PgConnection,
@@ -59,30 +99,31 @@ fn insert_notice(
     }
 }
 
+/// Get last known processed epoch from the database
+pub fn get_current_db_epoch(
+    conn: &PgConnection,
+) -> Result<i32, crate::error::Error> {
+    let current_epoch = state
+        .filter(name.eq(rollups_data::database::CURRENT_EPOCH_INDEX))
+        .select(value_i32)
+        .get_result::<i32>(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })?;
+    trace!("Get current epoch index, value {}", current_epoch);
+    Ok(current_epoch)
+}
+
 async fn db_loop(
     config: IndexerConfig,
     mut message_rx: mpsc::Receiver<rollups_data::database::Message>,
 ) -> Result<(), crate::error::Error> {
     info!("starting db loop");
-    let postgres_endpoint = format!(
-        "postgres://{}:{}@{}:{}/{}",
-        urlencoding::encode(&config.database.postgres_user),
-        urlencoding::encode(&config.database.postgres_password),
-        urlencoding::encode(&config.database.postgres_hostname),
-        config.database.postgres_port,
-        urlencoding::encode(&config.database.postgres_db)
-    );
-
-    println!("Postgres endpoint {}", postgres_endpoint);
-
-    let mut connection_manager: ConnectionManager<PgConnection> =
-        ConnectionManager::new(postgres_endpoint);
+    let postgres_endpoint = format_endpoint(&config);
 
     loop {
         tokio::select! {
             Some(response) = message_rx.recv() => {
                 // Connect to database. In case of error, continue trying with increasing retry period
-                let mut conn = rollups_data::database::connect_to_database_with_retry(&mut connection_manager).await;
+                let mut conn = rollups_data::database::connect_to_database_with_retry(&postgres_endpoint).await;
                 match response {
                     Message::Notice(notice) => {
                         debug!("Notice message received session_id {} epoch_index {} input_index {} notice_index {}, writing to db",
@@ -94,6 +135,12 @@ async fn db_loop(
                                 warn!("Notice session_id {} epoch_index {} input_index {} notice_index {} is lost",
                                     &notice.session_id, &notice.epoch_index, &notice.input_index, &notice.notice_index);
                             }
+                            if let Err(err) = update_current_epoch_index(&mut conn, notice.epoch_index) {
+                                warn!("Failed to update database epoch index {}, details: {}", notice.epoch_index, err.to_string());
+                            }
+
+
+
                         }).await;
                     }
                 }

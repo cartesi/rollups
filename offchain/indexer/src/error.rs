@@ -28,6 +28,9 @@ pub enum Error {
 
     #[snafu(display("Server Manager out of sync: {}", err))]
     OutOfSync { err: String },
+
+    #[snafu(display("Tokio join error: {:?}", source))]
+    TokioError { source: tokio::task::JoinError },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

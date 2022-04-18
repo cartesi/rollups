@@ -9,6 +9,9 @@ use diesel::r2d2::{ConnectionManager, ManageConnection};
 use diesel::{Insertable, Queryable};
 use schema::notices;
 
+pub const CURRENT_EPOCH_INDEX: &str = "current_epoch_index";
+pub const CURRENT_EPOCH_INDEX_VALUE: &str = "value_i32";
+
 #[derive(Insertable, Queryable, Debug, PartialEq)]
 #[table_name = "notices"]
 pub struct DbNotice {
@@ -58,9 +61,13 @@ fn new_backoff_err<E: std::fmt::Display>(err: E) -> backoff::Error<E> {
 }
 
 /// Create database connection manager, wait until database server is available with backoff strategy
+/// Return postgres connection
 pub async fn connect_to_database_with_retry(
-    connection_manager: &ConnectionManager<PgConnection>,
+    postgres_endpoint: &str,
 ) -> PgConnection {
+    let connection_manager: ConnectionManager<PgConnection> =
+        ConnectionManager::new(postgres_endpoint);
+
     let op = || connection_manager.connect().map_err(new_backoff_err);
     backoff::retry(backoff::ExponentialBackoff::default(), op)
         .expect("Failed to connect")

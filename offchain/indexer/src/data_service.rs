@@ -23,45 +23,89 @@ use crate::grpc::{
     cartesi_machine, cartesi_server_manager,
     cartesi_server_manager::{
         server_manager_client::ServerManagerClient, GetEpochStatusRequest,
-        GetSessionStatusRequest,
+        GetEpochStatusResponse, GetSessionStatusRequest,
+        GetSessionStatusResponse,
     },
 };
 
-async fn poll_epoch_status(
-    config: Arc<IndexerConfig>,
-    message_tx: mpsc::Sender<Message>,
-    mut client: ServerManagerClient<tonic::transport::Channel>,
-) -> Result<(), crate::error::Error> {
-    debug!(
-        "Polling epoch status from server manager {}",
-        &config.mm_endpoint
-    );
-    let request = GetSessionStatusRequest {
-        session_id: config.session_id.clone(),
-    };
+async fn connect_to_server_manager(
+    mm_endpoint: &str,
+) -> Result<ServerManagerClient<tonic::transport::Channel>, crate::error::Error>
+{
+    let endpoint = mm_endpoint.to_string();
+    match ServerManagerClient::connect(endpoint.clone()).await {
+        Ok(client) => Ok(client),
+        Err(e) => {
+            error!(
+                "Failed to connect to server manager endpoint {}: {}",
+                &endpoint,
+                e.to_string()
+            );
+            Err(crate::error::Error::TonicTransportError { source: e })
+        }
+    }
+}
 
-    let session_status = client
-        .get_session_status(tonic::Request::new(request.clone()))
-        .await
-        .map_err(|e| crate::error::Error::TonicStatusError { source: e })?
-        .into_inner();
-
-    debug!("Session status {:?}", session_status);
-
+async fn get_epoch_status(
+    client: &mut ServerManagerClient<tonic::transport::Channel>,
+    session_id: &str,
+    epoch_index: u64,
+) -> Result<GetEpochStatusResponse, crate::error::Error> {
     let request = GetEpochStatusRequest {
-        session_id: config.session_id.clone(),
-        epoch_index: session_status.active_epoch_index,
+        session_id: session_id.to_string(),
+        epoch_index,
     };
 
-    let response = client
+    Ok(client
         .get_epoch_status(tonic::Request::new(request.clone()))
         .await
         .map_err(|e| crate::error::Error::TonicStatusError { source: e })?
-        .into_inner();
+        .into_inner())
+}
 
-    for input in response.processed_inputs {
+async fn get_session_status(
+    client: &mut ServerManagerClient<tonic::transport::Channel>,
+    session_id: &str,
+) -> Result<GetSessionStatusResponse, crate::error::Error> {
+    let request = GetSessionStatusRequest {
+        session_id: session_id.to_string(),
+    };
+
+    Ok(client
+        .get_session_status(tonic::Request::new(request.clone()))
+        .await
+        .map_err(|e| crate::error::Error::TonicStatusError { source: e })?
+        .into_inner())
+}
+
+/// Get epoch status and send relevant data to db service
+/// If epoch_index is not provided, use session active epoch index
+async fn poll_epoch_status(
+    message_tx: &mpsc::Sender<Message>,
+    mut client: &mut ServerManagerClient<tonic::transport::Channel>,
+    session_id: &str,
+    epoch_index: Option<u64>,
+) -> Result<(), crate::error::Error> {
+    let epoch_index: u64 = match epoch_index {
+        Some(index) => index,
+        None => {
+            let session_status =
+                get_session_status(&mut client, session_id).await?;
+            debug!(
+                "Looking for current epoch index, acquired session status {:?}",
+                session_status
+            );
+            session_status.active_epoch_index
+        }
+    };
+
+    let epoch_status_response =
+        get_epoch_status(&mut client, session_id, epoch_index).await?;
+
+    for input in epoch_status_response.processed_inputs {
         debug!(
-            "Processed input {} reports number {}",
+            "Processed epoch {} input {} report index {}",
+            epoch_index,
             input.input_index,
             input.reports.len()
         );
@@ -71,10 +115,10 @@ async fn poll_epoch_status(
                     for (nindex, notice) in input_result.notices.iter().enumerate() {
                         // Send one notice
                         trace!("Sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
-                                &request.session_id, &request.epoch_index, input.input_index, &nindex);
+                                session_id, epoch_index, input.input_index, &nindex);
                         if let Err(e) = message_tx.send(Message::Notice(DbNotice {
-                            session_id: request.session_id.clone(),
-                            epoch_index: request.epoch_index as i32,
+                            session_id: session_id.to_string(),
+                            epoch_index: epoch_index as i32,
                             input_index: input.input_index  as i32,
                             notice_index: nindex as i32,
                             keccak: hex::encode(
@@ -112,10 +156,9 @@ struct Task {
 }
 
 async fn polling_loop(
-    config: IndexerConfig,
+    config: Arc<IndexerConfig>,
     message_tx: mpsc::Sender<rollups_data::database::Message>,
 ) -> Result<(), crate::error::Error> {
-    let config = Arc::new(config);
     let loop_interval = std::time::Duration::from_millis(100);
     let poll_interval = std::time::Duration::from_secs(config.interval);
 
@@ -139,9 +182,9 @@ async fn polling_loop(
                             tokio::spawn(async move {
                                 debug!("Performing get epoch status from client {}", &config.mm_endpoint);
                                 // Connect to server manager client
-                                let server_manager_client =
-                                    match ServerManagerClient::connect(
-                                        config.mm_endpoint.clone(),
+                                let mut server_manager_client =
+                                    match connect_to_server_manager(
+                                        &config.mm_endpoint,
                                     )
                                     .await
                                     {
@@ -154,9 +197,10 @@ async fn polling_loop(
                                     };
 
                                 if let Err(e) = poll_epoch_status(
-                                    config,
-                                    message_tx,
-                                    server_manager_client,
+                                    &message_tx,
+                                    &mut server_manager_client,
+                                    &config.session_id,
+                                    None,
                                 )
                                 .await
                                 {
@@ -178,10 +222,72 @@ async fn polling_loop(
     }
 }
 
+async fn sync_data(
+    message_tx: mpsc::Sender<rollups_data::database::Message>,
+    config: Arc<IndexerConfig>,
+) -> Result<(), crate::error::Error> {
+    let postgres_endpoint = crate::db_service::format_endpoint(&config);
+    let conn = rollups_data::database::connect_to_database_with_retry(
+        &postgres_endpoint,
+    )
+    .await;
+    let db_epoch_index = tokio::task::spawn_blocking(move || {
+        Ok(crate::db_service::get_current_db_epoch(&conn)? as u64)
+    })
+    .await
+    .map_err(|e| crate::error::Error::TokioError { source: e })??;
+
+    let mut client = connect_to_server_manager(&config.mm_endpoint).await?;
+    let current_session_status =
+        get_session_status(&mut client, &config.session_id).await?;
+    debug!(
+        "Sync initial epochs: database epoch index is {}, session active epoch index is {}",
+        db_epoch_index, current_session_status.active_epoch_index
+    );
+
+    // Pool epoch status for all previous epochs
+    for epoch_index in
+        db_epoch_index..=current_session_status.active_epoch_index
+    {
+        debug!(
+            "Syncing in progress, polling epoch status for epoch {}",
+            epoch_index
+        );
+        if let Err(e) = poll_epoch_status(
+            &message_tx,
+            &mut client,
+            &config.session_id,
+            Some(epoch_index),
+        )
+        .await
+        {
+            error!("Error pooling epoch status {}", e.to_string());
+        }
+    }
+
+    Ok(())
+}
+
 /// Create and run new instance of db service
 pub async fn run(
     config: IndexerConfig,
     message_tx: mpsc::Sender<rollups_data::database::Message>,
 ) -> Result<(), crate::error::Error> {
+    let config = Arc::new(config);
+    match sync_data(message_tx.clone(), config.clone()).await {
+        Ok(()) => {
+            info!(
+                "Data successfully synced from server {}",
+                &config.mm_endpoint
+            );
+        }
+        Err(e) => {
+            error!(
+                "Failed to sync data from server {}: {}",
+                &config.mm_endpoint,
+                e.to_string()
+            );
+        }
+    }
     polling_loop(config, message_tx).await
 }

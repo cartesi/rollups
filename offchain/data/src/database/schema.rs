@@ -9,3 +9,12 @@ table! {
         timestamp -> Timestamptz,
     }
 }
+
+table! {
+    state (name) {
+        name -> Varchar,
+        value_i32 -> Int4,
+    }
+}
+
+allow_tables_to_appear_in_same_query!(notices, state,);
