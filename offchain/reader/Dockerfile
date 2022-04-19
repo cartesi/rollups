@@ -27,13 +27,12 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 # build
 COPY ./offchain/ .
-RUN cargo build --release --bin indexer_main
+RUN cargo build --release --bin reader
 
 ## Run application
-# Diesel cli database tool requires cargo installation
-FROM rust:1.59 AS runtime
+# debian
+FROM debian:buster-slim  AS runtime
 RUN apt-get update && apt-get install -y openssl postgresql postgresql-contrib wget && rm -rf /var/lib/apt/lists/*
-RUN cargo install diesel_cli --no-default-features --features "postgres"
 
 ENV DOCKERIZE_VERSION v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
@@ -41,8 +40,8 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 WORKDIR app
-COPY --from=builder /rollups/offchain/target/release/indexer_main /usr/local/bin
-COPY --from=builder /rollups/offchain/data/migrations/ ./migrations/
+COPY --from=builder /rollups/offchain/target/release/reader /usr/local/bin
+COPY ./offchain/reader/entrypoint-reader.sh .
 
-COPY ./offchain/indexer/entrypoint-indexer.sh .
-ENTRYPOINT ["/bin/bash", "./entrypoint-indexer.sh"]
+ENTRYPOINT ["/bin/sh", "./entrypoint-reader.sh"]
+EXPOSE 4000

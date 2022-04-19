@@ -75,8 +75,6 @@ impl ReaderConfig {
     pub fn initialize() -> crate::error::Result<Self> {
         let reader_cli_config = ReaderCliConfig::from_args();
 
-        println!("CONFIG {:?}", &reader_cli_config);
-
         let password: String = if let Some(password_filename) =
             reader_cli_config.postgres_password_file
         {
