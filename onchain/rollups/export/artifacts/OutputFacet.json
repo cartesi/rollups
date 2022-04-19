@@ -502,9 +502,9 @@
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@diamondStorage_7759": {
+        "@diamondStorage_7758": {
           "entryPoint": null,
-          "id": 7759,
+          "id": 7758,
           "parameterSlots": 0,
           "returnSlots": 1
         },
@@ -550,9 +550,9 @@
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getNumberOfFinalizedEpochs_7791": {
+        "@getNumberOfFinalizedEpochs_7790": {
           "entryPoint": null,
-          "id": 7791,
+          "id": 7790,
           "parameterSlots": 1,
           "returnSlots": 1
         },

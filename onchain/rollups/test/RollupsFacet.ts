@@ -266,8 +266,8 @@ describe("Rollups Facet", () => {
     /// ***test emitting events*** ///
     it("event RollupsInitialized", async () => {
         // we use ethers.js to query historic events
-        // ref: https://docs.ethers.io/v5/single-page/#/v5/getting-started/-%23-getting-started--history
-        let eventFilter = diamondInit.filters.RollupsInitialized(null, null);
+        // ref: https://docs.ethers.io/v5/single-page/#/v5/api/contract/contract/-%23-Contract--filters
+        let eventFilter = diamondInit.filters.RollupsInitialized();
         let event = await diamondInit.queryFilter(eventFilter);
         let eventArgs = event[0]["args"]; // get 'args' from the first RollupsInitialized event
 

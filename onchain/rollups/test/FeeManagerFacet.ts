@@ -164,11 +164,7 @@ describe("FeeManager Facet", () => {
     }
 
     it("test constructor event FeeManagerCreated", async () => {
-        let eventFilter = diamondInit.filters.FeeManagerInitialized(
-            null,
-            null,
-            null
-        );
+        let eventFilter = diamondInit.filters.FeeManagerInitialized();
         let event = await diamondInit.queryFilter(eventFilter);
         let eventArgs = event[0]["args"];
 

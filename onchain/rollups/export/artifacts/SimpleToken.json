@@ -336,9 +336,9 @@
           "parameterSlots": 2,
           "returnSlots": 0
         },
-        "@_9802": {
+        "@_9801": {
           "entryPoint": null,
-          "id": 9802,
+          "id": 9801,
           "parameterSlots": 1,
           "returnSlots": 0
         },

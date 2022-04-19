@@ -154,7 +154,7 @@ library LibInput {
         emit InputAdded(
             currentEpoch,
             inputBox.length - 1,
-            msg.sender,
+            sender,
             block.timestamp,
             input
         );

@@ -39,7 +39,7 @@ describe("Input Facet", () => {
     let inputDuration: number;
 
     const NUM_OF_INITIAL_INPUTS = 1; // machine starts with one input
-    var numberOfInputs: number;
+    let numberOfInputs: number;
 
     ///let enum starts from 0
     enum Phase {
@@ -49,14 +49,39 @@ describe("Input Facet", () => {
     }
 
     async function addInputAndIncreaseCounter(input: BytesLike) {
-        await inputFacet.addInput(input);
         numberOfInputs++;
+        return await inputFacet.addInput(input);
     }
 
     // Increase the current time in the network by just above
     // the input duration and force a block to be mined
     async function passInputAccumulationPeriod() {
         await increaseTimeAndMine(inputDuration + 1);
+    }
+
+    // Check the arguments of the last emitted `InputAdded` event
+    // with `epochNumber` and `inputIndex` indexed arguments
+    async function checkInputAddedEventArgs(
+        epochNumber: number,
+        inputIndex: number,
+        sender: string,
+        timestamp: number,
+        input: Buffer
+    ) {
+        // we use ethers.js to query historic events, filtering by indexed event parameters
+        // ref: https://docs.ethers.io/v5/single-page/#/v5/api/contract/contract/-%23-Contract--filters
+        let eventFilter = inputFacet.filters.InputAdded(
+            epochNumber,
+            inputIndex
+        );
+        let event = await inputFacet.queryFilter(eventFilter);
+        let eventArgs = event[0]["args"];
+
+        expect(eventArgs["sender"], "Input sender").to.equal(sender);
+        expect(eventArgs["timestamp"], "Input timestamp").to.equal(timestamp);
+        expect(eventArgs["input"], "Input").to.equal(
+            "0x" + input.toString("hex")
+        );
     }
 
     beforeEach(async () => {
@@ -95,9 +120,9 @@ describe("Input Facet", () => {
     });
 
     it("addInput should revert if input is larger than drive (log2Size=7)", async () => {
-        var input_300_bytes = Buffer.from("a".repeat(300), "utf-8");
+        let input_300_bytes = Buffer.from("a".repeat(300), "utf-8");
         // one extra byte
-        var input_257_bytes = Buffer.from("a".repeat(257), "utf-8");
+        let input_257_bytes = Buffer.from("a".repeat(257), "utf-8");
 
         await expect(
             inputFacet.addInput(input_300_bytes),
@@ -127,10 +152,10 @@ describe("Input Facet", () => {
     });
 
     it("addInput should add input to inbox", async () => {
-        var input = Buffer.from("a".repeat(64), "utf-8");
+        let input = Buffer.from("a".repeat(64), "utf-8");
         const numOfInputsToAdd = 3;
 
-        for (var i = 0; i < numOfInputsToAdd; i++) {
+        for (let i = 0; i < numOfInputsToAdd; i++) {
             await addInputAndIncreaseCounter(input);
         }
 
@@ -170,21 +195,59 @@ describe("Input Facet", () => {
         }
     });
 
-    it("emit event InputAdded", async () => {
-        var input = Buffer.from("a".repeat(64), "utf-8");
-        const numOfInputsToAdd = 1;
+    it("internal inputs should have DApps address as sender", async () => {
+        let block = await ethers.provider.getBlock("latest");
+        await passInputAccumulationPeriod();
 
-        await expect(
-            await inputFacet.addInput(input),
-            "should emit event InputAdded"
-        ).to.emit(inputFacet, "InputAdded");
-        //            .withArgs(
-        //                0,
-        //                0,
-        //                await signer.getAddress(),
-        //                (await ethers.provider.getBlock("latest")).timestamp + 1, // this is unstable
-        //                "0x" + input.toString("hex")
-        //            );
+        // switch input boxes before testing getInput()
+        await addInputAndIncreaseCounter("0x00");
+
+        let input = Buffer.from("".repeat(64), "utf-8");
+        let sender = inputFacet.address;
+        let epochNumber = 0x0;
+        let inputIndex = NUM_OF_INITIAL_INPUTS - 1;
+
+        let inputHash = getInputHash(
+            input,
+            sender,
+            block.number,
+            block.timestamp,
+            epochNumber,
+            inputIndex
+        );
+
+        expect(
+            await inputFacet.getInput(inputIndex),
+            "input hash doesnt match setup input"
+        ).to.equal(inputHash);
+
+        await checkInputAddedEventArgs(
+            epochNumber,
+            inputIndex,
+            sender,
+            block.timestamp,
+            input
+        );
+    });
+
+    it("emit event InputAdded", async () => {
+        let input = Buffer.from("a".repeat(64), "utf-8");
+
+        let tx = await addInputAndIncreaseCounter(input);
+        let receipt = await tx.wait();
+        let block = await ethers.provider.getBlock(receipt.blockNumber);
+
+        let sender = await signer.getAddress();
+        let epochNumber = 0x0;
+        let inputIndex = numberOfInputs - 1; // latest input
+
+        await checkInputAddedEventArgs(
+            epochNumber,
+            inputIndex,
+            sender,
+            block.timestamp,
+            input
+        );
 
         // test delegate
         if (enableDelegate) {
@@ -196,7 +259,7 @@ describe("Input Facet", () => {
             let state = JSON.parse(await getState(initialState));
 
             expect(state.inputs.length, "initial input + new input").to.equal(
-                numOfInputsToAdd + NUM_OF_INITIAL_INPUTS
+                NUM_OF_INITIAL_INPUTS + 1
             );
         }
     });
@@ -256,7 +319,7 @@ describe("Input Facet", () => {
     });
 
     it("test getInput()", async () => {
-        var input = Buffer.from("a".repeat(64), "utf-8");
+        let input = Buffer.from("a".repeat(64), "utf-8");
         await addInputAndIncreaseCounter(input);
 
         // test for input box 0
@@ -337,7 +400,7 @@ describe("Input Facet", () => {
     });
 
     it("getCurrentInbox should return correct inbox", async () => {
-        var input = Buffer.from("a".repeat(64), "utf-8");
+        let input = Buffer.from("a".repeat(64), "utf-8");
 
         expect(
             await inputFacet.getCurrentInbox(),

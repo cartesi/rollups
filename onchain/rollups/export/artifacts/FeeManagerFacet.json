@@ -221,9 +221,9 @@
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@diamondStorage_8315": {
+        "@diamondStorage_8314": {
           "entryPoint": null,
-          "id": 8315,
+          "id": 8314,
           "parameterSlots": 0,
           "returnSlots": 1
         },
@@ -245,9 +245,9 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@getValidatorIndex_9009": {
+        "@getValidatorIndex_9008": {
           "entryPoint": 1959,
-          "id": 9009,
+          "id": 9008,
           "parameterSlots": 2,
           "returnSlots": 1
         },

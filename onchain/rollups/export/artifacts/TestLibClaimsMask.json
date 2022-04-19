@@ -418,69 +418,69 @@
     },
     "deployedBytecode": {
       "functionDebugData": {
-        "@alreadyClaimed_9939": {
+        "@alreadyClaimed_9938": {
           "entryPoint": 945,
-          "id": 9939,
+          "id": 9938,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@clearAgreementMask_9908": {
+        "@clearAgreementMask_9907": {
           "entryPoint": 1137,
-          "id": 9908,
+          "id": 9907,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getAgreementMask_9922": {
+        "@getAgreementMask_9921": {
           "entryPoint": 1328,
-          "id": 9922,
+          "id": 9921,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getConsensusGoalMask_9971": {
+        "@getConsensusGoalMask_9970": {
           "entryPoint": 1196,
-          "id": 9971,
+          "id": 9970,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getNumClaims_9851": {
+        "@getNumClaims_9850": {
           "entryPoint": 745,
-          "id": 9851,
+          "id": 9850,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@increaseNumClaims_9872": {
+        "@increaseNumClaims_9871": {
           "entryPoint": 418,
-          "id": 9872,
+          "id": 9871,
           "parameterSlots": 3,
           "returnSlots": 1
         },
-        "@newClaimsMaskWithConsensusGoalSet_9834": {
+        "@newClaimsMaskWithConsensusGoalSet_9833": {
           "entryPoint": 560,
-          "id": 9834,
+          "id": 9833,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@newClaimsMask_9820": {
+        "@newClaimsMask_9819": {
           "entryPoint": 686,
-          "id": 9820,
+          "id": 9819,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@removeValidator_9989": {
+        "@removeValidator_9988": {
           "entryPoint": 879,
-          "id": 9989,
+          "id": 9988,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@setAgreementMask_9957": {
+        "@setAgreementMask_9956": {
           "entryPoint": 1071,
-          "id": 9957,
+          "id": 9956,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@setNumClaims_9893": {
+        "@setNumClaims_9892": {
           "entryPoint": 1255,
-          "id": 9893,
+          "id": 9892,
           "parameterSlots": 3,
           "returnSlots": 1
         },
