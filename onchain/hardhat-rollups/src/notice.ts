@@ -27,8 +27,8 @@ graphqlParams(
                 const { data, error } = await client
                     .query(GetNoticeDocument, {
                         query: {
-                            epoch_index: args.epoch.toString(),
-                            input_index: args.input?.toString(),
+                            epochIndex: args.epoch,
+                            inputIndex: args.input,
                         },
                     })
                     .toPromise();
@@ -38,12 +38,12 @@ graphqlParams(
                     return;
                 }
 
-                data?.GetNotice?.forEach((notice) => {
+                data?.getNotice?.forEach((notice) => {
                     if (notice) {
                         delete notice.__typename;
                         if (args.payload == "string") {
                             // converts payload from hex to string format
-                            notice.payload = "0x" + notice.payload;
+                            notice.payload = notice.payload;
                             try {
                                 notice.payload = ethers.utils.toUtf8String(
                                     notice.payload

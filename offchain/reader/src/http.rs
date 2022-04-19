@@ -42,7 +42,7 @@ pub async fn start_service(
     .await
 }
 
-#[actix_web::get("/")]
+#[actix_web::get("/graphql")]
 fn juniper_playground() -> HttpResponse {
     let html = playground_source("", None);
     HttpResponse::Ok()
@@ -50,7 +50,7 @@ fn juniper_playground() -> HttpResponse {
         .body(html)
 }
 
-#[actix_web::post("/")]
+#[actix_web::post("/graphql")]
 async fn graphql(
     query: web::Json<GraphQLRequest>,
     context: web::Data<Context>,

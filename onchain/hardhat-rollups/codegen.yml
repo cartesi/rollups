@@ -1,4 +1,4 @@
-schema: ../../reader/src/graphql/typeDefs/typeDefs.graphql
+schema: ../../offchain/data/graphql/typeDefs.graphql
 documents: ./graphql/queries.graphql
 generates:
     ./src/generated/graphql/index.ts:
