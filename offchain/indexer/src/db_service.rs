@@ -11,6 +11,7 @@
  * the License.
  */
 
+/// Receive messages from data service and insert them in database
 use crate::config::IndexerConfig;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -37,11 +38,7 @@ fn update_current_epoch_index(
     conn: &PgConnection,
     new_epoch_index: i32,
 ) -> Result<i32, crate::error::Error> {
-    let current_db_epoch_index = state
-        .filter(name.eq(rollups_data::database::CURRENT_EPOCH_INDEX))
-        .select(value_i32)
-        .get_result::<i32>(conn)
-        .map_err(|e| crate::error::Error::DieselError { source: e })?;
+    let current_db_epoch_index = get_current_db_epoch(conn)?;
 
     if current_db_epoch_index < new_epoch_index {
         let (_, new_db_index): (String, i32) = diesel::update(
@@ -59,7 +56,7 @@ fn update_current_epoch_index(
     }
 }
 
-/// Insert notice to database if it not exists
+/// Insert notice to database if it does not exist
 fn insert_notice(
     db_notice: &DbNotice,
     conn: &PgConnection,
@@ -108,7 +105,10 @@ pub fn get_current_db_epoch(
         .select(value_i32)
         .get_result::<i32>(conn)
         .map_err(|e| crate::error::Error::DieselError { source: e })?;
-    trace!("Get current epoch index, value {}", current_epoch);
+    trace!(
+        "Epoch epoch index {} read from database as current",
+        current_epoch
+    );
     Ok(current_epoch)
 }
 
@@ -123,24 +123,32 @@ async fn db_loop(
         tokio::select! {
             Some(response) = message_rx.recv() => {
                 // Connect to database. In case of error, continue trying with increasing retry period
-                let mut conn = rollups_data::database::connect_to_database_with_retry(&postgres_endpoint).await;
+                let conn = {
+                    let pe = postgres_endpoint.clone();
+                    match tokio::task::spawn_blocking(move || {
+                       rollups_data::database::connect_to_database_with_retry(&pe)
+                    }).await.map_err(|e| crate::error::Error::TokioError { source: e }) {
+                        Ok(c) => c,
+                        Err(e) => {
+                            error!("Failed to connect to database {}, error: {}", &postgres_endpoint, e.to_string());
+                            continue;
+                        }
+                    }
+                };
                 match response {
                     Message::Notice(notice) => {
                         debug!("Notice message received session_id {} epoch_index {} input_index {} notice_index {}, writing to db",
                             &notice.session_id, notice.epoch_index, notice.input_index, notice.notice_index);
                         // Spawn tokio blocking task, diesel access to db is blocking
                         let _res = tokio::task::spawn_blocking(move || {
-                            if let Err(_err) = insert_notice(&notice, &mut conn) {
+                            if let Err(_err) = insert_notice(&notice, &conn) {
                                 //ignore error, continue
                                 warn!("Notice session_id {} epoch_index {} input_index {} notice_index {} is lost",
                                     &notice.session_id, &notice.epoch_index, &notice.input_index, &notice.notice_index);
                             }
-                            if let Err(err) = update_current_epoch_index(&mut conn, notice.epoch_index) {
+                            if let Err(err) = update_current_epoch_index(&conn, notice.epoch_index) {
                                 warn!("Failed to update database epoch index {}, details: {}", notice.epoch_index, err.to_string());
                             }
-
-
-
                         }).await;
                     }
                 }

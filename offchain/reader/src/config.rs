@@ -11,10 +11,14 @@
  * the License.
  */
 
+/// Reader configuration. Command line parameters take precedence over environment variables
 use structopt::StructOpt;
 use tracing::error;
 use tracing::log::warn;
 
+/// Reader configuration generated from command
+/// line arguments. Where both cli and environment arguments are possible
+/// although stuctopt generates them automatically they are explicitelly defined for clarity
 #[derive(StructOpt, Clone, Debug)]
 #[structopt(name = "reader_config", about = "Configuration for reader")]
 pub struct ReaderCliConfig {
@@ -61,6 +65,8 @@ pub struct ReaderCliConfig {
     pub graphql_port: String,
 }
 
+/// Final reader configuration
+/// derived from various input configuration options
 pub struct ReaderConfig {
     pub postgres_hostname: String,
     pub postgres_port: u16,
@@ -72,6 +78,9 @@ pub struct ReaderConfig {
 }
 
 impl ReaderConfig {
+    /// Generate reader config from command line arguments and
+    /// and environment variables. Mix all parameters taking
+    /// into account precedence to form final ReaderConfig
     pub fn initialize() -> crate::error::Result<Self> {
         let reader_cli_config = ReaderCliConfig::from_args();
 
@@ -106,20 +115,18 @@ impl ReaderConfig {
 
         Ok(ReaderConfig {
             postgres_hostname: reader_cli_config.postgres_hostname.clone(),
-            postgres_port: u16::from_str_radix(
-                &reader_cli_config.postgres_port,
-                10,
-            )
-            .expect("valid database port"),
+            postgres_port: reader_cli_config
+                .postgres_port
+                .parse::<u16>()
+                .expect("valid database port"),
             postgres_user: reader_cli_config.postgres_user.to_string(),
             postgres_password: password,
             postgres_db: reader_cli_config.postgres_db.clone(),
             graphql_host: reader_cli_config.graphql_host.clone(),
-            graphql_port: u16::from_str_radix(
-                &reader_cli_config.graphql_port,
-                10,
-            )
-            .expect("valid port"),
+            graphql_port: reader_cli_config
+                .graphql_port
+                .parse::<u16>()
+                .expect("valid port"),
         })
     }
 }

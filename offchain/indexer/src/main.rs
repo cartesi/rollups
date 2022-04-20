@@ -22,6 +22,7 @@ use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+    // Use tracing library for logs. By default use system standard output logger
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
@@ -33,8 +34,12 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         })?;
 
     trace!("Indexer configuration {:?}", &indexer_config);
+    // Channel for passing messaged between data service acquiring data from outside
+    // and database service inserting data to the library
     let (message_tx, message_rx) =
         mpsc::channel::<rollups_data::database::Message>(128);
+
+    // Run database and data services
     tokio::select! {
         db_service_result = db_service::run(indexer_config.clone(), message_rx) => {
             match db_service_result {

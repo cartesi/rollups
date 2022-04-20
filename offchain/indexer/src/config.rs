@@ -11,6 +11,10 @@
  * the License.
  */
 
+/// Configuration for the indexer
+/// Configuration to the indexer can be provided using command line options, environment variables
+/// or configuration file. In general, command line indexer parameters take precedence over environment variables
+/// and environment variables take precedence over same parameter from file configuration
 use configuration::config::Config;
 use configuration::config::EnvCLIConfig;
 use configuration::error as config_error;
@@ -23,6 +27,8 @@ use tracing::{error, warn};
 
 use structopt::StructOpt;
 
+/// Application configuration generated from
+/// command line arguments
 #[derive(StructOpt, Clone)]
 pub struct ApplicationCLIConfig {
     #[structopt(flatten)]
@@ -31,6 +37,9 @@ pub struct ApplicationCLIConfig {
     pub indexer_config: IndexerEnvCLIConfig,
 }
 
+/// Indexer configuration generated from command
+/// line arguments. Where both cli and environment arguments are possible
+/// although stuctopt generates them automatically they are explicitelly defined for clarity
 #[derive(StructOpt, Clone)]
 #[structopt(name = "indexer_config", about = "Configuration for indexer")]
 pub struct IndexerEnvCLIConfig {
@@ -46,8 +55,6 @@ pub struct IndexerEnvCLIConfig {
     pub interval: Option<u64>,
     #[structopt(long)]
     pub initial_epoch: Option<u64>,
-    #[structopt(long)]
-    pub postgres_endpoint: Option<String>,
     #[structopt(long)]
     pub mm_endpoint: Option<String>,
     #[structopt(long)]
@@ -69,6 +76,8 @@ pub struct IndexerEnvCLIConfig {
     pub postgres_db: Option<String>,
 }
 
+/// Indexer configuration deserialized from file
+/// (usually indexer-config.toml defined with rollup application)
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct IndexerFileConfig {
     pub dapp_contract_address: Option<String>,
@@ -86,11 +95,14 @@ pub struct IndexerFileConfig {
     pub postgres_db: Option<String>,
 }
 
+/// Indexer file configuration
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct FileConfig {
     pub indexer_config: IndexerFileConfig,
 }
 
+/// Final database configuration (needed for database handling)
+/// derived from various input configuration options
 #[derive(Clone, Debug)]
 pub struct PostgresConfig {
     pub postgres_hostname: String,
@@ -100,6 +112,8 @@ pub struct PostgresConfig {
     pub postgres_db: String,
 }
 
+/// Final indexer configuration
+/// derived from various input configuration options
 #[derive(Clone, Debug)]
 pub struct IndexerConfig {
     pub dapp_contract_address: Address,
@@ -112,6 +126,10 @@ pub struct IndexerConfig {
 }
 
 impl IndexerConfig {
+    /// Generate application config from command line arguments and
+    /// and environment variables. If  indexer config path is provided
+    /// read indexer configuration from the file. Mix all parameters taking
+    /// into account precedence to form final IndexerConfig
     pub fn initialize() -> config_error::Result<Self> {
         let app_config = ApplicationCLIConfig::from_args();
         let env_cli_config = app_config.indexer_config;
@@ -127,7 +145,9 @@ impl IndexerConfig {
 
         let dapp_contract_name = env_cli_config
             .dapp_contract_name
-            .unwrap_or("CartesiDApp".to_string());
+            .or(file_config.dapp_contract_name)
+            .unwrap_or_else(|| "CartesiDApp".to_string());
+
         let dapp_contract_address = basic_config.contracts[&dapp_contract_name];
 
         let state_server_endpoint: String = env_cli_config
@@ -148,6 +168,7 @@ impl IndexerConfig {
                 })?,
         );
 
+        // Polling interval
         let interval: u64 = env_cli_config
             .interval
             .or(file_config.interval)
@@ -156,6 +177,7 @@ impl IndexerConfig {
                 err: "Must specify interval",
             })?;
 
+        // Cartesi server manager endpoint
         let mm_endpoint: String = env_cli_config
             .mm_endpoint
             .or(file_config.mm_endpoint)
@@ -180,7 +202,7 @@ impl IndexerConfig {
                 err: "Must specify postgres hostname",
             })?;
 
-        // we use default port if no other provided
+        // We use default postgres port if no other provided
         let postgres_port: u16 = env_cli_config
             .postgres_port
             .or(file_config.postgres_port)
@@ -198,6 +220,8 @@ impl IndexerConfig {
             .postgres_password_file
             .or(file_config.postgres_password_file);
 
+        // Password can also be read from file, in which case
+        // takes the precedence
         let password_from_file: Option<String> = if let Some(
             password_filename,
         ) = postgres_password_file

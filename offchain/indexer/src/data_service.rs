@@ -11,6 +11,8 @@
  * the License.
  */
 
+/// Data service polls other Cartesi services
+/// with specified interval and collects related data about dapp
 use crate::config::IndexerConfig;
 use chrono::Local;
 use rollups_data::database::{DbNotice, Message};
@@ -28,24 +30,23 @@ use crate::grpc::{
     },
 };
 
-async fn connect_to_server_manager(
+/// Connect to Cartesi server manager using backoff strategy
+async fn connect_to_server_manager_with_retry(
     mm_endpoint: &str,
 ) -> Result<ServerManagerClient<tonic::transport::Channel>, crate::error::Error>
 {
     let endpoint = mm_endpoint.to_string();
-    match ServerManagerClient::connect(endpoint.clone()).await {
-        Ok(client) => Ok(client),
-        Err(e) => {
-            error!(
-                "Failed to connect to server manager endpoint {}: {}",
-                &endpoint,
-                e.to_string()
-            );
-            Err(crate::error::Error::TonicTransportError { source: e })
-        }
-    }
+    let op = || async {
+        ServerManagerClient::connect(endpoint.clone())
+            .await
+            .map_err(rollups_data::new_backoff_err)
+    };
+    backoff::future::retry(backoff::ExponentialBackoff::default(), op)
+        .await
+        .map_err(|e| crate::error::Error::TonicTransportError { source: e })
 }
 
+/// Get epoch status from server manager
 async fn get_epoch_status(
     client: &mut ServerManagerClient<tonic::transport::Channel>,
     session_id: &str,
@@ -63,6 +64,7 @@ async fn get_epoch_status(
         .into_inner())
 }
 
+/// Get session status from server manager
 async fn get_session_status(
     client: &mut ServerManagerClient<tonic::transport::Channel>,
     session_id: &str,
@@ -82,17 +84,16 @@ async fn get_session_status(
 /// If epoch_index is not provided, use session active epoch index
 async fn poll_epoch_status(
     message_tx: &mpsc::Sender<Message>,
-    mut client: &mut ServerManagerClient<tonic::transport::Channel>,
+    client: &mut ServerManagerClient<tonic::transport::Channel>,
     session_id: &str,
     epoch_index: Option<u64>,
 ) -> Result<(), crate::error::Error> {
     let epoch_index: u64 = match epoch_index {
         Some(index) => index,
         None => {
-            let session_status =
-                get_session_status(&mut client, session_id).await?;
+            let session_status = get_session_status(client, session_id).await?;
             debug!(
-                "Looking for current epoch index, acquired session status {:?}",
+                "Retrieving current epoch index, acquired session status {:?}",
                 session_status
             );
             session_status.active_epoch_index
@@ -100,20 +101,21 @@ async fn poll_epoch_status(
     };
 
     let epoch_status_response =
-        get_epoch_status(&mut client, session_id, epoch_index).await?;
+        get_epoch_status(client, session_id, epoch_index).await?;
 
     for input in epoch_status_response.processed_inputs {
         debug!(
-            "Processed epoch {} input {} report index {}",
+            "Processed epoch {} input {} reports len: {}",
             epoch_index,
             input.input_index,
             input.reports.len()
         );
-        for one_of in input.processed_oneof {
+        if let Some(one_of) = input.processed_oneof {
             match one_of {
                 cartesi_server_manager::processed_input::ProcessedOneof::Result(input_result) => {
+                    // Process notices
                     for (nindex, notice) in input_result.notices.iter().enumerate() {
-                        // Send one notice
+                        // Send one notice to database service
                         trace!("Sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
                                 session_id, epoch_index, input.input_index, &nindex);
                         if let Err(e) = message_tx.send(Message::Notice(DbNotice {
@@ -130,7 +132,6 @@ async fn poll_epoch_status(
                             ),
                             payload: Some(notice.payload.clone()),
                             timestamp: Local::now()
-
                         })).await {
                             error!("error passing message to db {}", e.to_string())
                         }
@@ -145,10 +146,12 @@ async fn poll_epoch_status(
     Ok(())
 }
 
+/// Polling task type
 enum TaskType {
     GetEpochStatus,
 }
 
+/// Task that gets executed in the polling event loop
 struct Task {
     interval: std::time::Duration,
     next_execution: std::time::SystemTime,
@@ -168,22 +171,20 @@ async fn polling_loop(
         task_type: TaskType::GetEpochStatus,
     }];
 
-    // Pooling tasks loop
+    // Polling tasks loop
     info!("Starting data polling loop");
     loop {
         for task in tasks.iter_mut() {
             if task.next_execution <= std::time::SystemTime::now() {
                 match task.task_type {
                     TaskType::GetEpochStatus => {
-                        debug!("Performing get epoch status");
                         {
                             let config = config.clone();
                             let message_tx = message_tx.clone();
                             tokio::spawn(async move {
-                                debug!("Performing get epoch status from client {}", &config.mm_endpoint);
-                                // Connect to server manager client
+                                debug!("Performing get epoch status from Cartesi server manager {}", &config.mm_endpoint);
                                 let mut server_manager_client =
-                                    match connect_to_server_manager(
+                                    match connect_to_server_manager_with_retry(
                                         &config.mm_endpoint,
                                     )
                                     .await
@@ -192,10 +193,9 @@ async fn polling_loop(
                                         Err(e) => {
                                             // In case of error, continue with the loop, try to connect again after interval
                                             error!("Failed to connect to server manager endpoint {}: {}", &config.mm_endpoint, e.to_string());
-                                            return ();
+                                            return (); // return from spanned background task
                                         }
                                     };
-
                                 if let Err(e) = poll_epoch_status(
                                     &message_tx,
                                     &mut server_manager_client,
@@ -217,27 +217,33 @@ async fn polling_loop(
                 }
             }
         }
-
         tokio::time::sleep(loop_interval).await;
     }
 }
 
+/// Sync data from external endpoints on indexer startup,
+/// based on current database epoch index
 async fn sync_data(
     message_tx: mpsc::Sender<rollups_data::database::Message>,
     config: Arc<IndexerConfig>,
 ) -> Result<(), crate::error::Error> {
     let postgres_endpoint = crate::db_service::format_endpoint(&config);
-    let conn = rollups_data::database::connect_to_database_with_retry(
-        &postgres_endpoint,
-    )
-    .await;
+    let conn = tokio::task::spawn_blocking(move || {
+        rollups_data::database::connect_to_database_with_retry(
+            &postgres_endpoint,
+        )
+    })
+    .await
+    .map_err(|e| crate::error::Error::TokioError { source: e })?;
+
     let db_epoch_index = tokio::task::spawn_blocking(move || {
         Ok(crate::db_service::get_current_db_epoch(&conn)? as u64)
     })
     .await
     .map_err(|e| crate::error::Error::TokioError { source: e })??;
 
-    let mut client = connect_to_server_manager(&config.mm_endpoint).await?;
+    let mut client =
+        connect_to_server_manager_with_retry(&config.mm_endpoint).await?;
     let current_session_status =
         get_session_status(&mut client, &config.session_id).await?;
     debug!(
@@ -268,7 +274,7 @@ async fn sync_data(
     Ok(())
 }
 
-/// Create and run new instance of db service
+/// Create and run new instance of data polling service
 pub async fn run(
     config: IndexerConfig,
     message_tx: mpsc::Sender<rollups_data::database::Message>,
@@ -277,17 +283,18 @@ pub async fn run(
     match sync_data(message_tx.clone(), config.clone()).await {
         Ok(()) => {
             info!(
-                "Data successfully synced from server {}",
+                "Data successfully synced from Cartesi server manager {}",
                 &config.mm_endpoint
             );
         }
         Err(e) => {
             error!(
-                "Failed to sync data from server {}: {}",
+                "Failed to sync data from Cartesi server manager {}: {}",
                 &config.mm_endpoint,
                 e.to_string()
             );
         }
     }
+    // Start polling loop
     polling_loop(config, message_tx).await
 }

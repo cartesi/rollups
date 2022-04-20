@@ -1,5 +1,15 @@
-#![allow(dead_code)]
-
+/* Copyright 2022 Cartesi Pte. Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 pub mod schema;
 
 use chrono::{DateTime, Local, Utc};
@@ -10,8 +20,9 @@ use diesel::{Insertable, Queryable};
 use schema::notices;
 
 pub const CURRENT_EPOCH_INDEX: &str = "current_epoch_index";
-pub const CURRENT_EPOCH_INDEX_VALUE: &str = "value_i32";
+pub const POOL_CONNECTION_SIZE: u32 = 3;
 
+/// Struct representing Notice in the database
 #[derive(Insertable, Queryable, Debug, PartialEq)]
 #[table_name = "notices"]
 pub struct DbNotice {
@@ -19,17 +30,19 @@ pub struct DbNotice {
     pub epoch_index: i32,
     pub input_index: i32,
     pub notice_index: i32,
+    // Keep keccak as string in database for easier db manual search
     pub keccak: String,
     pub payload: Option<Vec<u8>>,
     #[diesel(deserialize_as = "LocalDateTimeWrapper")]
-    pub timestamp: chrono::DateTime<chrono::Local>,
+    pub timestamp: chrono::DateTime<chrono::Local>, //todo use time from input
 }
 pub struct LocalDateTimeWrapper(DateTime<Local>);
-impl Into<DateTime<Local>> for LocalDateTimeWrapper {
-    fn into(self) -> DateTime<Local> {
-        self.0
+impl From<LocalDateTimeWrapper> for DateTime<Local> {
+    fn from(wrapper: LocalDateTimeWrapper) -> DateTime<Local> {
+        wrapper.0
     }
 }
+
 impl<DB, ST> Queryable<ST, DB> for LocalDateTimeWrapper
 where
     DB: Backend,
@@ -45,35 +58,25 @@ where
     }
 }
 
+/// Message enumeration comprising all available objects that can be kept
+/// in the database
 #[derive(Debug)]
 pub enum Message {
     Notice(DbNotice),
 }
 
-pub const POOL_CONNECTION_SIZE: u32 = 3;
-
-fn new_backoff_err<E: std::fmt::Display>(err: E) -> backoff::Error<E> {
-    // Retry according to backoff policy
-    backoff::Error::Transient {
-        err,
-        retry_after: None,
-    }
-}
-
 /// Create database connection manager, wait until database server is available with backoff strategy
 /// Return postgres connection
-pub async fn connect_to_database_with_retry(
-    postgres_endpoint: &str,
-) -> PgConnection {
+pub fn connect_to_database_with_retry(postgres_endpoint: &str) -> PgConnection {
     let connection_manager: ConnectionManager<PgConnection> =
         ConnectionManager::new(postgres_endpoint);
 
-    let op = || connection_manager.connect().map_err(new_backoff_err);
+    let op = || connection_manager.connect().map_err(crate::new_backoff_err);
     backoff::retry(backoff::ExponentialBackoff::default(), op)
         .expect("Failed to connect")
 }
 
-/// Create pool, wait until database server is available with backoff strategy
+/// Create database connection pool, wait until database server is available with backoff strategy
 pub fn create_db_pool_with_retry(
     database_url: &str,
 ) -> diesel::r2d2::Pool<ConnectionManager<PgConnection>> {
@@ -81,7 +84,7 @@ pub fn create_db_pool_with_retry(
         diesel::r2d2::Pool::builder()
             .max_size(POOL_CONNECTION_SIZE)
             .build(ConnectionManager::<PgConnection>::new(database_url))
-            .map_err(new_backoff_err)
+            .map_err(crate::new_backoff_err)
     };
 
     backoff::retry(backoff::ExponentialBackoff::default(), op)

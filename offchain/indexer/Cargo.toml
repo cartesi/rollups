@@ -2,8 +2,8 @@
 name = "indexer"
 license = "Apache-2.0"
 version = "0.4.0"
-authors = ["victornogueira <victor.nogueira@cartesi.io>", "marko atanasievski <marko.atanasievski@cartesi.io"]
-edition = "2018"
+authors = ["victornogueira <victor.nogueira@cartesi.io>", "marko atanasievski <marko.atanasievski@cartesi.io>"]
+edition = "2021"
 
 [[bin]]
 name = "indexer_main"
@@ -29,6 +29,7 @@ hex = "0.4.3"
 chrono = "0.4"
 async-mutex = "1.4"
 urlencoding = "2.1"
+backoff = { version = "0.4", features = ["tokio"] }
 
 
 

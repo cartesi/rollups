@@ -5,6 +5,7 @@ on:
         paths:
             - offchain/indexer/**
             - offchain/offchain/**
+            - offchain/data/**
             - grpc-interfaces/**
             - onchain/rollups/abi/**
             - .github/workflows/indexer.yml

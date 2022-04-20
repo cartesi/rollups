@@ -3,7 +3,9 @@ name: Reader
 on:
     pull_request:
         paths:
-            - reader/**
+            - offchain/reader/**
+            - offchain/data/**
+            - grpc-interfaces/**
             - .github/workflows/reader.yml
     push:
         tags:
@@ -16,17 +18,7 @@ jobs:
               with:
                   submodules: recursive
                   token: ${{ secrets.CI_TOKEN }}
-            
-            - uses: actions/setup-node@v1
-              with:
-                  node-version: "16"
-            
-            - run: yarn --cwd reader/ install
-            
-            - name: Set up QEMU
-              id: qemu
-              uses: docker/setup-qemu-action@v2
-
+                        
             - name: Set up Docker Buildx
               id: buildx
               uses: docker/setup-buildx-action@v2
@@ -56,6 +48,3 @@ jobs:
                   targets: reader
                   builder: ${{ steps.buildx.outputs.name }}
                   push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
-                  set: |
-                    *.cache-from=type=gha
-                    *.cache-to=type=gha,mode=max
