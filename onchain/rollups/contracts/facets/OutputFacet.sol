@@ -29,14 +29,14 @@ contract OutputFacet is IOutput {
 
     uint256 constant KECCAK_LOG2_SIZE = 5; // keccak log2 size
 
-    // max size of voucher metadata drive 32 * (2^16) bytes
+    // max size of voucher metadata memory range 32 * (2^16) bytes
     uint256 constant VOUCHER_METADATA_LOG2_SIZE = 21;
-    // max size of epoch voucher drive 32 * (2^32) bytes
+    // max size of epoch voucher memory range 32 * (2^32) bytes
     uint256 constant EPOCH_VOUCHER_LOG2_SIZE = 37;
 
-    // max size of notice metadata drive 32 * (2^16) bytes
+    // max size of notice metadata memory range 32 * (2^16) bytes
     uint256 constant NOTICE_METADATA_LOG2_SIZE = 21;
-    // max size of epoch notice drive 32 * (2^32) bytes
+    // max size of epoch notice memory range 32 * (2^32) bytes
     uint256 constant EPOCH_NOTICE_LOG2_SIZE = 37;
 
     /// @notice functions modified by noReentrancy are not subject to recursion
@@ -102,44 +102,44 @@ contract OutputFacet is IOutput {
 
     /// @notice functions modified by isValidProof will only be executed if
     ///         the validity proof is valid
-    ///  @dev _epochOutputDriveHash must be _v.epochVoucherDriveHash or
-    ///                                  or _v.epochNoticeDriveHash
+    ///  @dev _outputsEpochRootHash must be _v.vouchersEpochRootHash or
+    ///                                  or _v.noticesEpochRootHash
     function isValidProof(
         bytes memory _encodedOutput,
         bytes32 _epochHash,
-        bytes32 _epochOutputDriveHash,
-        uint256 _epochOutputLog2Size,
-        uint256 _outputMetadataLog2Size,
+        bytes32 _outputsEpochRootHash,
+        uint256 _outputEpochLog2Size,
+        uint256 _outputHashesLog2Size,
         OutputValidityProof calldata _v
     ) internal pure returns (bool) {
         // prove that outputs hash is represented in a finalized epoch
         require(
             keccak256(
                 abi.encodePacked(
-                    _v.epochVoucherDriveHash,
-                    _v.epochNoticeDriveHash,
-                    _v.epochMachineFinalState
+                    _v.vouchersEpochRootHash,
+                    _v.noticesEpochRootHash,
+                    _v.machineStateHash
                 )
             ) == _epochHash,
             "epochHash incorrect"
         );
 
-        // prove that output metadata drive is contained in epoch's output drive
+        // prove that output metadata memory range is contained in epoch's output memory range
         require(
             Merkle.getRootAfterReplacementInDrive(
                 getIntraDrivePosition(_v.inputIndex, KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
-                _epochOutputLog2Size,
-                keccak256(abi.encodePacked(_v.outputMetadataArrayDriveHash)),
-                _v.epochOutputDriveProof
-            ) == _epochOutputDriveHash,
-            "epochOutputDriveHash incorrect"
+                _outputEpochLog2Size,
+                keccak256(abi.encodePacked(_v.outputHashesRootHash)),
+                _v.outputHashesInEpochSiblings
+            ) == _outputsEpochRootHash,
+            "outputsEpochRootHash incorrect"
         );
 
         // The hash of the output is converted to bytes (abi.encode) and
-        // treated as data. The metadata output drive stores that data while
+        // treated as data. The metadata output memory range stores that data while
         // being indifferent to its contents. To prove that the received
-        // output is contained in the metadata output drive we need to
+        // output is contained in the metadata output memory range we need to
         // prove that x, where:
         // x = keccak(
         //          keccak(
@@ -159,16 +159,16 @@ contract OutputFacet is IOutput {
         );
 
         // prove that merkle root hash of bytes(hashOfOutput) is contained
-        // in the output metadata array drive
+        // in the output metadata array memory range
         require(
             Merkle.getRootAfterReplacementInDrive(
                 getIntraDrivePosition(_v.outputIndex, KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
-                _outputMetadataLog2Size,
+                _outputHashesLog2Size,
                 merkleRootOfHashOfOutput,
-                _v.outputMetadataProof
-            ) == _v.outputMetadataArrayDriveHash,
-            "outputMetadataArrayDriveHash incorrect"
+                _v.keccakInHashesSiblings
+            ) == _v.outputHashesRootHash,
+            "outputHashesRootHash incorrect"
         );
 
         return true;
@@ -185,7 +185,7 @@ contract OutputFacet is IOutput {
             isValidProof(
                 _encodedVoucher,
                 _epochHash,
-                _v.epochVoucherDriveHash,
+                _v.vouchersEpochRootHash,
                 EPOCH_VOUCHER_LOG2_SIZE,
                 VOUCHER_METADATA_LOG2_SIZE,
                 _v
@@ -203,7 +203,7 @@ contract OutputFacet is IOutput {
             isValidProof(
                 _encodedNotice,
                 _epochHash,
-                _v.epochNoticeDriveHash,
+                _v.noticesEpochRootHash,
                 EPOCH_NOTICE_LOG2_SIZE,
                 NOTICE_METADATA_LOG2_SIZE,
                 _v
@@ -225,10 +225,10 @@ contract OutputFacet is IOutput {
         return (((_voucher << 128) | (_input << 64)) | _epoch);
     }
 
-    /// @notice returns the position of a intra drive on a drive
+    /// @notice returns the position of a intra memory range on a memory range
     //          with  contents with the same size
-    /// @param _index index of intra drive
-    /// @param _log2Size of intra drive
+    /// @param _index index of intra memory range
+    /// @param _log2Size of intra memory range
     function getIntraDrivePosition(uint256 _index, uint256 _log2Size)
         public
         pure
@@ -248,7 +248,7 @@ contract OutputFacet is IOutput {
         return outputDS.getNumberOfFinalizedEpochs();
     }
 
-    /// @notice get log2 size of voucher metadata drive
+    /// @notice get log2 size of voucher metadata memory range
     function getVoucherMetadataLog2Size()
         public
         pure
@@ -258,12 +258,12 @@ contract OutputFacet is IOutput {
         return VOUCHER_METADATA_LOG2_SIZE;
     }
 
-    /// @notice get log2 size of epoch voucher drive
+    /// @notice get log2 size of epoch voucher memory range
     function getEpochVoucherLog2Size() public pure override returns (uint256) {
         return EPOCH_VOUCHER_LOG2_SIZE;
     }
 
-    /// @notice get log2 size of notice metadata drive
+    /// @notice get log2 size of notice metadata memory range
     function getNoticeMetadataLog2Size()
         public
         pure
@@ -273,7 +273,7 @@ contract OutputFacet is IOutput {
         return NOTICE_METADATA_LOG2_SIZE;
     }
 
-    /// @notice get log2 size of epoch notice drive
+    /// @notice get log2 size of epoch notice memory range
     function getEpochNoticeLog2Size() public pure override returns (uint256) {
         return EPOCH_NOTICE_LOG2_SIZE;
     }

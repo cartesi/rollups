@@ -37,7 +37,7 @@ contract DiamondInit {
     /// @param _templateHash state hash of the cartesi machine at t0
     /// @param _inputDuration duration of input accumulation phase in seconds
     /// @param _challengePeriod duration of challenge period in seconds
-    /// @param _inputLog2Size size of the input drive in this machine
+    /// @param _inputLog2Size size of the input memory range in this machine
     /// @param _feePerClaim fee per claim to reward the validators
     /// @param _feeManagerBank fee manager bank address
     /// @param _feeManagerOwner fee manager owner address
@@ -76,7 +76,7 @@ contract DiamondInit {
     }
 
     /// @notice initalize the Input facet
-    /// @param _inputLog2Size size of the input drive in this machine
+    /// @param _inputLog2Size size of the input memory range in this machine
     function initInput(uint256 _inputLog2Size) private {
         LibInput.DiamondStorage storage inputDS = LibInput.diamondStorage();
 

@@ -43,32 +43,32 @@
           },
           {
             "internalType": "bytes32",
-            "name": "outputMetadataArrayDriveHash",
+            "name": "outputHashesRootHash",
             "type": "bytes32"
           },
           {
             "internalType": "bytes32",
-            "name": "epochVoucherDriveHash",
+            "name": "vouchersEpochRootHash",
             "type": "bytes32"
           },
           {
             "internalType": "bytes32",
-            "name": "epochNoticeDriveHash",
+            "name": "noticesEpochRootHash",
             "type": "bytes32"
           },
           {
             "internalType": "bytes32",
-            "name": "epochMachineFinalState",
+            "name": "machineStateHash",
             "type": "bytes32"
           },
           {
             "internalType": "bytes32[]",
-            "name": "outputMetadataProof",
+            "name": "keccakInHashesSiblings",
             "type": "bytes32[]"
           },
           {
             "internalType": "bytes32[]",
-            "name": "epochOutputDriveProof",
+            "name": "outputHashesInEpochSiblings",
             "type": "bytes32[]"
           }
         ],
