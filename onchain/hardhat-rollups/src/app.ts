@@ -20,6 +20,7 @@ import {
     TASK_CLAIM,
     TASK_EXECUTE_VOUCHER,
     TASK_FINALIZE_EPOCH,
+    TASK_FUND_BANK,
     TASK_GET_STATE,
     TASK_GET_NOTICES,
 } from "./constants";
@@ -65,6 +66,7 @@ export const appTasks = (appName: string, graphqlConfig: GraphQLConfig) => {
     [
         TASK_CLAIM,
         TASK_FINALIZE_EPOCH,
+        TASK_FUND_BANK,
         TASK_GET_STATE,
         TASK_ADD_INPUT,
         TASK_GET_NOTICES,
