@@ -11,7 +11,6 @@
 // specific language governing permissions and limitations under the License.
 
 import { task } from "hardhat/config";
-import { getEvent } from "./eventUtil";
 import { FundBankArgs } from "./args";
 import { fundBankParams, rollupsParams } from "./params";
 import { connected } from "./connect";
@@ -36,35 +35,68 @@ rollupsParams(
                 const tokenAddress = await bank.getToken();
                 const token = IERC20__factory.connect(tokenAddress, signer);
 
-                let tx;
-                let events;
+                // query balance
+                const signerBalance = await token.balanceOf(signerAddress);
+                const bankBalance = await token.balanceOf(bankAddress);
+                console.log(
+                    `user balance(${signerAddress}): ${signerBalance.toString()}`
+                );
+                console.log(
+                    `bank balance(${bankAddress}): ${bankBalance.toString()}`
+                );
 
-                // Allow bank to withdraw `amount` tokens from signer
-                tx = await token.approve(bankAddress, amount);
-                events = (await tx.wait()).events ?? [];
-                const approvalEvent = getEvent("Approval", token, events);
-                if (!approvalEvent) {
+                if (amount.gt(signerBalance)) {
                     throw Error(
-                        `Could not approve ${amount} tokens for DApp(${feeManagerFacet.address})'s bank (signer: ${signerAddress}, tx: ${tx.hash})`
-                    );
-                } else {
-                    console.log(
-                        `Approved ${amount} tokens for DApp(${feeManagerFacet.address})'s bank (signer: ${signerAddress}, tx: ${tx.hash})`
+                        `not enough balance for account ${signerAddress}: ${signerBalance.toString()}`
                     );
                 }
 
-                // Transfer `amount` tokens to bank and increase DApp's balance in bank by `amount`
-                tx = await bank.depositTokens(feeManagerFacet.address, amount);
-                events = (await tx.wait()).events ?? [];
-                const depositEvent = getEvent(
-                    "Deposit",
-                    feeManagerFacet,
-                    events
+                // query current allowance
+                const currentAllowance = await token.allowance(
+                    signerAddress,
+                    bankAddress
+                );
+                console.log(
+                    `allowance(${signerAddress},${bankAddress}): ${currentAllowance.toString()}`
                 );
 
-                if (!depositEvent) {
+                if (amount.gt(currentAllowance)) {
+                    // Allow bank to withdraw `amount` tokens from signer
+                    const tx = await token.approve(bankAddress, amount);
+                    const receipt = await tx.wait(1);
+                    const event = (
+                        await token.queryFilter(
+                            token.filters.Approval(),
+                            receipt.blockHash
+                        )
+                    ).pop();
+                    if (!event) {
+                        throw Error(
+                            `could not approve ${amount} tokens for DApp(${feeManagerFacet.address})'s bank (signer: ${signerAddress}, tx: ${tx.hash})`
+                        );
+                    } else {
+                        console.log(
+                            `approved ${amount} tokens for DApp(${feeManagerFacet.address})'s bank (signer: ${signerAddress}, tx: ${tx.hash})`
+                        );
+                    }
+                }
+
+                // Transfer `amount` tokens to bank and increase DApp's balance in bank by `amount`
+                const tx = await bank.depositTokens(
+                    feeManagerFacet.address,
+                    amount
+                );
+                const receipt = await tx.wait(1);
+                const event = (
+                    await bank.queryFilter(
+                        bank.filters.Deposit(),
+                        receipt.blockHash
+                    )
+                ).pop();
+
+                if (!event) {
                     throw Error(
-                        `Failed to fund DApp(${feeManagerFacet.address})'s bank with ${amount} tokens (signer: ${signerAddress}, tx: ${tx.hash})`
+                        `failed to fund DApp(${feeManagerFacet.address})'s bank with ${amount} tokens (signer: ${signerAddress}, tx: ${tx.hash})`
                     );
                 } else {
                     console.log(

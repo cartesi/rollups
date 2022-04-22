@@ -11,7 +11,6 @@
 // specific language governing permissions and limitations under the License.
 
 import { task } from "hardhat/config";
-import { getEvent } from "./eventUtil";
 import { connected } from "./connect";
 import { AddInputArgs } from "./args";
 import { addInputParams, rollupsParams } from "./params";
@@ -32,22 +31,19 @@ rollupsParams(
                 }
                 const signer = await inputFacet.signer.getAddress();
                 const tx = await inputFacet.addInput(inputBytes);
-                const events = (await tx.wait()).events ?? [];
-                const inputAddedEvent = getEvent(
-                    "InputAdded",
-                    inputFacet,
-                    events
-                );
-                if (!inputAddedEvent) {
+                const event = (
+                    await inputFacet.queryFilter(
+                        inputFacet.filters.InputAdded()
+                    )
+                ).pop();
+                if (!event) {
                     console.log(
                         `Failed to add input '${args.input}' (signer: ${signer}, tx: ${tx.hash})`
                     );
                 } else {
-                    const epochNumber =
-                        inputAddedEvent.args.epochNumber.toString();
-                    const inputIndex =
-                        inputAddedEvent.args.inputIndex.toString();
-                    const timestamp = inputAddedEvent.args.timestamp.toString();
+                    const epochNumber = event.args.epochNumber.toString();
+                    const inputIndex = event.args.inputIndex.toString();
+                    const timestamp = event.args.timestamp.toString();
                     console.log(
                         `Added input '${args.input}' to epoch '${epochNumber}' (index: '${inputIndex}', timestamp: ${timestamp}, signer: ${signer}, tx: ${tx.hash})`
                     );

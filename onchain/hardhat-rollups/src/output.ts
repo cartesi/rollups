@@ -11,7 +11,6 @@
 // specific language governing permissions and limitations under the License.
 
 import { task } from "hardhat/config";
-import { getEvent } from "./eventUtil";
 import { ExecuteVoucherArgs } from "./args";
 import { executeVoucherParams, rollupsParams } from "./params";
 import { connected } from "./connect";
@@ -32,22 +31,22 @@ rollupsParams(
                     args.payload,
                     proof
                 )!;
-                const events = (await tx.wait()).events!;
-                const voucherExecutedEvent = getEvent(
-                    "VoucherExecuted",
-                    outputFacet,
-                    events
-                );
+                const receipt = await tx.wait(1);
+                const event = (
+                    await outputFacet.queryFilter(
+                        outputFacet.filters.VoucherExecuted(),
+                        receipt.blockHash
+                    )
+                ).pop();
 
-                if (!voucherExecutedEvent) {
+                if (!event) {
                     console.log(
                         `Failed to execute payload '${args.payload}' at destination '${args.destination}' with proof '${proof}' (signer: ${signer}, tx: ${tx.hash})`
                     );
                 } else {
-                    const voucherPosition =
-                        voucherExecutedEvent.args.voucherPosition.toString();
+                    const position = event.args.voucherPosition.toString();
                     console.log(
-                        `Executed voucher at position '${voucherPosition}' (signer: ${signer}, tx: ${tx.hash})`
+                        `Executed voucher at position '${position}' (signer: ${signer}, tx: ${tx.hash})`
                     );
                 }
             })
