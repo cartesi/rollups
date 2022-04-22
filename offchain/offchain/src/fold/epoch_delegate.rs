@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::rollups_facet::*;
+use contracts::rollups_facet::*;
 
 use super::types::{AccumulatingEpoch, EpochWithClaims, FinalizedEpochs};
 

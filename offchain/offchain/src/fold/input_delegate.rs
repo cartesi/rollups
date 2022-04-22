@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::input_facet::*;
+use contracts::input_facet::*;
 
 use super::types::{EpochInputState, Input};
 

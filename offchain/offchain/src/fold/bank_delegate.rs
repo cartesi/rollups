@@ -1,4 +1,4 @@
-use crate::contracts::bank_contract::*;
+use contracts::bank_contract::*;
 
 use super::types::BankState;
 

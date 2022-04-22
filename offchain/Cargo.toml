@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "contracts",
   "delegate_server",
   "offchain",
   "data",

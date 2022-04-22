@@ -1,4 +1,4 @@
-use crate::contracts::erc20_contract::*;
+use contracts::erc20_contract::*;
 
 use super::types::ERC20BalanceState;
 

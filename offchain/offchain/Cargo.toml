@@ -11,6 +11,7 @@ name = "offchain_main"
 path = "src/main.rs"
 
 [dependencies]
+contracts = { path = "../contracts" }
 block-subscriber = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
 middleware-factory = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
 offchain-core = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }

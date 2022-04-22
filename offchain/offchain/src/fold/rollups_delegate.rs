@@ -1,6 +1,6 @@
 use offchain_core::ethers;
 
-use crate::contracts::diamond_init::*;
+use contracts::diamond_init::*;
 
 use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
 use super::output_delegate::OutputFoldDelegate;

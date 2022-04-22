@@ -5,12 +5,12 @@ use super::instantiate_tx_manager::{instantiate_tx_manager, RollupsTxManager};
 
 use super::config::LogicConfig;
 use crate::config::ApplicationConfig;
-use crate::contracts::fee_manager_facet::FeeManagerFacet;
-use crate::contracts::rollups_facet::RollupsFacet;
 use crate::error::*;
 use crate::fold::types::*;
 use crate::machine::{rollup_server, EpochStatus, MachineInterface};
 use crate::rollups_state_fold::RollupsStateFold;
+use contracts::fee_manager_facet::FeeManagerFacet;
+use contracts::rollups_facet::RollupsFacet;
 
 use block_subscriber::NewBlockSubscriber;
 use tx_manager::types::ResubmitStrategy;

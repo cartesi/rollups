@@ -1,5 +1,5 @@
-use crate::contracts::rollups_facet::*;
-use crate::contracts::validator_manager_facet::*;
+use contracts::rollups_facet::*;
+use contracts::validator_manager_facet::*;
 
 use super::types::{NumClaims, ValidatorManagerState, MAX_NUM_VALIDATORS};
 

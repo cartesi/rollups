@@ -1,4 +1,4 @@
-use crate::contracts::output_facet::*;
+use contracts::output_facet::*;
 
 use super::types::OutputState;
 

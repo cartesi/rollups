@@ -1,8 +1,8 @@
-use crate::contracts::bank_contract::*;
-use crate::contracts::diamond_init::*;
-use crate::contracts::fee_manager_facet::*;
-use crate::contracts::rollups_facet::*;
-use crate::contracts::validator_manager_facet::*;
+use contracts::bank_contract::*;
+use contracts::diamond_init::*;
+use contracts::fee_manager_facet::*;
+use contracts::rollups_facet::*;
+use contracts::validator_manager_facet::*;
 
 use super::types::{
     FeeManagerState, NumClaims, NumRedeemed, MAX_NUM_VALIDATORS,
