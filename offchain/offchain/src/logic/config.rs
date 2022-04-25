@@ -69,7 +69,7 @@ pub struct LogicEnvCLIConfig {
     pub num_buffer_epochs: Option<usize>,
     /// Number of claims before validator redeems fee.
     #[structopt(long, env)]
-    pub num_claims_triger_redeem: Option<usize>,
+    pub num_claims_trigger_redeem: Option<usize>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -90,7 +90,7 @@ pub struct LogicFileConfig {
     pub session_id: Option<String>,
     pub minimum_required_fee: Option<String>,
     pub num_buffer_epochs: Option<usize>,
-    pub num_claims_triger_redeem: Option<usize>,
+    pub num_claims_trigger_redeem: Option<usize>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -119,7 +119,7 @@ pub struct LogicConfig {
 
     pub minimum_required_fee: U256,
     pub num_buffer_epochs: usize,
-    pub num_claims_triger_redeem: usize,
+    pub num_claims_trigger_redeem: usize,
 }
 
 // default values
@@ -264,9 +264,9 @@ impl LogicConfig {
             .or(file_config.num_buffer_epochs)
             .unwrap_or(DEFAULT_NUM_BUFFER_EPOCHS);
 
-        let num_claims_triger_redeem: usize = env_cli_config
-            .num_claims_triger_redeem
-            .or(file_config.num_claims_triger_redeem)
+        let num_claims_trigger_redeem: usize = env_cli_config
+            .num_claims_trigger_redeem
+            .or(file_config.num_claims_trigger_redeem)
             .unwrap_or(DEFAULT_NUM_CLAIMS_TRIGGER_REDEEM);
 
         Ok(LogicConfig {
@@ -289,7 +289,7 @@ impl LogicConfig {
 
             minimum_required_fee,
             num_buffer_epochs,
-            num_claims_triger_redeem,
+            num_claims_trigger_redeem,
         })
     }
 }

@@ -119,7 +119,9 @@ pub async fn main_loop(config: &ApplicationConfig) -> Result<()> {
     let fee_incentive_strategy = FeeIncentiveStrategy {
         minimum_required_fee: config.logic_config.minimum_required_fee,
         num_buffer_epochs: config.logic_config.num_buffer_epochs,
-        num_claims_triger_redeem: config.logic_config.num_claims_triger_redeem,
+        num_claims_trigger_redeem: config
+            .logic_config
+            .num_claims_trigger_redeem,
     };
 
     info!("Entering main loop...");

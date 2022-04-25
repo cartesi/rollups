@@ -356,7 +356,7 @@ pub struct FeeManagerState {
 
 pub struct FeeIncentiveStrategy {
     pub num_buffer_epochs: usize,
-    pub num_claims_triger_redeem: usize,
+    pub num_claims_trigger_redeem: usize,
     pub minimum_required_fee: U256,
 }
 
@@ -366,7 +366,7 @@ impl Default for FeeIncentiveStrategy {
             // ideally fee manager should have enough uncommitted balance for at least 4 epochs
             num_buffer_epochs: 4,
             // when the number of redeemable claims reaches this value, call `redeem`
-            num_claims_triger_redeem: 4,
+            num_claims_trigger_redeem: 4,
             // zero means an altruistic validator
             minimum_required_fee: U256::zero(),
         }
@@ -380,8 +380,8 @@ impl FeeManagerState {
         validator_address: Address,
         strategy: &FeeIncentiveStrategy,
     ) -> bool {
-        let num_claims_triger_redeem =
-            U256::from(strategy.num_claims_triger_redeem);
+        let num_claims_trigger_redeem =
+            U256::from(strategy.num_claims_trigger_redeem);
 
         let validator_claims =
             validator_manager_state.num_claims_for_validator(validator_address);
@@ -393,7 +393,7 @@ impl FeeManagerState {
         );
         let num_redeemable_claims = validator_claims - validator_redeemed;
 
-        num_redeemable_claims >= num_claims_triger_redeem
+        num_redeemable_claims >= num_claims_trigger_redeem
     }
 
     pub fn num_redeemed_for_validator(
