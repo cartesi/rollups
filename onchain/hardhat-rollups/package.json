@@ -19,18 +19,18 @@
         "@nomiclabs/hardhat-ethers": "^2.0.5",
         "@urql/core": "^2.4.3",
         "cross-fetch": "^3.1.5",
-        "hardhat": "^2.8.4",
-        "hardhat-deploy": "^0.10.5",
-        "graphql": "^16.3.0",
+        "graphql": "^16.4.0",
+        "hardhat": "^2.9.3",
+        "hardhat-deploy": "^0.11.4",
         "npm-run-all": "^4.1.5",
         "rimraf": "^3.0.2",
-        "typescript": "^4.5.5"
+        "typescript": "^4.6.3"
     },
     "peerDependencies": {
         "@cartesi/rollups": "^0.2.0",
         "@nomiclabs/hardhat-ethers": "^2.0.0",
-        "hardhat": "^2.8.0",
-        "hardhat-deploy": "^0.10.0"
+        "hardhat": "^2.9.0",
+        "hardhat-deploy": "^0.11.0"
     },
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
