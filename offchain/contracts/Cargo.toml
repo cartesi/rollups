@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ethers = "0.5.4"
+state-fold-types = { features = ["ethers"], version = "0.2", registry = "cartesi" }
 serde_json = "1"
 
 [build-dependencies]
-ethers = "0.5.4"
+state-fold-types = { features = ["ethers"], version = "0.2", registry = "cartesi" }
 serde_json = "1"

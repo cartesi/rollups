@@ -1,27 +1,23 @@
-use offchain_core::ethers;
-
-use contracts::rollups_facet::*;
-
-use super::input_delegate::InputFoldDelegate;
-use super::types::{
-    AccumulatingEpoch, Claims, EpochInputState, EpochWithClaims,
+use crate::{
+    accumulating_epoch::AccumulatingEpoch, input::EpochInputState,
+    FoldableError,
 };
-
-use offchain_core::types::Block;
-use state_fold::{
-    delegate_access::{FoldAccess, SyncAccess},
-    error::*,
-    types::*,
-    utils as fold_utils, DelegateAccess, StateFold,
-};
-
+use anyhow::{Context, Error};
 use async_trait::async_trait;
-use snafu::ResultExt;
+use contracts::rollups_facet::*;
+use ethers::{
+    prelude::EthEvent,
+    providers::Middleware,
+    types::{Address, H256, U256},
+};
+use im::{HashMap, HashSet};
+use serde::{Deserialize, Serialize};
+use state_fold::{
+    utils as fold_utils, FoldMiddleware, Foldable, StateFoldEnvironment,
+    SyncMiddleware,
+};
+use state_fold_types::{ethers, Block};
 use std::sync::Arc;
-
-use ethers::prelude::EthEvent;
-use ethers::providers::Middleware;
-use ethers::types::{Address, H256, U256};
 
 #[derive(Clone, Debug)]
 pub enum SealedEpochState {
@@ -72,44 +68,120 @@ impl SealedEpochState {
         }
     }
 }
-/// Sealed epoch StateFold Delegate
-pub struct SealedEpochFoldDelegate<DA: DelegateAccess> {
-    input_fold: Arc<StateFold<InputFoldDelegate, DA>>,
+
+/// Sealed epoch with one or more claims
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct EpochWithClaims {
+    pub epoch_number: U256,
+    pub claims: Claims,
+    pub inputs: EpochInputState,
+    pub dapp_contract_address: Address,
 }
 
-impl<DA: DelegateAccess> SealedEpochFoldDelegate<DA> {
-    pub fn new(input_fold: Arc<StateFold<InputFoldDelegate, DA>>) -> Self {
-        Self { input_fold }
+/// Set of claims
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Claims {
+    claims: HashMap<H256, HashSet<Address>>,
+    first_claim_timestamp: U256,
+}
+
+impl Claims {
+    pub fn new(claim: H256, sender: Address, timestamp: U256) -> Self {
+        let claims = HashMap::unit(claim, HashSet::unit(sender));
+        Self {
+            claims,
+            first_claim_timestamp: timestamp,
+        }
+    }
+
+    pub fn first_claim_timestamp(&self) -> U256 {
+        self.first_claim_timestamp
+    }
+
+    pub fn claims(self) -> HashMap<H256, HashSet<Address>> {
+        self.claims.clone()
+    }
+
+    pub fn claims_ref(&self) -> &HashMap<H256, HashSet<Address>> {
+        &self.claims
+    }
+
+    pub fn update_with_new_claim(&self, claim: H256, sender: Address) -> Self {
+        let sender_set =
+            self.claims.clone().entry(claim).or_default().update(sender);
+        let claims = self.claims.update(claim, sender_set);
+        Self {
+            claims,
+            first_claim_timestamp: self.first_claim_timestamp,
+        }
+    }
+
+    pub fn insert_claim(&mut self, claim: H256, sender: Address) {
+        self.claims.entry(claim).or_default().insert(sender);
+    }
+
+    pub fn get_sender_claim(&self, sender: &Address) -> Option<H256> {
+        for (k, v) in self.claims.iter() {
+            if v.contains(sender) {
+                return Some(*k);
+            }
+        }
+        None
+    }
+
+    pub fn get_senders_with_claim(&self, claim: &H256) -> HashSet<Address> {
+        self.claims.get(claim).cloned().unwrap_or_default()
+    }
+
+    pub fn iter(&self) -> im::hashmap::Iter<H256, HashSet<Address>> {
+        self.claims.iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Claims {
+    type Item = (&'a H256, &'a HashSet<Address>);
+    type IntoIter = im::hashmap::Iter<'a, H256, HashSet<Address>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.claims.iter()
+    }
+}
+
+impl IntoIterator for Claims {
+    type Item = (H256, HashSet<Address>);
+    type IntoIter = im::hashmap::ConsumingIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.claims.into_iter()
     }
 }
 
 #[async_trait]
-impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
-    for SealedEpochFoldDelegate<DA>
-{
+impl Foldable for SealedEpochState {
     type InitialState = (Address, U256);
-    type Accumulator = SealedEpochState;
-    type State = BlockState<Self::Accumulator>;
+    type Error = FoldableError;
+    type UserData = ();
 
-    async fn sync<A: SyncAccess + Send + Sync>(
-        &self,
+    async fn sync<M: Middleware + 'static>(
         initial_state: &Self::InitialState,
         block: &Block,
-        access: &A,
-    ) -> SyncResult<Self::Accumulator, A> {
+        env: &StateFoldEnvironment<M, Self::UserData>,
+        access: Arc<SyncMiddleware<M>>,
+    ) -> Result<Self, Self::Error> {
         let (dapp_contract_address, epoch_number) = initial_state.clone();
 
-        let middleware = access
-            .build_sync_contract(Address::zero(), block.number, |_, m| m)
-            .await;
-
+        let middleware = access.get_inner();
         let contract =
             RollupsFacet::new(dapp_contract_address, Arc::clone(&middleware));
 
         // Inputs of epoch
-        let inputs = self
-            .get_inputs_sync(dapp_contract_address, epoch_number, block.hash)
-            .await?;
+        let inputs = EpochInputState::get_state_for_block(
+            &(dapp_contract_address, epoch_number),
+            block,
+            env,
+        )
+        .await?
+        .state;
 
         // Get all claim events of epoch
         let claim_events = contract
@@ -117,9 +189,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .topic1(epoch_number.clone())
             .query_with_meta()
             .await
-            .context(SyncContractError {
-                err: "Error querying for rollups claims",
-            })?;
+            .context("Error querying for rollups claims")?;
 
         // If there are no claim, state is SealedEpochNoClaims
         if claim_events.is_empty() {
@@ -140,11 +210,8 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                     let timestamp = middleware
                         .get_block(meta.block_hash)
                         .await
-                        .context(SyncAccessError {})?
-                        .ok_or(snafu::NoneError)
-                        .context(SyncDelegateError {
-                            err: "Block not found",
-                        })?
+                        .map_err(|e| FoldableError::from(Error::from(e)))?
+                        .context("Block not found")?
                         .timestamp;
 
                     Claims::new(
@@ -174,12 +241,12 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         })
     }
 
-    async fn fold<A: FoldAccess + Send + Sync>(
-        &self,
-        previous_state: &Self::Accumulator,
+    async fn fold<M: Middleware + 'static>(
+        previous_state: &Self,
         block: &Block,
-        access: &A,
-    ) -> FoldResult<Self::Accumulator, A> {
+        env: &StateFoldEnvironment<M, Self::UserData>,
+        _access: Arc<FoldMiddleware<M>>,
+    ) -> Result<Self, Self::Error> {
         // Check if there was (possibly) some log emited on this block.
         // As finalized epochs' inputs will not change, we can return early
         // without querying the input StateFold.
@@ -198,14 +265,9 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             return Ok(previous_state.clone());
         }
 
+        let middleware = env.inner_middleware();
         let epoch_number = previous_state.epoch_number().clone();
-        let contract = access
-            .build_fold_contract(
-                dapp_contract_address,
-                block.hash,
-                RollupsFacet::new,
-            )
-            .await;
+        let contract = RollupsFacet::new(dapp_contract_address, middleware);
 
         // Get claim events of epoch at this block hash
         let claim_events = contract
@@ -213,9 +275,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .topic1(epoch_number.clone())
             .query_with_meta()
             .await
-            .context(FoldContractError {
-                err: "Error querying for rollups claims",
-            })?;
+            .context("Error querying for rollups claims")?;
 
         // if there are no new claims, return epoch's old claims (might be empty)
         if claim_events.is_empty() {
@@ -223,6 +283,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         }
 
         let mut claims: Option<Claims> = previous_state.claims();
+
         for (claim_event, _) in claim_events {
             claims = Some(match claims {
                 None => {
@@ -246,6 +307,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 }
             });
         }
+
         // don't need to re-update inputs because epoch is sealed
         Ok(SealedEpochState::SealedEpochWithClaims {
             claimed_epoch: EpochWithClaims {
@@ -255,36 +317,5 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 dapp_contract_address,
             },
         })
-    }
-
-    fn convert(
-        &self,
-        accumulator: &BlockState<Self::Accumulator>,
-    ) -> Self::State {
-        accumulator.clone()
-    }
-}
-
-impl<DA: DelegateAccess + Send + Sync + 'static> SealedEpochFoldDelegate<DA> {
-    async fn get_inputs_sync<A: SyncAccess + Send + Sync + 'static>(
-        &self,
-        dapp_contract_address: Address,
-        epoch: U256,
-        block_hash: H256,
-    ) -> SyncResult<EpochInputState, A> {
-        Ok(self
-            .input_fold
-            .get_state_for_block(
-                &(dapp_contract_address, epoch),
-                Some(block_hash),
-            )
-            .await
-            .map_err(|e| {
-                SyncDelegateError {
-                    err: format!("Input state fold error: {:?}", e),
-                }
-                .build()
-            })?
-            .state)
     }
 }

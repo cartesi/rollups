@@ -13,9 +13,8 @@ path = "src/main.rs"
 rollups-data = { path = "../data" }
 offchain-core = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
 configuration = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
-state-fold = { git = "https://github.com/cartesi/state-fold",  tag = "v0.1.0" }
+state-fold = { version = "0.2", registry = "cartesi" }
 offchain = { path = "../offchain" }
-state-server-grpc = { git = "https://github.com/cartesi/state-fold", tag = "v0.1.0" }
 
 structopt = "0.3"
 snafu = "0.6"

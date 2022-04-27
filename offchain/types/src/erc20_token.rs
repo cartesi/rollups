@@ -1,42 +1,43 @@
-use contracts::erc20_contract::*;
-
-use super::types::ERC20BalanceState;
-
-use offchain_core::types::Block;
-use state_fold::{
-    delegate_access::{FoldAccess, SyncAccess},
-    error::*,
-    types::*,
-    utils as fold_utils,
-};
-
+use crate::FoldableError;
+use anyhow::Context;
 use async_trait::async_trait;
-use snafu::ResultExt;
+use contracts::erc20_contract::*;
+use ethers::{
+    prelude::EthEvent,
+    providers::Middleware,
+    types::{Address, U256},
+};
+use serde::{Deserialize, Serialize};
+use state_fold::{
+    utils as fold_utils, FoldMiddleware, Foldable, StateFoldEnvironment,
+    SyncMiddleware,
+};
+use state_fold_types::{ethers, Block};
+use std::sync::Arc;
 
-use ethers::prelude::EthEvent;
-use ethers::types::{Address, U256};
-
-/// erc20 token delegate
-#[derive(Default)]
-pub struct ERC20BalanceFoldDelegate {}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ERC20BalanceState {
+    pub erc20_address: Address,
+    pub owner_address: Address,
+    pub balance: U256,
+}
 
 #[async_trait]
-impl StateFoldDelegate for ERC20BalanceFoldDelegate {
+impl Foldable for ERC20BalanceState {
     type InitialState = (Address, Address); // erc20 contract address, owner address
-    type Accumulator = ERC20BalanceState;
-    type State = BlockState<Self::Accumulator>;
+    type Error = FoldableError;
+    type UserData = ();
 
-    async fn sync<A: SyncAccess + Send + Sync>(
-        &self,
+    async fn sync<M: Middleware + 'static>(
         initial_state: &Self::InitialState,
-        block: &Block,
-        access: &A,
-    ) -> SyncResult<Self::Accumulator, A> {
+        _block: &Block,
+        _env: &StateFoldEnvironment<M, Self::UserData>,
+        access: Arc<SyncMiddleware<M>>,
+    ) -> Result<Self, Self::Error> {
         let (erc20_address, owner_address) = *initial_state;
 
-        let erc20_contract = access
-            .build_sync_contract(erc20_address, block.number, ERC20::new)
-            .await;
+        let middleware = access.get_inner();
+        let erc20_contract = ERC20::new(erc20_address, middleware);
 
         // `Transfer` events
         // topic1: from
@@ -45,18 +46,14 @@ impl StateFoldDelegate for ERC20BalanceFoldDelegate {
             .topic1(owner_address)
             .query()
             .await
-            .context(SyncContractError {
-                err: "Error querying for erc20 transfer events from owner",
-            })?;
+            .context("Error querying for erc20 transfer events from owner")?;
         // topic2: to
         let erc20_transfer_to_events = erc20_contract
             .transfer_filter()
             .topic2(owner_address)
             .query()
             .await
-            .context(SyncContractError {
-                err: "Error querying for erc20 transfer events to owner",
-            })?;
+            .context("Error querying for erc20 transfer events to owner")?;
         // combine both types of events to calculate balance
         let balance = new_balance(
             U256::zero(),
@@ -71,12 +68,12 @@ impl StateFoldDelegate for ERC20BalanceFoldDelegate {
         })
     }
 
-    async fn fold<A: FoldAccess + Send + Sync>(
-        &self,
-        previous_state: &Self::Accumulator,
+    async fn fold<M: Middleware + 'static>(
+        previous_state: &Self,
         block: &Block,
-        access: &A,
-    ) -> FoldResult<Self::Accumulator, A> {
+        env: &StateFoldEnvironment<M, Self::UserData>,
+        _access: Arc<FoldMiddleware<M>>,
+    ) -> Result<Self, Self::Error> {
         let erc20_address = previous_state.erc20_address;
 
         // If not in bloom copy previous state
@@ -89,9 +86,8 @@ impl StateFoldDelegate for ERC20BalanceFoldDelegate {
             return Ok(previous_state.clone());
         }
 
-        let erc20_contract = access
-            .build_fold_contract(erc20_address, block.hash, ERC20::new)
-            .await;
+        let middleware = env.inner_middleware();
+        let erc20_contract = ERC20::new(erc20_address, middleware);
 
         let mut state = previous_state.clone();
 
@@ -102,18 +98,14 @@ impl StateFoldDelegate for ERC20BalanceFoldDelegate {
             .topic1(state.owner_address)
             .query()
             .await
-            .context(FoldContractError {
-                err: "Error querying for erc20 transfer events from owner",
-            })?;
+            .context("Error querying for erc20 transfer events from owner")?;
         // topic2: to
         let erc20_transfer_to_events = erc20_contract
             .transfer_filter()
             .topic2(state.owner_address)
             .query()
             .await
-            .context(FoldContractError {
-                err: "Error querying for erc20 transfer events to owner",
-            })?;
+            .context("Error querying for erc20 transfer events to owner")?;
 
         // combine both types of events to calculate balance
         state.balance = new_balance(
@@ -123,13 +115,6 @@ impl StateFoldDelegate for ERC20BalanceFoldDelegate {
         );
 
         Ok(state)
-    }
-
-    fn convert(
-        &self,
-        accumulator: &BlockState<Self::Accumulator>,
-    ) -> Self::State {
-        accumulator.clone()
     }
 }
 

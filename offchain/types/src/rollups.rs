@@ -1,81 +1,107 @@
-use offchain_core::ethers;
-
-use contracts::diamond_init::*;
-
-use super::epoch_delegate::{ContractPhase, EpochFoldDelegate, EpochState};
-use super::output_delegate::OutputFoldDelegate;
-use super::sealed_epoch_delegate::SealedEpochState;
-use super::types::{
-    AccumulatingEpoch, ImmutableState, OutputState, PhaseState, RollupsState,
+use crate::{
+    accumulating_epoch::AccumulatingEpoch,
+    epoch::{ContractPhase, EpochState},
+    fee_manager::FeeManagerState,
+    finalized_epoch::FinalizedEpochs,
+    output::OutputState,
+    sealed_epoch::{EpochWithClaims, SealedEpochState},
+    validator_manager::ValidatorManagerState,
+    FoldableError,
 };
-
-use offchain_core::types::Block;
-use state_fold::{
-    delegate_access::{FoldAccess, SyncAccess},
-    error::*,
-    types::*,
-    DelegateAccess, StateFold,
-};
-
+use anyhow::{anyhow, Context, Error};
 use async_trait::async_trait;
-use snafu::ResultExt;
+use contracts::diamond_init::*;
+use ethers::{
+    providers::Middleware,
+    types::{Address, U256},
+};
+use serde::{Deserialize, Serialize};
+use state_fold::{
+    FoldMiddleware, Foldable, StateFoldEnvironment, SyncMiddleware,
+};
+use state_fold_types::{ethers, Block};
 use std::sync::Arc;
 
-use crate::fold::fee_manager_delegate::FeeManagerFoldDelegate;
-use crate::fold::types::FeeManagerState;
-use crate::fold::types::ValidatorManagerState;
-use crate::fold::validator_manager_delegate::ValidatorManagerFoldDelegate;
-use ethers::providers::Middleware;
-use ethers::types::{Address, U256};
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum PhaseState {
+    /// No claims or disputes going on, the previous epoch was finalized
+    /// successfully and the current epoch is still accumulating inputs
+    InputAccumulation {},
 
-/// Rollups StateActor Delegate, which implements `sync` and `fold`.
-pub struct RollupsFoldDelegate<DA: DelegateAccess + Send + Sync + 'static> {
-    epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
-    output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
-    validator_manager_fold: Arc<StateFold<ValidatorManagerFoldDelegate, DA>>,
-    fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate<DA>, DA>>,
+    /// `current_epoch` is no longer accepting inputs but hasn't yet received
+    /// a claim
+    EpochSealedAwaitingFirstClaim { sealed_epoch: AccumulatingEpoch },
+
+    /// Epoch has been claimed but a dispute has yet to arise
+    AwaitingConsensusNoConflict { claimed_epoch: EpochWithClaims },
+
+    /// Epoch being claimed was previously challenged and there is a standing
+    /// claim that can be challenged
+    AwaitingConsensusAfterConflict {
+        claimed_epoch: EpochWithClaims,
+        challenge_period_base_ts: U256,
+    },
+    /// Consensus was not reached but the last 'challenge_period' is over. Epoch
+    /// can be finalized at any time by anyone
+    ConsensusTimeout { claimed_epoch: EpochWithClaims },
+
+    /// Unreacheable
+    AwaitingDispute { claimed_epoch: EpochWithClaims },
+    // TODO: add dispute timeout when disputes are turned on.
 }
 
-impl<DA: DelegateAccess + Send + Sync + 'static> RollupsFoldDelegate<DA> {
-    pub fn new(
-        epoch_fold: Arc<StateFold<EpochFoldDelegate<DA>, DA>>,
-        output_fold: Arc<StateFold<OutputFoldDelegate, DA>>,
-        validator_manager_fold: Arc<
-            StateFold<ValidatorManagerFoldDelegate, DA>,
-        >,
-        fee_manager_fold: Arc<StateFold<FeeManagerFoldDelegate<DA>, DA>>,
-    ) -> Self {
-        Self {
-            epoch_fold,
-            output_fold,
-            validator_manager_fold,
-            fee_manager_fold,
-        }
+impl Default for PhaseState {
+    fn default() -> Self {
+        Self::InputAccumulation {}
     }
 }
 
-#[async_trait]
-impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
-    for RollupsFoldDelegate<DA>
-{
-    type InitialState = (Address, U256);
-    type Accumulator = RollupsState;
-    type State = BlockState<Self::Accumulator>;
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ImmutableState {
+    /// duration of input accumulation phase in seconds
+    pub input_duration: U256,
 
-    async fn sync<A: SyncAccess + Send + Sync>(
-        &self,
+    /// duration of challenge period in seconds
+    pub challenge_period: U256,
+
+    /// timestamp of the contract creation
+    pub contract_creation_timestamp: U256,
+
+    /// decentralized application contract address
+    pub dapp_contract_address: Address,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct RollupsState {
+    pub constants: ImmutableState,
+
+    pub initial_epoch: U256,
+    pub finalized_epochs: FinalizedEpochs,
+    pub current_epoch: AccumulatingEpoch,
+
+    pub current_phase: PhaseState,
+
+    pub output_state: OutputState,
+    pub validator_manager_state: ValidatorManagerState,
+    pub fee_manager_state: FeeManagerState,
+}
+
+#[async_trait]
+impl Foldable for RollupsState {
+    type InitialState = (Address, U256);
+    type Error = FoldableError;
+    type UserData = ();
+
+    async fn sync<M: Middleware + 'static>(
         initial_state: &Self::InitialState,
         block: &Block,
-        access: &A,
-    ) -> SyncResult<Self::Accumulator, A> {
-        let middleware = access
-            .build_sync_contract(Address::zero(), block.number, |_, m| m)
-            .await;
-
+        env: &StateFoldEnvironment<M, Self::UserData>,
+        access: Arc<SyncMiddleware<M>>,
+    ) -> Result<Self, Self::Error> {
         let (dapp_contract_address, epoch_number) = *initial_state;
 
-        let diamond_init =
-            DiamondInit::new(dapp_contract_address, Arc::clone(&middleware));
+        let middleware = access.get_inner();
+        let diamond_init = DiamondInit::new(dapp_contract_address, middleware);
 
         // Retrieve constants from contract creation event
         let constants = {
@@ -84,15 +110,12 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                     .rollups_initialized_filter()
                     .query_with_meta()
                     .await
-                    .context(SyncContractError {
-                        err: "Error querying for rollups initialized",
-                    })?;
+                    .context("Error querying for rollups initialized")?;
 
                 if e.is_empty() {
-                    return SyncDelegateError {
-                        err: "Rollups initialization event not found",
-                    }
-                    .fail();
+                    return Err(FoldableError::from(anyhow!(
+                        "Rollups initialization event not found"
+                    )));
                 }
 
                 assert_eq!(e.len(), 1);
@@ -100,14 +123,11 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             };
 
             // retrieve timestamp of creation
-            let timestamp = middleware
+            let timestamp = access
                 .get_block(meta.block_hash)
                 .await
-                .context(SyncAccessError {})?
-                .ok_or(snafu::NoneError)
-                .context(SyncDelegateError {
-                    err: "Block not found",
-                })?
+                .map_err(|e| FoldableError::from(Error::from(e)))?
+                .context("Block not found")?
                 .timestamp;
 
             ImmutableState::from(&(
@@ -117,63 +137,38 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             ))
         };
 
-        // get raw state from EpochFoldDelegate
-        let raw_contract_state = self
-            .epoch_fold
-            .get_state_for_block(
-                &(dapp_contract_address, epoch_number),
-                Some(block.hash),
+        let raw_contract_state = EpochState::get_state_for_block(
+            &(dapp_contract_address, epoch_number),
+            block,
+            env,
+        )
+        .await?
+        .state;
+
+        let output_state = OutputState::get_state_for_block(
+            &constants.dapp_contract_address,
+            block,
+            env,
+        )
+        .await?
+        .state;
+
+        let validator_manager_state =
+            ValidatorManagerState::get_state_for_block(
+                &dapp_contract_address,
+                block,
+                env,
             )
-            .await
-            .map_err(|e| {
-                SyncDelegateError {
-                    err: format!("Epoch state fold error: {:?}", e),
-                }
-                .build()
-            })?
+            .await?
             .state;
 
-        let output_state = self
-            .output_fold
-            .get_state_for_block(
-                &constants.dapp_contract_address,
-                Some(block.hash),
-            )
-            .await
-            .map_err(|e| {
-                SyncDelegateError {
-                    err: format!("Output state fold error: {:?}", e),
-                }
-                .build()
-            })?
-            .state;
-
-        let validator_manager_state = self
-            .validator_manager_fold
-            .get_state_for_block(&dapp_contract_address, Some(block.hash))
-            .await
-            .map_err(|e| {
-                SyncDelegateError {
-                    err: format!("Validator Manager state fold error: {:?}", e),
-                }
-                .build()
-            })?
-            .state;
-
-        let fee_manager_state = self
-            .fee_manager_fold
-            .get_state_for_block(
-                &constants.dapp_contract_address,
-                Some(block.hash),
-            )
-            .await
-            .map_err(|e| {
-                SyncDelegateError {
-                    err: format!("Fee Manager state fold error: {:?}", e),
-                }
-                .build()
-            })?
-            .state;
+        let fee_manager_state = FeeManagerState::get_state_for_block(
+            &constants.dapp_contract_address,
+            block,
+            env,
+        )
+        .await?
+        .state;
 
         Ok(convert_raw_to_logical(
             raw_contract_state,
@@ -186,66 +181,47 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         ))
     }
 
-    async fn fold<A: FoldAccess + Send + Sync>(
-        &self,
-        previous_state: &Self::Accumulator,
+    async fn fold<M: Middleware + 'static>(
+        previous_state: &Self,
         block: &Block,
-        _access: &A,
-    ) -> FoldResult<Self::Accumulator, A> {
+        env: &StateFoldEnvironment<M, Self::UserData>,
+        _access: Arc<FoldMiddleware<M>>,
+    ) -> Result<Self, Self::Error> {
         let constants = previous_state.constants.clone();
         let dapp_contract_address = constants.dapp_contract_address;
 
-        // get raw state from EpochFoldDelegate
-        let raw_contract_state = self
-            .epoch_fold
-            .get_state_for_block(
-                &(dapp_contract_address, previous_state.initial_epoch),
-                Some(block.hash),
+        let raw_contract_state = EpochState::get_state_for_block(
+            &(dapp_contract_address, previous_state.initial_epoch),
+            block,
+            env,
+        )
+        .await?
+        .state;
+
+        let output_state = OutputState::get_state_for_block(
+            &dapp_contract_address,
+            block,
+            env,
+        )
+        .await?
+        .state;
+
+        let validator_manager_state =
+            ValidatorManagerState::get_state_for_block(
+                &dapp_contract_address,
+                block,
+                env,
             )
-            .await
-            .map_err(|e| {
-                FoldDelegateError {
-                    err: format!("Epoch state fold error: {:?}", e),
-                }
-                .build()
-            })?
+            .await?
             .state;
 
-        let output_state = self
-            .output_fold
-            .get_state_for_block(&dapp_contract_address, Some(block.hash))
-            .await
-            .map_err(|e| {
-                FoldDelegateError {
-                    err: format!("Output state fold error: {:?}", e),
-                }
-                .build()
-            })?
-            .state;
-
-        let validator_manager_state = self
-            .validator_manager_fold
-            .get_state_for_block(&dapp_contract_address, Some(block.hash))
-            .await
-            .map_err(|e| {
-                FoldDelegateError {
-                    err: format!("Validator manager fold error: {:?}", e),
-                }
-                .build()
-            })?
-            .state;
-
-        let fee_manager_state = self
-            .fee_manager_fold
-            .get_state_for_block(&dapp_contract_address, Some(block.hash))
-            .await
-            .map_err(|e| {
-                FoldDelegateError {
-                    err: format!("Fee manager fold error: {:?}", e),
-                }
-                .build()
-            })?
-            .state;
+        let fee_manager_state = FeeManagerState::get_state_for_block(
+            &dapp_contract_address,
+            block,
+            env,
+        )
+        .await?
+        .state;
 
         Ok(convert_raw_to_logical(
             raw_contract_state,
@@ -256,13 +232,6 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             validator_manager_state,
             fee_manager_state,
         ))
-    }
-
-    fn convert(
-        &self,
-        accumulator: &BlockState<Self::Accumulator>,
-    ) -> Self::State {
-        accumulator.clone()
     }
 }
 

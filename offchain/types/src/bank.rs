@@ -1,42 +1,42 @@
-use contracts::bank_contract::*;
-
-use super::types::BankState;
-
-use offchain_core::types::Block;
-use state_fold::{
-    delegate_access::{FoldAccess, SyncAccess},
-    error::*,
-    types::*,
-    utils as fold_utils,
-};
-
+use crate::FoldableError;
+use anyhow::Context;
 use async_trait::async_trait;
-use snafu::ResultExt;
+use contracts::bank_contract::*;
+use ethers::{
+    prelude::EthEvent,
+    providers::Middleware,
+    types::{Address, U256},
+};
+use serde::{Deserialize, Serialize};
+use state_fold::{
+    utils as fold_utils, FoldMiddleware, Foldable, StateFoldEnvironment,
+    SyncMiddleware,
+};
+use state_fold_types::{ethers, Block};
+use std::sync::Arc;
 
-use ethers::prelude::EthEvent;
-use ethers::types::{Address, U256};
-
-/// bank delegate
-#[derive(Default)]
-pub struct BankFoldDelegate {}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct BankState {
+    pub bank_address: Address,
+    pub dapp_address: Address,
+    pub balance: U256,
+}
 
 #[async_trait]
-impl StateFoldDelegate for BankFoldDelegate {
+impl Foldable for BankState {
     type InitialState = (Address, Address); // bank address, dapp address
-    type Accumulator = BankState;
-    type State = BlockState<Self::Accumulator>;
+    type Error = FoldableError;
+    type UserData = ();
 
-    async fn sync<A: SyncAccess + Send + Sync>(
-        &self,
+    async fn sync<M: Middleware + 'static>(
         initial_state: &Self::InitialState,
-        block: &Block,
-        access: &A,
-    ) -> SyncResult<Self::Accumulator, A> {
+        _block: &Block,
+        _env: &StateFoldEnvironment<M, Self::UserData>,
+        access: Arc<SyncMiddleware<M>>,
+    ) -> Result<Self, Self::Error> {
         let (bank_address, dapp_address) = *initial_state;
 
-        let bank_contract = access
-            .build_sync_contract(bank_address, block.number, Bank::new)
-            .await;
+        let bank_contract = Bank::new(bank_address, Arc::clone(&access));
 
         // `Deposit` events
         // topic1: `to` address, same as dapp address
@@ -45,9 +45,7 @@ impl StateFoldDelegate for BankFoldDelegate {
             .topic1(dapp_address)
             .query()
             .await
-            .context(SyncContractError {
-                err: "Error querying for bank deposit events to dapp",
-            })?;
+            .context("Error querying for bank deposit events to dapp")?;
 
         // `Transfer` events
         // topic1: `from` address, same as dapp address
@@ -56,9 +54,7 @@ impl StateFoldDelegate for BankFoldDelegate {
             .topic1(dapp_address)
             .query()
             .await
-            .context(SyncContractError {
-                err: "Error querying for bank transfer events from dapp",
-            })?;
+            .context("Error querying for bank transfer events from dapp")?;
 
         // combine both types of events to calculate balance
         let balance =
@@ -71,12 +67,12 @@ impl StateFoldDelegate for BankFoldDelegate {
         })
     }
 
-    async fn fold<A: FoldAccess + Send + Sync>(
-        &self,
-        previous_state: &Self::Accumulator,
+    async fn fold<M: Middleware + 'static>(
+        previous_state: &Self,
         block: &Block,
-        access: &A,
-    ) -> FoldResult<Self::Accumulator, A> {
+        _env: &StateFoldEnvironment<M, Self::UserData>,
+        access: Arc<FoldMiddleware<M>>,
+    ) -> Result<Self, Self::Error> {
         let bank_address = previous_state.bank_address;
 
         // If not in bloom copy previous state
@@ -92,9 +88,7 @@ impl StateFoldDelegate for BankFoldDelegate {
             return Ok(previous_state.clone());
         }
 
-        let bank_contract = access
-            .build_fold_contract(bank_address, block.hash, Bank::new)
-            .await;
+        let bank_contract = Bank::new(bank_address, Arc::clone(&access));
 
         let mut state = previous_state.clone();
         let dapp_address = state.dapp_address;
@@ -106,9 +100,7 @@ impl StateFoldDelegate for BankFoldDelegate {
             .topic1(dapp_address)
             .query()
             .await
-            .context(FoldContractError {
-                err: "Error querying for bank deposit events to dapp",
-            })?;
+            .context("Error querying for bank deposit events to dapp")?;
 
         // `Transfer` events
         // topic1: `from` address, same as dapp address
@@ -117,22 +109,13 @@ impl StateFoldDelegate for BankFoldDelegate {
             .topic1(dapp_address)
             .query()
             .await
-            .context(FoldContractError {
-                err: "Error querying for bank transfer events from dapp",
-            })?;
+            .context("Error querying for bank transfer events from dapp")?;
 
         // combine both types of events to calculate balance
         state.balance =
             new_balance(state.balance, deposit_events, transfer_events);
 
         Ok(state)
-    }
-
-    fn convert(
-        &self,
-        accumulator: &BlockState<Self::Accumulator>,
-    ) -> Self::State {
-        accumulator.clone()
     }
 }
 

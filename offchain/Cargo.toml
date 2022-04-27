@@ -3,14 +3,10 @@ members = [
   "contracts",
   "delegate_server",
   "offchain",
+  "types",
+
   "data",
   "indexer",
   "inspect-server",
   "reader"
 ]
-
-
-[patch.'https://github.com/cartesi/state-fold']
-state-fold = { path = "./state-fold/state-fold" }
-state-server-grpc = { path = "./state-fold/state-server-grpc" }
-

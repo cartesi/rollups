@@ -1,7 +1,5 @@
-use ethers::contract::Abigen;
-use serde_json::Value;
+use state_fold_types::contract;
 use std::fs::File;
-use std::io::{Read, Write};
 
 macro_rules! path {
     ($contract_file: expr, $contract_name: expr) => {
@@ -10,29 +8,6 @@ macro_rules! path {
             _ => format!("../../onchain/rollups/abi/contracts/{}.sol/{}.json", $contract_file, $contract_name),
         }
     };
-}
-
-pub fn write<R, W>(
-    contract_name: &str,
-    source: R,
-    mut output: W,
-) -> Result<(), Box<dyn std::error::Error>>
-where
-    R: Read,
-    W: Write,
-{
-    let source: Value = serde_json::from_reader(source)?;
-    let abi_source = serde_json::to_string(&source)?;
-
-    let bindings = Abigen::new(&contract_name, abi_source)?.generate()?;
-    let tokens = bindings.into_tokens();
-
-    let raw = tokens.to_string();
-    let formatted = raw;
-
-    output.write_all(formatted.as_bytes())?;
-
-    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -98,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let source = File::open(&source_path)?;
         let output = File::create(&output_path)?;
 
-        self::write(contract_name, source, output)?;
+        contract::write(contract_name, source, output)?;
     }
 
     println!("cargo:rerun-if-changed=build.rs");

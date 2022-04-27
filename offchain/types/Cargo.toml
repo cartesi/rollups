@@ -1,0 +1,13 @@
+[package]
+name = "types"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+async-trait = "0.1"
+contracts = { path = "../contracts" }
+im = { version = "15", features = ["serde"] }
+serde = { version = "1", features = ["rc"] }
+state-fold = { version = "0.2", registry = "cartesi" }
+state-fold-types = { version = "0.2", registry = "cartesi", features = ["ethers"] }
