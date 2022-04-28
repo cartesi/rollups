@@ -366,213 +366,213 @@
     },
     "deployedBytecode": {
       "functionDebugData": {
-        "@claimFinalizedIncreaseCounts_8761": {
+        "@claimFinalizedIncreaseCounts_8759": {
           "entryPoint": 4397,
-          "id": 8761,
+          "id": 8759,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@claim_4803": {
+        "@claim_4801": {
           "entryPoint": 869,
-          "id": 4803,
+          "id": 4801,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@diamondStorage_7459": {
+        "@diamondStorage_7457": {
           "entryPoint": null,
-          "id": 7459,
+          "id": 7457,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@diamondStorage_7758": {
+        "@diamondStorage_7756": {
           "entryPoint": null,
-          "id": 7758,
+          "id": 7756,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@diamondStorage_7869": {
+        "@diamondStorage_7867": {
           "entryPoint": null,
-          "id": 7869,
+          "id": 7867,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@diamondStorage_8314": {
+        "@diamondStorage_8312": {
           "entryPoint": null,
-          "id": 8314,
+          "id": 8312,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@emitClaimReceivedAndReturn_8711": {
+        "@emitClaimReceivedAndReturn_8709": {
           "entryPoint": 3857,
-          "id": 8711,
+          "id": 8709,
           "parameterSlots": 3,
           "returnSlots": 3
         },
-        "@emitDisputeEndedAndReturn_8673": {
+        "@emitDisputeEndedAndReturn_8671": {
           "entryPoint": 5733,
-          "id": 8673,
+          "id": 8671,
           "parameterSlots": 3,
           "returnSlots": 3
         },
-        "@finalizeEpoch_4879": {
+        "@finalizeEpoch_4877": {
           "entryPoint": 376,
-          "id": 4879,
+          "id": 4877,
           "parameterSlots": 0,
           "returnSlots": 0
         },
-        "@getChallengePeriod_5010": {
+        "@getChallengePeriod_5008": {
           "entryPoint": null,
-          "id": 5010,
+          "id": 5008,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getClaimerOfCurrentClaim_8887": {
+        "@getClaimerOfCurrentClaim_8885": {
           "entryPoint": 3562,
-          "id": 8887,
+          "id": 8885,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getCurrentEpoch_4900": {
+        "@getCurrentEpoch_4898": {
           "entryPoint": 843,
-          "id": 4900,
+          "id": 4898,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getCurrentEpoch_8241": {
+        "@getCurrentEpoch_8239": {
           "entryPoint": 1719,
-          "id": 8241,
+          "id": 8239,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getCurrentPhase_4922": {
+        "@getCurrentPhase_4920": {
           "entryPoint": 772,
-          "id": 4922,
+          "id": 4920,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getInputAccumulationStart_4944": {
+        "@getInputAccumulationStart_4942": {
           "entryPoint": null,
-          "id": 4944,
+          "id": 4942,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getInputDuration_4988": {
+        "@getInputDuration_4986": {
           "entryPoint": null,
-          "id": 4988,
+          "id": 4986,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getNumberOfFinalizedEpochs_7790": {
+        "@getNumberOfFinalizedEpochs_7788": {
           "entryPoint": null,
-          "id": 7790,
+          "id": 7788,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getSealingEpochTimestamp_4966": {
+        "@getSealingEpochTimestamp_4964": {
           "entryPoint": null,
-          "id": 4966,
+          "id": 4964,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getTemplateHash_5029": {
+        "@getTemplateHash_5027": {
           "entryPoint": null,
-          "id": 5029,
+          "id": 5027,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getValidatorIndex_9008": {
+        "@getValidatorIndex_9006": {
           "entryPoint": 3339,
-          "id": 9008,
+          "id": 9006,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@initiateDispute_7095": {
+        "@initiateDispute_7093": {
           "entryPoint": 4356,
-          "id": 7095,
+          "id": 7093,
           "parameterSlots": 2,
           "returnSlots": 0
         },
-        "@isConsensus_8838": {
+        "@isConsensus_8836": {
           "entryPoint": 4108,
-          "id": 8838,
+          "id": 8836,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@isValidator_8960": {
+        "@isValidator_8958": {
           "entryPoint": 3164,
-          "id": 8960,
+          "id": 8958,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@onClaim_8635": {
+        "@onClaim_8633": {
           "entryPoint": 1893,
-          "id": 8635,
+          "id": 8633,
           "parameterSlots": 3,
           "returnSlots": 3
         },
-        "@onDisputeEnd_8457": {
+        "@onDisputeEnd_8455": {
           "entryPoint": 4896,
-          "id": 8457,
+          "id": 8455,
           "parameterSlots": 4,
           "returnSlots": 3
         },
-        "@onNewEpoch_7694": {
+        "@onNewEpoch_7692": {
           "entryPoint": 3098,
-          "id": 7694,
+          "id": 7692,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@onNewEpoch_7776": {
+        "@onNewEpoch_7774": {
           "entryPoint": null,
-          "id": 7776,
+          "id": 7774,
           "parameterSlots": 2,
           "returnSlots": 0
         },
-        "@onNewEpoch_8500": {
+        "@onNewEpoch_8498": {
           "entryPoint": 2897,
-          "id": 8500,
+          "id": 8498,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@onNewInputAccumulation_7673": {
+        "@onNewInputAccumulation_7671": {
           "entryPoint": 1881,
-          "id": 7673,
+          "id": 7671,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@removeValidator_8814": {
+        "@removeValidator_8812": {
           "entryPoint": 5445,
-          "id": 8814,
+          "id": 8812,
           "parameterSlots": 2,
           "returnSlots": 0
         },
-        "@resolveDispute_8003": {
+        "@resolveDispute_8001": {
           "entryPoint": 4714,
-          "id": 8003,
+          "id": 8001,
           "parameterSlots": 4,
           "returnSlots": 0
         },
-        "@resolveValidatorResult_8104": {
+        "@resolveValidatorResult_8102": {
           "entryPoint": 2555,
-          "id": 8104,
+          "id": 8102,
           "parameterSlots": 4,
           "returnSlots": 0
         },
-        "@startNewEpoch_8198": {
+        "@startNewEpoch_8196": {
           "entryPoint": 1407,
-          "id": 8198,
+          "id": 8196,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@swapInputBox_7715": {
+        "@swapInputBox_7713": {
           "entryPoint": 3133,
-          "id": 7715,
+          "id": 7713,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@updateClaimAgreementMask_8914": {
+        "@updateClaimAgreementMask_8912": {
           "entryPoint": 3946,
-          "id": 8914,
+          "id": 8912,
           "parameterSlots": 2,
           "returnSlots": 0
         },
@@ -594,7 +594,7 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5762_fromMemory": {
+        "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760_fromMemory": {
           "entryPoint": 6065,
           "id": null,
           "parameterSlots": 2,
@@ -618,13 +618,13 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "abi_encode_tuple_t_enum$_Phase_$5664__to_t_uint8__fromStack_reversed": {
+        "abi_encode_tuple_t_enum$_Phase_$5662__to_t_uint8__fromStack_reversed": {
           "entryPoint": 5934,
           "id": null,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "abi_encode_tuple_t_enum$_Result_$5718_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__to_t_uint8_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__fromStack_reversed": {
+        "abi_encode_tuple_t_enum$_Result_$5716_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__to_t_uint8_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__fromStack_reversed": {
           "entryPoint": 6137,
           "id": null,
           "parameterSlots": 4,
@@ -696,19 +696,19 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5762__to_t_uint256__fromStack_library_reversed": {
+        "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760__to_t_uint256__fromStack_library_reversed": {
           "entryPoint": null,
           "id": null,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5762_t_uint256__to_t_uint256_t_uint256__fromStack_library_reversed": {
+        "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760_t_uint256__to_t_uint256_t_uint256__fromStack_library_reversed": {
           "entryPoint": null,
           "id": null,
           "parameterSlots": 3,
           "returnSlots": 1
         },
-        "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5762_t_uint256_t_rational_1_by_1__to_t_uint256_t_uint256_t_uint256__fromStack_library_reversed": {
+        "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760_t_uint256_t_rational_1_by_1__to_t_uint256_t_uint256_t_uint256__fromStack_library_reversed": {
           "entryPoint": null,
           "id": null,
           "parameterSlots": 4,
@@ -1316,7 +1316,7 @@
                     }
                   ]
                 },
-                "name": "abi_encode_tuple_t_enum$_Phase_$5664__to_t_uint8__fromStack_reversed",
+                "name": "abi_encode_tuple_t_enum$_Phase_$5662__to_t_uint8__fromStack_reversed",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -3095,7 +3095,7 @@
                     }
                   ]
                 },
-                "name": "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5762_t_uint256__to_t_uint256_t_uint256__fromStack_library_reversed",
+                "name": "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760_t_uint256__to_t_uint256_t_uint256__fromStack_library_reversed",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -3666,7 +3666,7 @@
                     }
                   ]
                 },
-                "name": "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5762__to_t_uint256__fromStack_library_reversed",
+                "name": "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760__to_t_uint256__fromStack_library_reversed",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -3804,7 +3804,7 @@
                     }
                   ]
                 },
-                "name": "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5762_fromMemory",
+                "name": "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760_fromMemory",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -5427,7 +5427,7 @@
                     }
                   ]
                 },
-                "name": "abi_encode_tuple_t_enum$_Result_$5718_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__to_t_uint8_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__fromStack_reversed",
+                "name": "abi_encode_tuple_t_enum$_Result_$5716_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__to_t_uint8_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__fromStack_reversed",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -5617,7 +5617,7 @@
                     }
                   ]
                 },
-                "name": "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5762_t_uint256_t_rational_1_by_1__to_t_uint256_t_uint256_t_uint256__fromStack_library_reversed",
+                "name": "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760_t_uint256_t_rational_1_by_1__to_t_uint256_t_uint256_t_uint256__fromStack_library_reversed",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -5934,7 +5934,7 @@
               }
             ]
           },
-          "contents": "{\n    { }\n    function abi_encode_tuple_t_uint256__to_t_uint256__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function panic_error_0x21()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x21)\n        revert(0, 0x24)\n    }\n    function validator_assert_enum_Phase(value)\n    {\n        if iszero(lt(value, 3))\n        {\n            mstore(0, shl(224, 0x4e487b71))\n            mstore(4, 0x21)\n            revert(0, 0x24)\n        }\n    }\n    function abi_encode_tuple_t_enum$_Phase_$5664__to_t_uint8__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        validator_assert_enum_Phase(value0)\n        mstore(headStart, value0)\n    }\n    function abi_decode_tuple_t_bytes32(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := calldataload(headStart)\n    }\n    function abi_encode_tuple_t_stringliteral_9f472971abf84cec2b9857f1d01ead29b405a6824513831338b49ed5445df55e__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 27)\n        mstore(add(headStart, 64), \"Phase != Awaiting Consensus\")\n        tail := add(headStart, 96)\n    }\n    function panic_error_0x11()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x11)\n        revert(0, 0x24)\n    }\n    function checked_add_t_uint256(x, y) -> sum\n    {\n        if gt(x, not(y)) { panic_error_0x11() }\n        sum := add(x, y)\n    }\n    function abi_encode_tuple_t_stringliteral_8a7130c090cfeeea0c44f268e56ab7cc213b4a2db431894594339a13db4dede8__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 25)\n        mstore(add(headStart, 64), \"Challenge period not over\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_13d43d64d78f81493e6d51a2cd7fe9a7d75c7361db948a4163eb953bb7c18e90__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 24)\n        mstore(add(headStart, 64), \"No Claim to be finalized\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_cdaeb840dc7c9c20ccfebaeaffab1ccdfa95fb47b9d777965bacfa7526d207ae__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 26)\n        mstore(add(headStart, 64), \"Phase != AwaitingConsensus\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_address_t_bytes32__to_t_address_t_bytes32__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, sub(shl(160, 1), 1)))\n        mstore(add(headStart, 32), value1)\n    }\n    function abi_encode_tuple_t_stringliteral_cf380c47f6d4378bba73c9b2df8a3523552d90befb210db4e6e6d52a38b34f25__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 11)\n        mstore(add(headStart, 64), \"empty claim\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_9435e67db38af498cac4ff0f67c95329bbd8b0b6f440c6fbb30817e980901290__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 18)\n        mstore(add(headStart, 64), \"sender not allowed\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5762_t_uint256__to_t_uint256_t_uint256__fromStack_library_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, value0)\n        mstore(add(headStart, 32), value1)\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_0fa6258d77e1ae243515c3844792e5570489e1a536afaa96177ed2afebc7bc1f__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 39)\n        mstore(add(headStart, 64), \"sender had claimed in this epoch\")\n        mstore(add(headStart, 96), \" before\")\n        tail := add(headStart, 128)\n    }\n    function abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5762__to_t_uint256__fromStack_library_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5762_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := mload(headStart)\n    }\n    function abi_encode_tuple_t_stringliteral_b684bfcf74a89552a53e80a65accc0859b3c118596051724f5dba1ff9e910033__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 9)\n        mstore(add(headStart, 64), \"address 0\")\n        tail := add(headStart, 96)\n    }\n    function panic_error_0x32()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x32)\n        revert(0, 0x24)\n    }\n    function increment_t_uint256(value) -> ret\n    {\n        if eq(value, not(0)) { panic_error_0x11() }\n        ret := add(value, 1)\n    }\n    function abi_encode_tuple_t_stringliteral_36dcd3300a5c6c546e3d353aaf08e0249b269714af4a29df0e9cf64bb6042176__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 19)\n        mstore(add(headStart, 64), \"validator not found\")\n        tail := add(headStart, 96)\n    }\n    function abi_decode_tuple_t_uint256_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := mload(headStart)\n    }\n    function abi_encode_tuple_t_stringliteral_d9df6a7699a9b21c144340fa7bcf61e7a08aaf8f8c7236889796c31e7b8f7317__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 28)\n        mstore(add(headStart, 64), \"Agreeing validator not found\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_enum$_Result_$5718_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__to_t_uint8_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 160)\n        validator_assert_enum_Phase(value0)\n        mstore(headStart, value0)\n        let _1 := 32\n        let pos := add(headStart, _1)\n        pos := pos\n        let srcPtr := value1\n        let i := 0\n        for { } lt(i, 0x02) { i := add(i, 1) }\n        {\n            mstore(pos, mload(srcPtr))\n            pos := add(pos, _1)\n            srcPtr := add(srcPtr, _1)\n        }\n        let pos_1 := add(headStart, 96)\n        pos_1 := pos_1\n        let srcPtr_1 := value2\n        let i_1 := 0\n        for { } lt(i_1, 0x02) { i_1 := add(i_1, 1) }\n        {\n            mstore(pos_1, and(mload(srcPtr_1), sub(shl(160, 1), 1)))\n            pos_1 := add(pos_1, _1)\n            srcPtr_1 := add(srcPtr_1, _1)\n        }\n    }\n    function abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5762_t_uint256_t_rational_1_by_1__to_t_uint256_t_uint256_t_uint256__fromStack_library_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        mstore(headStart, value0)\n        mstore(add(headStart, 32), value1)\n        mstore(add(headStart, 64), value2)\n    }\n    function abi_encode_tuple_t_address_payable_t_address_payable_t_bytes32__to_t_address_t_address_t_bytes32__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        let _1 := sub(shl(160, 1), 1)\n        mstore(headStart, and(value0, _1))\n        mstore(add(headStart, 32), and(value1, _1))\n        mstore(add(headStart, 64), value2)\n    }\n}",
+          "contents": "{\n    { }\n    function abi_encode_tuple_t_uint256__to_t_uint256__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function panic_error_0x21()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x21)\n        revert(0, 0x24)\n    }\n    function validator_assert_enum_Phase(value)\n    {\n        if iszero(lt(value, 3))\n        {\n            mstore(0, shl(224, 0x4e487b71))\n            mstore(4, 0x21)\n            revert(0, 0x24)\n        }\n    }\n    function abi_encode_tuple_t_enum$_Phase_$5662__to_t_uint8__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        validator_assert_enum_Phase(value0)\n        mstore(headStart, value0)\n    }\n    function abi_decode_tuple_t_bytes32(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := calldataload(headStart)\n    }\n    function abi_encode_tuple_t_stringliteral_9f472971abf84cec2b9857f1d01ead29b405a6824513831338b49ed5445df55e__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 27)\n        mstore(add(headStart, 64), \"Phase != Awaiting Consensus\")\n        tail := add(headStart, 96)\n    }\n    function panic_error_0x11()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x11)\n        revert(0, 0x24)\n    }\n    function checked_add_t_uint256(x, y) -> sum\n    {\n        if gt(x, not(y)) { panic_error_0x11() }\n        sum := add(x, y)\n    }\n    function abi_encode_tuple_t_stringliteral_8a7130c090cfeeea0c44f268e56ab7cc213b4a2db431894594339a13db4dede8__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 25)\n        mstore(add(headStart, 64), \"Challenge period not over\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_13d43d64d78f81493e6d51a2cd7fe9a7d75c7361db948a4163eb953bb7c18e90__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 24)\n        mstore(add(headStart, 64), \"No Claim to be finalized\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_cdaeb840dc7c9c20ccfebaeaffab1ccdfa95fb47b9d777965bacfa7526d207ae__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 26)\n        mstore(add(headStart, 64), \"Phase != AwaitingConsensus\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_address_t_bytes32__to_t_address_t_bytes32__fromStack_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, and(value0, sub(shl(160, 1), 1)))\n        mstore(add(headStart, 32), value1)\n    }\n    function abi_encode_tuple_t_stringliteral_cf380c47f6d4378bba73c9b2df8a3523552d90befb210db4e6e6d52a38b34f25__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 11)\n        mstore(add(headStart, 64), \"empty claim\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_stringliteral_9435e67db38af498cac4ff0f67c95329bbd8b0b6f440c6fbb30817e980901290__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 18)\n        mstore(add(headStart, 64), \"sender not allowed\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760_t_uint256__to_t_uint256_t_uint256__fromStack_library_reversed(headStart, value1, value0) -> tail\n    {\n        tail := add(headStart, 64)\n        mstore(headStart, value0)\n        mstore(add(headStart, 32), value1)\n    }\n    function abi_decode_tuple_t_bool_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        let value := mload(headStart)\n        if iszero(eq(value, iszero(iszero(value)))) { revert(0, 0) }\n        value0 := value\n    }\n    function abi_encode_tuple_t_stringliteral_0fa6258d77e1ae243515c3844792e5570489e1a536afaa96177ed2afebc7bc1f__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 39)\n        mstore(add(headStart, 64), \"sender had claimed in this epoch\")\n        mstore(add(headStart, 96), \" before\")\n        tail := add(headStart, 128)\n    }\n    function abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760__to_t_uint256__fromStack_library_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := mload(headStart)\n    }\n    function abi_encode_tuple_t_stringliteral_b684bfcf74a89552a53e80a65accc0859b3c118596051724f5dba1ff9e910033__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 9)\n        mstore(add(headStart, 64), \"address 0\")\n        tail := add(headStart, 96)\n    }\n    function panic_error_0x32()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x32)\n        revert(0, 0x24)\n    }\n    function increment_t_uint256(value) -> ret\n    {\n        if eq(value, not(0)) { panic_error_0x11() }\n        ret := add(value, 1)\n    }\n    function abi_encode_tuple_t_stringliteral_36dcd3300a5c6c546e3d353aaf08e0249b269714af4a29df0e9cf64bb6042176__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 19)\n        mstore(add(headStart, 64), \"validator not found\")\n        tail := add(headStart, 96)\n    }\n    function abi_decode_tuple_t_uint256_fromMemory(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := mload(headStart)\n    }\n    function abi_encode_tuple_t_stringliteral_d9df6a7699a9b21c144340fa7bcf61e7a08aaf8f8c7236889796c31e7b8f7317__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 28)\n        mstore(add(headStart, 64), \"Agreeing validator not found\")\n        tail := add(headStart, 96)\n    }\n    function abi_encode_tuple_t_enum$_Result_$5716_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__to_t_uint8_t_array$_t_bytes32_$2_memory_ptr_t_array$_t_address_payable_$2_memory_ptr__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 160)\n        validator_assert_enum_Phase(value0)\n        mstore(headStart, value0)\n        let _1 := 32\n        let pos := add(headStart, _1)\n        pos := pos\n        let srcPtr := value1\n        let i := 0\n        for { } lt(i, 0x02) { i := add(i, 1) }\n        {\n            mstore(pos, mload(srcPtr))\n            pos := add(pos, _1)\n            srcPtr := add(srcPtr, _1)\n        }\n        let pos_1 := add(headStart, 96)\n        pos_1 := pos_1\n        let srcPtr_1 := value2\n        let i_1 := 0\n        for { } lt(i_1, 0x02) { i_1 := add(i_1, 1) }\n        {\n            mstore(pos_1, and(mload(srcPtr_1), sub(shl(160, 1), 1)))\n            pos_1 := add(pos_1, _1)\n            srcPtr_1 := add(srcPtr_1, _1)\n        }\n    }\n    function abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760_t_uint256_t_rational_1_by_1__to_t_uint256_t_uint256_t_uint256__fromStack_library_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        mstore(headStart, value0)\n        mstore(add(headStart, 32), value1)\n        mstore(add(headStart, 64), value2)\n    }\n    function abi_encode_tuple_t_address_payable_t_address_payable_t_bytes32__to_t_address_t_address_t_bytes32__fromStack_reversed(headStart, value2, value1, value0) -> tail\n    {\n        tail := add(headStart, 96)\n        let _1 := sub(shl(160, 1), 1)\n        mstore(headStart, and(value0, _1))\n        mstore(add(headStart, 32), and(value1, _1))\n        mstore(add(headStart, 64), value2)\n    }\n}",
           "id": 49,
           "language": "Yul",
           "name": "#utility.yul"
