@@ -21,6 +21,30 @@ Several articles were written about the code presented here:
 ## On-chain Rollups:
 Designed to mediate the relationship between the off-chain components with other smart contracts and externally owned accounts. It is composed by several modules, each with clear responsibilities and well-defined interfaces. The modules are the following:
 
+```mermaid
+graph LR
+    subgraph "CartesiDApp (Diamond)"
+        direction TB
+        ERC20PortalFacet
+        ERC721PortalFacet
+        EtherPortalFacet
+        FeeManagerFacet
+        OutputFacet
+        InputFacet
+        RollupsFacet
+        ValidatorManagerFacet
+    end
+    Bank -- transfer, transferFrom --> CTSI["CTSI Token"]
+    ERC20PortalFacet -- transfer, transferFrom --> ERC20["Any ERC-20 Token"]
+    ERC721PortalFacet -- safeTransferFrom --> ERC721["Any ERC-721 Token (NFT)"]
+    EtherPortalFacet -- Ether transfer --> Anyone
+    FeeManagerFacet -- transferTokens --> Bank
+    OutputFacet -- "Any message call" --> AnyoneButBank["Anyone (#ne;Bank)"]
+    click ERC20 href "https://eips.ethereum.org/EIPS/eip-20"
+    click ERC721 href "https://eips.ethereum.org/EIPS/eip-721"
+    click CTSI href "https://cartesi.io/en/ctsi-token"
+```
+
 ## Cartesi Rollups Manager
 
 The Cartesi Rollups Manager is responsible for synchronicity between the modules. It defines the duration of the different phases and notifies the other modules of any phase change. Among others, the responsibilities of this module are:
