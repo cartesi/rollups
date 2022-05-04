@@ -27,7 +27,7 @@ library LibClaimsMask {
 
     /// @notice this function creates a new ClaimsMask variable with value _value
     /// @param  _value the value following the format of ClaimsMask
-    function newClaimsMask(uint256 _value) public pure returns (ClaimsMask) {
+    function newClaimsMask(uint256 _value) internal pure returns (ClaimsMask) {
         return ClaimsMask.wrap(_value);
     }
 
@@ -35,7 +35,7 @@ library LibClaimsMask {
     ///         according to the number of validators
     /// @param  _numValidators the number of validators
     function newClaimsMaskWithConsensusGoalSet(uint256 _numValidators)
-        public
+        internal
         pure
         returns (ClaimsMask)
     {
@@ -49,7 +49,7 @@ library LibClaimsMask {
     /// @param  _validatorIndex index of the validator in the validator array, starting from 0
     ///     this index can be obtained though `getNumberOfClaimsByIndex` function in Validator Manager
     function getNumClaims(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        public
+        internal
         pure
         returns (uint256)
     {
@@ -68,7 +68,7 @@ library LibClaimsMask {
         ClaimsMask _claimsMask,
         uint256 _validatorIndex,
         uint256 _value
-    ) public pure returns (ClaimsMask) {
+    ) internal pure returns (ClaimsMask) {
         require(_validatorIndex < 8, "index out of range");
         uint256 currentNum = getNumClaims(_claimsMask, _validatorIndex);
         uint256 newNum = currentNum + _value; // overflows checked by default with sol0.8
@@ -83,7 +83,7 @@ library LibClaimsMask {
         ClaimsMask _claimsMask,
         uint256 _validatorIndex,
         uint256 _value
-    ) public pure returns (ClaimsMask) {
+    ) internal pure returns (ClaimsMask) {
         require(_validatorIndex < 8, "index out of range");
         require(_value <= ((1 << claimsBitLen) - 1), "ClaimsMask Overflow");
         uint256 bitmask = ~(((1 << claimsBitLen) - 1) <<
@@ -98,7 +98,7 @@ library LibClaimsMask {
     /// @notice get consensus goal mask
     /// @param  _claimsMask the ClaimsMask value
     function clearAgreementMask(ClaimsMask _claimsMask)
-        public
+        internal
         pure
         returns (ClaimsMask)
     {
@@ -109,7 +109,7 @@ library LibClaimsMask {
     /// @notice get the entire agreement mask
     /// @param  _claimsMask the ClaimsMask value
     function getAgreementMask(ClaimsMask _claimsMask)
-        public
+        internal
         pure
         returns (uint256)
     {
@@ -120,7 +120,7 @@ library LibClaimsMask {
     /// @param  _claimsMask the ClaimsMask value
     /// @param  _validatorIndex index of the validator in the validator array, starting from 0
     function alreadyClaimed(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        public
+        internal
         pure
         returns (bool)
     {
@@ -134,7 +134,7 @@ library LibClaimsMask {
     /// @param  _claimsMask the ClaimsMask value
     /// @param  _validatorIndex index of the validator in the validator array, starting from 0
     function setAgreementMask(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        public
+        internal
         pure
         returns (ClaimsMask)
     {
@@ -147,7 +147,7 @@ library LibClaimsMask {
     /// @notice get the entire consensus goal mask
     /// @param  _claimsMask the ClaimsMask value
     function getConsensusGoalMask(ClaimsMask _claimsMask)
-        public
+        internal
         pure
         returns (uint256)
     {
@@ -158,7 +158,7 @@ library LibClaimsMask {
     /// @param  _claimsMask the ClaimsMask value
     /// @param  _validatorIndex index of the validator in the validator array, starting from 0
     function removeValidator(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        public
+        internal
         pure
         returns (ClaimsMask)
     {
