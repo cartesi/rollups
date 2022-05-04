@@ -19,6 +19,12 @@ export type ParamsBuilder = (
 
 export const createParams: ParamsBuilder = (task) => {
     return task
+        .addOptionalParam<string>(
+            "name",
+            "Name of deployed contract",
+            "CartesiDApp",
+            types.string
+        )
         .addOptionalParam<boolean>(
             "log",
             "Enable log output",

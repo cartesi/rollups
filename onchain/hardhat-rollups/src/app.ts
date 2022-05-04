@@ -35,13 +35,14 @@ export type GraphQLConfig = Record<string, string>;
  */
 const rollupsAction = (
     taskName: string,
-    graphqlConfig: GraphQLConfig
+    graphqlConfig: GraphQLConfig,
+    contractName?: string
 ): ActionType<any> => {
     return async (args: any, hre: HardhatRuntimeEnvironment) => {
         const { deployments, network, run } = hre;
 
         // resolves Rollups contract
-        const Rollups = await deployments.get("CartesiDApp");
+        const Rollups = await deployments.get(contractName ?? "CartesiDApp");
 
         // retrieves GraphQL endpoint for the network being used
         let graphqlEndpoint;
@@ -82,7 +83,7 @@ export const appTasks = (appName: string, graphqlConfig: GraphQLConfig) => {
             task(
                 newTaskName,
                 taskDef.description,
-                rollupsAction(taskName, graphqlConfig)
+                rollupsAction(taskName, graphqlConfig, appName)
             )
         );
     });

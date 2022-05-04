@@ -71,7 +71,8 @@ createParams(
                 await deployments.all();
 
             // deploy raw diamond with only the diamond cut facet
-            const diamond = await deployments.deploy("CartesiDApp", {
+            const diamond = await deployments.deploy(args.name, {
+                contract: "CartesiDApp",
                 from: deployer,
                 args: [deployer, DiamondCutFacet.address],
                 log: args.log,
