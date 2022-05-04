@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: Hardhat
+name: Rollups
 on:
     pull_request:
         paths:
@@ -15,11 +15,11 @@ jobs:
             run:
                 working-directory: onchain/rollups
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
               with:
                   submodules: recursive
                   token: ${{ secrets.CI_TOKEN }}
-            - uses: actions/setup-node@v1
+            - uses: actions/setup-node@v3
               with:
                   node-version: "16"
             - run: yarn install

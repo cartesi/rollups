@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Hardhat Rollups
+on:
+    pull_request:
+        paths:
+            - onchain/rollups/**
+            - onchain/hardhat-rollups/**
+            - .github/workflows/hardhat-rollups.yml
+    push:
+        tags:
+            - v*
+jobs:
+    build:
+        runs-on: ubuntu-20.04
+        defaults:
+            run:
+                working-directory: onchain/rollups
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: recursive
+                  token: ${{ secrets.CI_TOKEN }}
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: "16"
+            - run: yarn install
+            - run: yarn prepack
