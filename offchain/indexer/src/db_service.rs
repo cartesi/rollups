@@ -79,8 +79,17 @@ fn insert_notice(
     }
 
     // Write notice to database
+    // Id field is auto incremented in table on insert
     match diesel::insert_into(notices)
-        .values(db_notice)
+        .values((
+            session_id.eq(&db_notice.session_id),
+            epoch_index.eq(&db_notice.epoch_index),
+            input_index.eq(&db_notice.input_index),
+            notice_index.eq(&db_notice.notice_index),
+            keccak.eq(&db_notice.keccak),
+            payload.eq(&db_notice.payload),
+            timestamp.eq(&db_notice.timestamp),
+        ))
         .execute(conn)
         .map_err(|e| crate::error::Error::DieselError { source: e })
     {

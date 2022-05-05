@@ -26,6 +26,8 @@ pub const POOL_CONNECTION_SIZE: u32 = 3;
 #[derive(Insertable, Queryable, Debug, PartialEq)]
 #[table_name = "notices"]
 pub struct DbNotice {
+    // Numerical id of notice in database, used as cursor in connection pattern
+    pub id: i32,
     pub session_id: String,
     pub epoch_index: i32,
     pub input_index: i32,

@@ -1,4 +1,9 @@
 
+
+type PageInfo {
+	hasNextPage: Boolean!
+}
+
 input NoticeKeys {
 	sessionId: String
 	epochIndex: Int
@@ -15,8 +20,18 @@ type Notice {
 	payload: String!
 }
 
+type NoticeEdge {
+	node: Notice!
+	cursor: String!
+}
+
+type NoticeConnection {
+	edges: [NoticeEdge!]!
+	pageInfo: PageInfo!
+}
+
 type Query {
-	getNotice(query: NoticeKeys): [Notice!]! @juniper(ownership: "owned")
+	getNotice(query: NoticeKeys, first: Int, after: String): NoticeConnection! @juniper(ownership: "owned")
 }
 
 schema {

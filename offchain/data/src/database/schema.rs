@@ -1,5 +1,6 @@
 table! {
-    notices (session_id, epoch_index, input_index, notice_index) {
+    notices (id, session_id, epoch_index, input_index, notice_index) {
+        id -> Int4,
         session_id -> Varchar,
         epoch_index -> Int4,
         input_index -> Int4,

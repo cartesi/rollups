@@ -119,6 +119,7 @@ async fn poll_epoch_status(
                         trace!("Sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
                                 session_id, epoch_index, input.input_index, &nindex);
                         if let Err(e) = message_tx.send(Message::Notice(DbNotice {
+                            id: 0,
                             session_id: session_id.to_string(),
                             epoch_index: epoch_index as i32,
                             input_index: input.input_index  as i32,

@@ -30,6 +30,72 @@ pub struct Context {
 }
 impl juniper::Context for Context {}
 
+/// Graphql representation of the page info
+pub struct PageInfo {
+    pub has_next_page: bool,
+}
+
+impl PageInfoFields for PageInfo {
+    fn field_has_next_page(
+        &self,
+        _executor: &Executor<Context>,
+    ) -> FieldResult<&bool> {
+        Ok(&self.has_next_page)
+    }
+}
+
+/// Graphql representation of the notice edge
+pub struct NoticeEdge {
+    pub node: Notice,
+    // Cursor is intentionally string although it is actually
+    // autoincrement index in the database,
+    // in case that we want to change its type/implementation
+    pub cursor: String,
+}
+
+/// Necessary graphql boilerplate for NoticeEdge
+impl NoticeEdgeFields for NoticeEdge {
+    fn field_node(
+        &self,
+        _executor: &Executor<Context>,
+        _trail: &QueryTrail<'_, Notice, Walked>,
+    ) -> FieldResult<&Notice> {
+        Ok(&self.node)
+    }
+
+    fn field_cursor(
+        &self,
+        _executor: &Executor<Context>,
+    ) -> FieldResult<&String> {
+        Ok(&self.cursor)
+    }
+}
+
+/// Graphql representation of the notice connection
+pub struct NoticeConnection {
+    edges: Vec<NoticeEdge>,
+    page_info: PageInfo,
+}
+
+/// Necessary graphql boilerplate for Notice
+impl NoticeConnectionFields for NoticeConnection {
+    fn field_edges(
+        &self,
+        _executor: &Executor<Context>,
+        _trail: &QueryTrail<'_, NoticeEdge, Walked>,
+    ) -> FieldResult<&Vec<NoticeEdge>> {
+        Ok(&self.edges)
+    }
+
+    fn field_page_info(
+        &self,
+        _executor: &Executor<Context>,
+        _trail: &QueryTrail<'_, PageInfo, Walked>,
+    ) -> FieldResult<&PageInfo> {
+        Ok(&self.page_info)
+    }
+}
+
 /// Graphql representation of the Notice
 pub struct Notice {
     session_id: String,
@@ -94,9 +160,11 @@ impl QueryFields for Query {
     fn field_get_notice(
         &self,
         executor: &juniper::Executor<Context>,
-        _trail: &QueryTrail<'_, Notice, Walked>,
+        _trail: &QueryTrail<'_, NoticeConnection, Walked>,
         notice_keys: std::option::Option<NoticeKeys>,
-    ) -> juniper::FieldResult<Vec<Notice>> {
+        first: std::option::Option<i32>,
+        after: std::option::Option<String>,
+    ) -> juniper::FieldResult<NoticeConnection> {
         use rollups_data::database::{schema::notices::dsl::*, DbNotice};
         // note: graphql does not have native Int64, so it is only 32 bit integer
         debug!("Query: notice keys: {:?}", notice_keys);
@@ -104,40 +172,79 @@ impl QueryFields for Query {
         let conn = executor.context().db_pool.get()?;
         // Form database selection command based on graphql query parameters
         let mut query = notices.into_boxed();
+        let mut total_count_query = notices.into_boxed();
         if let Some(notice_keys) = notice_keys {
-            if let Some(id) = notice_keys.session_id {
-                query = query.filter(session_id.eq(id));
+            if let Some(_session_id) = notice_keys.session_id {
+                query = query.filter(session_id.eq(_session_id.clone()));
+                total_count_query =
+                    total_count_query.filter(session_id.eq(_session_id));
             };
 
             if let Some(index) = notice_keys.epoch_index {
                 query = query.filter(epoch_index.eq(index as i32));
+                total_count_query =
+                    total_count_query.filter(epoch_index.eq(index as i32));
             };
 
             if let Some(index) = notice_keys.input_index {
                 query = query.filter(input_index.eq(index as i32));
+                total_count_query =
+                    total_count_query.filter(input_index.eq(index as i32));
             };
 
             if let Some(index) = notice_keys.notice_index {
                 query = query.filter(notice_index.eq(index as i32));
+                total_count_query =
+                    total_count_query.filter(notice_index.eq(index as i32));
             };
         }
+        if let Some(first) = first {
+            query = query.limit(first.into());
+        };
+        if let Some(after) = after {
+            if let Ok(after_i32) = after.parse::<i32>() {
+                query = query.filter(id.gt(after_i32));
+            }
+        };
+        query = query.order_by(id.asc());
         // Retrieve data from database
         let result = query.load::<DbNotice>(&conn)?;
 
-        Ok(result
+        let edges: Vec<NoticeEdge> = result
             .iter()
-            .map(|db_notice| Notice {
-                session_id: db_notice.session_id.clone(),
-                epoch_index: db_notice.epoch_index as i32,
-                input_index: db_notice.input_index as i32,
-                notice_index: db_notice.notice_index as i32,
-                keccak: db_notice.keccak.clone(),
-                payload: "0x".to_string()
-                    + hex::encode(
-                        db_notice.payload.as_ref().unwrap_or(&Vec::new()),
-                    )
-                    .as_str(),
+            .map(|db_notice| NoticeEdge {
+                node: Notice {
+                    session_id: db_notice.session_id.clone(),
+                    epoch_index: db_notice.epoch_index as i32,
+                    input_index: db_notice.input_index as i32,
+                    notice_index: db_notice.notice_index as i32,
+                    keccak: db_notice.keccak.clone(),
+                    payload: "0x".to_string()
+                        + hex::encode(
+                            db_notice.payload.as_ref().unwrap_or(&Vec::new()),
+                        )
+                        .as_str(),
+                },
+                cursor: db_notice.id.to_string(),
             })
-            .collect())
+            .collect();
+
+        // Deduce hasNextPage indicator
+        let mut has_next_page = false;
+        if let Some(current_last_edge) = edges.iter().last() {
+            if let Ok(cursor) = current_last_edge.cursor.parse::<i32>() {
+                let total_count = total_count_query
+                    .filter(id.gt(cursor))
+                    .count()
+                    .get_result::<i64>(&conn)?;
+                if total_count > 0 {
+                    has_next_page = true;
+                }
+            }
+        }
+        Ok(NoticeConnection {
+            edges,
+            page_info: PageInfo { has_next_page },
+        })
     }
 }
