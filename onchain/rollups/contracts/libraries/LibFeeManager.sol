@@ -104,12 +104,24 @@ library LibFeeManager {
         // before resetting the feePerClaim, pay fees for all validators as per current rates
         LibValidatorManager.DiamondStorage
             storage validatorManagerDS = LibValidatorManager.diamondStorage();
-        for (uint256 i; i < validatorManagerDS.maxNumValidators; i++) {
-            address validator = validatorManagerDS.validators[i];
-            if (
-                validator != address(0) && ds.numClaimsRedeemable(validator) > 0
-            ) {
-                ds.redeemFee(validator);
+        for (
+            uint256 valIndex;
+            valIndex < validatorManagerDS.maxNumValidators;
+            valIndex++
+        ) {
+            address validator = validatorManagerDS.validators[valIndex];
+            if (validator != address(0)) {
+                uint256 nowRedeemingClaims = ds.numClaimsRedeemable(validator);
+                if (nowRedeemingClaims > 0) {
+                    ds.numClaimsRedeemed = ds
+                        .numClaimsRedeemed
+                        .increaseNumClaims(valIndex, nowRedeemingClaims);
+
+                    uint256 feesToSend = nowRedeemingClaims * ds.feePerClaim; // number of erc20 tokens to send
+                    ds.bank.transferTokens(validator, feesToSend); // will revert if transfer fails
+                    // emit the number of claimed being redeemed, instead of the amount of tokens
+                    emit FeeRedeemed(validator, nowRedeemingClaims);
+                }
             }
         }
         ds.feePerClaim = _value;

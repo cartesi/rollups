@@ -237,9 +237,9 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@claimFinalizedIncreaseCounts_8759": {
+        "@claimFinalizedIncreaseCounts_8790": {
           "entryPoint": 3726,
-          "id": 8759,
+          "id": 8790,
           "parameterSlots": 1,
           "returnSlots": 0
         },
@@ -255,39 +255,39 @@
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@diamondStorage_7457": {
+        "@diamondStorage_7488": {
           "entryPoint": null,
-          "id": 7457,
+          "id": 7488,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@diamondStorage_7756": {
+        "@diamondStorage_7787": {
           "entryPoint": null,
-          "id": 7756,
+          "id": 7787,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@diamondStorage_7867": {
+        "@diamondStorage_7898": {
           "entryPoint": null,
-          "id": 7867,
+          "id": 7898,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@diamondStorage_8312": {
+        "@diamondStorage_8343": {
           "entryPoint": null,
-          "id": 8312,
+          "id": 8343,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@emitClaimReceivedAndReturn_8709": {
+        "@emitClaimReceivedAndReturn_8740": {
           "entryPoint": 3519,
-          "id": 8709,
+          "id": 8740,
           "parameterSlots": 3,
           "returnSlots": 3
         },
-        "@emitDisputeEndedAndReturn_8671": {
+        "@emitDisputeEndedAndReturn_8702": {
           "entryPoint": 5006,
-          "id": 8671,
+          "id": 8702,
           "parameterSlots": 3,
           "returnSlots": 3
         },
@@ -309,9 +309,9 @@
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getClaimerOfCurrentClaim_8885": {
+        "@getClaimerOfCurrentClaim_8916": {
           "entryPoint": 3333,
-          "id": 8885,
+          "id": 8916,
           "parameterSlots": 1,
           "returnSlots": 1
         },
@@ -327,9 +327,9 @@
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getCurrentEpoch_8239": {
+        "@getCurrentEpoch_8270": {
           "entryPoint": 1719,
-          "id": 8239,
+          "id": 8270,
           "parameterSlots": 1,
           "returnSlots": 1
         },
@@ -357,9 +357,9 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@getNumberOfFinalizedEpochs_7788": {
+        "@getNumberOfFinalizedEpochs_7819": {
           "entryPoint": null,
-          "id": 7788,
+          "id": 7819,
           "parameterSlots": 1,
           "returnSlots": 1
         },
@@ -375,9 +375,9 @@
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getValidatorIndex_9006": {
+        "@getValidatorIndex_9037": {
           "entryPoint": 3110,
-          "id": 9006,
+          "id": 9037,
           "parameterSlots": 2,
           "returnSlots": 1
         },
@@ -393,51 +393,51 @@
           "parameterSlots": 2,
           "returnSlots": 0
         },
-        "@isConsensus_8836": {
+        "@isConsensus_8867": {
           "entryPoint": 3651,
-          "id": 8836,
+          "id": 8867,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@isValidator_8958": {
+        "@isValidator_8989": {
           "entryPoint": 2935,
-          "id": 8958,
+          "id": 8989,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@onClaim_8633": {
+        "@onClaim_8664": {
           "entryPoint": 1893,
-          "id": 8633,
+          "id": 8664,
           "parameterSlots": 3,
           "returnSlots": 3
         },
-        "@onDisputeEnd_8455": {
+        "@onDisputeEnd_8486": {
           "entryPoint": 4138,
-          "id": 8455,
+          "id": 8486,
           "parameterSlots": 4,
           "returnSlots": 3
         },
-        "@onNewEpoch_7692": {
+        "@onNewEpoch_7723": {
           "entryPoint": 2869,
-          "id": 7692,
+          "id": 7723,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@onNewEpoch_7774": {
+        "@onNewEpoch_7805": {
           "entryPoint": null,
-          "id": 7774,
+          "id": 7805,
           "parameterSlots": 2,
           "returnSlots": 0
         },
-        "@onNewEpoch_8498": {
+        "@onNewEpoch_8529": {
           "entryPoint": 2776,
-          "id": 8498,
+          "id": 8529,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@onNewInputAccumulation_7671": {
+        "@onNewInputAccumulation_7702": {
           "entryPoint": 1881,
-          "id": 7671,
+          "id": 7702,
           "parameterSlots": 1,
           "returnSlots": 0
         },
@@ -447,21 +447,21 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@removeValidator_8812": {
+        "@removeValidator_8843": {
           "entryPoint": 4832,
-          "id": 8812,
+          "id": 8843,
           "parameterSlots": 2,
           "returnSlots": 0
         },
-        "@resolveDispute_8001": {
+        "@resolveDispute_8032": {
           "entryPoint": 3873,
-          "id": 8001,
+          "id": 8032,
           "parameterSlots": 4,
           "returnSlots": 0
         },
-        "@resolveValidatorResult_8102": {
+        "@resolveValidatorResult_8133": {
           "entryPoint": 2434,
-          "id": 8102,
+          "id": 8133,
           "parameterSlots": 4,
           "returnSlots": 0
         },
@@ -477,21 +477,21 @@
           "parameterSlots": 3,
           "returnSlots": 1
         },
-        "@startNewEpoch_8196": {
+        "@startNewEpoch_8227": {
           "entryPoint": 1407,
-          "id": 8196,
+          "id": 8227,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@swapInputBox_7713": {
+        "@swapInputBox_7744": {
           "entryPoint": 2904,
-          "id": 7713,
+          "id": 7744,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@updateClaimAgreementMask_8912": {
+        "@updateClaimAgreementMask_8943": {
           "entryPoint": 3608,
-          "id": 8912,
+          "id": 8943,
           "parameterSlots": 2,
           "returnSlots": 0
         },

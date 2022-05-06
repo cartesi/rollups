@@ -277,9 +277,9 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@alreadyClaimed_9936": {
+        "@alreadyClaimed_9967": {
           "entryPoint": 495,
-          "id": 9936,
+          "id": 9967,
           "parameterSlots": 2,
           "returnSlots": 1
         },
@@ -289,9 +289,9 @@
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@clearAgreementMask_9905": {
+        "@clearAgreementMask_9936": {
           "entryPoint": 526,
-          "id": 9905,
+          "id": 9936,
           "parameterSlots": 1,
           "returnSlots": 1
         },
@@ -301,9 +301,9 @@
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getAgreementMask_9919": {
+        "@getAgreementMask_9950": {
           "entryPoint": 571,
-          "id": 9919,
+          "id": 9950,
           "parameterSlots": 1,
           "returnSlots": 1
         },
@@ -313,9 +313,9 @@
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getConsensusGoalMask_9968": {
+        "@getConsensusGoalMask_9999": {
           "entryPoint": 543,
-          "id": 9968,
+          "id": 9999,
           "parameterSlots": 1,
           "returnSlots": 1
         },
@@ -325,9 +325,9 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@getNumClaims_9848": {
+        "@getNumClaims_9879": {
           "entryPoint": 464,
-          "id": 9848,
+          "id": 9879,
           "parameterSlots": 2,
           "returnSlots": 1
         },
@@ -337,9 +337,9 @@
           "parameterSlots": 3,
           "returnSlots": 1
         },
-        "@increaseNumClaims_9869": {
+        "@increaseNumClaims_9900": {
           "entryPoint": 418,
-          "id": 9869,
+          "id": 9900,
           "parameterSlots": 3,
           "returnSlots": 1
         },
@@ -349,9 +349,9 @@
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@newClaimsMaskWithConsensusGoalSet_9831": {
+        "@newClaimsMaskWithConsensusGoalSet_9862": {
           "entryPoint": 439,
-          "id": 9831,
+          "id": 9862,
           "parameterSlots": 1,
           "returnSlots": 1
         },
@@ -361,21 +361,21 @@
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@newClaimsMask_9817": {
+        "@newClaimsMask_9848": {
           "entryPoint": 456,
-          "id": 9817,
+          "id": 9848,
           "parameterSlots": 1,
+          "returnSlots": 1
+        },
+        "@removeValidator_10017": {
+          "entryPoint": 483,
+          "id": 10017,
+          "parameterSlots": 2,
           "returnSlots": 1
         },
         "@removeValidator_6182": {
           "entryPoint": 850,
           "id": 6182,
-          "parameterSlots": 2,
-          "returnSlots": 1
-        },
-        "@removeValidator_9986": {
-          "entryPoint": 483,
-          "id": 9986,
           "parameterSlots": 2,
           "returnSlots": 1
         },
@@ -385,9 +385,9 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@setAgreementMask_9954": {
+        "@setAgreementMask_9985": {
           "entryPoint": 514,
-          "id": 9954,
+          "id": 9985,
           "parameterSlots": 2,
           "returnSlots": 1
         },
@@ -397,9 +397,9 @@
           "parameterSlots": 3,
           "returnSlots": 1
         },
-        "@setNumClaims_9890": {
+        "@setNumClaims_9921": {
           "entryPoint": 558,
-          "id": 9890,
+          "id": 9921,
           "parameterSlots": 3,
           "returnSlots": 1
         },

@@ -239,9 +239,9 @@
     },
     "deployedBytecode": {
       "functionDebugData": {
-        "@diamondStorage_8312": {
+        "@diamondStorage_8343": {
           "entryPoint": null,
-          "id": 8312,
+          "id": 8343,
           "parameterSlots": 0,
           "returnSlots": 1
         },
@@ -281,9 +281,9 @@
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getMaxNumValidators_9077": {
+        "@getMaxNumValidators_9108": {
           "entryPoint": null,
-          "id": 9077,
+          "id": 9108,
           "parameterSlots": 1,
           "returnSlots": 1
         },
@@ -299,9 +299,9 @@
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getNumberOfClaimsByAddress_9046": {
+        "@getNumberOfClaimsByAddress_9077": {
           "entryPoint": 757,
-          "id": 9046,
+          "id": 9077,
           "parameterSlots": 2,
           "returnSlots": 1
         },
@@ -311,9 +311,9 @@
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getNumberOfClaimsByIndex_9064": {
+        "@getNumberOfClaimsByIndex_9095": {
           "entryPoint": 871,
-          "id": 9064,
+          "id": 9095,
           "parameterSlots": 2,
           "returnSlots": 1
         },
@@ -323,9 +323,9 @@
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getValidatorIndex_9006": {
+        "@getValidatorIndex_9037": {
           "entryPoint": 523,
-          "id": 9006,
+          "id": 9037,
           "parameterSlots": 2,
           "returnSlots": 1
         },
