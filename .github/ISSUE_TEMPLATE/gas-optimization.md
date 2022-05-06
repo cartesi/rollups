@@ -11,6 +11,7 @@ assignees: ''
 - [ ] configure and run the [HardHat profiler](https://www.npmjs.com/package/hardhat-gas-reporter)
 - [ ] check the boxes in the checklist if they are applicable. Leave out those that are not applicable. It would be helpful to record the gas savings amount for modification steps.
 - [ ] create a PR to compare the original/current gas report, display the amount of gas savings of modification steps, discuss and comment.
+- [ ] you can use [this Python script](https://gist.github.com/guidanoli/b7566f54c437e0b0f28c4554d151286f) to ease the job of comparing Hardhat gas reports. It takes two Hardhat gas reports (before and after some change) and outputs a Markdown table comparing them. Other options are available.
 - [ ] (optional) Learn more about [gas consumption components of deploying a contract](https://ethereum.stackexchange.com/questions/35539/what-is-the-real-price-of-deploying-a-contract-on-the-mainnet/37898), [more detailed analysis](https://hackernoon.com/costs-of-a-real-world-ethereum-contract-2033511b3214), and how to [reduce contract bytecode](https://medium.com/daox/avoiding-out-of-gas-error-in-large-ethereum-smart-contracts-18961b1fc0c6)
 
 ## Checklist
