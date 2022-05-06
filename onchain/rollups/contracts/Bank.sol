@@ -17,10 +17,10 @@ import {IBank} from "./IBank.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Bank is IBank {
-    IERC20 immutable token;
+    IERC20 private immutable token;
 
     // `balances` maps account/contract addresses to balances
-    mapping(address => uint256) balances;
+    mapping(address => uint256) private balances;
 
     constructor(address _token) {
         require(_token != address(0), "Bank: invalid token");
