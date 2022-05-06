@@ -334,13 +334,11 @@ describe("Output Facet", () => {
 
     /// ***test function isValidVoucherProof()///
     it("testing function isValidVoucherProof()", async () => {
-        expect(
-            await outputFacet.isValidVoucherProof(
-                encodedVoucher,
-                epochHashForVoucher,
-                v
-            )
-        ).to.equal(true);
+        await outputFacet.isValidVoucherProof(
+            encodedVoucher,
+            epochHashForVoucher,
+            v
+        );
     });
 
     it("isValidVoucherProof() should revert when _epochHash doesn't match", async () => {
@@ -383,13 +381,11 @@ describe("Output Facet", () => {
 
     /// ***test function isValidNoticeProof()///
     it("testing function isValidNoticeProof()", async () => {
-        expect(
-            await outputFacet.isValidNoticeProof(
-                encodedNotice,
-                epochHashForNotice,
-                n
-            )
-        ).to.equal(true);
+        await outputFacet.isValidNoticeProof(
+            encodedNotice,
+            epochHashForNotice,
+            n
+        );
     });
 
     it("isValidNoticeProof() should revert when _epochHash doesn't match", async () => {

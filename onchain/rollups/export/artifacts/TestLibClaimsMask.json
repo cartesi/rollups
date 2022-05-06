@@ -271,135 +271,135 @@
     },
     "deployedBytecode": {
       "functionDebugData": {
-        "@alreadyClaimed_6048": {
+        "@alreadyClaimed_6037": {
           "entryPoint": null,
-          "id": 6048,
+          "id": 6037,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@alreadyClaimed_9967": {
+        "@alreadyClaimed_9956": {
           "entryPoint": 495,
-          "id": 9967,
+          "id": 9956,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@clearAgreementMask_6002": {
+        "@clearAgreementMask_5991": {
           "entryPoint": null,
-          "id": 6002,
+          "id": 5991,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@clearAgreementMask_9936": {
+        "@clearAgreementMask_9925": {
           "entryPoint": 526,
-          "id": 9936,
+          "id": 9925,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getAgreementMask_6020": {
+        "@getAgreementMask_6009": {
           "entryPoint": null,
-          "id": 6020,
+          "id": 6009,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getAgreementMask_9950": {
+        "@getAgreementMask_9939": {
           "entryPoint": 571,
-          "id": 9950,
+          "id": 9939,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getConsensusGoalMask_6110": {
+        "@getConsensusGoalMask_6099": {
           "entryPoint": null,
-          "id": 6110,
+          "id": 6099,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getConsensusGoalMask_9999": {
+        "@getConsensusGoalMask_9988": {
           "entryPoint": 543,
-          "id": 9999,
+          "id": 9988,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getNumClaims_5852": {
+        "@getNumClaims_5841": {
           "entryPoint": 772,
-          "id": 5852,
+          "id": 5841,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@getNumClaims_9879": {
+        "@getNumClaims_9868": {
           "entryPoint": 464,
-          "id": 9879,
+          "id": 9868,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@increaseNumClaims_5893": {
+        "@increaseNumClaims_5882": {
           "entryPoint": 583,
-          "id": 5893,
+          "id": 5882,
           "parameterSlots": 3,
           "returnSlots": 1
         },
-        "@increaseNumClaims_9900": {
+        "@increaseNumClaims_9889": {
           "entryPoint": 418,
-          "id": 9900,
+          "id": 9889,
           "parameterSlots": 3,
           "returnSlots": 1
         },
-        "@newClaimsMaskWithConsensusGoalSet_5811": {
+        "@newClaimsMaskWithConsensusGoalSet_5800": {
           "entryPoint": 675,
-          "id": 5811,
+          "id": 5800,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@newClaimsMaskWithConsensusGoalSet_9862": {
+        "@newClaimsMaskWithConsensusGoalSet_9851": {
           "entryPoint": 439,
-          "id": 9862,
+          "id": 9851,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@newClaimsMask_5778": {
+        "@newClaimsMask_5767": {
           "entryPoint": null,
-          "id": 5778,
+          "id": 5767,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@newClaimsMask_9848": {
+        "@newClaimsMask_9837": {
           "entryPoint": 456,
-          "id": 9848,
+          "id": 9837,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@removeValidator_10017": {
+        "@removeValidator_10006": {
           "entryPoint": 483,
-          "id": 10017,
+          "id": 10006,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@removeValidator_6182": {
+        "@removeValidator_6171": {
           "entryPoint": 850,
-          "id": 6182,
+          "id": 6171,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@setAgreementMask_6089": {
+        "@setAgreementMask_6078": {
           "entryPoint": 952,
-          "id": 6089,
+          "id": 6078,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@setAgreementMask_9985": {
+        "@setAgreementMask_9974": {
           "entryPoint": 514,
-          "id": 9985,
+          "id": 9974,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@setNumClaims_5971": {
+        "@setNumClaims_5960": {
           "entryPoint": 1014,
-          "id": 5971,
+          "id": 5960,
           "parameterSlots": 3,
           "returnSlots": 1
         },
-        "@setNumClaims_9921": {
+        "@setNumClaims_9910": {
           "entryPoint": 558,
-          "id": 9921,
+          "id": 9910,
           "parameterSlots": 3,
           "returnSlots": 1
         },
@@ -409,19 +409,19 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760": {
+        "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5749": {
           "entryPoint": null,
           "id": null,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760t_uint256": {
+        "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5749t_uint256": {
           "entryPoint": 1263,
           "id": null,
           "parameterSlots": 2,
           "returnSlots": 2
         },
-        "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760t_uint256t_uint256": {
+        "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5749t_uint256t_uint256": {
           "entryPoint": 1194,
           "id": null,
           "parameterSlots": 2,
@@ -457,7 +457,7 @@
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760__to_t_uint256__fromStack_reversed": {
+        "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5749__to_t_uint256__fromStack_reversed": {
           "entryPoint": null,
           "id": null,
           "parameterSlots": 2,
@@ -701,7 +701,7 @@
                     }
                   ]
                 },
-                "name": "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760t_uint256t_uint256",
+                "name": "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5749t_uint256t_uint256",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -805,7 +805,7 @@
                     }
                   ]
                 },
-                "name": "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760__to_t_uint256__fromStack_reversed",
+                "name": "abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5749__to_t_uint256__fromStack_reversed",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -1126,7 +1126,7 @@
                     }
                   ]
                 },
-                "name": "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760t_uint256",
+                "name": "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5749t_uint256",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -1476,7 +1476,7 @@
                     }
                   ]
                 },
-                "name": "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760",
+                "name": "abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5749",
                 "nodeType": "YulFunctionDefinition",
                 "parameters": [
                   {
@@ -2565,7 +2565,7 @@
               }
             ]
           },
-          "contents": "{\n    { }\n    function abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760t_uint256t_uint256(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 96) { revert(0, 0) }\n        value0 := calldataload(headStart)\n        value1 := calldataload(add(headStart, 32))\n        value2 := calldataload(add(headStart, 64))\n    }\n    function abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5760__to_t_uint256__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_decode_tuple_t_uint256(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := calldataload(headStart)\n    }\n    function abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760t_uint256(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := calldataload(headStart)\n        value1 := calldataload(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_uint256__to_t_uint256__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_encode_tuple_t_bool__to_t_bool__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, iszero(iszero(value0)))\n    }\n    function abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5760(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := calldataload(headStart)\n    }\n    function abi_encode_tuple_t_stringliteral_724a1a52159ca2ba80a0176a83b5dd7273d23b0484847d7480bf867e72e8022d__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 18)\n        mstore(add(headStart, 64), \"index out of range\")\n        tail := add(headStart, 96)\n    }\n    function panic_error_0x11()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x11)\n        revert(0, 0x24)\n    }\n    function checked_add_t_uint256(x, y) -> sum\n    {\n        if gt(x, not(y)) { panic_error_0x11() }\n        sum := add(x, y)\n    }\n    function abi_encode_tuple_t_stringliteral_d1a2afdc0f74321c3b7d82f19b47510e11d228fd856d186619a9fd649a0593ab__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 18)\n        mstore(add(headStart, 64), \"up to 8 validators\")\n        tail := add(headStart, 96)\n    }\n    function checked_sub_t_uint256(x, y) -> diff\n    {\n        if lt(x, y) { panic_error_0x11() }\n        diff := sub(x, y)\n    }\n    function checked_mul_t_uint256(x, y) -> product\n    {\n        if and(iszero(iszero(x)), gt(y, div(not(0), x))) { panic_error_0x11() }\n        product := mul(x, y)\n    }\n    function abi_encode_tuple_t_stringliteral_c4d2189ab07abe2786c9ddd18bc105c0ac91aadb5554043dc1484eea89108e20__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 19)\n        mstore(add(headStart, 64), \"ClaimsMask Overflow\")\n        tail := add(headStart, 96)\n    }\n}",
+          "contents": "{\n    { }\n    function abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5749t_uint256t_uint256(headStart, dataEnd) -> value0, value1, value2\n    {\n        if slt(sub(dataEnd, headStart), 96) { revert(0, 0) }\n        value0 := calldataload(headStart)\n        value1 := calldataload(add(headStart, 32))\n        value2 := calldataload(add(headStart, 64))\n    }\n    function abi_encode_tuple_t_userDefinedValueType$_ClaimsMask_$5749__to_t_uint256__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_decode_tuple_t_uint256(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := calldataload(headStart)\n    }\n    function abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5749t_uint256(headStart, dataEnd) -> value0, value1\n    {\n        if slt(sub(dataEnd, headStart), 64) { revert(0, 0) }\n        value0 := calldataload(headStart)\n        value1 := calldataload(add(headStart, 32))\n    }\n    function abi_encode_tuple_t_uint256__to_t_uint256__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, value0)\n    }\n    function abi_encode_tuple_t_bool__to_t_bool__fromStack_reversed(headStart, value0) -> tail\n    {\n        tail := add(headStart, 32)\n        mstore(headStart, iszero(iszero(value0)))\n    }\n    function abi_decode_tuple_t_userDefinedValueType$_ClaimsMask_$5749(headStart, dataEnd) -> value0\n    {\n        if slt(sub(dataEnd, headStart), 32) { revert(0, 0) }\n        value0 := calldataload(headStart)\n    }\n    function abi_encode_tuple_t_stringliteral_724a1a52159ca2ba80a0176a83b5dd7273d23b0484847d7480bf867e72e8022d__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 18)\n        mstore(add(headStart, 64), \"index out of range\")\n        tail := add(headStart, 96)\n    }\n    function panic_error_0x11()\n    {\n        mstore(0, shl(224, 0x4e487b71))\n        mstore(4, 0x11)\n        revert(0, 0x24)\n    }\n    function checked_add_t_uint256(x, y) -> sum\n    {\n        if gt(x, not(y)) { panic_error_0x11() }\n        sum := add(x, y)\n    }\n    function abi_encode_tuple_t_stringliteral_d1a2afdc0f74321c3b7d82f19b47510e11d228fd856d186619a9fd649a0593ab__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 18)\n        mstore(add(headStart, 64), \"up to 8 validators\")\n        tail := add(headStart, 96)\n    }\n    function checked_sub_t_uint256(x, y) -> diff\n    {\n        if lt(x, y) { panic_error_0x11() }\n        diff := sub(x, y)\n    }\n    function checked_mul_t_uint256(x, y) -> product\n    {\n        if and(iszero(iszero(x)), gt(y, div(not(0), x))) { panic_error_0x11() }\n        product := mul(x, y)\n    }\n    function abi_encode_tuple_t_stringliteral_c4d2189ab07abe2786c9ddd18bc105c0ac91aadb5554043dc1484eea89108e20__to_t_string_memory_ptr__fromStack_reversed(headStart) -> tail\n    {\n        mstore(headStart, 32)\n        mstore(add(headStart, 32), 19)\n        mstore(add(headStart, 64), \"ClaimsMask Overflow\")\n        tail := add(headStart, 96)\n    }\n}",
           "id": 49,
           "language": "Yul",
           "name": "#utility.yul"

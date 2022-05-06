@@ -182,9 +182,7 @@ library LibValidatorManager {
         // cant return because a single claim might mean consensus
         if (ds.currentClaim == bytes32(0)) {
             ds.currentClaim = claim;
-        }
-
-        if (claim != ds.currentClaim) {
+        } else if (claim != ds.currentClaim) {
             return
                 emitClaimReceivedAndReturn(
                     Result.Conflict,

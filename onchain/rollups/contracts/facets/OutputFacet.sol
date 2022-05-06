@@ -89,7 +89,7 @@ contract OutputFacet is IOutput {
         );
 
         // execute voucher
-        (bool succ, ) = address(_destination).call(_payload);
+        (bool succ, ) = _destination.call(_payload);
 
         // if properly executed, mark it as executed and emit event
         if (succ) {
@@ -100,8 +100,7 @@ contract OutputFacet is IOutput {
         return succ;
     }
 
-    /// @notice functions modified by isValidProof will only be executed if
-    ///         the validity proof is valid
+    /// @notice isValidProof reverts if the proof is invalid
     ///  @dev _outputsEpochRootHash must be _v.vouchersEpochRootHash or
     ///                                  or _v.noticesEpochRootHash
     function isValidProof(
@@ -111,7 +110,7 @@ contract OutputFacet is IOutput {
         uint256 _outputEpochLog2Size,
         uint256 _outputHashesLog2Size,
         OutputValidityProof calldata _v
-    ) internal pure returns (bool) {
+    ) internal pure {
         // prove that outputs hash is represented in a finalized epoch
         require(
             keccak256(
@@ -170,44 +169,38 @@ contract OutputFacet is IOutput {
             ) == _v.outputHashesRootHash,
             "outputHashesRootHash incorrect"
         );
-
-        return true;
     }
 
-    /// @notice functions modified by isValidVoucherProof will only be executed if
-    ///         the validity proof is valid
+    /// @notice isValidVoucherProof reverts if the proof is invalid
     function isValidVoucherProof(
         bytes memory _encodedVoucher,
         bytes32 _epochHash,
         OutputValidityProof calldata _v
-    ) public pure returns (bool) {
-        return
-            isValidProof(
-                _encodedVoucher,
-                _epochHash,
-                _v.vouchersEpochRootHash,
-                EPOCH_VOUCHER_LOG2_SIZE,
-                VOUCHER_METADATA_LOG2_SIZE,
-                _v
-            );
+    ) public pure {
+        isValidProof(
+            _encodedVoucher,
+            _epochHash,
+            _v.vouchersEpochRootHash,
+            EPOCH_VOUCHER_LOG2_SIZE,
+            VOUCHER_METADATA_LOG2_SIZE,
+            _v
+        );
     }
 
-    /// @notice functions modified by isValidNoticeProof will only be executed if
-    ///         the validity proof is valid
+    /// @notice isValidNoticeProof reverts if the proof is invalid
     function isValidNoticeProof(
         bytes memory _encodedNotice,
         bytes32 _epochHash,
         OutputValidityProof calldata _v
-    ) public pure returns (bool) {
-        return
-            isValidProof(
-                _encodedNotice,
-                _epochHash,
-                _v.noticesEpochRootHash,
-                EPOCH_NOTICE_LOG2_SIZE,
-                NOTICE_METADATA_LOG2_SIZE,
-                _v
-            );
+    ) public pure {
+        isValidProof(
+            _encodedNotice,
+            _epochHash,
+            _v.noticesEpochRootHash,
+            EPOCH_NOTICE_LOG2_SIZE,
+            NOTICE_METADATA_LOG2_SIZE,
+            _v
+        );
     }
 
     /// @notice get voucher position on bitmask

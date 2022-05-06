@@ -272,13 +272,7 @@
       }
     ],
     "name": "isValidNoticeProof",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "pure",
     "type": "function"
   },
@@ -348,13 +342,7 @@
       }
     ],
     "name": "isValidVoucherProof",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "pure",
     "type": "function"
   }
