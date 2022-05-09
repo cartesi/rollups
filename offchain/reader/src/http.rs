@@ -23,8 +23,8 @@ use juniper::http::GraphQLRequest;
 use juniper::{EmptyMutation, EmptySubscription};
 use std::sync::Arc;
 
-struct Context {
-    schema: Arc<crate::graphql::Schema>,
+struct HttpContext {
+    schema: Arc<rollups_data::graphql::schema::Schema>,
     db_pool: Arc<Pool<ConnectionManager<PgConnection>>>,
 }
 
@@ -34,19 +34,20 @@ pub async fn start_service(
     pool: Pool<ConnectionManager<PgConnection>>,
 ) -> std::io::Result<()> {
     HttpServer::new(move || {
-        let schema = std::sync::Arc::new(crate::graphql::Schema::new(
-            crate::graphql::Query,
-            EmptyMutation::new(),
-            EmptySubscription::new(),
-        ));
+        let schema =
+            std::sync::Arc::new(rollups_data::graphql::queries::Schema::new(
+                rollups_data::graphql::queries::Query,
+                EmptyMutation::<rollups_data::graphql::queries::Context>::new(),
+                EmptySubscription::new(),
+            ));
 
-        let context = Context {
+        let http_context = HttpContext {
             schema: schema.clone(),
             db_pool: Arc::new(pool.clone()),
         };
 
         App::new()
-            .app_data(Data::new(context))
+            .app_data(Data::new(http_context))
             .wrap(Logger::default())
             .service(graphql)
             .service(juniper_playground)
@@ -67,12 +68,12 @@ fn juniper_playground() -> HttpResponse {
 #[actix_web::post("/graphql")]
 async fn graphql(
     query: web::Json<GraphQLRequest>,
-    context: web::Data<Context>,
+    http_context: web::Data<HttpContext>,
 ) -> HttpResult<impl Responder> {
-    let ctx = crate::graphql::Context {
-        db_pool: context.db_pool.clone(),
+    let ctx = rollups_data::graphql::queries::Context {
+        db_pool: http_context.db_pool.clone(),
     };
-    let res = query.execute(&context.schema, &ctx).await;
+    let res = query.execute(&http_context.schema, &ctx).await;
     let value = serde_json::to_string(&res)?;
 
     Ok(HttpResponse::Ok()

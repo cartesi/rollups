@@ -13,7 +13,6 @@
 
 mod config;
 mod error;
-pub mod graphql;
 pub mod http;
 
 use tracing::{info, warn};

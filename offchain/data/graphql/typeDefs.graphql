@@ -1,39 +1,46 @@
-
-
-type PageInfo {
-	hasNextPage: Boolean!
+"Notice generated during dapp advance request processing"
+type Notice {
+  id: Int!
+  sessionId: String!
+  epochIndex: Int!
+  inputIndex: Int!
+  noticeIndex: Int!
+  keccak: String!
+  payload: String!
 }
 
 input NoticeKeys {
-	sessionId: String
-	epochIndex: Int
-	inputIndex: Int
-	noticeIndex: Int
-}
-
-type Notice {
-	sessionId: String!
-	epochIndex: Int!
-	inputIndex: Int!
-	noticeIndex: Int!
-	keccak: String!
-	payload: String!
-}
-
-type NoticeEdge {
-	node: Notice!
-	cursor: String!
-}
-
-type NoticeConnection {
-	edges: [NoticeEdge!]!
-	pageInfo: PageInfo!
+  sessionId: String
+  epochIndex: Int
+  inputIndex: Int
+  noticeIndex: Int
 }
 
 type Query {
-	getNotice(query: NoticeKeys, first: Int, after: String): NoticeConnection! @juniper(ownership: "owned")
+  notice(noticeId: String!): Notice!
+  notices(noticeKeys: NoticeKeys, first: Int, last: Int, after: String, before: String): NoticeConnection!
+}
+
+type NoticeEdge {
+  node: Notice!
+  cursor: String!
+}
+
+type NoticeConnection {
+  totalCount: Int!
+  edges: [NoticeEdge!]!
+  nodes: [Notice!]!
+  pageInfo: PageInfo!
+}
+
+"Connection pattern cursor based pagination page info"
+type PageInfo {
+  startCursor: String!
+  endCursor: String!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
 }
 
 schema {
-	query: Query
+  query: Query
 }

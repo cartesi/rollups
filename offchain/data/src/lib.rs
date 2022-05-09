@@ -12,6 +12,7 @@
  */
 
 pub mod database;
+pub mod graphql;
 
 #[macro_use]
 extern crate diesel;
