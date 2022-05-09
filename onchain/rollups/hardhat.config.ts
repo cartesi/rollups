@@ -21,6 +21,7 @@ import "@typechain/hardhat";
 import "hardhat-deploy";
 import "@tenderly/hardhat-tenderly";
 import "hardhat-abi-exporter";
+import "hardhat-gas-reporter";
 
 // read MNEMONIC from env variable
 let mnemonic = process.env.MNEMONIC;
@@ -137,6 +138,9 @@ const config: HardhatUserConfig = {
         beneficiary: {
             default: 1,
         },
+    },
+    gasReporter: {
+        enabled: process.env.REPORT_GAS ? true : false,
     },
 };
 
