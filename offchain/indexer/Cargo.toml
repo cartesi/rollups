@@ -11,8 +11,11 @@ path = "src/main.rs"
 
 [dependencies]
 rollups-data = { path = "../data" }
+offchain = { path = "../offchain" }
 offchain-core = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
 configuration = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
+state-fold = { git = "https://github.com/cartesi/state-fold", tag = "v0.1.0" }
+
 structopt = "0.3"
 snafu = "0.6"
 tokio = { version = "1.0", features = ["full"] }

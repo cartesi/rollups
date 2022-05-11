@@ -17,10 +17,32 @@ use diesel::backend::Backend;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, ManageConnection};
 use diesel::{Insertable, Queryable};
-use schema::notices;
+use schema::{epochs, inputs, notices};
+use tokio::task::JoinError;
 
-pub const CURRENT_EPOCH_INDEX: &str = "current_epoch_index";
+pub const CURRENT_NOTICE_EPOCH_INDEX: &str = "current_notice_epoch_index";
+pub const CURRENT_INPUT_EPOCH_INDEX: &str = "current_input_epoch_index";
 pub const POOL_CONNECTION_SIZE: u32 = 3;
+
+/// Struct representing Epoch in the database
+#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[table_name = "epochs"]
+pub struct DbEpoch {
+    pub epoch_index: i32,
+}
+
+/// Struct representing Input in the database
+#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[table_name = "inputs"]
+pub struct DbInput {
+    pub id: i32,
+    pub input_index: i32,
+    pub epoch_index: i32,
+    pub sender: String,
+    pub block_number: i64,
+    pub payload: Option<Vec<u8>>,
+    pub timestamp: chrono::NaiveDateTime,
+}
 
 /// Struct representing Notice in the database
 #[derive(Insertable, Queryable, Debug, PartialEq)]
@@ -38,6 +60,7 @@ pub struct DbNotice {
     #[diesel(deserialize_as = "LocalDateTimeWrapper")]
     pub timestamp: chrono::DateTime<chrono::Local>, //todo use time from input
 }
+
 pub struct LocalDateTimeWrapper(DateTime<Local>);
 impl From<LocalDateTimeWrapper> for DateTime<Local> {
     fn from(wrapper: LocalDateTimeWrapper) -> DateTime<Local> {
@@ -65,6 +88,7 @@ where
 #[derive(Debug)]
 pub enum Message {
     Notice(DbNotice),
+    Input(DbInput),
 }
 
 /// Create database connection manager, wait until database server is available with backoff strategy
@@ -91,4 +115,14 @@ pub fn create_db_pool_with_retry(
 
     backoff::retry(backoff::ExponentialBackoff::default(), op)
         .expect("error creating pool")
+}
+
+// Connect to database in separate async blocking tread
+pub async fn connect_to_database_with_retry_async(
+    endpoint: String,
+) -> Result<PgConnection, JoinError> {
+    tokio::task::spawn_blocking(move || {
+        connect_to_database_with_retry(&endpoint)
+    })
+    .await
 }

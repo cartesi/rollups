@@ -25,12 +25,14 @@ impl Query {
             .map_err(|e| super::error::Error::InvalidIdError { source: e })?;
         use crate::database::{schema::notices::dsl::*, DbNotice};
         let conn = executor.context().db_pool.get().map_err(|e| {
-            super::error::Error::DatabasePoolConnectionError { message: e.to_string() }
+            super::error::Error::DatabasePoolConnectionError {
+                message: e.to_string(),
+            }
         })?;
         let query = notices.into_boxed().filter(id.eq(notice_id));
-        let db_notices = query.load::<DbNotice>(&conn).map_err(|e| {
-            super::error::Error::DatabaseError { source: e }
-        })?;
+        let db_notices = query
+            .load::<DbNotice>(&conn)
+            .map_err(|e| super::error::Error::DatabaseError { source: e })?;
 
         if let Some(db_notice) = db_notices.iter().nth(0) {
             Ok(Notice {
@@ -47,7 +49,10 @@ impl Query {
                     .as_str(),
             })
         } else {
-            Err(super::error::Error::ItemNotFound { id: notice_id.to_string() }.into())
+            Err(super::error::Error::ItemNotFound {
+                id: notice_id.to_string(),
+            }
+            .into())
         }
     }
 

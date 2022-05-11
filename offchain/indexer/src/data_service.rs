@@ -14,8 +14,14 @@
 /// Data service polls other Cartesi services
 /// with specified interval and collects related data about dapp
 use crate::config::IndexerConfig;
+use crate::db_service::{get_current_db_epoch_async, EpochIndexType};
 use chrono::Local;
-use rollups_data::database::{DbNotice, Message};
+use diesel::PgConnection;
+use ethers::core::types::{Address, U256};
+use offchain::fold::types::{Input, RollupsState};
+use rollups_data::database::{DbInput, DbNotice, Message};
+use snafu::ResultExt;
+use state_fold::types::BlockState;
 use std::ops::Add;
 use std::sync::Arc;
 use tokio::sync::mpsc;
@@ -27,6 +33,10 @@ use crate::grpc::{
         server_manager_client::ServerManagerClient, GetEpochStatusRequest,
         GetEpochStatusResponse, GetSessionStatusRequest,
         GetSessionStatusResponse,
+    },
+    state_server::{
+        delegate_manager_client::DelegateManagerClient, GetStateRequest,
+        GetStateResponse,
     },
 };
 
@@ -43,7 +53,23 @@ async fn connect_to_server_manager_with_retry(
     };
     backoff::future::retry(backoff::ExponentialBackoff::default(), op)
         .await
-        .map_err(|e| crate::error::Error::TonicTransportError { source: e })
+        .context(super::error::TonicTransportError)
+}
+
+/// Connect to Cartesi State Server using backoff strategy
+async fn connect_to_state_server_with_retry(
+    state_server_endpoint: &str,
+) -> Result<DelegateManagerClient<tonic::transport::Channel>, crate::error::Error>
+{
+    let endpoint = state_server_endpoint.to_string();
+    let op = || async {
+        DelegateManagerClient::connect(endpoint.clone())
+            .await
+            .map_err(rollups_data::new_backoff_err)
+    };
+    backoff::future::retry(backoff::ExponentialBackoff::default(), op)
+        .await
+        .context(super::error::TonicTransportError)
 }
 
 /// Get epoch status from server manager
@@ -60,7 +86,7 @@ async fn get_epoch_status(
     Ok(client
         .get_epoch_status(tonic::Request::new(request.clone()))
         .await
-        .map_err(|e| crate::error::Error::TonicStatusError { source: e })?
+        .context(crate::error::TonicStatusError)?
         .into_inner())
 }
 
@@ -76,7 +102,23 @@ async fn get_session_status(
     Ok(client
         .get_session_status(tonic::Request::new(request.clone()))
         .await
-        .map_err(|e| crate::error::Error::TonicStatusError { source: e })?
+        .context(crate::error::TonicStatusError)?
+        .into_inner())
+}
+
+/// Get state from state server (a.k.a delegate manager)
+async fn get_state(
+    client: &mut DelegateManagerClient<tonic::transport::Channel>,
+    initial_state: &str,
+) -> Result<GetStateResponse, crate::error::Error> {
+    let request = GetStateRequest {
+        json_initial_state: initial_state.into(),
+    };
+
+    Ok(client
+        .get_state(tonic::Request::new(request.clone()))
+        .await
+        .context(crate::error::TonicStatusError)?
         .into_inner())
 }
 
@@ -147,9 +189,97 @@ async fn poll_epoch_status(
     Ok(())
 }
 
+/// Get state server current state
+async fn poll_state(
+    message_tx: &mpsc::Sender<Message>,
+    client: &mut DelegateManagerClient<tonic::transport::Channel>,
+    dapp_contract_address: Address,
+    initial_epoch: i32,
+) -> Result<(), crate::error::Error> {
+    let initial_state = (U256::from(initial_epoch), dapp_contract_address);
+
+    let json_initial_state = serde_json::to_string(&initial_state)
+        .context(super::error::SerializeError)?;
+
+    debug!(
+        "Json state server retrieve initial state argument: {:?}",
+        &json_initial_state
+    );
+
+    let state_str = get_state(client, &json_initial_state).await?;
+
+    let block_state: BlockState<RollupsState> =
+        serde_json::from_str(&state_str.json_state)
+            .context(super::error::DeserializeError)?;
+
+    async fn send_input(
+        index: usize,
+        epoch_index: i32,
+        input: &Input,
+        message_tx: &mpsc::Sender<Message>,
+    ) {
+        if let Err(e) = message_tx
+            .send(Message::Input(DbInput {
+                id: 0,
+                epoch_index: epoch_index,
+                input_index: index as i32,
+                block_number: input.block_number.as_u64() as i64,
+                sender: "0x".to_string() + hex::encode(input.sender).as_str(),
+                payload: Some((*input.payload).clone()),
+                timestamp: chrono::NaiveDateTime::from_timestamp(
+                    input.timestamp.low_u64() as i64,
+                    0,
+                ),
+            }))
+            .await
+        {
+            error!("error passing input message to db {}", e.to_string())
+        }
+    }
+
+    // Process first inputs from finalized epochs
+    for finalized_epoch in block_state.state.finalized_epochs.finalized_epochs {
+        for (index, input) in finalized_epoch.inputs.inputs.iter().enumerate() {
+            debug!("Processing finalized input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
+                    &input.sender, finalized_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
+            send_input(
+                index,
+                finalized_epoch.epoch_number.as_u32() as i32,
+                input,
+                message_tx,
+            )
+            .await;
+        }
+    }
+
+    debug!("Checking current inputs: {:?}", &json_initial_state);
+
+    for (index, input) in block_state
+        .state
+        .current_epoch
+        .inputs
+        .inputs
+        .iter()
+        .enumerate()
+    {
+        debug!("Processing current input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
+                    &input.sender, block_state.state.current_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
+        send_input(
+            index,
+            block_state.state.current_epoch.epoch_number.as_u32() as i32,
+            input,
+            message_tx,
+        )
+        .await;
+    }
+
+    Ok(())
+}
+
 /// Polling task type
 enum TaskType {
     GetEpochStatus,
+    GetState,
 }
 
 /// Task that gets executed in the polling event loop
@@ -165,12 +295,20 @@ async fn polling_loop(
 ) -> Result<(), crate::error::Error> {
     let loop_interval = std::time::Duration::from_millis(100);
     let poll_interval = std::time::Duration::from_secs(config.interval);
+    let postgres_endpoint = crate::db_service::format_endpoint(&config);
 
-    let mut tasks = vec![Task {
-        interval: poll_interval,
-        next_execution: std::time::SystemTime::now().add(poll_interval),
-        task_type: TaskType::GetEpochStatus,
-    }];
+    let mut tasks = vec![
+        Task {
+            interval: poll_interval,
+            next_execution: std::time::SystemTime::now().add(poll_interval),
+            task_type: TaskType::GetEpochStatus,
+        },
+        Task {
+            interval: poll_interval,
+            next_execution: std::time::SystemTime::now().add(2 * poll_interval),
+            task_type: TaskType::GetState,
+        },
+    ];
 
     // Polling tasks loop
     info!("Starting data polling loop");
@@ -215,6 +353,56 @@ async fn polling_loop(
                         task.next_execution =
                             task.next_execution.add(task.interval);
                     }
+                    TaskType::GetState => {
+                        {
+                            let config = config.clone();
+                            let message_tx = message_tx.clone();
+                            let postgres_endpoint = postgres_endpoint.clone();
+                            tokio::spawn(async move {
+                                debug!(
+                                    "Performing get state from state server {}",
+                                    &config.state_server_endpoint
+                                );
+
+                                let mut state_server_client =
+                                    match connect_to_state_server_with_retry(
+                                        &config.state_server_endpoint,
+                                    )
+                                    .await
+                                    {
+                                        Ok(client) => client,
+                                        Err(e) => {
+                                            // In case of error, continue with the loop, try to connect again after interval
+                                            error!("Failed to connect to state server endpoint {}: {}", &config.state_server_endpoint, e.to_string());
+                                            return (); // return from spanned background task
+                                        }
+                                    };
+                                let db_epoch_index =
+                                    get_current_db_epoch_async(
+                                        &postgres_endpoint,
+                                        EpochIndexType::Input,
+                                    )
+                                    .await
+                                    .unwrap_or_default();
+
+                                if let Err(e) = poll_state(
+                                    &message_tx,
+                                    &mut state_server_client,
+                                    config.dapp_contract_address,
+                                    db_epoch_index,
+                                )
+                                .await
+                                {
+                                    error!(
+                                        "Error pooling get state from delegate server {}",
+                                        e.to_string()
+                                    );
+                                }
+                            });
+                        }
+                        task.next_execution =
+                            task.next_execution.add(task.interval);
+                    }
                 }
             }
         }
@@ -222,31 +410,25 @@ async fn polling_loop(
     }
 }
 
-/// Sync data from external endpoints on indexer startup,
-/// based on current database epoch index
-async fn sync_data(
+/// Sync data from machine manager starting from last epoch recorded
+/// in database
+async fn sync_epoch_status(
     message_tx: mpsc::Sender<rollups_data::database::Message>,
-    config: Arc<IndexerConfig>,
+    mut client: ServerManagerClient<tonic::transport::Channel>,
+    conn: PgConnection,
+    session_id: &str,
 ) -> Result<(), crate::error::Error> {
-    let postgres_endpoint = crate::db_service::format_endpoint(&config);
-    let conn = tokio::task::spawn_blocking(move || {
-        rollups_data::database::connect_to_database_with_retry(
-            &postgres_endpoint,
-        )
-    })
-    .await
-    .map_err(|e| crate::error::Error::TokioError { source: e })?;
-
     let db_epoch_index = tokio::task::spawn_blocking(move || {
-        Ok(crate::db_service::get_current_db_epoch(&conn)? as u64)
+        Ok(crate::db_service::get_current_db_epoch(
+            &conn,
+            EpochIndexType::Notice,
+        )? as u64)
     })
     .await
     .map_err(|e| crate::error::Error::TokioError { source: e })??;
 
-    let mut client =
-        connect_to_server_manager_with_retry(&config.mm_endpoint).await?;
     let current_session_status =
-        get_session_status(&mut client, &config.session_id).await?;
+        get_session_status(&mut client, session_id).await?;
     debug!(
         "Sync initial epochs: database epoch index is {}, session active epoch index is {}",
         db_epoch_index, current_session_status.active_epoch_index
@@ -263,7 +445,7 @@ async fn sync_data(
         if let Err(e) = poll_epoch_status(
             &message_tx,
             &mut client,
-            &config.session_id,
+            session_id,
             Some(epoch_index),
         )
         .await
@@ -271,6 +453,81 @@ async fn sync_data(
             error!("Error pooling epoch status {}", e.to_string());
         }
     }
+
+    Ok(())
+}
+
+/// Sync data from state server starting from last epoch recorded
+/// in database
+async fn sync_state(
+    message_tx: mpsc::Sender<rollups_data::database::Message>,
+    mut client: DelegateManagerClient<tonic::transport::Channel>,
+    conn: PgConnection,
+    dapp_contract_address: Address,
+) -> Result<(), crate::error::Error> {
+    let db_epoch_index = tokio::task::spawn_blocking(move || {
+        Ok(crate::db_service::get_current_db_epoch(
+            &conn,
+            EpochIndexType::Input,
+        )? as u64)
+    })
+    .await
+    .context(crate::error::TokioError)??;
+
+    // Pool epoch state for all previous epochs
+    debug!(
+        "Syncing in progress, polling state since epoch {}",
+        db_epoch_index
+    );
+    if let Err(e) = poll_state(
+        &message_tx,
+        &mut client,
+        dapp_contract_address,
+        db_epoch_index as i32,
+    )
+    .await
+    {
+        error!("Error pooling epoch status {}", e.to_string());
+    }
+
+    Ok(())
+}
+
+async fn sync_data(
+    message_tx: mpsc::Sender<rollups_data::database::Message>,
+    config: Arc<IndexerConfig>,
+) -> Result<(), crate::error::Error> {
+    let postgres_endpoint = crate::db_service::format_endpoint(&config);
+
+    // Sync notices from machine manager
+    let conn = rollups_data::database::connect_to_database_with_retry_async(
+        postgres_endpoint.clone(),
+    )
+    .await
+    .context(crate::error::TokioError)?;
+
+    let client =
+        connect_to_server_manager_with_retry(&config.mm_endpoint).await?;
+    sync_epoch_status(message_tx.clone(), client, conn, &config.session_id)
+        .await?;
+
+    // Sync inputs and epochs from state server
+    let conn = rollups_data::database::connect_to_database_with_retry_async(
+        postgres_endpoint.clone(),
+    )
+    .await
+    .context(crate::error::TokioError)?;
+
+    let client =
+        connect_to_state_server_with_retry(&config.state_server_endpoint)
+            .await?;
+    sync_state(
+        message_tx.clone(),
+        client,
+        conn,
+        config.dapp_contract_address,
+    )
+    .await?;
 
     Ok(())
 }
@@ -284,8 +541,8 @@ pub async fn run(
     match sync_data(message_tx.clone(), config.clone()).await {
         Ok(()) => {
             info!(
-                "Data successfully synced from Cartesi server manager {}",
-                &config.mm_endpoint
+                "Data successfully synced from Cartesi server manager {} and state server {}",
+                &config.mm_endpoint, &config.state_server_endpoint
             );
         }
         Err(e) => {
