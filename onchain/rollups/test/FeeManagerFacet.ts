@@ -166,19 +166,17 @@ describe("FeeManager Facet", () => {
     it("test constructor event FeeManagerCreated", async () => {
         let eventFilter = diamondInit.filters.FeeManagerInitialized();
         let event = await diamondInit.queryFilter(eventFilter);
-        let eventArgs = event[0]["args"];
+        let eventArgs = event[0].args;
 
-        expect(eventArgs["feePerClaim"], "feePerClaim").to.equal(
+        expect(eventArgs.feePerClaim, "feePerClaim").to.equal(
             initialFeePerClaim
         );
-        expect(
-            eventArgs["feeManagerOwner"],
-            "fee manager owner address"
-        ).to.equal(await signers[0].getAddress());
-        expect(
-            eventArgs["feeManagerBank"],
-            "fee manager bank address"
-        ).to.equal(bank.address);
+        expect(eventArgs.feeManagerOwner, "fee manager owner address").to.equal(
+            await signers[0].getAddress()
+        );
+        expect(eventArgs.feeManagerBank, "fee manager bank address").to.equal(
+            bank.address
+        );
     });
 
     it("fund the FeeManager contract and emit event", async () => {

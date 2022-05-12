@@ -269,13 +269,13 @@ describe("Rollups Facet", () => {
         // ref: https://docs.ethers.io/v5/single-page/#/v5/api/contract/contract/-%23-Contract--filters
         let eventFilter = diamondInit.filters.RollupsInitialized();
         let event = await diamondInit.queryFilter(eventFilter);
-        let eventArgs = event[0]["args"]; // get 'args' from the first RollupsInitialized event
+        let eventArgs = event[0].args; // get 'args' from the first RollupsInitialized event
 
-        expect(eventArgs["inputDuration"], "Input Duration").to.equal(
+        expect(eventArgs.inputDuration, "Input Duration").to.equal(
             inputDuration
         );
 
-        expect(eventArgs["challengePeriod"], "Challenge Period").to.equal(
+        expect(eventArgs.challengePeriod, "Challenge Period").to.equal(
             challengePeriod
         );
     });

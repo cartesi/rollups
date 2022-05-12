@@ -75,13 +75,11 @@ describe("Input Facet", () => {
             inputIndex
         );
         let event = await inputFacet.queryFilter(eventFilter);
-        let eventArgs = event[0]["args"];
+        let eventArgs = event[0].args;
 
-        expect(eventArgs["sender"], "Input sender").to.equal(sender);
-        expect(eventArgs["timestamp"], "Input timestamp").to.equal(timestamp);
-        expect(eventArgs["input"], "Input").to.equal(
-            "0x" + input.toString("hex")
-        );
+        expect(eventArgs.sender, "Input sender").to.equal(sender);
+        expect(eventArgs.timestamp, "Input timestamp").to.equal(timestamp);
+        expect(eventArgs.input, "Input").to.equal("0x" + input.toString("hex"));
     }
 
     beforeEach(async () => {

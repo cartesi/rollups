@@ -19,7 +19,10 @@ import { DeployOptions } from "hardhat-deploy/types";
 import { ServiceError } from "@grpc/grpc-js";
 import createClient from "./client";
 import { GetStateResponse__Output } from "../generated-src/proto/StateServer/GetStateResponse";
+import { getFacetCuts, productionFacetNames } from "../src/utils";
 import {
+    CartesiDAppFactory,
+    ICartesiDAppFactory,
     CartesiDAppFactory__factory,
     CartesiDApp__factory,
 } from "../src/types";
@@ -119,32 +122,12 @@ export interface FactoryOptions {
     debug?: boolean; // defaults to false
 }
 
-export enum FacetCutAction {
-    Add = 0,
-    Replace = 1,
-    Remove = 2,
-}
-
-export interface FacetCut {
-    facetAddress: string;
-    action: FacetCutAction;
-    functionSelectors: string[];
-}
-
-interface FactoryConfig {
-    diamondCutFacet: string;
-    diamondInit: string;
-    feeManagerBank: string;
-    diamondCut: FacetCut[];
-}
-
 export const deployFactory = deployments.createFixture(
     async (hre: HardhatRuntimeEnvironment, options: FactoryOptions = {}) => {
         const { deployments, ethers, getNamedAccounts } = hre;
         const signers = await ethers.getSigners();
         const { deployer } = await getNamedAccounts();
 
-        // ensure facets, libraries, and diamond init are deployed
         await deployments.fixture();
 
         const opts: DeployOptions = {
@@ -163,57 +146,16 @@ export const deployFactory = deployments.createFixture(
             });
         }
 
-        // list all facets names
-        const facetNames: string[] = [
-            // essential facets
-            "DiamondLoupeFacet",
-            "OwnershipFacet",
-            // rollups-related facets
-            "ERC20PortalFacet",
-            "ERC721PortalFacet",
-            "EtherPortalFacet",
-            "FeeManagerFacet",
-            "InputFacet",
-            "OutputFacet",
-            "RollupsFacet",
-            "ValidatorManagerFacet",
-        ];
-
-        // add the debug facet if `debug` is true
+        // list all facet names
+        let facetNames: string[];
         if (options.debug) {
-            facetNames.push("DebugFacet");
+            facetNames = [...productionFacetNames, "DebugFacet"];
+        } else {
+            facetNames = [...productionFacetNames];
         }
 
-        console.log("===> Listing diamond facets");
-
-        // list all facets cuts
-        const facetCuts: FacetCut[] = [];
-
-        for (const facetName of facetNames) {
-            const facetDeployment = await deployments.get(facetName);
-            const facet = await ethers.getContractAt(
-                facetName,
-                facetDeployment.address
-            );
-            const signatures = Object.keys(facet.interface.functions);
-            const selectors = signatures.reduce(
-                (acc: string[], val: string) => {
-                    if (val !== "init(bytes") {
-                        acc.push(facet.interface.getSighash(val));
-                    }
-                    return acc;
-                },
-                []
-            );
-            facetCuts.push({
-                facetAddress: facet.address,
-                action: FacetCutAction.Add,
-                functionSelectors: selectors,
-            });
-            console.log(`[${facet.address}] Adding ${facetName}`);
-        }
-
-        console.log("===> Deploying Factory");
+        // list all facet cuts
+        const facetCuts = await getFacetCuts(hre, facetNames);
 
         const { DiamondCutFacet, DiamondInit, Bank } = await deployments.all();
 
@@ -235,7 +177,7 @@ export const deployFactory = deployments.createFixture(
             feeManagerBank = Bank.address;
         }
 
-        let factoryConfig: FactoryConfig = {
+        let factoryConfig: CartesiDAppFactory.FactoryConfigStruct = {
             diamondCutFacet: DiamondCutFacet.address,
             diamondInit: DiamondInit.address,
             feeManagerBank: feeManagerBank,
@@ -249,8 +191,9 @@ export const deployFactory = deployments.createFixture(
                 args: [factoryConfig],
             }
         );
+
         console.log(
-            `[${factoryDeployment.address}] Deployed CartesiDAppFactory`
+            `[${factoryDeployment.address}] CartesiDAppFactory deployed`
         );
 
         const factory = CartesiDAppFactory__factory.connect(
@@ -274,17 +217,6 @@ export interface DiamondOptions {
     feeManagerOwner?: string; // defaults to the first signer
     validators?: string[]; // defaults to the 8 first signers
     debug?: boolean; // defaults to false
-}
-
-interface AppConfig {
-    diamondOwner: string;
-    templateHash: BytesLike;
-    inputDuration: number | BigNumber;
-    challengePeriod: number | BigNumber;
-    inputLog2Size: number | BigNumber;
-    feePerClaim: number | BigNumber;
-    feeManagerOwner: string;
-    validators: string[];
 }
 
 export const MINUTE = 60; // seconds in a minute
@@ -340,9 +272,7 @@ export const deployDiamond = deployments.createFixture(
             simpleFeeManagerBank: options.simpleFeeManagerBank,
         });
 
-        console.log("===> Deploying CartesiDApp");
-
-        let appConfig: AppConfig = {
+        let appConfig: ICartesiDAppFactory.AppConfigStruct = {
             diamondOwner,
             templateHash,
             inputDuration,
@@ -359,15 +289,14 @@ export const deployDiamond = deployments.createFixture(
             throw Error(`Application creation failed: ${tx.hash}`);
         }
 
-        for (var event of receipt.events!) {
-            if (event.event == "ApplicationCreated") {
-                const { application } = event.args!;
-                console.log(`[${application}] Deployed CartesiDApp`);
-                return CartesiDApp__factory.connect(application, signers[0]);
-            }
-        }
-
-        throw Error("No 'ApplicationCreated' event emitted");
+        let eventFilter = factory.filters.ApplicationCreated();
+        let events = await factory.queryFilter(
+            eventFilter,
+            receipt.blockNumber
+        );
+        const { application } = events[events.length - 1].args;
+        console.log(`[${application}] Deployed CartesiDApp`);
+        return CartesiDApp__factory.connect(application, signers[0]);
     }
 );
 
