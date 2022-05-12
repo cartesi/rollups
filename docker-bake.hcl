@@ -9,7 +9,7 @@ target "delegate_server" {
 }
 
 target "dispatcher" {
-  dockerfile = "offchain/delegate_server/Dockerfile"
+  dockerfile = "offchain/offchain/Dockerfile"
   context    = "."
 }
 
