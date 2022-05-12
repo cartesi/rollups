@@ -30,23 +30,16 @@ import {
     TASK_FINALIZE_EPOCH,
     TASK_GET_STATE,
 } from "./constants";
-import { DiamondInit__factory, IDiamondCut__factory } from "@cartesi/rollups";
+import {
+    CartesiDApp,
+    CartesiDApp__factory,
+    CartesiDAppFactory__factory,
+    ICartesiDAppFactory,
+} from "@cartesi/rollups";
 
 // return true if string is an unsigned integer
 const isIndex = (str: string): boolean =>
     str.match(/^[0-9]+$/) ? true : false;
-
-enum FacetCutAction {
-    Add = 0,
-    Replace = 1,
-    Remove = 2,
-}
-
-interface FacetCut {
-    facetAddress: string;
-    action: FacetCutAction;
-    functionSelectors: string[];
-}
 
 createParams(
     task<CreateArgs>(
@@ -58,6 +51,7 @@ createParams(
 
             // process list of validators from config. If item is a number consider as an account index of the defined MNEMONIC
             const signers = await ethers.getSigners();
+            const diamondOwner = deployer;
             const validators: string[] = args.validators
                 .split(",")
                 .map((address) =>
@@ -66,90 +60,46 @@ createParams(
                         : address
                 );
 
-            // get pre-deployed contracts artifacts
-            const { Bank, DiamondCutFacet, DiamondInit } =
-                await deployments.all();
-
-            // deploy raw diamond with only the diamond cut facet
-            const diamond = await deployments.deploy(args.name, {
-                contract: "CartesiDApp",
-                from: deployer,
-                args: [deployer, DiamondCutFacet.address],
-                log: args.log,
-            });
-
-            // list all facets to add in a diamond cut
-            const facetNames: string[] = [
-                // essential facets
-                "DiamondLoupeFacet",
-                "OwnershipFacet",
-                // rollups-related facets
-                "ERC20PortalFacet",
-                "ERC721PortalFacet",
-                "EtherPortalFacet",
-                "FeeManagerFacet",
-                "InputFacet",
-                "OutputFacet",
-                "RollupsFacet",
-                "ValidatorManagerFacet",
-            ];
-
-            // list all facet cuts to be made
-            const facetCuts: FacetCut[] = [];
-
-            for (const facetName of facetNames) {
-                const facetDeployment = await deployments.get(facetName);
-                const facet = await ethers.getContractAt(
-                    facetDeployment.abi,
-                    facetDeployment.address
-                );
-                const signatures = Object.keys(facet.interface.functions);
-                const selectors = signatures.reduce(
-                    (acc: string[], val: string) => {
-                        if (val !== "init(bytes") {
-                            acc.push(facet.interface.getSighash(val));
-                        }
-                        return acc;
-                    },
-                    []
-                );
-                facetCuts.push({
-                    facetAddress: facet.address,
-                    action: FacetCutAction.Add,
-                    functionSelectors: selectors,
-                });
-            }
-
-            // make diamond cut
-            const diamondCutFacet = IDiamondCut__factory.connect(
-                diamond.address,
+            // get pre-deployed factory artifact
+            const { CartesiDAppFactory } = await deployments.all();
+            const factory = CartesiDAppFactory__factory.connect(
+                CartesiDAppFactory.address,
                 signers[0]
             );
-            const diamondInit = DiamondInit__factory.connect(
-                DiamondInit.address,
-                signers[0]
-            );
-            const calldata = diamondInit.interface.encodeFunctionData("init", [
-                args.templateHash,
-                args.inputDuration,
-                args.challengePeriod,
-                args.inputLog2Size,
-                BigNumber.from(args.feePerClaim),
-                Bank.address,
-                args.feeManagerOwner || deployer,
-                validators,
-            ]);
-            const tx = await diamondCutFacet.diamondCut(
-                facetCuts,
-                DiamondInit.address,
-                calldata
-            );
+
+            // set application configurations from arguments
+            let appConfig: ICartesiDAppFactory.AppConfigStruct = {
+                diamondOwner: diamondOwner,
+                templateHash: args.templateHash,
+                inputDuration: args.inputDuration,
+                challengePeriod: args.challengePeriod,
+                inputLog2Size: args.inputLog2Size,
+                feePerClaim: BigNumber.from(args.feePerClaim),
+                feeManagerOwner: args.feeManagerOwner || deployer,
+                validators: validators,
+            };
+
+            // order new application from the factory
+            const tx = await factory.newApplication(appConfig);
             const receipt = await tx.wait();
             if (!receipt.status) {
-                throw Error(`Diamond cut failed: ${tx.hash}`);
+                throw Error(`Application creation failed: ${tx.hash}`);
             }
 
-            return diamond;
+            // query application id and address from the event log
+            let eventFilter = factory.filters.ApplicationCreated();
+            let events = await factory.queryFilter(
+                eventFilter,
+                receipt.blockNumber
+            );
+            for (let event of events) {
+                const { application, config } = event.args;
+                if (config.diamondOwner == diamondOwner) {
+                    console.log(`Application deployed at ${application}`);
+                    return event.args;
+                }
+            }
+            throw Error(`Could not find ApplicationCreated event in the logs`);
         }
     )
 );
