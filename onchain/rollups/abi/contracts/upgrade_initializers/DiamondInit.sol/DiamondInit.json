@@ -46,44 +46,51 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_templateHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_inputDuration",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_challengePeriod",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_inputLog2Size",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_feePerClaim",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_feeManagerBank",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_feeManagerOwner",
-        "type": "address"
-      },
-      {
-        "internalType": "address payable[]",
-        "name": "_validators",
-        "type": "address[]"
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "templateHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "inputDuration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "challengePeriod",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "inputLog2Size",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feePerClaim",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "feeManagerBank",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "feeManagerOwner",
+            "type": "address"
+          },
+          {
+            "internalType": "address payable[]",
+            "name": "validators",
+            "type": "address[]"
+          }
+        ],
+        "internalType": "struct DiamondConfig",
+        "name": "_dConfig",
+        "type": "tuple"
       }
     ],
     "name": "init",

@@ -29,41 +29,52 @@ import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {IERC173} from "../interfaces/IERC173.sol"; // not in openzeppelin-contracts yet
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
+/// @notice diamond configurations
+/// @param templateHash state hash of the cartesi machine at t0
+/// @param inputDuration duration of input accumulation phase in seconds
+/// @param challengePeriod duration of challenge period in seconds
+/// @param inputLog2Size size of the input memory range in this machine
+/// @param feePerClaim fee per claim to reward the validators
+/// @param feeManagerBank fee manager bank address
+/// @param feeManagerOwner fee manager owner address
+/// @param validators initial validator set
+/// @dev validators have to be unique, if the same validator is added twice
+///      consensus will never be reached
+struct DiamondConfig {
+    // RollupsFacet
+    bytes32 templateHash;
+    uint256 inputDuration;
+    uint256 challengePeriod;
+    // InputFacet
+    uint256 inputLog2Size;
+    // FeeManagerFacet
+    uint256 feePerClaim;
+    address feeManagerBank;
+    address feeManagerOwner;
+    // ValidatorManagerFacet
+    address payable[] validators;
+}
+
 contract DiamondInit {
     using LibValidatorManager for LibValidatorManager.DiamondStorage;
     using LibInput for LibInput.DiamondStorage;
 
-    /// @notice initialize the Rollups contract
-    /// @param _templateHash state hash of the cartesi machine at t0
-    /// @param _inputDuration duration of input accumulation phase in seconds
-    /// @param _challengePeriod duration of challenge period in seconds
-    /// @param _inputLog2Size size of the input memory range in this machine
-    /// @param _feePerClaim fee per claim to reward the validators
-    /// @param _feeManagerBank fee manager bank address
-    /// @param _feeManagerOwner fee manager owner address
-    /// @param _validators initial validator set
-    /// @dev validators have to be unique, if the same validator is added twice
-    ///      consensus will never be reached
-    function init(
-        // rollups init variables
-        bytes32 _templateHash,
-        uint256 _inputDuration,
-        uint256 _challengePeriod,
-        // input init variables
-        uint256 _inputLog2Size,
-        // fee manager init variables
-        uint256 _feePerClaim,
-        address _feeManagerBank,
-        address _feeManagerOwner,
-        // validator manager init variables
-        address payable[] memory _validators
-    ) external {
-        // initializing facets
+    /// @notice initialize the diamond
+    /// @param _dConfig diamond configurations
+    function init(DiamondConfig calldata _dConfig) external {
         initERC165();
-        initValidatorManager(_validators);
-        initRollups(_templateHash, _inputDuration, _challengePeriod);
-        initFeeManager(_feePerClaim, _feeManagerBank, _feeManagerOwner);
-        initInput(_inputLog2Size);
+        initValidatorManager(_dConfig.validators);
+        initRollups(
+            _dConfig.templateHash,
+            _dConfig.inputDuration,
+            _dConfig.challengePeriod
+        );
+        initFeeManager(
+            _dConfig.feePerClaim,
+            _dConfig.feeManagerBank,
+            _dConfig.feeManagerOwner
+        );
+        initInput(_dConfig.inputLog2Size);
     }
 
     /// @notice initialize ERC165 data
