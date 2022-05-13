@@ -70,34 +70,50 @@ describe("Output Facet", () => {
     let simpleToken: SimpleToken;
     let tokenOwner: string;
 
+    const setupTest = deployments.createFixture(
+        async ({ deployments, ethers }, options) => {
+            const diamond = await deployDiamond({ debug: true });
+            signers = await ethers.getSigners();
+
+            console.log("signers[0]: ", await signers[0].getAddress());
+
+            outputFacet = OutputFacet__factory.connect(
+                diamond.address,
+                signers[0]
+            );
+            debugFacet = DebugFacet__factory.connect(
+                diamond.address,
+                signers[0]
+            );
+            feeManagerFacet = FeeManagerFacet__factory.connect(
+                diamond.address,
+                signers[0]
+            );
+
+            // deploy a simple contract to execute
+            const simpleContract = await deployments.deploy("SimpleContract", {
+                from: await signers[0].getAddress(),
+            });
+            simpleContractAddress = simpleContract.address;
+
+            // deploy simple token to test ERC20 withdrawals
+            const SimpleToken_deploy = await deployments.deploy("SimpleToken", {
+                from: await signers[0].getAddress(),
+                args: [initialSupply],
+            });
+            simpleToken = SimpleToken__factory.connect(
+                SimpleToken_deploy.address,
+                signers[0]
+            );
+
+            console.log("Simple Token address: ", simpleToken.address);
+
+            tokenOwner = await simpleToken.owner(); // owner is fixed by deterministic deploy
+        }
+    );
+
     beforeEach(async () => {
-        const diamond = await deployDiamond({ debug: true });
-        signers = await ethers.getSigners();
-        outputFacet = OutputFacet__factory.connect(diamond.address, signers[0]);
-        debugFacet = DebugFacet__factory.connect(diamond.address, signers[0]);
-        feeManagerFacet = FeeManagerFacet__factory.connect(
-            diamond.address,
-            signers[0]
-        );
-
-        // deploy a simple contract to execute
-        const simpleContract = await deployments.deploy("SimpleContract", {
-            from: await signers[0].getAddress(),
-            deterministicDeployment: true, // deployed address is calculated based on contract bytecode, constructor arguments, deployer address...
-        });
-        simpleContractAddress = simpleContract.address;
-
-        // deploy simple token to test ERC20 withdrawals
-        const SimpleToken_deploy = await deployments.deploy("SimpleToken", {
-            from: await signers[0].getAddress(),
-            args: [initialSupply],
-            deterministicDeployment: true, // deployed address is calculated based on contract bytecode, constructor arguments, deployer address...
-        });
-        simpleToken = SimpleToken__factory.connect(
-            SimpleToken_deploy.address,
-            signers[0]
-        );
-        tokenOwner = await simpleToken.owner(); // owner is fixed by deterministic deploy
+        await setupTest();
     });
 
     interface OutputValidityProof {

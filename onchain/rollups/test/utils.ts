@@ -143,6 +143,8 @@ export const deployDiamond = deployments.createFixture(
         const signers = await ethers.getSigners();
         const { deployer } = await getNamedAccounts();
 
+        console.log("deployer: ", deployer);
+
         // ensure facets are deployed
         await deployments.fixture();
 
