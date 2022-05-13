@@ -1,5 +1,6 @@
 table! {
     epochs (epoch_index) {
+        id -> Int4,
         epoch_index -> Int4,
     }
 }
@@ -9,10 +10,10 @@ table! {
         id -> Int4,
         input_index -> Int4,
         epoch_index -> Int4,
-        sender -> Nullable<Varchar>,
-        block_number -> Nullable<Int8>,
-        payload -> Nullable<Bytea>,
-        timestamp -> Nullable<Timestamp>,
+        sender -> Varchar,
+        block_number -> Int8,
+        payload -> Bytea,
+        timestamp -> Timestamp,
     }
 }
 

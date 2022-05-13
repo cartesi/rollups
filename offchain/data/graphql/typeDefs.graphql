@@ -1,24 +1,43 @@
-"Notice generated during dapp advance request processing"
+type EpochEdge {
+  node: Epoch!
+  cursor: String!
+}
+
+type EpochConnection {
+  totalCount: Int!
+  edges: [EpochEdge!]!
+  nodes: [Epoch!]!
+  pageInfo: PageInfo!
+}
+
 type Notice {
-  id: Int!
+  id: ID!
+  index: Int!
   sessionId: String!
-  epochIndex: Int!
-  inputIndex: Int!
-  noticeIndex: Int!
+  input: Input!
   keccak: String!
+  "Payload in Ethereum hex binary format, starting with '0x'"
   payload: String!
 }
 
-input NoticeKeys {
-  sessionId: String
-  epochIndex: Int
-  inputIndex: Int
-  noticeIndex: Int
+type Input {
+  id: ID!
+  index: Int!
+  epoch: Epoch!
+  """
+    Get notices from this particular input
+    with additional ability to filter and paginate them
+  """
+  notices(first: Int, last: Int, after: String, before: String): NoticeConnection!
 }
 
 type Query {
-  notice(noticeId: String!): Notice!
-  notices(noticeKeys: NoticeKeys, first: Int, last: Int, after: String, before: String): NoticeConnection!
+  epoch(id: ID!): Epoch!
+  input(id: ID!): Input!
+  notice(id: ID!): Notice!
+  epochs(first: Int, last: Int, after: String, before: String): EpochConnection!
+  inputs(first: Int, last: Int, after: String, before: String): InputConnection!
+  notices(first: Int, last: Int, after: String, before: String): NoticeConnection!
 }
 
 type NoticeEdge {
@@ -39,6 +58,24 @@ type PageInfo {
   endCursor: String!
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
+}
+
+type InputEdge {
+  node: Input!
+  cursor: String!
+}
+
+type Epoch {
+  id: ID!
+  index: Int!
+  inputs(first: Int, last: Int, after: String, before: String): InputConnection!
+}
+
+type InputConnection {
+  totalCount: Int!
+  edges: [InputEdge!]!
+  nodes: [Input!]!
+  pageInfo: PageInfo!
 }
 
 schema {

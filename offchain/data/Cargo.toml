@@ -19,6 +19,8 @@ backoff = "0.4"
 juniper = "0.15.9"
 hex = "0.4.3"
 snafu = "0.6.10"
+serde = { version = "1.0", features = ["derive"] }
+base64 = "0.13.0"
 
 [build-dependencies]
 juniper = "0.15.9"

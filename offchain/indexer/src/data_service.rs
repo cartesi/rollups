@@ -18,7 +18,7 @@ use crate::db_service::{get_current_db_epoch_async, EpochIndexType};
 use chrono::Local;
 use diesel::PgConnection;
 use ethers::core::types::{Address, U256};
-use offchain::fold::types::{Input, RollupsState};
+use offchain::fold::types::{Input, PhaseState, RollupsState};
 use rollups_data::database::{DbInput, DbNotice, Message};
 use snafu::ResultExt;
 use state_fold::types::BlockState;
@@ -207,6 +207,11 @@ async fn poll_state(
     );
 
     let state_str = get_state(client, &json_initial_state).await?;
+    trace!(
+        "State received for initial state {:?} is {:?}",
+        &json_initial_state,
+        state_str
+    );
 
     let block_state: BlockState<RollupsState> =
         serde_json::from_str(&state_str.json_state)
@@ -225,7 +230,7 @@ async fn poll_state(
                 input_index: index as i32,
                 block_number: input.block_number.as_u64() as i64,
                 sender: "0x".to_string() + hex::encode(input.sender).as_str(),
-                payload: Some((*input.payload).clone()),
+                payload: (*input.payload).clone(),
                 timestamp: chrono::NaiveDateTime::from_timestamp(
                     input.timestamp.low_u64() as i64,
                     0,
@@ -252,7 +257,21 @@ async fn poll_state(
         }
     }
 
-    debug!("Checking current inputs: {:?}", &json_initial_state);
+    if let PhaseState::EpochSealedAwaitingFirstClaim { sealed_epoch } =
+        block_state.state.current_phase
+    {
+        for (index, input) in sealed_epoch.inputs.inputs.iter().enumerate() {
+            debug!("Processing sealed epoch input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
+                    &input.sender, sealed_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
+            send_input(
+                index,
+                sealed_epoch.epoch_number.as_u32() as i32,
+                input,
+                message_tx,
+            )
+            .await;
+        }
+    }
 
     for (index, input) in block_state
         .state
@@ -300,12 +319,12 @@ async fn polling_loop(
     let mut tasks = vec![
         Task {
             interval: poll_interval,
-            next_execution: std::time::SystemTime::now().add(poll_interval),
+            next_execution: std::time::SystemTime::now().add(2 * poll_interval),
             task_type: TaskType::GetEpochStatus,
         },
         Task {
             interval: poll_interval,
-            next_execution: std::time::SystemTime::now().add(2 * poll_interval),
+            next_execution: std::time::SystemTime::now().add(poll_interval),
             task_type: TaskType::GetState,
         },
     ];

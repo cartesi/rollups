@@ -2,6 +2,7 @@
 
 CREATE TABLE "epochs"
 (
+    id SERIAL,
     epoch_index int NOT NULL,
     CONSTRAINT "epochs_pkey" PRIMARY KEY (epoch_index)
 );
@@ -12,10 +13,10 @@ CREATE TABLE "inputs"
     id SERIAL,
     input_index int NOT NULL,
     epoch_index int NOT NULL,
-    sender character varying(255),
-    block_number bigint,
-    payload bytea,
-    "timestamp" timestamp,
+    sender character varying(255) NOT NULL,
+    block_number bigint NOT NULL,
+    payload bytea NOT NULL,
+    "timestamp" timestamp NOT NULL,
     CONSTRAINT "inputs_pkey" PRIMARY KEY (id, input_index, epoch_index)
 );
 

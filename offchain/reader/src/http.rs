@@ -21,10 +21,11 @@ use diesel::r2d2::{ConnectionManager, Pool};
 use juniper::http::playground::playground_source;
 use juniper::http::GraphQLRequest;
 use juniper::{EmptyMutation, EmptySubscription};
+use rollups_data::graphql::types::CartesiGraphQLScalarValue;
 use std::sync::Arc;
 
 struct HttpContext {
-    schema: Arc<rollups_data::graphql::schema::Schema>,
+    schema: Arc<rollups_data::graphql::types::Schema>,
     db_pool: Arc<Pool<ConnectionManager<PgConnection>>>,
 }
 
@@ -34,12 +35,14 @@ pub async fn start_service(
     pool: Pool<ConnectionManager<PgConnection>>,
 ) -> std::io::Result<()> {
     HttpServer::new(move || {
-        let schema =
-            std::sync::Arc::new(rollups_data::graphql::queries::Schema::new(
-                rollups_data::graphql::queries::Query,
-                EmptyMutation::<rollups_data::graphql::queries::Context>::new(),
+        let schema = std::sync::Arc::new(
+            rollups_data::graphql::resolvers::Schema::new_with_scalar_value(
+                rollups_data::graphql::resolvers::Query,
+                EmptyMutation::<rollups_data::graphql::resolvers::Context>::new(
+                ),
                 EmptySubscription::new(),
-            ));
+            ),
+        );
 
         let http_context = HttpContext {
             schema: schema.clone(),
@@ -67,10 +70,10 @@ fn juniper_playground() -> HttpResponse {
 
 #[actix_web::post("/graphql")]
 async fn graphql(
-    query: web::Json<GraphQLRequest>,
+    query: web::Json<GraphQLRequest<CartesiGraphQLScalarValue>>,
     http_context: web::Data<HttpContext>,
 ) -> HttpResult<impl Responder> {
-    let ctx = rollups_data::graphql::queries::Context {
+    let ctx = rollups_data::graphql::resolvers::Context {
         db_pool: http_context.db_pool.clone(),
     };
     let res = query.execute(&http_context.schema, &ctx).await;

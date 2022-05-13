@@ -17,8 +17,11 @@ use std::num::ParseIntError;
 #[derive(Debug, Snafu)]
 #[snafu(visibility = "pub")]
 pub enum Error {
-    #[snafu(display("Invalid id provided: {}", source.to_string()))]
-    InvalidIdError { source: ParseIntError },
+    #[snafu(display("Invalid id provided for {}, id='{}'", item, source.to_string()))]
+    InvalidIdError { item: String, source: ParseIntError },
+
+    #[snafu(display("Invalid parameter provided"))]
+    InvalidParameterError {},
 
     #[snafu(display("Database pool connection error: {}", message))]
     DatabasePoolConnectionError { message: String },
@@ -26,8 +29,21 @@ pub enum Error {
     #[snafu(display("Database error: {}", source.to_string()))]
     DatabaseError { source: diesel::result::Error },
 
-    #[snafu(display("Unable to find item with id {}", id))]
-    ItemNotFound { id: String },
+    #[snafu(display("Unable to find {} with id='{}'", item_type, id))]
+    ItemNotFound { item_type: String, id: String },
+
+    #[snafu(display("Unable to find {} with index {}", item_type, index))]
+    IndexNotFound { item_type: String, index: i32 },
+
+    #[snafu(display(
+        "Unable to find input with index={} from epoch index={}",
+        index,
+        epoch_index
+    ))]
+    InputNotFound { epoch_index: i32, index: i32 },
+
+    #[snafu(display("Unable to find epoch with index={}", index))]
+    EpochNotFound { index: i32 },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

@@ -28,6 +28,7 @@ pub const POOL_CONNECTION_SIZE: u32 = 3;
 #[derive(Insertable, Queryable, Debug, PartialEq)]
 #[table_name = "epochs"]
 pub struct DbEpoch {
+    pub id: i32,
     pub epoch_index: i32,
 }
 
@@ -40,7 +41,7 @@ pub struct DbInput {
     pub epoch_index: i32,
     pub sender: String,
     pub block_number: i64,
-    pub payload: Option<Vec<u8>>,
+    pub payload: Vec<u8>,
     pub timestamp: chrono::NaiveDateTime,
 }
 

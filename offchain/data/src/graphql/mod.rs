@@ -1,3 +1,3 @@
 pub mod error;
-pub mod queries;
-pub mod schema;
+pub mod resolvers;
+pub mod types;

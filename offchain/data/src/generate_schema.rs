@@ -10,10 +10,10 @@ const GRAPHQL_SCHEMA_FILE: &str = "graphql/typeDefs.graphql";
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create graphql schema object from code definition
-    let schema = graphql::schema::Schema::new(
-        graphql::queries::Query {},
-        juniper::EmptyMutation::<graphql::queries::Context>::new(),
-        juniper::EmptySubscription::<graphql::queries::Context>::new(),
+    let schema = graphql::types::Schema::new_with_scalar_value(
+        graphql::resolvers::Query {},
+        juniper::EmptyMutation::<graphql::resolvers::Context>::new(),
+        juniper::EmptySubscription::<graphql::resolvers::Context>::new(),
     );
 
     // Convert the Rust schema into the GraphQL Schema Language.
