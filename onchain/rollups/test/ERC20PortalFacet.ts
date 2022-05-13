@@ -109,53 +109,5 @@ describe("ERC20Portal Facet", async () => {
         ).to.equal(inputHash);
     });
 
-    it("erc20Withdrawal should revert if not called by the Rollups contract", async () => {
-        let data = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint", "uint"],
-            [mockERC20.address, await signer.getAddress(), 10]
-        );
-        await expect(
-            portalFacet.connect(signer2).erc20Withdrawal(data)
-        ).to.be.revertedWith("only itself");
-    });
-
-    it("erc20Withdrawal should revert if transfer returns false", async () => {
-        await mockERC20.mock.transfer.returns(false);
-
-        const erc20 = mockERC20.address;
-        const sender = await signer.getAddress();
-        const value = 42;
-
-        let data = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint", "uint"],
-            [erc20, sender, value]
-        );
-
-        await expect(debugFacet._erc20Withdrawal(data)).to.be.revertedWith(
-            "ERC20 transfer failed"
-        );
-    });
-
-    it("erc20Withdrawal should emit ERC20Withdrawn and return true", async () => {
-        await mockERC20.mock.transfer.returns(true);
-
-        const erc20 = mockERC20.address;
-        const sender = await signer.getAddress();
-        const value = 42;
-
-        let data = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint", "uint"],
-            [erc20, sender, value]
-        );
-
-        // callStatic check return value
-        expect(await debugFacet.callStatic._erc20Withdrawal(data)).to.equal(
-            true
-        );
-
-        // check emitted event
-        await expect(debugFacet._erc20Withdrawal(data))
-            .to.emit(portalFacet, "ERC20Withdrawn")
-            .withArgs(erc20, sender, value);
-    });
+    // erc20Withdrawals are tested in output facet
 });

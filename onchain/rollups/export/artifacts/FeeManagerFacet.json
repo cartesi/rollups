@@ -152,99 +152,99 @@
     },
     "deployedBytecode": {
       "functionDebugData": {
-        "@diamondStorage_7134": {
+        "@diamondStorage_7031": {
           "entryPoint": null,
-          "id": 7134,
+          "id": 7031,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@diamondStorage_8332": {
+        "@diamondStorage_8229": {
           "entryPoint": null,
-          "id": 8332,
+          "id": 8229,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getFeeManagerBank_4024": {
+        "@getFeeManagerBank_3938": {
           "entryPoint": null,
-          "id": 4024,
+          "id": 3938,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getNumClaimsRedeemed_3950": {
+        "@getNumClaimsRedeemed_3864": {
           "entryPoint": 285,
-          "id": 3950,
+          "id": 3864,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@getNumClaimsRedeemed_7256": {
+        "@getNumClaimsRedeemed_7153": {
           "entryPoint": 1048,
-          "id": 7256,
+          "id": 7153,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@getNumClaims_5841": {
+        "@getNumClaims_5738": {
           "entryPoint": 2024,
-          "id": 5841,
+          "id": 5738,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@getValidatorIndex_9026": {
+        "@getValidatorIndex_8923": {
           "entryPoint": 1801,
-          "id": 9026,
+          "id": 8923,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@increaseNumClaims_5882": {
+        "@increaseNumClaims_5779": {
           "entryPoint": 1718,
-          "id": 5882,
+          "id": 5779,
           "parameterSlots": 3,
           "returnSlots": 1
         },
-        "@numClaimsRedeemable_3926": {
+        "@numClaimsRedeemable_3840": {
           "entryPoint": 528,
-          "id": 3926,
+          "id": 3840,
           "parameterSlots": 1,
           "returnSlots": 1
         },
-        "@numClaimsRedeemable_7208": {
+        "@numClaimsRedeemable_7105": {
           "entryPoint": 1532,
-          "id": 7208,
+          "id": 7105,
           "parameterSlots": 2,
           "returnSlots": 1
         },
-        "@onlyOwner_7150": {
+        "@onlyOwner_7047": {
           "entryPoint": 555,
-          "id": 7150,
+          "id": 7047,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@redeemFee_4003": {
+        "@redeemFee_3917": {
           "entryPoint": 319,
-          "id": 4003,
+          "id": 3917,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@redeemFee_7428": {
+        "@redeemFee_7325": {
           "entryPoint": 1196,
-          "id": 7428,
+          "id": 7325,
           "parameterSlots": 2,
           "returnSlots": 0
         },
-        "@resetFeePerClaim_3978": {
+        "@resetFeePerClaim_3892": {
           "entryPoint": 247,
-          "id": 3978,
+          "id": 3892,
           "parameterSlots": 1,
           "returnSlots": 0
         },
-        "@resetFeePerClaim_7356": {
+        "@resetFeePerClaim_7253": {
           "entryPoint": 647,
-          "id": 7356,
+          "id": 7253,
           "parameterSlots": 2,
           "returnSlots": 0
         },
-        "@setNumClaims_5960": {
+        "@setNumClaims_5857": {
           "entryPoint": 2102,
-          "id": 5960,
+          "id": 5857,
           "parameterSlots": 3,
           "returnSlots": 1
         },

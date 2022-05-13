@@ -104,11 +104,6 @@ contract DebugFacet {
         outputDS.onNewEpoch(epochHash);
     }
 
-    function _erc20Withdrawal(bytes calldata _data) public returns (bool) {
-        IERC20Portal erc20Portal = IERC20Portal(address(this));
-        return erc20Portal.erc20Withdrawal(_data);
-    }
-
     function _erc721Withdrawal(bytes calldata _data) public returns (bool) {
         IERC721Portal erc721Portal = IERC721Portal(address(this));
         return erc721Portal.erc721Withdrawal(_data);

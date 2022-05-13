@@ -25,23 +25,11 @@ interface IERC20Portal {
         bytes calldata _data
     ) external returns (bytes32);
 
-    /// @notice withdraw an amount of a generic ERC20 token from the portal
-    /// @param _data data with withdrawal information
-    /// @dev can only be called by the Rollups contract
-    function erc20Withdrawal(bytes calldata _data) external returns (bool);
-
     /// @notice emitted on ERC20 deposited
     event ERC20Deposited(
         address ERC20,
         address sender,
         uint256 amount,
         bytes data
-    );
-
-    /// @notice emitted on ERC20 withdrawal
-    event ERC20Withdrawn(
-        address ERC20,
-        address payable receiver,
-        uint256 amount
     );
 }

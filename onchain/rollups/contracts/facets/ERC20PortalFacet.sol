@@ -53,27 +53,4 @@ contract ERC20PortalFacet is IERC20Portal {
         emit ERC20Deposited(_ERC20, msg.sender, _amount, _data);
         return inputDS.addInternalInput(input);
     }
-
-    /// @notice withdraw an amount of a generic ERC20 from the portal
-    /// @param _data data with withdrawal information
-    /// @dev can only be called by the Rollups contract
-    function erc20Withdrawal(bytes calldata _data)
-        public
-        override
-        returns (bool)
-    {
-        // Delegate calls preserve msg.sender, msg.value and address(this)
-        require(msg.sender == address(this), "only itself");
-
-        (address tokenAddr, address payable receiver, uint256 value) = abi
-            .decode(_data, (address, address, uint256));
-
-        IERC20 token = IERC20(tokenAddr);
-
-        require(token.transfer(receiver, value), "ERC20 transfer failed");
-
-        emit ERC20Withdrawn(tokenAddr, receiver, value);
-
-        return true;
-    }
 }

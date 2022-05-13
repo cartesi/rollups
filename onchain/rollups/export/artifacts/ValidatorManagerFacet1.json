@@ -140,27 +140,27 @@
     },
     "deployedBytecode": {
       "functionDebugData": {
-        "@diamondStorage_9162": {
+        "@diamondStorage_9059": {
           "entryPoint": null,
-          "id": 9162,
+          "id": 9059,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getConsensusGoalMask_5234": {
+        "@getConsensusGoalMask_5148": {
           "entryPoint": null,
-          "id": 5234,
+          "id": 5148,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getCurrentAgreementMask_5215": {
+        "@getCurrentAgreementMask_5129": {
           "entryPoint": null,
-          "id": 5215,
+          "id": 5129,
           "parameterSlots": 0,
           "returnSlots": 1
         },
-        "@getCurrentClaim_5254": {
+        "@getCurrentClaim_5168": {
           "entryPoint": null,
-          "id": 5254,
+          "id": 5168,
           "parameterSlots": 0,
           "returnSlots": 1
         },

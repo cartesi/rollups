@@ -848,26 +848,6 @@ describe("FeeManager Facet", () => {
             ).to.equal(10000 - 8 * initialFeePerClaim);
         }
     });
-
-    it("test whether we can withdraw tokens from Bank via the ERC-20 Portal", async () => {
-        // fund 10000 tokens
-        let amount = 10000;
-        await fundFeeManager(amount);
-
-        // create fake input
-        const erc20 = bank.address;
-        const sender = await signers[0].getAddress();
-
-        let data = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "uint", "uint"],
-            [erc20, sender, amount]
-        );
-
-        // check erc20Withdrawal reverts
-        await expect(debugFacet._erc20Withdrawal(data)).to.be.revertedWith(
-            "function selector was not recognized and there's no fallback function"
-        );
-    });
 });
 
 // helper function

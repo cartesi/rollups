@@ -23,6 +23,8 @@ import {
     FeeManagerFacet__factory,
     OutputFacet,
     OutputFacet__factory,
+    SimpleToken,
+    SimpleToken__factory,
 } from "../src/types";
 import { deployDiamond, getState } from "./utils";
 
@@ -46,7 +48,7 @@ use(solidity);
 // 3. take the keccak value and replace into the variable `KeccakForVoucher0` in "shell.sh"
 //    run the shell in the Cartesi machine emulator as we need to use `merkle-tree-hash`
 //    (the shell script can be found here: https://github.com/cartesi-corp/rollups/pull/120)
-// 4. run the shell script to obtain values of `outputHashesRootHash` and `EpochOutputDriveHash`
+// 4. run the shell script to obtain values of `outputHashesRootHash` and `OutputsEpochRootHash`
 //    replace respectively here in the test scenario the value of `outputHashesRootHash` and `vouchersEpochRootHash` (or `noticesEpochRootHash`)
 //    To replace thoroughly, search for the outdated hex values and replace all
 
@@ -64,6 +66,10 @@ describe("Output Facet", () => {
     let encodedVoucher: string;
     let encodedNotice: string;
 
+    const initialSupply = 1000000;
+    let simpleToken: SimpleToken;
+    let tokenOwner: string;
+
     beforeEach(async () => {
         const diamond = await deployDiamond({ debug: true });
         signers = await ethers.getSigners();
@@ -77,9 +83,21 @@ describe("Output Facet", () => {
         // deploy a simple contract to execute
         const simpleContract = await deployments.deploy("SimpleContract", {
             from: await signers[0].getAddress(),
-            deterministicDeployment: true, // deployed address is calculated based on contract bytecode and constructor arguments
+            deterministicDeployment: true, // deployed address is calculated based on contract bytecode, constructor arguments, deployer address...
         });
         simpleContractAddress = simpleContract.address;
+
+        // deploy simple token to test ERC20 withdrawals
+        const SimpleToken_deploy = await deployments.deploy("SimpleToken", {
+            from: await signers[0].getAddress(),
+            args: [initialSupply],
+            deterministicDeployment: true, // deployed address is calculated based on contract bytecode, constructor arguments, deployer address...
+        });
+        simpleToken = SimpleToken__factory.connect(
+            SimpleToken_deploy.address,
+            signers[0]
+        );
+        tokenOwner = await simpleToken.owner(); // owner is fixed by deterministic deploy
     });
 
     interface OutputValidityProof {
@@ -206,6 +224,7 @@ describe("Output Facet", () => {
         "function simple_function() public pure returns (string memory)",
         "function simple_function(bytes32) public pure returns (string memory)",
         "function nonExistent() public",
+        "function transfer(address,uint256) public returns (bool)",
     ]);
 
     it("Initialization", async () => {
@@ -476,6 +495,79 @@ describe("Output Facet", () => {
             outputFacet.executeVoucher(bankAddress, _payload, v),
             "executing voucher for bank"
         ).to.be.revertedWith("bad destination");
+    });
+
+    // test executing vouchers that withdraw ERC20 tokens
+    it("test erc20 withdrawal voucher", async () => {
+        let sender = tokenOwner;
+        let recipient = await signers[1].getAddress();
+
+        let destination_erc20 = simpleToken.address;
+        let amount_erc20 = 7;
+        let payload_erc20 = iface.encodeFunctionData(
+            "transfer(address,uint256)",
+            [recipient, amount_erc20]
+        );
+        let encodedVoucher_erc20 = ethers.utils.defaultAbiCoder.encode(
+            ["uint", "bytes"],
+            [destination_erc20, payload_erc20]
+        );
+        // console.log(encodedVoucher_erc20);
+
+        let v_erc20 = Object.assign({}, v); // copy object contents from v to v_erc20, rather than just the address reference
+        v_erc20.outputHashesRootHash =
+            "0xd43aae655ac9a9134560ef33433cb2c917d5afbc3abb39231920512eac1fd05c";
+        v_erc20.vouchersEpochRootHash =
+            "0x8b99cb720c60f2c3600c6ed3d3dc11a6697bb8da23f3671f094d1c8a3e419227";
+        let epochHash_erc20 = keccak256(
+            ethers.utils.defaultAbiCoder.encode(
+                ["uint", "uint", "uint"],
+                [
+                    v_erc20.vouchersEpochRootHash,
+                    v_erc20.noticesEpochRootHash,
+                    v_erc20.machineStateHash,
+                ]
+            )
+        );
+
+        // enter new epoch
+        await debugFacet._onNewEpochOutput(epochHash_erc20);
+
+        // fail if dapp doesn't have enough balance
+        expect(
+            await outputFacet.callStatic.executeVoucher(
+                destination_erc20,
+                payload_erc20,
+                v_erc20
+            )
+        ).to.equal(false);
+
+        // fund dapp
+        let dapp_init_balance = 100;
+        await simpleToken.transfer(outputFacet.address, dapp_init_balance);
+
+        // now it succeeds
+        expect(
+            await outputFacet.callStatic.executeVoucher(
+                destination_erc20,
+                payload_erc20,
+                v_erc20
+            )
+        ).to.equal(true);
+        // modify state
+        await outputFacet.executeVoucher(
+            destination_erc20,
+            payload_erc20,
+            v_erc20
+        );
+        expect(
+            await simpleToken.balanceOf(recipient),
+            "check recipient's balance"
+        ).to.equal(amount_erc20);
+        expect(
+            await simpleToken.balanceOf(sender),
+            "check sender's balance"
+        ).to.equal(dapp_init_balance - amount_erc20);
     });
 
     /// ***test delegate*** ///
