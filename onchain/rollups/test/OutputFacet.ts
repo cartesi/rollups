@@ -40,7 +40,7 @@ use(solidity);
 // Steps for modification are as follows:
 // (repeat 3 times as there are 3 kinds of test scenarios )
 //
-// 1. uncomment the line that has `console.log`, which prints the encoded value of a voucher
+// 1. uncomment the line that has `console.log(some_voucher)`, which prints the encoded value of a voucher
 // 2. keccak256 the value of the printed encoded voucher
 //    For example, you may use this website to calculate the keccak256:
 //    https://emn178.github.io/online-tools/keccak_256.html
@@ -68,14 +68,13 @@ describe("Output Facet", () => {
 
     const initialSupply = 1000000;
     let simpleToken: SimpleToken;
-    let tokenOwner: string;
 
     const setupTest = deployments.createFixture(
         async ({ deployments, ethers }, options) => {
             const diamond = await deployDiamond({ debug: true });
             signers = await ethers.getSigners();
 
-            console.log("signers[0]: ", await signers[0].getAddress());
+            // console.log("signers[0]: ", await signers[0].getAddress());
 
             outputFacet = OutputFacet__factory.connect(
                 diamond.address,
@@ -93,6 +92,7 @@ describe("Output Facet", () => {
             // deploy a simple contract to execute
             const simpleContract = await deployments.deploy("SimpleContract", {
                 from: await signers[0].getAddress(),
+                deterministicDeployment: true, // deployed address is calculated based on contract bytecode, constructor arguments, deployer address...
             });
             simpleContractAddress = simpleContract.address;
 
@@ -100,15 +100,14 @@ describe("Output Facet", () => {
             const SimpleToken_deploy = await deployments.deploy("SimpleToken", {
                 from: await signers[0].getAddress(),
                 args: [initialSupply],
+                deterministicDeployment: true, // deployed address is calculated based on contract bytecode, constructor arguments, deployer address...
             });
             simpleToken = SimpleToken__factory.connect(
                 SimpleToken_deploy.address,
                 signers[0]
             );
 
-            console.log("Simple Token address: ", simpleToken.address);
-
-            tokenOwner = await simpleToken.owner(); // owner is fixed by deterministic deploy
+            // console.log("Simple Token address: ", simpleToken.address);
         }
     );
 
@@ -515,7 +514,7 @@ describe("Output Facet", () => {
 
     // test executing vouchers that withdraw ERC20 tokens
     it("test erc20 withdrawal voucher", async () => {
-        let sender = tokenOwner;
+        // send erc20 from dapp to recipient
         let recipient = await signers[1].getAddress();
 
         let destination_erc20 = simpleToken.address;
@@ -532,9 +531,9 @@ describe("Output Facet", () => {
 
         let v_erc20 = Object.assign({}, v); // copy object contents from v to v_erc20, rather than just the address reference
         v_erc20.outputHashesRootHash =
-            "0xd43aae655ac9a9134560ef33433cb2c917d5afbc3abb39231920512eac1fd05c";
+            "0x403895df37999725f975a4d3fcf1800fb414ef09c565be48985fc52511eea5f6";
         v_erc20.vouchersEpochRootHash =
-            "0x8b99cb720c60f2c3600c6ed3d3dc11a6697bb8da23f3671f094d1c8a3e419227";
+            "0x84111d7805888b118ef5235d5cdca958931c5e42cc983a18131accc04f4b5274";
         let epochHash_erc20 = keccak256(
             ethers.utils.defaultAbiCoder.encode(
                 ["uint", "uint", "uint"],
@@ -581,8 +580,8 @@ describe("Output Facet", () => {
             "check recipient's balance"
         ).to.equal(amount_erc20);
         expect(
-            await simpleToken.balanceOf(sender),
-            "check sender's balance"
+            await simpleToken.balanceOf(outputFacet.address),
+            "check dapp's balance"
         ).to.equal(dapp_init_balance - amount_erc20);
     });
 

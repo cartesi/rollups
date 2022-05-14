@@ -18,10 +18,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract SimpleToken is ERC20 {
     // name: SimpleToken
     // symbol: SIM
-    address public owner;
-
     constructor(uint256 initialSupply) ERC20("SimpleToken", "SIM") {
-        owner = msg.sender;
-        _mint(msg.sender, initialSupply);
+        // on Hardhat network, 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 should be the address of signers[0]
+        // generated from default mnemonic "test test test test test test test test test test test junk"
+        _mint(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266, initialSupply);
     }
 }
