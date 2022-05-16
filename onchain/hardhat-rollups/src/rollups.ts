@@ -16,12 +16,7 @@ import "hardhat-deploy/dist/src/type-extensions";
 import { BigNumber } from "ethers";
 
 import { RollupsArgs, CreateArgs, ClaimArgs } from "./args";
-import {
-    accountIndexParam,
-    claimParams,
-    createParams,
-    rollupsParams,
-} from "./params";
+import { accountIndexParam, claimParams, createParams } from "./params";
 import { connected } from "./connect";
 import {
     taskDefs,
@@ -86,7 +81,7 @@ createParams(
                 throw Error(`Application creation failed: ${tx.hash}`);
             }
 
-            // query application id and address from the event log
+            // query application address from the event log
             let eventFilter = factory.filters.ApplicationCreated();
             let events = await factory.queryFilter(
                 eventFilter,
@@ -104,74 +99,66 @@ createParams(
     )
 );
 
-rollupsParams(
-    claimParams(
-        task<ClaimArgs>(
-            TASK_CLAIM,
-            taskDefs[TASK_CLAIM].description,
-            connected(async (args, { rollupsFacet }) => {
-                const tx = await rollupsFacet.claim(args.claim);
-                console.log(
-                    `Claim ${args.claim} sent to rollups ${rollupsFacet.address}`
-                );
-                return tx;
-            })
-        )
-    )
-);
-
-rollupsParams(
-    accountIndexParam(
-        task<RollupsArgs>(
-            TASK_FINALIZE_EPOCH,
-            taskDefs[TASK_FINALIZE_EPOCH].description,
-            connected(async (_args, { rollupsFacet }) => {
-                const tx = await rollupsFacet.finalizeEpoch();
-                console.log(
-                    `Finalized epoch for rollups ${rollupsFacet.address}`
-                );
-                return tx;
-            })
-        )
-    )
-);
-
-rollupsParams(
-    task<RollupsArgs>(
-        TASK_GET_STATE,
-        taskDefs[TASK_GET_STATE].description,
-        connected(async (_args, { rollupsFacet }, hre) => {
-            const { ethers } = hre;
-
-            enum Phases {
-                InputAccumulation,
-                AwaitingConsensus,
-                AwaitingDispute,
-            }
-
-            const templateHash = await rollupsFacet.getTemplateHash();
-            const inputDuration = await rollupsFacet.getInputDuration();
-            const challengePeriod = await rollupsFacet.getChallengePeriod();
-            const currentEpoch = await rollupsFacet.getCurrentEpoch();
-            const inputAccumulationStart =
-                await rollupsFacet.getInputAccumulationStart();
-            const sealingEpochTimestamp =
-                await rollupsFacet.getSealingEpochTimestamp();
-            const currentPhase = await rollupsFacet.getCurrentPhase();
-            const block = await ethers.provider.getBlock("latest");
-
-            const result = {
-                currentTimestamp: block.timestamp,
-                templateHash: templateHash,
-                inputDuration: inputDuration,
-                challengePeriod: challengePeriod,
-                currentEpoch: currentEpoch.toNumber(),
-                accumulationStart: inputAccumulationStart,
-                sealingEpochTimestamp: sealingEpochTimestamp,
-                currentPhase: Phases[currentPhase],
-            };
-            console.log(JSON.stringify(result, null, 2));
-            return result;
+claimParams(
+    task<ClaimArgs>(
+        TASK_CLAIM,
+        taskDefs[TASK_CLAIM].description,
+        connected(async (args, { rollupsFacet }) => {
+            const tx = await rollupsFacet.claim(args.claim);
+            console.log(
+                `Claim ${args.claim} sent to rollups ${rollupsFacet.address}`
+            );
+            return tx;
         })
     )
+);
+
+accountIndexParam(
+    task<RollupsArgs>(
+        TASK_FINALIZE_EPOCH,
+        taskDefs[TASK_FINALIZE_EPOCH].description,
+        connected(async (_args, { rollupsFacet }) => {
+            const tx = await rollupsFacet.finalizeEpoch();
+            console.log(`Finalized epoch for rollups ${rollupsFacet.address}`);
+            return tx;
+        })
+    )
+);
+
+task<RollupsArgs>(
+    TASK_GET_STATE,
+    taskDefs[TASK_GET_STATE].description,
+    connected(async (_args, { rollupsFacet }, hre) => {
+        const { ethers } = hre;
+
+        enum Phases {
+            InputAccumulation,
+            AwaitingConsensus,
+            AwaitingDispute,
+        }
+
+        const templateHash = await rollupsFacet.getTemplateHash();
+        const inputDuration = await rollupsFacet.getInputDuration();
+        const challengePeriod = await rollupsFacet.getChallengePeriod();
+        const currentEpoch = await rollupsFacet.getCurrentEpoch();
+        const inputAccumulationStart =
+            await rollupsFacet.getInputAccumulationStart();
+        const sealingEpochTimestamp =
+            await rollupsFacet.getSealingEpochTimestamp();
+        const currentPhase = await rollupsFacet.getCurrentPhase();
+        const block = await ethers.provider.getBlock("latest");
+
+        const result = {
+            currentTimestamp: block.timestamp,
+            templateHash: templateHash,
+            inputDuration: inputDuration,
+            challengePeriod: challengePeriod,
+            currentEpoch: currentEpoch.toNumber(),
+            accumulationStart: inputAccumulationStart,
+            sealingEpochTimestamp: sealingEpochTimestamp,
+            currentPhase: Phases[currentPhase],
+        };
+        console.log(JSON.stringify(result, null, 2));
+        return result;
+    })
 );

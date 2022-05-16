@@ -12,44 +12,42 @@
 
 import { task } from "hardhat/config";
 import { ExecuteVoucherArgs } from "./args";
-import { executeVoucherParams, rollupsParams } from "./params";
+import { executeVoucherParams } from "./params";
 import { connected } from "./connect";
 import { TASK_EXECUTE_VOUCHER } from "./constants";
 import { taskDefs } from ".";
 
-rollupsParams(
-    executeVoucherParams(
-        task<ExecuteVoucherArgs>(
-            TASK_EXECUTE_VOUCHER,
-            taskDefs[TASK_EXECUTE_VOUCHER].description,
-            connected(async (args, { outputFacet }) => {
-                const signer = await outputFacet.signer.getAddress();
-                const proof = JSON.parse(args.proof); // string to JSON object
+executeVoucherParams(
+    task<ExecuteVoucherArgs>(
+        TASK_EXECUTE_VOUCHER,
+        taskDefs[TASK_EXECUTE_VOUCHER].description,
+        connected(async (args, { outputFacet }) => {
+            const signer = await outputFacet.signer.getAddress();
+            const proof = JSON.parse(args.proof); // string to JSON object
 
-                const tx = await outputFacet.executeVoucher(
-                    args.destination,
-                    args.payload,
-                    proof
-                )!;
-                const receipt = await tx.wait(1);
-                const event = (
-                    await outputFacet.queryFilter(
-                        outputFacet.filters.VoucherExecuted(),
-                        receipt.blockHash
-                    )
-                ).pop();
+            const tx = await outputFacet.executeVoucher(
+                args.destination,
+                args.payload,
+                proof
+            )!;
+            const receipt = await tx.wait(1);
+            const event = (
+                await outputFacet.queryFilter(
+                    outputFacet.filters.VoucherExecuted(),
+                    receipt.blockHash
+                )
+            ).pop();
 
-                if (!event) {
-                    console.log(
-                        `Failed to execute payload '${args.payload}' at destination '${args.destination}' with proof '${proof}' (signer: ${signer}, tx: ${tx.hash})`
-                    );
-                } else {
-                    const position = event.args.voucherPosition.toString();
-                    console.log(
-                        `Executed voucher at position '${position}' (signer: ${signer}, tx: ${tx.hash})`
-                    );
-                }
-            })
-        )
+            if (!event) {
+                console.log(
+                    `Failed to execute payload '${args.payload}' at destination '${args.destination}' with proof '${proof}' (signer: ${signer}, tx: ${tx.hash})`
+                );
+            } else {
+                const position = event.args.voucherPosition.toString();
+                console.log(
+                    `Executed voucher at position '${position}' (signer: ${signer}, tx: ${tx.hash})`
+                );
+            }
+        })
     )
 );

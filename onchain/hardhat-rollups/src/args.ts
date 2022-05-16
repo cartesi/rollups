@@ -13,7 +13,6 @@
 import { TaskArguments } from "hardhat/types";
 
 export interface CreateArgs extends TaskArguments {
-    name: string;
     templateHash: string;
     inputDuration: number;
     challengePeriod: number;

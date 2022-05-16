@@ -92,7 +92,7 @@ export const accountIndexParam: ParamsBuilder = (task) => {
 };
 
 export const rollupsParams: ParamsBuilder = (task) => {
-    return task.addParam<string>(
+    return accountIndexParam(task).addParam<string>(
         "rollups",
         "Address of rollups contract",
         undefined,
@@ -102,7 +102,7 @@ export const rollupsParams: ParamsBuilder = (task) => {
 };
 
 export const claimParams: ParamsBuilder = (task) => {
-    return accountIndexParam(task).addParam<string>(
+    return rollupsParams(task).addParam<string>(
         "claim",
         "Validator's bytes32 claim for current claimable epoch",
         undefined,
@@ -112,7 +112,7 @@ export const claimParams: ParamsBuilder = (task) => {
 };
 
 export const addInputParams: ParamsBuilder = (task) => {
-    return accountIndexParam(task).addParam<string>(
+    return rollupsParams(task).addParam<string>(
         "input",
         "Bytes to be processed by the offchain machine",
         undefined,
@@ -121,7 +121,7 @@ export const addInputParams: ParamsBuilder = (task) => {
 };
 
 export const executeVoucherParams: ParamsBuilder = (task) => {
-    return accountIndexParam(task)
+    return rollupsParams(task)
         .addParam(
             "destination",
             "The destination address that is called for execution"
@@ -137,7 +137,7 @@ export const executeVoucherParams: ParamsBuilder = (task) => {
 };
 
 export const fundBankParams: ParamsBuilder = (task) => {
-    return accountIndexParam(task).addParam<string>(
+    return rollupsParams(task).addParam<string>(
         "amount",
         "The number of CTSI to fund DApp's bank",
         undefined,
