@@ -108,11 +108,11 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
                     // find claimer in `num_claims`
                     if let Some(num_claims_struct) = &num_claims[i] {
                         let addr = num_claims_struct.validator_address;
-                        let num = num_claims_struct.num_claims_mades;
+                        let num = num_claims_struct.num_claims_made;
                         if addr == claimer {
                             num_claims[i] = Some(NumClaims {
                                 validator_address: addr,
-                                num_claims_mades: num + 1,
+                                num_claims_made: num + 1,
                             });
                             break;
                         } else {
@@ -123,7 +123,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
                         // at this stage, there's no `None` between `Some`
                         num_claims[i] = Some(NumClaims {
                             validator_address: claimer,
-                            num_claims_mades: U256::one(),
+                            num_claims_made: U256::one(),
                         });
                     }
                 }
@@ -289,11 +289,11 @@ fn find_validator_and_increase(v: Address, state: &mut ValidatorManagerState) {
     for i in 0..MAX_NUM_VALIDATORS {
         if let Some(num_claims_struct) = &state.num_claims[i] {
             let addr = num_claims_struct.validator_address;
-            let num = num_claims_struct.num_claims_mades;
+            let num = num_claims_struct.num_claims_made;
             if addr == v {
                 state.num_claims[i] = Some(NumClaims {
                     validator_address: addr,
-                    num_claims_mades: num + 1,
+                    num_claims_made: num + 1,
                 });
                 found = true;
                 break;
@@ -306,7 +306,7 @@ fn find_validator_and_increase(v: Address, state: &mut ValidatorManagerState) {
             if let None = state.num_claims[i] {
                 state.num_claims[i] = Some(NumClaims {
                     validator_address: v,
-                    num_claims_mades: U256::one(),
+                    num_claims_made: U256::one(),
                 });
                 break;
             }

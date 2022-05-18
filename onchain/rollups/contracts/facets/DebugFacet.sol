@@ -123,6 +123,16 @@ contract DebugFacet {
             .setNumClaims(_validatorIndex, _value);
     }
 
+    function _getNumRedeems(uint256 _validatorIndex)
+        public
+        view
+        returns (uint256)
+    {
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
+        return feeManagerDS.numClaimsRedeemed.getNumClaims(_validatorIndex);
+    }
+
     /// @notice emitted on Claim received
     event ClaimReceived(
         Result result,

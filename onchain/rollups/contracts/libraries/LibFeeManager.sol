@@ -154,6 +154,15 @@ library LibFeeManager {
         emit FeeRedeemed(_validator, nowRedeemingClaims);
     }
 
+    /// @notice removes a validator
+    /// @param ds diamond storage pointer
+    /// @param index index of validator to be removed
+    function removeValidator(DiamondStorage storage ds, uint256 index)
+        internal
+    {
+        ds.numClaimsRedeemed = ds.numClaimsRedeemed.setNumClaims(index, 0);
+    }
+
     /// @notice emitted on resetting feePerClaim
     event FeePerClaimReset(uint256 value);
 

@@ -332,7 +332,7 @@ describe("Validator Manager Facet", async () => {
                     "`num_claims` should have included the validator"
                 ).to.equal((await signers[i].getAddress()).toLowerCase());
                 expect(
-                    state.num_claims[i].num_claims_mades,
+                    state.num_claims[i].num_claims_made,
                     "`num_claims` should be 1 for each validator"
                 ).to.equal("0x1");
             }
@@ -559,7 +559,7 @@ describe("Validator Manager Facet", async () => {
                     "`num_claims` should have included the validator"
                 ).to.equal((await signers[i].getAddress()).toLowerCase());
                 expect(
-                    state.num_claims[i].num_claims_mades,
+                    state.num_claims[i].num_claims_made,
                     "`num_claims` should be 1 for each validator"
                 ).to.equal("0x1");
             }
@@ -724,7 +724,7 @@ describe("Validator Manager Facet", async () => {
                 "only signers[0] is moved to `num_claims`"
             ).to.equal((await signers[0].getAddress()).toLowerCase());
             expect(
-                state.num_claims[0].num_claims_mades,
+                state.num_claims[0].num_claims_made,
                 "signers[0] made 1 claim"
             ).to.equal("0x1");
             for (let i = 1; i < 8; i++) {
@@ -881,7 +881,7 @@ describe("Validator Manager Facet", async () => {
                 "only signers[0] in `num_claims`"
             ).to.equal((await signers[0].getAddress()).toLowerCase());
             expect(
-                state.num_claims[0].num_claims_mades,
+                state.num_claims[0].num_claims_made,
                 "signers[0] made 1 claim"
             ).to.equal("0x1");
             for (let i = 1; i < 8; i++) {
@@ -981,7 +981,7 @@ describe("Validator Manager Facet", async () => {
                 ).to.equal(epoch + 1);
             }
 
-            // currently, #claims gets cleared once a validator makes a wrong claim
+            // #claims gets cleared once a validator makes a wrong claim
             await debugFacet._onClaim(validators[0], claim);
             await debugFacet._onClaim(validators[1], claim2);
             // let the 2nd validator win the dispute
@@ -1042,7 +1042,7 @@ describe("Validator Manager Facet", async () => {
                     "now validators claimed has #claims increased"
                 ).to.equal((await signers[i].getAddress()).toLowerCase());
                 expect(
-                    state.num_claims[i].num_claims_mades,
+                    state.num_claims[i].num_claims_made,
                     "now validators claimed has 1 claim"
                 ).to.equal("0x1");
             }
@@ -1064,7 +1064,7 @@ describe("Validator Manager Facet", async () => {
                 ).to.equal((await signers[0].getAddress()).toLowerCase());
                 // and its #claims should stay the same, until epoch finalized
                 expect(
-                    parseInt(state.num_claims[0].num_claims_mades, 16),
+                    parseInt(state.num_claims[0].num_claims_made, 16),
                     "#claims should stay the same for now"
                 ).to.equal(epoch);
 
@@ -1083,7 +1083,7 @@ describe("Validator Manager Facet", async () => {
                     "the 1st in `num_claims` is the 1st validator"
                 ).to.equal((await signers[0].getAddress()).toLowerCase());
                 expect(
-                    parseInt(state.num_claims[0].num_claims_mades, 16),
+                    parseInt(state.num_claims[0].num_claims_made, 16),
                     "the 1st validator keeps increasing #claims"
                 ).to.equal(epoch + 1);
             }
@@ -1114,7 +1114,7 @@ describe("Validator Manager Facet", async () => {
                 "the first address in `num_claims`"
             ).to.equal((await signers[0].getAddress()).toLowerCase());
             expect(
-                state.num_claims[0].num_claims_mades,
+                state.num_claims[0].num_claims_made,
                 "the 1st validator should have 20 claims, the last claim hasn't finalized"
             ).to.equal("0x14");
             for (let i = 2; i < 8 - 1; i++) {
@@ -1123,7 +1123,7 @@ describe("Validator Manager Facet", async () => {
                     "the i-th address in `num_claims`"
                 ).to.equal((await signers[i].getAddress()).toLowerCase());
                 expect(
-                    state.num_claims[i].num_claims_mades,
+                    state.num_claims[i].num_claims_made,
                     "they all have only 1 claim"
                 ).to.equal("0x1");
             }
@@ -1175,7 +1175,7 @@ describe("Validator Manager Facet", async () => {
         await debugFacet._onDisputeEnd(validators[0], validators[1], claim);
         await expect(
             validatorManagerFacet.getValidatorIndex(validators[1]),
-            "nvalidators[1] gets kicked out, should revert"
+            "validators[1] gets kicked out, should revert"
         ).to.be.revertedWith("validator not found");
         for (let i = 0; i < 8 && i != 1; i++) {
             expect(

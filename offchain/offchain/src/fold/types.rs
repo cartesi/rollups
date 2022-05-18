@@ -285,7 +285,7 @@ pub struct ImmutableState {
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct NumClaims {
     pub validator_address: Address,
-    pub num_claims_mades: U256,
+    pub num_claims_made: U256,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -311,7 +311,7 @@ impl ValidatorManagerState {
             // find validator address in `num_claims`
             if let Some(num_claims_struct) = &num_claims[i] {
                 if num_claims_struct.validator_address == validator_address {
-                    validator_claims = num_claims_struct.num_claims_mades;
+                    validator_claims = num_claims_struct.num_claims_made;
                     break;
                 }
             }

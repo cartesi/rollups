@@ -62,6 +62,18 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
     ) -> SyncResult<Self::Accumulator, A> {
         let dapp_contract_address = initial_state;
 
+        let validator_manager_state = self
+            .validator_manager_fold
+            .get_state_for_block(&dapp_contract_address, Some(block.hash))
+            .await
+            .map_err(|e| {
+                SyncDelegateError {
+                    err: format!("Validator Manager state fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
         let diamond_init = access
             .build_sync_contract(
                 *dapp_contract_address,
@@ -118,6 +130,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let mut num_redeemed_sums: HashMap<Address, U256> = HashMap::new();
 
         for ev in events.iter() {
+            if validator_manager_state
+                .validators_removed
+                .contains(&ev.validator)
+            {
+                // skip validator if it's removed in Validator Manager state
+                continue;
+            }
             match num_redeemed_sums.get(&ev.validator) {
                 Some(amount) => {
                     num_redeemed_sums[&ev.validator] = amount + ev.claims
@@ -150,19 +169,6 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .state;
 
         let bank_balance = bank_state.balance;
-
-        // obtain #claims validators made from Validator Manager
-        let validator_manager_state = self
-            .validator_manager_fold
-            .get_state_for_block(&dapp_contract_address, Some(block.hash))
-            .await
-            .map_err(|e| {
-                SyncDelegateError {
-                    err: format!("Validator Manager state fold error: {:?}", e),
-                }
-                .build()
-            })?
-            .state;
 
         // uncommitted balance
         let uncommitted_balance = calculate_uncommitted_balance(
@@ -237,6 +243,18 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             )
             .await;
 
+        let validator_manager_state = self
+            .validator_manager_fold
+            .get_state_for_block(&dapp_contract_address, Some(block.hash))
+            .await
+            .map_err(|e| {
+                FoldDelegateError {
+                    err: format!("Validator manager fold error: {:?}", e),
+                }
+                .build()
+            })?
+            .state;
+
         // `FeePerClaimReset` event
         let events = contract
             .fee_per_claim_reset_filter()
@@ -259,6 +277,13 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         // newly redeemed
         let mut num_redeemed_sums: HashMap<Address, U256> = HashMap::new();
         for ev in events.iter() {
+            if validator_manager_state
+                .validators_removed
+                .contains(&ev.validator)
+            {
+                // skip validator if it's removed in Validator Manager state
+                continue;
+            }
             let amount = num_redeemed_sums
                 .get(&ev.validator)
                 .map(|v| *v)
@@ -306,6 +331,19 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             }
         }
 
+        // remove validator's existing num_redeemed if it's newly removed from Validator Manager state
+        for index in 0..MAX_NUM_VALIDATORS {
+            if let Some(num_redeemed_struct) = &state.num_redeemed[index] {
+                let address = num_redeemed_struct.validator_address;
+                if validator_manager_state
+                    .validators_removed
+                    .contains(&address)
+                {
+                    state.num_redeemed[index] = None;
+                }
+            }
+        }
+
         // update fee manager bank balance
         let bank_state = self
             .bank_fold
@@ -323,18 +361,6 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             .state;
 
         state.bank_balance = bank_state.balance;
-
-        let validator_manager_state = self
-            .validator_manager_fold
-            .get_state_for_block(&dapp_contract_address, Some(block.hash))
-            .await
-            .map_err(|e| {
-                FoldDelegateError {
-                    err: format!("Validator manager fold error: {:?}", e),
-                }
-                .build()
-            })?
-            .state;
 
         // uncommitted balance
         state.uncommitted_balance = calculate_uncommitted_balance(
@@ -365,7 +391,7 @@ fn calculate_uncommitted_balance(
     let mut total_claims = U256::zero();
     for i in 0..MAX_NUM_VALIDATORS {
         if let Some(num_claims_struct) = num_claims[i] {
-            total_claims = total_claims + num_claims_struct.num_claims_mades;
+            total_claims = total_claims + num_claims_struct.num_claims_made;
         }
     }
 

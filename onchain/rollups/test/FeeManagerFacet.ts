@@ -745,7 +745,13 @@ describe("FeeManager Facet", () => {
             await debugFacet._setNumClaims(1, 20);
             // but then lost a dispute
             // its number of claims will be set to 0 by validator manager
-            await debugFacet._setNumClaims(1, 0);
+            var claim = "0x" + "1".repeat(64);
+            await debugFacet._onDisputeEnd(
+                await signers[0].getAddress(), // winner
+                await signers[1].getAddress(), // loser
+                claim
+            );
+
             // so signers[1] will not be able to redeem any more fees
             await expect(
                 feeManagerFacet
@@ -753,6 +759,17 @@ describe("FeeManager Facet", () => {
                     .redeemFee(await signers[1].getAddress()),
                 "signers[1] will not be able to redeem anymore"
             ).to.be.reverted;
+            // its #redeems also get cleared
+            await expect(
+                feeManagerFacet.getNumClaimsRedeemed(
+                    await signers[1].getAddress()
+                ),
+                "after losing dispute, validator cannot be found"
+            ).to.be.revertedWith("validator not found");
+            expect(
+                await debugFacet._getNumRedeems(1),
+                "after losing dispute, its #redeems gets cleared"
+            ).to.equal(0);
         } else {
             // test delegate
             var claim = "0x" + "1".repeat(64);
@@ -846,6 +863,102 @@ describe("FeeManager Facet", () => {
             ).to.equal(10000 - 8 * initialFeePerClaim);
         }
     });
+
+    if (enableDelegate) {
+        it("test whether #redeems gets cleared for validators who lost disputes", async () => {
+            // owner fund FeeManager
+            let init_fund = 10000;
+            await fundFeeManager(init_fund);
+            let claim = "0x" + "1".repeat(64);
+            let claim2 = "0x" + "2".repeat(64);
+
+            // *** EPOCH 0 ***
+
+            // let all validators redeem 1 claim
+            await passInputAccumulationPeriod();
+            for (let i = 0; i < 8; i++) {
+                await rollupsFacet.connect(signers[i]).claim(claim);
+            }
+            for (let i = 0; i < 8; i++) {
+                await feeManagerFacet
+                    .connect(signers[i])
+                    .redeemFee(await signers[i].getAddress());
+            }
+
+            // *** EPOCH 1 ***
+
+            // in epoch 1, let valiator0 win over validator1
+            await passInputAccumulationPeriod();
+            await rollupsFacet.connect(signers[0]).claim(claim);
+            await rollupsFacet.connect(signers[1]).claim(claim2);
+            // signers[2] will be used for epoch 2
+            await rollupsFacet.connect(signers[2]).claim(claim);
+
+            // update delegate
+            let state = JSON.parse(await getState(initialState));
+            for (let i = 0; i < 8; i++) {
+                if (i == 1) {
+                    expect(
+                        state.num_redeemed[i],
+                        "signers[1] is removed from `num_redeemed`"
+                    ).to.equal(null);
+                    continue;
+                }
+                expect(
+                    state.num_redeemed[i].validator_address,
+                    "check validator address in `num_redeemed`"
+                ).to.equal((await signers[i].getAddress()).toLowerCase());
+                expect(
+                    parseInt(state.num_redeemed[i].num_claims_redeemed, 16),
+                    "#claims should be 1 for validators except signers[1]"
+                ).to.equal(1);
+            }
+
+            // ** check uncommitted_balance
+            // there are 8 finalized claims, 3 un-finalized claims (including 1 lost)
+            // there are 8 redeems
+            // uncommitted_balance ignores un-finalized claims
+            let fund_after_8_redeems = init_fund - 8 * initialFeePerClaim;
+            expect(
+                state.uncommitted_balance,
+                "check uncommitted_balance in the middle of epoch 1"
+            ).to.equal(fund_after_8_redeems);
+
+            // now finalize epoch 1
+            await passChallengePeriod();
+            await rollupsFacet.finalizeEpoch();
+            // update delegate
+            state = JSON.parse(await getState(initialState));
+
+            // *** EPOCH 2 ***
+
+            // ** check uncommitted_balance
+            // there are 10 finalized claims
+            // there are 8 redeems
+            // signers[0] and signers[2] each has 1 redeemable claim
+            expect(
+                state.uncommitted_balance,
+                "commit 2 extra because there are 2 more finalized claims than redeems"
+            ).to.equal(fund_after_8_redeems - 2 * initialFeePerClaim);
+
+            // in epoch 2, let signers[0] win over signers[2]
+            // signers[2] will lose its redeemable claim immediately
+            await passInputAccumulationPeriod();
+            await rollupsFacet.connect(signers[0]).claim(claim);
+            await rollupsFacet.connect(signers[2]).claim(claim2);
+            // update delegate
+            state = JSON.parse(await getState(initialState));
+
+            // ** check uncommitted_balance
+            // now there are 8 (was 10) finalized claims because signers[2]'s 2 claims are removed
+            // now there are 7 (was 8) redeems because signers[2]'s 1 redeem is removed
+            // there are 2 un-finalized claims (including 1 lost). uncommitted_balance ignores un-finalized claims
+            expect(
+                state.uncommitted_balance,
+                "now only need to commit 1 extra because now there is only 1 more finalized claims than redeems"
+            ).to.equal(fund_after_8_redeems - 1 * initialFeePerClaim);
+        });
+    }
 });
 
 // helper function

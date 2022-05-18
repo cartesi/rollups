@@ -16,9 +16,11 @@ pragma solidity ^0.8.0;
 import {Result} from "../interfaces/IValidatorManager.sol";
 
 import {LibClaimsMask, ClaimsMask} from "../libraries/LibClaimsMask.sol";
+import {LibFeeManager} from "../libraries/LibFeeManager.sol";
 
 library LibValidatorManager {
     using LibClaimsMask for ClaimsMask;
+    using LibFeeManager for LibFeeManager.DiamondStorage;
 
     bytes32 constant DIAMOND_STORAGE_POSITION =
         keccak256("ValidatorManager.diamond.storage");
@@ -268,12 +270,16 @@ library LibValidatorManager {
     function removeValidator(DiamondStorage storage ds, address validator)
         internal
     {
+        LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
+            .diamondStorage();
         for (uint256 i; i < ds.validators.length; i++) {
             if (validator == ds.validators[i]) {
                 // put address(0) in validators position
                 ds.validators[i] = payable(0);
-                // remove the validator from claimsMask
+                // remove the validator from ValidatorManager's claimsMask
                 ds.claimsMask = ds.claimsMask.removeValidator(i);
+                // remove the validator from FeeManager's claimsMask (#redeems)
+                feeManagerDS.removeValidator(i);
                 break;
             }
         }
