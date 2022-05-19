@@ -74,8 +74,6 @@ describe("Output Facet", () => {
             const diamond = await deployDiamond({ debug: true });
             signers = await ethers.getSigners();
 
-            // console.log("signers[0]: ", await signers[0].getAddress());
-
             outputFacet = OutputFacet__factory.connect(
                 diamond.address,
                 signers[0]
@@ -106,8 +104,6 @@ describe("Output Facet", () => {
                 SimpleToken_deploy.address,
                 signers[0]
             );
-
-            // console.log("Simple Token address: ", simpleToken.address);
         }
     );
 
@@ -241,6 +237,13 @@ describe("Output Facet", () => {
         "function nonExistent() public",
         "function transfer(address,uint256) public returns (bool)",
     ]);
+
+    it("check signer address", async () => {
+        expect(
+            await signers[0].getAddress(),
+            "Failed to use Hardhat default signer, please unset user defined MNEMONIC env variable"
+        ).to.equal("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
+    });
 
     it("Initialization", async () => {
         _destination = simpleContractAddress;
