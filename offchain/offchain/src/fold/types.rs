@@ -139,7 +139,7 @@ impl IntoIterator for Claims {
 }
 
 /// Epoch finalized on the blockchain, vouchers are executable and notices
-/// are verfiable/provable
+/// are verifiable/provable
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FinalizedEpoch {
     pub epoch_number: U256,
