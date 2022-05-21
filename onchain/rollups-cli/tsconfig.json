@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "esModuleInterop": true,
+        "module": "commonjs",
+        "outDir": "dist",
+        "resolveJsonModule": true,
+        "target": "es2020",
+        "forceConsistentCasingInFileNames": true,
+        "strict": true
+    }
+}

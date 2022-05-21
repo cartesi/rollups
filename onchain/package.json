@@ -1,12 +1,14 @@
 {
     "private": true,
     "scripts": {
+        "prettier:hardhat-rollups": "yarn workspace @cartesi/hardhat-rollups prettier",
         "prettier:rollups": "yarn workspace @cartesi/rollups prettier",
-        "prettier:hardhat-rollups": "yarn workspace @cartesi/hardhat-rollups prettier"
+        "prettier:rollups-cli": "yarn workspace @cartesi/rollups-cli prettier"
     },
     "workspaces": [
         "hardhat-rollups",
-        "rollups"
+        "rollups",
+        "rollups-cli"
     ],
     "devDependencies": {
         "prettier": "^2.6.2"
