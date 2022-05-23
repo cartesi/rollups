@@ -24,12 +24,15 @@ type Input {
   id: ID!
   index: Int!
   epoch: Epoch!
+  blockNumber: BigInt!
   """
     Get notices from this particular input
     with additional ability to filter and paginate them
   """
   notices(first: Int, last: Int, after: String, before: String): NoticeConnection!
 }
+
+scalar BigInt
 
 type Query {
   epoch(id: ID!): Epoch!

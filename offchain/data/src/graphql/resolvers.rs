@@ -9,6 +9,8 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ * Parts of the code (BigInt scalar implementatation) is licenced
+ * under BSD 2-Clause Copyright (c) 2016, Magnus Hallin
  */
 
 use crate::database;
@@ -46,7 +48,7 @@ pub struct Context {
 }
 impl juniper::Context for Context {}
 
-#[graphql_object(context = Context, Scalar = CartesiGraphQLScalarValue)]
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl Epoch {
     fn id(&self) -> &juniper::ID {
         &self.id
@@ -98,7 +100,7 @@ impl Epoch {
     }
 }
 
-#[graphql_object(context = Context, Scalar = CartesiGraphQLScalarValue)]
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl EpochEdge {
     fn node(&self) -> &Epoch {
         &self.node
@@ -110,7 +112,7 @@ impl EpochEdge {
 }
 implement_cursor!(EpochEdge);
 
-#[graphql_object(context = Context, Scalar = CartesiGraphQLScalarValue)]
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl EpochConnection {
     fn total_count(&self) -> i32 {
         self.total_count
@@ -276,6 +278,7 @@ fn get_input_from_db(
             id: juniper::ID::new(db_input.id.to_string()),
             index: db_input.input_index,
             epoch,
+            block_number: db_input.block_number,
         })
     } else {
         match val {
@@ -322,6 +325,7 @@ fn process_db_inputs(
                 Input {
                     id: juniper::ID::from(db_input.id.to_string()),
                     index: db_input.input_index as i32,
+                    block_number: db_input.block_number,
                     epoch: match epochs.get(&db_input.epoch_index).ok_or_else(
                         || {
                             warn!(
@@ -538,7 +542,7 @@ where
     }
 }
 
-#[graphql_object(context = Context, Scalar = CartesiGraphQLScalarValue)]
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl Input {
     fn id(&self) -> &juniper::ID {
         &self.id
@@ -550,6 +554,10 @@ impl Input {
 
     fn epoch(&self) -> &Epoch {
         &self.epoch
+    }
+
+    fn block_number(&self) -> &i64 {
+        &self.block_number
     }
 
     /// Get notices from this particular input
@@ -599,7 +607,7 @@ impl Input {
     }
 }
 
-#[graphql_object(context = Context, Scalar = CartesiGraphQLScalarValue)]
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl InputEdge {
     fn node(&self) -> &Input {
         &self.node
@@ -611,7 +619,7 @@ impl InputEdge {
 }
 implement_cursor!(InputEdge);
 
-#[graphql_object(context = Context, Scalar = CartesiGraphQLScalarValue)]
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl InputConnection {
     fn total_count(&self) -> i32 {
         self.total_count
@@ -630,7 +638,7 @@ impl InputConnection {
     }
 }
 
-#[graphql_object(context = Context, Scalar = CartesiGraphQLScalarValue)]
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl Notice {
     fn id(&self) -> &juniper::ID {
         &self.id
@@ -660,7 +668,7 @@ impl Notice {
     }
 }
 
-#[graphql_object(context = Context, Scalar = CartesiGraphQLScalarValue)]
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl NoticeEdge {
     fn node(&self) -> &Notice {
         &self.node
@@ -672,7 +680,7 @@ impl NoticeEdge {
 }
 implement_cursor!(NoticeEdge);
 
-#[graphql_object(context = Context, Scalar = CartesiGraphQLScalarValue)]
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl NoticeConnection {
     fn total_count(&self) -> i32 {
         self.total_count
@@ -691,7 +699,7 @@ impl NoticeConnection {
     }
 }
 
-#[graphql_object(context = Context, Scalar = CartesiGraphQLScalarValue)]
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl Query {
     fn epoch(id: juniper::ID) -> FieldResult<Epoch> {
         use crate::database::{schema, DbEpoch};
@@ -756,6 +764,7 @@ impl Query {
                 id: juniper::ID::from(db_input.id.to_string()),
                 index: db_input.input_index as i32,
                 epoch,
+                block_number: db_input.block_number,
             })
         } else {
             Err(super::error::Error::ItemNotFound {
@@ -916,8 +925,8 @@ impl Query {
     }
 }
 
-impl juniper::ScalarValue for CartesiGraphQLScalarValue {
-    type Visitor = CartesiGraphQLScalarValueVisitor;
+impl juniper::ScalarValue for RollupsGraphQLScalarValue {
+    type Visitor = RollupsGraphQLScalarValueVisitor;
 
     fn as_int(&self) -> Option<i32> {
         match *self {
@@ -964,10 +973,10 @@ impl juniper::ScalarValue for CartesiGraphQLScalarValue {
 }
 
 #[derive(Default)]
-pub struct CartesiGraphQLScalarValueVisitor;
+pub struct RollupsGraphQLScalarValueVisitor;
 
-impl<'de> serde::de::Visitor<'de> for CartesiGraphQLScalarValueVisitor {
-    type Value = CartesiGraphQLScalarValue;
+impl<'de> serde::de::Visitor<'de> for RollupsGraphQLScalarValueVisitor {
+    type Value = RollupsGraphQLScalarValue;
 
     fn expecting(
         &self,
@@ -979,29 +988,29 @@ impl<'de> serde::de::Visitor<'de> for CartesiGraphQLScalarValueVisitor {
     fn visit_bool<E>(
         self,
         value: bool,
-    ) -> Result<CartesiGraphQLScalarValue, E> {
-        Ok(CartesiGraphQLScalarValue::Boolean(value))
+    ) -> Result<RollupsGraphQLScalarValue, E> {
+        Ok(RollupsGraphQLScalarValue::Boolean(value))
     }
 
-    fn visit_i32<E>(self, value: i32) -> Result<CartesiGraphQLScalarValue, E>
+    fn visit_i32<E>(self, value: i32) -> Result<RollupsGraphQLScalarValue, E>
     where
         E: serde::de::Error,
     {
-        Ok(CartesiGraphQLScalarValue::Int(value))
+        Ok(RollupsGraphQLScalarValue::Int(value))
     }
 
-    fn visit_i64<E>(self, value: i64) -> Result<CartesiGraphQLScalarValue, E>
+    fn visit_i64<E>(self, value: i64) -> Result<RollupsGraphQLScalarValue, E>
     where
         E: serde::de::Error,
     {
         if value <= i32::max_value() as i64 {
             self.visit_i32(value as i32)
         } else {
-            Ok(CartesiGraphQLScalarValue::Long(value))
+            Ok(RollupsGraphQLScalarValue::BigInt(value))
         }
     }
 
-    fn visit_u32<E>(self, value: u32) -> Result<CartesiGraphQLScalarValue, E>
+    fn visit_u32<E>(self, value: u32) -> Result<RollupsGraphQLScalarValue, E>
     where
         E: serde::de::Error,
     {
@@ -1012,22 +1021,22 @@ impl<'de> serde::de::Visitor<'de> for CartesiGraphQLScalarValueVisitor {
         }
     }
 
-    fn visit_u64<E>(self, value: u64) -> Result<CartesiGraphQLScalarValue, E>
+    fn visit_u64<E>(self, value: u64) -> Result<RollupsGraphQLScalarValue, E>
     where
         E: serde::de::Error,
     {
         if value <= i64::MAX as u64 {
             self.visit_i64(value as i64)
         } else {
-            Ok(CartesiGraphQLScalarValue::Float(value as f64))
+            Ok(RollupsGraphQLScalarValue::Float(value as f64))
         }
     }
 
-    fn visit_f64<E>(self, value: f64) -> Result<CartesiGraphQLScalarValue, E> {
-        Ok(CartesiGraphQLScalarValue::Float(value))
+    fn visit_f64<E>(self, value: f64) -> Result<RollupsGraphQLScalarValue, E> {
+        Ok(RollupsGraphQLScalarValue::Float(value))
     }
 
-    fn visit_str<E>(self, value: &str) -> Result<CartesiGraphQLScalarValue, E>
+    fn visit_str<E>(self, value: &str) -> Result<RollupsGraphQLScalarValue, E>
     where
         E: serde::de::Error,
     {
@@ -1037,7 +1046,7 @@ impl<'de> serde::de::Visitor<'de> for CartesiGraphQLScalarValueVisitor {
     fn visit_string<E>(
         self,
         value: String,
-    ) -> Result<CartesiGraphQLScalarValue, E> {
-        Ok(CartesiGraphQLScalarValue::String(value))
+    ) -> Result<RollupsGraphQLScalarValue, E> {
+        Ok(RollupsGraphQLScalarValue::String(value))
     }
 }

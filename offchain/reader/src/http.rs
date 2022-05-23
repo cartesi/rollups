@@ -21,7 +21,7 @@ use diesel::r2d2::{ConnectionManager, Pool};
 use juniper::http::playground::playground_source;
 use juniper::http::GraphQLRequest;
 use juniper::{EmptyMutation, EmptySubscription};
-use rollups_data::graphql::types::CartesiGraphQLScalarValue;
+use rollups_data::graphql::types::RollupsGraphQLScalarValue;
 use std::sync::Arc;
 
 struct HttpContext {
@@ -70,7 +70,7 @@ fn juniper_playground() -> HttpResponse {
 
 #[actix_web::post("/graphql")]
 async fn graphql(
-    query: web::Json<GraphQLRequest<CartesiGraphQLScalarValue>>,
+    query: web::Json<GraphQLRequest<RollupsGraphQLScalarValue>>,
     http_context: web::Data<HttpContext>,
 ) -> HttpResult<impl Responder> {
     let ctx = rollups_data::graphql::resolvers::Context {
