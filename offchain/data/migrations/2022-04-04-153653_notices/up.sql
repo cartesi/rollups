@@ -4,7 +4,7 @@ CREATE TABLE "epochs"
 (
     id SERIAL,
     epoch_index int NOT NULL,
-    CONSTRAINT "epochs_pkey" PRIMARY KEY (epoch_index)
+    CONSTRAINT "epochs_pkey" PRIMARY KEY (id)
 );
 
 
@@ -17,7 +17,7 @@ CREATE TABLE "inputs"
     block_number bigint NOT NULL,
     payload bytea NOT NULL,
     "timestamp" timestamp NOT NULL,
-    CONSTRAINT "inputs_pkey" PRIMARY KEY (id, input_index, epoch_index)
+    CONSTRAINT "inputs_pkey" PRIMARY KEY (id)
 );
 
 CREATE TABLE "notices"
@@ -29,9 +29,44 @@ CREATE TABLE "notices"
     notice_index int NOT NULL,
     keccak character varying(255) NOT NULL,
     payload bytea,
-    "timestamp" timestamp with time zone default current_timestamp NOT NULL,
-    CONSTRAINT "notices_pkey" PRIMARY KEY (id, session_id, epoch_index, input_index, notice_index)
+    CONSTRAINT "notices_pkey" PRIMARY KEY (id)
 );
+
+CREATE TABLE "proofs"
+(
+    id SERIAL,
+    output_hashes_root_hash character varying(255) NOT NULL,
+    vouchers_epoch_root_hash character varying(255) NOT NULL,
+    notices_epoch_root_hash character varying(255) NOT NULL,
+    machine_state_hash character varying(255) NOT NULL,
+    keccak_in_hashes_siblings text,
+    output_hashes_in_epoch_siblings text,
+    CONSTRAINT "proofs_pkey" PRIMARY KEY (id)
+);
+
+CREATE TABLE "vouchers"
+(
+    id SERIAL,
+    epoch_index int NOT NULL,
+    input_index int NOT NULL,
+    voucher_index int NOT NULL,
+    proof int,
+    destination character varying(255) NOT NULL,
+    payload bytea,
+    CONSTRAINT "vouchers_pkey" PRIMARY KEY (id),
+    CONSTRAINT "vouchers_proof_fkey" FOREIGN KEY (proof) REFERENCES proofs(id) ON DELETE SET NULL
+);
+
+CREATE TABLE "reports"
+(
+    id SERIAL,
+    epoch_index int NOT NULL,
+    input_index int NOT NULL,
+    report_index int NOT NULL,
+    payload bytea,
+    CONSTRAINT "reports_pkey" PRIMARY KEY (id)
+);
+
 
 
 CREATE TABLE "state"

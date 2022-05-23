@@ -12,12 +12,10 @@
  */
 pub mod schema;
 
-use chrono::{DateTime, Local, Utc};
-use diesel::backend::Backend;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, ManageConnection};
 use diesel::{Insertable, Queryable};
-use schema::{epochs, inputs, notices};
+use schema::{epochs, inputs, notices, proofs, reports, vouchers};
 use tokio::task::JoinError;
 
 pub const CURRENT_NOTICE_EPOCH_INDEX: &str = "current_notice_epoch_index";
@@ -58,30 +56,47 @@ pub struct DbNotice {
     // Keep keccak as string in database for easier db manual search
     pub keccak: String,
     pub payload: Option<Vec<u8>>,
-    #[diesel(deserialize_as = "LocalDateTimeWrapper")]
-    pub timestamp: chrono::DateTime<chrono::Local>, //todo use time from input
 }
 
-pub struct LocalDateTimeWrapper(DateTime<Local>);
-impl From<LocalDateTimeWrapper> for DateTime<Local> {
-    fn from(wrapper: LocalDateTimeWrapper) -> DateTime<Local> {
-        wrapper.0
-    }
+/// Struct representing Proof in the database
+#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[table_name = "proofs"]
+pub struct DbProof {
+    // Numerical id of proof in database, used as cursor in connection pattern
+    pub id: i32,
+    // Hashes given in Ethereum hex binary format (32 bytes), starting with '0x'
+    pub output_hashes_root_hash: String,
+    pub vouchers_epoch_root_hash: String,
+    pub notices_epoch_root_hash: String,
+    pub machine_state_hash: String,
+    pub keccak_in_hashes_siblings: String,
+    pub output_hashes_in_epoch_siblings: String,
 }
 
-impl<DB, ST> Queryable<ST, DB> for LocalDateTimeWrapper
-where
-    DB: Backend,
-    DateTime<Utc>: Queryable<ST, DB>,
-{
-    type Row = <DateTime<Utc> as Queryable<ST, DB>>::Row;
+/// Struct representing Voucher in the database
+#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[table_name = "vouchers"]
+pub struct DbVoucher {
+    // Numerical id of voucher in database, used as cursor in connection pattern
+    pub id: i32,
+    pub epoch_index: i32,
+    pub input_index: i32,
+    pub voucher_index: i32,
+    pub proof: Option<i32>,
+    pub destination: String,
+    pub payload: Option<Vec<u8>>,
+}
 
-    fn build(row: Self::Row) -> Self {
-        Self(
-            <DateTime<Utc> as Queryable<ST, DB>>::build(row)
-                .with_timezone(&Local),
-        )
-    }
+/// Struct representing Report in the database
+#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[table_name = "reports"]
+pub struct DbReport {
+    // Numerical id of report in database, used as cursor in connection pattern
+    pub id: i32,
+    pub epoch_index: i32,
+    pub input_index: i32,
+    pub report_index: i32,
+    pub payload: Option<Vec<u8>>,
 }
 
 /// Message enumeration comprising all available objects that can be kept

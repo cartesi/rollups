@@ -15,7 +15,7 @@ import { NoticesArgs } from "./args";
 import { taskDefs, TASK_GET_NOTICES } from "./constants";
 import { connected } from "./graphql";
 import { noticesParams, graphqlParams } from "./params";
-import { GetNoticeDocument } from "./generated/graphql";
+import { NoticesDocument } from "./generated/graphql";
 import { ethers } from "ethers";
 
 graphqlParams(
@@ -25,12 +25,7 @@ graphqlParams(
             taskDefs[TASK_GET_NOTICES].description,
             connected(async (args, client) => {
                 const { data, error } = await client
-                    .query(GetNoticeDocument, {
-                        query: {
-                            epochIndex: args.epoch,
-                            inputIndex: args.input,
-                        },
-                    })
+                    .query(NoticesDocument, {})
                     .toPromise();
 
                 if (error) {
@@ -38,7 +33,7 @@ graphqlParams(
                     return;
                 }
 
-                data?.getNotice?.forEach((notice) => {
+                data?.notices?.nodes.forEach((notice) => {
                     if (notice) {
                         delete notice.__typename;
                         if (args.payload == "string") {

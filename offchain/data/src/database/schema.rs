@@ -1,12 +1,12 @@
 table! {
-    epochs (epoch_index) {
+    epochs (id) {
         id -> Int4,
         epoch_index -> Int4,
     }
 }
 
 table! {
-    inputs (id, input_index, epoch_index) {
+    inputs (id) {
         id -> Int4,
         input_index -> Int4,
         epoch_index -> Int4,
@@ -18,7 +18,7 @@ table! {
 }
 
 table! {
-    notices (id, session_id, epoch_index, input_index, notice_index) {
+    notices (id) {
         id -> Int4,
         session_id -> Varchar,
         epoch_index -> Int4,
@@ -26,7 +26,28 @@ table! {
         notice_index -> Int4,
         keccak -> Varchar,
         payload -> Nullable<Bytea>,
-        timestamp -> Timestamptz,
+    }
+}
+
+table! {
+    proofs (id) {
+        id -> Int4,
+        output_hashes_root_hash -> Varchar,
+        vouchers_epoch_root_hash -> Varchar,
+        notices_epoch_root_hash -> Varchar,
+        machine_state_hash -> Varchar,
+        keccak_in_hashes_siblings -> Nullable<Text>,
+        output_hashes_in_epoch_siblings -> Nullable<Text>,
+    }
+}
+
+table! {
+    reports (id) {
+        id -> Int4,
+        epoch_index -> Int4,
+        input_index -> Int4,
+        report_index -> Int4,
+        payload -> Nullable<Bytea>,
     }
 }
 
@@ -37,4 +58,20 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(epochs, inputs, notices, state,);
+table! {
+    vouchers (id) {
+        id -> Int4,
+        epoch_index -> Int4,
+        input_index -> Int4,
+        voucher_index -> Int4,
+        proof -> Nullable<Int4>,
+        destination -> Varchar,
+        payload -> Nullable<Bytea>,
+    }
+}
+
+joinable!(vouchers -> proofs (proof));
+
+allow_tables_to_appear_in_same_query!(
+    epochs, inputs, notices, proofs, reports, state, vouchers,
+);

@@ -15,7 +15,6 @@
 /// with specified interval and collects related data about dapp
 use crate::config::IndexerConfig;
 use crate::db_service::{get_current_db_epoch_async, EpochIndexType};
-use chrono::Local;
 use ethers::core::types::{Address, U256};
 use offchain::fold::types::{
     AccumulatingEpoch, EpochWithClaims, Input, PhaseState, RollupsState,
@@ -147,15 +146,23 @@ async fn poll_epoch_status(
         get_epoch_status(client, session_id, epoch_index).await?;
 
     for input in epoch_status_response.processed_inputs {
-        debug!(
+        info!(
             "Poll epoch status: processed epoch {} input {} reports len: {}",
             epoch_index,
             input.input_index,
             input.reports.len()
         );
+
         if let Some(one_of) = input.processed_oneof {
+            //info!("One of >>>>>>>>>>>>>> {:?}", one_of);
             match one_of {
                 cartesi_server_manager::processed_input::ProcessedOneof::Result(input_result) => {
+                    // Process vouchers
+                    for (vindex, voucher) in input_result.vouchers.iter().enumerate() {
+                        // Send one voucher to database service
+                        info!("Poll epoch status: sending voucher with session id {}, epoch_index {} input_index {} voucher_index {} voucher {:?}",
+                                session_id, epoch_index, input.input_index, &vindex, voucher);
+                    }
                     // Process notices
                     for (nindex, notice) in input_result.notices.iter().enumerate() {
                         // Send one notice to database service
@@ -174,8 +181,7 @@ async fn poll_epoch_status(
                                     .unwrap_or(&cartesi_machine::Hash { data: vec![] })
                                     .data,
                             ),
-                            payload: Some(notice.payload.clone()),
-                            timestamp: Local::now()
+                            payload: Some(notice.payload.clone())
                         })).await {
                             error!("Poll epoch status: error passing message to db {}", e.to_string())
                         }

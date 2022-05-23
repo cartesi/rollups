@@ -25,8 +25,8 @@ target "indexer" {
 
 target "reader" {
   inherits   = ["docker-metadata-action"]
-  dockerfile = "Dockerfile"
-  context    = "./reader"
+  dockerfile = "offchain/reader/Dockerfile"
+  context    = "."
 }
 
 target "hardhat" {

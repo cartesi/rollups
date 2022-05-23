@@ -1,9 +1,19 @@
-query getNotice($query: NoticeKeys) {
-    getNotice(query: $query) {
-        sessionId
-        epochIndex
-        inputIndex
-        noticeIndex
-        payload
+query notices($first: Int, $last: Int, $after: String, $before: String) {
+    notices(first: $first, last: $last, after: $after, before: $before) {
+        nodes {
+          id
+          index
+          input {
+            id
+            index
+            epoch {
+              id
+              index
+            }
+          }
+          keccak
+          payload
+        
+        }
     }
 }

@@ -105,7 +105,6 @@ fn insert_notice(
             notice_index.eq(&db_notice.notice_index),
             keccak.eq(&db_notice.keccak),
             payload.eq(&db_notice.payload),
-            timestamp.eq(&db_notice.timestamp),
         ))
         .execute(conn)
         .map_err(|e| crate::error::Error::DieselError { source: e })
