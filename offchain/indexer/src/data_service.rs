@@ -16,9 +16,10 @@
 use crate::config::IndexerConfig;
 use crate::db_service::{get_current_db_epoch_async, EpochIndexType};
 use chrono::Local;
-use diesel::PgConnection;
 use ethers::core::types::{Address, U256};
-use offchain::fold::types::{Input, PhaseState, RollupsState};
+use offchain::fold::types::{
+    AccumulatingEpoch, EpochWithClaims, Input, PhaseState, RollupsState,
+};
 use rollups_data::database::{DbInput, DbNotice, Message};
 use snafu::ResultExt;
 use state_fold::types::BlockState;
@@ -135,7 +136,7 @@ async fn poll_epoch_status(
         None => {
             let session_status = get_session_status(client, session_id).await?;
             debug!(
-                "Retrieving current epoch index, acquired session status {:?}",
+                "Poll epoch status: retrieving current epoch index, acquired session status {:?}",
                 session_status
             );
             session_status.active_epoch_index
@@ -147,7 +148,7 @@ async fn poll_epoch_status(
 
     for input in epoch_status_response.processed_inputs {
         debug!(
-            "Processed epoch {} input {} reports len: {}",
+            "Poll epoch status: processed epoch {} input {} reports len: {}",
             epoch_index,
             input.input_index,
             input.reports.len()
@@ -158,7 +159,7 @@ async fn poll_epoch_status(
                     // Process notices
                     for (nindex, notice) in input_result.notices.iter().enumerate() {
                         // Send one notice to database service
-                        trace!("Sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
+                        trace!("Poll epoch status: sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
                                 session_id, epoch_index, input.input_index, &nindex);
                         if let Err(e) = message_tx.send(Message::Notice(DbNotice {
                             id: 0,
@@ -176,12 +177,12 @@ async fn poll_epoch_status(
                             payload: Some(notice.payload.clone()),
                             timestamp: Local::now()
                         })).await {
-                            error!("error passing message to db {}", e.to_string())
+                            error!("Poll epoch status: error passing message to db {}", e.to_string())
                         }
                     }
                 },
                 cartesi_server_manager::processed_input::ProcessedOneof::SkipReason(reason) => {
-                    info!("Skip input for reason {}", reason);
+                    info!("Poll epoch status: skip input for reason {}", reason);
                 }
             }
         }
@@ -190,6 +191,7 @@ async fn poll_epoch_status(
 }
 
 /// Get state server current state
+/// Process inputs ad send to db service
 async fn poll_state(
     message_tx: &mpsc::Sender<Message>,
     client: &mut DelegateManagerClient<tonic::transport::Channel>,
@@ -197,18 +199,17 @@ async fn poll_state(
     initial_epoch: i32,
 ) -> Result<(), crate::error::Error> {
     let initial_state = (U256::from(initial_epoch), dapp_contract_address);
-
     let json_initial_state = serde_json::to_string(&initial_state)
         .context(super::error::SerializeError)?;
 
     debug!(
-        "Json state server retrieve initial state argument: {:?}",
+        "Poll state: json state server retrieve initial state argument: {:?}",
         &json_initial_state
     );
 
     let state_str = get_state(client, &json_initial_state).await?;
     trace!(
-        "State received for initial state {:?} is {:?}",
+        "Poll state: state received for initial state {:?} is {:?}",
         &json_initial_state,
         state_str
     );
@@ -238,14 +239,17 @@ async fn poll_state(
             }))
             .await
         {
-            error!("error passing input message to db {}", e.to_string())
+            error!(
+                "Poll state: error passing input message to db {}",
+                e.to_string()
+            )
         }
     }
 
     // Process first inputs from finalized epochs
     for finalized_epoch in block_state.state.finalized_epochs.finalized_epochs {
         for (index, input) in finalized_epoch.inputs.inputs.iter().enumerate() {
-            debug!("Processing finalized input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
+            debug!("Poll state: processing finalized input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
                     &input.sender, finalized_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
             send_input(
                 index,
@@ -257,15 +261,18 @@ async fn poll_state(
         }
     }
 
-    if let PhaseState::EpochSealedAwaitingFirstClaim { sealed_epoch } =
-        block_state.state.current_phase
-    {
-        for (index, input) in sealed_epoch.inputs.inputs.iter().enumerate() {
-            debug!("Processing sealed epoch input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
-                    &input.sender, sealed_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
+    async fn process_accumulating_epoch(
+        message_tx: &mpsc::Sender<Message>,
+        accumulating_epoch: AccumulatingEpoch,
+    ) {
+        for (index, input) in
+            accumulating_epoch.inputs.inputs.iter().enumerate()
+        {
+            debug!("Poll state: processing accumulating epoch input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
+                    &input.sender, accumulating_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
             send_input(
                 index,
-                sealed_epoch.epoch_number.as_u32() as i32,
+                accumulating_epoch.epoch_number.as_u32() as i32,
                 input,
                 message_tx,
             )
@@ -273,24 +280,65 @@ async fn poll_state(
         }
     }
 
-    for (index, input) in block_state
-        .state
-        .current_epoch
-        .inputs
-        .inputs
-        .iter()
-        .enumerate()
-    {
-        debug!("Processing current input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
-                    &input.sender, block_state.state.current_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
-        send_input(
-            index,
-            block_state.state.current_epoch.epoch_number.as_u32() as i32,
-            input,
-            message_tx,
-        )
-        .await;
+    async fn process_epoch_with_claims(
+        message_tx: &mpsc::Sender<Message>,
+        claimed_epoch: EpochWithClaims,
+    ) {
+        for (index, input) in claimed_epoch.inputs.inputs.iter().enumerate() {
+            debug!("Poll state: processing claimed epoch input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
+                    &input.sender, claimed_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
+            send_input(
+                index,
+                claimed_epoch.epoch_number.as_u32() as i32,
+                input,
+                message_tx,
+            )
+            .await;
+        }
     }
+
+    // Check for current phase state, process inputs accordingly
+    info!(
+        "Poll state: state server poll, current rollups phase is {:?}",
+        block_state.state.current_phase
+    );
+    match block_state.state.current_phase {
+        PhaseState::EpochSealedAwaitingFirstClaim { sealed_epoch } => {
+            debug!(
+                "Poll state: processing sealed epoch {} while awaiting first claim",
+                sealed_epoch.epoch_number
+            );
+            process_accumulating_epoch(message_tx, sealed_epoch).await;
+        }
+        PhaseState::InputAccumulation {} => {}
+        PhaseState::AwaitingConsensusNoConflict { claimed_epoch }
+        | PhaseState::ConsensusTimeout { claimed_epoch }
+        | PhaseState::AwaitingDispute { claimed_epoch } => {
+            debug!(
+                "Poll state: processing claimed epoch {}",
+                claimed_epoch.epoch_number
+            );
+            process_epoch_with_claims(message_tx, claimed_epoch).await;
+        }
+        PhaseState::AwaitingConsensusAfterConflict {
+            claimed_epoch,
+            challenge_period_base_ts,
+        } => {
+            debug!(
+                "Poll state: processing claimed epoch {}, challenge period base ts {}",
+                claimed_epoch.epoch_number, challenge_period_base_ts
+            );
+            process_epoch_with_claims(message_tx, claimed_epoch).await;
+        }
+    }
+
+    // Process current epoch
+    debug!(
+        "Poll state: processing current epoch {}",
+        block_state.state.current_epoch.epoch_number
+    );
+    process_accumulating_epoch(message_tx, block_state.state.current_epoch)
+        .await;
 
     Ok(())
 }
@@ -434,9 +482,15 @@ async fn polling_loop(
 async fn sync_epoch_status(
     message_tx: mpsc::Sender<rollups_data::database::Message>,
     mut client: ServerManagerClient<tonic::transport::Channel>,
-    conn: PgConnection,
+    postgres_endpoint: &str,
     session_id: &str,
 ) -> Result<(), crate::error::Error> {
+    let conn = rollups_data::database::connect_to_database_with_retry_async(
+        postgres_endpoint.into(),
+    )
+    .await
+    .context(crate::error::TokioError)?;
+
     let db_epoch_index = tokio::task::spawn_blocking(move || {
         Ok(crate::db_service::get_current_db_epoch(
             &conn,
@@ -481,9 +535,16 @@ async fn sync_epoch_status(
 async fn sync_state(
     message_tx: mpsc::Sender<rollups_data::database::Message>,
     mut client: DelegateManagerClient<tonic::transport::Channel>,
-    conn: PgConnection,
+    postgres_endpoint: &str,
     dapp_contract_address: Address,
 ) -> Result<(), crate::error::Error> {
+    let conn = rollups_data::database::connect_to_database_with_retry_async(
+        postgres_endpoint.into(),
+    )
+    .await
+    .context(crate::error::TokioError)?;
+
+    // Get last known state server epoch from database
     let db_epoch_index = tokio::task::spawn_blocking(move || {
         Ok(crate::db_service::get_current_db_epoch(
             &conn,
@@ -493,7 +554,7 @@ async fn sync_state(
     .await
     .context(crate::error::TokioError)??;
 
-    // Pool epoch state for all previous epochs
+    // Pool epoch state for all previous epochs since the last known epoch
     debug!(
         "Syncing in progress, polling state since epoch {}",
         db_epoch_index
@@ -519,34 +580,31 @@ async fn sync_data(
     let postgres_endpoint = crate::db_service::format_endpoint(&config);
 
     // Sync notices from machine manager
-    let conn = rollups_data::database::connect_to_database_with_retry_async(
-        postgres_endpoint.clone(),
-    )
-    .await
-    .context(crate::error::TokioError)?;
-
+    info!("Syncing up to date data from machine manager");
     let client =
         connect_to_server_manager_with_retry(&config.mm_endpoint).await?;
-    sync_epoch_status(message_tx.clone(), client, conn, &config.session_id)
-        .await?;
+    sync_epoch_status(
+        message_tx.clone(),
+        client,
+        &postgres_endpoint,
+        &config.session_id,
+    )
+    .await?;
+    info!("Machine manager sync finished successfully");
 
     // Sync inputs and epochs from state server
-    let conn = rollups_data::database::connect_to_database_with_retry_async(
-        postgres_endpoint.clone(),
-    )
-    .await
-    .context(crate::error::TokioError)?;
-
+    info!("Syncing up to date data from state server");
     let client =
         connect_to_state_server_with_retry(&config.state_server_endpoint)
             .await?;
     sync_state(
         message_tx.clone(),
         client,
-        conn,
+        &postgres_endpoint,
         config.dapp_contract_address,
     )
     .await?;
+    info!("State server sync finished successfully");
 
     Ok(())
 }
@@ -558,20 +616,12 @@ pub async fn run(
 ) -> Result<(), crate::error::Error> {
     let config = Arc::new(config);
     match sync_data(message_tx.clone(), config.clone()).await {
-        Ok(()) => {
-            info!(
-                "Data successfully synced from Cartesi server manager {} and state server {}",
-                &config.mm_endpoint, &config.state_server_endpoint
-            );
-        }
+        Ok(()) => {}
         Err(e) => {
-            error!(
-                "Failed to sync data from Cartesi server manager {}: {}",
-                &config.mm_endpoint,
-                e.to_string()
-            );
+            error!("Failed to sync data: {}", e.to_string());
         }
     }
+
     // Start polling loop
     polling_loop(config, message_tx).await
 }
