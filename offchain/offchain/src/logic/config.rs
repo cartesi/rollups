@@ -28,6 +28,9 @@ pub struct LogicEnvCLIConfig {
     /// Address of deployed DApp contract
     #[structopt(long, env)]
     pub dapp_contract_address: Option<String>,
+    /// File with ddress of deployed DApp contract
+    #[structopt(long, env)]
+    pub dapp_contract_address_file: Option<String>,
     /// URL of provider http endpoint
     #[structopt(long, env)]
     pub provider_http_endpoint: Option<String>,
@@ -180,21 +183,44 @@ impl LogicConfig {
                 err: "Must specify chain_id",
             })?;
 
-        let dapp_contract_address: Address = Address::from_str(
-            &env_cli_config
-                .dapp_contract_address
-                .or(file_config.dapp_contract_address)
+        let dapp_contract_address: Address = if let Some(a) = env_cli_config
+            .dapp_contract_address
+            .or(file_config.dapp_contract_address)
+        {
+            Address::from_str(&a).map_err(|e| {
+                config_error::FileError {
+                    err: format!(
+                        "DApp contract address string ill-formed: {}",
+                        e
+                    ),
+                }
+                .build()
+            })?
+        } else {
+            let path = env_cli_config
+                .dapp_contract_address_file
                 .ok_or(snafu::NoneError)
                 .context(config_error::FileError {
-                    err: "Must specify DApp contract address",
-                })?,
-        )
-        .map_err(|e| {
-            config_error::FileError {
-                err: format!("DApp contract address string ill-formed: {}", e),
-            }
-            .build()
-        })?;
+                    err: "Must specify either dapp_contract_address or dapp_contract_address_file",
+                })?;
+
+            let contents = fs::read_to_string(path.clone()).map_err(|e| {
+                config_error::FileError {
+                    err: format!("Could not read file at path {}: {}", path, e),
+                }
+                .build()
+            })?;
+
+            Address::from_str(&contents.trim().to_string()).map_err(|e| {
+                config_error::FileError {
+                    err: format!(
+                        "DApp contract address string ill-formed: {}",
+                        e
+                    ),
+                }
+                .build()
+            })?
+        };
 
         let initial_epoch: U256 = U256::from(
             env_cli_config
