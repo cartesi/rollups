@@ -1,0 +1,205 @@
+{
+  "contractName": "IBank",
+  "sourceName": "contracts/IBank.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Deposit",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Transfer",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
+      "name": "depositTokens",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getToken",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
+      "name": "transferTokens",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "Deposit(address,address,uint256)": {
+        "details": "is triggered on any successful call to `depositTokens`",
+        "params": {
+          "from": "the account/contract that called `depositTokens` and              transfered `value` tokens to the bank",
+          "to": "the one that got their balance increased by `value`",
+          "value": "amount of tokens that were transfered"
+        }
+      },
+      "Transfer(address,address,uint256)": {
+        "details": "is triggered on any successful call to `transferTokens`",
+        "params": {
+          "from": "the account/contract that called `transferTokens` and              got their balance decreased by `value`",
+          "to": "the one that received `value` tokens from the bank",
+          "value": "amount of tokens that were transfered"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "balanceOf(address)": {
+        "params": {
+          "_owner": "account owner"
+        }
+      },
+      "depositTokens(address,uint256)": {
+        "details": "you may need to call `token.approve(bank, _value)`",
+        "params": {
+          "_to": "account that will have their balance increased by `_value`",
+          "_value": "amount of tokens to be transfered"
+        }
+      },
+      "transferTokens(address,uint256)": {
+        "params": {
+          "_to": "account that will receive `_value` tokens",
+          "_value": "amount of tokens to be transfered"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "Deposit(address,address,uint256)": {
+        "notice": "`value` tokens were transfered from `from` to bankthe balance of `to` was increased by `value`"
+      },
+      "Transfer(address,address,uint256)": {
+        "notice": "`value` tokens were transfered from the bank to `to`the balance of `from` was decreased by `value`"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "balanceOf(address)": {
+        "notice": "get balance of `_owner`"
+      },
+      "depositTokens(address,uint256)": {
+        "notice": "transfer `_value` tokens from caller to bankincrease the balance of `_to` by `_value`"
+      },
+      "getToken()": {
+        "notice": "returns the token used internally"
+      },
+      "transferTokens(address,uint256)": {
+        "notice": "transfer `_value` tokens from bank to `_to`decrease the balance of caller by `_value`"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "balanceOf(address)": "70a08231",
+      "depositTokens(address,uint256)": "66168bd7",
+      "getToken()": "21df0da7",
+      "transferTokens(address,uint256)": "bec3fa17"
+    }
+  }
+}

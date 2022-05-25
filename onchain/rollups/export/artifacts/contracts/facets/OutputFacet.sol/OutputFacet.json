@@ -1,0 +1,517 @@
+{
+  "contractName": "OutputFacet",
+  "sourceName": "contracts/facets/OutputFacet.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "voucherPosition",
+          "type": "uint256"
+        }
+      ],
+      "name": "VoucherExecuted",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_destination",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_payload",
+          "type": "bytes"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "epochIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "inputIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "outputIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "outputHashesRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "vouchersEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "noticesEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "machineStateHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "keccakInHashesSiblings",
+              "type": "bytes32[]"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "outputHashesInEpochSiblings",
+              "type": "bytes32[]"
+            }
+          ],
+          "internalType": "struct OutputValidityProof",
+          "name": "_v",
+          "type": "tuple"
+        }
+      ],
+      "name": "executeVoucher",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_voucher",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_input",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBitMaskPosition",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getEpochNoticeLog2Size",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getEpochVoucherLog2Size",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_log2Size",
+          "type": "uint256"
+        }
+      ],
+      "name": "getIntraDrivePosition",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getNoticeMetadataLog2Size",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getNumberOfFinalizedEpochs",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getVoucherMetadataLog2Size",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_encodedNotice",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_epochHash",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "epochIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "inputIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "outputIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "outputHashesRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "vouchersEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "noticesEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "machineStateHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "keccakInHashesSiblings",
+              "type": "bytes32[]"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "outputHashesInEpochSiblings",
+              "type": "bytes32[]"
+            }
+          ],
+          "internalType": "struct OutputValidityProof",
+          "name": "_v",
+          "type": "tuple"
+        }
+      ],
+      "name": "isValidNoticeProof",
+      "outputs": [],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_encodedVoucher",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_epochHash",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "epochIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "inputIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "outputIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "outputHashesRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "vouchersEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "noticesEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "machineStateHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "keccakInHashesSiblings",
+              "type": "bytes32[]"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "outputHashesInEpochSiblings",
+              "type": "bytes32[]"
+            }
+          ],
+          "internalType": "struct OutputValidityProof",
+          "name": "_v",
+          "type": "tuple"
+        }
+      ],
+      "name": "isValidVoucherProof",
+      "outputs": [],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610c7b806100206000396000f3fe608060405234801561001057600080fd5b506004361061009e5760003560e01c80638021be81116100665780638021be811461013557806383552b4d1461013c578063a238203614610163578063a981588a14610135578063f3af7efd1461016357600080fd5b806310517cfc146100a35780633ad58a27146100c85780633c0d9958146100dd5780635e439a0c146100ff5780636190d81e14610112575b600080fd5b6100b56100b1366004610886565b1b90565b6040519081526020015b60405180910390f35b6100db6100d63660046108d7565b61016a565b005b6100b56100eb3660046109b6565b608083901b604083901b1781179392505050565b6100db61010d3660046108d7565b610183565b6101256101203660046109e2565b610197565b60405190151581526020016100bf565b60156100b5565b7f0635ad75fae4d4e8d896461a635d23700076a1c3fd8da26276f18cb1c09ea567546100b5565b60256100b5565b61017e83838360a00135602560158661055c565b505050565b61017e83838360800135602560158661055c565b7f0635ad75fae4d4e8d896461a635d23700076a1c3fd8da26276f18cb1c09ea568546000907f0635ad75fae4d4e8d896461a635d23700076a1c3fd8da26276f18cb1c09ea5669060ff161561022c5760405162461bcd60e51b81526020600482015260166024820152751c99595b9d1c985b98de481b9bdd08185b1b1bddd95960521b60448201526064015b60405180910390fd5b60028101805460ff1916600117905560006102647f0635ad75fae4d4e8d896461a635d23700076a1c3fd8da26276f18cb1c09ea56690565b7f844e22529543d6e722c6477171dd50ffe5b412198b92cd9aeea62bbfabe4cc75549091507f844e22529543d6e722c6477171dd50ffe5b412198b92cd9aeea62bbfabe4cc73906001600160a01b03908116908916036102f85760405162461bcd60e51b815260206004820152600f60248201526e3130b2103232b9ba34b730ba34b7b760891b6044820152606401610223565b600088888860405160200161030f93929190610a98565b604051602081830303815290604052905061034e818460010188600001358154811061033d5761033d610ad8565b906000526020600020015488610183565b60006020870135604090811b9088013560801b178735176040516303fbaf7360e01b8152600481018690526024810182905290915073__$f57eb21c11c6dae369da3ca36f4f48eb77$__906303fbaf7390604401602060405180830381865af41580156103bf573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906103e39190610aee565b156104305760405162461bcd60e51b815260206004820152601860248201527f72652d657865637574696f6e206e6f7420616c6c6f77656400000000000000006044820152606401610223565b60008a6001600160a01b03168a8a60405161044c929190610b17565b6000604051808303816000865af19150503d8060008114610489576040519150601f19603f3d011682016040523d82523d6000602084013e61048e565b606091505b505090508015610543576040516306449da160e41b815260048101869052602481018390526001604482015273__$f57eb21c11c6dae369da3ca36f4f48eb77$__90636449da109060640160006040518083038186803b1580156104f157600080fd5b505af4158015610505573d6000803e3d6000fd5b505050507f0eb7ee080f865f1cadc4f54daf58cc3b8879e888832867d13351edcec0fbdc548260405161053a91815260200190565b60405180910390a15b955050505050600201805460ff19169055949350505050565b60408051608080840135602083015260a08401359282019290925260c0830135606082015286910160405160208183030381529060405280519060200120146105dd5760405162461bcd60e51b8152602060048201526013602482015272195c1bd8da12185cda081a5b98dbdc9c9958dd606a1b6044820152606401610223565b8373__$c7dbd794b8c7b5c2028db781007df1176e$__6379de4601602084013560051b600587866060013560405160200161061a91815260200190565b60408051601f198184030181529190528051602090910120610640610100890189610b27565b6040518763ffffffff1660e01b815260040161066196959493929190610b78565b602060405180830381865af415801561067e573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106a29190610bcf565b146106ef5760405162461bcd60e51b815260206004820152601e60248201527f6f75747075747345706f6368526f6f744861736820696e636f727265637400006044820152606401610223565b600073__$c7dbd794b8c7b5c2028db781007df1176e$__63c84583a1888051906020012060405160200161072591815260200190565b60405160208183030381529060405260056040518363ffffffff1660e01b8152600401610753929190610be8565b602060405180830381865af4158015610770573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906107949190610bcf565b9050606082013573__$c7dbd794b8c7b5c2028db781007df1176e$__6379de4601604085013560051b600587866107ce60e08a018a610b27565b6040518763ffffffff1660e01b81526004016107ef96959493929190610b78565b602060405180830381865af415801561080c573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906108309190610bcf565b1461087d5760405162461bcd60e51b815260206004820152601e60248201527f6f7574707574486173686573526f6f744861736820696e636f727265637400006044820152606401610223565b50505050505050565b6000806040838503121561089957600080fd5b50508035926020909101359150565b634e487b7160e01b600052604160045260246000fd5b600061012082840312156108d157600080fd5b50919050565b6000806000606084860312156108ec57600080fd5b833567ffffffffffffffff8082111561090457600080fd5b818601915086601f83011261091857600080fd5b81358181111561092a5761092a6108a8565b604051601f8201601f19908116603f01168101908382118183101715610952576109526108a8565b8160405282815289602084870101111561096b57600080fd5b8260208601602083013760006020848301015280975050505060208601359350604086013591508082111561099f57600080fd5b506109ac868287016108be565b9150509250925092565b6000806000606084860312156109cb57600080fd5b505081359360208301359350604090920135919050565b600080600080606085870312156109f857600080fd5b84356001600160a01b0381168114610a0f57600080fd5b9350602085013567ffffffffffffffff80821115610a2c57600080fd5b818701915087601f830112610a4057600080fd5b813581811115610a4f57600080fd5b886020828501011115610a6157600080fd5b602083019550809450506040870135915080821115610a7f57600080fd5b50610a8c878288016108be565b91505092959194509250565b6001600160a01b03841681526040602082018190528101829052818360608301376000818301606090810191909152601f909201601f1916010192915050565b634e487b7160e01b600052603260045260246000fd5b600060208284031215610b0057600080fd5b81518015158114610b1057600080fd5b9392505050565b8183823760009101908152919050565b6000808335601e19843603018112610b3e57600080fd5b83018035915067ffffffffffffffff821115610b5957600080fd5b6020019150600581901b3603821315610b7157600080fd5b9250929050565b86815285602082015284604082015283606082015260a060808201528160a0820152600060018060fb1b03831115610baf57600080fd5b8260051b808560c08501376000920160c001918252509695505050505050565b600060208284031215610be157600080fd5b5051919050565b604081526000835180604084015260005b81811015610c165760208187018101516060868401015201610bf9565b81811115610c28576000606083860101525b50602083019390935250601f91909101601f19160160600191905056fea2646970667358221220ab5dd554a337df535e6f08f0a561e17bd5256019c878fa8227bf7fa69e0b065664736f6c634300080d0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061009e5760003560e01c80638021be81116100665780638021be811461013557806383552b4d1461013c578063a238203614610163578063a981588a14610135578063f3af7efd1461016357600080fd5b806310517cfc146100a35780633ad58a27146100c85780633c0d9958146100dd5780635e439a0c146100ff5780636190d81e14610112575b600080fd5b6100b56100b1366004610886565b1b90565b6040519081526020015b60405180910390f35b6100db6100d63660046108d7565b61016a565b005b6100b56100eb3660046109b6565b608083901b604083901b1781179392505050565b6100db61010d3660046108d7565b610183565b6101256101203660046109e2565b610197565b60405190151581526020016100bf565b60156100b5565b7f0635ad75fae4d4e8d896461a635d23700076a1c3fd8da26276f18cb1c09ea567546100b5565b60256100b5565b61017e83838360a00135602560158661055c565b505050565b61017e83838360800135602560158661055c565b7f0635ad75fae4d4e8d896461a635d23700076a1c3fd8da26276f18cb1c09ea568546000907f0635ad75fae4d4e8d896461a635d23700076a1c3fd8da26276f18cb1c09ea5669060ff161561022c5760405162461bcd60e51b81526020600482015260166024820152751c99595b9d1c985b98de481b9bdd08185b1b1bddd95960521b60448201526064015b60405180910390fd5b60028101805460ff1916600117905560006102647f0635ad75fae4d4e8d896461a635d23700076a1c3fd8da26276f18cb1c09ea56690565b7f844e22529543d6e722c6477171dd50ffe5b412198b92cd9aeea62bbfabe4cc75549091507f844e22529543d6e722c6477171dd50ffe5b412198b92cd9aeea62bbfabe4cc73906001600160a01b03908116908916036102f85760405162461bcd60e51b815260206004820152600f60248201526e3130b2103232b9ba34b730ba34b7b760891b6044820152606401610223565b600088888860405160200161030f93929190610a98565b604051602081830303815290604052905061034e818460010188600001358154811061033d5761033d610ad8565b906000526020600020015488610183565b60006020870135604090811b9088013560801b178735176040516303fbaf7360e01b8152600481018690526024810182905290915073__$f57eb21c11c6dae369da3ca36f4f48eb77$__906303fbaf7390604401602060405180830381865af41580156103bf573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906103e39190610aee565b156104305760405162461bcd60e51b815260206004820152601860248201527f72652d657865637574696f6e206e6f7420616c6c6f77656400000000000000006044820152606401610223565b60008a6001600160a01b03168a8a60405161044c929190610b17565b6000604051808303816000865af19150503d8060008114610489576040519150601f19603f3d011682016040523d82523d6000602084013e61048e565b606091505b505090508015610543576040516306449da160e41b815260048101869052602481018390526001604482015273__$f57eb21c11c6dae369da3ca36f4f48eb77$__90636449da109060640160006040518083038186803b1580156104f157600080fd5b505af4158015610505573d6000803e3d6000fd5b505050507f0eb7ee080f865f1cadc4f54daf58cc3b8879e888832867d13351edcec0fbdc548260405161053a91815260200190565b60405180910390a15b955050505050600201805460ff19169055949350505050565b60408051608080840135602083015260a08401359282019290925260c0830135606082015286910160405160208183030381529060405280519060200120146105dd5760405162461bcd60e51b8152602060048201526013602482015272195c1bd8da12185cda081a5b98dbdc9c9958dd606a1b6044820152606401610223565b8373__$c7dbd794b8c7b5c2028db781007df1176e$__6379de4601602084013560051b600587866060013560405160200161061a91815260200190565b60408051601f198184030181529190528051602090910120610640610100890189610b27565b6040518763ffffffff1660e01b815260040161066196959493929190610b78565b602060405180830381865af415801561067e573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106a29190610bcf565b146106ef5760405162461bcd60e51b815260206004820152601e60248201527f6f75747075747345706f6368526f6f744861736820696e636f727265637400006044820152606401610223565b600073__$c7dbd794b8c7b5c2028db781007df1176e$__63c84583a1888051906020012060405160200161072591815260200190565b60405160208183030381529060405260056040518363ffffffff1660e01b8152600401610753929190610be8565b602060405180830381865af4158015610770573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906107949190610bcf565b9050606082013573__$c7dbd794b8c7b5c2028db781007df1176e$__6379de4601604085013560051b600587866107ce60e08a018a610b27565b6040518763ffffffff1660e01b81526004016107ef96959493929190610b78565b602060405180830381865af415801561080c573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906108309190610bcf565b1461087d5760405162461bcd60e51b815260206004820152601e60248201527f6f7574707574486173686573526f6f744861736820696e636f727265637400006044820152606401610223565b50505050505050565b6000806040838503121561089957600080fd5b50508035926020909101359150565b634e487b7160e01b600052604160045260246000fd5b600061012082840312156108d157600080fd5b50919050565b6000806000606084860312156108ec57600080fd5b833567ffffffffffffffff8082111561090457600080fd5b818601915086601f83011261091857600080fd5b81358181111561092a5761092a6108a8565b604051601f8201601f19908116603f01168101908382118183101715610952576109526108a8565b8160405282815289602084870101111561096b57600080fd5b8260208601602083013760006020848301015280975050505060208601359350604086013591508082111561099f57600080fd5b506109ac868287016108be565b9150509250925092565b6000806000606084860312156109cb57600080fd5b505081359360208301359350604090920135919050565b600080600080606085870312156109f857600080fd5b84356001600160a01b0381168114610a0f57600080fd5b9350602085013567ffffffffffffffff80821115610a2c57600080fd5b818701915087601f830112610a4057600080fd5b813581811115610a4f57600080fd5b886020828501011115610a6157600080fd5b602083019550809450506040870135915080821115610a7f57600080fd5b50610a8c878288016108be565b91505092959194509250565b6001600160a01b03841681526040602082018190528101829052818360608301376000818301606090810191909152601f909201601f1916010192915050565b634e487b7160e01b600052603260045260246000fd5b600060208284031215610b0057600080fd5b81518015158114610b1057600080fd5b9392505050565b8183823760009101908152919050565b6000808335601e19843603018112610b3e57600080fd5b83018035915067ffffffffffffffff821115610b5957600080fd5b6020019150600581901b3603821315610b7157600080fd5b9250929050565b86815285602082015284604082015283606082015260a060808201528160a0820152600060018060fb1b03831115610baf57600080fd5b8260051b808560c08501376000920160c001918252509695505050505050565b600060208284031215610be157600080fd5b5051919050565b604081526000835180604084015260005b81811015610c165760208187018101516060868401015201610bf9565b81811115610c28576000606083860101525b50602083019390935250601f91909101601f19160160600191905056fea2646970667358221220ab5dd554a337df535e6f08f0a561e17bd5256019c878fa8227bf7fa69e0b065664736f6c634300080d0033",
+  "linkReferences": {
+    "@cartesi/util/contracts/Bitmask.sol": {
+      "Bitmask": [
+        {
+          "length": 20,
+          "start": 933
+        },
+        {
+          "length": 20,
+          "start": 1244
+        }
+      ]
+    },
+    "@cartesi/util/contracts/Merkle.sol": {
+      "Merkle": [
+        {
+          "length": 20,
+          "start": 1536
+        },
+        {
+          "length": 20,
+          "start": 1811
+        },
+        {
+          "length": 20,
+          "start": 1981
+        }
+      ]
+    }
+  },
+  "deployedLinkReferences": {
+    "@cartesi/util/contracts/Bitmask.sol": {
+      "Bitmask": [
+        {
+          "length": 20,
+          "start": 901
+        },
+        {
+          "length": 20,
+          "start": 1212
+        }
+      ]
+    },
+    "@cartesi/util/contracts/Merkle.sol": {
+      "Merkle": [
+        {
+          "length": 20,
+          "start": 1504
+        },
+        {
+          "length": 20,
+          "start": 1779
+        },
+        {
+          "length": 20,
+          "start": 1949
+        }
+      ]
+    }
+  },
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "executeVoucher(address,bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
+        "details": "vouchers can only be executed once",
+        "params": {
+          "_destination": "address that will execute the payload",
+          "_payload": "payload to be executed by destination",
+          "_v": "validity proof for this encoded voucher"
+        },
+        "returns": {
+          "_0": "true if voucher was executed successfully"
+        }
+      },
+      "getBitMaskPosition(uint256,uint256,uint256)": {
+        "params": {
+          "_epoch": "which epoch the voucher belongs to",
+          "_input": "which input, inside the epoch, the voucher belongs to",
+          "_voucher": "of voucher inside the input"
+        },
+        "returns": {
+          "_0": "position of that voucher on bitmask"
+        }
+      },
+      "getIntraDrivePosition(uint256,uint256)": {
+        "params": {
+          "_index": "index of intra memory range",
+          "_log2Size": "of intra memory range"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "executeVoucher(address,bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
+        "notice": "executes voucher"
+      },
+      "getBitMaskPosition(uint256,uint256,uint256)": {
+        "notice": "get voucher position on bitmask"
+      },
+      "getEpochNoticeLog2Size()": {
+        "notice": "get log2 size of epoch notice memory range"
+      },
+      "getEpochVoucherLog2Size()": {
+        "notice": "get log2 size of epoch voucher memory range"
+      },
+      "getNoticeMetadataLog2Size()": {
+        "notice": "get log2 size of notice metadata memory range"
+      },
+      "getNumberOfFinalizedEpochs()": {
+        "notice": "get number of finalized epochs"
+      },
+      "getVoucherMetadataLog2Size()": {
+        "notice": "get log2 size of voucher metadata memory range"
+      },
+      "isValidNoticeProof(bytes,bytes32,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
+        "notice": "isValidNoticeProof reverts if the proof is invalid"
+      },
+      "isValidVoucherProof(bytes,bytes32,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
+        "notice": "isValidVoucherProof reverts if the proof is invalid"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "639000",
+        "executionCost": "670",
+        "totalCost": "639670"
+      },
+      "external": {
+        "executeVoucher(address,bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "infinite",
+        "getBitMaskPosition(uint256,uint256,uint256)": "391",
+        "getEpochNoticeLog2Size()": "225",
+        "getEpochVoucherLog2Size()": "269",
+        "getIntraDrivePosition(uint256,uint256)": "285",
+        "getNoticeMetadataLog2Size()": "181",
+        "getNumberOfFinalizedEpochs()": "2303",
+        "getVoucherMetadataLog2Size()": "247",
+        "isValidNoticeProof(bytes,bytes32,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "infinite",
+        "isValidVoucherProof(bytes,bytes32,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "infinite"
+      },
+      "internal": {
+        "isValidProof(bytes memory,bytes32,bytes32,uint256,uint256,struct OutputValidityProof calldata)": "infinite"
+      }
+    },
+    "methodIdentifiers": {
+      "executeVoucher(address,bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "6190d81e",
+      "getBitMaskPosition(uint256,uint256,uint256)": "3c0d9958",
+      "getEpochNoticeLog2Size()": "a2382036",
+      "getEpochVoucherLog2Size()": "f3af7efd",
+      "getIntraDrivePosition(uint256,uint256)": "10517cfc",
+      "getNoticeMetadataLog2Size()": "8021be81",
+      "getNumberOfFinalizedEpochs()": "83552b4d",
+      "getVoucherMetadataLog2Size()": "a981588a",
+      "isValidNoticeProof(bytes,bytes32,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "3ad58a27",
+      "isValidVoucherProof(bytes,bytes32,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "5e439a0c"
+    }
+  }
+}

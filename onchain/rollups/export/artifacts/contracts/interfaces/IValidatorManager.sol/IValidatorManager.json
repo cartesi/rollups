@@ -1,0 +1,117 @@
+{
+  "contractName": "IValidatorManager",
+  "sourceName": "contracts/interfaces/IValidatorManager.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum Result",
+          "name": "result",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32[2]",
+          "name": "claims",
+          "type": "bytes32[2]"
+        },
+        {
+          "indexed": false,
+          "internalType": "address payable[2]",
+          "name": "validators",
+          "type": "address[2]"
+        }
+      ],
+      "name": "ClaimReceived",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum Result",
+          "name": "result",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32[2]",
+          "name": "claims",
+          "type": "bytes32[2]"
+        },
+        {
+          "indexed": false,
+          "internalType": "address payable[2]",
+          "name": "validators",
+          "type": "address[2]"
+        }
+      ],
+      "name": "DisputeEnded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "claim",
+          "type": "bytes32"
+        }
+      ],
+      "name": "NewEpoch",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentClaim",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ClaimReceived(uint8,bytes32[2],address[2])": {
+        "notice": "emitted on Claim received"
+      },
+      "DisputeEnded(uint8,bytes32[2],address[2])": {
+        "notice": "emitted on Dispute end"
+      },
+      "NewEpoch(bytes32)": {
+        "notice": "emitted on new Epoch"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "getCurrentClaim()": {
+        "notice": "get current claim"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "getCurrentClaim()": "8219fda4"
+    }
+  }
+}

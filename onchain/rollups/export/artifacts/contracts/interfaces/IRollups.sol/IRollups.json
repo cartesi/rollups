@@ -1,0 +1,210 @@
+{
+  "contractName": "IRollups",
+  "sourceName": "contracts/interfaces/IRollups.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "epochNumber",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "claimer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "epochHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "Claim",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "epochNumber",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "epochHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "FinalizeEpoch",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum Phase",
+          "name": "newPhase",
+          "type": "uint8"
+        }
+      ],
+      "name": "PhaseChange",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "winner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "loser",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "winningClaim",
+          "type": "bytes32"
+        }
+      ],
+      "name": "ResolveDispute",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_epochHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "claim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "finalizeEpoch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentEpoch",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "Claim(uint256,address,bytes32)": {
+        "params": {
+          "claimer": "address of current claimer",
+          "epochHash": "claim being submitted by this epoch",
+          "epochNumber": "number of the epoch being submitted"
+        }
+      },
+      "FinalizeEpoch(uint256,bytes32)": {
+        "params": {
+          "epochHash": "claim being submitted by this epoch",
+          "epochNumber": "number of the epoch being finalized"
+        }
+      },
+      "PhaseChange(uint8)": {
+        "params": {
+          "newPhase": "new phase"
+        }
+      },
+      "ResolveDispute(address,address,bytes32)": {
+        "params": {
+          "loser": "loser of dispute",
+          "winner": "winner of dispute",
+          "winningClaim": "initial claim of winning validator"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "claim(bytes32)": {
+        "details": "ValidatorManager makes sure that msg.sender is allowed      and that claim != bytes32(0) TODO: add signatures for aggregated claims",
+        "params": {
+          "_epochHash": "hash of epoch"
+        }
+      },
+      "finalizeEpoch()": {
+        "details": "can only be called if challenge period is over"
+      },
+      "getCurrentEpoch()": {
+        "details": "if phase is input accumulation, then the epoch number is length      of finalized epochs array, else there are two epochs two non      finalized epochs, one awaiting consensus/dispute and another      accumulating input",
+        "returns": {
+          "_0": "index of current epoch"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "Claim(uint256,address,bytes32)": {
+        "notice": "claim submitted"
+      },
+      "FinalizeEpoch(uint256,bytes32)": {
+        "notice": "epoch finalized"
+      },
+      "PhaseChange(uint8)": {
+        "notice": "phase change"
+      },
+      "ResolveDispute(address,address,bytes32)": {
+        "notice": "dispute resolved"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "claim(bytes32)": {
+        "notice": "claim the result of current epoch"
+      },
+      "finalizeEpoch()": {
+        "notice": "finalize epoch after timeout"
+      },
+      "getCurrentEpoch()": {
+        "notice": "returns index of current (accumulating) epoch"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "claim(bytes32)": "bd66528a",
+      "finalizeEpoch()": "82ae9ef7",
+      "getCurrentEpoch()": "b97dd9e2"
+    }
+  }
+}

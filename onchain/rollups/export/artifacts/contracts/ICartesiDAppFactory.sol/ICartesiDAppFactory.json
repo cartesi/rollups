@@ -1,0 +1,174 @@
+{
+  "contractName": "ICartesiDAppFactory",
+  "sourceName": "contracts/ICartesiDAppFactory.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "contract CartesiDApp",
+          "name": "application",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "diamondOwner",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "templateHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "inputDuration",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "challengePeriod",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "inputLog2Size",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "feePerClaim",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "feeManagerOwner",
+              "type": "address"
+            },
+            {
+              "internalType": "address payable[]",
+              "name": "validators",
+              "type": "address[]"
+            }
+          ],
+          "indexed": false,
+          "internalType": "struct ICartesiDAppFactory.AppConfig",
+          "name": "config",
+          "type": "tuple"
+        }
+      ],
+      "name": "ApplicationCreated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "diamondOwner",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "templateHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "inputDuration",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "challengePeriod",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "inputLog2Size",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "feePerClaim",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "feeManagerOwner",
+              "type": "address"
+            },
+            {
+              "internalType": "address payable[]",
+              "name": "validators",
+              "type": "address[]"
+            }
+          ],
+          "internalType": "struct ICartesiDAppFactory.AppConfig",
+          "name": "_appConfig",
+          "type": "tuple"
+        }
+      ],
+      "name": "newApplication",
+      "outputs": [
+        {
+          "internalType": "contract CartesiDApp",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "ApplicationCreated(address,(address,bytes32,uint256,uint256,uint256,uint256,address,address[]))": {
+        "params": {
+          "application": "application address",
+          "config": "application configurations"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "newApplication((address,bytes32,uint256,uint256,uint256,uint256,address,address[]))": {
+        "params": {
+          "_appConfig": "application configurations"
+        },
+        "returns": {
+          "_0": "application address"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ApplicationCreated(address,(address,bytes32,uint256,uint256,uint256,uint256,address,address[]))": {
+        "notice": "Event emitted when a new application is deployed"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "newApplication((address,bytes32,uint256,uint256,uint256,uint256,address,address[]))": {
+        "notice": "Deploy a new application"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "newApplication((address,bytes32,uint256,uint256,uint256,uint256,address,address[]))": "94a28f32"
+    }
+  }
+}

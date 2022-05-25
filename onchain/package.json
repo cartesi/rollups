@@ -10,8 +10,5 @@
     ],
     "devDependencies": {
         "prettier": "^2.6.2"
-    },
-    "resolutions": {
-        "ethers": "5.6.1"
     }
 }

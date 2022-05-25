@@ -1,0 +1,178 @@
+{
+  "contractName": "ValidatorManagerFacet1",
+  "sourceName": "contracts/facets/alternatives/ValidatorManagerFacet1.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum Result",
+          "name": "result",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32[2]",
+          "name": "claims",
+          "type": "bytes32[2]"
+        },
+        {
+          "indexed": false,
+          "internalType": "address payable[2]",
+          "name": "validators",
+          "type": "address[2]"
+        }
+      ],
+      "name": "ClaimReceived",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum Result",
+          "name": "result",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32[2]",
+          "name": "claims",
+          "type": "bytes32[2]"
+        },
+        {
+          "indexed": false,
+          "internalType": "address payable[2]",
+          "name": "validators",
+          "type": "address[2]"
+        }
+      ],
+      "name": "DisputeEnded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "claim",
+          "type": "bytes32"
+        }
+      ],
+      "name": "NewEpoch",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "getConsensusGoalMask",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentAgreementMask",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentClaim",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5061011d806100206000396000f3fe6080604052348015600f57600080fd5b5060043610603c5760003560e01c8063012ad61c1460415780638219fda4146084578063f60238151460b3575b600080fd5b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1fe5463ffffffff165b60405163ffffffff90911681526020015b60405180910390f35b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1fc54604051908152602001607b565b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1fe54640100000000900463ffffffff16606a56fea2646970667358221220baf7efd21b96e2832103af9042838b6ea5cf8e2d5e26f14b4c5b041e9a0fd01364736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060043610603c5760003560e01c8063012ad61c1460415780638219fda4146084578063f60238151460b3575b600080fd5b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1fe5463ffffffff165b60405163ffffffff90911681526020015b60405180910390f35b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1fc54604051908152602001607b565b7f8ab37fef2b2e34c4b62ff9948ee661cdcf34e209d7c20f4d1f6e83085e93b1fe54640100000000900463ffffffff16606a56fea2646970667358221220baf7efd21b96e2832103af9042838b6ea5cf8e2d5e26f14b4c5b041e9a0fd01364736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getConsensusGoalMask()": {
+        "returns": {
+          "_0": "current consensus goal mask"
+        }
+      },
+      "getCurrentAgreementMask()": {
+        "returns": {
+          "_0": "current state of agreement mask"
+        }
+      },
+      "getCurrentClaim()": {
+        "returns": {
+          "_0": "current claim"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ClaimReceived(uint8,bytes32[2],address[2])": {
+        "notice": "emitted on Claim received"
+      },
+      "DisputeEnded(uint8,bytes32[2],address[2])": {
+        "notice": "emitted on Dispute end"
+      },
+      "NewEpoch(bytes32)": {
+        "notice": "emitted on new Epoch"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "getConsensusGoalMask()": {
+        "notice": "get consensus goal mask"
+      },
+      "getCurrentAgreementMask()": {
+        "notice": "get agreement mask"
+      },
+      "getCurrentClaim()": {
+        "notice": "get current claim"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "57000",
+        "executionCost": "105",
+        "totalCost": "57105"
+      },
+      "external": {
+        "getConsensusGoalMask()": "2329",
+        "getCurrentAgreementMask()": "2263",
+        "getCurrentClaim()": "2280"
+      }
+    },
+    "methodIdentifiers": {
+      "getConsensusGoalMask()": "f6023815",
+      "getCurrentAgreementMask()": "012ad61c",
+      "getCurrentClaim()": "8219fda4"
+    }
+  }
+}

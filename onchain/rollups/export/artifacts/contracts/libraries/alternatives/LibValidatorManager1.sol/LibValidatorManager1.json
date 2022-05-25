@@ -1,0 +1,118 @@
+{
+  "contractName": "LibValidatorManager1",
+  "sourceName": "contracts/libraries/alternatives/LibValidatorManager1.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum Result",
+          "name": "result",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32[2]",
+          "name": "claims",
+          "type": "bytes32[2]"
+        },
+        {
+          "indexed": false,
+          "internalType": "address payable[2]",
+          "name": "validators",
+          "type": "address[2]"
+        }
+      ],
+      "name": "ClaimReceived",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum Result",
+          "name": "result",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32[2]",
+          "name": "claims",
+          "type": "bytes32[2]"
+        },
+        {
+          "indexed": false,
+          "internalType": "address payable[2]",
+          "name": "validators",
+          "type": "address[2]"
+        }
+      ],
+      "name": "DisputeEnded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "claim",
+          "type": "bytes32"
+        }
+      ],
+      "name": "NewEpoch",
+      "type": "event"
+    }
+  ],
+  "bytecode": "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122052cd4858f192744fe95ed3cf89bc0ec42b32530ce24c0ea1e1ce5d41429c607464736f6c634300080d0033",
+  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122052cd4858f192744fe95ed3cf89bc0ec42b32530ce24c0ea1e1ce5d41429c607464736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ClaimReceived(uint8,bytes32[2],address[2])": {
+        "notice": "emitted on Claim received"
+      },
+      "DisputeEnded(uint8,bytes32[2],address[2])": {
+        "notice": "emitted on Dispute end"
+      },
+      "NewEpoch(bytes32)": {
+        "notice": "emitted on new Epoch"
+      }
+    },
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "17200",
+        "executionCost": "103",
+        "totalCost": "17303"
+      },
+      "internal": {
+        "diamondStorage()": "infinite",
+        "emitClaimReceivedAndReturn(enum Result,bytes32[2] memory,address payable[2] memory)": "infinite",
+        "emitDisputeEndedAndReturn(enum Result,bytes32[2] memory,address payable[2] memory)": "infinite",
+        "getClaimerOfCurrentClaim(struct LibValidatorManager1.DiamondStorage storage pointer)": "infinite",
+        "isConsensus(uint256,uint256)": "infinite",
+        "isValidator(struct LibValidatorManager1.DiamondStorage storage pointer,address)": "infinite",
+        "onClaim(struct LibValidatorManager1.DiamondStorage storage pointer,address payable,bytes32)": "infinite",
+        "onDisputeEnd(struct LibValidatorManager1.DiamondStorage storage pointer,address payable,address payable,bytes32)": "infinite",
+        "onNewEpoch(struct LibValidatorManager1.DiamondStorage storage pointer)": "infinite",
+        "removeFromValidatorSetAndBothBitmasks(struct LibValidatorManager1.DiamondStorage storage pointer,address)": "infinite",
+        "updateClaimAgreementMask(struct LibValidatorManager1.DiamondStorage storage pointer,address payable)": "infinite",
+        "updateConsensusGoalMask(struct LibValidatorManager1.DiamondStorage storage pointer)": "infinite"
+      }
+    },
+    "methodIdentifiers": {}
+  }
+}

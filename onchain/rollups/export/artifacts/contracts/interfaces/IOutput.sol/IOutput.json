@@ -1,0 +1,216 @@
+{
+  "contractName": "IOutput",
+  "sourceName": "contracts/interfaces/IOutput.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "voucherPosition",
+          "type": "uint256"
+        }
+      ],
+      "name": "VoucherExecuted",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_destination",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_payload",
+          "type": "bytes"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "epochIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "inputIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "outputIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "outputHashesRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "vouchersEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "noticesEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "machineStateHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "keccakInHashesSiblings",
+              "type": "bytes32[]"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "outputHashesInEpochSiblings",
+              "type": "bytes32[]"
+            }
+          ],
+          "internalType": "struct OutputValidityProof",
+          "name": "_v",
+          "type": "tuple"
+        }
+      ],
+      "name": "executeVoucher",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getEpochNoticeLog2Size",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getEpochVoucherLog2Size",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getNoticeMetadataLog2Size",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getNumberOfFinalizedEpochs",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getVoucherMetadataLog2Size",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "executeVoucher(address,bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
+        "details": "vouchers can only be executed once",
+        "params": {
+          "_destination": "address that will execute the payload",
+          "_payload": "payload to be executed by destination",
+          "_v": "validity proof for this encoded voucher"
+        },
+        "returns": {
+          "_0": "true if voucher was executed successfully"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "executeVoucher(address,bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
+        "notice": "executes voucher"
+      },
+      "getEpochNoticeLog2Size()": {
+        "notice": "get log2 size of epoch notice memory range"
+      },
+      "getEpochVoucherLog2Size()": {
+        "notice": "get log2 size of epoch voucher memory range"
+      },
+      "getNoticeMetadataLog2Size()": {
+        "notice": "get log2 size of notice metadata memory range"
+      },
+      "getNumberOfFinalizedEpochs()": {
+        "notice": "get number of finalized epochs"
+      },
+      "getVoucherMetadataLog2Size()": {
+        "notice": "get log2 size of voucher metadata memory range"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "executeVoucher(address,bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "6190d81e",
+      "getEpochNoticeLog2Size()": "a2382036",
+      "getEpochVoucherLog2Size()": "f3af7efd",
+      "getNoticeMetadataLog2Size()": "8021be81",
+      "getNumberOfFinalizedEpochs()": "83552b4d",
+      "getVoucherMetadataLog2Size()": "a981588a"
+    }
+  }
+}

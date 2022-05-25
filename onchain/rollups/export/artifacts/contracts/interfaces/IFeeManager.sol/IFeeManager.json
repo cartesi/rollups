@@ -1,0 +1,184 @@
+{
+  "contractName": "IFeeManager",
+  "sourceName": "contracts/interfaces/IFeeManager.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "FeePerClaimReset",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "validator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "claims",
+          "type": "uint256"
+        }
+      ],
+      "name": "FeeRedeemed",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "getFeeManagerBank",
+      "outputs": [
+        {
+          "internalType": "contract IBank",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_validator",
+          "type": "address"
+        }
+      ],
+      "name": "getNumClaimsRedeemed",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_validator",
+          "type": "address"
+        }
+      ],
+      "name": "numClaimsRedeemable",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_validator",
+          "type": "address"
+        }
+      ],
+      "name": "redeemFee",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
+      "name": "resetFeePerClaim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getNumClaimsRedeemed(address)": {
+        "params": {
+          "_validator": "address of the validator"
+        }
+      },
+      "numClaimsRedeemable(address)": {
+        "params": {
+          "_validator": "address of the validator"
+        }
+      },
+      "redeemFee(address)": {
+        "params": {
+          "_validator": "address of the validator that is redeeming"
+        }
+      },
+      "resetFeePerClaim(uint256)": {
+        "params": {
+          "_value": "the new value of fee per claim"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "FeePerClaimReset(uint256)": {
+        "notice": "emitted on resetting feePerClaim"
+      },
+      "FeeRedeemed(address,uint256)": {
+        "notice": "emitted on ERC20 funds redeemed by validator"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "getFeeManagerBank()": {
+        "notice": "returns the bank used to manage fees"
+      },
+      "getNumClaimsRedeemed(address)": {
+        "notice": "this function can be called to check the number of claims that has been redeemed for the validator"
+      },
+      "numClaimsRedeemable(address)": {
+        "notice": "this function can be called to check the number of claims that's redeemable for the validator"
+      },
+      "redeemFee(address)": {
+        "notice": "this function can be called to redeem fees for validators"
+      },
+      "resetFeePerClaim(uint256)": {
+        "notice": "contract owner can set/reset the value of fee per claim"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "getFeeManagerBank()": "6e964cea",
+      "getNumClaimsRedeemed(address)": "a859b983",
+      "numClaimsRedeemable(address)": "e8f56171",
+      "redeemFee(address)": "de7a8d11",
+      "resetFeePerClaim(uint256)": "7a5bf67c"
+    }
+  }
+}
