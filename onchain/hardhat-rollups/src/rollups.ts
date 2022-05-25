@@ -26,8 +26,6 @@ import {
     TASK_GET_STATE,
 } from "./constants";
 import {
-    CartesiDApp,
-    CartesiDApp__factory,
     CartesiDAppFactory__factory,
     ICartesiDAppFactory,
 } from "@cartesi/rollups";
@@ -76,22 +74,31 @@ createParams(
 
             // order new application from the factory
             const tx = await factory.newApplication(appConfig);
+            if (args.log) {
+                process.stdout.write(
+                    `deploying "${appConfig.templateHash}" (tx: ${tx.hash})...: `
+                );
+            }
             const receipt = await tx.wait();
             if (!receipt.status) {
                 throw Error(`Application creation failed: ${tx.hash}`);
             }
 
             // query application address from the event log
-            let eventFilter = factory.filters.ApplicationCreated();
-            let events = await factory.queryFilter(
+            const eventFilter = factory.filters.ApplicationCreated();
+            const events = await factory.queryFilter(
                 eventFilter,
                 receipt.blockNumber
             );
-            for (let event of events) {
+            for (const event of events) {
                 const { application, config } = event.args;
                 if (config.diamondOwner == diamondOwner) {
-                    console.log(`Application deployed at ${application}`);
-                    return event.args;
+                    if (args.log) {
+                        process.stdout.write(
+                            `deployed at ${application} with ${receipt.gasUsed} gas\n`
+                        );
+                    }
+                    return event;
                 }
             }
             throw Error(`Could not find ApplicationCreated event in the logs`);
