@@ -1,9 +1,38 @@
 use juniper::{
     graphql_scalar,
     parser::{ParseError, ScalarToken, Token},
-    GraphQLObject, GraphQLScalarValue, ParseScalarResult, Value, ID,
+    GraphQLInputObject, GraphQLObject, GraphQLScalarValue, ParseScalarResult,
+    Value, ID,
 };
 use std::cmp::Ordering;
+
+/// Helper macro to implement partial order related traits based on id
+macro_rules! implement_ordering {
+    ($cursor_type:ty) => {
+        impl PartialOrd for $cursor_type {
+            fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+                let id_i32 = self.id.parse::<i32>().unwrap_or_default();
+                let other_i32 = other.id.parse::<i32>().unwrap_or_default();
+                id_i32.partial_cmp(&other_i32)
+            }
+        }
+
+        impl PartialEq for $cursor_type {
+            fn eq(&self, other: &Self) -> bool {
+                (*self.id).eq(&*other.id)
+            }
+        }
+        impl Eq for $cursor_type {}
+
+        impl Ord for $cursor_type {
+            fn cmp(&self, other: &Self) -> Ordering {
+                let id_i32 = self.id.parse::<i32>().unwrap_or_default();
+                let other_i32 = other.id.parse::<i32>().unwrap_or_default();
+                id_i32.cmp(&other_i32)
+            }
+        }
+    };
+}
 
 /// Custom Graphql scalar definition, to be able to use long (signed 64)
 /// values
@@ -39,7 +68,7 @@ impl GraphQLScalar for i64 {
     }
 }
 
-#[derive(GraphQLObject, Debug)]
+#[derive(GraphQLObject, Debug, Clone)]
 #[graphql(description = "Connection pattern cursor based pagination page info")]
 pub struct PageInfo {
     pub start_cursor: String,
@@ -54,35 +83,15 @@ pub struct Epoch {
     pub index: i32,
 }
 
-impl PartialOrd for Epoch {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let id_i32 = self.id.parse::<i32>().unwrap_or_default();
-        let other_i32 = other.id.parse::<i32>().unwrap_or_default();
-        id_i32.partial_cmp(&other_i32)
-    }
-}
-impl PartialEq for Epoch {
-    fn eq(&self, other: &Self) -> bool {
-        (*self.id).eq(&*other.id)
-    }
-}
-impl Eq for Epoch {}
+implement_ordering!(Epoch);
 
-impl Ord for Epoch {
-    fn cmp(&self, other: &Self) -> Ordering {
-        let id_i32 = self.id.parse::<i32>().unwrap_or_default();
-        let other_i32 = other.id.parse::<i32>().unwrap_or_default();
-        id_i32.cmp(&other_i32)
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EpochEdge {
     pub node: Epoch,
     pub cursor: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EpochConnection {
     pub total_count: i32,
     pub edges: Vec<EpochEdge>,
@@ -98,42 +107,25 @@ pub struct Input {
     pub(super) block_number: i64,
 }
 
-impl PartialOrd for Input {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let id_i32 = self.id.parse::<i32>().unwrap_or_default();
-        let other_i32 = other.id.parse::<i32>().unwrap_or_default();
-        id_i32.partial_cmp(&other_i32)
-    }
-}
+implement_ordering!(Input);
 
-impl PartialEq for Input {
-    fn eq(&self, other: &Self) -> bool {
-        self.id != other.id
-    }
-}
-
-impl Ord for Input {
-    fn cmp(&self, other: &Self) -> Ordering {
-        let id_i32 = self.id.parse::<i32>().unwrap_or_default();
-        let other_i32 = other.id.parse::<i32>().unwrap_or_default();
-        id_i32.cmp(&other_i32)
-    }
-}
-
-impl Eq for Input {}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InputEdge {
     pub(super) node: Input,
     pub(super) cursor: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InputConnection {
     pub total_count: i32,
     pub edges: Vec<InputEdge>,
     pub nodes: Vec<Input>,
     pub page_info: PageInfo,
+}
+
+#[derive(Debug, Clone, GraphQLInputObject)]
+pub struct InputFilter {
+    dummy: String,
 }
 
 #[derive(Debug, Clone)]
@@ -147,40 +139,54 @@ pub struct Notice {
     pub payload: String,
 }
 
-impl PartialOrd for Notice {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let id_i32 = self.id.parse::<i32>().unwrap_or_default();
-        let other_i32 = other.id.parse::<i32>().unwrap_or_default();
-        id_i32.partial_cmp(&other_i32)
-    }
-}
-impl PartialEq for Notice {
-    fn eq(&self, other: &Self) -> bool {
-        (*self.id).eq(&*other.id)
-    }
-}
-impl Eq for Notice {}
+implement_ordering!(Notice);
 
-impl Ord for Notice {
-    fn cmp(&self, other: &Self) -> Ordering {
-        let id_i32 = self.id.parse::<i32>().unwrap_or_default();
-        let other_i32 = other.id.parse::<i32>().unwrap_or_default();
-        id_i32.cmp(&other_i32)
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NoticeEdge {
     pub node: Notice,
     pub cursor: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NoticeConnection {
     pub total_count: i32,
     pub edges: Vec<NoticeEdge>,
     pub nodes: Vec<Notice>,
     pub page_info: PageInfo,
+}
+
+#[derive(Debug, Clone, GraphQLInputObject)]
+pub struct NoticeFilter {
+    dummy: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct Report {
+    pub id: juniper::ID,
+    pub index: i32,
+    pub input: Input,
+    pub payload: String,
+}
+
+implement_ordering!(Report);
+
+#[derive(Debug, Clone)]
+pub struct ReportEdge {
+    pub node: Report,
+    pub cursor: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct ReportConnection {
+    pub total_count: i32,
+    pub edges: Vec<ReportEdge>,
+    pub nodes: Vec<Report>,
+    pub page_info: PageInfo,
+}
+
+#[derive(Debug, Clone, GraphQLInputObject)]
+pub struct ReportFilter {
+    dummy: String,
 }
 
 pub struct Query;

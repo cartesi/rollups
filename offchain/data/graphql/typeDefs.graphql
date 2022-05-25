@@ -1,8 +1,3 @@
-type EpochEdge {
-  node: Epoch!
-  cursor: String!
-}
-
 type EpochConnection {
   totalCount: Int!
   edges: [EpochEdge!]!
@@ -10,43 +5,93 @@ type EpochConnection {
   pageInfo: PageInfo!
 }
 
-type Notice {
-  id: ID!
-  index: Int!
-  sessionId: String!
-  input: Input!
-  keccak: String!
-  "Payload in Ethereum hex binary format, starting with '0x'"
-  payload: String!
-}
-
 type Input {
   id: ID!
   index: Int!
   epoch: Epoch!
   blockNumber: BigInt!
-  """
-    Get notices from this particular input
-    with additional ability to filter and paginate them
-  """
-  notices(first: Int, last: Int, after: String, before: String): NoticeConnection!
+  "Get notices from this particular input with additional ability to filter and paginate them"
+  notices(first: Int, last: Int, after: String, before: String, where: NoticeFilter): NoticeConnection!
+  "Get reports from this particular input with additional ability to filter and paginate them"
+  reports(first: Int, last: Int, after: String, before: String, where: ReportFilter): ReportConnection!
 }
-
-scalar BigInt
 
 type Query {
   epoch(id: ID!): Epoch!
+  epochI(index: Int!): Epoch!
   input(id: ID!): Input!
   notice(id: ID!): Notice!
+  report(id: ID!): Report!
   epochs(first: Int, last: Int, after: String, before: String): EpochConnection!
-  inputs(first: Int, last: Int, after: String, before: String): InputConnection!
-  notices(first: Int, last: Int, after: String, before: String): NoticeConnection!
+  "Get all available inputs with additional ability to filter and paginate them"
+  inputs(first: Int, last: Int, after: String, before: String, where: InputFilter): InputConnection!
+  "Get all available notices with additional ability to filter and paginate them"
+  notices(first: Int, last: Int, after: String, before: String, where: NoticeFilter): NoticeConnection!
+  "Get all available reports with additional ability to filter and paginate them"
+  reports(first: Int, last: Int, after: String, before: String, where: ReportFilter): ReportConnection!
 }
 
 type NoticeEdge {
   node: Notice!
   cursor: String!
 }
+
+input NoticeFilter {
+  dummy: String!
+}
+
+type Epoch {
+  id: ID!
+  index: Int!
+  inputs(first: Int, last: Int, after: String, before: String, where: InputFilter): InputConnection!
+  "Get reports from this particular epoch with additional ability to filter and paginate them"
+  reports(first: Int, last: Int, after: String, before: String, where: ReportFilter): ReportConnection!
+}
+
+type InputConnection {
+  totalCount: Int!
+  edges: [InputEdge!]!
+  nodes: [Input!]!
+  pageInfo: PageInfo!
+}
+
+input ReportFilter {
+  dummy: String!
+}
+
+type EpochEdge {
+  node: Epoch!
+  cursor: String!
+}
+
+type Notice {
+  id: ID!
+  index: Int!
+  sessionId: String!
+  input: Input!
+  "Keccak in Ethereum hex binary format, starting with '0x'"
+  keccak: String!
+  "Payload in Ethereum hex binary format, starting with '0x'"
+  payload: String!
+}
+
+type ReportEdge {
+  node: Report!
+  cursor: String!
+}
+
+type ReportConnection {
+  totalCount: Int!
+  edges: [ReportEdge!]!
+  nodes: [Report!]!
+  pageInfo: PageInfo!
+}
+
+input InputFilter {
+  dummy: String!
+}
+
+scalar BigInt
 
 type NoticeConnection {
   totalCount: Int!
@@ -68,17 +113,12 @@ type InputEdge {
   cursor: String!
 }
 
-type Epoch {
+type Report {
   id: ID!
   index: Int!
-  inputs(first: Int, last: Int, after: String, before: String): InputConnection!
-}
-
-type InputConnection {
-  totalCount: Int!
-  edges: [InputEdge!]!
-  nodes: [Input!]!
-  pageInfo: PageInfo!
+  input: Input!
+  "Payload in Ethereum hex binary format, starting with '0x'"
+  payload: String!
 }
 
 schema {

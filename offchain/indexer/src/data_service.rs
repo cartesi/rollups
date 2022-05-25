@@ -19,12 +19,12 @@ use ethers::core::types::{Address, U256};
 use offchain::fold::types::{
     AccumulatingEpoch, EpochWithClaims, Input, PhaseState, RollupsState,
 };
-use rollups_data::database::{DbInput, DbNotice, Message};
+use rollups_data::database::{DbInput, DbNotice, DbReport, Message};
 use snafu::ResultExt;
 use state_fold::types::BlockState;
 use std::ops::Add;
 use std::sync::Arc;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tracing::{debug, error, info, trace};
 
 use crate::grpc::{
@@ -124,12 +124,13 @@ async fn get_state(
 
 /// Get epoch status and send relevant data to db service
 /// If epoch_index is not provided, use session active epoch index
+/// Return epoch index of the epoch pooled
 async fn poll_epoch_status(
     message_tx: &mpsc::Sender<Message>,
     client: &mut ServerManagerClient<tonic::transport::Channel>,
     session_id: &str,
     epoch_index: Option<u64>,
-) -> Result<(), crate::error::Error> {
+) -> Result<u64, crate::error::Error> {
     let epoch_index: u64 = match epoch_index {
         Some(index) => index,
         None => {
@@ -142,25 +143,40 @@ async fn poll_epoch_status(
         }
     };
 
+    info!("Poll epoch status: polling for epoch {}", epoch_index);
     let epoch_status_response =
         get_epoch_status(client, session_id, epoch_index).await?;
 
     for input in epoch_status_response.processed_inputs {
-        info!(
-            "Poll epoch status: processed epoch {} input {} reports len: {}",
-            epoch_index,
-            input.input_index,
-            input.reports.len()
-        );
+        // Process reports
+        for (rindex, report) in input.reports.iter().enumerate() {
+            trace!("Poll epoch status: sending report with session id {}, epoch_index {} input_index {} report_index {} report {:?}",
+                                session_id, epoch_index, input.input_index, &rindex, report);
+            if let Err(e) = message_tx
+                .send(Message::Report(DbReport {
+                    id: 0,
+                    epoch_index: epoch_index as i32,
+                    input_index: input.input_index as i32,
+                    report_index: rindex as i32,
+                    // Keep payload in database in raw byte format
+                    payload: Some(report.payload.clone()),
+                }))
+                .await
+            {
+                error!(
+                    "Poll epoch status: error passing report message to db {}",
+                    e.to_string()
+                )
+            }
+        }
 
         if let Some(one_of) = input.processed_oneof {
-            //info!("One of >>>>>>>>>>>>>> {:?}", one_of);
             match one_of {
                 cartesi_server_manager::processed_input::ProcessedOneof::Result(input_result) => {
                     // Process vouchers
                     for (vindex, voucher) in input_result.vouchers.iter().enumerate() {
                         // Send one voucher to database service
-                        info!("Poll epoch status: sending voucher with session id {}, epoch_index {} input_index {} voucher_index {} voucher {:?}",
+                        trace!("Poll epoch status: sending voucher with session id {}, epoch_index {} input_index {} voucher_index {} voucher {:?}",
                                 session_id, epoch_index, input.input_index, &vindex, voucher);
                     }
                     // Process notices
@@ -174,6 +190,7 @@ async fn poll_epoch_status(
                             epoch_index: epoch_index as i32,
                             input_index: input.input_index  as i32,
                             notice_index: nindex as i32,
+                            // Encode keccak in hex format, to be able to easily query it in the database
                             keccak: hex::encode(
                                 &notice
                                     .keccak
@@ -181,19 +198,20 @@ async fn poll_epoch_status(
                                     .unwrap_or(&cartesi_machine::Hash { data: vec![] })
                                     .data,
                             ),
+                            // Payload is in raw format
                             payload: Some(notice.payload.clone())
                         })).await {
-                            error!("Poll epoch status: error passing message to db {}", e.to_string())
+                            error!("Poll epoch status: error passing notice message to db {}", e.to_string())
                         }
                     }
                 },
                 cartesi_server_manager::processed_input::ProcessedOneof::SkipReason(reason) => {
-                    info!("Poll epoch status: skip input for reason {}", reason);
+                    info!("Poll epoch status: skip processed input for reason {:?}", reason);
                 }
             }
         }
     }
-    Ok(())
+    Ok(epoch_index)
 }
 
 /// Get state server current state
@@ -305,7 +323,7 @@ async fn poll_state(
 
     // Check for current phase state, process inputs accordingly
     info!(
-        "Poll state: state server poll, current rollups phase is {:?}",
+        "Poll state: pooling state server, current rollups phase is {:?}",
         block_state.state.current_phase
     );
     match block_state.state.current_phase {
@@ -385,6 +403,7 @@ async fn polling_loop(
 
     // Polling tasks loop
     info!("Starting data polling loop");
+    let last_epoch_status_index: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
     loop {
         for task in tasks.iter_mut() {
             if task.next_execution <= std::time::SystemTime::now() {
@@ -393,6 +412,8 @@ async fn polling_loop(
                         {
                             let config = config.clone();
                             let message_tx = message_tx.clone();
+                            let last_epoch_index =
+                                last_epoch_status_index.clone();
                             tokio::spawn(async move {
                                 debug!("Performing get epoch status from Cartesi server manager {}", &config.mm_endpoint);
                                 let mut server_manager_client =
@@ -408,7 +429,7 @@ async fn polling_loop(
                                             return (); // return from spanned background task
                                         }
                                     };
-                                if let Err(e) = poll_epoch_status(
+                                match poll_epoch_status(
                                     &message_tx,
                                     &mut server_manager_client,
                                     &config.session_id,
@@ -416,10 +437,35 @@ async fn polling_loop(
                                 )
                                 .await
                                 {
-                                    error!(
-                                        "Error pooling epoch status {}",
-                                        e.to_string()
-                                    );
+                                    Ok(new_epoch_index) => {
+                                        let mut last_epoch_index =
+                                            last_epoch_index.lock().await;
+                                        if new_epoch_index > *last_epoch_index {
+                                            // Epoch changed, pool previous epoch just in case not to miss anything
+                                            for epoch_index in *last_epoch_index
+                                                ..new_epoch_index
+                                            {
+                                                if let Err(e) = poll_epoch_status(
+                                                    &message_tx,
+                                                    &mut server_manager_client,
+                                                    &config.session_id,
+                                                    Some(epoch_index),
+                                                )
+                                                    .await
+                                                {
+                                                    error!("Error pooling epoch status for epoch {}: {}", epoch_index, e.to_string());
+                                                }
+                                            }
+                                            *last_epoch_index = new_epoch_index;
+                                        }
+                                    }
+                                    Err(e) => {
+                                        let last_epoch_index =
+                                            *last_epoch_index.lock().await;
+                                        error!(
+                                            "Error pooling epoch status for epoch index {}: {}", last_epoch_index, e.to_string()
+                                        );
+                                    }
                                 }
                             });
                         }

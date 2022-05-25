@@ -15,7 +15,7 @@
 use crate::config::IndexerConfig;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use rollups_data::database::{schema, DbInput, DbNotice, Message};
+use rollups_data::database::{schema, DbInput, DbNotice, DbReport, Message};
 use snafu::ResultExt;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, trace, warn};
@@ -34,6 +34,7 @@ pub fn format_endpoint(config: &IndexerConfig) -> String {
 pub enum EpochIndexType {
     Notice,
     Input,
+    Report,
 }
 
 /// Update current epoch index if smaller than db stored epoch index
@@ -48,6 +49,9 @@ fn update_current_epoch_index(
     let field = match epoch_index_type {
         EpochIndexType::Notice => {
             rollups_data::database::CURRENT_NOTICE_EPOCH_INDEX
+        }
+        EpochIndexType::Report => {
+            rollups_data::database::CURRENT_REPORT_EPOCH_INDEX
         }
         EpochIndexType::Input => {
             rollups_data::database::CURRENT_INPUT_EPOCH_INDEX
@@ -116,6 +120,52 @@ fn insert_notice(
         }
         Err(e) => {
             error!("Failed to write notice to db, details: {}", e.to_string());
+            Err(e)
+        }
+    }
+}
+
+/// Insert report to database if it does not exist
+fn insert_report(
+    db_report: &DbReport,
+    conn: &PgConnection,
+) -> Result<(), crate::error::Error> {
+    use schema::reports::dsl::*;
+    // Check if report is already in database
+    if reports
+        .filter(epoch_index.eq(&db_report.epoch_index))
+        .filter(input_index.eq(&db_report.input_index))
+        .filter(report_index.eq(&db_report.report_index))
+        .count()
+        .get_result::<i64>(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })?
+        > 0
+    {
+        // Report already in the database, skip insert
+        trace!("Report epoch_index {} input_index {} report_index {} already in the database",
+                db_report.epoch_index, db_report.input_index, db_report.report_index);
+        return Ok(());
+    }
+
+    // Write report to database
+    // Id field is auto incremented in table on insert
+    match diesel::insert_into(reports)
+        .values((
+            epoch_index.eq(&db_report.epoch_index),
+            input_index.eq(&db_report.input_index),
+            report_index.eq(&db_report.report_index),
+            payload.eq(&db_report.payload),
+        ))
+        .execute(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })
+    {
+        Ok(_) => {
+            trace!("Report epoch_index {} input_index {} report_index {}  written successfully to db",
+                db_report.epoch_index, db_report.input_index, db_report.report_index);
+            Ok(())
+        }
+        Err(e) => {
+            error!("Failed to write report to db, details: {}", e.to_string());
             Err(e)
         }
     }
@@ -218,6 +268,9 @@ pub fn get_current_db_epoch(
         EpochIndexType::Notice => {
             rollups_data::database::CURRENT_NOTICE_EPOCH_INDEX
         }
+        EpochIndexType::Report => {
+            rollups_data::database::CURRENT_REPORT_EPOCH_INDEX
+        }
         EpochIndexType::Input => {
             rollups_data::database::CURRENT_INPUT_EPOCH_INDEX
         }
@@ -293,6 +346,24 @@ async fn db_loop(
                                 warn!("Failed to update notice database epoch index {}, details: {}", notice.epoch_index, err.to_string());
                             }
                         }).await;
+                    }
+                    Message::Report(report) => {
+                        debug!("Report message received epoch_index {} input_index {} report_index {}, writing to db",
+                            report.epoch_index, report.input_index, report.report_index);
+                        // Spawn tokio blocking task, diesel access to db is blocking
+                        let _res = tokio::task::spawn_blocking(move || {
+                            if let Err(_err) = insert_report(&report, &conn) {
+                                //ignore error, continue
+                                warn!("Reportepoch_index {} input_index {} report_index {} is lost",
+                                    &report.epoch_index, &report.input_index, &report.report_index);
+                            }
+                            if let Err(err) = update_current_epoch_index(&conn, report.epoch_index, EpochIndexType::Report) {
+                                warn!("Failed to update report database epoch index {}, details: {}", report.epoch_index, err.to_string());
+                            }
+                        }).await;
+                    }
+                    Message::Voucher(_voucher) => {
+                        todo!();
                     }
                     Message::Input(input) => {
                         debug!("Input message received id {} input_index {} epoch_index {} sender {} block_number {} timestamp {}",

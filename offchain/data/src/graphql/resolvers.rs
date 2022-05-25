@@ -14,7 +14,7 @@
  */
 
 use crate::database;
-use crate::database::{DbEpoch, DbInput, DbNotice};
+use crate::database::{DbEpoch, DbInput, DbNotice, DbReport};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -64,39 +64,34 @@ impl Epoch {
         last: Option<i32>,
         after: Option<String>,
         before: Option<String>,
+        r#where: Option<InputFilter>,
     ) -> FieldResult<InputConnection> {
         let conn = executor.context().db_pool.get()?;
-        println!("Checkpoint 0");
-        let mut inputs: Vec<Input> = get_inputs_by_cursor(
+        get_inputs(&conn, first, last, after, before, r#where, Some(self.index))
+    }
+
+    #[graphql(
+        description = "Get reports from this particular epoch with additional ability to filter and paginate them"
+    )]
+    fn reports(
+        &self,
+        first: Option<i32>,
+        last: Option<i32>,
+        after: Option<String>,
+        before: Option<String>,
+        r#where: Option<ReportFilter>,
+    ) -> FieldResult<ReportConnection> {
+        let conn = executor.context().db_pool.get()?;
+        get_reports(
             &conn,
             first,
             last,
             after,
             before,
+            r#where,
+            None,
             Some(self.index),
-        )?
-        .into_iter()
-        .map(|(_, input)| input)
-        .collect();
-        inputs.sort(); // sort by id, they are sorted by index
-        let edges: Vec<InputEdge> = inputs
-            .clone()
-            .into_iter()
-            .map(|input| InputEdge {
-                cursor: input.id.to_string(),
-                node: input,
-            })
-            .collect();
-        let total_count = database::schema::inputs::dsl::inputs
-            .count()
-            .get_result::<i64>(&conn)? as i32;
-        let page_info = calculate_page_info(&edges, total_count);
-        Ok(InputConnection {
-            page_info,
-            total_count: total_count as i32,
-            edges,
-            nodes: inputs,
-        })
+        )
     }
 }
 
@@ -159,7 +154,7 @@ fn get_epoch_from_db(
         .context(super::error::DatabaseError)?;
     if let Some(db_epoch) = query_result.get(0) {
         Ok(Epoch {
-            id: juniper::ID::new(db_epoch.epoch_index.to_string()),
+            id: juniper::ID::new(db_epoch.id.to_string()),
             index: db_epoch.epoch_index,
         })
     } else {
@@ -396,6 +391,54 @@ fn get_inputs_by_cursor(
     process_db_inputs(db_inputs, conn)
 }
 
+fn get_inputs(
+    conn: &PgConnection,
+    first: Option<i32>,
+    last: Option<i32>,
+    after: Option<String>,
+    before: Option<String>,
+    r#where: Option<InputFilter>,
+    epoch_index: Option<i32>,
+) -> FieldResult<InputConnection> {
+    let mut inputs: Vec<Input> =
+        get_inputs_by_cursor(&conn, first, last, after, before, epoch_index)?
+            .into_iter()
+            .map(|(_, input)| input)
+            .collect();
+    inputs.sort(); // sort by id, they are sorted by index
+    let edges: Vec<InputEdge> = inputs
+        .clone()
+        .into_iter()
+        .map(|input| InputEdge {
+            cursor: input.id.to_string(),
+            node: input,
+        })
+        .collect();
+
+    let total_input_count = if let Some(epoch_index) = epoch_index {
+        // number of inputs in epoch
+        database::schema::inputs::dsl::inputs
+            .filter(
+                crate::database::schema::inputs::dsl::epoch_index
+                    .eq(&epoch_index),
+            )
+            .count()
+            .get_result::<i64>(conn)? as i32
+    } else {
+        database::schema::inputs::dsl::inputs
+            .count()
+            .get_result::<i64>(conn)? as i32
+    };
+
+    let page_info = calculate_page_info(&edges, total_input_count);
+    Ok(InputConnection {
+        page_info,
+        total_count: total_input_count as i32,
+        edges,
+        nodes: inputs,
+    })
+}
+
 /// Get notices from database and return ordered map of <notice id, Notice>
 fn process_db_notices(
     db_notices: Vec<DbNotice>,
@@ -434,7 +477,8 @@ fn process_db_notices(
                             return e;
                         }
                     },
-                    keccak: db_notice.keccak,
+                    keccak: db_notice.keccak, // In ethereum "0x" binary format already
+                    // Payload in database is in raw format, make it Ethereum hex binary format again
                     payload: "0x".to_string()
                         + hex::encode(
                             db_notice.payload.as_ref().unwrap_or(&Vec::new()),
@@ -495,6 +539,232 @@ fn get_notices_by_cursor(
     query = query.order_by(notices::dsl::id.asc());
     let db_notices = query.load::<DbNotice>(conn)?;
     process_db_notices(db_notices, conn)
+}
+
+fn get_notices(
+    conn: &PgConnection,
+    first: Option<i32>,
+    last: Option<i32>,
+    after: Option<String>,
+    before: Option<String>,
+    r#where: Option<NoticeFilter>,
+    input_index: Option<i32>,
+    epoch_index: Option<i32>,
+) -> FieldResult<NoticeConnection> {
+    let notices: Vec<Notice> = get_notices_by_cursor(
+        conn,
+        first,
+        last,
+        after,
+        before,
+        input_index,
+        epoch_index,
+    )?
+    .into_values()
+    .collect();
+
+    let total_count = if let Some(input_index) = input_index {
+        // number of notices in input
+        database::schema::notices::dsl::notices
+            .filter(
+                crate::database::schema::notices::dsl::input_index
+                    .eq(&input_index),
+            )
+            .count()
+            .get_result::<i64>(conn)? as i32
+    } else if let Some(epoch_index) = epoch_index {
+        // number of notices in epoch
+        database::schema::notices::dsl::notices
+            .filter(
+                crate::database::schema::notices::dsl::epoch_index
+                    .eq(&epoch_index),
+            )
+            .count()
+            .get_result::<i64>(conn)? as i32
+    } else {
+        // total number of reports
+        database::schema::notices::dsl::notices
+            .count()
+            .get_result::<i64>(conn)? as i32
+    };
+    let edges: Vec<NoticeEdge> = notices
+        .clone()
+        .into_iter()
+        .map(|notice| NoticeEdge {
+            cursor: notice.id.to_string(),
+            node: notice,
+        })
+        .collect();
+    let page_info = calculate_page_info(&edges, total_count);
+    Ok(NoticeConnection {
+        page_info,
+        total_count: total_count as i32,
+        edges,
+        nodes: notices,
+    })
+}
+
+/// Get reports from database and return ordered map of <report id, Report>
+fn process_db_reports(
+    db_reports: Vec<DbReport>,
+    conn: &PgConnection,
+) -> FieldResult<std::collections::BTreeMap<i32, Report>> {
+    //Get all inputs related to those reports
+    let mut input_indexes = std::collections::HashSet::<i32>::new();
+    db_reports.iter().for_each(|db_report| {
+        input_indexes.insert(db_report.input_index);
+    });
+    let inputs =
+        get_inputs_by_indexes(input_indexes.into_iter().collect(), conn)?;
+
+    let result: Result<
+        std::collections::BTreeMap<i32, Report>,
+        super::error::Error,
+    > = db_reports
+        .into_iter()
+        .map(|db_report| {
+            Ok((
+                db_report.id,
+                Report {
+                    id: juniper::ID::new(db_report.id.to_string()),
+                    index: db_report.input_index as i32,
+                    input: match inputs.get(&(db_report.epoch_index, db_report.input_index)).ok_or(Err(
+                        super::error::Error::InputNotFound {
+                            epoch_index: db_report.epoch_index,
+                            index: db_report.input_index,
+                        },
+                    )) {
+                        Ok(val) => val.clone(),
+                        Err(e) => {
+                            warn!("Unable to get input index={} from epoch index={} for report id={}",
+                                db_report.input_index, db_report.epoch_index, db_report.id );
+                            return e;
+                        }
+                    },
+                    // Payload in database is in raw format, make it Ethereum hex binary format again
+                    payload: "0x".to_string()
+                        + hex::encode(
+                        db_report.payload.as_ref().unwrap_or(&Vec::new()),
+                    )
+                        .as_str(),
+                },
+            ))
+        })
+        .collect();
+    result.map_err(|e| e.into())
+}
+
+/// Get reports from database and return ordered map of <report id, Report>
+fn get_reports_by_cursor(
+    conn: &PgConnection,
+    first: Option<i32>,
+    last: Option<i32>,
+    after: Option<String>,
+    before: Option<String>,
+    input_index: Option<i32>,
+    epoch_index: Option<i32>,
+) -> FieldResult<std::collections::BTreeMap<i32, Report>> {
+    use crate::database::schema::reports;
+    let mut query = reports::dsl::reports.into_boxed();
+    let start_pos = if let Some(first) = first {
+        let first = std::cmp::max(0, first - 1);
+        query = query.offset(first.into());
+        first
+    } else {
+        0
+    };
+    if let Some(last) = last {
+        query = query.limit((last - start_pos).into());
+        Some(last)
+    } else {
+        None
+    };
+    if let Some(after) = after {
+        if let Ok(after_i32) = after.parse::<i32>() {
+            query = query.filter(reports::dsl::id.gt(after_i32));
+        }
+    };
+    if let Some(before) = before {
+        if let Ok(before_i32) = before.parse::<i32>() {
+            query = query.filter(reports::dsl::id.lt(before_i32));
+        }
+    };
+    if let Some(in_index) = input_index {
+        query = query.filter(
+            crate::database::schema::reports::dsl::input_index.eq(in_index),
+        );
+    };
+    if let Some(ep_index) = epoch_index {
+        query = query.filter(
+            crate::database::schema::reports::dsl::epoch_index.eq(ep_index),
+        );
+    };
+    query = query.order_by(reports::dsl::id.asc());
+    let db_reports = query.load::<DbReport>(conn)?;
+    process_db_reports(db_reports, conn)
+}
+
+fn get_reports(
+    conn: &PgConnection,
+    first: Option<i32>,
+    last: Option<i32>,
+    after: Option<String>,
+    before: Option<String>,
+    r#where: Option<ReportFilter>,
+    input_index: Option<i32>,
+    epoch_index: Option<i32>,
+) -> FieldResult<ReportConnection> {
+    let reports: Vec<Report> = get_reports_by_cursor(
+        conn,
+        first,
+        last,
+        after,
+        before,
+        input_index,
+        epoch_index,
+    )?
+    .into_values()
+    .collect();
+
+    let total_count = if let Some(input_index) = input_index {
+        // number of reports in input
+        database::schema::reports::dsl::reports
+            .filter(
+                crate::database::schema::reports::dsl::input_index
+                    .eq(&input_index),
+            )
+            .count()
+            .get_result::<i64>(conn)? as i32
+    } else if let Some(epoch_index) = epoch_index {
+        // number of reports in epoch
+        database::schema::reports::dsl::reports
+            .filter(
+                crate::database::schema::reports::dsl::epoch_index
+                    .eq(&epoch_index),
+            )
+            .count()
+            .get_result::<i64>(conn)? as i32
+    } else {
+        // total number of reports
+        database::schema::reports::dsl::reports
+            .count()
+            .get_result::<i64>(conn)? as i32
+    };
+    let edges: Vec<ReportEdge> = reports
+        .clone()
+        .into_iter()
+        .map(|report| ReportEdge {
+            cursor: report.id.to_string(),
+            node: report,
+        })
+        .collect();
+    let page_info = calculate_page_info(&edges, total_count);
+    Ok(ReportConnection {
+        page_info,
+        total_count: total_count as i32,
+        edges,
+        nodes: reports,
+    })
 }
 
 /// Get inputs from database for every index from the list
@@ -560,50 +830,52 @@ impl Input {
         &self.block_number
     }
 
-    /// Get notices from this particular input
-    /// with additional ability to filter and paginate them
+    #[graphql(
+        description = "Get notices from this particular input with additional ability to filter and paginate them"
+    )]
     fn notices(
         &self,
         first: Option<i32>,
         last: Option<i32>,
         after: Option<String>,
         before: Option<String>,
+        r#where: Option<NoticeFilter>,
     ) -> FieldResult<NoticeConnection> {
         let conn = executor.context().db_pool.get()?;
-        let notices: Vec<Notice> = get_notices_by_cursor(
+        get_notices(
             &conn,
             first,
             last,
             after,
             before,
+            r#where,
             Some(self.index),
             Some(self.epoch.index),
-        )?
-        .into_values()
-        .collect();
+        )
+    }
 
-        let total_count = database::schema::notices::dsl::notices
-            .filter(
-                crate::database::schema::notices::dsl::input_index
-                    .eq(&self.index),
-            )
-            .count()
-            .get_result::<i64>(&conn)? as i32;
-        let edges: Vec<NoticeEdge> = notices
-            .clone()
-            .into_iter()
-            .map(|notice| NoticeEdge {
-                cursor: notice.id.to_string(),
-                node: notice,
-            })
-            .collect();
-        let page_info = calculate_page_info(&edges, total_count);
-        Ok(NoticeConnection {
-            page_info,
-            total_count: total_count as i32,
-            edges,
-            nodes: notices,
-        })
+    #[graphql(
+        description = "Get reports from this particular input with additional ability to filter and paginate them"
+    )]
+    fn reports(
+        &self,
+        first: Option<i32>,
+        last: Option<i32>,
+        after: Option<String>,
+        before: Option<String>,
+        r#where: Option<ReportFilter>,
+    ) -> FieldResult<ReportConnection> {
+        let conn = executor.context().db_pool.get()?;
+        get_reports(
+            &conn,
+            first,
+            last,
+            after,
+            before,
+            r#where,
+            Some(self.index),
+            Some(self.epoch.index),
+        )
     }
 }
 
@@ -656,6 +928,9 @@ impl Notice {
         &self.input
     }
 
+    #[graphql(
+        description = "Keccak in Ethereum hex binary format, starting with '0x'"
+    )]
     fn keccak(&self) -> &str {
         self.keccak.as_str()
     }
@@ -700,6 +975,59 @@ impl NoticeConnection {
 }
 
 #[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
+impl Report {
+    fn id(&self) -> &juniper::ID {
+        &self.id
+    }
+
+    fn index(&self) -> i32 {
+        self.index
+    }
+
+    fn input(&self) -> &Input {
+        &self.input
+    }
+
+    #[graphql(
+        description = "Payload in Ethereum hex binary format, starting with '0x'"
+    )]
+    fn payload(&self) -> &str {
+        self.payload.as_str()
+    }
+}
+
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
+impl ReportEdge {
+    fn node(&self) -> &Report {
+        &self.node
+    }
+
+    fn cursor(&self) -> &String {
+        &self.cursor
+    }
+}
+implement_cursor!(ReportEdge);
+
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
+impl ReportConnection {
+    fn total_count(&self) -> i32 {
+        self.total_count
+    }
+
+    fn edges(&self) -> &Vec<ReportEdge> {
+        &self.edges
+    }
+
+    fn nodes(&self) -> &Vec<Report> {
+        &self.nodes
+    }
+
+    fn page_info(&self) -> &PageInfo {
+        &self.page_info
+    }
+}
+
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl Query {
     fn epoch(id: juniper::ID) -> FieldResult<Epoch> {
         use crate::database::{schema, DbEpoch};
@@ -732,6 +1060,30 @@ impl Query {
                 id: epoch_id.to_string(),
             }
             .into())
+        }
+    }
+
+    fn epoch_i(index: i32) -> FieldResult<Epoch> {
+        use crate::database::{schema, DbEpoch};
+        let conn = executor.context().db_pool.get().map_err(|e| {
+            super::error::Error::DatabasePoolConnectionError {
+                message: e.to_string(),
+            }
+        })?;
+
+        let mut query = schema::epochs::dsl::epochs.into_boxed();
+        query = query.filter(schema::epochs::dsl::epoch_index.eq(index));
+        let query_result = query
+            .load::<DbEpoch>(&conn)
+            .context(super::error::DatabaseError)?;
+
+        if let Some(db_epoch) = query_result.get(0) {
+            Ok(Epoch {
+                id: juniper::ID::new(db_epoch.id.to_string()),
+                index: db_epoch.epoch_index,
+            })
+        } else {
+            Err(super::error::Error::EpochNotFound { index }.into())
         }
     }
 
@@ -823,6 +1175,53 @@ impl Query {
         }
     }
 
+    fn report(id: juniper::ID) -> FieldResult<Report> {
+        use crate::database::{schema, DbReport};
+        let report_id = id.parse::<i32>().map_err(|e| {
+            super::error::Error::InvalidIdError {
+                item: "report".to_string(),
+                source: e,
+            }
+        })?;
+        let conn = executor.context().db_pool.get().map_err(|e| {
+            super::error::Error::DatabasePoolConnectionError {
+                message: e.to_string(),
+            }
+        })?;
+        let query = schema::reports::dsl::reports
+            .into_boxed()
+            .filter(schema::reports::dsl::id.eq(report_id));
+        let db_reports = query
+            .load::<DbReport>(&conn)
+            .map_err(|e| super::error::Error::DatabaseError { source: e })?;
+        if let Some(db_report) = db_reports.get(0) {
+            let input = get_input_from_db(
+                DbFilterType::EpochAndInputIndex(
+                    db_report.epoch_index,
+                    db_report.input_index,
+                ),
+                &conn,
+            )?;
+            Ok(Report {
+                id: juniper::ID::new(db_report.id.to_string()),
+                index: db_report.report_index as i32,
+                input,
+                // Take the free payload format from the database, may be base64 or something else
+                payload: "0x".to_string()
+                    + hex::encode(
+                        db_report.payload.as_ref().unwrap_or(&Vec::new()),
+                    )
+                    .as_str(),
+            })
+        } else {
+            Err(super::error::Error::ItemNotFound {
+                item_type: "report".to_string(),
+                id: report_id.to_string(),
+            }
+            .into())
+        }
+    }
+
     fn epochs(
         &self,
         first: Option<i32>,
@@ -857,71 +1256,49 @@ impl Query {
         })
     }
 
+    #[graphql(
+        description = "Get all available inputs with additional ability to filter and paginate them"
+    )]
     fn inputs(
         &self,
         first: Option<i32>,
         last: Option<i32>,
         after: Option<String>,
         before: Option<String>,
+        r#where: Option<InputFilter>,
     ) -> FieldResult<InputConnection> {
         let conn = executor.context().db_pool.get()?;
-        let mut inputs: Vec<Input> =
-            get_inputs_by_cursor(&conn, first, last, after, before, None)?
-                .into_iter()
-                .map(|(_, input)| input)
-                .collect();
-        inputs.sort(); // sort by id, they are sorted by index
-        let edges: Vec<InputEdge> = inputs
-            .clone()
-            .into_iter()
-            .map(|input| InputEdge {
-                cursor: input.id.to_string(),
-                node: input,
-            })
-            .collect();
-        let total_count = database::schema::inputs::dsl::inputs
-            .count()
-            .get_result::<i64>(&conn)? as i32;
-        let page_info = calculate_page_info(&edges, total_count);
-        Ok(InputConnection {
-            page_info,
-            total_count: total_count as i32,
-            edges,
-            nodes: inputs,
-        })
+        get_inputs(&conn, first, last, after, before, r#where, None)
     }
 
+    #[graphql(
+        description = "Get all available notices with additional ability to filter and paginate them"
+    )]
     fn notices(
         &self,
         first: Option<i32>,
         last: Option<i32>,
         after: Option<String>,
         before: Option<String>,
+        r#where: Option<NoticeFilter>,
     ) -> FieldResult<NoticeConnection> {
         let conn = executor.context().db_pool.get()?;
-        let notices: Vec<Notice> = get_notices_by_cursor(
-            &conn, first, last, after, before, None, None,
-        )?
-        .into_values()
-        .collect();
-        let edges: Vec<NoticeEdge> = notices
-            .clone()
-            .into_iter()
-            .map(|notice| NoticeEdge {
-                cursor: notice.id.to_string(),
-                node: notice,
-            })
-            .collect();
-        let total_count = database::schema::notices::dsl::notices
-            .count()
-            .get_result::<i64>(&conn)? as i32;
-        let page_info = calculate_page_info(&edges, total_count);
-        Ok(NoticeConnection {
-            page_info,
-            total_count: total_count as i32,
-            edges,
-            nodes: notices,
-        })
+        get_notices(&conn, first, last, after, before, r#where, None, None)
+    }
+
+    #[graphql(
+        description = "Get all available reports with additional ability to filter and paginate them"
+    )]
+    fn reports(
+        &self,
+        first: Option<i32>,
+        last: Option<i32>,
+        after: Option<String>,
+        before: Option<String>,
+        r#where: Option<ReportFilter>,
+    ) -> FieldResult<ReportConnection> {
+        let conn = executor.context().db_pool.get()?;
+        get_reports(&conn, first, last, after, before, r#where, None, None)
     }
 }
 
