@@ -40,7 +40,7 @@ export const getFacetCuts = async (
     for (const facetName of facetNames) {
         const facetDeployment = await deployments.get(facetName);
         const facet = await ethers.getContractAt(
-            facetName,
+            facetDeployment.abi,
             facetDeployment.address
         );
         let selectors: string[] = [];
