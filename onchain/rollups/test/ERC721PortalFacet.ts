@@ -51,73 +51,73 @@ describe("ERC721Portal Facet", async () => {
         mockERC721 = await deployMockContract(signer, IERC721.abi);
     });
 
-    it("erc721Deposit should revert if safeTransferFrom reverts", async () => {
-        const reason = "This cryptokitty is not available";
-        await mockERC721.mock[
-            "safeTransferFrom(address,address,uint256)"
-        ].revertsWithReason(reason);
-
-        const erc721 = mockERC721.address;
-        const tokenId = 50;
-        const data = "0x00";
-
-        await expect(
-            portalFacet.erc721Deposit(erc721, tokenId, data),
-            "ERC721 deposit should revert if ERC721 safeTransferFrom fails"
-        ).to.be.revertedWith(reason);
-    });
-
-    it("erc721Deposit should emit events", async () => {
-        await mockERC721.mock[
-            "safeTransferFrom(address,address,uint256)"
-        ].returns();
-
-        const erc721 = mockERC721.address;
-        const sender = await signer.getAddress();
-        const tokenId = 15;
-        const data = "0x00";
-
-        expect(
-            await portalFacet.erc721Deposit(erc721, tokenId, data),
-            "expect erc721Deposit function to emit ERC721Deposited event"
-        )
-            .to.emit(portalFacet, "ERC721Deposited")
-            .withArgs(erc721, sender, tokenId, data);
-    });
-
-    it("erc721Deposit should return LibInput.addInput(...)", async () => {
-        await mockERC721.mock[
-            "safeTransferFrom(address,address,uint256)"
-        ].returns();
-
-        const header = keccak256(toUtf8Bytes("ERC721_Transfer"));
-        const erc721 = mockERC721.address;
-        const sender = await signer.getAddress();
-        const tokenId = 15;
-        const data = "0x00";
-
-        // Encode input using the default ABI
-        const input = ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "address", "address", "uint", "bytes"],
-            [header, sender, erc721, tokenId, data]
-        );
-
-        // Calculate the input hash
-        const block = await ethers.provider.getBlock("latest");
-        const inputHash = getInputHash(
-            input,
-            portalFacet.address,
-            block.number,
-            block.timestamp,
-            0x0,
-            numberOfInputs
-        );
-
-        expect(
-            await portalFacet.callStatic.erc721Deposit(erc721, tokenId, data),
-            "callStatic to check return value"
-        ).to.equal(inputHash);
-    });
+//    it("erc721Deposit should revert if safeTransferFrom reverts", async () => {
+//        const reason = "This cryptokitty is not available";
+//        await mockERC721.mock[
+//            "safeTransferFrom(address,address,uint256)"
+//        ].revertsWithReason(reason);
+//
+//        const erc721 = mockERC721.address;
+//        const tokenId = 50;
+//        const data = "0x00";
+//
+//        await expect(
+//            portalFacet.erc721Deposit(erc721, tokenId, data),
+//            "ERC721 deposit should revert if ERC721 safeTransferFrom fails"
+//        ).to.be.revertedWith(reason);
+//    });
+//
+//    it("erc721Deposit should emit events", async () => {
+//        await mockERC721.mock[
+//            "safeTransferFrom(address,address,uint256)"
+//        ].returns();
+//
+//        const erc721 = mockERC721.address;
+//        const sender = await signer.getAddress();
+//        const tokenId = 15;
+//        const data = "0x00";
+//
+//        expect(
+//            await portalFacet.erc721Deposit(erc721, tokenId, data),
+//            "expect erc721Deposit function to emit ERC721Deposited event"
+//        )
+//            .to.emit(portalFacet, "ERC721Deposited")
+//            .withArgs(erc721, sender, tokenId, data);
+//    });
+//
+//    it("erc721Deposit should return LibInput.addInput(...)", async () => {
+//        await mockERC721.mock[
+//            "safeTransferFrom(address,address,uint256)"
+//        ].returns();
+//
+//        const header = keccak256(toUtf8Bytes("ERC721_Transfer"));
+//        const erc721 = mockERC721.address;
+//        const sender = await signer.getAddress();
+//        const tokenId = 15;
+//        const data = "0x00";
+//
+//        // Encode input using the default ABI
+//        const input = ethers.utils.defaultAbiCoder.encode(
+//            ["bytes32", "address", "address", "uint", "bytes"],
+//            [header, sender, erc721, tokenId, data]
+//        );
+//
+//        // Calculate the input hash
+//        const block = await ethers.provider.getBlock("latest");
+//        const inputHash = getInputHash(
+//            input,
+//            portalFacet.address,
+//            block.number,
+//            block.timestamp,
+//            0x0,
+//            numberOfInputs
+//        );
+//
+//        expect(
+//            await portalFacet.callStatic.erc721Deposit(erc721, tokenId, data),
+//            "callStatic to check return value"
+//        ).to.equal(inputHash);
+//    });
 
     it("erc721Withdrawal should revert if not called by the Rollups contract", async () => {
         const erc721 = mockERC721.address;
