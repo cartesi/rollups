@@ -1,5 +1,3 @@
-use configuration::config::Config;
-use configuration::config::EnvCLIConfig;
 use configuration::error as config_error;
 
 use serde::Deserialize;
@@ -7,12 +5,13 @@ use snafu::ResultExt;
 
 use ethers::core::types::{Address, U256};
 
+use std::fs;
+use std::str::FromStr;
+
 use structopt::StructOpt;
 
 #[derive(StructOpt, Clone)]
 pub struct ApplicationCLIConfig {
-    #[structopt(flatten)]
-    pub basic_config: EnvCLIConfig,
     #[structopt(flatten)]
     pub indexer_config: IndexerEnvCLIConfig,
 }
@@ -20,8 +19,14 @@ pub struct ApplicationCLIConfig {
 #[derive(StructOpt, Clone)]
 #[structopt(name = "indexer_config", about = "Configuration for indexer")]
 pub struct IndexerEnvCLIConfig {
+    /// Address of deployed DApp contract
     #[structopt(long, env)]
     pub dapp_contract_address: Option<String>,
+
+    /// File with ddress of deployed DApp contract
+    #[structopt(long, env)]
+    pub dapp_contract_address_file: Option<String>,
+
     #[structopt(long, env)]
     pub contract_name: Option<String>,
     #[structopt(long, env)]
@@ -73,7 +78,6 @@ impl IndexerConfig {
     pub fn initialize() -> config_error::Result<Self> {
         let app_config = ApplicationCLIConfig::from_args();
         let env_cli_config = app_config.indexer_config;
-        let base_cli_config = app_config.basic_config;
 
         let file_config: IndexerFileConfig = {
             let c: FileConfig = configuration::config::load_config_file(
@@ -81,12 +85,45 @@ impl IndexerConfig {
             )?;
             c.indexer_config
         };
-        let basic_config = Config::initialize(base_cli_config)?;
 
-        let contract_name = env_cli_config
-            .contract_name
-            .unwrap_or("CartesiDApp".to_string());
-        let dapp_contract_address = basic_config.contracts[&contract_name];
+        let dapp_contract_address: Address = if let Some(a) = env_cli_config
+            .dapp_contract_address
+            .or(file_config.dapp_contract_address)
+        {
+            Address::from_str(&a).map_err(|e| {
+                config_error::FileError {
+                    err: format!(
+                        "DApp contract address string ill-formed: {}",
+                        e
+                    ),
+                }
+                .build()
+            })?
+        } else {
+            let path = env_cli_config
+                .dapp_contract_address_file
+                .ok_or(snafu::NoneError)
+                .context(config_error::FileError {
+                    err: "Must specify either dapp_contract_address or dapp_contract_address_file",
+                })?;
+
+            let contents = fs::read_to_string(path.clone()).map_err(|e| {
+                config_error::FileError {
+                    err: format!("Could not read file at path {}: {}", path, e),
+                }
+                .build()
+            })?;
+
+            Address::from_str(&contents.trim().to_string()).map_err(|e| {
+                config_error::FileError {
+                    err: format!(
+                        "DApp contract address string ill-formed: {}",
+                        e
+                    ),
+                }
+                .build()
+            })?
+        };
 
         let state_server_endpoint: String = env_cli_config
             .state_server_endpoint
