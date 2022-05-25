@@ -74,7 +74,7 @@
         "contracts",
         "deployments/*/*.json",
         "deployments/*/.chainid",
-        "dist/src/types",
+        "dist/src",
         "dist/deploy/*.js",
         "export"
     ],
