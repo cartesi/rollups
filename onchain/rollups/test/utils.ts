@@ -25,6 +25,8 @@ import {
     ICartesiDAppFactory,
     CartesiDAppFactory__factory,
     CartesiDApp__factory,
+    SimpleNFT,
+    SimpleNFT__factory,
 } from "../src/types";
 
 const client = createClient();
@@ -295,8 +297,38 @@ export const deployDiamond = deployments.createFixture(
             receipt.blockNumber
         );
         const { application } = events[events.length - 1].args;
-        console.log(`[${application}] Deployed CartesiDApp`);
+        console.log(`[${application}] CartesiDApp deployed`);
         return CartesiDApp__factory.connect(application, signers[0]);
+    }
+);
+
+export interface SimpleNFTOptions {
+    tokenIds?: number[];
+}
+
+export const deploySimpleNFT = deployments.createFixture(
+    async (hre: HardhatRuntimeEnvironment, options: SimpleNFTOptions = {}) => {
+        const { deployments, ethers, getNamedAccounts } = hre;
+        const signers = await ethers.getSigners();
+        const { deployer } = await getNamedAccounts();
+
+        const opts: DeployOptions = {
+            from: deployer,
+            log: true,
+        };
+
+        let tokenIds: number[] = options.tokenIds || [];
+        const simpleNFTDeployment = await deployments.deploy("SimpleNFT", {
+            ...opts,
+            args: [tokenIds],
+        });
+
+        const simpleNFT = SimpleNFT__factory.connect(
+            simpleNFTDeployment.address,
+            signers[0]
+        );
+
+        return simpleNFT;
     }
 );
 
