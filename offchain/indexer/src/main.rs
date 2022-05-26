@@ -13,6 +13,8 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         .build()
     })?;
 
+    println!("Starting indexer with config `{:?}`", &indexer_config);
+
     let dapp_contract_address = indexer_config.dapp_contract_address;
     let poll_interval = std::time::Duration::from_secs(indexer_config.interval);
     let initial_state = (
