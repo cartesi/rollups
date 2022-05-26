@@ -14,7 +14,9 @@
  */
 
 use crate::database;
-use crate::database::{DbEpoch, DbInput, DbNotice, DbReport};
+use crate::database::{
+    DbEpoch, DbInput, DbNotice, DbProof, DbReport, DbVoucher,
+};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -48,6 +50,29 @@ pub struct Context {
 }
 impl juniper::Context for Context {}
 
+pub struct Pagination {
+    pub first: Option<i32>,
+    pub last: Option<i32>,
+    pub after: Option<String>,
+    pub before: Option<String>,
+}
+
+impl Pagination {
+    pub fn new(
+        first: Option<i32>,
+        last: Option<i32>,
+        after: Option<String>,
+        before: Option<String>,
+    ) -> Pagination {
+        Pagination {
+            first,
+            last,
+            after,
+            before,
+        }
+    }
+}
+
 #[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl Epoch {
     fn id(&self) -> &juniper::ID {
@@ -67,7 +92,12 @@ impl Epoch {
         r#where: Option<InputFilter>,
     ) -> FieldResult<InputConnection> {
         let conn = executor.context().db_pool.get()?;
-        get_inputs(&conn, first, last, after, before, r#where, Some(self.index))
+        get_inputs(
+            &conn,
+            Pagination::new(first, last, after, before),
+            r#where,
+            Some(self.index),
+        )
     }
 
     #[graphql(
@@ -84,10 +114,7 @@ impl Epoch {
         let conn = executor.context().db_pool.get()?;
         get_reports(
             &conn,
-            first,
-            last,
-            after,
-            before,
+            Pagination::new(first, last, after, before),
             r#where,
             None,
             Some(self.index),
@@ -134,9 +161,59 @@ enum DbFilterType {
     EpochAndInputIndex(i32, i32),
 }
 
-fn get_epoch_from_db(
-    val: DbFilterType,
+fn get_epoch(
     conn: &PgConnection,
+    id: Option<juniper::ID>,
+    index: Option<i32>,
+) -> FieldResult<Epoch> {
+    // Either id or indexes must be provided
+    if id.is_some() && index.is_some() {
+        return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    use crate::database::schema;
+    let mut query = schema::epochs::dsl::epochs.into_boxed();
+    if let Some(ref id) = id {
+        let epoch_id: i32 = id.parse::<i32>().map_err(|e| {
+            super::error::Error::InvalidIdError {
+                item: "epoch".to_string(),
+                source: e,
+            }
+        })?;
+        query = query.filter(schema::epochs::dsl::id.eq(epoch_id));
+    } else if let Some(epoch_index) = index {
+        query = query.filter(schema::epochs::dsl::epoch_index.eq(epoch_index));
+    } else {
+        return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    let query_result = query
+        .load::<DbEpoch>(conn)
+        .context(super::error::DatabaseError)?;
+    if let Some(db_epoch) = query_result.get(0) {
+        Ok(Epoch {
+            id: juniper::ID::new(db_epoch.id.to_string()),
+            index: db_epoch.epoch_index,
+        })
+    }
+    // Error, epoch not found
+    else if let Some(epoch_id) = id {
+        Err(super::error::Error::ItemNotFound {
+            item_type: "epoch".to_string(),
+            id: epoch_id.to_string(),
+        }
+        .into())
+    } else if let Some(epoch_index) = index {
+        Err(super::error::Error::EpochNotFound { index: epoch_index }.into())
+    } else {
+        // Should not get here
+        Err(super::error::Error::InvalidParameterError {}.into())
+    }
+}
+
+fn get_epoch_from_db(
+    conn: &PgConnection,
+    val: DbFilterType,
 ) -> Result<Epoch, super::error::Error> {
     use crate::database::schema::epochs::dsl::*;
     let mut query = epochs.into_boxed();
@@ -195,33 +272,30 @@ fn process_db_epochs(
 /// Get epochs from database and return ordered map of <epoch index, Epoch>
 fn get_epochs(
     conn: &PgConnection,
-    first: Option<i32>,
-    last: Option<i32>,
-    after: Option<String>,
-    before: Option<String>,
+    pagination: Pagination,
 ) -> FieldResult<std::collections::BTreeMap<i32, Epoch>> {
     use crate::database::schema::epochs::dsl::*;
 
     let mut query = epochs.into_boxed();
-    let start_pos = if let Some(first) = first {
+    let start_pos = if let Some(first) = pagination.first {
         let first = std::cmp::max(0, first - 1);
         query = query.offset(first.into());
         first
     } else {
         0
     };
-    if let Some(last) = last {
+    if let Some(last) = pagination.last {
         query = query.limit((last - start_pos).into());
         Some(last)
     } else {
         None
     };
-    if let Some(after) = after {
+    if let Some(after) = pagination.after {
         if let Ok(after_i32) = after.parse::<i32>() {
             query = query.filter(id.gt(after_i32));
         }
     };
-    if let Some(before) = before {
+    if let Some(before) = pagination.before {
         if let Ok(before_i32) = before.parse::<i32>() {
             query = query.filter(id.lt(before_i32));
         }
@@ -242,6 +316,71 @@ fn get_epochs_by_indexes(
     query = query.order_by(epoch_index.asc());
     let db_epochs = query.load::<DbEpoch>(conn)?;
     process_db_epochs(db_epochs)
+}
+
+// Get input by id or by epoch and input index
+fn get_input(
+    conn: &PgConnection,
+    id: Option<juniper::ID>,
+    indexes: Option<(i32, i32)>,
+) -> FieldResult<Input> {
+    // Either id or indexes must be provided
+    if id.is_some() && indexes.is_some() {
+        return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    use crate::database::schema;
+    let mut query = schema::inputs::dsl::inputs.into_boxed();
+
+    if let Some(ref id) = id {
+        let input_id = id.parse::<i32>().map_err(|e| {
+            super::error::Error::InvalidIdError {
+                item: "input".to_string(),
+                source: e,
+            }
+        })?;
+
+        query = query.filter(schema::inputs::dsl::id.eq(input_id));
+    } else if let Some((epoch_index, input_index)) = indexes {
+        query = query.filter(schema::inputs::dsl::input_index.eq(input_index));
+        query = query.filter(schema::inputs::dsl::epoch_index.eq(epoch_index));
+    } else {
+        return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    let db_inputs = query
+        .load::<DbInput>(conn)
+        .map_err(|e| super::error::Error::DatabaseError { source: e })?;
+
+    if let Some(db_input) = db_inputs.get(0) {
+        let epoch = get_epoch_from_db(
+            conn,
+            DbFilterType::EpochIndex(db_input.epoch_index),
+        )?;
+        Ok(Input {
+            id: juniper::ID::from(db_input.id.to_string()),
+            index: db_input.input_index as i32,
+            epoch,
+            block_number: db_input.block_number,
+        })
+    }
+    // Return error, input not found
+    else if let Some(input_id) = id {
+        Err(super::error::Error::ItemNotFound {
+            item_type: "input".to_string(),
+            id: input_id.to_string(),
+        }
+        .into())
+    } else if let Some((epoch_index, input_index)) = indexes {
+        Err(super::error::Error::InputNotFound {
+            epoch_index,
+            index: input_index,
+        }
+        .into())
+    } else {
+        // Should not get here
+        Err(super::error::Error::InvalidParameterError {}.into())
+    }
 }
 
 /// Get single input (by id or by index) from database
@@ -266,8 +405,8 @@ fn get_input_from_db(
         .context(super::error::DatabaseError)?;
     if let Some(db_input) = query_result.get(0) {
         let epoch = get_epoch_from_db(
-            DbFilterType::EpochIndex(db_input.epoch_index),
             conn,
+            DbFilterType::EpochIndex(db_input.epoch_index),
         )?;
         Ok(Input {
             id: juniper::ID::new(db_input.id.to_string()),
@@ -327,8 +466,7 @@ fn process_db_inputs(
                                 "Unable to get epoch with index: {}",
                                 db_input.epoch_index
                             );
-                            Err(super::error::Error::IndexNotFound {
-                                item_type: "epoch".to_string(),
+                            Err(super::error::Error::EpochNotFound {
                                 index: db_input.epoch_index,
                             })
                         },
@@ -352,33 +490,30 @@ fn process_db_inputs(
 /// Get inputs from database and return map of <(epoch index, input index), Input>
 fn get_inputs_by_cursor(
     conn: &PgConnection,
-    first: Option<i32>,
-    last: Option<i32>,
-    after: Option<String>,
-    before: Option<String>,
+    pagination: Pagination,
     ep_index: Option<i32>,
 ) -> FieldResult<std::collections::BTreeMap<(i32, i32), Input>> {
     use crate::database::schema::inputs::dsl::*;
     let mut query = inputs.into_boxed();
-    let start_pos = if let Some(first) = first {
+    let start_pos = if let Some(first) = pagination.first {
         let first = std::cmp::max(0, first - 1);
         query = query.offset(first.into());
         first
     } else {
         0
     };
-    if let Some(last) = last {
+    if let Some(last) = pagination.last {
         query = query.limit((last - start_pos).into());
         Some(last)
     } else {
         None
     };
-    if let Some(after) = after {
+    if let Some(after) = pagination.after {
         if let Ok(after_i32) = after.parse::<i32>() {
             query = query.filter(id.gt(after_i32));
         }
     };
-    if let Some(before) = before {
+    if let Some(before) = pagination.before {
         if let Ok(before_i32) = before.parse::<i32>() {
             query = query.filter(id.lt(before_i32));
         }
@@ -393,15 +528,12 @@ fn get_inputs_by_cursor(
 
 fn get_inputs(
     conn: &PgConnection,
-    first: Option<i32>,
-    last: Option<i32>,
-    after: Option<String>,
-    before: Option<String>,
-    r#where: Option<InputFilter>,
+    pagination: Pagination,
+    r#_where: Option<InputFilter>,
     epoch_index: Option<i32>,
 ) -> FieldResult<InputConnection> {
     let mut inputs: Vec<Input> =
-        get_inputs_by_cursor(&conn, first, last, after, before, epoch_index)?
+        get_inputs_by_cursor(conn, pagination, epoch_index)?
             .into_iter()
             .map(|(_, input)| input)
             .collect();
@@ -439,10 +571,23 @@ fn get_inputs(
     })
 }
 
+/// Get inputs from database for every index from the list
+fn get_inputs_by_indexes(
+    conn: &PgConnection,
+    indexes: Vec<i32>,
+) -> FieldResult<std::collections::BTreeMap<(i32, i32), Input>> {
+    use crate::database::schema::inputs::dsl::*;
+    let mut query = inputs.into_boxed();
+    query = query.filter(input_index.eq_any(indexes));
+    query = query.order_by(id.asc());
+    let db_inputs = query.load::<DbInput>(conn)?;
+    process_db_inputs(db_inputs, conn)
+}
+
 /// Get notices from database and return ordered map of <notice id, Notice>
 fn process_db_notices(
-    db_notices: Vec<DbNotice>,
     conn: &PgConnection,
+    db_notices: Vec<DbNotice>,
 ) -> FieldResult<std::collections::BTreeMap<i32, Notice>> {
     //Get all inputs related to those notices
     let mut input_indexes = std::collections::HashSet::<i32>::new();
@@ -450,7 +595,7 @@ fn process_db_notices(
         input_indexes.insert(db_notice.input_index);
     });
     let inputs =
-        get_inputs_by_indexes(input_indexes.into_iter().collect(), conn)?;
+        get_inputs_by_indexes(conn, input_indexes.into_iter().collect())?;
 
     let result: Result<
         std::collections::BTreeMap<i32, Notice>,
@@ -491,37 +636,105 @@ fn process_db_notices(
     result.map_err(|e| e.into())
 }
 
+fn get_notice(
+    conn: &PgConnection,
+    id: Option<juniper::ID>,
+    indexes: Option<(i32, i32)>,
+) -> FieldResult<Notice> {
+    // Either id or indexes must be provided
+    if id.is_some() && indexes.is_some() {
+        return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    use crate::database::schema;
+    let mut query = schema::notices::dsl::notices.into_boxed();
+    if let Some(ref id) = id {
+        let notice_id = id.parse::<i32>().map_err(|e| {
+            super::error::Error::InvalidIdError {
+                item: "notice".to_string(),
+                source: e,
+            }
+        })?;
+        query = query.filter(schema::notices::dsl::id.eq(notice_id));
+    } else if let Some((epoch_index, notice_index)) = indexes {
+        query =
+            query.filter(schema::notices::dsl::input_index.eq(notice_index));
+        query = query.filter(schema::notices::dsl::epoch_index.eq(epoch_index));
+    } else {
+        return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    let db_notices = query
+        .load::<DbNotice>(conn)
+        .map_err(|e| super::error::Error::DatabaseError { source: e })?;
+    if let Some(db_notice) = db_notices.get(0) {
+        let input = get_input_from_db(
+            DbFilterType::EpochAndInputIndex(
+                db_notice.epoch_index,
+                db_notice.input_index,
+            ),
+            conn,
+        )?;
+        Ok(Notice {
+            id: juniper::ID::new(db_notice.id.to_string()),
+            session_id: db_notice.session_id.clone(),
+            index: db_notice.notice_index as i32,
+            input,
+            keccak: db_notice.keccak.clone(),
+            payload: "0x".to_string()
+                + hex::encode(
+                    db_notice.payload.as_ref().unwrap_or(&Vec::new()),
+                )
+                .as_str(),
+        })
+    }
+    // Notice not found, return error
+    else if let Some(notice_id) = id {
+        Err(super::error::Error::ItemNotFound {
+            item_type: "notice".to_string(),
+            id: notice_id.to_string(),
+        }
+        .into())
+    } else if let Some((epoch_index, notice_index)) = indexes {
+        Err(super::error::Error::NoticeNotFound {
+            epoch_index,
+            index: notice_index,
+        }
+        .into())
+    } else {
+        // Should not get here
+        Err(super::error::Error::InvalidParameterError {}.into())
+    }
+}
+
 /// Get notices from database and return ordered map of <notice id, Notice>
 fn get_notices_by_cursor(
     conn: &PgConnection,
-    first: Option<i32>,
-    last: Option<i32>,
-    after: Option<String>,
-    before: Option<String>,
+    pagination: Pagination,
     input_index: Option<i32>,
     epoch_index: Option<i32>,
 ) -> FieldResult<std::collections::BTreeMap<i32, Notice>> {
     use crate::database::schema::notices;
     let mut query = notices::dsl::notices.into_boxed();
-    let start_pos = if let Some(first) = first {
+    let start_pos = if let Some(first) = pagination.first {
         let first = std::cmp::max(0, first - 1);
         query = query.offset(first.into());
         first
     } else {
         0
     };
-    if let Some(last) = last {
+    if let Some(last) = pagination.last {
         query = query.limit((last - start_pos).into());
         Some(last)
     } else {
         None
     };
-    if let Some(after) = after {
+    if let Some(after) = pagination.after {
         if let Ok(after_i32) = after.parse::<i32>() {
             query = query.filter(notices::dsl::id.gt(after_i32));
         }
     };
-    if let Some(before) = before {
+    if let Some(before) = pagination.before {
         if let Ok(before_i32) = before.parse::<i32>() {
             query = query.filter(notices::dsl::id.lt(before_i32));
         }
@@ -538,30 +751,20 @@ fn get_notices_by_cursor(
     };
     query = query.order_by(notices::dsl::id.asc());
     let db_notices = query.load::<DbNotice>(conn)?;
-    process_db_notices(db_notices, conn)
+    process_db_notices(conn, db_notices)
 }
 
 fn get_notices(
     conn: &PgConnection,
-    first: Option<i32>,
-    last: Option<i32>,
-    after: Option<String>,
-    before: Option<String>,
-    r#where: Option<NoticeFilter>,
+    pagination: Pagination,
+    r#_where: Option<NoticeFilter>,
     input_index: Option<i32>,
     epoch_index: Option<i32>,
 ) -> FieldResult<NoticeConnection> {
-    let notices: Vec<Notice> = get_notices_by_cursor(
-        conn,
-        first,
-        last,
-        after,
-        before,
-        input_index,
-        epoch_index,
-    )?
-    .into_values()
-    .collect();
+    let notices: Vec<Notice> =
+        get_notices_by_cursor(conn, pagination, input_index, epoch_index)?
+            .into_values()
+            .collect();
 
     let total_count = if let Some(input_index) = input_index {
         // number of notices in input
@@ -606,8 +809,8 @@ fn get_notices(
 
 /// Get reports from database and return ordered map of <report id, Report>
 fn process_db_reports(
-    db_reports: Vec<DbReport>,
     conn: &PgConnection,
+    db_reports: Vec<DbReport>,
 ) -> FieldResult<std::collections::BTreeMap<i32, Report>> {
     //Get all inputs related to those reports
     let mut input_indexes = std::collections::HashSet::<i32>::new();
@@ -615,7 +818,7 @@ fn process_db_reports(
         input_indexes.insert(db_report.input_index);
     });
     let inputs =
-        get_inputs_by_indexes(input_indexes.into_iter().collect(), conn)?;
+        get_inputs_by_indexes(conn, input_indexes.into_iter().collect())?;
 
     let result: Result<
         std::collections::BTreeMap<i32, Report>,
@@ -654,37 +857,104 @@ fn process_db_reports(
     result.map_err(|e| e.into())
 }
 
+fn get_report(
+    conn: &PgConnection,
+    id: Option<juniper::ID>,
+    indexes: Option<(i32, i32)>,
+) -> FieldResult<Report> {
+    // Either id or indexes must be provided
+    if id.is_some() && indexes.is_some() {
+        return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    use crate::database::schema;
+    let mut query = schema::reports::dsl::reports.into_boxed();
+    if let Some(ref id) = id {
+        let report_id = id.parse::<i32>().map_err(|e| {
+            super::error::Error::InvalidIdError {
+                item: "report".to_string(),
+                source: e,
+            }
+        })?;
+        query = query.filter(schema::reports::dsl::id.eq(report_id));
+    } else if let Some((epoch_index, report_index)) = indexes {
+        query =
+            query.filter(schema::reports::dsl::input_index.eq(report_index));
+        query = query.filter(schema::reports::dsl::epoch_index.eq(epoch_index));
+    } else {
+        return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    let db_reports = query
+        .load::<DbReport>(conn)
+        .map_err(|e| super::error::Error::DatabaseError { source: e })?;
+    if let Some(db_report) = db_reports.get(0) {
+        let input = get_input_from_db(
+            DbFilterType::EpochAndInputIndex(
+                db_report.epoch_index,
+                db_report.input_index,
+            ),
+            conn,
+        )?;
+        Ok(Report {
+            id: juniper::ID::new(db_report.id.to_string()),
+            index: db_report.report_index as i32,
+            input,
+            // Payload is in raw format, make it Ethereum hex binary format
+            payload: "0x".to_string()
+                + hex::encode(
+                    db_report.payload.as_ref().unwrap_or(&Vec::new()),
+                )
+                .as_str(),
+        })
+    }
+    // Report not found, return error
+    else if let Some(report_id) = id {
+        Err(super::error::Error::ItemNotFound {
+            item_type: "report".to_string(),
+            id: report_id.to_string(),
+        }
+        .into())
+    } else if let Some((epoch_index, report_index)) = indexes {
+        Err(super::error::Error::ReportNotFound {
+            epoch_index,
+            index: report_index,
+        }
+        .into())
+    } else {
+        // Should not get here
+        Err(super::error::Error::InvalidParameterError {}.into())
+    }
+}
+
 /// Get reports from database and return ordered map of <report id, Report>
 fn get_reports_by_cursor(
     conn: &PgConnection,
-    first: Option<i32>,
-    last: Option<i32>,
-    after: Option<String>,
-    before: Option<String>,
+    pagination: Pagination,
     input_index: Option<i32>,
     epoch_index: Option<i32>,
 ) -> FieldResult<std::collections::BTreeMap<i32, Report>> {
     use crate::database::schema::reports;
     let mut query = reports::dsl::reports.into_boxed();
-    let start_pos = if let Some(first) = first {
+    let start_pos = if let Some(first) = pagination.first {
         let first = std::cmp::max(0, first - 1);
         query = query.offset(first.into());
         first
     } else {
         0
     };
-    if let Some(last) = last {
+    if let Some(last) = pagination.last {
         query = query.limit((last - start_pos).into());
         Some(last)
     } else {
         None
     };
-    if let Some(after) = after {
+    if let Some(after) = pagination.after {
         if let Ok(after_i32) = after.parse::<i32>() {
             query = query.filter(reports::dsl::id.gt(after_i32));
         }
     };
-    if let Some(before) = before {
+    if let Some(before) = pagination.before {
         if let Ok(before_i32) = before.parse::<i32>() {
             query = query.filter(reports::dsl::id.lt(before_i32));
         }
@@ -701,30 +971,20 @@ fn get_reports_by_cursor(
     };
     query = query.order_by(reports::dsl::id.asc());
     let db_reports = query.load::<DbReport>(conn)?;
-    process_db_reports(db_reports, conn)
+    process_db_reports(conn, db_reports)
 }
 
 fn get_reports(
     conn: &PgConnection,
-    first: Option<i32>,
-    last: Option<i32>,
-    after: Option<String>,
-    before: Option<String>,
-    r#where: Option<ReportFilter>,
+    pagination: Pagination,
+    r#_where: Option<ReportFilter>,
     input_index: Option<i32>,
     epoch_index: Option<i32>,
 ) -> FieldResult<ReportConnection> {
-    let reports: Vec<Report> = get_reports_by_cursor(
-        conn,
-        first,
-        last,
-        after,
-        before,
-        input_index,
-        epoch_index,
-    )?
-    .into_values()
-    .collect();
+    let reports: Vec<Report> =
+        get_reports_by_cursor(conn, pagination, input_index, epoch_index)?
+            .into_values()
+            .collect();
 
     let total_count = if let Some(input_index) = input_index {
         // number of reports in input
@@ -767,17 +1027,115 @@ fn get_reports(
     })
 }
 
-/// Get inputs from database for every index from the list
-fn get_inputs_by_indexes(
-    indexes: Vec<i32>,
+fn process_vector_of_strings(_field: &str) -> Vec<String> {
+    // Parse database string field to vector of strings
+    todo!()
+}
+
+/// Get single input (by id or by index) from database
+fn get_proof_from_db(
     conn: &PgConnection,
-) -> FieldResult<std::collections::BTreeMap<(i32, i32), Input>> {
-    use crate::database::schema::inputs::dsl::*;
-    let mut query = inputs.into_boxed();
-    query = query.filter(input_index.eq_any(indexes));
-    query = query.order_by(id.asc());
-    let db_inputs = query.load::<DbInput>(conn)?;
-    process_db_inputs(db_inputs, conn)
+    proof_id: i32,
+) -> Result<Proof, crate::graphql::error::Error> {
+    use crate::database::schema::proofs::dsl::*;
+    let mut query = proofs.into_boxed();
+    query = query.filter(crate::database::schema::proofs::dsl::id.eq(proof_id));
+
+    let query_result = query
+        .load::<DbProof>(conn)
+        .context(super::error::DatabaseError)?;
+    if let Some(db_proof) = query_result.get(0) {
+        Ok(Proof {
+            output_hashes_root_hash: db_proof.output_hashes_root_hash.clone(),
+            vouchers_epoch_root_hash: db_proof.vouchers_epoch_root_hash.clone(),
+            notices_epoch_root_hash: db_proof.notices_epoch_root_hash.clone(),
+            machine_state_hash: db_proof.machine_state_hash.clone(),
+            keccak_in_hashes_siblings: process_vector_of_strings(
+                &db_proof.keccak_in_hashes_siblings,
+            ),
+            output_hashes_in_epoch_siblings: process_vector_of_strings(
+                &db_proof.output_hashes_in_epoch_siblings,
+            ),
+        })
+    } else {
+        Err(super::error::Error::ItemNotFound {
+            item_type: "proof".to_string(),
+            id: proof_id.to_string(),
+        })
+    }
+}
+
+fn get_voucher(
+    conn: &PgConnection,
+    id: Option<juniper::ID>,
+    indexes: Option<(i32, i32)>,
+) -> FieldResult<Voucher> {
+    // Either id or indexes must be provided
+    if id.is_some() && indexes.is_some() {
+        return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    use crate::database::schema;
+    let mut query = schema::vouchers::dsl::vouchers.into_boxed();
+    if let Some(ref id) = id {
+        let voucher_id = id.parse::<i32>().map_err(|e| {
+            super::error::Error::InvalidIdError {
+                item: "voucher".to_string(),
+                source: e,
+            }
+        })?;
+        query = query.filter(schema::vouchers::dsl::id.eq(voucher_id));
+    } else if let Some((epoch_index, voucher_index)) = indexes {
+        query =
+            query.filter(schema::vouchers::dsl::input_index.eq(voucher_index));
+        query =
+            query.filter(schema::vouchers::dsl::epoch_index.eq(epoch_index));
+    } else {
+        return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    let db_vouchers = query
+        .load::<DbVoucher>(conn)
+        .map_err(|e| super::error::Error::DatabaseError { source: e })?;
+    if let Some(db_voucher) = db_vouchers.get(0) {
+        let input = get_input_from_db(
+            DbFilterType::EpochAndInputIndex(
+                db_voucher.epoch_index,
+                db_voucher.input_index,
+            ),
+            conn,
+        )?;
+        let proof = get_proof_from_db(conn, db_voucher.proof_id)?;
+        Ok(Voucher {
+            id: juniper::ID::new(db_voucher.id.to_string()),
+            index: db_voucher.voucher_index as i32,
+            input,
+            proof,
+            destination: db_voucher.destination.clone(),
+            payload: "0x".to_string()
+                + hex::encode(
+                    db_voucher.payload.as_ref().unwrap_or(&Vec::new()),
+                )
+                .as_str(),
+        })
+    }
+    // Notice not found, return error
+    else if let Some(notice_id) = id {
+        Err(super::error::Error::ItemNotFound {
+            item_type: "notice".to_string(),
+            id: notice_id.to_string(),
+        }
+        .into())
+    } else if let Some((epoch_index, notice_index)) = indexes {
+        Err(super::error::Error::NoticeNotFound {
+            epoch_index,
+            index: notice_index,
+        }
+        .into())
+    } else {
+        // Should not get here
+        Err(super::error::Error::InvalidParameterError {}.into())
+    }
 }
 
 /// Calculate pagination info structure based on edges list
@@ -844,10 +1202,7 @@ impl Input {
         let conn = executor.context().db_pool.get()?;
         get_notices(
             &conn,
-            first,
-            last,
-            after,
-            before,
+            Pagination::new(first, last, after, before),
             r#where,
             Some(self.index),
             Some(self.epoch.index),
@@ -868,10 +1223,7 @@ impl Input {
         let conn = executor.context().db_pool.get()?;
         get_reports(
             &conn,
-            first,
-            last,
-            after,
-            before,
+            Pagination::new(first, last, after, before),
             r#where,
             Some(self.index),
             Some(self.epoch.index),
@@ -1028,198 +1380,154 @@ impl ReportConnection {
 }
 
 #[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
+impl Proof {
+    #[graphql(
+        description = "Hashes given in Ethereum hex binary format (32 bytes), starting with '0x'"
+    )]
+    fn output_hashes_root_hash(&self) -> &str {
+        self.output_hashes_root_hash.as_str()
+    }
+
+    fn vouchers_epoch_root_hash(&self) -> &str {
+        self.vouchers_epoch_root_hash.as_str()
+    }
+
+    fn notices_epoch_root_hash(&self) -> &str {
+        self.notices_epoch_root_hash.as_str()
+    }
+
+    fn machine_state_hash(&self) -> &str {
+        self.machine_state_hash.as_str()
+    }
+
+    fn keccak_in_hashes_siblings(&self) -> &Vec<String> {
+        self.keccak_in_hashes_siblings.as_ref()
+    }
+
+    fn output_hashes_in_epoch_siblings(&self) -> &Vec<String> {
+        self.output_hashes_in_epoch_siblings.as_ref()
+    }
+}
+
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
+impl Voucher {
+    fn id(&self) -> &juniper::ID {
+        &self.id
+    }
+
+    fn index(&self) -> i32 {
+        self.index
+    }
+
+    fn input(&self) -> &Input {
+        &self.input
+    }
+
+    fn proof(&self) -> &Proof {
+        &self.proof
+    }
+
+    #[graphql(
+        description = "Destination address as an Ethereum hex binary format (20 bytes), starting with '0x'"
+    )]
+    fn destination(&self) -> &str {
+        self.destination.as_str()
+    }
+
+    #[graphql(
+        description = "Payload in Ethereum hex binary format, starting with '0x'"
+    )]
+    fn payload(&self) -> &str {
+        self.payload.as_str()
+    }
+}
+
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
+impl VoucherEdge {
+    fn node(&self) -> &Voucher {
+        &self.node
+    }
+
+    fn cursor(&self) -> &String {
+        &self.cursor
+    }
+}
+implement_cursor!(VoucherEdge);
+
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
+impl VoucherConnection {
+    fn total_count(&self) -> i32 {
+        self.total_count
+    }
+
+    fn edges(&self) -> &Vec<VoucherEdge> {
+        &self.edges
+    }
+
+    fn nodes(&self) -> &Vec<Voucher> {
+        &self.nodes
+    }
+
+    fn page_info(&self) -> &PageInfo {
+        &self.page_info
+    }
+}
+
+#[graphql_object(context = Context, Scalar = RollupsGraphQLScalarValue)]
 impl Query {
     fn epoch(id: juniper::ID) -> FieldResult<Epoch> {
-        use crate::database::{schema, DbEpoch};
-        let epoch_id: i32 = id.parse::<i32>().map_err(|e| {
-            super::error::Error::InvalidIdError {
-                item: "epoch".to_string(),
-                source: e,
-            }
-        })?;
         let conn = executor.context().db_pool.get().map_err(|e| {
             super::error::Error::DatabasePoolConnectionError {
                 message: e.to_string(),
             }
         })?;
-
-        let mut query = schema::epochs::dsl::epochs.into_boxed();
-        query = query.filter(schema::epochs::dsl::id.eq(epoch_id));
-        let query_result = query
-            .load::<DbEpoch>(&conn)
-            .context(super::error::DatabaseError)?;
-
-        if let Some(db_epoch) = query_result.get(0) {
-            Ok(Epoch {
-                id: juniper::ID::new(db_epoch.id.to_string()),
-                index: db_epoch.epoch_index,
-            })
-        } else {
-            Err(super::error::Error::ItemNotFound {
-                item_type: "epoch".to_string(),
-                id: epoch_id.to_string(),
-            }
-            .into())
-        }
+        get_epoch(&conn, Some(id), None)
     }
 
     fn epoch_i(index: i32) -> FieldResult<Epoch> {
-        use crate::database::{schema, DbEpoch};
         let conn = executor.context().db_pool.get().map_err(|e| {
             super::error::Error::DatabasePoolConnectionError {
                 message: e.to_string(),
             }
         })?;
-
-        let mut query = schema::epochs::dsl::epochs.into_boxed();
-        query = query.filter(schema::epochs::dsl::epoch_index.eq(index));
-        let query_result = query
-            .load::<DbEpoch>(&conn)
-            .context(super::error::DatabaseError)?;
-
-        if let Some(db_epoch) = query_result.get(0) {
-            Ok(Epoch {
-                id: juniper::ID::new(db_epoch.id.to_string()),
-                index: db_epoch.epoch_index,
-            })
-        } else {
-            Err(super::error::Error::EpochNotFound { index }.into())
-        }
+        get_epoch(&conn, None, Some(index))
     }
 
     fn input(id: juniper::ID) -> FieldResult<Input> {
-        use crate::database::{schema, DbInput};
-        let input_id = id.parse::<i32>().map_err(|e| {
-            super::error::Error::InvalidIdError {
-                item: "input".to_string(),
-                source: e,
-            }
-        })?;
         let conn = executor.context().db_pool.get().map_err(|e| {
             super::error::Error::DatabasePoolConnectionError {
                 message: e.to_string(),
             }
         })?;
-        let query = schema::inputs::dsl::inputs
-            .into_boxed()
-            .filter(schema::inputs::dsl::id.eq(input_id));
-        let db_inputs = query
-            .load::<DbInput>(&conn)
-            .map_err(|e| super::error::Error::DatabaseError { source: e })?;
-
-        if let Some(db_input) = db_inputs.get(0) {
-            let epoch = get_epoch_from_db(
-                DbFilterType::EpochIndex(db_input.epoch_index),
-                &conn,
-            )?;
-            Ok(Input {
-                id: juniper::ID::from(db_input.id.to_string()),
-                index: db_input.input_index as i32,
-                epoch,
-                block_number: db_input.block_number,
-            })
-        } else {
-            Err(super::error::Error::ItemNotFound {
-                item_type: "input".to_string(),
-                id: input_id.to_string(),
-            }
-            .into())
-        }
+        get_input(&conn, Some(id), None)
     }
 
     fn notice(id: juniper::ID) -> FieldResult<Notice> {
-        use crate::database::{schema, DbNotice};
-        let notice_id = id.parse::<i32>().map_err(|e| {
-            super::error::Error::InvalidIdError {
-                item: "notice".to_string(),
-                source: e,
-            }
-        })?;
         let conn = executor.context().db_pool.get().map_err(|e| {
             super::error::Error::DatabasePoolConnectionError {
                 message: e.to_string(),
             }
         })?;
-        let query = schema::notices::dsl::notices
-            .into_boxed()
-            .filter(schema::notices::dsl::id.eq(notice_id));
-        let db_notices = query
-            .load::<DbNotice>(&conn)
-            .map_err(|e| super::error::Error::DatabaseError { source: e })?;
-        if let Some(db_notice) = db_notices.get(0) {
-            let input = get_input_from_db(
-                DbFilterType::EpochAndInputIndex(
-                    db_notice.epoch_index,
-                    db_notice.input_index,
-                ),
-                &conn,
-            )?;
-            Ok(Notice {
-                id: juniper::ID::new(db_notice.id.to_string()),
-                session_id: db_notice.session_id.clone(),
-                index: db_notice.notice_index as i32,
-                input,
-                keccak: db_notice.keccak.clone(),
-                payload: "0x".to_string()
-                    + hex::encode(
-                        db_notice.payload.as_ref().unwrap_or(&Vec::new()),
-                    )
-                    .as_str(),
-            })
-        } else {
-            Err(super::error::Error::ItemNotFound {
-                item_type: "notice".to_string(),
-                id: notice_id.to_string(),
-            }
-            .into())
-        }
+        get_notice(&conn, Some(id), None)
     }
 
     fn report(id: juniper::ID) -> FieldResult<Report> {
-        use crate::database::{schema, DbReport};
-        let report_id = id.parse::<i32>().map_err(|e| {
-            super::error::Error::InvalidIdError {
-                item: "report".to_string(),
-                source: e,
-            }
-        })?;
         let conn = executor.context().db_pool.get().map_err(|e| {
             super::error::Error::DatabasePoolConnectionError {
                 message: e.to_string(),
             }
         })?;
-        let query = schema::reports::dsl::reports
-            .into_boxed()
-            .filter(schema::reports::dsl::id.eq(report_id));
-        let db_reports = query
-            .load::<DbReport>(&conn)
-            .map_err(|e| super::error::Error::DatabaseError { source: e })?;
-        if let Some(db_report) = db_reports.get(0) {
-            let input = get_input_from_db(
-                DbFilterType::EpochAndInputIndex(
-                    db_report.epoch_index,
-                    db_report.input_index,
-                ),
-                &conn,
-            )?;
-            Ok(Report {
-                id: juniper::ID::new(db_report.id.to_string()),
-                index: db_report.report_index as i32,
-                input,
-                // Take the free payload format from the database, may be base64 or something else
-                payload: "0x".to_string()
-                    + hex::encode(
-                        db_report.payload.as_ref().unwrap_or(&Vec::new()),
-                    )
-                    .as_str(),
-            })
-        } else {
-            Err(super::error::Error::ItemNotFound {
-                item_type: "report".to_string(),
-                id: report_id.to_string(),
+
+        get_report(&conn, Some(id), None)
+    }
+
+    fn voucher(id: juniper::ID) -> FieldResult<Voucher> {
+        let conn = executor.context().db_pool.get().map_err(|e| {
+            super::error::Error::DatabasePoolConnectionError {
+                message: e.to_string(),
             }
-            .into())
-        }
+        })?;
+        get_voucher(&conn, Some(id), None)
     }
 
     fn epochs(
@@ -1230,9 +1538,10 @@ impl Query {
         before: Option<String>,
     ) -> FieldResult<EpochConnection> {
         let conn = executor.context().db_pool.get()?;
-        let epochs: Vec<Epoch> = get_epochs(&conn, first, last, after, before)?
-            .into_values()
-            .collect();
+        let epochs: Vec<Epoch> =
+            get_epochs(&conn, Pagination::new(first, last, after, before))?
+                .into_values()
+                .collect();
         // Epoch id and index are correlated and strictly increasing, no
         // need to sort epoch by id
         let edges: Vec<EpochEdge> = epochs
@@ -1268,7 +1577,12 @@ impl Query {
         r#where: Option<InputFilter>,
     ) -> FieldResult<InputConnection> {
         let conn = executor.context().db_pool.get()?;
-        get_inputs(&conn, first, last, after, before, r#where, None)
+        get_inputs(
+            &conn,
+            Pagination::new(first, last, after, before),
+            r#where,
+            None,
+        )
     }
 
     #[graphql(
@@ -1283,7 +1597,13 @@ impl Query {
         r#where: Option<NoticeFilter>,
     ) -> FieldResult<NoticeConnection> {
         let conn = executor.context().db_pool.get()?;
-        get_notices(&conn, first, last, after, before, r#where, None, None)
+        get_notices(
+            &conn,
+            Pagination::new(first, last, after, before),
+            r#where,
+            None,
+            None,
+        )
     }
 
     #[graphql(
@@ -1298,7 +1618,13 @@ impl Query {
         r#where: Option<ReportFilter>,
     ) -> FieldResult<ReportConnection> {
         let conn = executor.context().db_pool.get()?;
-        get_reports(&conn, first, last, after, before, r#where, None, None)
+        get_reports(
+            &conn,
+            Pagination::new(first, last, after, before),
+            r#where,
+            None,
+            None,
+        )
     }
 }
 

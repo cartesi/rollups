@@ -55,6 +55,7 @@ pub struct DbNotice {
     pub input_index: i32,
     pub notice_index: i32,
     // Keep keccak as string in database for easier db manual search
+    // in ethereum hex binary format
     pub keccak: String,
     pub payload: Option<Vec<u8>>,
 }
@@ -83,7 +84,9 @@ pub struct DbVoucher {
     pub epoch_index: i32,
     pub input_index: i32,
     pub voucher_index: i32,
-    pub proof: Option<i32>,
+    pub proof_id: i32,
+    // Keep destination as string in database for easier db manual search,
+    // in ethereum hex binary format
     pub destination: String,
     pub payload: Option<Vec<u8>>,
 }

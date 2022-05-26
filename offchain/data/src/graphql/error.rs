@@ -32,9 +32,6 @@ pub enum Error {
     #[snafu(display("Unable to find {} with id='{}'", item_type, id))]
     ItemNotFound { item_type: String, id: String },
 
-    #[snafu(display("Unable to find {} with index {}", item_type, index))]
-    IndexNotFound { item_type: String, index: i32 },
-
     #[snafu(display(
         "Unable to find input with index={} from epoch index={}",
         index,
@@ -44,6 +41,20 @@ pub enum Error {
 
     #[snafu(display("Unable to find epoch with index={}", index))]
     EpochNotFound { index: i32 },
+
+    #[snafu(display(
+        "Unable to find notice with index={} from epoch index={}",
+        index,
+        epoch_index
+    ))]
+    NoticeNotFound { epoch_index: i32, index: i32 },
+
+    #[snafu(display(
+        "Unable to find report with index={} from epoch index={}",
+        index,
+        epoch_index
+    ))]
+    ReportNotFound { epoch_index: i32, index: i32 },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

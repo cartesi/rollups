@@ -1,3 +1,13 @@
+type Proof {
+  "Hashes given in Ethereum hex binary format (32 bytes), starting with '0x'"
+  outputHashesRootHash: String!
+  vouchersEpochRootHash: String!
+  noticesEpochRootHash: String!
+  machineStateHash: String!
+  keccakInHashesSiblings: [String!]!
+  outputHashesInEpochSiblings: [String!]!
+}
+
 type EpochConnection {
   totalCount: Int!
   edges: [EpochEdge!]!
@@ -16,12 +26,24 @@ type Input {
   reports(first: Int, last: Int, after: String, before: String, where: ReportFilter): ReportConnection!
 }
 
+type Voucher {
+  id: ID!
+  index: Int!
+  input: Input!
+  proof: Proof!
+  "Destination address as an Ethereum hex binary format (20 bytes), starting with '0x'"
+  destination: String!
+  "Payload in Ethereum hex binary format, starting with '0x'"
+  payload: String!
+}
+
 type Query {
   epoch(id: ID!): Epoch!
   epochI(index: Int!): Epoch!
   input(id: ID!): Input!
   notice(id: ID!): Notice!
   report(id: ID!): Report!
+  voucher(id: ID!): Voucher!
   epochs(first: Int, last: Int, after: String, before: String): EpochConnection!
   "Get all available inputs with additional ability to filter and paginate them"
   inputs(first: Int, last: Int, after: String, before: String, where: InputFilter): InputConnection!

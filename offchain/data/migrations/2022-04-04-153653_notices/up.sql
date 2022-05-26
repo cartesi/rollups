@@ -39,8 +39,8 @@ CREATE TABLE "proofs"
     vouchers_epoch_root_hash character varying(255) NOT NULL,
     notices_epoch_root_hash character varying(255) NOT NULL,
     machine_state_hash character varying(255) NOT NULL,
-    keccak_in_hashes_siblings text,
-    output_hashes_in_epoch_siblings text,
+    keccak_in_hashes_siblings text not NULL,
+    output_hashes_in_epoch_siblings text not NULL,
     CONSTRAINT "proofs_pkey" PRIMARY KEY (id)
 );
 
@@ -50,11 +50,11 @@ CREATE TABLE "vouchers"
     epoch_index int NOT NULL,
     input_index int NOT NULL,
     voucher_index int NOT NULL,
-    proof int,
+    proof_id int NOT NULL,
     destination character varying(255) NOT NULL,
     payload bytea,
     CONSTRAINT "vouchers_pkey" PRIMARY KEY (id),
-    CONSTRAINT "vouchers_proof_fkey" FOREIGN KEY (proof) REFERENCES proofs(id) ON DELETE SET NULL
+    CONSTRAINT "vouchers_proof_fkey" FOREIGN KEY (proof_id) REFERENCES proofs(id) ON DELETE SET NULL
 );
 
 CREATE TABLE "reports"

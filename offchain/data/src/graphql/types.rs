@@ -189,6 +189,45 @@ pub struct ReportFilter {
     dummy: String,
 }
 
+#[derive(Debug, Clone)]
+pub struct Proof {
+    pub output_hashes_root_hash: String,
+    pub vouchers_epoch_root_hash: String,
+    pub notices_epoch_root_hash: String,
+    pub machine_state_hash: String,
+    pub keccak_in_hashes_siblings: Vec<String>,
+    pub output_hashes_in_epoch_siblings: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Voucher {
+    pub id: juniper::ID,
+    pub index: i32,
+    pub input: Input,
+    pub proof: Proof,
+    pub destination: String,
+    pub payload: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct VoucherEdge {
+    pub node: Voucher,
+    pub cursor: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct VoucherConnection {
+    pub total_count: i32,
+    pub edges: Vec<VoucherEdge>,
+    pub nodes: Vec<Voucher>,
+    pub page_info: PageInfo,
+}
+
+#[derive(Debug, Clone, GraphQLInputObject)]
+pub struct VoucherFilter {
+    dummy: String,
+}
+
 pub struct Query;
 
 pub type Schema = juniper::RootNode<
