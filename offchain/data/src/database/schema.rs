@@ -11,6 +11,7 @@ table! {
         input_index -> Int4,
         epoch_index -> Int4,
         sender -> Varchar,
+        tx_hash -> Nullable<Varchar>,
         block_number -> Int8,
         payload -> Bytea,
         timestamp -> Timestamp,
@@ -24,6 +25,7 @@ table! {
         epoch_index -> Int4,
         input_index -> Int4,
         notice_index -> Int4,
+        proof_id -> Nullable<Int4>,
         keccak -> Varchar,
         payload -> Nullable<Bytea>,
     }
@@ -36,8 +38,8 @@ table! {
         vouchers_epoch_root_hash -> Varchar,
         notices_epoch_root_hash -> Varchar,
         machine_state_hash -> Varchar,
-        keccak_in_hashes_siblings -> Text,
-        output_hashes_in_epoch_siblings -> Text,
+        keccak_in_hashes_siblings -> Array<Text>,
+        output_hashes_in_epoch_siblings -> Array<Text>,
     }
 }
 
@@ -64,12 +66,13 @@ table! {
         epoch_index -> Int4,
         input_index -> Int4,
         voucher_index -> Int4,
-        proof_id -> Int4,
+        proof_id -> Nullable<Int4>,
         destination -> Varchar,
         payload -> Nullable<Bytea>,
     }
 }
 
+joinable!(notices -> proofs (proof_id));
 joinable!(vouchers -> proofs (proof_id));
 
 allow_tables_to_appear_in_same_query!(

@@ -14,22 +14,11 @@ CREATE TABLE "inputs"
     input_index int NOT NULL,
     epoch_index int NOT NULL,
     sender character varying(255) NOT NULL,
+    tx_hash character varying(255) default NULL,
     block_number bigint NOT NULL,
     payload bytea NOT NULL,
     "timestamp" timestamp NOT NULL,
     CONSTRAINT "inputs_pkey" PRIMARY KEY (id)
-);
-
-CREATE TABLE "notices"
-(
-    id SERIAL,
-    session_id character varying(255) NOT NULL,
-    epoch_index int NOT NULL,
-    input_index int NOT NULL,
-    notice_index int NOT NULL,
-    keccak character varying(255) NOT NULL,
-    payload bytea,
-    CONSTRAINT "notices_pkey" PRIMARY KEY (id)
 );
 
 CREATE TABLE "proofs"
@@ -39,9 +28,23 @@ CREATE TABLE "proofs"
     vouchers_epoch_root_hash character varying(255) NOT NULL,
     notices_epoch_root_hash character varying(255) NOT NULL,
     machine_state_hash character varying(255) NOT NULL,
-    keccak_in_hashes_siblings text not NULL,
-    output_hashes_in_epoch_siblings text not NULL,
+    keccak_in_hashes_siblings text[] not NULL,
+    output_hashes_in_epoch_siblings text[] not NULL,
     CONSTRAINT "proofs_pkey" PRIMARY KEY (id)
+);
+
+CREATE TABLE "notices"
+(
+    id SERIAL,
+    session_id character varying(255) NOT NULL,
+    epoch_index int NOT NULL,
+    input_index int NOT NULL,
+    notice_index int NOT NULL,
+    proof_id int,
+    keccak character varying(255) NOT NULL,
+    payload bytea,
+    CONSTRAINT "notices_pkey" PRIMARY KEY (id),
+    CONSTRAINT "notices_proof_fkey" FOREIGN KEY (proof_id) REFERENCES proofs(id) ON DELETE SET NULL
 );
 
 CREATE TABLE "vouchers"
@@ -50,7 +53,7 @@ CREATE TABLE "vouchers"
     epoch_index int NOT NULL,
     input_index int NOT NULL,
     voucher_index int NOT NULL,
-    proof_id int NOT NULL,
+    proof_id int,
     destination character varying(255) NOT NULL,
     payload bytea,
     CONSTRAINT "vouchers_pkey" PRIMARY KEY (id),

@@ -39,6 +39,7 @@ pub struct DbInput {
     pub input_index: i32,
     pub epoch_index: i32,
     pub sender: String,
+    pub tx_hash: Option<String>,
     pub block_number: i64,
     pub payload: Vec<u8>,
     pub timestamp: chrono::NaiveDateTime,
@@ -54,6 +55,7 @@ pub struct DbNotice {
     pub epoch_index: i32,
     pub input_index: i32,
     pub notice_index: i32,
+    pub proof_id: Option<i32>,
     // Keep keccak as string in database for easier db manual search
     // in ethereum hex binary format
     pub keccak: String,
@@ -71,8 +73,8 @@ pub struct DbProof {
     pub vouchers_epoch_root_hash: String,
     pub notices_epoch_root_hash: String,
     pub machine_state_hash: String,
-    pub keccak_in_hashes_siblings: String,
-    pub output_hashes_in_epoch_siblings: String,
+    pub keccak_in_hashes_siblings: Vec<String>,
+    pub output_hashes_in_epoch_siblings: Vec<String>,
 }
 
 /// Struct representing Voucher in the database
@@ -84,7 +86,7 @@ pub struct DbVoucher {
     pub epoch_index: i32,
     pub input_index: i32,
     pub voucher_index: i32,
-    pub proof_id: i32,
+    pub proof_id: Option<i32>,
     // Keep destination as string in database for easier db manual search,
     // in ethereum hex binary format
     pub destination: String,

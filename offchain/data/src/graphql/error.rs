@@ -55,6 +55,13 @@ pub enum Error {
         epoch_index
     ))]
     ReportNotFound { epoch_index: i32, index: i32 },
+
+    #[snafu(display(
+        "Unable to find voucher with index={} from epoch index={}",
+        index,
+        epoch_index
+    ))]
+    VoucherNotFound { epoch_index: i32, index: i32 },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

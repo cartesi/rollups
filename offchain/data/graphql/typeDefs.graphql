@@ -19,7 +19,18 @@ type Input {
   id: ID!
   index: Int!
   epoch: Epoch!
+  msgSender: String!
+  thHash: String
+  timestamp: BigInt!
   blockNumber: BigInt!
+  "Get voucher from this particular input given the voucher's index"
+  voucher(index: Int!): Voucher!
+  "Get notice from this particular input given the notice's index"
+  notice(index: Int!): Notice!
+  "Get report from this particular input given report's index"
+  report(index: Int!): Report!
+  "Get vouchers from this particular input with additional ability to filter and paginate them"
+  vouchers(first: Int, last: Int, after: String, before: String, where: VoucherFilter): VoucherConnection!
   "Get notices from this particular input with additional ability to filter and paginate them"
   notices(first: Int, last: Int, after: String, before: String, where: NoticeFilter): NoticeConnection!
   "Get reports from this particular input with additional ability to filter and paginate them"
@@ -30,7 +41,7 @@ type Voucher {
   id: ID!
   index: Int!
   input: Input!
-  proof: Proof!
+  proof: Proof
   "Destination address as an Ethereum hex binary format (20 bytes), starting with '0x'"
   destination: String!
   "Payload in Ethereum hex binary format, starting with '0x'"
@@ -47,6 +58,8 @@ type Query {
   epochs(first: Int, last: Int, after: String, before: String): EpochConnection!
   "Get all available inputs with additional ability to filter and paginate them"
   inputs(first: Int, last: Int, after: String, before: String, where: InputFilter): InputConnection!
+  "Get all available vouchers with additional ability to filter and paginate them"
+  vouchers(first: Int, last: Int, after: String, before: String, where: VoucherFilter): VoucherConnection!
   "Get all available notices with additional ability to filter and paginate them"
   notices(first: Int, last: Int, after: String, before: String, where: NoticeFilter): NoticeConnection!
   "Get all available reports with additional ability to filter and paginate them"
@@ -65,9 +78,19 @@ input NoticeFilter {
 type Epoch {
   id: ID!
   index: Int!
+  "Get input from this particular epoch given the input's index"
+  input(index: Int!): Input!
   inputs(first: Int, last: Int, after: String, before: String, where: InputFilter): InputConnection!
+  "Get vouchers from this particular epoch with additional ability to filter and paginate them"
+  vouchers(first: Int, last: Int, after: String, before: String, where: VoucherFilter): VoucherConnection!
+  "Get notices from this particular input with additional ability to filter and paginate them"
+  notices(first: Int, last: Int, after: String, before: String, where: NoticeFilter): NoticeConnection!
   "Get reports from this particular epoch with additional ability to filter and paginate them"
   reports(first: Int, last: Int, after: String, before: String, where: ReportFilter): ReportConnection!
+}
+
+input VoucherFilter {
+  destination: String!
 }
 
 type InputConnection {
@@ -86,10 +109,17 @@ type EpochEdge {
   cursor: String!
 }
 
+type VoucherConnection {
+  totalCount: Int!
+  edges: [VoucherEdge!]!
+  nodes: [Voucher!]!
+  pageInfo: PageInfo!
+}
+
 type Notice {
   id: ID!
   index: Int!
-  sessionId: String!
+  proof: Proof
   input: Input!
   "Keccak in Ethereum hex binary format, starting with '0x'"
   keccak: String!
@@ -110,7 +140,13 @@ type ReportConnection {
 }
 
 input InputFilter {
-  dummy: String!
+  thHash: String
+  msgSender: String
+  blockNumber: BigInt
+  blockNumberLowerThan: BigInt
+  blockNumberGreaterThan: BigInt
+  timestampLowerThan: BigInt
+  timestampGreaterThan: BigInt
 }
 
 scalar BigInt
@@ -122,6 +158,11 @@ type NoticeConnection {
   pageInfo: PageInfo!
 }
 
+type InputEdge {
+  node: Input!
+  cursor: String!
+}
+
 "Connection pattern cursor based pagination page info"
 type PageInfo {
   startCursor: String!
@@ -130,8 +171,8 @@ type PageInfo {
   hasPreviousPage: Boolean!
 }
 
-type InputEdge {
-  node: Input!
+type VoucherEdge {
+  node: Voucher!
   cursor: String!
 }
 

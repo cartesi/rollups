@@ -191,6 +191,7 @@ async fn poll_epoch_status(
                             input_index: input.input_index  as i32,
                             notice_index: nindex as i32,
                             // Encode keccak in hex format, to be able to easily query it in the database
+                            proof_id: None,
                             keccak: hex::encode(
                                 &notice
                                     .keccak
@@ -255,6 +256,7 @@ async fn poll_state(
                 input_index: index as i32,
                 block_number: input.block_number.as_u64() as i64,
                 sender: "0x".to_string() + hex::encode(input.sender).as_str(),
+                tx_hash: None,
                 payload: (*input.payload).clone(),
                 timestamp: chrono::NaiveDateTime::from_timestamp(
                     input.timestamp.low_u64() as i64,

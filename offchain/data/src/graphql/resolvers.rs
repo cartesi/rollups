@@ -83,6 +83,18 @@ impl Epoch {
         self.index
     }
 
+    #[graphql(
+        description = "Get input from this particular epoch given the input's index"
+    )]
+    fn input(&self, index: i32) -> FieldResult<Input> {
+        let conn = executor.context().db_pool.get().map_err(|e| {
+            super::error::Error::DatabasePoolConnectionError {
+                message: e.to_string(),
+            }
+        })?;
+        get_input(&conn, None, Some((self.index, index)))
+    }
+
     fn inputs(
         &self,
         first: Option<i32>,
@@ -97,6 +109,48 @@ impl Epoch {
             Pagination::new(first, last, after, before),
             r#where,
             Some(self.index),
+        )
+    }
+
+    #[graphql(
+        description = "Get vouchers from this particular epoch with additional ability to filter and paginate them"
+    )]
+    fn vouchers(
+        &self,
+        first: Option<i32>,
+        last: Option<i32>,
+        after: Option<String>,
+        before: Option<String>,
+        r#where: Option<VoucherFilter>,
+    ) -> FieldResult<VoucherConnection> {
+        let conn = executor.context().db_pool.get()?;
+        get_vouchers(
+            &conn,
+            Pagination::new(first, last, after, before),
+            r#where,
+            Some(self.index), //epoch index
+            None,
+        )
+    }
+
+    #[graphql(
+        description = "Get notices from this particular input with additional ability to filter and paginate them"
+    )]
+    fn notices(
+        &self,
+        first: Option<i32>,
+        last: Option<i32>,
+        after: Option<String>,
+        before: Option<String>,
+        r#where: Option<NoticeFilter>,
+    ) -> FieldResult<NoticeConnection> {
+        let conn = executor.context().db_pool.get()?;
+        get_notices(
+            &conn,
+            Pagination::new(first, last, after, before),
+            r#where,
+            Some(self.index), //epoch index
+            None,
         )
     }
 
@@ -116,8 +170,8 @@ impl Epoch {
             &conn,
             Pagination::new(first, last, after, before),
             r#where,
+            Some(self.index), //epoch index
             None,
-            Some(self.index),
         )
     }
 }
@@ -361,6 +415,9 @@ fn get_input(
             id: juniper::ID::from(db_input.id.to_string()),
             index: db_input.input_index as i32,
             epoch,
+            msg_sender: db_input.sender.clone(),
+            tx_hash: None,
+            timestamp: db_input.timestamp.timestamp(),
             block_number: db_input.block_number,
         })
     }
@@ -412,6 +469,9 @@ fn get_input_from_db(
             id: juniper::ID::new(db_input.id.to_string()),
             index: db_input.input_index,
             epoch,
+            msg_sender: db_input.sender.clone(),
+            tx_hash: None,
+            timestamp: db_input.timestamp.timestamp(),
             block_number: db_input.block_number,
         })
     } else {
@@ -459,6 +519,9 @@ fn process_db_inputs(
                 Input {
                     id: juniper::ID::from(db_input.id.to_string()),
                     index: db_input.input_index as i32,
+                    msg_sender: db_input.sender,
+                    tx_hash: None,
+                    timestamp: db_input.timestamp.timestamp(),
                     block_number: db_input.block_number,
                     epoch: match epochs.get(&db_input.epoch_index).ok_or_else(
                         || {
@@ -603,12 +666,16 @@ fn process_db_notices(
     > = db_notices
         .into_iter()
         .map(|db_notice| {
+            let proof: Option<Proof> = if let Some(proof_id) = db_notice.proof_id {
+                get_proof_from_db(conn, proof_id).ok()
+            } else {
+                None
+            };
             Ok((
                 db_notice.id,
                 Notice {
                     id: juniper::ID::new(db_notice.id.to_string()),
                     index: db_notice.input_index as i32,
-                    session_id: db_notice.session_id,
                     input: match inputs.get(&(db_notice.epoch_index, db_notice.input_index)).ok_or(Err(
                         super::error::Error::InputNotFound {
                             epoch_index: db_notice.epoch_index,
@@ -622,6 +689,7 @@ fn process_db_notices(
                             return e;
                         }
                     },
+                    proof: proof,
                     keccak: db_notice.keccak, // In ethereum "0x" binary format already
                     // Payload in database is in raw format, make it Ethereum hex binary format again
                     payload: "0x".to_string()
@@ -675,11 +743,16 @@ fn get_notice(
             ),
             conn,
         )?;
+        let proof: Option<Proof> = if let Some(proof_id) = db_notice.proof_id {
+            get_proof_from_db(conn, proof_id).ok()
+        } else {
+            None
+        };
         Ok(Notice {
             id: juniper::ID::new(db_notice.id.to_string()),
-            session_id: db_notice.session_id.clone(),
             index: db_notice.notice_index as i32,
             input,
+            proof,
             keccak: db_notice.keccak.clone(),
             payload: "0x".to_string()
                 + hex::encode(
@@ -711,8 +784,8 @@ fn get_notice(
 fn get_notices_by_cursor(
     conn: &PgConnection,
     pagination: Pagination,
-    input_index: Option<i32>,
     epoch_index: Option<i32>,
+    input_index: Option<i32>,
 ) -> FieldResult<std::collections::BTreeMap<i32, Notice>> {
     use crate::database::schema::notices;
     let mut query = notices::dsl::notices.into_boxed();
@@ -758,11 +831,11 @@ fn get_notices(
     conn: &PgConnection,
     pagination: Pagination,
     r#_where: Option<NoticeFilter>,
-    input_index: Option<i32>,
     epoch_index: Option<i32>,
+    input_index: Option<i32>,
 ) -> FieldResult<NoticeConnection> {
     let notices: Vec<Notice> =
-        get_notices_by_cursor(conn, pagination, input_index, epoch_index)?
+        get_notices_by_cursor(conn, pagination, epoch_index, input_index)?
             .into_values()
             .collect();
 
@@ -785,7 +858,7 @@ fn get_notices(
             .count()
             .get_result::<i64>(conn)? as i32
     } else {
-        // total number of reports
+        // total number of notices
         database::schema::notices::dsl::notices
             .count()
             .get_result::<i64>(conn)? as i32
@@ -931,8 +1004,8 @@ fn get_report(
 fn get_reports_by_cursor(
     conn: &PgConnection,
     pagination: Pagination,
-    input_index: Option<i32>,
     epoch_index: Option<i32>,
+    input_index: Option<i32>,
 ) -> FieldResult<std::collections::BTreeMap<i32, Report>> {
     use crate::database::schema::reports;
     let mut query = reports::dsl::reports.into_boxed();
@@ -978,11 +1051,11 @@ fn get_reports(
     conn: &PgConnection,
     pagination: Pagination,
     r#_where: Option<ReportFilter>,
-    input_index: Option<i32>,
     epoch_index: Option<i32>,
+    input_index: Option<i32>,
 ) -> FieldResult<ReportConnection> {
     let reports: Vec<Report> =
-        get_reports_by_cursor(conn, pagination, input_index, epoch_index)?
+        get_reports_by_cursor(conn, pagination, epoch_index, input_index)?
             .into_values()
             .collect();
 
@@ -1027,11 +1100,6 @@ fn get_reports(
     })
 }
 
-fn process_vector_of_strings(_field: &str) -> Vec<String> {
-    // Parse database string field to vector of strings
-    todo!()
-}
-
 /// Get single input (by id or by index) from database
 fn get_proof_from_db(
     conn: &PgConnection,
@@ -1050,12 +1118,12 @@ fn get_proof_from_db(
             vouchers_epoch_root_hash: db_proof.vouchers_epoch_root_hash.clone(),
             notices_epoch_root_hash: db_proof.notices_epoch_root_hash.clone(),
             machine_state_hash: db_proof.machine_state_hash.clone(),
-            keccak_in_hashes_siblings: process_vector_of_strings(
-                &db_proof.keccak_in_hashes_siblings,
-            ),
-            output_hashes_in_epoch_siblings: process_vector_of_strings(
-                &db_proof.output_hashes_in_epoch_siblings,
-            ),
+            keccak_in_hashes_siblings: db_proof
+                .keccak_in_hashes_siblings
+                .clone(),
+            output_hashes_in_epoch_siblings: db_proof
+                .output_hashes_in_epoch_siblings
+                .clone(),
         })
     } else {
         Err(super::error::Error::ItemNotFound {
@@ -1105,7 +1173,11 @@ fn get_voucher(
             ),
             conn,
         )?;
-        let proof = get_proof_from_db(conn, db_voucher.proof_id)?;
+        let proof: Option<Proof> = if let Some(proof_id) = db_voucher.proof_id {
+            get_proof_from_db(conn, proof_id).ok()
+        } else {
+            None
+        };
         Ok(Voucher {
             id: juniper::ID::new(db_voucher.id.to_string()),
             index: db_voucher.voucher_index as i32,
@@ -1127,7 +1199,7 @@ fn get_voucher(
         }
         .into())
     } else if let Some((epoch_index, notice_index)) = indexes {
-        Err(super::error::Error::NoticeNotFound {
+        Err(super::error::Error::VoucherNotFound {
             epoch_index,
             index: notice_index,
         }
@@ -1136,6 +1208,163 @@ fn get_voucher(
         // Should not get here
         Err(super::error::Error::InvalidParameterError {}.into())
     }
+}
+
+/// Get vouchers from database and return ordered map of <notice id, Voucher>
+fn process_db_vouchers(
+    conn: &PgConnection,
+    db_vouchers: Vec<DbVoucher>,
+) -> FieldResult<std::collections::BTreeMap<i32, Voucher>> {
+    //Get all inputs related to those vouchers
+    let mut input_indexes = std::collections::HashSet::<i32>::new();
+    db_vouchers.iter().for_each(|db_voucher| {
+        input_indexes.insert(db_voucher.input_index);
+    });
+    let inputs =
+        get_inputs_by_indexes(conn, input_indexes.into_iter().collect())?;
+
+    let result: Result<
+        std::collections::BTreeMap<i32, Voucher>,
+        super::error::Error,
+    > = db_vouchers
+        .into_iter()
+        .map(|db_voucher| {
+            let proof: Option<Proof> = if let Some(proof_id) = db_voucher.proof_id {
+                get_proof_from_db(conn, proof_id).ok()
+            } else {
+                None
+            };
+            Ok((
+                db_voucher.id,
+                Voucher {
+                    id: juniper::ID::new(db_voucher.id.to_string()),
+                    index: db_voucher.input_index as i32,
+                    input: match inputs.get(&(db_voucher.epoch_index, db_voucher.input_index)).ok_or(Err(
+                        super::error::Error::InputNotFound {
+                            epoch_index: db_voucher.epoch_index,
+                            index: db_voucher.input_index,
+                        },
+                    )) {
+                        Ok(val) => val.clone(),
+                        Err(e) => {
+                            warn!("Unable to get input index={} from epoch index={} for voucher id={}",
+                                db_voucher.input_index, db_voucher.epoch_index, db_voucher.id );
+                            return e;
+                        }
+                    },
+                    proof,
+                    destination: db_voucher.destination.clone(),
+                    // Payload in database is in raw format, make it Ethereum hex binary format again
+                    payload: "0x".to_string()
+                        + hex::encode(
+                        db_voucher.payload.as_ref().unwrap_or(&Vec::new()),
+                    )
+                        .as_str(),
+                },
+            ))
+        })
+        .collect();
+    result.map_err(|e| e.into())
+}
+
+/// Get vouchers from database and return ordered map of <voucher id, Voucher>
+fn get_vouchers_by_cursor(
+    conn: &PgConnection,
+    pagination: Pagination,
+    epoch_index: Option<i32>,
+    input_index: Option<i32>,
+) -> FieldResult<std::collections::BTreeMap<i32, Voucher>> {
+    use crate::database::schema::vouchers;
+    let mut query = vouchers::dsl::vouchers.into_boxed();
+    let start_pos = if let Some(first) = pagination.first {
+        let first = std::cmp::max(0, first - 1);
+        query = query.offset(first.into());
+        first
+    } else {
+        0
+    };
+    if let Some(last) = pagination.last {
+        query = query.limit((last - start_pos).into());
+        Some(last)
+    } else {
+        None
+    };
+    if let Some(after) = pagination.after {
+        if let Ok(after_i32) = after.parse::<i32>() {
+            query = query.filter(vouchers::dsl::id.gt(after_i32));
+        }
+    };
+    if let Some(before) = pagination.before {
+        if let Ok(before_i32) = before.parse::<i32>() {
+            query = query.filter(vouchers::dsl::id.lt(before_i32));
+        }
+    };
+    if let Some(in_index) = input_index {
+        query = query.filter(
+            crate::database::schema::vouchers::dsl::input_index.eq(in_index),
+        );
+    };
+    if let Some(ep_index) = epoch_index {
+        query = query.filter(
+            crate::database::schema::vouchers::dsl::epoch_index.eq(ep_index),
+        );
+    };
+    query = query.order_by(vouchers::dsl::id.asc());
+    let db_vouchers = query.load::<DbVoucher>(conn)?;
+    process_db_vouchers(conn, db_vouchers)
+}
+
+fn get_vouchers(
+    conn: &PgConnection,
+    pagination: Pagination,
+    r#_where: Option<VoucherFilter>,
+    epoch_index: Option<i32>,
+    input_index: Option<i32>,
+) -> FieldResult<VoucherConnection> {
+    let vouchers: Vec<Voucher> =
+        get_vouchers_by_cursor(conn, pagination, epoch_index, input_index)?
+            .into_values()
+            .collect();
+
+    let total_count = if let Some(input_index) = input_index {
+        // number of vouchers in input
+        database::schema::vouchers::dsl::vouchers
+            .filter(
+                crate::database::schema::vouchers::dsl::input_index
+                    .eq(&input_index),
+            )
+            .count()
+            .get_result::<i64>(conn)? as i32
+    } else if let Some(epoch_index) = epoch_index {
+        // number of vouchers in epoch
+        database::schema::vouchers::dsl::vouchers
+            .filter(
+                crate::database::schema::vouchers::dsl::epoch_index
+                    .eq(&epoch_index),
+            )
+            .count()
+            .get_result::<i64>(conn)? as i32
+    } else {
+        // total number of vouchers
+        database::schema::vouchers::dsl::vouchers
+            .count()
+            .get_result::<i64>(conn)? as i32
+    };
+    let edges: Vec<VoucherEdge> = vouchers
+        .clone()
+        .into_iter()
+        .map(|voucher| VoucherEdge {
+            cursor: voucher.id.to_string(),
+            node: voucher,
+        })
+        .collect();
+    let page_info = calculate_page_info(&edges, total_count);
+    Ok(VoucherConnection {
+        page_info,
+        total_count: total_count as i32,
+        edges,
+        nodes: vouchers,
+    })
 }
 
 /// Calculate pagination info structure based on edges list
@@ -1184,8 +1413,77 @@ impl Input {
         &self.epoch
     }
 
+    fn msg_sender(&self) -> &str {
+        self.msg_sender.as_str()
+    }
+
+    fn th_hash(&self) -> &Option<String> {
+        &self.tx_hash
+    }
+
+    fn timestamp(&self) -> &i64 {
+        &self.timestamp
+    }
+
     fn block_number(&self) -> &i64 {
         &self.block_number
+    }
+
+    #[graphql(
+        description = "Get voucher from this particular input given the voucher's index"
+    )]
+    fn voucher(index: i32) -> FieldResult<Voucher> {
+        let conn = executor.context().db_pool.get().map_err(|e| {
+            super::error::Error::DatabasePoolConnectionError {
+                message: e.to_string(),
+            }
+        })?;
+        get_voucher(&conn, None, Some((self.epoch.index, index)))
+    }
+
+    #[graphql(
+        description = "Get notice from this particular input given the notice's index"
+    )]
+    fn notice(index: i32) -> FieldResult<Notice> {
+        let conn = executor.context().db_pool.get().map_err(|e| {
+            super::error::Error::DatabasePoolConnectionError {
+                message: e.to_string(),
+            }
+        })?;
+        get_notice(&conn, None, Some((self.epoch.index, index)))
+    }
+
+    #[graphql(
+        description = "Get report from this particular input given report's index"
+    )]
+    fn report(index: i32) -> FieldResult<Report> {
+        let conn = executor.context().db_pool.get().map_err(|e| {
+            super::error::Error::DatabasePoolConnectionError {
+                message: e.to_string(),
+            }
+        })?;
+        get_report(&conn, None, Some((self.epoch.index, index)))
+    }
+
+    #[graphql(
+        description = "Get vouchers from this particular input with additional ability to filter and paginate them"
+    )]
+    fn vouchers(
+        &self,
+        first: Option<i32>,
+        last: Option<i32>,
+        after: Option<String>,
+        before: Option<String>,
+        r#where: Option<VoucherFilter>,
+    ) -> FieldResult<VoucherConnection> {
+        let conn = executor.context().db_pool.get()?;
+        get_vouchers(
+            &conn,
+            Pagination::new(first, last, after, before),
+            r#where,
+            Some(self.epoch.index),
+            Some(self.index),
+        )
     }
 
     #[graphql(
@@ -1204,8 +1502,8 @@ impl Input {
             &conn,
             Pagination::new(first, last, after, before),
             r#where,
-            Some(self.index),
             Some(self.epoch.index),
+            Some(self.index),
         )
     }
 
@@ -1225,8 +1523,8 @@ impl Input {
             &conn,
             Pagination::new(first, last, after, before),
             r#where,
-            Some(self.index),
             Some(self.epoch.index),
+            Some(self.index),
         )
     }
 }
@@ -1272,8 +1570,8 @@ impl Notice {
         self.index
     }
 
-    fn session_id(&self) -> &str {
-        self.session_id.as_str()
+    fn proof(&self) -> &Option<Proof> {
+        &self.proof
     }
 
     fn input(&self) -> &Input {
@@ -1423,7 +1721,7 @@ impl Voucher {
         &self.input
     }
 
-    fn proof(&self) -> &Proof {
+    fn proof(&self) -> &Option<Proof> {
         &self.proof
     }
 
@@ -1581,6 +1879,27 @@ impl Query {
             &conn,
             Pagination::new(first, last, after, before),
             r#where,
+            None,
+        )
+    }
+
+    #[graphql(
+        description = "Get all available vouchers with additional ability to filter and paginate them"
+    )]
+    fn vouchers(
+        &self,
+        first: Option<i32>,
+        last: Option<i32>,
+        after: Option<String>,
+        before: Option<String>,
+        r#where: Option<VoucherFilter>,
+    ) -> FieldResult<VoucherConnection> {
+        let conn = executor.context().db_pool.get()?;
+        get_vouchers(
+            &conn,
+            Pagination::new(first, last, after, before),
+            r#where,
+            None,
             None,
         )
     }

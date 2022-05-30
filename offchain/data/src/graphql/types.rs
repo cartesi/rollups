@@ -104,6 +104,9 @@ pub struct Input {
     pub(super) id: juniper::ID,
     pub(super) index: i32,
     pub(super) epoch: Epoch,
+    pub(super) msg_sender: String,
+    pub(super) tx_hash: Option<String>,
+    pub(super) timestamp: i64,
     pub(super) block_number: i64,
 }
 
@@ -124,18 +127,24 @@ pub struct InputConnection {
 }
 
 #[derive(Debug, Clone, GraphQLInputObject)]
+#[graphql(scalar = RollupsGraphQLScalarValue)]
 pub struct InputFilter {
-    dummy: String,
+    th_hash: Option<String>,
+    msg_sender: Option<String>,
+    block_number: Option<i64>,
+    block_number_lower_than: Option<i64>,
+    block_number_greater_than: Option<i64>,
+    timestamp_lower_than: Option<i64>,
+    timestamp_greater_than: Option<i64>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Notice {
     pub id: juniper::ID,
     pub index: i32,
-    pub session_id: String,
     pub input: Input,
+    pub proof: Option<Proof>,
     pub keccak: String,
-
     pub payload: String,
 }
 
@@ -204,7 +213,7 @@ pub struct Voucher {
     pub id: juniper::ID,
     pub index: i32,
     pub input: Input,
-    pub proof: Proof,
+    pub proof: Option<Proof>,
     pub destination: String,
     pub payload: String,
 }
@@ -225,7 +234,7 @@ pub struct VoucherConnection {
 
 #[derive(Debug, Clone, GraphQLInputObject)]
 pub struct VoucherFilter {
-    dummy: String,
+    destination: String,
 }
 
 pub struct Query;
