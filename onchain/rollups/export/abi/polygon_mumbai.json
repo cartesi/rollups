@@ -3,7 +3,7 @@
   "chainId": "80001",
   "contracts": {
     "Bank": {
-      "address": "0xc6956323f9AC641e2e9ee1F70766efec43aB8CEC",
+      "address": "0xb1e1eb803CE016b62821FBf683c93E827C3089B1",
       "abi": [
         {
           "inputs": [
@@ -136,6 +136,246 @@
         }
       ]
     },
+    "CartesiDAppFactory": {
+      "address": "0x6381a2879919AC66a30b9Cd194828dB544e1D93C",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "components": [
+                {
+                  "internalType": "contract IDiamondCut",
+                  "name": "diamondCutFacet",
+                  "type": "address"
+                },
+                {
+                  "internalType": "contract DiamondInit",
+                  "name": "diamondInit",
+                  "type": "address"
+                },
+                {
+                  "internalType": "contract IBank",
+                  "name": "feeManagerBank",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "address",
+                      "name": "facetAddress",
+                      "type": "address"
+                    },
+                    {
+                      "internalType": "enum IDiamondCut.FacetCutAction",
+                      "name": "action",
+                      "type": "uint8"
+                    },
+                    {
+                      "internalType": "bytes4[]",
+                      "name": "functionSelectors",
+                      "type": "bytes4[]"
+                    }
+                  ],
+                  "internalType": "struct IDiamondCut.FacetCut[]",
+                  "name": "diamondCut",
+                  "type": "tuple[]"
+                }
+              ],
+              "internalType": "struct CartesiDAppFactory.FactoryConfig",
+              "name": "_fConfig",
+              "type": "tuple"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "contract CartesiDApp",
+              "name": "application",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "diamondOwner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "templateHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "inputDuration",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "challengePeriod",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "inputLog2Size",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "feePerClaim",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "feeManagerOwner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address payable[]",
+                  "name": "validators",
+                  "type": "address[]"
+                }
+              ],
+              "indexed": false,
+              "internalType": "struct ICartesiDAppFactory.AppConfig",
+              "name": "config",
+              "type": "tuple"
+            }
+          ],
+          "name": "ApplicationCreated",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "name": "diamondCut",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "facetAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "enum IDiamondCut.FacetCutAction",
+              "name": "action",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "diamondCutFacet",
+          "outputs": [
+            {
+              "internalType": "contract IDiamondCut",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "diamondInit",
+          "outputs": [
+            {
+              "internalType": "contract DiamondInit",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "feeManagerBank",
+          "outputs": [
+            {
+              "internalType": "contract IBank",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "diamondOwner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "templateHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "inputDuration",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "challengePeriod",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "inputLog2Size",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "feePerClaim",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "feeManagerOwner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address payable[]",
+                  "name": "validators",
+                  "type": "address[]"
+                }
+              ],
+              "internalType": "struct ICartesiDAppFactory.AppConfig",
+              "name": "_appConfig",
+              "type": "tuple"
+            }
+          ],
+          "name": "newApplication",
+          "outputs": [
+            {
+              "internalType": "contract CartesiDApp",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+    },
     "DiamondCutFacet": {
       "address": "0x0E31192c81d9C6D5c5B1561e09FC5a3EBD3f88Ca",
       "abi": [
@@ -224,7 +464,7 @@
       ]
     },
     "DiamondInit": {
-      "address": "0xc2e23F01f5685E35D83Cf104Cf2F0CAE1E64Fb1F",
+      "address": "0xe85096B74DEE4e4EbF86F263928bB316115aD555",
       "abi": [
         {
           "anonymous": false,
@@ -273,44 +513,51 @@
         {
           "inputs": [
             {
-              "internalType": "bytes32",
-              "name": "_templateHash",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_inputDuration",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_challengePeriod",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_inputLog2Size",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_feePerClaim",
-              "type": "uint256"
-            },
-            {
-              "internalType": "address",
-              "name": "_feeManagerBank",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_feeManagerOwner",
-              "type": "address"
-            },
-            {
-              "internalType": "address payable[]",
-              "name": "_validators",
-              "type": "address[]"
+              "components": [
+                {
+                  "internalType": "bytes32",
+                  "name": "templateHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "inputDuration",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "challengePeriod",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "inputLog2Size",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "feePerClaim",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "feeManagerBank",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "feeManagerOwner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address payable[]",
+                  "name": "validators",
+                  "type": "address[]"
+                }
+              ],
+              "internalType": "struct DiamondConfig",
+              "name": "_dConfig",
+              "type": "tuple"
             }
           ],
           "name": "init",
@@ -421,7 +668,7 @@
       ]
     },
     "ERC20PortalFacet": {
-      "address": "0xc7B997bAa864991214b45Fc933DE1421465930BE",
+      "address": "0xEB210376951EBc154361d205CAb80a6eBcC4a756",
       "abi": [
         {
           "anonymous": false,
@@ -455,31 +702,6 @@
           "type": "event"
         },
         {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": false,
-              "internalType": "address",
-              "name": "ERC20",
-              "type": "address"
-            },
-            {
-              "indexed": false,
-              "internalType": "address payable",
-              "name": "receiver",
-              "type": "address"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "amount",
-              "type": "uint256"
-            }
-          ],
-          "name": "ERC20Withdrawn",
-          "type": "event"
-        },
-        {
           "inputs": [
             {
               "internalType": "address",
@@ -507,30 +729,11 @@
           ],
           "stateMutability": "nonpayable",
           "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "bytes",
-              "name": "_data",
-              "type": "bytes"
-            }
-          ],
-          "name": "erc20Withdrawal",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
         }
       ]
     },
     "ERC721PortalFacet": {
-      "address": "0x0225d5D1A14A1D5DA4ac39A639c2691C8FBa9770",
+      "address": "0x6afbB2cdd255Ea130a0B0cF52408610AA3438123",
       "abi": [
         {
           "anonymous": false,
@@ -539,6 +742,12 @@
               "indexed": false,
               "internalType": "address",
               "name": "ERC721",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "operator",
               "type": "address"
             },
             {
@@ -560,7 +769,7 @@
               "type": "bytes"
             }
           ],
-          "name": "ERC721Deposited",
+          "name": "ERC721Received",
           "type": "event"
         },
         {
@@ -591,35 +800,6 @@
         {
           "inputs": [
             {
-              "internalType": "address",
-              "name": "_ERC721",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_tokenId",
-              "type": "uint256"
-            },
-            {
-              "internalType": "bytes",
-              "name": "_data",
-              "type": "bytes"
-            }
-          ],
-          "name": "erc721Deposit",
-          "outputs": [
-            {
-              "internalType": "bytes32",
-              "name": "",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
               "internalType": "bytes",
               "name": "_data",
               "type": "bytes"
@@ -640,22 +820,22 @@
           "inputs": [
             {
               "internalType": "address",
-              "name": "",
+              "name": "_operator",
               "type": "address"
             },
             {
               "internalType": "address",
-              "name": "",
+              "name": "_from",
               "type": "address"
             },
             {
               "internalType": "uint256",
-              "name": "",
+              "name": "_tokenId",
               "type": "uint256"
             },
             {
               "internalType": "bytes",
-              "name": "",
+              "name": "_data",
               "type": "bytes"
             }
           ],
@@ -667,13 +847,13 @@
               "type": "bytes4"
             }
           ],
-          "stateMutability": "pure",
+          "stateMutability": "nonpayable",
           "type": "function"
         }
       ]
     },
     "EtherPortalFacet": {
-      "address": "0x4D95d9d9206A5Ede945c1354C182E4F2F7965aFF",
+      "address": "0xb79960e28819fE97ECF9F951344fbc325b9E17CA",
       "abi": [
         {
           "anonymous": false,
@@ -760,7 +940,7 @@
       ]
     },
     "FeeManagerFacet": {
-      "address": "0x37bfB532D44C4Cc1C8aea8e12a19555D37F16967",
+      "address": "0x55578d2098Fd079946FdB6f985Df712a51626441",
       "abi": [
         {
           "anonymous": false,
@@ -874,7 +1054,7 @@
       ]
     },
     "InputFacet": {
-      "address": "0xb306aBAe70EaAb1DF913c7a6226910f1126E2b0c",
+      "address": "0x0323CA7f7733cEd032BB8fbbA46Ef97e58a7C411",
       "abi": [
         {
           "anonymous": false,
@@ -980,258 +1160,8 @@
       ]
     },
     "LibClaimsMask": {
-      "address": "0xdfE71bbad0ce232131dcc9e42e131ADD57ff3998",
-      "abi": [
-        {
-          "inputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "_claimsMask",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_validatorIndex",
-              "type": "uint256"
-            }
-          ],
-          "name": "alreadyClaimed",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "_claimsMask",
-              "type": "uint256"
-            }
-          ],
-          "name": "clearAgreementMask",
-          "outputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "_claimsMask",
-              "type": "uint256"
-            }
-          ],
-          "name": "getAgreementMask",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "_claimsMask",
-              "type": "uint256"
-            }
-          ],
-          "name": "getConsensusGoalMask",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "_claimsMask",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_validatorIndex",
-              "type": "uint256"
-            }
-          ],
-          "name": "getNumClaims",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "_claimsMask",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_validatorIndex",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_value",
-              "type": "uint256"
-            }
-          ],
-          "name": "increaseNumClaims",
-          "outputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint256",
-              "name": "_value",
-              "type": "uint256"
-            }
-          ],
-          "name": "newClaimsMask",
-          "outputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint256",
-              "name": "_numValidators",
-              "type": "uint256"
-            }
-          ],
-          "name": "newClaimsMaskWithConsensusGoalSet",
-          "outputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "_claimsMask",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_validatorIndex",
-              "type": "uint256"
-            }
-          ],
-          "name": "removeValidator",
-          "outputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "_claimsMask",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_validatorIndex",
-              "type": "uint256"
-            }
-          ],
-          "name": "setAgreementMask",
-          "outputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "_claimsMask",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_validatorIndex",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_value",
-              "type": "uint256"
-            }
-          ],
-          "name": "setNumClaims",
-          "outputs": [
-            {
-              "internalType": "ClaimsMask",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        }
-      ]
+      "address": "0x29B33E43Bed18B6f3cA2913d074FeAc5f14d3185",
+      "abi": []
     },
     "LibDiamond": {
       "address": "0x077a6dcFCFc0B24b9ac14cEe439470c96580Db36",
@@ -1300,11 +1230,11 @@
       ]
     },
     "LibDisputeManager": {
-      "address": "0xf43F15C9d99c68fED3b88C62432F5545d19cb5be",
+      "address": "0x345fA4EBDbB15F4Ec40C3097d4ec521044cD5a56",
       "abi": []
     },
     "LibFeeManager": {
-      "address": "0x3765E7820F1B9379e5CC16D2F697E23411300E0c",
+      "address": "0x4A468057d99dC4B2364B87Fcf31023eE69E1bFC5",
       "abi": [
         {
           "anonymous": false,
@@ -1341,7 +1271,7 @@
       ]
     },
     "LibInput": {
-      "address": "0xca61F1C51A347a9248fb8687973673bd3F24cCe3",
+      "address": "0xE1B9c48ECC4D98865AD991775E886496D8De8651",
       "abi": [
         {
           "anonymous": false,
@@ -1387,7 +1317,7 @@
       "abi": []
     },
     "LibRollups": {
-      "address": "0x75d0540048d86cf8798313B215cDBF9277239913",
+      "address": "0x75d93c94e46f3FAE92f78c3B9FD51F2DBCC51a6A",
       "abi": [
         {
           "anonymous": false,
@@ -1449,7 +1379,7 @@
       ]
     },
     "LibValidatorManager": {
-      "address": "0xE5239bAcB1d146ac0A00832C68d80E9f9BAe346C",
+      "address": "0xbEF95E6fE7720851b6Db5294369CE8De058d69e8",
       "abi": [
         {
           "anonymous": false,
@@ -1517,7 +1447,7 @@
       ]
     },
     "OutputFacet": {
-      "address": "0xc07948989C64fa5CcdA1d1dc90002A3cB50eB61a",
+      "address": "0xF5f0f051E213b438B6602D18cb84948B76F73781",
       "abi": [
         {
           "anonymous": false,
@@ -1792,13 +1722,7 @@
             }
           ],
           "name": "isValidNoticeProof",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
+          "outputs": [],
           "stateMutability": "pure",
           "type": "function"
         },
@@ -1868,13 +1792,7 @@
             }
           ],
           "name": "isValidVoucherProof",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
+          "outputs": [],
           "stateMutability": "pure",
           "type": "function"
         }
@@ -1931,7 +1849,7 @@
       ]
     },
     "RollupsFacet": {
-      "address": "0x0d581944a934F33F4797E5040c7Fb7173ec093A2",
+      "address": "0x4C5C0Dc309FDBC5EcE674897E1DF70cB8aF49c51",
       "abi": [
         {
           "anonymous": false,
@@ -2129,7 +2047,7 @@
       ]
     },
     "ValidatorManagerFacet": {
-      "address": "0x22baF2A180B24E0eee1C06a02776A0964dAfDc20",
+      "address": "0xCF9d0ee322f3ACF4fB5F324128097268A7c8caF0",
       "abi": [
         {
           "anonymous": false,
