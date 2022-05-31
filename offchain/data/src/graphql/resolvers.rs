@@ -416,7 +416,6 @@ fn get_input(
             index: db_input.input_index as i32,
             epoch,
             msg_sender: db_input.sender.clone(),
-            tx_hash: None,
             timestamp: db_input.timestamp.timestamp(),
             block_number: db_input.block_number,
         })
@@ -470,7 +469,6 @@ fn get_input_from_db(
             index: db_input.input_index,
             epoch,
             msg_sender: db_input.sender.clone(),
-            tx_hash: None,
             timestamp: db_input.timestamp.timestamp(),
             block_number: db_input.block_number,
         })
@@ -520,7 +518,6 @@ fn process_db_inputs(
                     id: juniper::ID::from(db_input.id.to_string()),
                     index: db_input.input_index as i32,
                     msg_sender: db_input.sender,
-                    tx_hash: None,
                     timestamp: db_input.timestamp.timestamp(),
                     block_number: db_input.block_number,
                     epoch: match epochs.get(&db_input.epoch_index).ok_or_else(
@@ -1415,10 +1412,6 @@ impl Input {
 
     fn msg_sender(&self) -> &str {
         self.msg_sender.as_str()
-    }
-
-    fn th_hash(&self) -> &Option<String> {
-        &self.tx_hash
     }
 
     fn timestamp(&self) -> &i64 {

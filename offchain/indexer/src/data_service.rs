@@ -19,7 +19,9 @@ use ethers::core::types::{Address, U256};
 use offchain::fold::types::{
     AccumulatingEpoch, EpochWithClaims, Input, PhaseState, RollupsState,
 };
-use rollups_data::database::{DbInput, DbNotice, DbReport, Message};
+use rollups_data::database::{
+    DbInput, DbNotice, DbProof, DbReport, DbVoucher, Message,
+};
 use snafu::ResultExt;
 use state_fold::types::BlockState;
 use std::ops::Add;
@@ -178,13 +180,122 @@ async fn poll_epoch_status(
                         // Send one voucher to database service
                         trace!("Poll epoch status: sending voucher with session id {}, epoch_index {} input_index {} voucher_index {} voucher {:?}",
                                 session_id, epoch_index, input.input_index, &vindex, voucher);
+
+                        // Construct and send notice proof
+                        let proof = DbProof {
+                            id: 0,
+                            machine_state_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                .most_recent_machine_hash
+                                .as_ref()
+                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                .data,
+                            ).as_str(),
+                            vouchers_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                .most_recent_vouchers_epoch_root_hash
+                                .as_ref()
+                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                .data,
+                            ).as_str(),
+                            notices_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                .most_recent_notices_epoch_root_hash
+                                .as_ref()
+                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                .data,
+                            ).as_str(),
+                            output_hashes_root_hash:  "0x".to_string() + hex::encode(&voucher.keccak_in_voucher_hashes
+                                .as_ref()
+                                .unwrap_or(&Default::default())
+                                .root_hash
+                                .as_ref()
+                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                .data,
+                            ).as_str(),
+                            keccak_in_hashes_siblings: voucher.keccak_in_voucher_hashes
+                                .as_ref()
+                                .unwrap_or(&Default::default())
+                                .sibling_hashes
+                                .iter()
+                                .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect(),
+                            output_hashes_in_epoch_siblings:    input.voucher_hashes_in_epoch
+                                .as_ref()
+                                .unwrap_or(&Default::default())
+                                .sibling_hashes
+                                .iter()
+                                .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect()
+                        };
+
+                        // Send voucher to db service
+                        if let Err(e) = message_tx.send(Message::Voucher(proof, DbVoucher {
+                            id: 0,
+                            epoch_index: epoch_index as i32,
+                            input_index: input.input_index  as i32,
+                            voucher_index: vindex as i32,
+                            proof_id: None,
+                            // Encode destination in hex format, to be able to easily query it in the database
+                            destination:  "0x".to_string() + hex::encode(
+                                &voucher
+                                    .address
+                                    .as_ref()
+                                    .unwrap_or(&cartesi_server_manager::Address { data: vec![] })
+                                    .data,
+                            ).as_str(),
+                            // Payload is in raw format
+                            payload: Some(voucher.payload.clone())
+                        })).await {
+                            error!("Poll epoch status: error passing voucher message to db {}", e.to_string())
+                        }
                     }
                     // Process notices
                     for (nindex, notice) in input_result.notices.iter().enumerate() {
                         // Send one notice to database service
                         trace!("Poll epoch status: sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
                                 session_id, epoch_index, input.input_index, &nindex);
-                        if let Err(e) = message_tx.send(Message::Notice(DbNotice {
+
+                        // Construct and send notice proof
+                        let proof = DbProof {
+                            id: 0,
+                            machine_state_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                .most_recent_machine_hash
+                                .as_ref()
+                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                .data,
+                                ).as_str(),
+                            vouchers_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                .most_recent_vouchers_epoch_root_hash
+                                .as_ref()
+                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                .data,
+                            ).as_str(),
+                            notices_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                .most_recent_notices_epoch_root_hash
+                                .as_ref()
+                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                .data,
+                            ).as_str(),
+                            output_hashes_root_hash:  "0x".to_string() + hex::encode(&notice.keccak_in_notice_hashes
+                                .as_ref()
+                                .unwrap_or(&Default::default())
+                                .root_hash
+                                .as_ref()
+                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                .data,
+                            ).as_str(),
+                            keccak_in_hashes_siblings: notice.keccak_in_notice_hashes
+                                .as_ref()
+                                .unwrap_or(&Default::default())
+                                .sibling_hashes
+                                .iter()
+                                .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect(),
+                            output_hashes_in_epoch_siblings:    input.notice_hashes_in_epoch
+                                .as_ref()
+                                .unwrap_or(&Default::default())
+                                .sibling_hashes
+                                .iter()
+                                .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect()
+                        };
+
+                        // Send notice to db service
+                        if let Err(e) = message_tx.send(Message::Notice(proof, DbNotice {
                             id: 0,
                             session_id: session_id.to_string(),
                             epoch_index: epoch_index as i32,
@@ -192,13 +303,13 @@ async fn poll_epoch_status(
                             notice_index: nindex as i32,
                             // Encode keccak in hex format, to be able to easily query it in the database
                             proof_id: None,
-                            keccak: hex::encode(
+                            keccak:  "0x".to_string() + hex::encode(
                                 &notice
                                     .keccak
                                     .as_ref()
                                     .unwrap_or(&cartesi_machine::Hash { data: vec![] })
                                     .data,
-                            ),
+                            ).as_str(),
                             // Payload is in raw format
                             payload: Some(notice.payload.clone())
                         })).await {

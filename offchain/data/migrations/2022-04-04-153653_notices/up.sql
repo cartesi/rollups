@@ -80,5 +80,6 @@ CREATE TABLE "state"
 );
 
 insert into "state" ("name", "value_i32") values ('current_notice_epoch_index', 0);
+insert into "state" ("name", "value_i32") values ('current_voucher_epoch_index', 0);
 insert into "state" ("name", "value_i32") values ('current_report_epoch_index', 0);
 insert into "state" ("name", "value_i32") values ('current_input_epoch_index', 0);

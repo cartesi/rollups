@@ -20,7 +20,6 @@ type Input {
   index: Int!
   epoch: Epoch!
   msgSender: String!
-  thHash: String
   timestamp: BigInt!
   blockNumber: BigInt!
   "Get voucher from this particular input given the voucher's index"
@@ -140,7 +139,6 @@ type ReportConnection {
 }
 
 input InputFilter {
-  thHash: String
   msgSender: String
   blockNumber: BigInt
   blockNumberLowerThan: BigInt

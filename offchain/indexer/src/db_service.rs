@@ -15,7 +15,9 @@
 use crate::config::IndexerConfig;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use rollups_data::database::{schema, DbInput, DbNotice, DbReport, Message};
+use rollups_data::database::{
+    schema, DbInput, DbNotice, DbProof, DbReport, DbVoucher, Message,
+};
 use snafu::ResultExt;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, trace, warn};
@@ -35,6 +37,7 @@ pub enum EpochIndexType {
     Notice,
     Input,
     Report,
+    Voucher,
 }
 
 /// Update current epoch index if smaller than db stored epoch index
@@ -49,6 +52,9 @@ fn update_current_epoch_index(
     let field = match epoch_index_type {
         EpochIndexType::Notice => {
             rollups_data::database::CURRENT_NOTICE_EPOCH_INDEX
+        }
+        EpochIndexType::Voucher => {
+            rollups_data::database::CURRENT_VOUCHER_EPOCH_INDEX
         }
         EpochIndexType::Report => {
             rollups_data::database::CURRENT_REPORT_EPOCH_INDEX
@@ -76,11 +82,115 @@ fn update_current_epoch_index(
     }
 }
 
+/// Insert proof to database if it does not exist
+fn insert_proof(
+    db_proof: &DbProof,
+    conn: &PgConnection,
+) -> Result<Option<i32>, crate::error::Error> {
+    use schema::proofs::dsl::*;
+    // Check if proof is already in database
+    if proofs
+        .filter(output_hashes_root_hash.eq(&db_proof.output_hashes_root_hash))
+        .filter(vouchers_epoch_root_hash.eq(&db_proof.vouchers_epoch_root_hash))
+        .filter(notices_epoch_root_hash.eq(&db_proof.notices_epoch_root_hash))
+        .filter(machine_state_hash.eq(&db_proof.machine_state_hash))
+        .filter(
+            keccak_in_hashes_siblings.eq(&db_proof.keccak_in_hashes_siblings),
+        )
+        .filter(
+            output_hashes_in_epoch_siblings
+                .eq(&db_proof.output_hashes_in_epoch_siblings),
+        )
+        .count()
+        .get_result::<i64>(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })?
+        > 0
+    {
+        // Proof already in the database, skip insert, get proof id
+        let proof_id = proofs
+            .filter(
+                output_hashes_root_hash.eq(&db_proof.output_hashes_root_hash),
+            )
+            .filter(
+                vouchers_epoch_root_hash.eq(&db_proof.vouchers_epoch_root_hash),
+            )
+            .filter(
+                notices_epoch_root_hash.eq(&db_proof.notices_epoch_root_hash),
+            )
+            .filter(machine_state_hash.eq(&db_proof.machine_state_hash))
+            .filter(
+                keccak_in_hashes_siblings
+                    .eq(&db_proof.keccak_in_hashes_siblings),
+            )
+            .filter(
+                output_hashes_in_epoch_siblings
+                    .eq(&db_proof.output_hashes_in_epoch_siblings),
+            )
+            .select(id)
+            .get_result::<i32>(conn)
+            .map_err(|e| crate::error::Error::DieselError { source: e })?;
+        info!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {}  already in the database with id={}",
+                db_proof.output_hashes_root_hash, db_proof.vouchers_epoch_root_hash, db_proof.notices_epoch_root_hash, db_proof.machine_state_hash, proof_id);
+        return Ok(Some(proof_id));
+    }
+
+    // Write notice to database
+    // Id field is auto incremented in table on insert
+    match diesel::insert_into(proofs)
+        .values((
+            output_hashes_root_hash.eq(&db_proof.output_hashes_root_hash),
+            vouchers_epoch_root_hash.eq(&db_proof.vouchers_epoch_root_hash),
+            notices_epoch_root_hash.eq(&db_proof.notices_epoch_root_hash),
+            machine_state_hash.eq(&db_proof.machine_state_hash),
+            keccak_in_hashes_siblings.eq(&db_proof.keccak_in_hashes_siblings),
+            output_hashes_in_epoch_siblings
+                .eq(&db_proof.output_hashes_in_epoch_siblings),
+        ))
+        .get_result::<DbProof>(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })
+    {
+        Ok(proof) => {
+            info!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} inserted to database, new id ={}",
+                db_proof.output_hashes_root_hash, db_proof.vouchers_epoch_root_hash, db_proof.notices_epoch_root_hash, db_proof.machine_state_hash, proof.id);
+            Ok(Some(proof.id))
+        }
+        Err(e) => {
+            error!("Failed to write proof to db, details: {}", e.to_string());
+            Err(e)
+        }
+    }
+}
+
+/// Update notice in the database
+fn update_notice(
+    db_notice: &DbNotice,
+    conn: &PgConnection,
+) -> Result<(), crate::error::Error> {
+    use schema::notices::dsl::*;
+    let changed_rows = diesel::update(notices.filter(id.eq(&db_notice.id)))
+        .set((
+            session_id.eq(&db_notice.session_id),
+            epoch_index.eq(db_notice.epoch_index),
+            input_index.eq(&db_notice.input_index),
+            notice_index.eq(&db_notice.notice_index),
+            proof_id.eq(&db_notice.proof_id),
+            keccak.eq(&db_notice.keccak),
+            payload.eq(&db_notice.payload),
+        ))
+        .execute(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })?;
+    info!(
+        "Notice with id {} updated, number of affected records {}",
+        db_notice.id, changed_rows
+    );
+    Ok(())
+}
+
 /// Insert notice to database if it does not exist
 fn insert_notice(
     db_notice: &DbNotice,
     conn: &PgConnection,
-) -> Result<(), crate::error::Error> {
+) -> Result<Option<i32>, crate::error::Error> {
     use schema::notices::dsl::*;
     // Check if notice is already in database
     if notices
@@ -96,7 +206,7 @@ fn insert_notice(
         // Notice already in the database, skip insert
         trace!("Notice session_id {} epoch_index {} input_index {} notice_index {}  already in the database",
                 db_notice.session_id, db_notice.epoch_index, db_notice.input_index, db_notice.notice_index);
-        return Ok(());
+        return Ok(None);
     }
 
     // Write notice to database
@@ -107,19 +217,89 @@ fn insert_notice(
             epoch_index.eq(&db_notice.epoch_index),
             input_index.eq(&db_notice.input_index),
             notice_index.eq(&db_notice.notice_index),
+            proof_id.eq(&db_notice.proof_id),
             keccak.eq(&db_notice.keccak),
             payload.eq(&db_notice.payload),
         ))
-        .execute(conn)
+        .get_result::<DbNotice>(conn)
         .map_err(|e| crate::error::Error::DieselError { source: e })
     {
-        Ok(_) => {
-            trace!("Notice session_id {} epoch_index {} input_index {} notice_index {}  written successfully to db",
-                db_notice.session_id, db_notice.epoch_index, db_notice.input_index, db_notice.notice_index);
-            Ok(())
+        Ok(notice) => {
+            info!("Notice session_id {} epoch_index {} input_index {} notice_index {} written successfully to, assigned id={}",
+                db_notice.session_id, db_notice.epoch_index, db_notice.input_index, db_notice.notice_index, notice.id);
+            Ok(Some(notice.id))
         }
         Err(e) => {
             error!("Failed to write notice to db, details: {}", e.to_string());
+            Err(e)
+        }
+    }
+}
+
+/// Update notice in the database
+fn update_voucher(
+    db_voucher: &DbVoucher,
+    conn: &PgConnection,
+) -> Result<(), crate::error::Error> {
+    use schema::vouchers::dsl::*;
+    diesel::update(vouchers.filter(id.eq(&db_voucher.id)))
+        .set((
+            epoch_index.eq(db_voucher.epoch_index),
+            input_index.eq(&db_voucher.input_index),
+            voucher_index.eq(&db_voucher.voucher_index),
+            proof_id.eq(&db_voucher.proof_id),
+            destination.eq(&db_voucher.destination),
+            payload.eq(&db_voucher.payload),
+        ))
+        .execute(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })?;
+    Ok(())
+}
+
+/// Insert voucher to database if it does not exist
+fn insert_voucher(
+    db_voucher: &DbVoucher,
+    conn: &PgConnection,
+) -> Result<Option<i32>, crate::error::Error> {
+    use schema::vouchers::dsl::*;
+    // Check if voucher is already in database
+    if vouchers
+        .filter(epoch_index.eq(&db_voucher.epoch_index))
+        .filter(input_index.eq(&db_voucher.input_index))
+        .filter(voucher_index.eq(&db_voucher.voucher_index))
+        .filter(destination.eq(&db_voucher.destination))
+        .count()
+        .get_result::<i64>(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })?
+        > 0
+    {
+        // Voucher is already in the database, skip insert
+        trace!("Voucher epoch_index {} input_index {} notice_index {}  already in the database",
+                db_voucher.epoch_index, db_voucher.input_index, db_voucher.voucher_index);
+        return Ok(None);
+    }
+
+    // Write voucher to database
+    // Id field is auto incremented in table on insert
+    match diesel::insert_into(vouchers)
+        .values((
+            epoch_index.eq(&db_voucher.epoch_index),
+            input_index.eq(&db_voucher.input_index),
+            voucher_index.eq(&db_voucher.voucher_index),
+            proof_id.eq(&db_voucher.proof_id),
+            destination.eq(&db_voucher.destination),
+            payload.eq(&db_voucher.payload),
+        ))
+        .get_result::<DbVoucher>(conn)
+        .map_err(|e| crate::error::Error::DieselError { source: e })
+    {
+        Ok(new_voucher) => {
+            trace!("Voucher epoch_index {} input_index {} voucher_index {}  written successfully to db with id {}",
+                db_voucher.epoch_index, db_voucher.input_index, db_voucher.voucher_index, new_voucher.id);
+            Ok(Some(new_voucher.id))
+        }
+        Err(e) => {
+            error!("Failed to write voucher to db, details: {}", e.to_string());
             Err(e)
         }
     }
@@ -268,6 +448,9 @@ pub fn get_current_db_epoch(
         EpochIndexType::Notice => {
             rollups_data::database::CURRENT_NOTICE_EPOCH_INDEX
         }
+        EpochIndexType::Voucher => {
+            rollups_data::database::CURRENT_VOUCHER_EPOCH_INDEX
+        }
         EpochIndexType::Report => {
             rollups_data::database::CURRENT_REPORT_EPOCH_INDEX
         }
@@ -332,15 +515,42 @@ async fn db_loop(
                     }
                 };
                 match response {
-                    Message::Notice(notice) => {
+                    Message::Notice(proof, mut notice) => {
                         debug!("Notice message received session_id {} epoch_index {} input_index {} notice_index {}, writing to db",
                             &notice.session_id, notice.epoch_index, notice.input_index, notice.notice_index);
+
                         // Spawn tokio blocking task, diesel access to db is blocking
                         let _res = tokio::task::spawn_blocking(move || {
-                            if let Err(_err) = insert_notice(&notice, &conn) {
-                                //ignore error, continue
-                                warn!("Notice session_id {} epoch_index {} input_index {} notice_index {} is lost",
-                                    &notice.session_id, &notice.epoch_index, &notice.input_index, &notice.notice_index);
+                            // Insert notice to database
+                            match insert_notice(&notice, &conn) {
+                                Ok(new_notice_id) => {
+                                    if let Some(notice_id) = new_notice_id {
+                                        notice.id = notice_id;
+                                        // Insert related notice proof to database, update notice record with proof_id
+                                        match insert_proof(&proof, &conn) {
+                                                Ok(new_proof_id) => {
+                                                    notice.proof_id = new_proof_id;
+                                                    println!(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> proof id {:?}", notice.proof_id);
+                                                    if let Err(err) = update_notice(&notice, &conn) {
+                                                        warn!("Failed to update notice with id {} for proof id {:?}, error {}",
+                                                            &notice.id, notice.proof_id, err.to_string());
+                                                    }
+                                                },
+                                                Err(err) => {
+                                                    //ignore error, continue
+                                                    warn!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
+                                                        &proof.output_hashes_root_hash, &proof.vouchers_epoch_root_hash, &proof.notices_epoch_root_hash,
+                                                    &proof.machine_state_hash, err.to_string());
+                                                }
+                                            };
+                                        }
+
+                                    }
+                                Err(err) => {
+                                    //ignore error, continue
+                                    warn!("Notice session_id {} epoch_index {} input_index {} notice_index {} is lost, error: {}",
+                                        &notice.session_id, &notice.epoch_index, &notice.input_index, &notice.notice_index, err.to_string());
+                                }
                             }
                             if let Err(err) = update_current_epoch_index(&conn, notice.epoch_index, EpochIndexType::Notice) {
                                 warn!("Failed to update notice database epoch index {}, details: {}", notice.epoch_index, err.to_string());
@@ -352,18 +562,70 @@ async fn db_loop(
                             report.epoch_index, report.input_index, report.report_index);
                         // Spawn tokio blocking task, diesel access to db is blocking
                         let _res = tokio::task::spawn_blocking(move || {
-                            if let Err(_err) = insert_report(&report, &conn) {
+                            if let Err(err) = insert_report(&report, &conn) {
                                 //ignore error, continue
-                                warn!("Reportepoch_index {} input_index {} report_index {} is lost",
-                                    &report.epoch_index, &report.input_index, &report.report_index);
+                                warn!("Report epoch_index {} input_index {} report_index {} is lost, error: {}",
+                                    &report.epoch_index, &report.input_index, &report.report_index, err.to_string());
                             }
                             if let Err(err) = update_current_epoch_index(&conn, report.epoch_index, EpochIndexType::Report) {
                                 warn!("Failed to update report database epoch index {}, details: {}", report.epoch_index, err.to_string());
                             }
                         }).await;
                     }
-                    Message::Voucher(_voucher) => {
-                        todo!();
+                    Message::Voucher(proof, mut voucher) => {
+                        debug!("Voucher message received epoch_index {} input_index {} voucher_index {}, writing to db",
+                            voucher.epoch_index, voucher.input_index, voucher.voucher_index);
+
+                        // Spawn tokio blocking task, diesel access to db is blocking
+                        let _res = tokio::task::spawn_blocking(move || {
+                            // Insert proof to database, assign proof id to voucher
+                            match insert_proof(&proof, &conn) {
+                                Ok(proof_id) => {
+                                    voucher.proof_id = proof_id;
+                                },
+                                Err(err) => {
+                                    //ignore error, continue
+                                    warn!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
+                                        &proof.output_hashes_root_hash, &proof.vouchers_epoch_root_hash, &proof.notices_epoch_root_hash,
+                                        &proof.machine_state_hash, err.to_string());
+                                }
+                            };
+
+                            // Insert voucher to database
+                            match insert_voucher(&voucher, &conn) {
+                                Ok(new_voucher_id) => {
+                                    if let Some(voucher_id) = new_voucher_id {
+                                        voucher.id = voucher_id;
+                                        // Insert related voucher proof to database, update voucher record with proof_id
+                                        match insert_proof(&proof, &conn) {
+                                            Ok(new_proof_id) => {
+                                                voucher.proof_id = new_proof_id;
+                                                if let Err(err) = update_voucher(&voucher, &conn) {
+                                                    warn!("Failed to update voucher with id {} for proof id {:?}, error {}",
+                                                        &voucher.id, voucher.proof_id, err.to_string());
+                                                }
+                                            },
+                                            Err(err) => {
+                                                //ignore error, continue
+                                                warn!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
+                                                    &proof.output_hashes_root_hash, &proof.vouchers_epoch_root_hash, &proof.notices_epoch_root_hash,
+                                                &proof.machine_state_hash, err.to_string());
+                                            }
+                                        };
+                                    }
+                                }
+                                Err(err) => {
+                                     //ignore error, continue
+                                    warn!("Voucher epoch_index {} input_index {} voucher_index {} is lost, error: {}",
+                                        &voucher.epoch_index, &voucher.input_index, &voucher.voucher_index, err.to_string());
+                                }
+                            }
+
+
+                            if let Err(err) = update_current_epoch_index(&conn, voucher.epoch_index, EpochIndexType::Voucher) {
+                                warn!("Failed to update voucher database epoch index {}, details: {}", voucher.epoch_index, err.to_string());
+                            }
+                        }).await;
                     }
                     Message::Input(input) => {
                         debug!("Input message received id {} input_index {} epoch_index {} sender {} block_number {} timestamp {}",
@@ -371,14 +633,15 @@ async fn db_loop(
                         // Spawn tokio blocking task, diesel access to db is blocking
                         let _res = tokio::task::spawn_blocking(move || {
                             // Insert epoch if not in database
-                            if let Err(_err) = insert_epoch(input.epoch_index, &conn) {
+                            if let Err(err) = insert_epoch(input.epoch_index, &conn) {
                                 //ignore error, continue
-                                warn!("Epoch index {} is lost", &input.epoch_index);
+                                warn!("Epoch index {} is lost, error: {}", &input.epoch_index, err.to_string());
                             }
-                            if let Err(_err) = insert_input(&input, &conn) {
+                            if let Err(err) = insert_input(&input, &conn) {
                                 //ignore error, continue
-                                warn!("Input id {} input_index {} epoch_index {} sender {} block_number {} timestamp {} is lost",
-                                    &input.id, &input.input_index, &input.epoch_index, &input.sender, &input.block_number, &input.timestamp);
+                                warn!("Input id {} input_index {} epoch_index {} sender {} block_number {} timestamp {} is lost, error: {}",
+                                    &input.id, &input.input_index, &input.epoch_index, &input.sender, &input.block_number, &input.timestamp,
+                                    err.to_string());
                             }
                             if let Err(err) = update_current_epoch_index(&conn, input.epoch_index, EpochIndexType::Input) {
                                 warn!("Failed to update input database epoch index {}, details: {}", input.epoch_index, err.to_string());

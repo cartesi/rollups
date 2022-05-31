@@ -76,6 +76,7 @@ async fn graphql(
     let ctx = rollups_data::graphql::resolvers::Context {
         db_pool: http_context.db_pool.clone(),
     };
+    // todo execute in blocking thread
     let res = query.execute(&http_context.schema, &ctx).await;
     let value = serde_json::to_string(&res)?;
 

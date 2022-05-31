@@ -105,7 +105,6 @@ pub struct Input {
     pub(super) index: i32,
     pub(super) epoch: Epoch,
     pub(super) msg_sender: String,
-    pub(super) tx_hash: Option<String>,
     pub(super) timestamp: i64,
     pub(super) block_number: i64,
 }
@@ -129,7 +128,6 @@ pub struct InputConnection {
 #[derive(Debug, Clone, GraphQLInputObject)]
 #[graphql(scalar = RollupsGraphQLScalarValue)]
 pub struct InputFilter {
-    th_hash: Option<String>,
     msg_sender: Option<String>,
     block_number: Option<i64>,
     block_number_lower_than: Option<i64>,

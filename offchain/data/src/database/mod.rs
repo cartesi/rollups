@@ -19,6 +19,7 @@ use schema::{epochs, inputs, notices, proofs, reports, vouchers};
 use tokio::task::JoinError;
 
 pub const CURRENT_NOTICE_EPOCH_INDEX: &str = "current_notice_epoch_index";
+pub const CURRENT_VOUCHER_EPOCH_INDEX: &str = "current_voucher_epoch_index";
 pub const CURRENT_REPORT_EPOCH_INDEX: &str = "current_report_epoch_index";
 pub const CURRENT_INPUT_EPOCH_INDEX: &str = "current_input_epoch_index";
 pub const POOL_CONNECTION_SIZE: u32 = 3;
@@ -110,9 +111,9 @@ pub struct DbReport {
 /// in the database
 #[derive(Debug)]
 pub enum Message {
-    Notice(DbNotice),
+    Notice(DbProof, DbNotice),
+    Voucher(DbProof, DbVoucher),
     Report(DbReport),
-    Voucher(DbVoucher),
     Input(DbInput),
 }
 
