@@ -22,3 +22,7 @@ target "indexer" {
 target "reader" {
   tags = ["${DOCKER_ORGANIZATION}/query-server:${TAG}"]
 }
+
+target "hardhat" {
+  tags = ["${DOCKER_ORGANIZATION}/rollups-hardhat:${TAG}"]
+}

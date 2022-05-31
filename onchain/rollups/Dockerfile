@@ -1,26 +1,21 @@
-FROM node:14-buster-slim
+# syntax=docker.io/docker/dockerfile:1.4
+FROM node:16.15.0-alpine3.15
 
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+# install git and python3
+RUN <<EOF
+apk update
+apk add --no-cache make g++ git make python3
+rm -rf /var/cache/apk/*
+EOF
 
-ENV BASE /opt/cartesi
+WORKDIR /app
 
-WORKDIR $BASE/share/blockchain
-COPY onchain/package.json onchain/package.json
-COPY onchain/yarn.lock onchain/yarn.lock
-COPY onchain/rollups/package.json onchain/rollups/package.json
-COPY onchain/rollups/tsconfig.json onchain/rollups/tsconfig.json
-
-ADD onchain/rollups/wait-for-file.sh /
-RUN chmod +x /wait-for-file.sh
-
-COPY onchain/rollups/hardhat.config.ts onchain/rollups/hardhat.config.ts
-COPY onchain/rollups/contracts onchain/rollups/contracts
-
+# build app
+COPY . .
 RUN yarn install --non-interactive
 
+# expose hardhat node port
 EXPOSE 8545
 
 ENTRYPOINT ["npx", "hardhat"]
-CMD ["node" ]
+CMD ["node"]

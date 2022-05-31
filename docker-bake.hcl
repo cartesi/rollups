@@ -2,7 +2,7 @@
 target "docker-metadata-action" {}
 
 group "default" {
-  targets = ["delegate_server", "dispatcher", "indexer", "reader"]
+  targets = ["delegate_server", "dispatcher", "indexer", "reader", "hardhat"]
 }
 
 target "delegate_server" {
@@ -27,4 +27,9 @@ target "reader" {
   inherits   = ["docker-metadata-action"]
   dockerfile = "Dockerfile"
   context    = "./reader"
+}
+
+target "hardhat" {
+  inherits = ["docker-metadata-action"]
+  context  = "./onchain/rollups"
 }
