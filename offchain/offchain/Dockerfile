@@ -6,7 +6,7 @@
 
 ## Build Stage
 # Start with deps
-FROM rust:1.56.1 AS chef
+FROM rust:1.61.0 AS chef
 RUN rustup component add rustfmt
 RUN cargo install cargo-chef
 WORKDIR rollups
