@@ -53,3 +53,6 @@ jobs:
                   targets: indexer
                   builder: ${{ steps.buildx.outputs.name }}
                   push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
+                  set: |
+                    *.cache-from=type=gha
+                    *.cache-to=type=gha,mode=max

@@ -54,6 +54,9 @@ jobs:
                   targets: delegate_server
                   builder: ${{ steps.buildx.outputs.name }}
                   push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
+                  set: |
+                    *.cache-from=type=gha
+                    *.cache-to=type=gha,mode=max
 
             - name: run delegate tests
               run: |
