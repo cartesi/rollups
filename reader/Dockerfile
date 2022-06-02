@@ -1,19 +1,41 @@
-FROM node:14-buster-slim
+# syntax=docker.io/docker/dockerfile:1.4
+FROM node:16.15.0-bullseye-slim as base
 
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+FROM base as builder
+
+# install wget
+RUN <<EOF
+apt-get update
+DEBIAN_FRONTEND="noninteractive" apt-get install -y wget
+rm -rf /var/lib/apt/lists/*
+EOF
+
 ENV DOCKERIZE_VERSION v0.6.1
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+RUN <<EOF
+wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+EOF
 
-WORKDIR reader
+WORKDIR /app
 
+# build app
 COPY . .
 
 RUN yarn preinstall
+RUN yarn install --non-interactive
 
-RUN yarn install
+# runtime
+FROM base
 
-ENTRYPOINT ["/bin/sh", "./entrypoint-app.sh"]
+WORKDIR /app
+
+COPY --from=builder /usr/local/bin/dockerize /usr/local/bin/dockerize
+COPY entrypoint.sh /
+
+# copy yarn build
+COPY --from=builder /app .
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 4000
