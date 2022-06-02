@@ -17,6 +17,7 @@ use diesel::r2d2::{ConnectionManager, ManageConnection};
 use diesel::{Insertable, Queryable};
 use schema::{epochs, inputs, notices, proofs, reports, vouchers};
 use tokio::task::JoinError;
+use tracing::{error, info};
 
 pub const CURRENT_NOTICE_EPOCH_INDEX: &str = "current_notice_epoch_index";
 pub const CURRENT_VOUCHER_EPOCH_INDEX: &str = "current_voucher_epoch_index";
@@ -123,23 +124,46 @@ pub fn connect_to_database_with_retry(postgres_endpoint: &str) -> PgConnection {
     let connection_manager: ConnectionManager<PgConnection> =
         ConnectionManager::new(postgres_endpoint);
 
-    let op = || connection_manager.connect().map_err(crate::new_backoff_err);
+    let op = || {
+        info!("Trying to connect to database {}", postgres_endpoint);
+        connection_manager.connect().map_err(crate::new_backoff_err)
+    };
     backoff::retry(backoff::ExponentialBackoff::default(), op)
+        .map_err(|e| {
+            error!(
+                "Failed to connect to database {}, error: {}",
+                postgres_endpoint,
+                e.to_string()
+            );
+            e
+        })
         .expect("Failed to connect")
 }
 
 /// Create database connection pool, wait until database server is available with backoff strategy
 pub fn create_db_pool_with_retry(
-    database_url: &str,
+    postgres_endpoint: &str,
 ) -> diesel::r2d2::Pool<ConnectionManager<PgConnection>> {
     let op = || {
+        info!(
+            "Trying to create db pool for database {}",
+            postgres_endpoint
+        );
         diesel::r2d2::Pool::builder()
             .max_size(POOL_CONNECTION_SIZE)
-            .build(ConnectionManager::<PgConnection>::new(database_url))
+            .build(ConnectionManager::<PgConnection>::new(postgres_endpoint))
             .map_err(crate::new_backoff_err)
     };
 
     backoff::retry(backoff::ExponentialBackoff::default(), op)
+        .map_err(|e| {
+            error!(
+                "Failed to create db pool for database {}, error: {}",
+                postgres_endpoint,
+                e.to_string()
+            );
+            e
+        })
         .expect("error creating pool")
 }
 

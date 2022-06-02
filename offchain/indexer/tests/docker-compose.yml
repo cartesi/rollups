@@ -1,0 +1,22 @@
+version: '3.9'
+
+x-credentials:
+  &postgres-config
+  POSTGRES_HOSTNAME: database
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: password
+  POSTGRES_DB: test_indexer
+
+services:
+  postgres:
+    image: postgres:14
+    ports:
+      - 5434:5432
+    volumes:
+      - test-database-data:/var/lib/postgresql/data
+    environment:
+      << : *postgres-config
+
+volumes:
+  test-database-data: {}

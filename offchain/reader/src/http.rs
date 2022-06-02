@@ -82,8 +82,7 @@ async fn graphql(
     let return_value: HttpResponse = match tokio::task::spawn_blocking(
         move || {
             let res = query.execute_sync(&http_context.schema, &ctx);
-            let value = serde_json::to_string(&res);
-            value
+            serde_json::to_string(&res)
         },
     )
     .await

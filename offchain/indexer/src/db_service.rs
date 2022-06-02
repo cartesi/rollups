@@ -83,7 +83,7 @@ fn update_current_epoch_index(
 }
 
 /// Insert proof to database if it does not exist
-fn insert_proof(
+pub(crate) fn insert_proof(
     db_proof: &DbProof,
     conn: &PgConnection,
 ) -> Result<Option<i32>, crate::error::Error> {
@@ -129,7 +129,7 @@ fn insert_proof(
             .select(id)
             .get_result::<i32>(conn)
             .map_err(|e| crate::error::Error::DieselError { source: e })?;
-        info!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {}  already in the database with id={}",
+        trace!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {}  already in the database with id={}",
                 db_proof.output_hashes_root_hash, db_proof.vouchers_epoch_root_hash, db_proof.notices_epoch_root_hash, db_proof.machine_state_hash, proof_id);
         return Ok(Some(proof_id));
     }
@@ -187,7 +187,7 @@ fn update_notice(
 }
 
 /// Insert notice to database if it does not exist
-fn insert_notice(
+pub(crate) fn insert_notice(
     db_notice: &DbNotice,
     conn: &PgConnection,
 ) -> Result<Option<i32>, crate::error::Error> {
@@ -257,7 +257,7 @@ fn update_voucher(
 }
 
 /// Insert voucher to database if it does not exist
-fn insert_voucher(
+pub(crate) fn insert_voucher(
     db_voucher: &DbVoucher,
     conn: &PgConnection,
 ) -> Result<Option<i32>, crate::error::Error> {
@@ -306,7 +306,7 @@ fn insert_voucher(
 }
 
 /// Insert report to database if it does not exist
-fn insert_report(
+pub(crate) fn insert_report(
     db_report: &DbReport,
     conn: &PgConnection,
 ) -> Result<(), crate::error::Error> {
@@ -352,7 +352,7 @@ fn insert_report(
 }
 
 /// Insert epoch to database if it does not exist
-fn insert_epoch(
+pub(crate) fn insert_epoch(
     index: i32,
     conn: &PgConnection,
 ) -> Result<(), crate::error::Error> {
@@ -389,7 +389,7 @@ fn insert_epoch(
 }
 
 /// Insert input to database if it does not exist
-fn insert_input(
+pub(crate) fn insert_input(
     db_input: &DbInput,
     conn: &PgConnection,
 ) -> Result<(), crate::error::Error> {
@@ -661,4 +661,57 @@ pub async fn run(
 ) -> Result<(), crate::error::Error> {
     db_loop(config, message_rx).await?;
     Ok(())
+}
+
+pub mod testing {
+    use super::*;
+
+    pub fn test_insert_notice(
+        db_notice: &DbNotice,
+        conn: &PgConnection,
+    ) -> Result<Option<i32>, crate::error::Error> {
+        insert_notice(db_notice, conn)
+    }
+
+    pub fn test_insert_voucher(
+        db_voucher: &DbVoucher,
+        conn: &PgConnection,
+    ) -> Result<Option<i32>, crate::error::Error> {
+        insert_voucher(db_voucher, conn)
+    }
+
+    pub fn test_insert_report(
+        db_report: &DbReport,
+        conn: &PgConnection,
+    ) -> Result<(), crate::error::Error> {
+        insert_report(db_report, conn)
+    }
+
+    pub fn test_insert_input(
+        db_input: &DbInput,
+        conn: &PgConnection,
+    ) -> Result<(), crate::error::Error> {
+        insert_input(db_input, conn)
+    }
+
+    pub fn test_insert_proof(
+        db_proof: &DbProof,
+        conn: &PgConnection,
+    ) -> Result<Option<i32>, crate::error::Error> {
+        insert_proof(db_proof, conn)
+    }
+
+    pub fn test_update_notice(
+        db_notice: &DbNotice,
+        conn: &PgConnection,
+    ) -> Result<(), crate::error::Error> {
+        update_notice(db_notice, conn)
+    }
+
+    pub fn test_update_voucher(
+        db_voucher: &DbVoucher,
+        conn: &PgConnection,
+    ) -> Result<(), crate::error::Error> {
+        update_voucher(db_voucher, conn)
+    }
 }
