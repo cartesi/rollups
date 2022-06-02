@@ -44,6 +44,7 @@ macro_rules! implement_cursor {
 }
 
 /// Context for graphql resolvers implementation
+#[derive(Clone)]
 pub struct Context {
     // Connection is not thread safe to share between threads, we use connection pool
     pub db_pool: Arc<Pool<ConnectionManager<PgConnection>>>,

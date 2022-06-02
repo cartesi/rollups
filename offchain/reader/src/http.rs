@@ -13,8 +13,8 @@
 
 /// Http service serving graphql queries
 use actix_web::{
-    error::Result as HttpResult, middleware::Logger, web, web::Data, App,
-    HttpResponse, HttpServer, Responder,
+    middleware::Logger, web, web::Data, App, HttpResponse, HttpServer,
+    Responder,
 };
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -61,7 +61,7 @@ pub async fn start_service(
 }
 
 #[actix_web::get("/graphql")]
-fn juniper_playground() -> HttpResponse {
+async fn juniper_playground() -> impl Responder {
     let html = playground_source("", None);
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
@@ -72,15 +72,40 @@ fn juniper_playground() -> HttpResponse {
 async fn graphql(
     query: web::Json<GraphQLRequest<RollupsGraphQLScalarValue>>,
     http_context: web::Data<HttpContext>,
-) -> HttpResult<impl Responder> {
+) -> HttpResponse {
     let ctx = rollups_data::graphql::resolvers::Context {
         db_pool: http_context.db_pool.clone(),
     };
-    // todo execute in blocking thread
-    let res = query.execute(&http_context.schema, &ctx).await;
-    let value = serde_json::to_string(&res)?;
-
-    Ok(HttpResponse::Ok()
-        .content_type("application/json")
-        .body(value))
+    // Execute resolvers in blocking thread as there are lot of blocking diesel db operations
+    let query = Arc::new(query);
+    let ctx = Arc::new(ctx);
+    let return_value: HttpResponse = match tokio::task::spawn_blocking(
+        move || {
+            let res = query.execute_sync(&http_context.schema, &ctx);
+            let value = serde_json::to_string(&res);
+            value
+        },
+    )
+    .await
+    {
+        Ok(value) => match value {
+            Ok(value) => HttpResponse::Ok()
+                .content_type("application/json")
+                .body(value),
+            Err(err) => {
+                let error_message = format!(
+                            "unable to execute query, internal server error, details: {}", err.to_string()
+                        );
+                return HttpResponse::BadRequest().body(error_message);
+            }
+        },
+        Err(err) => {
+            let error_message = format!(
+                "unable to execute query, internal server error, details: {}",
+                err.to_string()
+            );
+            return HttpResponse::BadRequest().body(error_message);
+        }
+    };
+    return_value
 }
