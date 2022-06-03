@@ -4,7 +4,7 @@ on:
     pull_request:
         paths:
             - onchain/rollups/**
-            - .github/workflows/hardhat.yml
+            - .github/workflows/rollups.yml
     push:
         tags:
             - v*
