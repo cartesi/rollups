@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Copyright 2022 Cartesi Pte. Ltd.
 
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -10,11 +9,26 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
+export type Chain = "localhost" | "polygon_mumbai";
 
-yargs(hideBin(process.argv))
-    .version()
-    .commandDir("commands", { extensions: ["js", "ts"] })
-    .strict()
-    .alias({ h: "help" }).argv;
+export interface ChainInfo {
+    chainId: number;
+    name: Chain;
+    rpc: string;
+    explorer?: string;
+}
+
+// compatible networks
+export const networks: Record<Chain, ChainInfo> = {
+    localhost: {
+        chainId: 31337,
+        name: "localhost",
+        rpc: "http://localhost:8545",
+    },
+    polygon_mumbai: {
+        chainId: 80001,
+        name: "polygon_mumbai",
+        rpc: "https://matic-mumbai.chainstacklabs.com",
+        explorer: "https://mumbai.polygonscan.com",
+    },
+};
