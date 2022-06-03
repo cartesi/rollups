@@ -61,7 +61,7 @@ const validators = (str: string, mnemonic: string): string[] => {
 
 const readTemplateHash = (filename: string): string => {
     if (!fs.existsSync(filename)) {
-        throw new Error(`Template hash file not found: ${filename}`);
+        throw new Error(`template hash file not found: ${filename}`);
     }
     return "0x" + fs.readFileSync(filename).toString("hex");
 };

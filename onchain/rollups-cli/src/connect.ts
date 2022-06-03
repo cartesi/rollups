@@ -39,7 +39,7 @@ export const rollups = (
 ): RollupsContracts => {
     const chain = networks[chainName];
     if (!chain) {
-        throw new Error(`Unsupported network: ${chainName}`);
+        throw new Error(`unsupported network: ${chainName}`);
     }
     // connect to JSON-RPC provider
     const provider = new JsonRpcProvider(chain.rpc);
@@ -78,7 +78,7 @@ export const factory = (
 ): CartesiDAppFactory => {
     const chain = networks[chainName];
     if (!chain) {
-        throw new Error(`Unsupported network: ${chainName}`);
+        throw new Error(`unsupported network: ${chainName}`);
     }
     // connect to JSON-RPC provider
     const provider = new JsonRpcProvider(chain.rpc);
@@ -99,7 +99,12 @@ export const factory = (
         case "localhost":
             if (!deploymentPath) {
                 throw new Error(
-                    `Undefined deployment path for network ${chainName}`
+                    `undefined deployment path for network ${chainName}`
+                );
+            }
+            if (!fs.existsSync(deploymentPath)) {
+                throw new Error(
+                    `deployment file '${deploymentPath}' not found`
                 );
             }
             const deployment = JSON.parse(
