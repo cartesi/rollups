@@ -173,6 +173,7 @@ export const handler = async (args: Args) => {
     if (application) {
         console.log(`application: ${application}`);
         if (outputFile) {
+            console.log(`writing application address to ${outputFile}`);
             fs.writeFileSync(outputFile, application);
         }
     }
