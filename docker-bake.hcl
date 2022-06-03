@@ -2,7 +2,7 @@
 target "docker-metadata-action" {}
 
 group "default" {
-  targets = ["delegate_server", "dispatcher", "indexer", "reader", "hardhat"]
+  targets = ["delegate_server", "dispatcher", "indexer", "reader", "hardhat", "rollups-cli"]
 }
 
 target "delegate_server" {
@@ -32,4 +32,9 @@ target "reader" {
 target "hardhat" {
   inherits = ["docker-metadata-action"]
   context  = "./onchain/rollups"
+}
+
+target "rollups-cli" {
+  inherits = ["docker-metadata-action"]
+  context  = "./onchain/rollups-cli"
 }

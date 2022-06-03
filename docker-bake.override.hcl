@@ -26,3 +26,7 @@ target "reader" {
 target "hardhat" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-hardhat:${TAG}"]
 }
+
+target "rollups-cli" {
+  tags = ["${DOCKER_ORGANIZATION}/rollups-cli:${TAG}"]
+}
