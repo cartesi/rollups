@@ -16,6 +16,7 @@ import { Wallet } from "ethers";
 import { Argv } from "yargs";
 import { BlockchainArgs, blockchainBuilder } from "../args";
 import { factory } from "../connect";
+import { safeHandler } from "../util";
 
 interface Args extends BlockchainArgs {
     diamondOwner: string;
@@ -119,7 +120,7 @@ export const builder = (yargs: Argv<Args>) => {
         .config();
 };
 
-export const handler = async (args: Args) => {
+export const handler = safeHandler(async (args: Args) => {
     const { deploymentFile, mnemonic, accountIndex, rpc, outputFile } = args;
 
     // connect to provider, use deployment address based on returned chain id of provider
@@ -177,4 +178,4 @@ export const handler = async (args: Args) => {
             fs.writeFileSync(outputFile, application);
         }
     }
-};
+});
