@@ -12,7 +12,7 @@
 import fs from "fs";
 import { ICartesiDAppFactory } from "@cartesi/rollups";
 import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/ICartesiDAppFactory";
-import { ethers, Wallet } from "ethers";
+import { Wallet } from "ethers";
 import { Argv } from "yargs";
 import {
     BlockchainArgs,
@@ -23,7 +23,8 @@ import { factory } from "../connect";
 
 interface Args extends BlockchainArgs {
     diamondOwner: string;
-    templateHash: string;
+    templateHash?: string;
+    templateHashFile?: string;
     inputDuration: number;
     challengePeriod: number;
     inputLog2Size: number;
@@ -58,6 +59,13 @@ const validators = (str: string, mnemonic: string): string[] => {
         );
 };
 
+const readTemplateHash = (filename: string): string => {
+    if (!fs.existsSync(filename)) {
+        throw new Error(`Template hash file not found: ${filename}`);
+    }
+    return "0x" + fs.readFileSync(filename).toString("hex");
+};
+
 export const builder = (yargs: Argv<Args>) => {
     return blockchainBuilder(yargs, true)
         .option("diamondOwner", {
@@ -67,7 +75,10 @@ export const builder = (yargs: Argv<Args>) => {
         .option("templateHash", {
             describe: "Cartesi Machine template hash",
             type: "string",
-            demandOption: true,
+        })
+        .option("templateHashFile", {
+            describe: "Cartesi Machine template hash file",
+            type: "string",
         })
         .option("inputDuration", {
             describe: "Time window of input collection, in seconds",
@@ -132,10 +143,18 @@ export const handler = async (args: Args) => {
     const address = await factoryContract.signer.getAddress();
     console.log(`using account "${address}"`);
 
+    if (!args.templateHash && !args.templateHashFile) {
+        throw new Error(
+            "either --templateHash or --templateHashFile must be defined"
+        );
+    }
+    const templateHash =
+        args.templateHash || readTemplateHash(args.templateHashFile!);
+
     // send transaction
     const config: ICartesiDAppFactory.AppConfigStruct = {
         diamondOwner: args.diamondOwner || address,
-        templateHash: args.templateHash,
+        templateHash: templateHash,
         inputDuration: args.inputDuration,
         challengePeriod: args.challengePeriod,
         inputLog2Size: args.inputLog2Size,
