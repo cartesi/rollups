@@ -11,13 +11,12 @@
 
 import { ethers } from "ethers";
 import { Argv } from "yargs";
-import { Chain, networks } from "./networks";
 
 export const HARDHAT_DEFAULT_MNEMONIC =
     "test test test test test test test test test test test junk";
 
 export interface BlockchainArgs {
-    network: Chain;
+    rpc: string;
     mnemonic?: string;
     accountIndex: number;
     deploymentFile?: string;
@@ -28,9 +27,9 @@ export const blockchainBuilder = <T extends BlockchainArgs>(
     transactional: boolean = false
 ) => {
     return yargs
-        .option("network", {
-            describe: "Network to connect to",
-            choices: Object.keys(networks),
+        .option("rpc", {
+            describe: "JSON-RPC URL",
+            type: "string",
         })
         .option("mnemonic", {
             describe: "Wallet mnemonic",

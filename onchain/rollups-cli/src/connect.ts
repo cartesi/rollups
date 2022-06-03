@@ -23,26 +23,20 @@ import {
     CartesiDAppFactory__factory,
 } from "@cartesi/rollups";
 import polygon_mumbai from "@cartesi/rollups/export/abi/polygon_mumbai.json";
-import { Chain, ChainInfo, networks } from "./networks";
 
 interface RollupsContracts {
-    chain: ChainInfo;
     inputContract: InputFacet;
     outputContract: OutputFacet;
     erc20Portal: ERC20PortalFacet;
 }
 
 export const rollups = (
-    chainName: Chain,
+    rpc: string,
     address: string,
     mnemonic?: string
 ): RollupsContracts => {
-    const chain = networks[chainName];
-    if (!chain) {
-        throw new Error(`unsupported network: ${chainName}`);
-    }
     // connect to JSON-RPC provider
-    const provider = new JsonRpcProvider(chain.rpc);
+    const provider = new JsonRpcProvider(rpc);
 
     // create signer to be used to send transactions
     const signer = mnemonic
@@ -63,25 +57,20 @@ export const rollups = (
         signer || provider
     );
     return {
-        chain,
         inputContract,
         outputContract,
         erc20Portal,
     };
 };
 
-export const factory = (
-    chainName: Chain,
+export const factory = async (
+    rpc: string,
     mnemonic?: string,
     accountIndex?: number,
     deploymentPath?: string
-): CartesiDAppFactory => {
-    const chain = networks[chainName];
-    if (!chain) {
-        throw new Error(`unsupported network: ${chainName}`);
-    }
+): Promise<CartesiDAppFactory> => {
     // connect to JSON-RPC provider
-    const provider = new JsonRpcProvider(chain.rpc);
+    const provider = new JsonRpcProvider(rpc);
 
     // create signer to be used to send transactions
     const signer = mnemonic
@@ -91,15 +80,17 @@ export const factory = (
           ).connect(provider)
         : undefined;
 
+    const { chainId } = await provider.getNetwork();
+
     let address;
-    switch (chainName) {
-        case "polygon_mumbai":
+    switch (chainId) {
+        case 80001: // polygon_mumbai
             address = polygon_mumbai.contracts.CartesiDAppFactory.address;
             break;
-        case "localhost":
+        case 31337: // hardhat
             if (!deploymentPath) {
                 throw new Error(
-                    `undefined deployment path for network ${chainName}`
+                    `undefined deployment path for network ${31337}`
                 );
             }
             if (!fs.existsSync(deploymentPath)) {

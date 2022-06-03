@@ -14,11 +14,7 @@ import { ICartesiDAppFactory } from "@cartesi/rollups";
 import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/ICartesiDAppFactory";
 import { Wallet } from "ethers";
 import { Argv } from "yargs";
-import {
-    BlockchainArgs,
-    blockchainBuilder,
-    HARDHAT_DEFAULT_MNEMONIC,
-} from "../args";
+import { BlockchainArgs, blockchainBuilder } from "../args";
 import { factory } from "../connect";
 
 interface Args extends BlockchainArgs {
@@ -59,6 +55,11 @@ const validators = (str: string, mnemonic: string): string[] => {
         );
 };
 
+/**
+ * Read a Cartesi Machine hash from its internal `hash` binary file
+ * @param filename path of cartesi machine internal hash file
+ * @returns Hash of the machine as string, prefixed by 0x
+ */
 const readTemplateHash = (filename: string): string => {
     if (!fs.existsSync(filename)) {
         throw new Error(`template hash file not found: ${filename}`);
@@ -118,23 +119,15 @@ export const builder = (yargs: Argv<Args>) => {
         .config();
 };
 
-export const middleware = (args: Args) => {
-    console.log("middleware");
-    if (args.network == "localhost" && !args.mnemonic) {
-        args.mnemonic = HARDHAT_DEFAULT_MNEMONIC;
-    }
-};
-
 export const handler = async (args: Args) => {
-    const { deploymentFile, mnemonic, accountIndex, network, outputFile } =
-        args;
+    const { deploymentFile, mnemonic, accountIndex, rpc, outputFile } = args;
 
     // connect to provider, use deployment address based on returned chain id of provider
-    console.log(`connecting to network ${network}`);
+    console.log(`connecting to ${rpc}`);
 
     // connect to factory
-    const factoryContract = factory(
-        network,
+    const factoryContract = await factory(
+        rpc,
         mnemonic,
         accountIndex,
         deploymentFile
