@@ -1,5 +1,5 @@
 require("dotenv").config();
-import { IResolvers } from "graphql-tools";
+import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server-express";
 import { v4 as uuidv4 } from "uuid";
 import {

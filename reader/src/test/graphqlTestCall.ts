@@ -1,5 +1,5 @@
 import { graphql } from "graphql";
-import { makeExecutableSchema } from "graphql-tools";
+import { makeExecutableSchema } from "@graphql-tools/schema";
 import { GraphQLSchema } from "graphql";
 
 import typeDefs from "./typeDefs";
@@ -11,5 +11,9 @@ const schema: GraphQLSchema = makeExecutableSchema({
 });
 
 export const graphqlTestCall = async (query: any, variables?: any) => {
-	return graphql(schema, query, undefined, undefined, variables);
+	return graphql({
+		schema,
+		source: query,
+		variableValues: variables,
+	});
 };

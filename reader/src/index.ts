@@ -48,9 +48,18 @@ app.use("/graphql", (req: Request, res: Response, next: NextFunction) => {
 	next();
 });
 
-server.applyMiddleware({ app, path: "/graphql" });
-app.listen(PORT, () => {
+async function main() {
+	await server.start();
+	server.applyMiddleware({ app, path: "/graphql" });
+	app.listen(PORT, () => {
 	console.log(
 		`\n🚀      GraphQL is now running on http://localhost:${PORT}/graphql`
 	);
-});
+	});
+};
+
+main().then((text) => {
+    console.log(text);
+  }).catch((err) => {
+    // Deal with the fact the chain failed
+  });
