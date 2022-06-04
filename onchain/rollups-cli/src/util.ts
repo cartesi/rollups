@@ -1,5 +1,7 @@
 // Copyright 2022 Cartesi Pte. Ltd.
 
+import { ArgumentsCamelCase } from "yargs";
+
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 // this file except in compliance with the License. You may obtain a copy of the
 // License at http://www.apache.org/licenses/LICENSE-2.0
@@ -9,7 +11,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-type Handler<U> = (args: U) => void | Promise<void>;
+type Handler<U> = (args: ArgumentsCamelCase<U>) => void | Promise<void>;
 
 /**
  * Create a wrapper handler that will catch any errors, print them to stderr, and exit with a non-zero code.

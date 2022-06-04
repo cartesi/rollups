@@ -19,14 +19,14 @@ import { factory } from "../connect";
 import { safeHandler } from "../util";
 
 interface Args extends BlockchainArgs {
-    diamondOwner: string;
+    diamondOwner?: string;
     templateHash?: string;
     templateHashFile?: string;
     inputDuration: number;
     challengePeriod: number;
     inputLog2Size: number;
     feePerClaim: string;
-    feeManagerOwner: string;
+    feeManagerOwner?: string;
     validators: string;
     outputFile?: string;
 }
@@ -68,7 +68,7 @@ const readTemplateHash = (filename: string): string => {
     return "0x" + fs.readFileSync(filename).toString("hex");
 };
 
-export const builder = (yargs: Argv<Args>) => {
+export const builder = (yargs: Argv<{}>): Argv<Args> => {
     return blockchainBuilder(yargs, true)
         .option("diamondOwner", {
             describe: "Rollups contract owner",
@@ -120,7 +120,7 @@ export const builder = (yargs: Argv<Args>) => {
         .config();
 };
 
-export const handler = safeHandler(async (args: Args) => {
+export const handler = safeHandler<Args>(async (args) => {
     const { deploymentFile, mnemonic, accountIndex, rpc, outputFile } = args;
 
     // connect to provider, use deployment address based on returned chain id of provider

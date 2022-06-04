@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Copyright 2022 Cartesi Pte. Ltd.
 
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -10,12 +9,4 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
-import { create } from "./commands";
-
-yargs(hideBin(process.argv))
-    .version()
-    .command(create)
-    .strict()
-    .alias({ h: "help" }).argv;
+export * as create from "./create";

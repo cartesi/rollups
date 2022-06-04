@@ -22,14 +22,15 @@ export interface BlockchainArgs {
     deploymentFile?: string;
 }
 
-export const blockchainBuilder = <T extends BlockchainArgs>(
-    yargs: Argv<T>,
+export const blockchainBuilder = (
+    yargs: Argv<{}>,
     transactional: boolean = false
-) => {
+): Argv<BlockchainArgs> => {
     return yargs
         .option("rpc", {
             describe: "JSON-RPC URL",
             type: "string",
+            demandOption: true,
         })
         .option("mnemonic", {
             describe: "Wallet mnemonic",
