@@ -27,21 +27,6 @@ RUN cargo build --release --bin offchain_main
 ## runtime
 FROM debian:bullseye-slim AS runtime
 
-RUN <<EOF
-apt-get update
-DEBIAN_FRONTEND="noninteractive" apt-get install -y openssl wget jq
-rm -rf /var/lib/apt/lists/*
-EOF
-
-ENV DOCKERIZE_VERSION v0.6.1
-RUN <<EOF
-wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
-tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
-rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
-EOF
-
-WORKDIR /usr/app
 COPY --from=builder /usr/src/app/offchain/target/release/offchain_main /usr/local/bin
 
-COPY ./offchain/offchain/entrypoint.sh /
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["offchain_main"]
