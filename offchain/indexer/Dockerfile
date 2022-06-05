@@ -29,7 +29,7 @@ FROM debian:bullseye-slim AS runtime
 
 RUN <<EOF
 apt-get update
-DEBIAN_FRONTEND="noninteractive" apt-get install -y openssl postgresql postgresql-contrib
+DEBIAN_FRONTEND="noninteractive" apt-get install -y openssl libpq-dev
 rm -rf /var/lib/apt/lists/*
 EOF
 
