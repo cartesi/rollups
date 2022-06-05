@@ -19,6 +19,6 @@ WORKDIR /app
 # copy yarn build
 COPY --from=builder /app .
 
-CMD ["yarn run migrate && yarn start"]
+CMD ["yarn", "migrate:start"]
 
 EXPOSE 4000
