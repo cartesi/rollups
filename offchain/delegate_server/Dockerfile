@@ -19,14 +19,19 @@ WORKDIR /usr/src/app/offchain
 COPY --from=planner /usr/src/app/offchain/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 
-# buld application
+# build application
 WORKDIR /usr/src/app/offchain
 COPY . /usr/src/app
 RUN cargo build --release --bin output_server_main
 
+# grpc readiness probe
+FROM golang:1.18.3-bullseye as grpc_health_probe
+RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
+
 ## runtime
 FROM debian:bullseye-slim AS runtime
 
+COPY --from=grpc_health_probe /go/bin/grpc-health-probe /usr/local/bin
 COPY --from=builder /usr/src/app/offchain/target/release/output_server_main /usr/local/bin
 
 ENTRYPOINT ["output_server_main"]
