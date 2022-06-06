@@ -8,17 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Factory contract to deploy rollups diamond
+- Mermaid diagram of the on-chain rollups on README
 
 ### Changed
 
 - Moved logic from `erc721Deposit` function to `onERC721Received`
 - Renamed `ERC721Deposited` event to `ERC721Received` and added `operator` field
+- Validators who lost a dispute are removed from the validator set, and cannot redeem fees from previous claims
+- Changed the visibility of `Bank`'s state variables to private
+- Changed the visibility of `LibClaimsMask`'s functions to internal
+- Improved entry point and configuration
+- Gas optimizations
 
 ### Deprecated
 
 ### Removed
 
 - `erc721Deposit` function (call `safeTransferFrom` from the ERC-721 contract instead)
+- `erc20Withdrawal` function call (vouchers now call `transfer` from the ERC-20 contract directly instead)
 
 ### Security
 
