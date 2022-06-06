@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "declaration": true,
+        "composite": true,
         "esModuleInterop": true,
         "module": "commonjs",
         "outDir": "dist",
@@ -8,5 +9,10 @@
         "target": "es2020",
         "forceConsistentCasingInFileNames": true,
         "strict": true
-    }
+    },
+    "references": [
+        {
+            "path": "../rollups/tsconfig.prod.json"
+        }
+    ]
 }

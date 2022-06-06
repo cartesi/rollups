@@ -35,6 +35,7 @@ target "hardhat" {
 }
 
 target "rollups-cli" {
-  inherits = ["docker-metadata-action"]
-  context  = "./onchain/rollups-cli"
+  inherits   = ["docker-metadata-action"]
+  context    = "./onchain"
+  dockerfile = "./rollups-cli/Dockerfile"
 }

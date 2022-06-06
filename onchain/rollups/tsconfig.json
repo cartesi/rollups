@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "declaration": true,
+        "composite": true,
         "target": "es2018",
         "module": "commonjs",
         "allowJs": true,

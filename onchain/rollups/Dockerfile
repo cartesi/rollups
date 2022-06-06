@@ -6,7 +6,7 @@ FROM base as builder
 # install git and python3
 RUN <<EOF
 apk update
-apk add --no-cache make g++ git make python3
+apk add --no-cache g++ git make python3
 rm -rf /var/cache/apk/*
 EOF
 
