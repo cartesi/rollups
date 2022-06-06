@@ -15,6 +15,7 @@ WORKDIR /app
 # build app
 COPY . .
 RUN yarn install --non-interactive
+RUN yarn prepack
 
 # runtime
 FROM base
