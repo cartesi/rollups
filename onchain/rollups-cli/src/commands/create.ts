@@ -10,6 +10,7 @@
 // specific language governing permissions and limitations under the License.
 
 import fs from "fs";
+import fse from "fs-extra";
 import { ICartesiDAppFactory } from "@cartesi/rollups";
 import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/ICartesiDAppFactory";
 import { Wallet } from "ethers";
@@ -175,7 +176,7 @@ export const handler = safeHandler<Args>(async (args) => {
         console.log(`application: ${application}`);
         if (outputFile) {
             console.log(`writing application address to ${outputFile}`);
-            fs.writeFileSync(outputFile, application);
+            fse.outputFileSync(outputFile, application);
         }
     }
 });
