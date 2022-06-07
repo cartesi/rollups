@@ -33,7 +33,51 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             err: format!("Fail to initialize indexer config: {}", e),
         })?;
 
-    trace!("Indexer configuration {:?}", &indexer_config);
+    info!("Indexer configuration dapp_contract_address={} state_server_endpoint={} initial_epoch={}\n\
+        interval={} server manager endpoint={} session_id={} postgres db host/port {}:{}",
+        &indexer_config.dapp_contract_address,
+        &indexer_config.state_server_endpoint,
+        &indexer_config.initial_epoch,
+        &indexer_config.interval,
+        &indexer_config.mm_endpoint,
+        &indexer_config.session_id,
+        &indexer_config.database.postgres_hostname,
+        &indexer_config.database.postgres_port,
+        );
+
+    // Perform migration if it was not performed before
+    {
+        let postgres_config = indexer_config.database.clone();
+        tokio::task::spawn_blocking(move || {
+            info!("Performing migrations if they are not performed before from directory {}", postgres_config.postgres_migration_folder);
+
+            // Perform diesel setup and migration
+            match rollups_data::database::perform_diesel_setup(
+                &postgres_config.postgres_user,
+                &postgres_config.postgres_password,
+                &postgres_config.postgres_hostname,
+                postgres_config.postgres_port,
+                &postgres_config.postgres_db,
+                &postgres_config.postgres_migration_folder,
+            ) {
+                Ok(process_output) => {
+                    info!(
+                        "Successfully performed migrations, result={:?}", process_output
+                    );
+                }
+                Err(e) => {
+                    error!(
+                        "Unable to perform migrations of database {} error details: {}",
+                        postgres_config.postgres_db, e.to_string()
+                    );
+                }
+            };
+        })
+        .await
+            .expect("Migration/setup executed successfully");
+        info!("Database migrations finished");
+    }
+
     // Channel for passing messaged between data service acquiring data from outside
     // and database service inserting data to the library
     let (message_tx, message_rx) =

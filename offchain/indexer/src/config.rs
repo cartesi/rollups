@@ -15,15 +15,16 @@
 /// Configuration to the indexer can be provided using command line options, environment variables
 /// or configuration file. In general, command line indexer parameters take precedence over environment variables
 /// and environment variables take precedence over same parameter from file configuration
-use configuration::config::Config;
-use configuration::config::EnvCLIConfig;
 use configuration::error as config_error;
 
 use serde::Deserialize;
 use snafu::ResultExt;
 
 use ethers::core::types::{Address, U256};
+
 use tracing::{error, warn};
+use std::fs;
+use std::str::FromStr;
 
 use structopt::StructOpt;
 
@@ -31,8 +32,6 @@ use structopt::StructOpt;
 /// command line arguments
 #[derive(StructOpt, Clone)]
 pub struct ApplicationCLIConfig {
-    #[structopt(flatten)]
-    pub basic_config: EnvCLIConfig,
     #[structopt(flatten)]
     pub indexer_config: IndexerEnvCLIConfig,
 }
@@ -43,10 +42,12 @@ pub struct ApplicationCLIConfig {
 #[derive(StructOpt, Clone)]
 #[structopt(name = "indexer_config", about = "Configuration for indexer")]
 pub struct IndexerEnvCLIConfig {
+    /// Address of deployed DApp contract
     #[structopt(long, env)]
     pub dapp_contract_address: Option<String>,
+    /// File with adress of deployed DApp contract
     #[structopt(long, env)]
-    pub dapp_contract_name: Option<String>,
+    pub dapp_contract_address_file: Option<String>,
     #[structopt(long, env)]
     pub indexer_config_path: Option<String>,
     #[structopt(long)]
@@ -74,6 +75,11 @@ pub struct IndexerEnvCLIConfig {
     pub postgres_port: Option<u16>,
     #[structopt(long = "--postgres-db", env = "POSTGRES_DB")]
     pub postgres_db: Option<String>,
+    #[structopt(
+        long = "--postgres-migration-folder",
+        env = "POSTGRES_MIGRATION_FOLDER"
+    )]
+    pub postgres_migration_folder: Option<String>,
 }
 
 /// Indexer configuration deserialized from file
@@ -86,13 +92,13 @@ pub struct IndexerFileConfig {
     pub initial_epoch: Option<u64>,
     pub mm_endpoint: Option<String>,
     pub session_id: Option<String>,
-    pub dapp_contract_name: Option<String>,
     pub postgres_hostname: Option<String>,
     pub postgres_port: Option<u16>,
     pub postgres_user: Option<String>,
     pub postgres_password: Option<String>,
     pub postgres_password_file: Option<String>,
     pub postgres_db: Option<String>,
+    pub postgres_migration_folder: Option<String>,
 }
 
 /// Indexer file configuration
@@ -110,6 +116,7 @@ pub struct PostgresConfig {
     pub postgres_user: String,
     pub postgres_password: String,
     pub postgres_db: String,
+    pub postgres_migration_folder: String,
 }
 
 /// Final indexer configuration
@@ -133,7 +140,6 @@ impl IndexerConfig {
     pub fn initialize() -> config_error::Result<Self> {
         let app_config = ApplicationCLIConfig::from_args();
         let env_cli_config = app_config.indexer_config;
-        let base_cli_config = app_config.basic_config;
 
         let file_config: IndexerFileConfig = {
             let c: FileConfig = configuration::config::load_config_file(
@@ -141,14 +147,45 @@ impl IndexerConfig {
             )?;
             c.indexer_config
         };
-        let basic_config = Config::initialize(base_cli_config)?;
 
-        let dapp_contract_name = env_cli_config
-            .dapp_contract_name
-            .or(file_config.dapp_contract_name)
-            .unwrap_or_else(|| "CartesiDApp".to_string());
+        let dapp_contract_address: Address = if let Some(a) = env_cli_config
+            .dapp_contract_address
+            .or(file_config.dapp_contract_address)
+        {
+            Address::from_str(&a).map_err(|e| {
+                config_error::FileError {
+                    err: format!(
+                        "DApp contract address string ill-formed: {}",
+                        e
+                    ),
+                }
+                .build()
+            })?
+        } else {
+            let path = env_cli_config
+                .dapp_contract_address_file
+                .ok_or(snafu::NoneError)
+                .context(config_error::FileError {
+                    err: "Must specify either dapp_contract_address or dapp_contract_address_file",
+                })?;
 
-        let dapp_contract_address = basic_config.contracts[&dapp_contract_name];
+            let contents = fs::read_to_string(path.clone()).map_err(|e| {
+                config_error::FileError {
+                    err: format!("Could not read file at path {}: {}", path, e),
+                }
+                .build()
+            })?;
+
+            Address::from_str(&contents.trim().to_string()).map_err(|e| {
+                config_error::FileError {
+                    err: format!(
+                        "DApp contract address string ill-formed: {}",
+                        e
+                    ),
+                }
+                .build()
+            })?
+        };
 
         let state_server_endpoint: String = env_cli_config
             .state_server_endpoint
@@ -259,10 +296,19 @@ impl IndexerConfig {
 
         let postgres_db: String = env_cli_config
             .postgres_db
+            .clone()
             .or(file_config.postgres_db)
             .ok_or(snafu::NoneError)
             .context(config_error::FileError {
                 err: "Must specify postgres database",
+            })?;
+
+        let postgres_migration_folder: String = env_cli_config
+            .postgres_migration_folder
+            .or(file_config.postgres_migration_folder)
+            .ok_or(snafu::NoneError)
+            .context(config_error::FileError {
+                err: "Must specify postgres migration folder",
             })?;
 
         Ok(IndexerConfig {
@@ -278,6 +324,7 @@ impl IndexerConfig {
                 postgres_user,
                 postgres_password,
                 postgres_db,
+                postgres_migration_folder,
             },
         })
     }

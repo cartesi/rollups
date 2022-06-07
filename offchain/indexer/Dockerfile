@@ -1,48 +1,40 @@
-# Execute with the context at the repository's root!
-# $ docker build -f Dockerfile ../../
+# syntax=docker.io/docker/dockerfile:1.4
+# deps install
+FROM rust:1.61.0-bullseye AS chef
 
-# Using `cargo-chef` for caching
-# https://github.com/LukeMathWalker/cargo-chef
-
-## Build Stage
-# Start with deps
-FROM rust:1.59 AS chef
 RUN rustup component add rustfmt
 RUN cargo install cargo-chef
-WORKDIR rollups
 
 # cargo chef prepare stage
 FROM chef AS planner
-WORKDIR offchain
-COPY ./offchain .
+
+WORKDIR /usr/src/app/offchain
+COPY . /usr/src/app
 RUN cargo chef prepare --recipe-path recipe.json
 
 # cargo chef cook stage
 FROM chef AS builder
-COPY onchain/rollups/abi onchain/rollups/abi
-COPY grpc-interfaces grpc-interfaces
-WORKDIR offchain
-COPY --from=planner rollups/offchain/recipe.json recipe.json
+
+WORKDIR /usr/src/app/offchain
+COPY --from=planner /usr/src/app/offchain/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 
-# build
-COPY ./offchain/ .
+# buld application
+WORKDIR /usr/src/app/offchain
+COPY . /usr/src/app
 RUN cargo build --release --bin indexer_main
 
-## Run application
-# Diesel cli database tool requires cargo installation
-FROM rust:1.59 AS runtime
-RUN apt-get update && apt-get install -y openssl postgresql postgresql-contrib wget && rm -rf /var/lib/apt/lists/*
-RUN cargo install diesel_cli --no-default-features --features "postgres"
+## runtime
+FROM rust:1.61.0-bullseye AS runtime
 
-ENV DOCKERIZE_VERSION v0.6.1
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+RUN <<EOF
+apt-get update
+DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
+cargo install diesel_cli --no-default-features --features "postgres"
+rm -rf /var/lib/apt/lists/*
+EOF
 
-WORKDIR app
-COPY --from=builder /rollups/offchain/target/release/indexer_main /usr/local/bin
-COPY --from=builder /rollups/offchain/data/migrations/ ./migrations/
+COPY --from=builder /usr/src/app/offchain/target/release/indexer_main /usr/local/bin
+COPY --from=builder /usr/src/app/offchain/data/migrations/ /usr/local/bin/migrations/
 
-COPY ./offchain/indexer/entrypoint-indexer.sh .
-ENTRYPOINT ["/bin/bash", "./entrypoint-indexer.sh"]
+ENTRYPOINT ["indexer_main"]

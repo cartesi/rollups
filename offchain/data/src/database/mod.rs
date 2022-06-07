@@ -176,3 +176,32 @@ pub async fn connect_to_database_with_retry_async(
     })
     .await
 }
+
+pub fn perform_diesel_setup(
+    user: &str,
+    password: &str,
+    host: &str,
+    port: u16,
+    database: &str,
+    migration_folder: &str,
+) -> std::io::Result<std::process::Output> {
+    let endpoint = format!(
+        "postgres://{}:{}@{}:{}/{}",
+        user,
+        password,
+        host,
+        &port.to_string(),
+        database
+    );
+
+    info!(
+        "Performing diesel setup on endpoint {} from migration directory {}",
+        endpoint, migration_folder
+    );
+
+    std::process::Command::new("diesel")
+        .arg(&format!("setup"))
+        .arg(&format!("--database-url={}", endpoint))
+        .arg(&format!("--migration-dir={}", migration_folder))
+        .output()
+}
