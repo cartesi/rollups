@@ -530,7 +530,6 @@ async fn db_loop(
                                         match insert_proof(&proof, &conn) {
                                                 Ok(new_proof_id) => {
                                                     notice.proof_id = new_proof_id;
-                                                    println!(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> proof id {:?}", notice.proof_id);
                                                     if let Err(err) = update_notice(&notice, &conn) {
                                                         warn!("Failed to update notice with id {} for proof id {:?}, error {}",
                                                             &notice.id, notice.proof_id, err.to_string());
@@ -649,7 +648,8 @@ async fn db_loop(
                         }).await;
                     }
                 }
-            }
+            },
+            else => {()}
         }
     }
 }

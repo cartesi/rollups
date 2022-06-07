@@ -9,8 +9,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use diesel::pg::PgConnection;
-use diesel::{Connection, ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use diesel_migrations::Migration;
 use indexer::db_service::testing::{
     test_insert_input, test_insert_notice, test_insert_proof,
@@ -22,15 +21,13 @@ use rstest::*;
 use serial_test::serial;
 use std::future::Future;
 
-const POSTGRES_PORT: u16 = 5434;
-const POSTGRES_HOSTNAME: &str = "127.0.0.1";
-const POSTGRES_USER: &str = "postgres";
-const POSTGRES_PASSWORD: &str = "password";
-const POSTGRES_DB: &str = "test_indexer";
-const PATH_TO_MIGRATION_FOLDER: &str = "../data/migrations/";
+mod common;
 
-#[cfg(feature = "postgres")]
-diesel_migrations::embed_migrations!(PATH_TO_MIGRATION_FOLDER);
+use common::{
+    connect_to_database, create_database, perform_diesel_setup,
+    PATH_TO_MIGRATION_FOLDER, POSTGRES_DB, POSTGRES_HOSTNAME,
+    POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER,
+};
 
 struct Context {
     postgres_endpoint: String,
@@ -38,79 +35,6 @@ struct Context {
 
 impl Drop for Context {
     fn drop(&mut self) {}
-}
-
-pub fn connect_to_database(
-    postgres_endpoint: &str,
-) -> Result<PgConnection, diesel::ConnectionError> {
-    PgConnection::establish(&postgres_endpoint)
-}
-
-pub fn create_database(
-    user: &str,
-    password: &str,
-    host: &str,
-    port: u16,
-) -> Result<(), diesel::result::Error> {
-    let endpoint = format!(
-        "postgres://{}:{}@{}:{}",
-        user,
-        password,
-        host,
-        &port.to_string()
-    );
-
-    let conn = connect_to_database(&endpoint).unwrap();
-    // Drop old database
-    match diesel::sql_query(&format!("DROP DATABASE IF EXISTS {}", POSTGRES_DB))
-        .execute(&conn)
-    {
-        Ok(res) => {
-            println!("Database dropped, result {}", res);
-        }
-        Err(e) => {
-            println!("Error dropping database: {}", e.to_string());
-        }
-    };
-
-    // Create new database
-    match diesel::sql_query(&format!("CREATE DATABASE {}", POSTGRES_DB))
-        .execute(&conn)
-    {
-        Ok(res) => {
-            println!("Database created, result {}", res);
-        }
-        Err(e) => {
-            println!("Error creating database: {}", e.to_string());
-        }
-    };
-    Ok(())
-}
-
-fn perform_diesel_setup(
-    user: &str,
-    password: &str,
-    host: &str,
-    port: u16,
-    database: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let endpoint = format!(
-        "postgres://{}:{}@{}:{}/{}",
-        user,
-        password,
-        host,
-        &port.to_string(),
-        database
-    );
-
-    std::process::Command::new("diesel")
-        .arg(&format!("setup"))
-        .arg(&format!("--database-url={}", endpoint))
-        .arg(&format!("--migration-dir={}", PATH_TO_MIGRATION_FOLDER))
-        .output()
-        .expect("Unable to launch Cartesi machine server");
-
-    Ok(())
 }
 
 #[fixture]

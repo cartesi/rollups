@@ -124,35 +124,16 @@ async fn get_state(
         .into_inner())
 }
 
-/// Get epoch status and send relevant data to db service
-/// If epoch_index is not provided, use session active epoch index
-/// Return epoch index of the epoch pooled
-async fn poll_epoch_status(
+async fn process_epoch_status_response(
+    epoch_status_response: GetEpochStatusResponse,
     message_tx: &mpsc::Sender<Message>,
-    client: &mut ServerManagerClient<tonic::transport::Channel>,
     session_id: &str,
-    epoch_index: Option<u64>,
+    epoch_index: u64,
 ) -> Result<u64, crate::error::Error> {
-    let epoch_index: u64 = match epoch_index {
-        Some(index) => index,
-        None => {
-            let session_status = get_session_status(client, session_id).await?;
-            debug!(
-                "Poll epoch status: retrieving current epoch index, acquired session status {:?}",
-                session_status
-            );
-            session_status.active_epoch_index
-        }
-    };
-
-    info!("Poll epoch status: polling for epoch {}", epoch_index);
-    let epoch_status_response =
-        get_epoch_status(client, session_id, epoch_index).await?;
-
     for input in epoch_status_response.processed_inputs {
         // Process reports
         for (rindex, report) in input.reports.iter().enumerate() {
-            trace!("Poll epoch status: sending report with session id {}, epoch_index {} input_index {} report_index {} report {:?}",
+            trace!("Process epoch status: sending report with session id {}, epoch_index {} input_index {} report_index {} report {:?}",
                                 session_id, epoch_index, input.input_index, &rindex, report);
             if let Err(e) = message_tx
                 .send(Message::Report(DbReport {
@@ -166,7 +147,7 @@ async fn poll_epoch_status(
                 .await
             {
                 error!(
-                    "Poll epoch status: error passing report message to db {}",
+                    "Process epoch status: error passing report message to db {}",
                     e.to_string()
                 )
             }
@@ -178,7 +159,7 @@ async fn poll_epoch_status(
                     // Process vouchers
                     for (vindex, voucher) in input_result.vouchers.iter().enumerate() {
                         // Send one voucher to database service
-                        trace!("Poll epoch status: sending voucher with session id {}, epoch_index {} input_index {} voucher_index {} voucher {:?}",
+                        trace!("Process epoch status: sending voucher with session id {}, epoch_index {} input_index {} voucher_index {} voucher {:?}",
                                 session_id, epoch_index, input.input_index, &vindex, voucher);
 
                         // Construct and send notice proof
@@ -242,13 +223,13 @@ async fn poll_epoch_status(
                             // Payload is in raw format
                             payload: Some(voucher.payload.clone())
                         })).await {
-                            error!("Poll epoch status: error passing voucher message to db {}", e.to_string())
+                            error!("Process epoch status: error passing voucher message to db {}", e.to_string())
                         }
                     }
                     // Process notices
                     for (nindex, notice) in input_result.notices.iter().enumerate() {
                         // Send one notice to database service
-                        trace!("Poll epoch status: sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
+                        trace!("Process epoch status: sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
                                 session_id, epoch_index, input.input_index, &nindex);
 
                         // Construct and send notice proof
@@ -259,7 +240,7 @@ async fn poll_epoch_status(
                                 .as_ref()
                                 .unwrap_or(&cartesi_machine::Hash { data: vec![] })
                                 .data,
-                                ).as_str(),
+                            ).as_str(),
                             vouchers_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
                                 .most_recent_vouchers_epoch_root_hash
                                 .as_ref()
@@ -313,12 +294,12 @@ async fn poll_epoch_status(
                             // Payload is in raw format
                             payload: Some(notice.payload.clone())
                         })).await {
-                            error!("Poll epoch status: error passing notice message to db {}", e.to_string())
+                            error!("Process epoch status: error passing notice message to db {}", e.to_string())
                         }
                     }
                 },
                 cartesi_server_manager::processed_input::ProcessedOneof::SkipReason(reason) => {
-                    info!("Poll epoch status: skip processed input for reason {:?}", reason);
+                    info!("Process epoch status: skip processed input for reason {:?}", reason);
                 }
             }
         }
@@ -326,32 +307,46 @@ async fn poll_epoch_status(
     Ok(epoch_index)
 }
 
-/// Get state server current state
-/// Process inputs ad send to db service
-async fn poll_state(
+/// Get epoch status and send relevant data to db service
+/// If epoch_index is not provided, use session active epoch index
+/// Return epoch index of the epoch pooled
+async fn poll_epoch_status(
     message_tx: &mpsc::Sender<Message>,
-    client: &mut DelegateManagerClient<tonic::transport::Channel>,
-    dapp_contract_address: Address,
-    initial_epoch: i32,
+    client: &mut ServerManagerClient<tonic::transport::Channel>,
+    session_id: &str,
+    epoch_index: Option<u64>,
+) -> Result<u64, crate::error::Error> {
+    let epoch_index: u64 = match epoch_index {
+        Some(index) => index,
+        None => {
+            let session_status = get_session_status(client, session_id).await?;
+            debug!(
+                "Poll epoch status: retrieving current epoch index, acquired session status {:?}",
+                session_status
+            );
+            session_status.active_epoch_index
+        }
+    };
+
+    info!("Poll epoch status: polling for epoch {}", epoch_index);
+    let epoch_status_response =
+        get_epoch_status(client, session_id, epoch_index).await?;
+
+    process_epoch_status_response(
+        epoch_status_response,
+        message_tx,
+        session_id,
+        epoch_index,
+    )
+    .await
+}
+
+async fn process_state_response(
+    state_response: GetStateResponse,
+    message_tx: &mpsc::Sender<Message>,
 ) -> Result<(), crate::error::Error> {
-    let initial_state = (U256::from(initial_epoch), dapp_contract_address);
-    let json_initial_state = serde_json::to_string(&initial_state)
-        .context(super::error::SerializeError)?;
-
-    debug!(
-        "Poll state: json state server retrieve initial state argument: {:?}",
-        &json_initial_state
-    );
-
-    let state_str = get_state(client, &json_initial_state).await?;
-    trace!(
-        "Poll state: state received for initial state {:?} is {:?}",
-        &json_initial_state,
-        state_str
-    );
-
     let block_state: BlockState<RollupsState> =
-        serde_json::from_str(&state_str.json_state)
+        serde_json::from_str(&state_response.json_state)
             .context(super::error::DeserializeError)?;
 
     async fn send_input(
@@ -478,6 +473,33 @@ async fn poll_state(
         .await;
 
     Ok(())
+}
+
+/// Get state server current state
+/// Process inputs ad send to db service
+async fn poll_state(
+    message_tx: &mpsc::Sender<Message>,
+    client: &mut DelegateManagerClient<tonic::transport::Channel>,
+    dapp_contract_address: Address,
+    initial_epoch: i32,
+) -> Result<(), crate::error::Error> {
+    let initial_state = (U256::from(initial_epoch), dapp_contract_address);
+    let json_initial_state = serde_json::to_string(&initial_state)
+        .context(super::error::SerializeError)?;
+
+    debug!(
+        "Poll state: json state server retrieve initial state argument: {:?}",
+        &json_initial_state
+    );
+
+    let state_response = get_state(client, &json_initial_state).await?;
+    trace!(
+        "Poll state: state received for initial state {:?} is {:?}",
+        &json_initial_state,
+        state_response
+    );
+
+    process_state_response(state_response, message_tx).await
 }
 
 /// Polling task type
@@ -789,4 +811,30 @@ pub async fn run(
 
     // Start polling loop
     polling_loop(config, message_tx).await
+}
+
+pub mod testing {
+    use super::*;
+
+    pub async fn test_process_epoch_status_response(
+        epoch_status_response: GetEpochStatusResponse,
+        message_tx: &mpsc::Sender<Message>,
+        session_id: &str,
+        epoch_index: u64,
+    ) -> Result<u64, crate::error::Error> {
+        process_epoch_status_response(
+            epoch_status_response,
+            message_tx,
+            session_id,
+            epoch_index,
+        )
+        .await
+    }
+
+    pub async fn test_process_state_response(
+        state_response: GetStateResponse,
+        message_tx: &mpsc::Sender<Message>,
+    ) -> Result<(), crate::error::Error> {
+        process_state_response(state_response, message_tx).await
+    }
 }

@@ -17,7 +17,7 @@ use indexer::db_service;
 
 use indexer::error::Error::BadConfiguration;
 use tokio::sync::mpsc;
-use tracing::{error, info, trace};
+use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]

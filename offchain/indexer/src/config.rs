@@ -22,9 +22,9 @@ use snafu::ResultExt;
 
 use ethers::core::types::{Address, U256};
 
-use tracing::{error, warn};
 use std::fs;
 use std::str::FromStr;
+use tracing::{error, warn};
 
 use structopt::StructOpt;
 
