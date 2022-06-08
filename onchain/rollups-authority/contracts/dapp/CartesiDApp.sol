@@ -15,9 +15,13 @@ pragma solidity ^0.8.13;
 
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
+import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 
-contract CartesiDapp {
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract CartesiDApp is ReentrancyGuard {
     using CanonicalMachine for CanonicalMachine.Log2Size;
+    using Bitmask for mapping(uint256 => uint256);
 
     address consensus;
     bytes32[] finalizedHashes;
@@ -30,6 +34,7 @@ contract CartesiDapp {
     );
 
     event NewConsensus(address newConsensus);
+    event VoucherExecuted(uint256 voucherPosition);
 
     constructor(address _consensus) {
         consensus = _consensus;
@@ -57,6 +62,50 @@ contract CartesiDapp {
         bytes32 machineStateHash;
         bytes32[] keccakInHashesSiblings;
         bytes32[] outputHashesInEpochSiblings;
+    }
+
+    /// @notice executes voucher
+    /// @param _destination address that will execute the payload
+    /// @param _payload payload to be executed by destination
+    /// @param _v validity proof for this encoded voucher
+    /// @return true if voucher was executed successfully
+    /// @dev  vouchers can only be executed once
+    function executeVoucher(
+        address _destination,
+        bytes calldata _payload,
+        OutputValidityProof calldata _v
+    ) public nonReentrant returns (bool) {
+        bytes memory encodedVoucher = abi.encode(_destination, _payload);
+
+        // check if validity proof matches the voucher provided
+        isValidVoucherProof(
+            encodedVoucher,
+            finalizedHashes[_v.epochIndex],
+            _v
+        );
+
+        uint256 voucherPosition = getBitMaskPosition(
+            _v.outputIndex,
+            _v.inputIndex,
+            _v.epochIndex
+        );
+
+        // check if voucher has been executed
+        require(
+            voucherBitmask.getBit(voucherPosition),
+            "re-execution not allowed"
+        );
+
+        // execute voucher
+        (bool succ, ) = _destination.call(_payload);
+
+        // if properly executed, mark it as executed and emit event
+        if (succ) {
+            voucherBitmask.setBit(voucherPosition, true);
+            emit VoucherExecuted(voucherPosition);
+        }
+
+        return succ;
     }
 
     /// TODO: extend documentation
@@ -135,5 +184,52 @@ contract CartesiDapp {
             ) == _v.outputHashesRootHash,
             "outputHashesRootHash incorrect"
         );
+    }
+
+    /// @notice isValidVoucherProof reverts if the proof is invalid
+    function isValidVoucherProof(
+        bytes memory _encodedVoucher,
+        bytes32 _epochHash,
+        OutputValidityProof calldata _v
+    ) public pure {
+        enforceProofValidity(
+            _encodedVoucher,
+            _epochHash,
+            _v.vouchersEpochRootHash,
+            CanonicalMachine.EPOCH_VOUCHER_LOG2_SIZE.uint64OfSize(),
+            CanonicalMachine.VOUCHER_METADATA_LOG2_SIZE.uint64OfSize(),
+            _v
+        );
+    }
+
+    /// @notice isValidNoticeProof reverts if the proof is invalid
+    function isValidNoticeProof(
+        bytes memory _encodedNotice,
+        bytes32 _epochHash,
+        OutputValidityProof calldata _v
+    ) public pure {
+        enforceProofValidity(
+            _encodedNotice,
+            _epochHash,
+            _v.noticesEpochRootHash,
+            CanonicalMachine.EPOCH_NOTICE_LOG2_SIZE.uint64OfSize(),
+            CanonicalMachine.NOTICE_METADATA_LOG2_SIZE.uint64OfSize(),
+            _v
+        );
+    }
+
+    /// @notice get voucher position on bitmask
+    /// @param _voucher of voucher inside the input
+    /// @param _input which input, inside the epoch, the voucher belongs to
+    /// @param _epoch which epoch the voucher belongs to
+    /// @return position of that voucher on bitmask
+    function getBitMaskPosition(
+        uint256 _voucher,
+        uint256 _input,
+        uint256 _epoch
+    ) public pure returns (uint256) {
+        // voucher * 2 ** 128 + input * 2 ** 64 + epoch
+        // this can't overflow because its impossible to have > 2**128 vouchers
+        return (((_voucher << 128) | (_input << 64)) | _epoch);
     }
 }
