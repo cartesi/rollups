@@ -13,22 +13,77 @@
 // @title Input Box
 pragma solidity ^0.8.13;
 
+import {CanonicalMachine} from "../common/CanonicalMachine.sol";
+
 contract InputBox {
-    uint256 immutable inputDriveSize;
+    using CanonicalMachine for CanonicalMachine.Log2Size;
 
-    bytes32[] inputBox;
+    bytes32[] public inputBox;
 
-    constructor (uint256 _inputDriveSize) {
-        inputDriveSize = _inputDriveSize;
+    event DirectInputAdded();
+    event IndirectInputAdded(address sender, bytes input);
+
+    function addDirectInput(bytes calldata _input) public returns (bytes32) {
+        // TODO require EOA account
+        bytes32 inputHash = computeInputHash(
+            msg.sender,
+            block.number,
+            block.timestamp,
+            _input,
+            inputBox.length
+        );
+
+        // add input to correct inbox
+        inputBox.push(inputHash);
+
+        emit DirectInputAdded();
+
+        return inputHash;
     }
 
-    // calldata!
-    event InputAdded(
-        uint256 indexed inputIndex,
-        address sender,
-        uint256 timestamp,
-        bytes input
-    );
-}
+    function addIndirectInput(bytes calldata _input) public returns (bytes32) {
+        bytes32 inputHash = computeInputHash(
+            msg.sender,
+            block.number,
+            block.timestamp,
+            _input,
+            inputBox.length
+        );
 
-// how does the dapp know its own address if input box is shared?
+        // add input to correct inbox
+        inputBox.push(inputHash);
+
+        emit IndirectInputAdded(msg.sender, _input);
+
+        return inputHash;
+    }
+
+    function computeInputHash(
+        address sender,
+        uint256 blockNumber,
+        uint256 blockTimestamp,
+        bytes calldata input,
+        uint256 inputIndex
+    ) internal pure returns (bytes32) {
+        // TODO guarantee that unwrapping is worth the gas cost
+        require(
+            input.length <=
+                (1 << CanonicalMachine.INPUT_MAX_LOG2_SIZE.uint64OfSize()),
+            "input len: [0,driveSize]"
+        );
+
+        bytes32 keccakMetadata = keccak256(
+            abi.encode(
+                sender,
+                blockNumber,
+                blockTimestamp,
+                0, //TODO decide how to deal with epoch index
+                inputIndex // input index
+            )
+        );
+
+        bytes32 keccakInput = keccak256(input);
+
+        return keccak256(abi.encode(keccakMetadata, keccakInput));
+    }
+}
