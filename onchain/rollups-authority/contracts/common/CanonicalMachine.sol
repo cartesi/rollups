@@ -16,6 +16,8 @@ pragma solidity ^0.8.13;
 library CanonicalMachine {
     type Log2Size is uint64;
 
+    Log2Size constant INPUT_MAX_LOG2_SIZE = Log2Size.wrap(25);
+
     // cartesi machine word log2 size
     Log2Size constant WORD_LOG2_SIZE = Log2Size.wrap(3);
 
@@ -37,8 +39,19 @@ library CanonicalMachine {
     // cartesi machine address space log2 size
     Log2Size constant MACHINE_LOG2_SIZE = Log2Size.wrap(64);
 
-
-    function uint64_of_size(Log2Size s) internal pure returns (uint64) {
+    function uint64OfSize(Log2Size s) internal pure returns (uint64) {
         return Log2Size.unwrap(s);
+    }
+
+    /// @notice returns the position of a intra memory range on a memory range
+    //          with  contents with the same size
+    /// @param _index index of intra memory range
+    /// @param _log2Size of intra memory range
+    function getIntraMemoryRangePosition(uint64 _index, Log2Size _log2Size)
+        public
+        pure
+        returns (uint64)
+    {
+        return _index << Log2Size.unwrap(_log2Size);
     }
 }
