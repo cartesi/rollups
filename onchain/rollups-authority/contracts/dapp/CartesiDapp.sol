@@ -13,18 +13,20 @@
 // @title Cartesi DApp
 pragma solidity ^0.8.13;
 
-import "../common/CanonicalMachine.sol";
+import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 
 contract CartesiDapp {
+    using CanonicalMachine for CanonicalMachine.Log2Size;
+
     address consensus;
-    bytes32[] outputsHashes;
+    bytes32[] finalizedHashes;
     mapping(uint256 => uint256) voucherBitmask;
 
-    event NewOutputsHash(
+    event NewFinalizedHash(
         uint256 indexed index,
         uint256 lastFinalizedInput,
-        bytes32 hash
+        bytes32 finalizedHash
     );
 
     event NewConsensus(address newConsensus);
@@ -32,6 +34,9 @@ contract CartesiDapp {
     constructor(address _consensus) {
         consensus = _consensus;
     }
+
+    // TODO submitFClaim(???)
+    // TODO function changeConsensus(address newConsensus)
 
     /// @param epochIndex which epoch the output belongs to
     /// @param inputIndex which input, inside the epoch, the output belongs to
@@ -43,9 +48,9 @@ contract CartesiDapp {
     /// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range
     /// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range
     struct OutputValidityProof {
-        uint256 epochIndex;
-        uint256 inputIndex;
-        uint256 outputIndex;
+        uint64 epochIndex;
+        uint64 inputIndex;
+        uint64 outputIndex;
         bytes32 outputHashesRootHash;
         bytes32 vouchersEpochRootHash;
         bytes32 noticesEpochRootHash;
@@ -81,8 +86,11 @@ contract CartesiDapp {
         // prove that output metadata memory range is contained in epoch's output memory range
         require(
             Merkle.getRootAfterReplacementInDrive(
-                getIntraDrivePosition(_v.inputIndex, CanonicalMachine.KECCAK_LOG2_SIZE),
-                CanonicalMachine.KECCAK_LOG2_SIZE,
+                CanonicalMachine.getIntraMemoryRangePosition(
+                    _v.inputIndex,
+                    CanonicalMachine.KECCAK_LOG2_SIZE
+                ),
+                CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
                 _outputEpochLog2Size,
                 keccak256(abi.encodePacked(_v.outputHashesRootHash)),
                 _v.outputHashesInEpochSiblings
@@ -109,32 +117,23 @@ contract CartesiDapp {
         // log2size of the leaf is three (8 bytes) not  five (32 bytes)
         bytes32 merkleRootOfHashOfOutput = Merkle.getMerkleRootFromBytes(
             abi.encodePacked(keccak256(_encodedOutput)),
-            CanonicalMachine.KECCAK_LOG2_SIZE
+            CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize()
         );
 
         // prove that merkle root hash of bytes(hashOfOutput) is contained
         // in the output metadata array memory range
         require(
             Merkle.getRootAfterReplacementInDrive(
-                getIntraDrivePosition(_v.outputIndex, CanonicalMachine.KECCAK_LOG2_SIZE),
-                CanonicalMachine.KECCAK_LOG2_SIZE,
+                CanonicalMachine.getIntraMemoryRangePosition(
+                    _v.outputIndex,
+                    CanonicalMachine.KECCAK_LOG2_SIZE
+                ),
+                CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
                 _outputHashesLog2Size,
                 merkleRootOfHashOfOutput,
                 _v.keccakInHashesSiblings
             ) == _v.outputHashesRootHash,
             "outputHashesRootHash incorrect"
         );
-    }
-
-    /// @notice returns the position of a intra memory range on a memory range
-    //          with  contents with the same size
-    /// @param _index index of intra memory range
-    /// @param _log2Size of intra memory range
-    function getIntraDrivePosition(uint256 _index, uint256 _log2Size)
-        public
-        pure
-        returns (uint256)
-    {
-        return (_index << _log2Size);
     }
 }
