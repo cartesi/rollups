@@ -462,10 +462,10 @@
   dependencies:
     "@cartesi/util" "^2.0.1"
 
-"@cartesi/token@^1.3.0":
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/@cartesi/token/-/token-1.3.0.tgz#b4ef208263320281761b6ed5676f1081ef3a2a8b"
-  integrity sha512-5m27aFhR9QXjLz4evEc+sp7fb5l1ATJpcFF+qwcXKneTx5ASXbhex1I2HoTqSb0fRLZvWGby3ulaixJgQjQylg==
+"@cartesi/token@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@cartesi/token/-/token-1.4.0.tgz#ec4339e6423afed7204dcd6a981d40c9576fb7cf"
+  integrity sha512-tDZgZHa4sKaiGMLQ4DykwYdtM3y4q3jdAc2A/PH53+K6L5vbAERTiUcWsd3kZm7/08wm6CjpajWIHzhwCoKipQ==
   dependencies:
     "@openzeppelin/contracts" "^2.5.0"
 

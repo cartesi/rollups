@@ -63,6 +63,11 @@ const config: HardhatUserConfig = {
             chainId: 97,
             accounts: mnemonic ? { mnemonic } : undefined,
         },
+        avax_fuji: {
+            url: "https://api.avax-test.network/ext/bc/C/rpc",
+            chainId: 43113,
+            accounts: mnemonic ? { mnemonic } : undefined,
+        },
     },
     solidity: {
         version: "0.8.13",
@@ -123,11 +128,15 @@ const config: HardhatUserConfig = {
             ],
             polygon_mumbai: [
                 ppath("@cartesi/util", "/deployments/matic_testnet"),
-                ppath("@cartesi/token", "/deployments/matic_testnet"),
+                ppath("@cartesi/token", "/deployments/polygon_mumbai"),
             ],
             bsc_testnet: [
                 ppath("@cartesi/util", "/deployments/bsc_testnet"),
                 ppath("@cartesi/token", "/deployments/bsc_testnet"),
+            ],
+            avax_fuji: [
+                ppath("@cartesi/util", "/deployments/avax_testnet"),
+                ppath("@cartesi/token", "/deployments/avax_fuji"),
             ],
         },
     },
