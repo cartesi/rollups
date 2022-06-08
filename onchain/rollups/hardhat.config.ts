@@ -53,6 +53,7 @@ const config: HardhatUserConfig = {
             accounts: mnemonic ? { mnemonic } : undefined,
         },
         mainnet: infuraNetwork("mainnet", 1, 6283185),
+        ropsten: infuraNetwork("ropsten", 3, 6283185),
         rinkeby: infuraNetwork("rinkeby", 4, 6283185),
         kovan: infuraNetwork("kovan", 42, 6283185),
         goerli: infuraNetwork("goerli", 5, 6283185),

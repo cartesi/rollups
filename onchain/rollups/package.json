@@ -11,6 +11,7 @@
         "deploy": "run-s deploy:development",
         "deploy:testnet": "run-s deploy:rinkeby deploy:kovan deploy:goerli deploy:polygon_mumbai deploy:bsc_testnet",
         "deploy:development": "hardhat deploy --network localhost",
+        "deploy:ropsten": "hardhat deploy --network ropsten --export export/abi/ropsten.json",
         "deploy:rinkeby": "hardhat deploy --network rinkeby --export export/abi/rinkeby.json",
         "deploy:kovan": "hardhat deploy --network kovan --export export/abi/kovan.json",
         "deploy:goerli": "hardhat deploy --network goerli --export export/abi/goerli.json",
