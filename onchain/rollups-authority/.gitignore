@@ -1,0 +1,16 @@
+/artifacts
+cache
+contracts.json
+coverage*
+deployments/localhost
+deployments/*/solcInputs/*.json
+dist
+generated-src
+node_modules
+src/proto/stateserver*
+src/types
+test/*/
+.vscode
+.node*
+.env
+.DS_Store
