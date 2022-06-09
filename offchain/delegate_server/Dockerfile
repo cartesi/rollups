@@ -31,6 +31,12 @@ RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
 ## runtime
 FROM debian:bullseye-slim AS runtime
 
+RUN <<EOF
+apt-get update
+DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
+rm -rf /var/lib/apt/lists/*
+EOF
+
 COPY --from=grpc_health_probe /go/bin/grpc-health-probe /usr/local/bin
 COPY --from=builder /usr/src/app/offchain/target/release/output_server_main /usr/local/bin
 
