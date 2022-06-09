@@ -14,5 +14,8 @@
 pragma solidity ^0.8.13;
 
 interface ICartesiDApp {
-    function submitClaim(bytes32 claim) external;
+    function submitFinalizedHash(
+        bytes32 _finalizedHash,
+        uint256 _lastFinalizedInput
+    ) external;
 }

@@ -18,8 +18,9 @@ import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract CartesiDApp is ReentrancyGuard {
+contract CartesiDApp is ReentrancyGuard, Ownable {
     using CanonicalMachine for CanonicalMachine.Log2Size;
     using Bitmask for mapping(uint256 => uint256);
 
@@ -29,19 +30,29 @@ contract CartesiDApp is ReentrancyGuard {
 
     event NewFinalizedHash(
         uint256 indexed index,
-        uint256 lastFinalizedInput,
-        bytes32 finalizedHash
+        bytes32 finalizedHash,
+        uint256 lastFinalizedInput
     );
 
     event NewConsensus(address newConsensus);
     event VoucherExecuted(uint256 voucherPosition);
 
     constructor(address _consensus) {
-        consensus = _consensus;
+        transferOwnership(_consensus);
     }
 
-    // TODO submitFClaim(???)
-    // TODO function changeConsensus(address newConsensus)
+    function submitFinalizedHash(
+        bytes32 _finalizedHash,
+        uint256 _lastFinalizedInput
+    ) external onlyOwner {
+        emit NewFinalizedHash(
+            finalizedHashes.length,
+            _finalizedHash,
+            _lastFinalizedInput
+        );
+
+        finalizedHashes.push(_finalizedHash);
+    }
 
     /// @param epochIndex which epoch the output belongs to
     /// @param inputIndex which input, inside the epoch, the output belongs to
@@ -78,11 +89,7 @@ contract CartesiDApp is ReentrancyGuard {
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
 
         // check if validity proof matches the voucher provided
-        isValidVoucherProof(
-            encodedVoucher,
-            finalizedHashes[_v.epochIndex],
-            _v
-        );
+        isValidVoucherProof(encodedVoucher, finalizedHashes[_v.epochIndex], _v);
 
         uint256 voucherPosition = getBitMaskPosition(
             _v.outputIndex,
