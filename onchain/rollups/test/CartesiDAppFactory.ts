@@ -45,6 +45,8 @@ describe("Cartesi DApp Factory", () => {
     let validators: string[];
 
     beforeEach(async () => {
+        await deployments.fixture();
+
         signers = await ethers.getSigners();
 
         // dummy addresses

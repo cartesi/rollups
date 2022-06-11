@@ -45,6 +45,8 @@ describe("ERC721Portal Facet", async () => {
     const inputHeader = keccak256(toUtf8Bytes("ERC721_Transfer"));
 
     beforeEach(async () => {
+        await deployments.fixture();
+
         const diamond = await deployDiamond({ debug: true });
         [signer, signer2] = await ethers.getSigners();
         portalFacet = ERC721PortalFacet__factory.connect(

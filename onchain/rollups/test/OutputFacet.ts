@@ -108,6 +108,7 @@ describe("Output Facet", () => {
     );
 
     beforeEach(async () => {
+        await deployments.fixture();
         await setupTest();
     });
 

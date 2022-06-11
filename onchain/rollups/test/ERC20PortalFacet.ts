@@ -39,6 +39,8 @@ describe("ERC20Portal Facet", async () => {
     var numberOfInputs = 0x1; // the machine starts with one input
 
     beforeEach(async () => {
+        await deployments.fixture();
+
         const diamond = await deployDiamond({ debug: true });
         [signer, signer2] = await ethers.getSigners();
         portalFacet = ERC20PortalFacet__factory.connect(

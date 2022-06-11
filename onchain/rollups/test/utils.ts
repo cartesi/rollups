@@ -94,9 +94,6 @@ export const deployTestBank = deployments.createFixture(
         const { deployments, getNamedAccounts } = hre;
         const { deployer } = await getNamedAccounts();
 
-        // start with a fresh deployment
-        await deployments.fixture();
-
         let initialSupply = options.initialSupply || 1000000;
 
         // deploy token
@@ -129,8 +126,6 @@ export const deployFactory = deployments.createFixture(
         const { deployments, ethers, getNamedAccounts } = hre;
         const signers = await ethers.getSigners();
         const { deployer } = await getNamedAccounts();
-
-        await deployments.fixture();
 
         const opts: DeployOptions = {
             from: deployer,

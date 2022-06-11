@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 import { expect, use } from "chai";
-import { ethers } from "hardhat";
+import { deployments, ethers } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import {
@@ -62,6 +62,8 @@ describe("Validator Manager Facet", async () => {
     }
 
     beforeEach(async () => {
+        await deployments.fixture();
+
         signers = await ethers.getSigners();
         const diamond = await deployDiamond({ debug: true });
         rollupsFacet = RollupsFacet__factory.connect(

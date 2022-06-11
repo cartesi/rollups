@@ -10,7 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-import { ethers } from "hardhat";
+import { deployments, ethers } from "hardhat";
 import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
@@ -74,6 +74,8 @@ describe("Rollups Facet", () => {
     let initialState: any;
 
     beforeEach(async () => {
+        await deployments.fixture();
+
         signers = await ethers.getSigners();
 
         let validators: string[] = [];

@@ -11,7 +11,6 @@
 // specific language governing permissions and limitations under the License.
 
 import { expect, use } from "chai";
-import { ethers } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
@@ -22,6 +21,7 @@ import {
     EtherPortalFacet__factory,
 } from "../src/types";
 import { deployDiamond, getInputHash } from "./utils";
+import { deployments, ethers } from "hardhat";
 
 use(solidity);
 
@@ -33,6 +33,8 @@ describe("EtherPortal Facet", async () => {
     var numberOfInputs = 0x1; // the machine starts with one input
 
     beforeEach(async () => {
+        await deployments.fixture();
+
         const diamond = await deployDiamond({ debug: true });
         [signer, signer2] = await ethers.getSigners();
         portalFacet = EtherPortalFacet__factory.connect(

@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 import { expect, use } from "chai";
-import { ethers } from "hardhat";
+import { deployments, ethers } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { BytesLike, Signer } from "ethers";
 import {
@@ -83,6 +83,8 @@ describe("Input Facet", () => {
     }
 
     beforeEach(async () => {
+        await deployments.fixture();
+
         numberOfInputs = NUM_OF_INITIAL_INPUTS;
 
         const diamond = await deployDiamond({ debug: true });

@@ -59,6 +59,8 @@ describe("Bank", () => {
     }
 
     beforeEach(async () => {
+        await deployments.fixture();
+
         [alice, bob] = await ethers.getSigners();
 
         // Deploy a simple token
