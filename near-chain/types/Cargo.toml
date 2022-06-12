@@ -1,0 +1,21 @@
+[package]
+name = "types"
+version = "0.1.0"
+edition = "2021"
+authors = [
+  "Felipe Argento <felipe@cartesi.io>",
+  "Gabriel Coutinho <gabriel.coutinho@cartesi.io>",
+  "Roman Hodulák <roman.hodulak@cartesi.io>",
+]
+
+[dependencies]
+state-fold = { version = "0.2", registry = "cartesi" }
+state-fold-types = { version = "0.2", registry = "cartesi", features = ["ethers"] }
+contracts = { path = "../contracts" }
+
+async-trait = "0.1"
+futures = "0.3"
+
+anyhow = "1"
+im = { version = "15", features = ["serde"] }
+serde = { version = "1", features = ["rc"] }
