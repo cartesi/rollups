@@ -1,0 +1,379 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_consensus",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newConsensus",
+        "type": "address"
+      }
+    ],
+    "name": "NewConsensus",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "finalizedHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "lastFinalizedInput",
+        "type": "uint256"
+      }
+    ],
+    "name": "NewFinalizedHash",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "voucherPosition",
+        "type": "uint256"
+      }
+    ],
+    "name": "VoucherExecuted",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_destination",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_payload",
+        "type": "bytes"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "epochIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "inputIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "outputIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "outputHashesRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "vouchersEpochRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "noticesEpochRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "machineStateHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "keccakInHashesSiblings",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "outputHashesInEpochSiblings",
+            "type": "bytes32[]"
+          }
+        ],
+        "internalType": "struct CartesiDApp.OutputValidityProof",
+        "name": "_v",
+        "type": "tuple"
+      }
+    ],
+    "name": "executeVoucher",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_voucher",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_input",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_epoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "getBitMaskPosition",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "_encodedNotice",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_epochHash",
+        "type": "bytes32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "epochIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "inputIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "outputIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "outputHashesRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "vouchersEpochRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "noticesEpochRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "machineStateHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "keccakInHashesSiblings",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "outputHashesInEpochSiblings",
+            "type": "bytes32[]"
+          }
+        ],
+        "internalType": "struct CartesiDApp.OutputValidityProof",
+        "name": "_v",
+        "type": "tuple"
+      }
+    ],
+    "name": "isValidNoticeProof",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "_encodedVoucher",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_epochHash",
+        "type": "bytes32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "epochIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "inputIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "outputIndex",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "outputHashesRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "vouchersEpochRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "noticesEpochRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "machineStateHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "keccakInHashesSiblings",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "outputHashesInEpochSiblings",
+            "type": "bytes32[]"
+          }
+        ],
+        "internalType": "struct CartesiDApp.OutputValidityProof",
+        "name": "_v",
+        "type": "tuple"
+      }
+    ],
+    "name": "isValidVoucherProof",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_finalizedHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_lastFinalizedInput",
+        "type": "uint256"
+      }
+    ],
+    "name": "submitFinalizedHash",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

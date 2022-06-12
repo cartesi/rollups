@@ -21,9 +21,9 @@ contract InputBox {
     bytes32[] public inputBox;
 
     event DirectInputAdded();
-    event IndirectInputAdded(address sender, bytes input);
+    event IndirectInputAdded(address sender, bytes input, uint256 value);
 
-    function addDirectInput(bytes calldata _input) public returns (bytes32) {
+    function addDirectInput(bytes calldata _input) payable public returns (bytes32) {
         // TODO require EOA account
         bytes32 inputHash = computeInputHash(
             msg.sender,
@@ -41,7 +41,7 @@ contract InputBox {
         return inputHash;
     }
 
-    function addIndirectInput(bytes calldata _input) public returns (bytes32) {
+    function addIndirectInput(bytes calldata _input) payable public returns (bytes32) {
         bytes32 inputHash = computeInputHash(
             msg.sender,
             block.number,
@@ -53,7 +53,7 @@ contract InputBox {
         // add input to correct inbox
         inputBox.push(inputHash);
 
-        emit IndirectInputAdded(msg.sender, _input);
+        emit IndirectInputAdded(msg.sender, _input, msg.value);
 
         return inputHash;
     }
