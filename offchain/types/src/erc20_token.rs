@@ -36,8 +36,7 @@ impl Foldable for ERC20BalanceState {
     ) -> Result<Self, Self::Error> {
         let (erc20_address, owner_address) = *initial_state;
 
-        let middleware = access.get_inner();
-        let erc20_contract = ERC20::new(erc20_address, middleware);
+        let erc20_contract = ERC20::new(erc20_address, access);
 
         // `Transfer` events
         // topic1: from
@@ -71,8 +70,8 @@ impl Foldable for ERC20BalanceState {
     async fn fold<M: Middleware + 'static>(
         previous_state: &Self,
         block: &Block,
-        env: &StateFoldEnvironment<M, Self::UserData>,
-        _access: Arc<FoldMiddleware<M>>,
+        _env: &StateFoldEnvironment<M, Self::UserData>,
+        access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
         let erc20_address = previous_state.erc20_address;
 
@@ -86,8 +85,7 @@ impl Foldable for ERC20BalanceState {
             return Ok(previous_state.clone());
         }
 
-        let middleware = env.inner_middleware();
-        let erc20_contract = ERC20::new(erc20_address, middleware);
+        let erc20_contract = ERC20::new(erc20_address, access);
 
         let mut state = previous_state.clone();
 

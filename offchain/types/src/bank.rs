@@ -36,7 +36,7 @@ impl Foldable for BankState {
     ) -> Result<Self, Self::Error> {
         let (bank_address, dapp_address) = *initial_state;
 
-        let bank_contract = Bank::new(bank_address, Arc::clone(&access));
+        let bank_contract = Bank::new(bank_address, access);
 
         // `Deposit` events
         // topic1: `to` address, same as dapp address
@@ -88,7 +88,7 @@ impl Foldable for BankState {
             return Ok(previous_state.clone());
         }
 
-        let bank_contract = Bank::new(bank_address, Arc::clone(&access));
+        let bank_contract = Bank::new(bank_address, access);
 
         let mut state = previous_state.clone();
         let dapp_address = state.dapp_address;

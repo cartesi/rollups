@@ -57,9 +57,8 @@ impl Foldable for EpochState {
     ) -> Result<Self, Self::Error> {
         let (dapp_contract_address, initial_epoch) = *(initial_state);
 
-        let middleware = access.get_inner();
         let contract =
-            RollupsFacet::new(dapp_contract_address, Arc::clone(&middleware));
+            RollupsFacet::new(dapp_contract_address, Arc::clone(&access));
 
         // retrieve list of finalized epochs from FinalizedEpochFoldDelegate
         let finalized_epochs = FinalizedEpochs::get_state_for_block(
@@ -85,7 +84,7 @@ impl Foldable for EpochState {
             match phase_change_events.last() {
                 None => None,
                 Some((_, meta)) => Some(
-                    middleware
+                    access
                         .get_block(meta.block_hash)
                         .await
                         .map_err(|e| FoldableError::from(Error::from(e)))?
@@ -208,7 +207,7 @@ impl Foldable for EpochState {
         previous_state: &Self,
         block: &Block,
         env: &StateFoldEnvironment<M, Self::UserData>,
-        _access: Arc<FoldMiddleware<M>>,
+        access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
         let dapp_contract_address = previous_state.dapp_contract_address;
         // Check if there was (possibly) some log emited on this block.
@@ -293,8 +292,7 @@ impl Foldable for EpochState {
             });
         }
 
-        let middleware = env.inner_middleware();
-        let contract = RollupsFacet::new(dapp_contract_address, middleware);
+        let contract = RollupsFacet::new(dapp_contract_address, access);
 
         let finalized_epochs = FinalizedEpochs::get_state_for_block(
             &(dapp_contract_address, previous_state.initial_epoch),

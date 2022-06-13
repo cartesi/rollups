@@ -77,8 +77,7 @@ impl Foldable for EpochInputState {
     ) -> Result<Self, Self::Error> {
         let (dapp_contract_address, epoch_number) = initial_state.clone();
 
-        let middleware = access.get_inner();
-        let contract = InputFacet::new(dapp_contract_address, middleware);
+        let contract = InputFacet::new(dapp_contract_address, access);
 
         // Retrieve `InputAdded` events
         let events = contract
@@ -103,8 +102,8 @@ impl Foldable for EpochInputState {
     async fn fold<M: Middleware + 'static>(
         previous_state: &Self,
         block: &Block,
-        env: &StateFoldEnvironment<M, Self::UserData>,
-        _access: Arc<FoldMiddleware<M>>,
+        _env: &StateFoldEnvironment<M, Self::UserData>,
+        access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
         let dapp_contract_address = previous_state.dapp_contract_address;
         // If not in bloom copy previous state
@@ -118,19 +117,18 @@ impl Foldable for EpochInputState {
             return Ok(previous_state.clone());
         }
 
-        let middleware = env.inner_middleware();
-        let contract = InputFacet::new(dapp_contract_address, middleware);
+        let contract = InputFacet::new(dapp_contract_address, access);
 
         let events = contract
             .input_added_filter()
             .topic1(previous_state.epoch_number)
-            .query_with_meta()
+            .query()
             .await
             .context("Error querying for input added events")?;
 
         let mut inputs = previous_state.inputs.clone();
         for ev in events {
-            inputs.push_back(ev.into());
+            inputs.push_back((ev, block).into());
         }
 
         Ok(EpochInputState {
@@ -146,10 +144,23 @@ impl From<(InputAddedFilter, LogMeta)> for Input {
         let ev = log.0;
         Self {
             sender: ev.sender,
-            payload: Arc::new(ev.input),
+            payload: Arc::new(ev.input.to_vec()),
             timestamp: ev.timestamp,
 
             block_number: log.1.block_number,
+        }
+    }
+}
+
+impl From<(InputAddedFilter, &Block)> for Input {
+    fn from(log: (InputAddedFilter, &Block)) -> Self {
+        let ev = log.0;
+        Self {
+            sender: ev.sender,
+            payload: Arc::new(ev.input.to_vec()),
+            timestamp: ev.timestamp,
+
+            block_number: log.1.number,
         }
     }
 }

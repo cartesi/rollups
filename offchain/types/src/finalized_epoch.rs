@@ -98,8 +98,7 @@ impl Foldable for FinalizedEpochs {
     ) -> Result<Self, Self::Error> {
         let (dapp_contract_address, initial_epoch) = *initial_state;
 
-        let middleware = access.get_inner();
-        let contract = RollupsFacet::new(dapp_contract_address, middleware);
+        let contract = RollupsFacet::new(dapp_contract_address, access);
 
         // Retrieve FinalizeEpoch events
         let epoch_finalized_events = contract
@@ -148,7 +147,7 @@ impl Foldable for FinalizedEpochs {
         previous_state: &Self,
         block: &Block,
         env: &StateFoldEnvironment<M, Self::UserData>,
-        _access: Arc<FoldMiddleware<M>>,
+        access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
         let dapp_contract_address = previous_state.dapp_contract_address;
 
@@ -168,8 +167,7 @@ impl Foldable for FinalizedEpochs {
             return Ok(previous_state.clone());
         }
 
-        let middleware = env.inner_middleware();
-        let contract = RollupsFacet::new(dapp_contract_address, middleware);
+        let contract = RollupsFacet::new(dapp_contract_address, access);
 
         // Retrieve finalized epoch events
         let epoch_finalized_events = contract

@@ -100,8 +100,8 @@ impl Foldable for RollupsState {
     ) -> Result<Self, Self::Error> {
         let (dapp_contract_address, epoch_number) = *initial_state;
 
-        let middleware = access.get_inner();
-        let diamond_init = DiamondInit::new(dapp_contract_address, middleware);
+        let diamond_init =
+            DiamondInit::new(dapp_contract_address, Arc::clone(&access));
 
         // Retrieve constants from contract creation event
         let constants = {

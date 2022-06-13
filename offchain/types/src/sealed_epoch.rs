@@ -170,9 +170,8 @@ impl Foldable for SealedEpochState {
     ) -> Result<Self, Self::Error> {
         let (dapp_contract_address, epoch_number) = initial_state.clone();
 
-        let middleware = access.get_inner();
         let contract =
-            RollupsFacet::new(dapp_contract_address, Arc::clone(&middleware));
+            RollupsFacet::new(dapp_contract_address, Arc::clone(&access));
 
         // Inputs of epoch
         let inputs = EpochInputState::get_state_for_block(
@@ -207,7 +206,7 @@ impl Foldable for SealedEpochState {
             claims = Some(match claims {
                 None => {
                     // If first claim, get timestamp
-                    let timestamp = middleware
+                    let timestamp = access
                         .get_block(meta.block_hash)
                         .await
                         .map_err(|e| FoldableError::from(Error::from(e)))?
@@ -244,8 +243,8 @@ impl Foldable for SealedEpochState {
     async fn fold<M: Middleware + 'static>(
         previous_state: &Self,
         block: &Block,
-        env: &StateFoldEnvironment<M, Self::UserData>,
-        _access: Arc<FoldMiddleware<M>>,
+        _env: &StateFoldEnvironment<M, Self::UserData>,
+        access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
         // Check if there was (possibly) some log emited on this block.
         // As finalized epochs' inputs will not change, we can return early
@@ -265,9 +264,8 @@ impl Foldable for SealedEpochState {
             return Ok(previous_state.clone());
         }
 
-        let middleware = env.inner_middleware();
         let epoch_number = previous_state.epoch_number().clone();
-        let contract = RollupsFacet::new(dapp_contract_address, middleware);
+        let contract = RollupsFacet::new(dapp_contract_address, access);
 
         // Get claim events of epoch at this block hash
         let claim_events = contract

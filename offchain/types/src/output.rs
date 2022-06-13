@@ -60,8 +60,7 @@ impl Foldable for OutputState {
     ) -> Result<Self, Self::Error> {
         let dapp_contract_address = *initial_state;
 
-        let middleware = access.get_inner();
-        let contract = OutputFacet::new(dapp_contract_address, middleware);
+        let contract = OutputFacet::new(dapp_contract_address, access);
         let events = contract
             .voucher_executed_filter()
             .query()
@@ -92,8 +91,8 @@ impl Foldable for OutputState {
     async fn fold<M: Middleware + 'static>(
         previous_state: &Self,
         block: &Block,
-        env: &StateFoldEnvironment<M, Self::UserData>,
-        _access: Arc<FoldMiddleware<M>>,
+        _env: &StateFoldEnvironment<M, Self::UserData>,
+        access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
         let dapp_contract_address = previous_state.dapp_contract_address;
 
@@ -108,8 +107,7 @@ impl Foldable for OutputState {
             return Ok(previous_state.clone());
         }
 
-        let middleware = env.inner_middleware();
-        let contract = OutputFacet::new(dapp_contract_address, middleware);
+        let contract = OutputFacet::new(dapp_contract_address, access);
         let events = contract
             .voucher_executed_filter()
             .query()

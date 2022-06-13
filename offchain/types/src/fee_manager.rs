@@ -154,8 +154,8 @@ impl Foldable for FeeManagerState {
     ) -> Result<Self, Self::Error> {
         let dapp_contract_address = initial_state;
 
-        let middleware = access.get_inner();
-        let diamond_init = DiamondInit::new(*dapp_contract_address, middleware);
+        let diamond_init =
+            DiamondInit::new(*dapp_contract_address, Arc::clone(&access));
 
         // `FeeManagerInitialized` event
         let events = diamond_init
@@ -165,9 +165,8 @@ impl Foldable for FeeManagerState {
             .context("Error querying for fee manager initialized events")?;
         let created_event = events.first().unwrap();
 
-        let middleware = access.get_inner();
         let fee_manager_facet =
-            FeeManagerFacet::new(*dapp_contract_address, middleware);
+            FeeManagerFacet::new(*dapp_contract_address, access);
 
         // `FeePerClaimReset` event
         let events = fee_manager_facet
@@ -251,7 +250,7 @@ impl Foldable for FeeManagerState {
         previous_state: &Self,
         block: &Block,
         env: &StateFoldEnvironment<M, Self::UserData>,
-        _access: Arc<FoldMiddleware<M>>,
+        access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
         let dapp_contract_address = previous_state.dapp_contract_address;
         let bank_address = previous_state.bank_address;
@@ -294,8 +293,7 @@ impl Foldable for FeeManagerState {
 
         let mut state = previous_state.clone();
 
-        let middleware = env.inner_middleware();
-        let contract = FeeManagerFacet::new(dapp_contract_address, middleware);
+        let contract = FeeManagerFacet::new(dapp_contract_address, access);
 
         // `FeePerClaimReset` event
         let events = contract
@@ -353,7 +351,7 @@ impl Foldable for FeeManagerState {
                 for index in 0..MAX_NUM_VALIDATORS {
                     if let None = state.num_redeemed[index] {
                         state.num_redeemed[index] = Some(NumRedeemed {
-                            validator_address: validator_address,
+                            validator_address,
                             num_claims_redeemed: newly_redeemed,
                         });
                         create_new = true;
