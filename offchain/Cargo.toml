@@ -1,8 +1,6 @@
 [workspace]
 members = [
   "contracts",
-  "delegate_server",
-  "offchain",
   "types",
 
   "data",
@@ -10,3 +8,7 @@ members = [
   "inspect-server",
   "reader"
 ]
+
+[patch.cartesi]
+state-fold = { path = "../../state-fold/state-fold" }
+state-fold-types = { path = "../../state-fold/state-fold-types" }
