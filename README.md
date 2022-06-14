@@ -2,7 +2,8 @@
 
 This repository contains the on-chain and off-chain pieces that are used to deploy, launch and interact with Cartesi Rollups DApps. The code presented here is work in progress, continuously being improved and updated.
 
-# Table of contents
+## Table of contents
+
 - [Documentation](#documentation)
 - [Experimenting](#experimenting)
 - [Talk with us](#talk-with-us)
@@ -12,13 +13,16 @@ This repository contains the on-chain and off-chain pieces that are used to depl
 - [License](#license)
 
 ## Documentation
+
 Several articles were written about the code presented here:
+
 - [Cartesi Rollups - Scalable Smart Contracts Built with mainstream software stacks](https://medium.com/cartesi/scalable-smart-contracts-on-ethereum-built-with-mainstream-software-stacks-8ad6f8f17997)
 - [Rollups On-Chain - Tackling Social Scalability](https://medium.com/cartesi/rollups-on-chain-d749744a9cb3)
 - [State Fold](https://medium.com/cartesi/state-fold-cfe5f4d79639)
 - [Transaction Manager](https://medium.com/cartesi/cartesi-rollups-rollout-transaction-manager-4a49af15d6b9)
 
-## On-chain Rollups:
+## On-chain Rollups
+
 Designed to mediate the relationship between the off-chain components with other smart contracts and externally owned accounts. It is composed by several modules, each with clear responsibilities and well-defined interfaces. The modules are the following:
 
 ```mermaid
@@ -48,6 +52,7 @@ graph LR
 ## Cartesi Rollups Manager
 
 The Cartesi Rollups Manager is responsible for synchronicity between the modules. It defines the duration of the different phases and notifies the other modules of any phase change. Among others, the responsibilities of this module are:
+
 - Define for which epoch, depending on the current state and deadlines, an input is destined to.
 - Receive and forward claims to the Validator Manager.
 - Forward disputes to the Dispute Resolution module.
@@ -64,6 +69,7 @@ The on-chain contracts often have two concurrent epochs: a sealed but unfinalize
 Portal, as the name suggests, is used to teleport assets from the Ethereum blockchain to DApps running on Cartesi Rollups. Once deposited, those Layer-1 assets gain a representation in Layer-2 and are owned, there, by whomever the depositor assigned them to. After being teleported, Layer-2 assets can be moved around in a significantly cheaper way, using simple inputs that are understood by the Linux logic. When an asset is deposited, the Portal contract sends an input to the DApp’s inbox, describing the type of asset, amount, receivers, and some data the depositor might want the DApp to read. This allows deposits and instructions to be sent as a single Layer-1 interaction.
 One could think of the Portal as a bank account, owned by the off-chain machine. Anyone can deposit assets there but only the DApp — through its Output contract — can decide on withdrawals. The withdrawal process is quite simple from a user perspective. They send an input requesting a withdrawal, which gets processed and interpreted off-chain. If everything is correct, the machine creates a voucher destined to the Portal contract, ordering and finalizing that withdrawal request.
 Currently, we support the following types of assets:
+
 - [Ether](https://ethereum.org/en/eth/) (ETH)
 - [ERC-20](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/)
 - [ERC-721](https://ethereum.org/en/developers/docs/standards/tokens/erc-721/) (NFTs)
@@ -80,6 +86,7 @@ Notices are informational statements that can be proved on L1 by other smart con
 ## Validator Manager
 
 The Validator Manager module was created to help DApps manage their claims, claim permissions, and punishments for bad behavior. Initially, our suggested implementation for this module includes the following characteristics: the set of payable validators is defined in construction time, validators send a claim for every epoch and those that lose a dispute are kicked off the validators set. Cartesi Rollups manager receives claims and redirects them to the Validator Manager. When receiving a claim, the validator manager checks which other claims have arrived at that epoch and returns the information Cartesi Rollups Manager needs to continue. The module can respond to received claims in one of the following ways:
+
 - If the sender is not a validator or the claim is invalid, the transaction reverts.
 - If the claim is valid, doesn’t disagree with any of the other claims in the epoch, and does not generate consensus, it returns a “No Conflict” response.
 - If the claim is valid but disagrees with another claim for that epoch, it warns Cartesi Rollups Manager that a conflict is happening and what are the conflicting claims and claimants involved. When that dispute is resolved the validator manager module gets notified so it can deal however it likes with the validators involved. In our initially suggested implementation, the loser of a dispute gets removed from the validator set.
@@ -95,20 +102,22 @@ Validators configure their nodes to either be altruistic or to have a minimum re
 ## Dispute Resolution
 
 Disputes occur when two validators claim different state updates to the same epoch. Because of the deterministic nature of our virtual machine and the fact that the inputs that constitute an epoch are agreed upon beforehand, conflicting claims imply dishonest behavior. When a conflict occurs, the module that mediates the interactions between both validators is the dispute resolution.
-The code for rollups dispute resolution is not being published yet - but a big part of it is available on the Cartesi Rollups SDK, using the [Arbitration dlib] (https://github.com/cartesi/arbitration-dlib/)
+The code for rollups dispute resolution is not being published yet - but a big part of it is available on the Cartesi Rollups SDK, using the [Arbitration dlib](https://github.com/cartesi/arbitration-dlib/)
 
 ## Off-chain Rollups
+
 The Rollups machine and the smart contracts live in fundamentally different environments. This creates the need for a middleware that manages and controls the communication between the blockchain and the machine.
 As such, the middleware is responsible for first reading data from our smart contracts, then sending them to the machine to be processed, and finally publishing their results back to the blockchain.
 The middleware can be used by anyone who's interested in the rollups state of affairs. We divide interested users into two roles, which run different types of nodes: readers and validators. Reader nodes are only interested in advancing their off-chain machine. They consume information from the blockchain but do not bother to enforce state updates, trusting that validators will ensure the validity of all on-chain state updates. Validators, on the other hand, have more responsibility: they not only watch the blockchain but also fight to ensure that the blockchain won't accept that which didn't happen.
 
 ## Experimenting
+
 To get a taste on how to use Cartesi to develop your DApp, check the following resources:
 See Cartesi Rollups in action with the [Simple Echo Example](https://github.com/cartesi/rollups-examples/tree/main/echo).
 To have a glimpse on how to develop your DApp locally using your favorite IDE and tools check our [Host Environment](https://github.com/cartesi/rollups-examples/tree/main/host) repo.
 
-
 ## Talk with us
+
 If you’re interested in developing with Cartesi, working with the team, or hanging out in our community, don’t forget to [join us on Discord and follow along](https://discordapp.com/invite/Pt2NrnS).
 
 Want to stay up to date? Make sure to join our [announcements channel on Telegram](https://t.me/CartesiAnnouncements) or [follow our Twitter](https://twitter.com/cartesiproject).
@@ -175,7 +184,7 @@ Now you can run the delegate test bench script.
 ./scripts/delegate_tests.sh
 ```
 
-# License
+## License
 
 Note: This component currently has dependencies that are licensed under the GNU GPL, version 3, and so you should treat this component as a whole as being under the GPL version 3. But all Cartesi-written code in this component is licensed under the Apache License, version 2, or a compatible permissive license, and can be used independently under the Apache v2 license. After this component is rewritten, the entire component will be released under the Apache v2 license.
 The arbitration d-lib repository and all contributions are licensed under
