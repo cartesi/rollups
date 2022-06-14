@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] 2022-06-14
+
 ### Added
+
 - Factory contract to deploy rollups diamond
 - Mermaid diagram of the on-chain rollups on README
+- Deploy to several testnets (avax_fuji, bsc_testnet, goerli, kovan, polygon_mumbai, rinkeby, ropsten)
+- New container with hardhat and deployed contracts for test environment
+- New command line tool to deploy DApps
 
 ### Changed
 
@@ -18,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validators who lost a dispute are removed from the validator set, and cannot redeem fees from previous claims
 - Changed the visibility of `Bank`'s state variables to private
 - Changed the visibility of `LibClaimsMask`'s functions to internal
-- Improved entry point and configuration
+- Improved docker entrypoints and configuration
 - Gas optimizations
 
 ### Deprecated
