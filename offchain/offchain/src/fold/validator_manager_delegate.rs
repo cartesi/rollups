@@ -125,6 +125,7 @@ impl StateFoldDelegate for ValidatorManagerFoldDelegate {
                             validator_address: claimer,
                             num_claims_made: U256::one(),
                         });
+                        break;
                     }
                 }
             } else {
