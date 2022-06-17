@@ -6,17 +6,17 @@ x-credentials:
   POSTGRES_PORT: "5432"
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: password
-  POSTGRES_DB: test_indexer
+  POSTGRES_DB: test_reader
 
 services:
   postgres:
     image: postgres:13
     ports:
-      - 5434:5432
+      - 5435:5432
     volumes:
-      - test-indexer-database-data:/var/lib/postgresql/data
+      - test-reader-database-data:/var/lib/postgresql/data
     environment:
       << : *postgres-config
 
 volumes:
-  test-indexer-database-data: {}
+  test-reader-database-data: {}

@@ -11,6 +11,7 @@
  * the License.
  */
 
+use reader::error;
 /// Reader configuration. Command line parameters take precedence over environment variables
 use structopt::StructOpt;
 use tracing::error;
@@ -81,7 +82,7 @@ impl ReaderConfig {
     /// Generate reader config from command line arguments and
     /// and environment variables. Mix all parameters taking
     /// into account precedence to form final ReaderConfig
-    pub fn initialize() -> crate::error::Result<Self> {
+    pub fn initialize() -> error::Result<Self> {
         let reader_cli_config = ReaderCliConfig::from_args();
 
         let password: String = if let Some(password_filename) =

@@ -20,3 +20,9 @@ tokio = { version = "1.17", features = ["macros", "time", "rt-multi-thread"] }
 snafu = "0.6"
 structopt = "0.3"
 urlencoding = "2.1"
+
+[dev-dependencies]
+rstest = "0.12.0"
+serial_test = "0.5.1"
+diesel_migrations = { version = "1.4.0", features = ["postgres"]}
+hyper = { version = "0.14", features = ["http1", "runtime", "client"] }

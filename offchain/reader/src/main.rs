@@ -12,21 +12,19 @@
  */
 
 mod config;
-mod error;
-pub mod http;
 
 use tracing::{info, warn};
 use tracing_subscriber::EnvFilter;
 
 #[actix_web::main]
-async fn main() -> Result<(), crate::error::Error> {
+async fn main() -> Result<(), reader::error::Error> {
     // Use tracing library for logs. By default use system standard output logger
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
     let reader_config = config::ReaderConfig::initialize().map_err(|e| {
-        crate::error::Error::BadConfiguration {
+        reader::error::Error::BadConfiguration {
             err: format!("Fail to initialize reader config: {}", e),
         }
     })?;
@@ -60,7 +58,7 @@ async fn main() -> Result<(), crate::error::Error> {
         rollups_data::database::create_db_pool_with_retry(&postgres_endpoint);
 
     // Start http server
-    match tokio::try_join!(http::start_service(
+    match tokio::try_join!(reader::http::start_service(
         &reader_config.graphql_host,
         reader_config.graphql_port,
         db_pool
@@ -71,7 +69,7 @@ async fn main() -> Result<(), crate::error::Error> {
         }
         Err(e) => {
             warn!("reader service terminated with error: {}", e);
-            Err(crate::error::Error::HttpServiceError { source: e })
+            Err(reader::error::Error::HttpServiceError { source: e })
         }
     }
 }
