@@ -896,22 +896,60 @@ describe("FeeManager Facet", () => {
 
             // update delegate
             let state = JSON.parse(await getState(initialState));
-            for (let i = 0; i < 8; i++) {
-                if (i == 1) {
+
+            // if it's run in sync function, lost validator is not added at all,
+            //    so there will be a null at the end
+            // if it's run in fold function, lost validator is removed from the array,
+            //    so there will be a null at that validator's position in array
+
+            // check position 0
+            expect(
+                state.num_redeemed[0].validator_address,
+                "check validator address at position 0"
+            ).to.equal((await signers[0].getAddress()).toLowerCase());
+            expect(
+                parseInt(state.num_redeemed[0].num_claims_redeemed, 16),
+                "check #claims at position 0"
+            ).to.equal(1);
+            // validator1 is the lost validator
+            // if position 1 is not null, sync was run
+            // else fold was run
+            if (state.num_redeemed[1] != null) {
+                // sync
+                // signers[1] didn't take a position at all
+                for (let i = 1; i < 7; i++) {
                     expect(
-                        state.num_redeemed[i],
-                        "signers[1] is removed from `num_redeemed`"
-                    ).to.equal(null);
-                    continue;
+                        state.num_redeemed[i].validator_address,
+                        "sync: check validator address"
+                    ).to.equal(
+                        (await signers[i + 1].getAddress()).toLowerCase()
+                    );
+                    expect(
+                        parseInt(state.num_redeemed[i].num_claims_redeemed, 16),
+                        "sync: check #claims"
+                    ).to.equal(1);
                 }
+                // null at the end
+                expect(state.num_redeemed[7], "sync: null at the end").to.equal(
+                    null
+                );
+            } else {
+                // fold
+                // null at position 1
                 expect(
-                    state.num_redeemed[i].validator_address,
-                    "check validator address in `num_redeemed`"
-                ).to.equal((await signers[i].getAddress()).toLowerCase());
-                expect(
-                    parseInt(state.num_redeemed[i].num_claims_redeemed, 16),
-                    "#claims should be 1 for validators except signers[1]"
-                ).to.equal(1);
+                    state.num_redeemed[1],
+                    "fold: null at position 1"
+                ).to.equal(null);
+                for (let i = 2; i < 8; i++) {
+                    expect(
+                        state.num_redeemed[i].validator_address,
+                        "fold: check validator address"
+                    ).to.equal((await signers[i].getAddress()).toLowerCase());
+                    expect(
+                        parseInt(state.num_redeemed[i].num_claims_redeemed, 16),
+                        "fold: check #claims"
+                    ).to.equal(1);
+                }
             }
 
             // ** check uncommitted_balance

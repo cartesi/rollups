@@ -21,7 +21,6 @@ use crate::fold::validator_manager_delegate::ValidatorManagerFoldDelegate;
 use async_trait::async_trait;
 use ethers::prelude::EthEvent;
 use ethers::types::{Address, U256};
-use im::HashMap;
 use snafu::ResultExt;
 use std::convert::TryFrom;
 use std::sync::Arc;
@@ -127,8 +126,6 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
         let mut num_redeemed: [Option<NumRedeemed>; MAX_NUM_VALIDATORS] =
             [None; MAX_NUM_VALIDATORS];
 
-        let mut num_redeemed_sums: HashMap<Address, U256> = HashMap::new();
-
         for ev in events.iter() {
             if validator_manager_state
                 .validators_removed
@@ -137,18 +134,7 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 // skip validator if it's removed in Validator Manager state
                 continue;
             }
-            match num_redeemed_sums.get(&ev.validator) {
-                Some(amount) => {
-                    num_redeemed_sums[&ev.validator] = amount + ev.claims
-                }
-                None => num_redeemed_sums[&ev.validator] = ev.claims,
-            }
-        }
-        for (index, sum) in num_redeemed_sums.iter().enumerate() {
-            num_redeemed[index] = Some(NumRedeemed {
-                validator_address: *sum.0,
-                num_claims_redeemed: *sum.1,
-            });
+            find_and_increase(&mut num_redeemed, &ev.validator, &ev.claims);
         }
 
         // obtain fee manager bank balance
@@ -275,7 +261,6 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
             },
         )?;
         // newly redeemed
-        let mut num_redeemed_sums: HashMap<Address, U256> = HashMap::new();
         for ev in events.iter() {
             if validator_manager_state
                 .validators_removed
@@ -284,51 +269,11 @@ impl<DA: DelegateAccess + Send + Sync + 'static> StateFoldDelegate
                 // skip validator if it's removed in Validator Manager state
                 continue;
             }
-            let amount = num_redeemed_sums
-                .get(&ev.validator)
-                .map(|v| *v)
-                .unwrap_or(U256::zero());
-
-            num_redeemed_sums.insert(ev.validator, amount + ev.claims);
-        }
-        // update to the state.num_redeemed array
-        for (&validator_address, &newly_redeemed) in num_redeemed_sums.iter() {
-            let mut found = false;
-            // find if address exist in the array
-            for index in 0..MAX_NUM_VALIDATORS {
-                if let Some(num_redeemed_struct) = &state.num_redeemed[index] {
-                    let address = num_redeemed_struct.validator_address;
-                    let pre_redeemed = num_redeemed_struct.num_claims_redeemed;
-                    if address == validator_address {
-                        // found validator, update #redeemed
-                        state.num_redeemed[index] = Some(NumRedeemed {
-                            validator_address: address,
-                            num_claims_redeemed: pre_redeemed + newly_redeemed,
-                        });
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            // if not found
-            if found == false {
-                let mut create_new = false;
-
-                for index in 0..MAX_NUM_VALIDATORS {
-                    if let None = state.num_redeemed[index] {
-                        state.num_redeemed[index] = Some(NumRedeemed {
-                            validator_address: validator_address,
-                            num_claims_redeemed: newly_redeemed,
-                        });
-                        create_new = true;
-                        break;
-                    };
-                }
-
-                if create_new == false {
-                    panic!("no space for validator {}", validator_address);
-                }
-            }
+            find_and_increase(
+                &mut state.num_redeemed,
+                &ev.validator,
+                &ev.claims,
+            );
         }
 
         // remove validator's existing num_redeemed if it's newly removed from Validator Manager state
@@ -411,4 +356,44 @@ fn calculate_uncommitted_balance(
     let uncommitted_balance = i128::try_from(bank_balance.as_u128()).unwrap()
         - i128::try_from(to_be_redeemed_fees.as_u128()).unwrap();
     uncommitted_balance
+}
+
+fn find_and_increase(
+    num_redeemed: &mut [Option<NumRedeemed>; MAX_NUM_VALIDATORS],
+    addr: &Address,
+    num: &U256,
+) {
+    // find if address exist in the array
+    for i in 0..MAX_NUM_VALIDATORS {
+        if let Some(num_redeemed_struct) = num_redeemed[i] {
+            let address = num_redeemed_struct.validator_address;
+            let number = num_redeemed_struct.num_claims_redeemed;
+            if address == *addr {
+                // found validator, update #redeemed
+                num_redeemed[i] = Some(NumRedeemed {
+                    validator_address: address,
+                    num_claims_redeemed: number + num,
+                });
+                return;
+            }
+        }
+    }
+
+    // if not found
+    let mut create_new = false;
+
+    for i in 0..MAX_NUM_VALIDATORS {
+        if let None = num_redeemed[i] {
+            num_redeemed[i] = Some(NumRedeemed {
+                validator_address: *addr,
+                num_claims_redeemed: *num,
+            });
+            create_new = true;
+            break;
+        };
+    }
+
+    if create_new == false {
+        panic!("no space for validator {}", addr);
+    }
 }
