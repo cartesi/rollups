@@ -17,15 +17,22 @@ use indexer::db_service;
 
 use indexer::error::Error::BadConfiguration;
 use tokio::sync::mpsc;
+use tracing::level_filters::LevelFilter;
 use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Use tracing library for logs. By default use system standard output logger
-    tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .init();
+    if std::env::var(EnvFilter::DEFAULT_ENV).is_ok() {
+        tracing_subscriber::fmt()
+            .with_env_filter(EnvFilter::from_default_env())
+            .init();
+    } else {
+        tracing_subscriber::fmt()
+            .with_max_level(LevelFilter::INFO)
+            .init();
+    }
 
     info!("Starting rollup indexer service");
     let indexer_config =

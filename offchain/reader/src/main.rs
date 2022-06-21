@@ -13,15 +13,23 @@
 
 mod config;
 
+use tracing::level_filters::LevelFilter;
 use tracing::{info, warn};
 use tracing_subscriber::EnvFilter;
 
 #[actix_web::main]
 async fn main() -> Result<(), reader::error::Error> {
     // Use tracing library for logs. By default use system standard output logger
-    tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .init();
+
+    if std::env::var(EnvFilter::DEFAULT_ENV).is_ok() {
+        tracing_subscriber::fmt()
+            .with_env_filter(EnvFilter::from_default_env())
+            .init();
+    } else {
+        tracing_subscriber::fmt()
+            .with_max_level(LevelFilter::INFO)
+            .init();
+    }
 
     let reader_config = config::ReaderConfig::initialize().map_err(|e| {
         reader::error::Error::BadConfiguration {
