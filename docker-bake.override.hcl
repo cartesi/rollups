@@ -19,6 +19,10 @@ target "indexer" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-indexer:${TAG}"]
 }
 
+target "inspect-server" {
+  tags = ["${DOCKER_ORGANIZATION}/rollups-inspect-server:${TAG}"]
+}
+
 target "reader" {
   tags = ["${DOCKER_ORGANIZATION}/query-server:${TAG}"]
 }

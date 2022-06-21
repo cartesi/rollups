@@ -2,7 +2,7 @@
 target "docker-metadata-action" {}
 
 group "default" {
-  targets = ["delegate_server", "dispatcher", "indexer", "reader", "hardhat", "rollups-cli"]
+  targets = ["delegate_server", "dispatcher", "indexer", "inspect-server", "reader", "hardhat", "rollups-cli"]
 }
 
 target "delegate_server" {
@@ -20,6 +20,12 @@ target "dispatcher" {
 target "indexer" {
   inherits   = ["docker-metadata-action"]
   dockerfile = "offchain/indexer/Dockerfile"
+  context    = "."
+}
+
+target "inspect-server" {
+  inherits   = ["docker-metadata-action"]
+  dockerfile = "offchain/inspect-server/Dockerfile"
   context    = "."
 }
 

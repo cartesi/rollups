@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update dependencies to latest emulator SDK with improved exception handling (grpc-interfaces 0.8)
 
+### Added
+
+- Inspect server
+
 ## [0.3.0] 2022-06-14
 
 ### Added

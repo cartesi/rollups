@@ -4,6 +4,7 @@ members = [
   "offchain",
   "data",
   "indexer",
+  "inspect-server",
   "reader"
 ]
 
