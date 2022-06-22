@@ -14,5 +14,5 @@ The test suite requires postgres to be running in the correct configuration. The
 3. Change to top-level directory of `offchain/reader` repo.
 4. Build reader binary `cargo run --release`. 
 5. Run `docker-compose -f tests/docker-compose.yml up --build -d`.
-7. Run `ROLLUPS_READER_BINARY_PATH=../target/release/reader cargo test`.
+7. Run `RUST_LOG=error ROLLUPS_READER_BINARY_PATH=../target/release/reader cargo test`.
 8. Run `docker-compose -f tests/docker-compose.yml stop`.

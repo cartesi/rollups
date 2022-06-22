@@ -439,7 +439,7 @@ async fn test_graphql_notices_edges(
             }"}"#;
 
     let expected_response = r#"
-          {
+         {
           "data": {
             "notices": {
               "totalCount": 12,
@@ -447,7 +447,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "1",
-                    "index": 4,
+                    "index": 0,
                     "input": {
                       "id": "5",
                       "index": 4,
@@ -463,7 +463,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "2",
-                    "index": 6,
+                    "index": 0,
                     "input": {
                       "id": "7",
                       "index": 6,
@@ -479,7 +479,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "3",
-                    "index": 10,
+                    "index": 0,
                     "input": {
                       "id": "11",
                       "index": 10,
@@ -495,7 +495,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "4",
-                    "index": 12,
+                    "index": 0,
                     "input": {
                       "id": "13",
                       "index": 12,
@@ -511,7 +511,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "5",
-                    "index": 15,
+                    "index": 0,
                     "input": {
                       "id": "16",
                       "index": 15,
@@ -527,7 +527,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "6",
-                    "index": 17,
+                    "index": 0,
                     "input": {
                       "id": "18",
                       "index": 17,
@@ -543,7 +543,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "7",
-                    "index": 21,
+                    "index": 0,
                     "input": {
                       "id": "22",
                       "index": 21,
@@ -559,7 +559,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "8",
-                    "index": 22,
+                    "index": 0,
                     "input": {
                       "id": "23",
                       "index": 22,
@@ -575,7 +575,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "9",
-                    "index": 26,
+                    "index": 0,
                     "input": {
                       "id": "27",
                       "index": 26,
@@ -591,7 +591,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "10",
-                    "index": 28,
+                    "index": 0,
                     "input": {
                       "id": "29",
                       "index": 28,
@@ -607,7 +607,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "11",
-                    "index": 30,
+                    "index": 0,
                     "input": {
                       "id": "31",
                       "index": 30,
@@ -623,7 +623,7 @@ async fn test_graphql_notices_edges(
                 {
                   "node": {
                     "id": "12",
-                    "index": 32,
+                    "index": 0,
                     "input": {
                       "id": "33",
                       "index": 32,
@@ -645,8 +645,7 @@ async fn test_graphql_notices_edges(
               }
             }
           }
-        }
-        "#;
+        }"#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
@@ -701,7 +700,7 @@ async fn test_graphql_notices_edges_nodes_cursor(
 }"}"#;
 
     let expected_response = r#"
-        {
+       {
           "data": {
             "notices": {
               "totalCount": 12,
@@ -709,7 +708,7 @@ async fn test_graphql_notices_edges_nodes_cursor(
                 {
                   "node": {
                     "id": "4",
-                    "index": 12,
+                    "index": 0,
                     "input": {
                       "id": "13",
                       "index": 12,
@@ -725,7 +724,7 @@ async fn test_graphql_notices_edges_nodes_cursor(
                 {
                   "node": {
                     "id": "5",
-                    "index": 15,
+                    "index": 0,
                     "input": {
                       "id": "16",
                       "index": 15,
@@ -742,7 +741,7 @@ async fn test_graphql_notices_edges_nodes_cursor(
               "nodes": [
                 {
                   "id": "4",
-                  "index": 12,
+                  "index": 0,
                   "input": {
                     "id": "13",
                     "index": 12,
@@ -755,7 +754,7 @@ async fn test_graphql_notices_edges_nodes_cursor(
                 },
                 {
                   "id": "5",
-                  "index": 15,
+                  "index": 0,
                   "input": {
                     "id": "16",
                     "index": 15,
@@ -870,67 +869,67 @@ async fn test_graphql_reports_count(
           "nodes": [
             {
               "id": "1",
-              "index": 3
+              "index": 0
             },
             {
               "id": "2",
-              "index": 7
+              "index": 0
             },
             {
               "id": "3",
-              "index": 9
+              "index": 0
             },
             {
               "id": "4",
-              "index": 13
+              "index": 0
             },
             {
               "id": "5",
-              "index": 16
+              "index": 0
             },
             {
               "id": "6",
-              "index": 18
+              "index": 0
             },
             {
               "id": "7",
-              "index": 20
+              "index": 0
             },
             {
               "id": "8",
-              "index": 23
+              "index": 0
             },
             {
               "id": "9",
-              "index": 25
+              "index": 0
             },
             {
               "id": "10",
-              "index": 29
+              "index": 0
             },
             {
               "id": "11",
-              "index": 33
+              "index": 0
             },
             {
               "id": "12",
-              "index": 34
+              "index": 0
             },
             {
               "id": "13",
-              "index": 35
+              "index": 0
             },
             {
               "id": "14",
-              "index": 36
+              "index": 0
             },
             {
               "id": "15",
-              "index": 37
+              "index": 0
             },
             {
               "id": "16",
-              "index": 38
+              "index": 0
             }
           ],
           "pageInfo": {
@@ -978,23 +977,23 @@ async fn test_graphql_reports_cursors(
           "nodes": [
             {
               "id": "4",
-              "index": 13
+              "index": 0
             },
             {
               "id": "5",
-              "index": 16
+              "index": 0
             },
             {
               "id": "6",
-              "index": 18
+              "index": 0
             },
             {
               "id": "7",
-              "index": 20
+              "index": 0
             },
             {
               "id": "8",
-              "index": 23
+              "index": 0
             }
           ],
           "pageInfo": {
@@ -1005,7 +1004,8 @@ async fn test_graphql_reports_cursors(
           }
         }
       }
-    }"#;
+    }
+   "#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
@@ -1052,82 +1052,83 @@ async fn test_graphql_reports_edges(
 
     let expected_response = r#"
     {
-          "data": {
-            "reports": {
-              "totalCount": 16,
-              "nodes": [
-                {
-                  "id": "1",
-                  "index": 3
-                },
-                {
-                  "id": "2",
-                  "index": 7
-                },
-                {
-                  "id": "3",
-                  "index": 9
-                }
-              ],
-              "edges": [
-                {
-                  "node": {
+      "data": {
+        "reports": {
+          "totalCount": 16,
+          "nodes": [
+            {
+              "id": "1",
+              "index": 0
+            },
+            {
+              "id": "2",
+              "index": 0
+            },
+            {
+              "id": "3",
+              "index": 0
+            }
+          ],
+          "edges": [
+            {
+              "node": {
+                "id": "1",
+                "index": 0,
+                "input": {
+                  "id": "4",
+                  "index": 3,
+                  "epoch": {
                     "id": "1",
-                    "index": 3,
-                    "input": {
-                      "id": "4",
-                      "index": 3,
-                      "epoch": {
-                        "id": "1",
-                        "index": 0,
-                        "__typename": "Epoch"
-                      }
-                    },
-                    "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c454354202a2046524f20506572736f6e73273a206e656172202246524f223a2073796e746178206572726f72"
+                    "index": 0,
+                    "__typename": "Epoch"
                   }
                 },
-                {
-                  "node": {
-                    "id": "2",
-                    "index": 7,
-                    "input": {
-                      "id": "8",
-                      "index": 7,
-                      "epoch": {
-                        "id": "1",
-                        "index": 0,
-                        "__typename": "Epoch"
-                      }
-                    },
-                    "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c45273a206e656172202253454c45223a2073796e746178206572726f72"
+                "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c454354202a2046524f20506572736f6e73273a206e656172202246524f223a2073796e746178206572726f72"
+              }
+            },
+            {
+              "node": {
+                "id": "2",
+                "index": 0,
+                "input": {
+                  "id": "8",
+                  "index": 7,
+                  "epoch": {
+                    "id": "1",
+                    "index": 0,
+                    "__typename": "Epoch"
                   }
                 },
-                {
-                  "node": {
-                    "id": "3",
-                    "index": 9,
-                    "input": {
-                      "id": "10",
-                      "index": 9,
-                      "epoch": {
-                        "id": "1",
-                        "index": 0,
-                        "__typename": "Epoch"
-                      }
-                    },
-                    "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c45273a206e656172202253454c45223a2073796e746178206572726f72"
+                "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c45273a206e656172202253454c45223a2073796e746178206572726f72"
+              }
+            },
+            {
+              "node": {
+                "id": "3",
+                "index": 0,
+                "input": {
+                  "id": "10",
+                  "index": 9,
+                  "epoch": {
+                    "id": "1",
+                    "index": 0,
+                    "__typename": "Epoch"
                   }
-                }
-              ],
-              "pageInfo": {
-                "startCursor": "1",
-                "endCursor": "3",
-                "hasNextPage": true,
-                "hasPreviousPage": false
+                },
+                "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c45273a206e656172202253454c45223a2073796e746178206572726f72"
               }
             }
+          ],
+          "pageInfo": {
+            "startCursor": "1",
+            "endCursor": "3",
+            "hasNextPage": true,
+            "hasPreviousPage": false
           }
-        }"#;
+        }
+      }
+    }
+  "#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
@@ -1162,29 +1163,29 @@ async fn test_graphql_input_id(
         }"}"#;
 
     let expected_response = r#"
-        {
-          "data": {
-            "input": {
-              "id": "5",
-              "index": 4,
-              "epoch": {
+     {
+      "data": {
+        "input": {
+          "id": "5",
+          "index": 4,
+          "epoch": {
+            "id": "1",
+            "index": 0
+          },
+          "blockNumber": 37,
+          "notices": {
+            "totalCount": 1,
+            "nodes": [
+              {
                 "id": "1",
-                "index": 0
-              },
-              "blockNumber": 37,
-              "notices": {
-                "totalCount": 1,
-                "nodes": [
-                  {
-                    "id": "1",
-                    "index": 4,
-                    "keccak": "0xac00532afbe52b5428b9201fdc89cc1e555089c37e7ffee5f8d0bb12f90d0f79"
-                  }
-                ]
+                "index": 0,
+                "keccak": "0xac00532afbe52b5428b9201fdc89cc1e555089c37e7ffee5f8d0bb12f90d0f79"
               }
-            }
+            ]
           }
-        }"#;
+        }
+      }
+    }"#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
@@ -1214,8 +1215,23 @@ async fn test_graphql_input_subfields(
         }"}"#;
 
     let expected_response = r#"
-
-    "#;
+        {
+          "data": {
+            "input": {
+              "id": "5",
+              "index": 4,
+              "epoch": {
+                "id": "1",
+                "index": 0
+              },
+              "notice": {
+                "id": "1",
+                "index": 0,
+                "payload": "0x5b5b224a696d6d79222c2033315d5d"
+              }
+            }
+          }
+        }"#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
@@ -1267,7 +1283,7 @@ async fn test_graphql_input_all_subfields(
 }"}"#;
 
     let expected_response = r#"
-        {
+       {
           "data": {
             "inputs": {
               "nodes": [
@@ -1363,7 +1379,7 @@ async fn test_graphql_input_all_subfields(
                     "nodes": [
                       {
                         "id": "1",
-                        "index": 3
+                        "index": 0
                       }
                     ]
                   }
@@ -1387,7 +1403,7 @@ async fn test_graphql_input_all_subfields(
                     "nodes": [
                       {
                         "id": "1",
-                        "index": 4
+                        "index": 0
                       }
                     ]
                   },
@@ -1438,7 +1454,7 @@ async fn test_graphql_input_all_subfields(
                     "nodes": [
                       {
                         "id": "2",
-                        "index": 6
+                        "index": 0
                       }
                     ]
                   },
@@ -1470,7 +1486,7 @@ async fn test_graphql_input_all_subfields(
                     "nodes": [
                       {
                         "id": "2",
-                        "index": 7
+                        "index": 0
                       }
                     ]
                   }
@@ -1521,7 +1537,7 @@ async fn test_graphql_input_all_subfields(
                     "nodes": [
                       {
                         "id": "3",
-                        "index": 9
+                        "index": 0
                       }
                     ]
                   }
@@ -1952,7 +1968,7 @@ async fn test_graphql_epoch_id(
                       "nodes": [
                         {
                           "id": "1",
-                          "index": 4,
+                          "index": 0,
                           "keccak": "0xac00532afbe52b5428b9201fdc89cc1e555089c37e7ffee5f8d0bb12f90d0f79"
                         }
                       ]
@@ -1999,7 +2015,7 @@ async fn test_graphql_epoch_index(
         }"}"#;
 
     let expected_response = r#"
-        {
+       {
           "data": {
             "epochI": {
               "id": "1",
@@ -2026,7 +2042,7 @@ async fn test_graphql_epoch_index(
                       "nodes": [
                         {
                           "id": "1",
-                          "index": 4,
+                          "index": 0,
                           "keccak": "0xac00532afbe52b5428b9201fdc89cc1e555089c37e7ffee5f8d0bb12f90d0f79"
                         }
                       ]

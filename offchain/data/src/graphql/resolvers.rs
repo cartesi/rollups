@@ -673,7 +673,7 @@ fn process_db_notices(
                 db_notice.id,
                 Notice {
                     id: juniper::ID::new(db_notice.id.to_string()),
-                    index: db_notice.input_index as i32,
+                    index: db_notice.notice_index as i32,
                     input: match inputs.get(&(db_notice.epoch_index, db_notice.input_index)).ok_or(Err(
                         super::error::Error::InputNotFound {
                             epoch_index: db_notice.epoch_index,
@@ -705,7 +705,8 @@ fn process_db_notices(
 fn get_notice(
     conn: &PgConnection,
     id: Option<juniper::ID>,
-    indexes: Option<(i32, i32)>,
+    indexes: Option<(i32, i32)>, //Option(epoch index, input index)
+    notice_index: Option<i32>,
 ) -> FieldResult<Notice> {
     // Either id or indexes must be provided
     if id.is_some() && indexes.is_some() {
@@ -722,12 +723,16 @@ fn get_notice(
             }
         })?;
         query = query.filter(schema::notices::dsl::id.eq(notice_id));
-    } else if let Some((epoch_index, notice_index)) = indexes {
-        query =
-            query.filter(schema::notices::dsl::input_index.eq(notice_index));
+    } else if let Some((epoch_index, input_index)) = indexes {
+        query = query.filter(schema::notices::dsl::input_index.eq(input_index));
         query = query.filter(schema::notices::dsl::epoch_index.eq(epoch_index));
     } else {
         return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    if let Some(notice_index) = notice_index {
+        query =
+            query.filter(schema::notices::dsl::notice_index.eq(notice_index));
     }
 
     let db_notices = query
@@ -901,7 +906,7 @@ fn process_db_reports(
                 db_report.id,
                 Report {
                     id: juniper::ID::new(db_report.id.to_string()),
-                    index: db_report.input_index as i32,
+                    index: db_report.report_index as i32,
                     input: match inputs.get(&(db_report.epoch_index, db_report.input_index)).ok_or(Err(
                         super::error::Error::InputNotFound {
                             epoch_index: db_report.epoch_index,
@@ -931,7 +936,8 @@ fn process_db_reports(
 fn get_report(
     conn: &PgConnection,
     id: Option<juniper::ID>,
-    indexes: Option<(i32, i32)>,
+    indexes: Option<(i32, i32)>, //Option(epoch index, input index)
+    report_index: Option<i32>,
 ) -> FieldResult<Report> {
     // Either id or indexes must be provided
     if id.is_some() && indexes.is_some() {
@@ -948,12 +954,16 @@ fn get_report(
             }
         })?;
         query = query.filter(schema::reports::dsl::id.eq(report_id));
-    } else if let Some((epoch_index, report_index)) = indexes {
-        query =
-            query.filter(schema::reports::dsl::input_index.eq(report_index));
+    } else if let Some((epoch_index, input_index)) = indexes {
+        query = query.filter(schema::reports::dsl::input_index.eq(input_index));
         query = query.filter(schema::reports::dsl::epoch_index.eq(epoch_index));
     } else {
         return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    if let Some(report_index) = report_index {
+        query =
+            query.filter(schema::reports::dsl::report_index.eq(report_index));
     }
 
     let db_reports = query
@@ -1134,7 +1144,8 @@ fn get_proof_from_db(
 fn get_voucher(
     conn: &PgConnection,
     id: Option<juniper::ID>,
-    indexes: Option<(i32, i32)>,
+    indexes: Option<(i32, i32)>, //Opetion(epoch index, input index)
+    voucher_index: Option<i32>,
 ) -> FieldResult<Voucher> {
     // Either id or indexes must be provided
     if id.is_some() && indexes.is_some() {
@@ -1151,13 +1162,18 @@ fn get_voucher(
             }
         })?;
         query = query.filter(schema::vouchers::dsl::id.eq(voucher_id));
-    } else if let Some((epoch_index, voucher_index)) = indexes {
+    } else if let Some((epoch_index, input_index)) = indexes {
         query =
-            query.filter(schema::vouchers::dsl::input_index.eq(voucher_index));
+            query.filter(schema::vouchers::dsl::input_index.eq(input_index));
         query =
             query.filter(schema::vouchers::dsl::epoch_index.eq(epoch_index));
     } else {
         return Err(super::error::Error::InvalidParameterError {}.into());
+    }
+
+    if let Some(voucher_index) = voucher_index {
+        query = query
+            .filter(schema::vouchers::dsl::voucher_index.eq(voucher_index));
     }
 
     let db_vouchers = query
@@ -1236,7 +1252,7 @@ fn process_db_vouchers(
                 db_voucher.id,
                 Voucher {
                     id: juniper::ID::new(db_voucher.id.to_string()),
-                    index: db_voucher.input_index as i32,
+                    index: db_voucher.voucher_index as i32,
                     input: match inputs.get(&(db_voucher.epoch_index, db_voucher.input_index)).ok_or(Err(
                         super::error::Error::InputNotFound {
                             epoch_index: db_voucher.epoch_index,
@@ -1432,7 +1448,12 @@ impl Input {
                 message: e.to_string(),
             }
         })?;
-        get_voucher(&conn, None, Some((self.epoch.index, index)))
+        get_voucher(
+            &conn,
+            None,
+            Some((self.epoch.index, self.index)),
+            Some(index),
+        )
     }
 
     #[graphql(
@@ -1444,7 +1465,12 @@ impl Input {
                 message: e.to_string(),
             }
         })?;
-        get_notice(&conn, None, Some((self.epoch.index, index)))
+        get_notice(
+            &conn,
+            None,
+            Some((self.epoch.index, self.index)),
+            Some(index),
+        )
     }
 
     #[graphql(
@@ -1456,7 +1482,12 @@ impl Input {
                 message: e.to_string(),
             }
         })?;
-        get_report(&conn, None, Some((self.epoch.index, index)))
+        get_report(
+            &conn,
+            None,
+            Some((self.epoch.index, self.index)),
+            Some(index),
+        )
     }
 
     #[graphql(
@@ -1800,7 +1831,7 @@ impl Query {
                 message: e.to_string(),
             }
         })?;
-        get_notice(&conn, Some(id), None)
+        get_notice(&conn, Some(id), None, None)
     }
 
     fn report(id: juniper::ID) -> FieldResult<Report> {
@@ -1810,7 +1841,7 @@ impl Query {
             }
         })?;
 
-        get_report(&conn, Some(id), None)
+        get_report(&conn, Some(id), None, None)
     }
 
     fn voucher(id: juniper::ID) -> FieldResult<Voucher> {
@@ -1819,7 +1850,7 @@ impl Query {
                 message: e.to_string(),
             }
         })?;
-        get_voucher(&conn, Some(id), None)
+        get_voucher(&conn, Some(id), None, None)
     }
 
     fn epochs(
