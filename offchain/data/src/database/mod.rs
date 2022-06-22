@@ -118,21 +118,55 @@ pub enum Message {
     Input(DbInput),
 }
 
+pub fn format_endpoint(
+    postgres_hostname: &str,
+    postgres_port: u16,
+    postgres_user: &str,
+    postgres_password: &str,
+    postgres_db: &str,
+) -> String {
+    format!(
+        "postgres://{}:{}@{}:{}/{}",
+        urlencoding::encode(postgres_user),
+        urlencoding::encode(postgres_password),
+        urlencoding::encode(postgres_hostname),
+        postgres_port,
+        urlencoding::encode(postgres_db)
+    )
+}
+
 /// Create database connection manager, wait until database server is available with backoff strategy
 /// Return postgres connection
-pub fn connect_to_database_with_retry(postgres_endpoint: &str) -> PgConnection {
+pub fn connect_to_database_with_retry(
+    postgres_hostname: &str,
+    postgres_port: u16,
+    postgres_user: &str,
+    postgres_password: &str,
+    postgres_db: &str,
+) -> PgConnection {
+    let postgres_endpoint = format_endpoint(
+        postgres_hostname,
+        postgres_port,
+        postgres_user,
+        postgres_password,
+        postgres_db,
+    );
+
     let connection_manager: ConnectionManager<PgConnection> =
-        ConnectionManager::new(postgres_endpoint);
+        ConnectionManager::new(postgres_endpoint.clone());
 
     let op = || {
-        info!("Trying to connect to database {}", postgres_endpoint);
+        info!(
+            "Trying to create db pool for database postgresql://{}@{}:{}/{}",
+            postgres_user, postgres_hostname, postgres_port, postgres_db
+        );
         connection_manager.connect().map_err(crate::new_backoff_err)
     };
     backoff::retry(backoff::ExponentialBackoff::default(), op)
         .map_err(|e| {
             error!(
-                "Failed to connect to database {}, error: {}",
-                postgres_endpoint,
+                "Failed to connect to database postgresql://{}@{}:{}/{}, error: {}",
+                postgres_user, postgres_hostname, postgres_port, postgres_db,
                 e.to_string()
             );
             e
@@ -142,24 +176,38 @@ pub fn connect_to_database_with_retry(postgres_endpoint: &str) -> PgConnection {
 
 /// Create database connection pool, wait until database server is available with backoff strategy
 pub fn create_db_pool_with_retry(
-    postgres_endpoint: &str,
+    postgres_hostname: &str,
+    postgres_port: u16,
+    postgres_user: &str,
+    postgres_password: &str,
+    postgres_db: &str,
 ) -> diesel::r2d2::Pool<ConnectionManager<PgConnection>> {
+    let postgres_endpoint = format_endpoint(
+        postgres_hostname,
+        postgres_port,
+        postgres_user,
+        postgres_password,
+        postgres_db,
+    );
+
     let op = || {
         info!(
-            "Trying to create db pool for database {}",
-            postgres_endpoint
+            "Trying to create db pool for database host: postgresql://{}@{}:{}/{}",
+            postgres_user, postgres_hostname, postgres_port, postgres_db
         );
         diesel::r2d2::Pool::builder()
             .max_size(POOL_CONNECTION_SIZE)
-            .build(ConnectionManager::<PgConnection>::new(postgres_endpoint))
+            .build(ConnectionManager::<PgConnection>::new(
+                postgres_endpoint.clone(),
+            ))
             .map_err(crate::new_backoff_err)
     };
 
     backoff::retry(backoff::ExponentialBackoff::default(), op)
         .map_err(|e| {
             error!(
-                "Failed to create db pool for database {}, error: {}",
-                postgres_endpoint,
+                "Failed to create db pool for postgresql://{}@{}:{}/{}, error: {}",
+                postgres_user, postgres_hostname, postgres_port, postgres_db,
                 e.to_string()
             );
             e
@@ -169,39 +217,52 @@ pub fn create_db_pool_with_retry(
 
 // Connect to database in separate async blocking tread
 pub async fn connect_to_database_with_retry_async(
-    endpoint: String,
+    postgres_hostname: &str,
+    postgres_port: u16,
+    postgres_user: &str,
+    postgres_password: &str,
+    postgres_db: &str,
 ) -> Result<PgConnection, JoinError> {
+    let postgres_hostname = postgres_hostname.to_string();
+    let postgres_user = postgres_user.to_string();
+    let postgres_password = postgres_password.to_string();
+    let postgres_db = postgres_db.to_string();
     tokio::task::spawn_blocking(move || {
-        connect_to_database_with_retry(&endpoint)
+        connect_to_database_with_retry(
+            postgres_hostname.as_str(),
+            postgres_port,
+            postgres_user.as_str(),
+            postgres_password.as_str(),
+            postgres_db.as_str(),
+        )
     })
     .await
 }
 
 pub fn perform_diesel_setup(
-    user: &str,
-    password: &str,
-    host: &str,
-    port: u16,
-    database: &str,
+    postgres_hostname: &str,
+    postgres_port: u16,
+    postgres_user: &str,
+    postgres_password: &str,
+    postgres_db: &str,
     migration_folder: &str,
 ) -> std::io::Result<std::process::Output> {
-    let endpoint = format!(
-        "postgres://{}:{}@{}:{}/{}",
-        user,
-        password,
-        host,
-        &port.to_string(),
-        database
+    let postgres_endpoint = format_endpoint(
+        postgres_hostname,
+        postgres_port,
+        postgres_user,
+        postgres_password,
+        postgres_db,
     );
 
     info!(
-        "Performing diesel setup on endpoint {} from migration directory {}",
-        endpoint, migration_folder
+        "Performing diesel setup on database postgresql://{}@{}:{}/{} from migration directory {}",
+        postgres_user, postgres_hostname, postgres_port, postgres_db, migration_folder
     );
 
     std::process::Command::new("diesel")
         .arg(&format!("setup"))
-        .arg(&format!("--database-url={}", endpoint))
+        .arg(&format!("--database-url={}", postgres_endpoint))
         .arg(&format!("--migration-dir={}", migration_folder))
         .output()
 }

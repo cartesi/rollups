@@ -60,10 +60,10 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
             // Perform diesel setup and migration
             match rollups_data::database::perform_diesel_setup(
-                &postgres_config.postgres_user,
-                &postgres_config.postgres_password,
                 &postgres_config.postgres_hostname,
                 postgres_config.postgres_port,
+                &postgres_config.postgres_user,
+                &postgres_config.postgres_password,
                 &postgres_config.postgres_db,
                 &postgres_config.postgres_migration_folder,
             ) {

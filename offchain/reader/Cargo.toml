@@ -19,7 +19,6 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tokio = { version = "1.17", features = ["macros", "time", "rt-multi-thread"] }
 snafu = "0.6"
 structopt = "0.3"
-urlencoding = "2.1"
 
 [dev-dependencies]
 rstest = "0.12.0"

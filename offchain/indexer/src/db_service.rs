@@ -12,7 +12,7 @@
  */
 
 /// Receive messages from data service and insert them in database
-use crate::config::IndexerConfig;
+use crate::config::{IndexerConfig, PostgresConfig};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use rollups_data::database::{
@@ -21,17 +21,6 @@ use rollups_data::database::{
 use snafu::ResultExt;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, trace, warn};
-
-pub fn format_endpoint(config: &IndexerConfig) -> String {
-    format!(
-        "postgres://{}:{}@{}:{}/{}",
-        urlencoding::encode(&config.database.postgres_user),
-        urlencoding::encode(&config.database.postgres_password),
-        urlencoding::encode(&config.database.postgres_hostname),
-        config.database.postgres_port,
-        urlencoding::encode(&config.database.postgres_db)
-    )
-}
 
 pub enum EpochIndexType {
     Notice,
@@ -472,11 +461,15 @@ pub fn get_current_db_epoch(
 }
 
 pub async fn get_current_db_epoch_async(
-    postgres_endpoint: &str,
+    postgres_config: &PostgresConfig,
     epoch_index_type: EpochIndexType,
 ) -> Result<i32, crate::error::Error> {
     let conn = rollups_data::database::connect_to_database_with_retry_async(
-        postgres_endpoint.into(),
+        &postgres_config.postgres_hostname,
+        postgres_config.postgres_port,
+        &postgres_config.postgres_user,
+        &postgres_config.postgres_password,
+        &postgres_config.postgres_db,
     )
     .await
     .context(crate::error::TokioError)?;
@@ -496,20 +489,24 @@ async fn db_loop(
     mut message_rx: mpsc::Receiver<rollups_data::database::Message>,
 ) -> Result<(), crate::error::Error> {
     info!("starting db loop");
-    let postgres_endpoint = format_endpoint(&config);
 
     loop {
+        let db_config = config.database.clone();
         tokio::select! {
             Some(response) = message_rx.recv() => {
                 // Connect to database. In case of error, continue trying with increasing retry period
                 let conn = {
-                    let pe = postgres_endpoint.clone();
+                    let db_config_tmp = db_config.clone();
                     match tokio::task::spawn_blocking(move || {
-                       rollups_data::database::connect_to_database_with_retry(&pe)
+                       rollups_data::database::connect_to_database_with_retry(&db_config_tmp.postgres_hostname, db_config_tmp.postgres_port,
+                            &db_config_tmp.postgres_user, &db_config_tmp.postgres_password, &db_config_tmp.postgres_db)
                     }).await.map_err(|e| crate::error::Error::TokioError { source: e }) {
                         Ok(c) => c,
                         Err(e) => {
-                            error!("Failed to connect to database {}, error: {}", &postgres_endpoint, e.to_string());
+                            error!("Failed to connect to database {}:{}/{}, error: {}", &db_config.postgres_hostname,
+                                db_config.postgres_port,
+                                &db_config.postgres_db,
+                                e.to_string());
                             continue;
                         }
                     }

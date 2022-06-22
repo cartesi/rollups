@@ -13,7 +13,7 @@
 
 /// Data service polls other Cartesi services
 /// with specified interval and collects related data about dapp
-use crate::config::IndexerConfig;
+use crate::config::{IndexerConfig, PostgresConfig};
 use crate::db_service::{get_current_db_epoch_async, EpochIndexType};
 use ethers::core::types::{Address, U256};
 use offchain::fold::types::{
@@ -521,7 +521,6 @@ async fn polling_loop(
 ) -> Result<(), crate::error::Error> {
     let loop_interval = std::time::Duration::from_millis(100);
     let poll_interval = std::time::Duration::from_secs(config.interval);
-    let postgres_endpoint = crate::db_service::format_endpoint(&config);
 
     let mut tasks = vec![
         Task {
@@ -611,7 +610,6 @@ async fn polling_loop(
                         {
                             let config = config.clone();
                             let message_tx = message_tx.clone();
-                            let postgres_endpoint = postgres_endpoint.clone();
                             tokio::spawn(async move {
                                 debug!(
                                     "Performing get state from state server {}",
@@ -633,7 +631,7 @@ async fn polling_loop(
                                     };
                                 let db_epoch_index =
                                     get_current_db_epoch_async(
-                                        &postgres_endpoint,
+                                        &config.database,
                                         EpochIndexType::Input,
                                     )
                                     .await
@@ -669,11 +667,15 @@ async fn polling_loop(
 async fn sync_epoch_status(
     message_tx: mpsc::Sender<rollups_data::database::Message>,
     mut client: ServerManagerClient<tonic::transport::Channel>,
-    postgres_endpoint: &str,
+    postgres_config: &PostgresConfig,
     session_id: &str,
 ) -> Result<(), crate::error::Error> {
     let conn = rollups_data::database::connect_to_database_with_retry_async(
-        postgres_endpoint.into(),
+        &postgres_config.postgres_hostname,
+        postgres_config.postgres_port,
+        &postgres_config.postgres_user,
+        &postgres_config.postgres_password,
+        &postgres_config.postgres_db,
     )
     .await
     .context(crate::error::TokioError)?;
@@ -722,11 +724,15 @@ async fn sync_epoch_status(
 async fn sync_state(
     message_tx: mpsc::Sender<rollups_data::database::Message>,
     mut client: DelegateManagerClient<tonic::transport::Channel>,
-    postgres_endpoint: &str,
+    postgres_config: &PostgresConfig,
     dapp_contract_address: Address,
 ) -> Result<(), crate::error::Error> {
     let conn = rollups_data::database::connect_to_database_with_retry_async(
-        postgres_endpoint.into(),
+        &postgres_config.postgres_hostname,
+        postgres_config.postgres_port,
+        &postgres_config.postgres_user,
+        &postgres_config.postgres_password,
+        &postgres_config.postgres_db,
     )
     .await
     .context(crate::error::TokioError)?;
@@ -764,8 +770,6 @@ async fn sync_data(
     message_tx: mpsc::Sender<rollups_data::database::Message>,
     config: Arc<IndexerConfig>,
 ) -> Result<(), crate::error::Error> {
-    let postgres_endpoint = crate::db_service::format_endpoint(&config);
-
     // Sync notices from machine manager
     info!("Syncing up to date data from machine manager");
     let client =
@@ -773,7 +777,7 @@ async fn sync_data(
     sync_epoch_status(
         message_tx.clone(),
         client,
-        &postgres_endpoint,
+        &config.database,
         &config.session_id,
     )
     .await?;
@@ -787,7 +791,7 @@ async fn sync_data(
     sync_state(
         message_tx.clone(),
         client,
-        &postgres_endpoint,
+        &config.database,
         config.dapp_contract_address,
     )
     .await?;
