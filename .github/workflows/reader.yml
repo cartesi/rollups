@@ -37,6 +37,27 @@ jobs:
               with:
                   username: ${{ secrets.DOCKER_USERNAME }}
                   password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Install dependencies for tests
+              run: |
+                  sudo apt-get update -y
+                  sudo DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5 docker-compose
+                  curl https://sh.rustup.rs -sSf | bash -s -- -y
+                  echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
+                  cargo install diesel_cli --no-default-features --features "postgres"
+                  sudo rm -rf /var/lib/apt/lists/*
+
+            - name: Build reader
+              run: |
+                  cd offchain/reader
+                  cargo build --release
+
+            - name: Execute reader integration tests
+              run: |
+                  cd offchain/reader
+                  docker-compose -f tests/docker-compose.yml up --build -d
+                  RUST_LOG=error ROLLUPS_READER_BINARY_PATH=../target/release/reader cargo test
+                  docker-compose -f tests/docker-compose.yml stop                  
             
             - name: Build and push docker image
               id: docker_build

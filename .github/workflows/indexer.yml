@@ -44,6 +44,28 @@ jobs:
                   username: ${{ secrets.DOCKER_USERNAME }}
                   password: ${{ secrets.DOCKER_PASSWORD }}
 
+            - name: Install dependencies for tests
+              run: |
+                  sudo apt-get update -y
+                  sudo DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5 docker-compose
+                  curl https://sh.rustup.rs -sSf | bash -s -- -y
+                  echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
+                  cargo install diesel_cli --no-default-features --features "postgres"
+                  sudo rm -rf /var/lib/apt/lists/*
+
+            - name: Build indexer
+              run: |
+                  cd offchain/indexer 
+                  cargo build --release
+
+            - name: Execute indexer integration tests
+              run: |
+                  ls -la
+                  cd offchain/indexer
+                  docker-compose -f tests/docker-compose.yml up --build -d
+                  cargo test
+                  docker-compose -f tests/docker-compose.yml stop
+
             - name: Build and push docker image
               id: docker_build
               uses: docker/bake-action@v2
