@@ -23,13 +23,23 @@ use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+    // Configure a custom event formatter
+    let tracing_format = tracing_subscriber::fmt::format()
+        .without_time()
+        .with_level(true)
+        .with_target(true)
+        .with_ansi(false)
+        .compact();
+
     // Use tracing library for logs. By default use system standard output logger
     if std::env::var(EnvFilter::DEFAULT_ENV).is_ok() {
         tracing_subscriber::fmt()
+            .event_format(tracing_format)
             .with_env_filter(EnvFilter::from_default_env())
             .init();
     } else {
         tracing_subscriber::fmt()
+            .event_format(tracing_format)
             .with_max_level(LevelFilter::INFO)
             .init();
     }
