@@ -15,6 +15,7 @@
 /// with specified interval and collects related data about dapp
 use crate::config::{IndexerConfig, PostgresConfig};
 use crate::db_service::{get_current_db_epoch_async, EpochIndexType};
+use crate::error::new_indexer_tokio_err;
 use ethers::core::types::{Address, U256};
 use offchain::fold::types::{
     AccumulatingEpoch, EpochWithClaims, Input, PhaseState, RollupsState,
@@ -48,6 +49,7 @@ async fn connect_to_server_manager_with_retry(
 ) -> Result<ServerManagerClient<tonic::transport::Channel>, crate::error::Error>
 {
     let endpoint = mm_endpoint.to_string();
+    debug!("Connecting to server manager {}", endpoint);
     let op = || async {
         ServerManagerClient::connect(endpoint.clone())
             .await
@@ -64,6 +66,7 @@ async fn connect_to_state_server_with_retry(
 ) -> Result<DelegateManagerClient<tonic::transport::Channel>, crate::error::Error>
 {
     let endpoint = state_server_endpoint.to_string();
+    debug!("Connecting to state server {}", endpoint);
     let op = || async {
         DelegateManagerClient::connect(endpoint.clone())
             .await
@@ -687,7 +690,7 @@ async fn sync_epoch_status(
         )? as u64)
     })
     .await
-    .map_err(|e| crate::error::Error::TokioError { source: e })??;
+    .map_err(new_indexer_tokio_err)??;
 
     let current_session_status =
         get_session_status(&mut client, session_id).await?;
@@ -772,30 +775,89 @@ async fn sync_data(
 ) -> Result<(), crate::error::Error> {
     // Sync notices from machine manager
     info!("Syncing up to date data from machine manager");
-    let client =
-        connect_to_server_manager_with_retry(&config.mm_endpoint).await?;
-    sync_epoch_status(
-        message_tx.clone(),
-        client,
-        &config.database,
-        &config.session_id,
-    )
-    .await?;
-    info!("Machine manager sync finished successfully");
 
-    // Sync inputs and epochs from state server
-    info!("Syncing up to date data from state server");
-    let client =
-        connect_to_state_server_with_retry(&config.state_server_endpoint)
-            .await?;
-    sync_state(
-        message_tx.clone(),
-        client,
-        &config.database,
-        config.dapp_contract_address,
-    )
-    .await?;
-    info!("State server sync finished successfully");
+    let db_config = config.database.clone();
+    let session_id = config.session_id.clone();
+    let mm_endpoint = config.mm_endpoint.clone();
+
+    // Sync inputs and epochs from server manager using backoff strategy
+    let sync_server_manager_task = backoff::future::retry(
+        backoff::ExponentialBackoff::default(),
+        || async {
+            info!("Connecting for sync to server manager {}", &mm_endpoint);
+            let client = ServerManagerClient::connect(mm_endpoint.to_string())
+                .await
+                .context(super::error::TonicTransportError)
+                .map_err(rollups_data::new_backoff_err)?;
+
+            info!("Trying to sync epoch status from server manager...");
+            match sync_epoch_status(
+                message_tx.clone(),
+                client,
+                &db_config,
+                &session_id,
+            )
+            .await
+            {
+                Ok(()) => {
+                    info!("Machine manager sync finished successfully");
+                    Ok(())
+                }
+                Err(e) => {
+                    error!(
+                        "Failed to sync from server manager, details: {}",
+                        e.to_string()
+                    );
+                    Err(rollups_data::new_backoff_err(e))
+                }
+            }
+        },
+    );
+
+    // Sync inputs and epochs from state server using backoff strategy
+    let state_server_endpoint = config.state_server_endpoint.clone();
+    let sync_state_server_task = backoff::future::retry(
+        backoff::ExponentialBackoff::default(),
+        || async {
+            info!(
+                "Connecting for sync to state server {}",
+                &state_server_endpoint
+            );
+            let client = DelegateManagerClient::connect(
+                state_server_endpoint.to_string(),
+            )
+            .await
+            .context(super::error::TonicTransportError)
+            .map_err(rollups_data::new_backoff_err)?;
+
+            info!("Trying to sync state from state server...");
+            match sync_state(
+                message_tx.clone(),
+                client,
+                &config.database,
+                config.dapp_contract_address,
+            )
+            .await
+            {
+                Ok(()) => {
+                    info!("State server sync finished successfully");
+                    Ok(())
+                }
+                Err(e) => {
+                    error!(
+                        "Failed to sync state server, details: {}",
+                        e.to_string()
+                    );
+                    Err(rollups_data::new_backoff_err(e))
+                }
+            }
+        },
+    );
+
+    let (result_server_manager_sync, result_state_server_sync) =
+        tokio::join!(sync_server_manager_task, sync_state_server_task);
+    result_server_manager_sync?;
+    result_state_server_sync?;
 
     Ok(())
 }

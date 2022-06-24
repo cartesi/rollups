@@ -45,3 +45,12 @@ pub enum Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+/// Helper function to map tokio join error to indexer error
+pub fn new_indexer_tokio_err(err: tokio::task::JoinError) -> Error {
+    Error::TokioError { source: err }
+}
+
+pub fn new_indexer_tonic_status_err(err: tonic::Status) -> Error {
+    Error::TonicStatusError { source: err }
+}
