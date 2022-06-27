@@ -490,26 +490,67 @@ async fn db_loop(
 ) -> Result<(), crate::error::Error> {
     info!("starting db loop");
 
+    let db_config = &config.database;
+
+    let mut db_pool = rollups_data::database::create_db_pool_with_retry(
+        &db_config.postgres_hostname,
+        db_config.postgres_port,
+        &db_config.postgres_user,
+        &db_config.postgres_password,
+        &db_config.postgres_db,
+    );
+
     loop {
-        let db_config = config.database.clone();
         tokio::select! {
             Some(response) = message_rx.recv() => {
-                // Connect to database. In case of error, continue trying with increasing retry period
-                let conn = {
-                    let db_config_tmp = db_config.clone();
-                    match tokio::task::spawn_blocking(move || {
-                       rollups_data::database::connect_to_database_with_retry(&db_config_tmp.postgres_hostname, db_config_tmp.postgres_port,
-                            &db_config_tmp.postgres_user, &db_config_tmp.postgres_password, &db_config_tmp.postgres_db)
-                    }).await.map_err(|e| crate::error::Error::TokioError { source: e }) {
-                        Ok(c) => c,
-                        Err(e) => {
-                            error!("Failed to connect to database {}:{}/{}, error: {}", &db_config.postgres_hostname,
-                                db_config.postgres_port,
-                                &db_config.postgres_db,
-                                e.to_string());
-                            continue;
+                // Try to get connection to dabase, recreate db pool if failed
+                let conn = match db_pool.get() {
+                    Ok(conn) => Some(conn),
+                    Err(e) => {
+                        error!("Failed to get connection from db pool, postgres://{}@{}:{}/{}, error: {}",
+                            &db_config.postgres_user,
+                            &db_config.postgres_hostname,
+                            config.database.postgres_port,
+                            &db_config.postgres_db,
+                            e.to_string()
+                        );
+                        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
+                        // Recreate connection pool
+                        match rollups_data::database::create_db_pool_with_retry_async(
+                            &db_config.postgres_hostname,
+                            db_config.postgres_port,
+                            &db_config.postgres_user,
+                            &db_config.postgres_password,
+                            &db_config.postgres_db,
+                        ).await {
+                            Ok(pool) => {
+                                db_pool = pool;
+                                db_pool.get().ok()
+                            },
+                            Err(_e) => {
+                                error!("Failed to recreate db pool, postgres://{}@{}:{}/{}",
+                                &db_config.postgres_user,
+                                &db_config.postgres_hostname,
+                                config.database.postgres_port,
+                                &db_config.postgres_db);
+                                None
+                            }
                         }
                     }
+                };
+                let conn = if let Some(c) = conn {
+                    c
+                } else {
+                    error!("Unable to connect to postgres://{}@{}:{}/{} to save message, received message {:?} lost",
+                        &db_config.postgres_user,
+                        &db_config.postgres_hostname,
+                        config.database.postgres_port,
+                        &db_config.postgres_db,
+                        response
+                    );
+                    // Message lost, wait for another message in the next loop
+                    continue;
                 };
                 match response {
                     Message::Notice(proof, mut notice) => {

@@ -174,6 +174,30 @@ pub fn connect_to_database_with_retry(
         .expect("Failed to connect")
 }
 
+// Connect to database in separate async blocking tread
+pub async fn connect_to_database_with_retry_async(
+    postgres_hostname: &str,
+    postgres_port: u16,
+    postgres_user: &str,
+    postgres_password: &str,
+    postgres_db: &str,
+) -> Result<PgConnection, JoinError> {
+    let postgres_hostname = postgres_hostname.to_string();
+    let postgres_user = postgres_user.to_string();
+    let postgres_password = postgres_password.to_string();
+    let postgres_db = postgres_db.to_string();
+    tokio::task::spawn_blocking(move || {
+        connect_to_database_with_retry(
+            postgres_hostname.as_str(),
+            postgres_port,
+            postgres_user.as_str(),
+            postgres_password.as_str(),
+            postgres_db.as_str(),
+        )
+    })
+    .await
+}
+
 /// Create database connection pool, wait until database server is available with backoff strategy
 pub fn create_db_pool_with_retry(
     postgres_hostname: &str,
@@ -215,25 +239,24 @@ pub fn create_db_pool_with_retry(
         .expect("error creating pool")
 }
 
-// Connect to database in separate async blocking tread
-pub async fn connect_to_database_with_retry_async(
+pub async fn create_db_pool_with_retry_async(
     postgres_hostname: &str,
     postgres_port: u16,
     postgres_user: &str,
     postgres_password: &str,
     postgres_db: &str,
-) -> Result<PgConnection, JoinError> {
+) -> Result<diesel::r2d2::Pool<ConnectionManager<PgConnection>>, JoinError> {
     let postgres_hostname = postgres_hostname.to_string();
     let postgres_user = postgres_user.to_string();
     let postgres_password = postgres_password.to_string();
     let postgres_db = postgres_db.to_string();
     tokio::task::spawn_blocking(move || {
-        connect_to_database_with_retry(
-            postgres_hostname.as_str(),
+        create_db_pool_with_retry(
+            &postgres_hostname,
             postgres_port,
-            postgres_user.as_str(),
-            postgres_password.as_str(),
-            postgres_db.as_str(),
+            &postgres_user,
+            &postgres_password,
+            &postgres_db,
         )
     })
     .await
