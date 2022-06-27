@@ -20,7 +20,7 @@ use crate::database::{
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
-use juniper::{graphql_object, FieldResult};
+use juniper::{graphql_object, graphql_value, FieldError, FieldResult};
 use snafu::ResultExt;
 use std::sync::Arc;
 use tracing::warn;
@@ -332,29 +332,53 @@ fn get_epochs(
     use crate::database::schema::epochs::dsl::*;
 
     let mut query = epochs.into_boxed();
-    let start_pos = if let Some(first) = pagination.first {
-        let first = std::cmp::max(0, first - 1);
-        query = query.offset(first.into());
+    let mut query_count = epochs.into_boxed();
+    let first = if let Some(first) = pagination.first {
+        if first < 0 {
+            return Err(FieldError::new(
+                "Parameter `first` is less than 0",
+                graphql_value!({ "error": "Invalid argument" }),
+            ));
+        }
+        query = query.limit(first.into());
+        query_count = query_count.limit(first.into());
         first
     } else {
         0
     };
-    if let Some(last) = pagination.last {
-        query = query.limit((last - start_pos).into());
-        Some(last)
-    } else {
-        None
-    };
+
     if let Some(after) = pagination.after {
         if let Ok(after_i32) = after.parse::<i32>() {
             query = query.filter(id.gt(after_i32));
+            query_count = query_count.filter(id.gt(after_i32));
         }
     };
     if let Some(before) = pagination.before {
         if let Ok(before_i32) = before.parse::<i32>() {
             query = query.filter(id.lt(before_i32));
+            query_count = query_count.filter(id.lt(before_i32));
         }
     };
+
+    if let Some(last) = pagination.last {
+        if last < 0 {
+            return Err(FieldError::new(
+                "Parameter `last` is less than 0",
+                graphql_value!({ "error": "Invalid argument" }),
+            ));
+        }
+        // Get count prior to slicing so that we can take last from that count
+        let number_count = query_count.count().get_result::<i64>(conn)? as i32;
+        let offset = if first > 0 {
+            // Should not be used by user but return according to spec
+            query = query.limit((std::cmp::min(first, last)).into());
+            std::cmp::max(0, std::cmp::min(first - last, number_count - last))
+        } else {
+            std::cmp::max(0, number_count - last)
+        };
+        query = query.offset(offset.into());
+    }
+
     query = query.order_by(id.asc());
     let db_epochs = query.load::<DbEpoch>(conn)?;
     process_db_epochs(db_epochs)
@@ -556,32 +580,58 @@ fn get_inputs_by_cursor(
 ) -> FieldResult<std::collections::BTreeMap<(i32, i32), Input>> {
     use crate::database::schema::inputs::dsl::*;
     let mut query = inputs.into_boxed();
-    let start_pos = if let Some(first) = pagination.first {
-        let first = std::cmp::max(0, first - 1);
-        query = query.offset(first.into());
+    let mut query_count = inputs.into_boxed();
+
+    let first = if let Some(first) = pagination.first {
+        if first < 0 {
+            return Err(FieldError::new(
+                "Parameter `first` is less than 0",
+                graphql_value!({ "error": "Invalid argument" }),
+            ));
+        }
+        query = query.limit(first.into());
+        query_count = query_count.limit(first.into());
         first
     } else {
         0
     };
-    if let Some(last) = pagination.last {
-        query = query.limit((last - start_pos).into());
-        Some(last)
-    } else {
-        None
-    };
+
     if let Some(after) = pagination.after {
         if let Ok(after_i32) = after.parse::<i32>() {
             query = query.filter(id.gt(after_i32));
+            query_count = query_count.filter(id.gt(after_i32));
         }
     };
     if let Some(before) = pagination.before {
         if let Ok(before_i32) = before.parse::<i32>() {
             query = query.filter(id.lt(before_i32));
+            query_count = query_count.filter(id.lt(before_i32));
         }
     };
     if let Some(ep_index) = ep_index {
         query = query.filter(epoch_index.eq(ep_index));
+        query_count = query_count.filter(epoch_index.eq(ep_index));
     };
+
+    if let Some(last) = pagination.last {
+        if last < 0 {
+            return Err(FieldError::new(
+                "Parameter `last` is less than 0",
+                graphql_value!({ "error": "Invalid argument" }),
+            ));
+        }
+        // Get count so that we can take last from that count
+        let number_count = query_count.count().get_result::<i64>(conn)? as i32;
+        let offset = if first > 0 {
+            // Should not be used by user but return according to spec
+            query = query.limit((std::cmp::min(first, last)).into());
+            std::cmp::max(0, std::cmp::min(first - last, number_count - last))
+        } else {
+            std::cmp::max(0, number_count - last)
+        };
+        query = query.offset(offset.into());
+    }
+
     query = query.order_by(id.asc());
     let db_inputs = query.load::<DbInput>(conn)?;
     process_db_inputs(db_inputs, conn)
@@ -792,31 +842,39 @@ fn get_notices_by_cursor(
 ) -> FieldResult<std::collections::BTreeMap<i32, Notice>> {
     use crate::database::schema::notices;
     let mut query = notices::dsl::notices.into_boxed();
-    let start_pos = if let Some(first) = pagination.first {
-        let first = std::cmp::max(0, first - 1);
-        query = query.offset(first.into());
+    let mut query_count = notices::dsl::notices.into_boxed();
+
+    let first = if let Some(first) = pagination.first {
+        if first < 0 {
+            return Err(FieldError::new(
+                "Parameter `first` is less than 0",
+                graphql_value!({ "error": "Invalid argument" }),
+            ));
+        }
+        query = query.limit(first.into());
+        query_count = query_count.limit(first.into());
         first
     } else {
         0
     };
-    if let Some(last) = pagination.last {
-        query = query.limit((last - start_pos).into());
-        Some(last)
-    } else {
-        None
-    };
+
     if let Some(after) = pagination.after {
         if let Ok(after_i32) = after.parse::<i32>() {
             query = query.filter(notices::dsl::id.gt(after_i32));
+            query_count = query_count.filter(notices::dsl::id.gt(after_i32));
         }
     };
     if let Some(before) = pagination.before {
         if let Ok(before_i32) = before.parse::<i32>() {
             query = query.filter(notices::dsl::id.lt(before_i32));
+            query_count = query_count.filter(notices::dsl::id.lt(before_i32));
         }
     };
     if let Some(in_index) = input_index {
         query = query.filter(
+            crate::database::schema::notices::dsl::input_index.eq(in_index),
+        );
+        query_count = query_count.filter(
             crate::database::schema::notices::dsl::input_index.eq(in_index),
         );
     };
@@ -824,7 +882,28 @@ fn get_notices_by_cursor(
         query = query.filter(
             crate::database::schema::notices::dsl::epoch_index.eq(ep_index),
         );
+        query_count = query_count.filter(
+            crate::database::schema::notices::dsl::epoch_index.eq(ep_index),
+        );
     };
+    if let Some(last) = pagination.last {
+        if last < 0 {
+            return Err(FieldError::new(
+                "Parameter `last` is less than 0",
+                graphql_value!({ "error": "Invalid argument" }),
+            ));
+        }
+        // Get count prior to slicing so that we can take last from that count
+        let number_count = query_count.count().get_result::<i64>(conn)? as i32;
+        let offset = if first > 0 {
+            // Should not be used by user but return according to spec
+            query = query.limit((std::cmp::min(first, last)).into());
+            std::cmp::max(0, std::cmp::min(first - last, number_count - last))
+        } else {
+            std::cmp::max(0, number_count - last)
+        };
+        query = query.offset(offset.into());
+    }
     query = query.order_by(notices::dsl::id.asc());
     let db_notices = query.load::<DbNotice>(conn)?;
     process_db_notices(conn, db_notices)
@@ -1017,31 +1096,39 @@ fn get_reports_by_cursor(
 ) -> FieldResult<std::collections::BTreeMap<i32, Report>> {
     use crate::database::schema::reports;
     let mut query = reports::dsl::reports.into_boxed();
-    let start_pos = if let Some(first) = pagination.first {
-        let first = std::cmp::max(0, first - 1);
-        query = query.offset(first.into());
+    let mut query_count = reports::dsl::reports.into_boxed();
+
+    let first = if let Some(first) = pagination.first {
+        if first < 0 {
+            return Err(FieldError::new(
+                "Parameter `first` is less than 0",
+                graphql_value!({ "error": "Invalid argument" }),
+            ));
+        }
+        query = query.limit(first.into());
+        query_count = query_count.limit(first.into());
         first
     } else {
         0
     };
-    if let Some(last) = pagination.last {
-        query = query.limit((last - start_pos).into());
-        Some(last)
-    } else {
-        None
-    };
+
     if let Some(after) = pagination.after {
         if let Ok(after_i32) = after.parse::<i32>() {
             query = query.filter(reports::dsl::id.gt(after_i32));
+            query_count = query_count.filter(reports::dsl::id.gt(after_i32));
         }
     };
     if let Some(before) = pagination.before {
         if let Ok(before_i32) = before.parse::<i32>() {
             query = query.filter(reports::dsl::id.lt(before_i32));
+            query_count = query_count.filter(reports::dsl::id.lt(before_i32));
         }
     };
     if let Some(in_index) = input_index {
         query = query.filter(
+            crate::database::schema::reports::dsl::input_index.eq(in_index),
+        );
+        query_count = query_count.filter(
             crate::database::schema::reports::dsl::input_index.eq(in_index),
         );
     };
@@ -1049,7 +1136,28 @@ fn get_reports_by_cursor(
         query = query.filter(
             crate::database::schema::reports::dsl::epoch_index.eq(ep_index),
         );
+        query_count = query_count.filter(
+            crate::database::schema::reports::dsl::epoch_index.eq(ep_index),
+        );
     };
+    if let Some(last) = pagination.last {
+        if last < 0 {
+            return Err(FieldError::new(
+                "Parameter `last` is less than 0",
+                graphql_value!({ "error": "Invalid argument" }),
+            ));
+        }
+        // Get count prior to slicing so that we can take last from that count
+        let number_count = query_count.count().get_result::<i64>(conn)? as i32;
+        let offset = if first > 0 {
+            // Should not be used by user but return according to spec
+            query = query.limit((std::cmp::min(first, last)).into());
+            std::cmp::max(0, std::cmp::min(first - last, number_count - last))
+        } else {
+            std::cmp::max(0, number_count - last)
+        };
+        query = query.offset(offset.into());
+    }
     query = query.order_by(reports::dsl::id.asc());
     let db_reports = query.load::<DbReport>(conn)?;
     process_db_reports(conn, db_reports)
@@ -1290,31 +1398,39 @@ fn get_vouchers_by_cursor(
 ) -> FieldResult<std::collections::BTreeMap<i32, Voucher>> {
     use crate::database::schema::vouchers;
     let mut query = vouchers::dsl::vouchers.into_boxed();
-    let start_pos = if let Some(first) = pagination.first {
-        let first = std::cmp::max(0, first - 1);
-        query = query.offset(first.into());
+    let mut query_count = vouchers::dsl::vouchers.into_boxed();
+
+    let first = if let Some(first) = pagination.first {
+        if first < 0 {
+            return Err(FieldError::new(
+                "Parameter `first` is less than 0",
+                graphql_value!({ "error": "Invalid argument" }),
+            ));
+        }
+        query = query.limit(first.into());
+        query_count = query_count.limit(first.into());
         first
     } else {
         0
     };
-    if let Some(last) = pagination.last {
-        query = query.limit((last - start_pos).into());
-        Some(last)
-    } else {
-        None
-    };
+
     if let Some(after) = pagination.after {
         if let Ok(after_i32) = after.parse::<i32>() {
             query = query.filter(vouchers::dsl::id.gt(after_i32));
+            query_count = query_count.filter(vouchers::dsl::id.gt(after_i32));
         }
     };
     if let Some(before) = pagination.before {
         if let Ok(before_i32) = before.parse::<i32>() {
             query = query.filter(vouchers::dsl::id.lt(before_i32));
+            query_count = query_count.filter(vouchers::dsl::id.lt(before_i32));
         }
     };
     if let Some(in_index) = input_index {
         query = query.filter(
+            crate::database::schema::vouchers::dsl::input_index.eq(in_index),
+        );
+        query_count = query_count.filter(
             crate::database::schema::vouchers::dsl::input_index.eq(in_index),
         );
     };
@@ -1322,7 +1438,28 @@ fn get_vouchers_by_cursor(
         query = query.filter(
             crate::database::schema::vouchers::dsl::epoch_index.eq(ep_index),
         );
+        query_count = query_count.filter(
+            crate::database::schema::vouchers::dsl::epoch_index.eq(ep_index),
+        );
     };
+    if let Some(last) = pagination.last {
+        if last < 0 {
+            return Err(FieldError::new(
+                "Parameter `last` is less than 0",
+                graphql_value!({ "error": "Invalid argument" }),
+            ));
+        }
+        // Get count prior to slicing so that we can take last from that count
+        let number_count = query_count.count().get_result::<i64>(conn)? as i32;
+        let offset = if first > 0 {
+            // Should not be used by user but return according to spec
+            query = query.limit((std::cmp::min(first, last)).into());
+            std::cmp::max(0, std::cmp::min(first - last, number_count - last))
+        } else {
+            std::cmp::max(0, number_count - last)
+        };
+        query = query.offset(offset.into());
+    }
     query = query.order_by(vouchers::dsl::id.asc());
     let db_vouchers = query.load::<DbVoucher>(conn)?;
     process_db_vouchers(conn, db_vouchers)

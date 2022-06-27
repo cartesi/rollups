@@ -659,7 +659,7 @@ async fn test_graphql_notices_edges_nodes_cursor(
     let context = context_reader_db.await;
 
     let request = r#"{"query":"query {
-    notices (first: 2, last: 3, after:\"2\",before:\"11\") {
+    notices (first: 10, last: 3, after:\"2\",before:\"11\") {
     totalCount
     edges {
       node {
@@ -700,75 +700,104 @@ async fn test_graphql_notices_edges_nodes_cursor(
 }"}"#;
 
     let expected_response = r#"
-       {
+         {
           "data": {
             "notices": {
               "totalCount": 12,
               "edges": [
                 {
                   "node": {
-                    "id": "4",
+                    "id": "8",
                     "index": 0,
                     "input": {
-                      "id": "13",
-                      "index": 12,
+                      "id": "23",
+                      "index": 22,
                       "epoch": {
                         "id": "1",
                         "index": 0
                       }
                     },
-                    "keccak": "0x53d7fecd171a8132ecb0aed2f2c07ae4336f61b2a10bf9c2f47cacd5aca08857"
+                    "keccak": "0xb05a614552507742bf1d4cd444b4fab6201560649daa0116ec93160c31cb4ef7"
                   },
-                  "cursor": "4"
+                  "cursor": "8"
                 },
                 {
                   "node": {
-                    "id": "5",
+                    "id": "9",
                     "index": 0,
                     "input": {
-                      "id": "16",
-                      "index": 15,
+                      "id": "27",
+                      "index": 26,
                       "epoch": {
                         "id": "1",
                         "index": 0
                       }
                     },
-                    "keccak": "0x305ed2d53368d90b31aa94966d0f9989379267b8da09dee41355e9eb16b68897"
+                    "keccak": "0xb66fcbae74d8a74a2b90d35dd6dd4828ee643cb59643eced537a59e9cbb56cd6"
                   },
-                  "cursor": "5"
+                  "cursor": "9"
+                },
+                {
+                  "node": {
+                    "id": "10",
+                    "index": 0,
+                    "input": {
+                      "id": "29",
+                      "index": 28,
+                      "epoch": {
+                        "id": "1",
+                        "index": 0
+                      }
+                    },
+                    "keccak": "0xc05c56e0708c5bcbefa98308a5a6386903222dec877613411218c0b8db7fa12a"
+                  },
+                  "cursor": "10"
                 }
               ],
               "nodes": [
                 {
-                  "id": "4",
+                  "id": "8",
                   "index": 0,
                   "input": {
-                    "id": "13",
-                    "index": 12,
+                    "id": "23",
+                    "index": 22,
                     "epoch": {
                       "id": "1",
                       "index": 0
                     }
                   },
-                  "keccak": "0x53d7fecd171a8132ecb0aed2f2c07ae4336f61b2a10bf9c2f47cacd5aca08857"
+                  "keccak": "0xb05a614552507742bf1d4cd444b4fab6201560649daa0116ec93160c31cb4ef7"
                 },
                 {
-                  "id": "5",
+                  "id": "9",
                   "index": 0,
                   "input": {
-                    "id": "16",
-                    "index": 15,
+                    "id": "27",
+                    "index": 26,
                     "epoch": {
                       "id": "1",
                       "index": 0
                     }
                   },
-                  "keccak": "0x305ed2d53368d90b31aa94966d0f9989379267b8da09dee41355e9eb16b68897"
+                  "keccak": "0xb66fcbae74d8a74a2b90d35dd6dd4828ee643cb59643eced537a59e9cbb56cd6"
+                },
+                {
+                  "id": "10",
+                  "index": 0,
+                  "input": {
+                    "id": "29",
+                    "index": 28,
+                    "epoch": {
+                      "id": "1",
+                      "index": 0
+                    }
+                  },
+                  "keccak": "0xc05c56e0708c5bcbefa98308a5a6386903222dec877613411218c0b8db7fa12a"
                 }
               ],
               "pageInfo": {
-                "startCursor": "4",
-                "endCursor": "5",
+                "startCursor": "8",
+                "endCursor": "10",
                 "hasNextPage": true,
                 "hasPreviousPage": true
               }
@@ -954,7 +983,7 @@ async fn test_graphql_reports_cursors(
     let context = context_reader_db.await;
 
     let request = r#"{"query": "query {
-      reports (first: 2, last: 6, after:\"2\",before:\"11\")  {
+      reports (first: 7, last: 6, after:\"2\",before:\"11\")  {
         totalCount
         nodes {
           id
@@ -970,41 +999,45 @@ async fn test_graphql_reports_cursors(
     }"}"#;
 
     let expected_response = r#"
-    {
-      "data": {
-        "reports": {
-          "totalCount": 16,
-          "nodes": [
-            {
-              "id": "4",
-              "index": 0
-            },
-            {
-              "id": "5",
-              "index": 0
-            },
-            {
-              "id": "6",
-              "index": 0
-            },
-            {
-              "id": "7",
-              "index": 0
-            },
-            {
-              "id": "8",
-              "index": 0
+           {
+          "data": {
+            "reports": {
+              "totalCount": 16,
+              "nodes": [
+                {
+                  "id": "4",
+                  "index": 0
+                },
+                {
+                  "id": "5",
+                  "index": 0
+                },
+                {
+                  "id": "6",
+                  "index": 0
+                },
+                {
+                  "id": "7",
+                  "index": 0
+                },
+                {
+                  "id": "8",
+                  "index": 0
+                },
+                {
+                  "id": "9",
+                  "index": 0
+                }
+              ],
+              "pageInfo": {
+                "startCursor": "4",
+                "endCursor": "9",
+                "hasNextPage": true,
+                "hasPreviousPage": true
+              }
             }
-          ],
-          "pageInfo": {
-            "startCursor": "4",
-            "endCursor": "8",
-            "hasNextPage": true,
-            "hasPreviousPage": true
           }
         }
-      }
-    }
    "#;
 
     perform_request_check_response(&context, request, expected_response).await
@@ -1019,7 +1052,7 @@ async fn test_graphql_reports_edges(
     let context = context_reader_db.await;
 
     let request = r#"{"query": "query {
-          reports (first: 1, last: 3)  {
+          reports (first: 2, last: 3)  {
             totalCount
             nodes {
               id
@@ -1051,83 +1084,63 @@ async fn test_graphql_reports_edges(
         }"}"#;
 
     let expected_response = r#"
-    {
-      "data": {
-        "reports": {
-          "totalCount": 16,
-          "nodes": [
-            {
-              "id": "1",
-              "index": 0
-            },
-            {
-              "id": "2",
-              "index": 0
-            },
-            {
-              "id": "3",
-              "index": 0
-            }
-          ],
-          "edges": [
-            {
-              "node": {
-                "id": "1",
-                "index": 0,
-                "input": {
-                  "id": "4",
-                  "index": 3,
-                  "epoch": {
+       {
+          "data": {
+            "reports": {
+              "totalCount": 16,
+              "nodes": [
+                {
+                  "id": "1",
+                  "index": 0
+                },
+                {
+                  "id": "2",
+                  "index": 0
+                }
+              ],
+              "edges": [
+                {
+                  "node": {
                     "id": "1",
                     "index": 0,
-                    "__typename": "Epoch"
+                    "input": {
+                      "id": "4",
+                      "index": 3,
+                      "epoch": {
+                        "id": "1",
+                        "index": 0,
+                        "__typename": "Epoch"
+                      }
+                    },
+                    "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c454354202a2046524f20506572736f6e73273a206e656172202246524f223a2073796e746178206572726f72"
                   }
                 },
-                "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c454354202a2046524f20506572736f6e73273a206e656172202246524f223a2073796e746178206572726f72"
-              }
-            },
-            {
-              "node": {
-                "id": "2",
-                "index": 0,
-                "input": {
-                  "id": "8",
-                  "index": 7,
-                  "epoch": {
-                    "id": "1",
+                {
+                  "node": {
+                    "id": "2",
                     "index": 0,
-                    "__typename": "Epoch"
+                    "input": {
+                      "id": "8",
+                      "index": 7,
+                      "epoch": {
+                        "id": "1",
+                        "index": 0,
+                        "__typename": "Epoch"
+                      }
+                    },
+                    "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c45273a206e656172202253454c45223a2073796e746178206572726f72"
                   }
-                },
-                "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c45273a206e656172202253454c45223a2073796e746178206572726f72"
-              }
-            },
-            {
-              "node": {
-                "id": "3",
-                "index": 0,
-                "input": {
-                  "id": "10",
-                  "index": 9,
-                  "epoch": {
-                    "id": "1",
-                    "index": 0,
-                    "__typename": "Epoch"
-                  }
-                },
-                "payload": "0x4572726f7220657865637574696e672073746174656d656e74202753454c45273a206e656172202253454c45223a2073796e746178206572726f72"
+                }
+              ],
+              "pageInfo": {
+                "startCursor": "1",
+                "endCursor": "2",
+                "hasNextPage": true,
+                "hasPreviousPage": false
               }
             }
-          ],
-          "pageInfo": {
-            "startCursor": "1",
-            "endCursor": "3",
-            "hasNextPage": true,
-            "hasPreviousPage": false
           }
         }
-      }
-    }
   "#;
 
     perform_request_check_response(&context, request, expected_response).await
@@ -1245,7 +1258,7 @@ async fn test_graphql_input_all_subfields(
     let context = context_reader_db.await;
 
     let request = r#"{"query": "query {
-  inputs (first: 1, last: 10)  {
+  inputs (first: 10, last: 5)  {
     nodes {
       id
       index
@@ -1283,135 +1296,10 @@ async fn test_graphql_input_all_subfields(
 }"}"#;
 
     let expected_response = r#"
-       {
+        {
           "data": {
             "inputs": {
               "nodes": [
-                {
-                  "id": "1",
-                  "index": 0,
-                  "epoch": {
-                    "id": "1",
-                    "index": 0
-                  },
-                  "msgSender": "0xa37ae2b259d35af4abdde122ec90b204323ed304",
-                  "timestamp": 1655711157,
-                  "blockNumber": 33,
-                  "vouchers": {
-                    "totalCount": 0,
-                    "nodes": []
-                  },
-                  "notices": {
-                    "totalCount": 0,
-                    "nodes": []
-                  },
-                  "reports": {
-                    "totalCount": 0,
-                    "nodes": []
-                  }
-                },
-                {
-                  "id": "2",
-                  "index": 1,
-                  "epoch": {
-                    "id": "1",
-                    "index": 0
-                  },
-                  "msgSender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-                  "timestamp": 1655711262,
-                  "blockNumber": 34,
-                  "vouchers": {
-                    "totalCount": 0,
-                    "nodes": []
-                  },
-                  "notices": {
-                    "totalCount": 0,
-                    "nodes": []
-                  },
-                  "reports": {
-                    "totalCount": 0,
-                    "nodes": []
-                  }
-                },
-                {
-                  "id": "3",
-                  "index": 2,
-                  "epoch": {
-                    "id": "1",
-                    "index": 0
-                  },
-                  "msgSender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-                  "timestamp": 1655711299,
-                  "blockNumber": 35,
-                  "vouchers": {
-                    "totalCount": 0,
-                    "nodes": []
-                  },
-                  "notices": {
-                    "totalCount": 0,
-                    "nodes": []
-                  },
-                  "reports": {
-                    "totalCount": 0,
-                    "nodes": []
-                  }
-                },
-                {
-                  "id": "4",
-                  "index": 3,
-                  "epoch": {
-                    "id": "1",
-                    "index": 0
-                  },
-                  "msgSender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-                  "timestamp": 1655711310,
-                  "blockNumber": 36,
-                  "vouchers": {
-                    "totalCount": 0,
-                    "nodes": []
-                  },
-                  "notices": {
-                    "totalCount": 0,
-                    "nodes": []
-                  },
-                  "reports": {
-                    "totalCount": 1,
-                    "nodes": [
-                      {
-                        "id": "1",
-                        "index": 0
-                      }
-                    ]
-                  }
-                },
-                {
-                  "id": "5",
-                  "index": 4,
-                  "epoch": {
-                    "id": "1",
-                    "index": 0
-                  },
-                  "msgSender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-                  "timestamp": 1655711326,
-                  "blockNumber": 37,
-                  "vouchers": {
-                    "totalCount": 0,
-                    "nodes": []
-                  },
-                  "notices": {
-                    "totalCount": 1,
-                    "nodes": [
-                      {
-                        "id": "1",
-                        "index": 0
-                      }
-                    ]
-                  },
-                  "reports": {
-                    "totalCount": 0,
-                    "nodes": []
-                  }
-                },
                 {
                   "id": "6",
                   "index": 5,
@@ -1545,7 +1433,8 @@ async fn test_graphql_input_all_subfields(
               ]
             }
           }
-        }"#;
+        }
+      "#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
@@ -1759,7 +1648,7 @@ async fn test_graphql_inputs_cursors(
     let context = context_reader_db.await;
 
     let request = r#"{"query": "query {
-          inputs (first: 2, last: 6, after:\"2\",before:\"11\")  {
+          inputs (first: 5, last: 6, after:\"2\",before:\"11\")  {
             totalCount
             nodes {
               id
@@ -1774,11 +1663,16 @@ async fn test_graphql_inputs_cursors(
           }
         }"}"#;
 
-    let expected_response = r#"{
+    let expected_response = r#"
+        {
           "data": {
             "inputs": {
               "totalCount": 39,
               "nodes": [
+                {
+                  "id": "3",
+                  "index": 2
+                },
                 {
                   "id": "4",
                   "index": 3
@@ -1794,21 +1688,18 @@ async fn test_graphql_inputs_cursors(
                 {
                   "id": "7",
                   "index": 6
-                },
-                {
-                  "id": "8",
-                  "index": 7
                 }
               ],
               "pageInfo": {
-                "startCursor": "4",
-                "endCursor": "8",
+                "startCursor": "3",
+                "endCursor": "7",
                 "hasNextPage": true,
                 "hasPreviousPage": true
               }
             }
           }
-        }"#;
+        }
+    "#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
@@ -1866,45 +1757,18 @@ async fn test_graphql_inputs_edges(
                     "blockNumber": 33
                   },
                   "cursor": "1"
-                },
-                {
-                  "node": {
-                    "id": "2",
-                    "index": 1,
-                    "epoch": {
-                      "id": "1",
-                      "index": 0
-                    },
-                    "timestamp": 1655711262,
-                    "msgSender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-                    "blockNumber": 34
-                  },
-                  "cursor": "2"
-                },
-                {
-                  "node": {
-                    "id": "3",
-                    "index": 2,
-                    "epoch": {
-                      "id": "1",
-                      "index": 0
-                    },
-                    "timestamp": 1655711299,
-                    "msgSender": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-                    "blockNumber": 35
-                  },
-                  "cursor": "3"
                 }
               ],
               "pageInfo": {
                 "startCursor": "1",
-                "endCursor": "3",
+                "endCursor": "1",
                 "hasNextPage": true,
                 "hasPreviousPage": false
               }
             }
           }
-        }"#;
+        }
+       "#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
@@ -1921,7 +1785,7 @@ async fn test_graphql_epoch_id(
           epoch(id: \"1\") {
             id
             index
-            inputs (first:4, last:5) {
+            inputs (first:4) {
               nodes {
                 id
                 index
@@ -1949,8 +1813,8 @@ async fn test_graphql_epoch_id(
               "inputs": {
                 "nodes": [
                   {
-                    "id": "4",
-                    "index": 3,
+                    "id": "1",
+                    "index": 0,
                     "epoch": {
                       "index": 0
                     },
@@ -1959,26 +1823,41 @@ async fn test_graphql_epoch_id(
                     }
                   },
                   {
-                    "id": "5",
-                    "index": 4,
+                    "id": "2",
+                    "index": 1,
                     "epoch": {
                       "index": 0
                     },
                     "notices": {
-                      "nodes": [
-                        {
-                          "id": "1",
-                          "index": 0,
-                          "keccak": "0xac00532afbe52b5428b9201fdc89cc1e555089c37e7ffee5f8d0bb12f90d0f79"
-                        }
-                      ]
+                      "nodes": []
+                    }
+                  },
+                  {
+                    "id": "3",
+                    "index": 2,
+                    "epoch": {
+                      "index": 0
+                    },
+                    "notices": {
+                      "nodes": []
+                    }
+                  },
+                  {
+                    "id": "4",
+                    "index": 3,
+                    "epoch": {
+                      "index": 0
+                    },
+                    "notices": {
+                      "nodes": []
                     }
                   }
                 ]
               }
             }
           }
-        }"#;
+        }
+        "#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
@@ -1995,7 +1874,7 @@ async fn test_graphql_epoch_index(
           epochI(index:0) {
             id
             index
-            inputs (first:4, last:5) {
+            inputs (first:4) {
               nodes {
                 id
                 index
@@ -2015,13 +1894,43 @@ async fn test_graphql_epoch_index(
         }"}"#;
 
     let expected_response = r#"
-       {
+        {
           "data": {
             "epochI": {
               "id": "1",
               "index": 0,
               "inputs": {
                 "nodes": [
+                  {
+                    "id": "1",
+                    "index": 0,
+                    "epoch": {
+                      "index": 0
+                    },
+                    "notices": {
+                      "nodes": []
+                    }
+                  },
+                  {
+                    "id": "2",
+                    "index": 1,
+                    "epoch": {
+                      "index": 0
+                    },
+                    "notices": {
+                      "nodes": []
+                    }
+                  },
+                  {
+                    "id": "3",
+                    "index": 2,
+                    "epoch": {
+                      "index": 0
+                    },
+                    "notices": {
+                      "nodes": []
+                    }
+                  },
                   {
                     "id": "4",
                     "index": 3,
@@ -2031,28 +1940,13 @@ async fn test_graphql_epoch_index(
                     "notices": {
                       "nodes": []
                     }
-                  },
-                  {
-                    "id": "5",
-                    "index": 4,
-                    "epoch": {
-                      "index": 0
-                    },
-                    "notices": {
-                      "nodes": [
-                        {
-                          "id": "1",
-                          "index": 0,
-                          "keccak": "0xac00532afbe52b5428b9201fdc89cc1e555089c37e7ffee5f8d0bb12f90d0f79"
-                        }
-                      ]
-                    }
                   }
                 ]
               }
             }
           }
-        }"#;
+        }
+      "#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
@@ -2102,22 +1996,6 @@ async fn test_graphql_epoch_subfields(
                       {
                         "id": "4",
                         "index": 3
-                      },
-                      {
-                        "id": "5",
-                        "index": 4
-                      },
-                      {
-                        "id": "6",
-                        "index": 5
-                      },
-                      {
-                        "id": "7",
-                        "index": 6
-                      },
-                      {
-                        "id": "8",
-                        "index": 7
                       }
                     ]
                   },
@@ -2129,7 +2007,8 @@ async fn test_graphql_epoch_subfields(
               ]
             }
           }
-        }"#;
+        }
+      "#;
 
     perform_request_check_response(&context, request, expected_response).await
 }
