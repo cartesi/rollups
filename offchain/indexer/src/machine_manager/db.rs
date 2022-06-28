@@ -5,8 +5,8 @@ use crate::error::*;
 use crate::grpc::{
     cartesi_machine::{Hash, MerkleTreeProof},
     server_manager::{
-        processed_input::ProcessedOneof, Address, GetEpochStatusResponse,
-        GetSessionStatusResponse, InputResult, Notice, ProcessedInput, Report,
+        processed_input::ProcessedInputOneOf, Address, GetEpochStatusResponse,
+        GetSessionStatusResponse, AcceptedData, Notice, ProcessedInput, Report,
         TaintStatus, Voucher,
     },
 };
@@ -347,8 +347,8 @@ pub struct DbInputResult {
     notices: Vec<DbNotice>,
 }
 
-impl From<InputResult> for DbInputResult {
-    fn from(input_result: InputResult) -> Self {
+impl From<AcceptedData> for DbInputResult {
+    fn from(input_result: AcceptedData) -> Self {
         let voucher_hashes_in_machine =
             convert_option(input_result.voucher_hashes_in_machine);
         let vouchers = convert_vec(input_result.vouchers);
@@ -474,13 +474,13 @@ impl DbProcessedOneof {
     }
 }
 
-impl From<ProcessedOneof> for DbProcessedOneof {
-    fn from(processed_oneof: ProcessedOneof) -> Self {
+impl From<ProcessedInputOneOf> for DbProcessedOneof {
+    fn from(processed_oneof: ProcessedInputOneOf) -> Self {
         match processed_oneof {
-            ProcessedOneof::Result(db_input_result) => {
+            ProcessedInputOneOf::AcceptedData(db_input_result) => {
                 DbProcessedOneof::Result(DbInputResult::from(db_input_result))
             }
-            ProcessedOneof::SkipReason(num) => {
+            ProcessedInputOneOf::ExceptionData(num) => {
                 DbProcessedOneof::SkipReason(Some(num))
             }
         }
