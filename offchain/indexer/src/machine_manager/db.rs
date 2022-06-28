@@ -5,9 +5,9 @@ use crate::error::*;
 use crate::grpc::{
     cartesi_machine::{Hash, MerkleTreeProof},
     server_manager::{
-        processed_input::ProcessedInputOneOf, Address, GetEpochStatusResponse,
-        GetSessionStatusResponse, AcceptedData, Notice, ProcessedInput, Report,
-        TaintStatus, Voucher,
+        processed_input::ProcessedInputOneOf, AcceptedData, Address,
+        GetEpochStatusResponse, GetSessionStatusResponse, Notice,
+        ProcessedInput, Report, TaintStatus, Voucher,
     },
 };
 
@@ -480,8 +480,8 @@ impl From<ProcessedInputOneOf> for DbProcessedOneof {
             ProcessedInputOneOf::AcceptedData(db_input_result) => {
                 DbProcessedOneof::Result(DbInputResult::from(db_input_result))
             }
-            ProcessedInputOneOf::ExceptionData(num) => {
-                DbProcessedOneof::SkipReason(Some(num))
+            ProcessedInputOneOf::ExceptionData(_) => {
+                DbProcessedOneof::SkipReason(Some(0))
             }
         }
     }
@@ -588,10 +588,8 @@ impl DbProcessedInput {
             input_index,
         )?;
 
-        let skip_reason: Option<String> = match self.processed_oneof {
-            DbProcessedOneof::SkipReason(reason) => {
-                Some(i32::to_string(&reason.unwrap()))
-            }
+        let skip_reason: Option<String> = match &self.processed_oneof {
+            DbProcessedOneof::SkipReason(_) => Some("".to_owned()),
             _ => None,
         };
 
@@ -621,7 +619,7 @@ impl From<ProcessedInput> for DbProcessedInput {
             convert_option(processed_input.notice_hashes_in_epoch);
         let reports = convert_vec(processed_input.reports);
         let processed_oneof_opt =
-            convert_option(processed_input.processed_oneof);
+            convert_option(processed_input.processed_input_one_of);
         let processed_oneof =
             processed_oneof_opt.expect("processed_oneof is None");
 

@@ -78,7 +78,6 @@ impl Config {
 
         let server_deadline = DeadlineConfig {
             checkin: 1000 * 5,
-            // update_merkle_tree: 1000 * 60 * 2,
             advance_state: 1000 * 60 * 3,
             advance_state_increment: 1000 * 10,
             inspect_state: 1000 * 60 * 3,
