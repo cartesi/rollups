@@ -152,5 +152,76 @@
     ],
     "stateMutability": "pure",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "_notice",
+        "type": "bytes"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "epochIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "inputIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "outputIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "outputHashesRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "vouchersEpochRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "noticesEpochRootHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "machineStateHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "keccakInHashesSiblings",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "outputHashesInEpochSiblings",
+            "type": "bytes32[]"
+          }
+        ],
+        "internalType": "struct OutputValidityProof",
+        "name": "_v",
+        "type": "tuple"
+      }
+    ],
+    "name": "validateNotice",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   }
 ]
