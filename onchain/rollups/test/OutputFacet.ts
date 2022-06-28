@@ -63,6 +63,7 @@ describe("Output Facet", () => {
     let simpleContractAddress: string;
     let _destination: string;
     let _payload: string;
+    let _notice: string;
     let encodedVoucher: string;
     let encodedNotice: string;
 
@@ -249,6 +250,7 @@ describe("Output Facet", () => {
     it("Initialization", async () => {
         _destination = simpleContractAddress;
         _payload = iface.encodeFunctionData("simple_function()");
+        _notice = "need_a_valid_notice";
         encodedVoucher = ethers.utils.defaultAbiCoder.encode(
             ["uint", "bytes"],
             [_destination, _payload]
@@ -415,6 +417,22 @@ describe("Output Facet", () => {
         ).to.be.revertedWith("outputHashesRootHash incorrect");
         // restore v
         v.outputIndex = tempVoucherIndex;
+    });
+
+    /// ***test function validateNotice()///
+    it("validateNotice(): valid notices should return true", async () => {
+        // DebugFacet._onNewEpoch() should be called first to push some epochHashes
+        // before calling OutputFacet.validateNotice()
+        await debugFacet._onNewEpochOutput(epochHashForNotice);
+        expect(
+            await outputFacet.callStatic.validateNotice(_notice, v)
+        ).to.equal(true);
+    });
+
+    it("validateNotice() should revert if proof is not valid", async () => {
+        await debugFacet._onNewEpochOutput(epochHashForNotice);
+        let _notice = iface.encodeFunctionData("nonExistent()");
+        await expect(outputFacet.validateNotice(_notice, v)).to.be.reverted;
     });
 
     /// ***test function isValidNoticeProof()///
