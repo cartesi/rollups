@@ -100,6 +100,28 @@ contract OutputFacet is IOutput {
         return succ;
     }
 
+    /// @notice validates notice
+    /// @param _notice notice to be verified
+    /// @param _v validity proof for this notice
+    /// @return true if notice is valid
+    function validateNotice(
+        bytes calldata _notice,
+        OutputValidityProof calldata _v
+    ) public view override returns (bool) {
+        LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
+
+        bytes memory encodedNotice = abi.encode(_notice);
+
+        // reverts if validity proof doesnt match
+        isValidNoticeProof(
+            encodedNotice,
+            outputDS.epochHashes[_v.epochIndex],
+            _v
+        );
+
+        return true;
+    }
+
     /// @notice isValidProof reverts if the proof is invalid
     ///  @dev _outputsEpochRootHash must be _v.vouchersEpochRootHash or
     ///                                  or _v.noticesEpochRootHash

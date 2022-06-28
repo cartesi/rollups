@@ -47,6 +47,15 @@ interface IOutput {
         OutputValidityProof calldata _v
     ) external returns (bool);
 
+    /// @notice validate notice
+    /// @param _notice notice to be verified
+    /// @param _v validity proof for this notice
+    /// @return true if notice is valid
+    function validateNotice(
+        bytes calldata _notice,
+        OutputValidityProof calldata _v
+    ) external view returns (bool);
+
     /// @notice get number of finalized epochs
     function getNumberOfFinalizedEpochs() external view returns (uint256);
 
