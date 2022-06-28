@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Inspect server
 - Add path prefix option to inspect server
+- Validate notice function to OutputFacet
 
 ## [0.4.0] 2022-07-04
 
