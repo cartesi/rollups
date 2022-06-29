@@ -157,7 +157,7 @@ pub fn connect_to_database_with_retry(
 
     let op = || {
         info!(
-            "Trying to create db pool for database postgresql://{}@{}:{}/{}",
+            "Trying to connect to database postgresql://{}@{}:{}/{}",
             postgres_user, postgres_hostname, postgres_port, postgres_db
         );
         connection_manager.connect().map_err(crate::new_backoff_err)

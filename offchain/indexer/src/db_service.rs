@@ -12,9 +12,10 @@
  */
 
 /// Receive messages from data service and insert them in database
-use crate::config::{IndexerConfig, PostgresConfig};
+use crate::config::IndexerConfig;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, PooledConnection};
 use rollups_data::database::{
     schema, DbInput, DbNotice, DbProof, DbReport, DbVoucher, Message,
 };
@@ -461,19 +462,9 @@ pub fn get_current_db_epoch(
 }
 
 pub async fn get_current_db_epoch_async(
-    postgres_config: &PostgresConfig,
     epoch_index_type: EpochIndexType,
+    conn: PooledConnection<ConnectionManager<diesel::PgConnection>>,
 ) -> Result<i32, crate::error::Error> {
-    let conn = rollups_data::database::connect_to_database_with_retry_async(
-        &postgres_config.postgres_hostname,
-        postgres_config.postgres_port,
-        &postgres_config.postgres_user,
-        &postgres_config.postgres_password,
-        &postgres_config.postgres_db,
-    )
-    .await
-    .context(crate::error::TokioError)?;
-
     tokio::task::spawn_blocking(move || {
         Ok(
             crate::db_service::get_current_db_epoch(&conn, epoch_index_type)?

@@ -538,6 +538,16 @@ async fn polling_loop(
         },
     ];
 
+    // Create database db pool
+    let db_config = &config.database;
+    let mut db_pool = rollups_data::database::create_db_pool_with_retry(
+        &db_config.postgres_hostname,
+        db_config.postgres_port,
+        &db_config.postgres_user,
+        &db_config.postgres_password,
+        &db_config.postgres_db,
+    );
+
     // Polling tasks loop
     info!("Starting data polling loop");
     let last_epoch_status_index: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
@@ -611,6 +621,55 @@ async fn polling_loop(
                     }
                     TaskType::GetState => {
                         {
+                            // Try to get connection to database, recreate db pool if failed
+                            let conn = match db_pool.get() {
+                                Ok(conn) => Some(conn),
+                                Err(e) => {
+                                    error!("Failed to get connection from db pool, postgres://{}@{}:{}/{}, error: {}",
+                                    &db_config.postgres_user,
+                                    &db_config.postgres_hostname,
+                                    config.database.postgres_port,
+                                    &db_config.postgres_db,
+                                    e.to_string()
+                                );
+                                    tokio::time::sleep(
+                                        tokio::time::Duration::from_secs(1),
+                                    )
+                                    .await;
+                                    // Recreate connection pool
+                                    match rollups_data::database::create_db_pool_with_retry_async(
+                                    &db_config.postgres_hostname,
+                                    db_config.postgres_port,
+                                    &db_config.postgres_user,
+                                    &db_config.postgres_password,
+                                    &db_config.postgres_db,
+                                ).await {
+                                    Ok(pool) => {
+                                        db_pool = pool;
+                                        db_pool.get().ok()
+                                    },
+                                    Err(_e) => {
+                                        error!("Failed to recreate db pool, postgres://{}@{}:{}/{}",
+                                        &db_config.postgres_user,
+                                        &db_config.postgres_hostname,
+                                        config.database.postgres_port,
+                                        &db_config.postgres_db);
+                                                    None
+                                                }
+                                            }
+                                }
+                            };
+                            let conn = if let Some(c) = conn {
+                                c
+                            } else {
+                                error!("Unable to connect to postgres://{}@{}:{}/{} to get current epoch and poll status",
+                                &db_config.postgres_user,
+                                &db_config.postgres_hostname,
+                                config.database.postgres_port,
+                                &db_config.postgres_db,
+                            );
+                                continue;
+                            };
                             let config = config.clone();
                             let message_tx = message_tx.clone();
                             tokio::spawn(async move {
@@ -634,8 +693,8 @@ async fn polling_loop(
                                     };
                                 let db_epoch_index =
                                     get_current_db_epoch_async(
-                                        &config.database,
                                         EpochIndexType::Input,
+                                        conn,
                                     )
                                     .await
                                     .unwrap_or_default();
