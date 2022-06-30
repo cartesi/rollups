@@ -250,7 +250,9 @@ describe("Output Facet", () => {
     it("Initialization", async () => {
         _destination = simpleContractAddress;
         _payload = iface.encodeFunctionData("simple_function()");
-        _notice = "need_a_valid_notice";
+        _notice = ethers.utils.hexlify(
+            ethers.utils.toUtf8Bytes("need_a_valid_notice")
+        );
         encodedVoucher = ethers.utils.defaultAbiCoder.encode(
             ["uint", "bytes"],
             [_destination, _payload]
@@ -421,11 +423,33 @@ describe("Output Facet", () => {
 
     /// ***test function validateNotice()///
     it("validateNotice(): valid notices should return true", async () => {
+        let encodedNotice_new = ethers.utils.defaultAbiCoder.encode(
+            ["bytes"],
+            [_notice]
+        );
+        // console.log(encodedNotice_new);
+
+        let n_new = Object.assign({}, n);
+        n_new.outputHashesRootHash =
+            "0x1548080d87bd02eed1a832b3971bbc8a1f2e296c96a01145c22eeaa85cf37f59";
+        n_new.noticesEpochRootHash =
+            "0xbf41401cfc806daff807554019e400971213f1769b7c6165a4b6aa4e3161396c";
+        let epochHash_new = keccak256(
+            ethers.utils.defaultAbiCoder.encode(
+                ["uint", "uint", "uint"],
+                [
+                    n_new.vouchersEpochRootHash,
+                    n_new.noticesEpochRootHash,
+                    n_new.machineStateHash,
+                ]
+            )
+        );
+
         // DebugFacet._onNewEpoch() should be called first to push some epochHashes
         // before calling OutputFacet.validateNotice()
-        await debugFacet._onNewEpochOutput(epochHashForNotice);
+        await debugFacet._onNewEpochOutput(epochHash_new);
         expect(
-            await outputFacet.callStatic.validateNotice(_notice, v)
+            await outputFacet.callStatic.validateNotice(_notice, n_new)
         ).to.equal(true);
     });
 
