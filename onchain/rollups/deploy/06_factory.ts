@@ -26,7 +26,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const { DiamondCutFacet, DiamondInit, Bank } = await deployments.all();
 
-    const facetCuts = await getFacetCuts(hre, productionFacetNames);
+    const facetCuts = await getFacetCuts(productionFacetNames);
 
     let factoryConfig: CartesiDAppFactory.FactoryConfigStruct = {
         diamondCutFacet: DiamondCutFacet.address,

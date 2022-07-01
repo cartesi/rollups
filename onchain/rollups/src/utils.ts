@@ -10,8 +10,47 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { deployments, ethers } from "hardhat";
+import { Contract } from "ethers";
 import { IDiamondCut } from "./types";
+
+export enum FacetCutAction {
+    Add = 0,
+    Replace = 1,
+    Remove = 2,
+}
+
+export const getAddFacetCut = (
+    facetAddress: string,
+    functionSelectors: string[]
+): IDiamondCut.FacetCutStruct => {
+    return {
+        facetAddress,
+        functionSelectors,
+        action: FacetCutAction.Add,
+    };
+};
+
+export const getReplaceFacetCut = (
+    facetAddress: string,
+    functionSelectors: string[]
+): IDiamondCut.FacetCutStruct => {
+    return {
+        facetAddress,
+        functionSelectors,
+        action: FacetCutAction.Replace,
+    };
+};
+
+export const getRemoveFacetCut = (
+    functionSelectors: string[]
+): IDiamondCut.FacetCutStruct => {
+    return {
+        facetAddress: ethers.constants.AddressZero,
+        functionSelectors,
+        action: FacetCutAction.Remove,
+    };
+};
 
 export const productionFacetNames: string[] = [
     // essential facets
@@ -28,12 +67,17 @@ export const productionFacetNames: string[] = [
     "ValidatorManagerFacet",
 ];
 
-export const getFacetCuts = async (
-    hre: HardhatRuntimeEnvironment,
-    facetNames: string[]
-) => {
-    const { deployments, ethers } = hre;
+export const getFunctionSelectors = (contract: Contract) => {
+    let selectors: string[] = [];
+    for (const signature in contract.interface.functions) {
+        if (signature !== "init(bytes") {
+            selectors.push(contract.interface.getSighash(signature));
+        }
+    }
+    return selectors;
+};
 
+export const getFacetCuts = async (facetNames: string[]) => {
     const facetCuts: IDiamondCut.FacetCutStruct[] = [];
     const functionSelectors: { [selector: string]: string } = {};
 
@@ -43,27 +87,18 @@ export const getFacetCuts = async (
             facetDeployment.abi,
             facetDeployment.address
         );
-        let selectors: string[] = [];
-        const signatures = Object.keys(facet.interface.functions);
-        for (let signature of signatures) {
-            if (signature !== "init(bytes") {
-                const selector = facet.interface.getSighash(signature);
-                if (selector in functionSelectors) {
-                    const otherFacetName = functionSelectors[selector];
-                    throw Error(
-                        `Tried to add function ${signature} (${selector})` +
-                            `from ${facetName} and ${otherFacetName}`
-                    );
-                }
-                functionSelectors[selector] = facetName;
-                selectors.push(selector);
+        const selectors = getFunctionSelectors(facet);
+        for (const selector of selectors) {
+            if (selector in functionSelectors) {
+                const otherFacetName = functionSelectors[selector];
+                throw Error(
+                    `Tried to add function selector ${selector} ` +
+                        `from ${facetName} and ${otherFacetName}`
+                );
             }
+            functionSelectors[selector] = facetName;
         }
-        facetCuts.push({
-            facetAddress: facet.address,
-            action: 0, // FacetCutAction.Add
-            functionSelectors: selectors,
-        });
+        facetCuts.push(getAddFacetCut(facet.address, selectors));
     }
 
     return facetCuts;

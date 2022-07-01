@@ -152,7 +152,7 @@ export const deployFactory = deployments.createFixture(
         }
 
         // list all facet cuts
-        const facetCuts = await getFacetCuts(hre, facetNames);
+        const facetCuts = await getFacetCuts(facetNames);
 
         const { DiamondCutFacet, DiamondInit, Bank } = await deployments.all();
 
@@ -187,10 +187,6 @@ export const deployFactory = deployments.createFixture(
                 ...opts,
                 args: [factoryConfig],
             }
-        );
-
-        console.log(
-            `[${factoryDeployment.address}] CartesiDAppFactory deployed`
         );
 
         const factory = CartesiDAppFactory__factory.connect(
@@ -292,7 +288,6 @@ export const deployDiamond = deployments.createFixture(
             receipt.blockNumber
         );
         const { application } = events[events.length - 1].args;
-        console.log(`[${application}] CartesiDApp deployed`);
         return CartesiDApp__factory.connect(application, signers[0]);
     }
 );
