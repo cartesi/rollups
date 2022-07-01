@@ -1,6 +1,6 @@
 {
     "name": "@cartesi/rollups-cli",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Rollups CLI",
     "main": "dist/cli.js",
     "repository": "https://github.com/cartesi/rollups",
@@ -15,7 +15,7 @@
         "start": "ts-node src/cli.ts"
     },
     "dependencies": {
-        "@cartesi/rollups": "^0.3.0",
+        "@cartesi/rollups": "^0.4.0",
         "ethers": "^5.6.1",
         "fs-extra": "^10.1.0",
         "yargs": "^17.4.0"

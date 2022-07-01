@@ -1,6 +1,6 @@
 {
     "name": "@cartesi/rollups",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "scripts": {
         "build": "run-s compile export",
         "clean:ignored": "rimraf artifacts cache coverage deployments/localhost dist generated-src src/types/*",
@@ -9,7 +9,7 @@
         "copy-dts": "copyfiles -u 1 \"src/**/*.d.ts\" dist/src",
         "compile": "hardhat compile",
         "deploy": "run-s deploy:development",
-        "deploy:testnet": "run-s deploy:rinkeby deploy:kovan deploy:goerli deploy:polygon_mumbai deploy:bsc_testnet",
+        "deploy:testnet": "run-s deploy:ropsten deploy:rinkeby deploy:kovan deploy:goerli deploy:polygon_mumbai deploy:bsc_testnet deploy:avax_fuji",
         "deploy:development": "hardhat deploy --network localhost",
         "deploy:ropsten": "hardhat deploy --network ropsten --export export/abi/ropsten.json",
         "deploy:rinkeby": "hardhat deploy --network rinkeby --export export/abi/rinkeby.json",
