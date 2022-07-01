@@ -16,6 +16,7 @@ use actix_web::{
     middleware::Logger, web, web::Data, App, HttpResponse, HttpServer,
     Responder,
 };
+use async_mutex::Mutex;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use juniper::http::playground::playground_source;
@@ -24,15 +25,21 @@ use juniper::{EmptyMutation, EmptySubscription};
 use rollups_data::graphql::types::RollupsGraphQLScalarValue;
 use std::sync::Arc;
 
+pub struct HealthStatus {
+    pub reader: Result<(), String>,
+}
+
 struct HttpContext {
     schema: Arc<rollups_data::graphql::types::Schema>,
     db_pool: Arc<Pool<ConnectionManager<PgConnection>>>,
+    health_status: Arc<Mutex<HealthStatus>>,
 }
 
 pub async fn start_service(
     host: &str,
     port: u16,
     pool: Pool<ConnectionManager<PgConnection>>,
+    health_status: Arc<Mutex<HealthStatus>>,
 ) -> std::io::Result<()> {
     HttpServer::new(move || {
         let schema = std::sync::Arc::new(
@@ -47,6 +54,7 @@ pub async fn start_service(
         let http_context = HttpContext {
             schema: schema.clone(),
             db_pool: Arc::new(pool.clone()),
+            health_status: health_status.clone(),
         };
 
         App::new()
@@ -55,6 +63,7 @@ pub async fn start_service(
             .service(graphql)
             .service(juniper_playground)
             .service(health)
+            .service(healthz)
     })
     .bind((host, port))?
     .run()
@@ -66,6 +75,20 @@ async fn health() -> impl Responder {
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body("")
+}
+
+#[actix_web::get("/healthz")]
+async fn healthz(http_context: web::Data<HttpContext>) -> impl Responder {
+    let status = http_context.health_status.lock().await;
+    if let Err(e) = &status.reader {
+        HttpResponse::BadRequest()
+            .content_type("text/html; charset=utf-8")
+            .body(format!("Faulty reader state: {}", e))
+    } else {
+        HttpResponse::Ok()
+            .content_type("text/html; charset=utf-8")
+            .body("")
+    }
 }
 
 #[actix_web::get("/graphql")]

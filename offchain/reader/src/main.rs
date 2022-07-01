@@ -13,6 +13,9 @@
 
 mod config;
 
+use async_mutex::Mutex;
+use reader::http::HealthStatus;
+use std::sync::Arc;
 use tracing::level_filters::LevelFilter;
 use tracing::{info, warn};
 use tracing_subscriber::EnvFilter;
@@ -67,11 +70,14 @@ async fn main() -> Result<(), reader::error::Error> {
         &reader_config.postgres_db,
     );
 
+    let health_status = Arc::new(Mutex::new(HealthStatus { reader: Ok(()) }));
+
     // Start http server
     match tokio::try_join!(reader::http::start_service(
         &reader_config.graphql_host,
         reader_config.graphql_port,
-        db_pool
+        db_pool,
+        health_status
     )) {
         Ok(_) => {
             info!("reader service terminated successfully");
