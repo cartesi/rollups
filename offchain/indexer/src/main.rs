@@ -11,11 +11,10 @@
  * the License.
  */
 
+use async_mutex::Mutex;
 use indexer::config::IndexerConfig;
-use indexer::data_service;
-use indexer::db_service;
-
-use indexer::error::Error::BadConfiguration;
+use indexer::{data_service, db_service, error::Error::BadConfiguration, http};
+use std::sync::Arc;
 use tokio::sync::mpsc;
 use tracing::level_filters::LevelFilter;
 use tracing::{error, info};
@@ -100,6 +99,13 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let (message_tx, message_rx) =
         mpsc::channel::<rollups_data::database::Message>(128);
 
+    // Shared state variable
+    let health_status = Arc::new(Mutex::new(http::HealthStatus {
+        server_manager: Ok(()),
+        state_server: Ok(()),
+        postgres: Ok(()),
+    }));
+
     // Run database and data services
     tokio::select! {
         db_service_result = db_service::run(indexer_config.clone(), message_rx) => {
@@ -112,6 +118,13 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             match data_service_result {
                 Ok(_) => info!("data service terminated successfully"),
                 Err(e) => error!("data service terminated with error: {}", e)
+            }
+        },
+        http_health_service = http::start_http_service(&indexer_config.health_endpoint.0,
+            indexer_config.health_endpoint.1, health_status) => {
+            match http_health_service {
+                Ok(_) => info!("http health service terminated successfully"),
+                Err(e) => error!("http health service terminated with error: {}", e)
             }
         }
     }

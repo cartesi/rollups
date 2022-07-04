@@ -80,6 +80,10 @@ pub struct IndexerEnvCLIConfig {
         env = "POSTGRES_MIGRATION_FOLDER"
     )]
     pub postgres_migration_folder: Option<String>,
+    #[structopt(long = "--http-health-hostname", env = "HTTP_HEALTH_HOSTNAME")]
+    pub http_health_hostname: Option<String>,
+    #[structopt(long = "--http-health-port", env = "HTTP_HEALTH_PORT")]
+    pub http_health_port: Option<u16>,
 }
 
 /// Indexer configuration deserialized from file
@@ -99,6 +103,8 @@ pub struct IndexerFileConfig {
     pub postgres_password_file: Option<String>,
     pub postgres_db: Option<String>,
     pub postgres_migration_folder: Option<String>,
+    pub http_health_hostname: Option<String>,
+    pub http_health_port: Option<u16>,
 }
 
 /// Indexer file configuration
@@ -130,6 +136,7 @@ pub struct IndexerConfig {
     pub mm_endpoint: String,
     pub session_id: String,
     pub database: PostgresConfig,
+    pub health_endpoint: (String, u16),
 }
 
 impl IndexerConfig {
@@ -311,6 +318,16 @@ impl IndexerConfig {
                 err: "Must specify postgres migration folder",
             })?;
 
+        let http_health_hostname: String = env_cli_config
+            .http_health_hostname
+            .or(file_config.http_health_hostname)
+            .unwrap_or("0.0.0.0".to_string());
+
+        let http_health_port: u16 = env_cli_config
+            .http_health_port
+            .or(file_config.http_health_port)
+            .unwrap_or(80);
+
         Ok(IndexerConfig {
             dapp_contract_address,
             state_server_endpoint,
@@ -326,6 +343,7 @@ impl IndexerConfig {
                 postgres_db,
                 postgres_migration_folder,
             },
+            health_endpoint: (http_health_hostname, http_health_port),
         })
     }
 }
