@@ -23,10 +23,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     println!("cargo:rerun-if-changed=../../grpc-interfaces/versioning.proto");
+
     println!(
         "cargo:rerun-if-changed=../../grpc-interfaces/server-manager.proto"
     );
+
     println!("cargo:rerun-if-changed=../../grpc-interfaces/stateserver.proto");
+
     println!("cargo:rerun-if-changed=build.rs");
+
     Ok(())
 }

@@ -86,6 +86,7 @@ async fn context_migrated_db() -> Context {
                 postgres_hostname: POSTGRES_HOSTNAME.to_string(),
                 postgres_port: POSTGRES_PORT,
             },
+            health_endpoint: ("127.0.0.1".to_string(), 8080),
         },
     }
 }

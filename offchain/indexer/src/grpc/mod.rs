@@ -21,7 +21,7 @@ pub mod cartesi_machine {
     tonic::include_proto!("cartesi_machine");
 }
 
-pub mod cartesi_server_manager {
+pub mod server_manager {
     tonic::include_proto!("cartesi_server_manager");
 }
 

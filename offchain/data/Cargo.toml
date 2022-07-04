@@ -11,7 +11,7 @@ path = "src/generate_schema.rs"
 
 [dependencies]
 diesel = {version = "1.4.8", features = ["postgres", "chrono", "r2d2"]}
-tokio = { version = "1.0", features = ["full"] }
+tokio = { version = "1.17", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 chrono = "0.4"

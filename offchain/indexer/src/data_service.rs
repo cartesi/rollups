@@ -31,8 +31,8 @@ use tokio::sync::{mpsc, Mutex};
 use tracing::{debug, error, info, trace};
 
 use crate::grpc::{
-    cartesi_machine, cartesi_server_manager,
-    cartesi_server_manager::{
+    cartesi_machine, server_manager,
+    server_manager::{
         server_manager_client::ServerManagerClient, GetEpochStatusRequest,
         GetEpochStatusResponse, GetSessionStatusRequest,
         GetSessionStatusResponse,
@@ -156,11 +156,11 @@ async fn process_epoch_status_response(
             }
         }
 
-        if let Some(one_of) = input.processed_oneof {
+        if let Some(one_of) = input.processed_input_one_of {
             match one_of {
-                cartesi_server_manager::processed_input::ProcessedOneof::Result(input_result) => {
+                server_manager::processed_input::ProcessedInputOneOf::AcceptedData(accepted_data) => {
                     // Process vouchers
-                    for (vindex, voucher) in input_result.vouchers.iter().enumerate() {
+                    for (vindex, voucher) in accepted_data.vouchers.iter().enumerate() {
                         // Send one voucher to database service
                         trace!("Process epoch status: sending voucher with session id {}, epoch_index {} input_index {} voucher_index {} voucher {:?}",
                                 session_id, epoch_index, input.input_index, &vindex, voucher);
@@ -220,7 +220,7 @@ async fn process_epoch_status_response(
                                 &voucher
                                     .address
                                     .as_ref()
-                                    .unwrap_or(&cartesi_server_manager::Address { data: vec![] })
+                                    .unwrap_or(&server_manager::Address { data: vec![] })
                                     .data,
                             ).as_str(),
                             // Payload is in raw format
@@ -230,7 +230,7 @@ async fn process_epoch_status_response(
                         }
                     }
                     // Process notices
-                    for (nindex, notice) in input_result.notices.iter().enumerate() {
+                    for (nindex, notice) in accepted_data.notices.iter().enumerate() {
                         // Send one notice to database service
                         trace!("Process epoch status: sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
                                 session_id, epoch_index, input.input_index, &nindex);
@@ -300,9 +300,9 @@ async fn process_epoch_status_response(
                             error!("Process epoch status: error passing notice message to db {}", e.to_string())
                         }
                     }
-                },
-                cartesi_server_manager::processed_input::ProcessedOneof::SkipReason(reason) => {
-                    info!("Process epoch status: skip processed input for reason {:?}", reason);
+                }
+                server_manager::processed_input::ProcessedInputOneOf::ExceptionData(data) => {
+                    error!("Process epoch status: exception data returned {:?}", data);
                 }
             }
         }
