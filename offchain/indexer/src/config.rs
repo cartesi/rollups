@@ -183,7 +183,7 @@ impl IndexerConfig {
                 .build()
             })?;
 
-            Address::from_str(&contents.trim().to_string()).map_err(|e| {
+            Address::from_str(contents.trim()).map_err(|e| {
                 config_error::FileError {
                     err: format!(
                         "DApp contract address string ill-formed: {}",
@@ -321,7 +321,7 @@ impl IndexerConfig {
         let http_health_hostname: String = env_cli_config
             .http_health_hostname
             .or(file_config.http_health_hostname)
-            .unwrap_or("0.0.0.0".to_string());
+            .unwrap_or_else(|| "0.0.0.0".to_string());
 
         let http_health_port: u16 = env_cli_config
             .http_health_port

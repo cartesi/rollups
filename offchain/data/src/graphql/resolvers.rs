@@ -737,7 +737,7 @@ fn process_db_notices(
                             return e;
                         }
                     },
-                    proof: proof,
+                    proof,
                     keccak: db_notice.keccak, // In ethereum "0x" binary format already
                     // Payload in database is in raw format, make it Ethereum hex binary format again
                     payload: "0x".to_string()

@@ -13,6 +13,7 @@
 
 /// Receive messages from data service and insert them in database
 use crate::config::IndexerConfig;
+use crate::http::HealthStatus;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
@@ -20,6 +21,7 @@ use rollups_data::database::{
     schema, DbInput, DbNotice, DbProof, DbReport, DbVoucher, Message,
 };
 use snafu::ResultExt;
+use std::sync::Arc;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, trace, warn};
 
@@ -478,11 +480,19 @@ pub async fn get_current_db_epoch_async(
 async fn db_loop(
     config: IndexerConfig,
     mut message_rx: mpsc::Receiver<rollups_data::database::Message>,
+    health_status: Arc<async_mutex::Mutex<HealthStatus>>,
 ) -> Result<(), crate::error::Error> {
     info!("starting db loop");
 
     let db_config = &config.database;
 
+    health_status.lock().await.postgres = Err(format!(
+        "Trying to create db pool for database host: postgresql://{}@{}:{}/{}",
+        &db_config.postgres_user,
+        &db_config.postgres_hostname,
+        db_config.postgres_port,
+        &db_config.postgres_db
+    ));
     let mut db_pool = rollups_data::database::create_db_pool_with_retry(
         &db_config.postgres_hostname,
         db_config.postgres_port,
@@ -490,21 +500,26 @@ async fn db_loop(
         &db_config.postgres_password,
         &db_config.postgres_db,
     );
+    health_status.lock().await.postgres = Ok(());
 
     loop {
         tokio::select! {
             Some(response) = message_rx.recv() => {
                 // Try to get connection to dabase, recreate db pool if failed
                 let conn = match db_pool.get() {
-                    Ok(conn) => Some(conn),
+                    Ok(conn) => {
+                        health_status.lock().await.postgres = Ok(());
+                        Some(conn)
+                    },
                     Err(e) => {
-                        error!("Failed to get connection from db pool, postgres://{}@{}:{}/{}, error: {}",
+                        let err_message = format!("Failed to get connection from db pool, postgres://{}@{}:{}/{}, error: {}",
                             &db_config.postgres_user,
                             &db_config.postgres_hostname,
                             config.database.postgres_port,
                             &db_config.postgres_db,
-                            e.to_string()
-                        );
+                            e);
+                        error!("{}", &err_message);
+                        health_status.lock().await.postgres = Err(err_message);
                         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
                         // Recreate connection pool
@@ -517,29 +532,34 @@ async fn db_loop(
                         ).await {
                             Ok(pool) => {
                                 db_pool = pool;
+                                health_status.lock().await.postgres = Ok(());
                                 db_pool.get().ok()
                             },
                             Err(_e) => {
-                                error!("Failed to recreate db pool, postgres://{}@{}:{}/{}",
+                                let err_message = format!("Failed to recreate db pool, postgres://{}@{}:{}/{}",
                                 &db_config.postgres_user,
                                 &db_config.postgres_hostname,
                                 config.database.postgres_port,
                                 &db_config.postgres_db);
+                                error!("{}", &err_message);
+                                health_status.lock().await.postgres = Err(err_message);
                                 None
                             }
                         }
                     }
                 };
                 let conn = if let Some(c) = conn {
+                    health_status.lock().await.postgres = Ok(());
                     c
                 } else {
-                    error!("Unable to connect to postgres://{}@{}:{}/{} to save message, received message {:?} lost",
+                    let err_message = format!("Unable to connect to postgres://{}@{}:{}/{} to save message, received message {:?} lost",
                         &db_config.postgres_user,
                         &db_config.postgres_hostname,
                         config.database.postgres_port,
                         &db_config.postgres_db,
-                        response
-                    );
+                        response);
+                    error!("{}", &err_message);
+                    health_status.lock().await.postgres = Err(err_message);
                     // Message lost, wait for another message in the next loop
                     continue;
                 };
@@ -549,7 +569,7 @@ async fn db_loop(
                             &notice.session_id, notice.epoch_index, notice.input_index, notice.notice_index);
 
                         // Spawn tokio blocking task, diesel access to db is blocking
-                        let _res = tokio::task::spawn_blocking(move || {
+                        let res = tokio::task::spawn_blocking(move || {
                             // Insert notice to database
                             match insert_notice(&notice, &conn) {
                                 Ok(new_notice_id) => {
@@ -560,65 +580,64 @@ async fn db_loop(
                                                 Ok(new_proof_id) => {
                                                     notice.proof_id = new_proof_id;
                                                     if let Err(err) = update_notice(&notice, &conn) {
-                                                        warn!("Failed to update notice with id {} for proof id {:?}, error {}",
-                                                            &notice.id, notice.proof_id, err.to_string());
+                                                        let err_message = format!("Failed to update notice with id {} for proof id {:?}, error {}",
+                                                            &notice.id, notice.proof_id, err);
+                                                        warn!("{}", &err_message);
+                                                        return Err(err_message);
                                                     }
                                                 },
                                                 Err(err) => {
-                                                    //ignore error, continue
-                                                    warn!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
+                                                    let err_message = format!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
                                                         &proof.output_hashes_root_hash, &proof.vouchers_epoch_root_hash, &proof.notices_epoch_root_hash,
-                                                    &proof.machine_state_hash, err.to_string());
+                                                    &proof.machine_state_hash, err);
+                                                    error!("{}", &err_message);
+                                                    return Err(err_message);
                                                 }
                                             };
                                         }
-
                                     }
                                 Err(err) => {
-                                    //ignore error, continue
-                                    warn!("Notice session_id {} epoch_index {} input_index {} notice_index {} is lost, error: {}",
-                                        &notice.session_id, &notice.epoch_index, &notice.input_index, &notice.notice_index, err.to_string());
+                                    let err_message = format!("Notice session_id {} epoch_index {} input_index {} notice_index {} is lost, error: {}",
+                                        &notice.session_id, &notice.epoch_index, &notice.input_index, &notice.notice_index, err);
+                                    error!("{}", &err_message);
+                                    return Err(err_message);
                                 }
                             }
                             if let Err(err) = update_current_epoch_index(&conn, notice.epoch_index, EpochIndexType::Notice) {
-                                warn!("Failed to update notice database epoch index {}, details: {}", notice.epoch_index, err.to_string());
+                                let err_message = format!("Failed to update notice database epoch index {}, details: {}", notice.epoch_index, err);
+                                error!("{}", &err_message);
+                                return Err(err_message);
                             }
-                        }).await;
+                            Ok(())
+                        }).await.expect("Task spawned successfully");
+                        health_status.lock().await.indexer_status = res;
                     }
                     Message::Report(report) => {
                         debug!("Report message received epoch_index {} input_index {} report_index {}, writing to db",
                             report.epoch_index, report.input_index, report.report_index);
                         // Spawn tokio blocking task, diesel access to db is blocking
-                        let _res = tokio::task::spawn_blocking(move || {
+                        let res = tokio::task::spawn_blocking(move || {
                             if let Err(err) = insert_report(&report, &conn) {
-                                //ignore error, continue
-                                warn!("Report epoch_index {} input_index {} report_index {} is lost, error: {}",
-                                    &report.epoch_index, &report.input_index, &report.report_index, err.to_string());
+                                let err_message = format!("Report epoch_index {} input_index {} report_index {} is lost, error: {}",
+                                    &report.epoch_index, &report.input_index, &report.report_index, err);
+                                error!("{}", &err_message);
+                                return Err(err_message);
                             }
                             if let Err(err) = update_current_epoch_index(&conn, report.epoch_index, EpochIndexType::Report) {
-                                warn!("Failed to update report database epoch index {}, details: {}", report.epoch_index, err.to_string());
+                                let err_message = format!("Failed to update report database epoch index {}, details: {}", report.epoch_index, err);
+                                error!("{}", &err_message);
+                                return Err(err_message);
                             }
-                        }).await;
+                            Ok(())
+                        }).await.expect("Task spawned successfully");
+                        health_status.lock().await.indexer_status = res;
                     }
                     Message::Voucher(proof, mut voucher) => {
                         debug!("Voucher message received epoch_index {} input_index {} voucher_index {}, writing to db",
                             voucher.epoch_index, voucher.input_index, voucher.voucher_index);
 
                         // Spawn tokio blocking task, diesel access to db is blocking
-                        let _res = tokio::task::spawn_blocking(move || {
-                            // Insert proof to database, assign proof id to voucher
-                            match insert_proof(&proof, &conn) {
-                                Ok(proof_id) => {
-                                    voucher.proof_id = proof_id;
-                                },
-                                Err(err) => {
-                                    //ignore error, continue
-                                    warn!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
-                                        &proof.output_hashes_root_hash, &proof.vouchers_epoch_root_hash, &proof.notices_epoch_root_hash,
-                                        &proof.machine_state_hash, err.to_string());
-                                }
-                            };
-
+                        let res = tokio::task::spawn_blocking(move || {
                             // Insert voucher to database
                             match insert_voucher(&voucher, &conn) {
                                 Ok(new_voucher_id) => {
@@ -629,56 +648,69 @@ async fn db_loop(
                                             Ok(new_proof_id) => {
                                                 voucher.proof_id = new_proof_id;
                                                 if let Err(err) = update_voucher(&voucher, &conn) {
-                                                    warn!("Failed to update voucher with id {} for proof id {:?}, error {}",
-                                                        &voucher.id, voucher.proof_id, err.to_string());
+                                                    let err_message = format!("Failed to update voucher with id {} for proof id {:?}, error {}",
+                                                        &voucher.id, voucher.proof_id, err);
+                                                    error!("{}", &err_message);
+                                                    return Err(err_message);
                                                 }
                                             },
                                             Err(err) => {
-                                                //ignore error, continue
-                                                warn!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
+                                                let err_message = format!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
                                                     &proof.output_hashes_root_hash, &proof.vouchers_epoch_root_hash, &proof.notices_epoch_root_hash,
-                                                &proof.machine_state_hash, err.to_string());
+                                                &proof.machine_state_hash, err);
+                                                error!("{}", &err_message);
+                                                return Err(err_message);
                                             }
                                         };
                                     }
                                 }
                                 Err(err) => {
-                                     //ignore error, continue
-                                    warn!("Voucher epoch_index {} input_index {} voucher_index {} is lost, error: {}",
-                                        &voucher.epoch_index, &voucher.input_index, &voucher.voucher_index, err.to_string());
+                                    let err_message = format!("Voucher epoch_index {} input_index {} voucher_index {} is lost, error: {}",
+                                        &voucher.epoch_index, &voucher.input_index, &voucher.voucher_index, err);
+                                    error!("{}", &err_message);
+                                    return Err(err_message);
                                 }
                             }
-
-
                             if let Err(err) = update_current_epoch_index(&conn, voucher.epoch_index, EpochIndexType::Voucher) {
-                                warn!("Failed to update voucher database epoch index {}, details: {}", voucher.epoch_index, err.to_string());
+                                let err_message = format!("Failed to update voucher database epoch index {}, details: {}", voucher.epoch_index, err);
+                                error!("{}", &err_message);
+                                return Err(err_message);
                             }
-                        }).await;
+                            Ok(())
+                        }).await.expect("Task spawned successfully");
+                        health_status.lock().await.indexer_status = res;
                     }
                     Message::Input(input) => {
                         debug!("Input message received id {} input_index {} epoch_index {} sender {} block_number {} timestamp {}",
                             &input.id, &input.input_index, &input.epoch_index, &input.sender, &input.block_number, &input.timestamp);
                         // Spawn tokio blocking task, diesel access to db is blocking
-                        let _res = tokio::task::spawn_blocking(move || {
+                        let res = tokio::task::spawn_blocking(move || {
                             // Insert epoch if not in database
                             if let Err(err) = insert_epoch(input.epoch_index, &conn) {
-                                //ignore error, continue
-                                warn!("Epoch index {} is lost, error: {}", &input.epoch_index, err.to_string());
+                                let err_message = format!("Epoch index {} is lost, error: {}", &input.epoch_index, err);
+                                error!("{}", &err_message);
+                                return Err(err_message)
                             }
+
                             if let Err(err) = insert_input(&input, &conn) {
-                                //ignore error, continue
-                                warn!("Input id {} input_index {} epoch_index {} sender {} block_number {} timestamp {} is lost, error: {}",
+                                let err_message = format!("Input id {} input_index {} epoch_index {} sender {} block_number {} timestamp {} is lost, error: {}",
                                     &input.id, &input.input_index, &input.epoch_index, &input.sender, &input.block_number, &input.timestamp,
-                                    err.to_string());
+                                    err);
+                                error!("{}", &err_message);
+                                return Err(err_message);
                             }
                             if let Err(err) = update_current_epoch_index(&conn, input.epoch_index, EpochIndexType::Input) {
-                                warn!("Failed to update input database epoch index {}, details: {}", input.epoch_index, err.to_string());
+                                let err_message = format!("Failed to update input database epoch index {}, details: {}", input.epoch_index, err);
+                                error!("{}", &err_message);
+                                return Err(err_message);
                             }
-                        }).await;
+                            Ok(())
+                        }).await.expect("Task spawned successfully");
+                         health_status.lock().await.indexer_status = res;
                     }
                 }
             },
-            else => {()}
+            else => {}
         }
     }
 }
@@ -687,8 +719,9 @@ async fn db_loop(
 pub async fn run(
     config: IndexerConfig,
     message_rx: mpsc::Receiver<rollups_data::database::Message>,
+    health_status: Arc<async_mutex::Mutex<HealthStatus>>,
 ) -> Result<(), crate::error::Error> {
-    db_loop(config, message_rx).await?;
+    db_loop(config, message_rx, health_status).await?;
     Ok(())
 }
 

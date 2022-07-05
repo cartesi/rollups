@@ -16,6 +16,8 @@
 use crate::config::{IndexerConfig, PostgresConfig};
 use crate::db_service::{get_current_db_epoch_async, EpochIndexType};
 use crate::error::new_indexer_tokio_err;
+use crate::http::HealthStatus;
+use async_mutex::Mutex;
 use ethers::core::types::{Address, U256};
 use offchain::fold::types::{
     AccumulatingEpoch, EpochWithClaims, Input, PhaseState, RollupsState,
@@ -27,7 +29,7 @@ use snafu::ResultExt;
 use state_fold::types::BlockState;
 use std::ops::Add;
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::mpsc;
 use tracing::{debug, error, info, trace};
 
 use crate::grpc::{
@@ -361,7 +363,7 @@ async fn process_state_response(
         if let Err(e) = message_tx
             .send(Message::Input(DbInput {
                 id: 0,
-                epoch_index: epoch_index,
+                epoch_index,
                 input_index: index as i32,
                 block_number: input.block_number.as_u64() as i64,
                 sender: "0x".to_string() + hex::encode(input.sender).as_str(),
@@ -521,6 +523,7 @@ struct Task {
 async fn polling_loop(
     config: Arc<IndexerConfig>,
     message_tx: mpsc::Sender<rollups_data::database::Message>,
+    health_status: Arc<async_mutex::Mutex<HealthStatus>>,
 ) -> Result<(), crate::error::Error> {
     let loop_interval = std::time::Duration::from_millis(100);
     let poll_interval = std::time::Duration::from_secs(config.interval);
@@ -540,6 +543,13 @@ async fn polling_loop(
 
     // Create database db pool
     let db_config = &config.database;
+    health_status.lock().await.postgres = Err(format!(
+        "Trying to create db pool for database host: postgresql://{}@{}:{}/{}",
+        &db_config.postgres_user,
+        &db_config.postgres_hostname,
+        db_config.postgres_port,
+        &db_config.postgres_db
+    ));
     let mut db_pool = rollups_data::database::create_db_pool_with_retry(
         &db_config.postgres_hostname,
         db_config.postgres_port,
@@ -547,12 +557,14 @@ async fn polling_loop(
         &db_config.postgres_password,
         &db_config.postgres_db,
     );
+    health_status.lock().await.postgres = Ok(());
 
     // Polling tasks loop
     info!("Starting data polling loop");
     let last_epoch_status_index: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
     loop {
         for task in tasks.iter_mut() {
+            let health_status = health_status.clone();
             if task.next_execution <= std::time::SystemTime::now() {
                 match task.task_type {
                     TaskType::GetEpochStatus => {
@@ -569,11 +581,23 @@ async fn polling_loop(
                                     )
                                     .await
                                     {
-                                        Ok(client) => client,
+                                        Ok(client) => {
+                                            health_status
+                                                .lock()
+                                                .await
+                                                .server_manager = Ok(());
+                                            client
+                                        }
                                         Err(e) => {
                                             // In case of error, continue with the loop, try to connect again after interval
-                                            error!("Failed to connect to server manager endpoint {}: {}", &config.mm_endpoint, e.to_string());
-                                            return (); // return from spanned background task
+                                            let err_message = format!("Failed to connect to server manager endpoint {}: {}", &config.mm_endpoint, e);
+                                            error!("{}", &err_message);
+                                            health_status
+                                                .lock()
+                                                .await
+                                                .server_manager =
+                                                Err(err_message.clone());
+                                            return; // return from spanned background task
                                         }
                                     };
                                 match poll_epoch_status(
@@ -600,7 +624,18 @@ async fn polling_loop(
                                                 )
                                                     .await
                                                 {
-                                                    error!("Error pooling epoch status for epoch {}: {}", epoch_index, e.to_string());
+                                                    let err_message = format!("Error pooling epoch status for epoch {}: {}", epoch_index, e);
+                                                    error!("{}", err_message);
+                                                    health_status
+                                                        .lock()
+                                                        .await
+                                                        .server_manager =
+                                                        Err(err_message);
+                                                } else {
+                                                    health_status
+                                                        .lock()
+                                                        .await
+                                                        .server_manager = Ok(());
                                                 }
                                             }
                                             *last_epoch_index = new_epoch_index;
@@ -609,9 +644,12 @@ async fn polling_loop(
                                     Err(e) => {
                                         let last_epoch_index =
                                             *last_epoch_index.lock().await;
-                                        error!(
-                                            "Error pooling epoch status for epoch index {}: {}", last_epoch_index, e.to_string()
-                                        );
+                                        let err_message = format!("Error pooling epoch status for epoch index {}: {}", last_epoch_index, e);
+                                        error!("{}", &err_message);
+                                        health_status
+                                            .lock()
+                                            .await
+                                            .server_manager = Err(err_message);
                                     }
                                 }
                             });
@@ -623,51 +661,63 @@ async fn polling_loop(
                         {
                             // Try to get connection to database, recreate db pool if failed
                             let conn = match db_pool.get() {
-                                Ok(conn) => Some(conn),
+                                Ok(conn) => {
+                                    health_status.lock().await.postgres =
+                                        Ok(());
+                                    Some(conn)
+                                }
                                 Err(e) => {
-                                    error!("Failed to get connection from db pool, postgres://{}@{}:{}/{}, error: {}",
-                                    &db_config.postgres_user,
-                                    &db_config.postgres_hostname,
-                                    config.database.postgres_port,
-                                    &db_config.postgres_db,
-                                    e.to_string()
-                                );
+                                    let err_message = format!("Failed to get connection from db pool, postgres://{}@{}:{}/{}, error: {}",
+                                                              &db_config.postgres_user,
+                                                              &db_config.postgres_hostname,
+                                                              config.database.postgres_port,
+                                                              &db_config.postgres_db,
+                                                              e);
+                                    error!("{}", &err_message);
+                                    health_status.lock().await.postgres =
+                                        Err(err_message);
                                     tokio::time::sleep(
                                         tokio::time::Duration::from_secs(1),
                                     )
                                     .await;
                                     // Recreate connection pool
                                     match rollups_data::database::create_db_pool_with_retry_async(
-                                    &db_config.postgres_hostname,
-                                    db_config.postgres_port,
-                                    &db_config.postgres_user,
-                                    &db_config.postgres_password,
-                                    &db_config.postgres_db,
-                                ).await {
-                                    Ok(pool) => {
-                                        db_pool = pool;
-                                        db_pool.get().ok()
-                                    },
-                                    Err(_e) => {
-                                        error!("Failed to recreate db pool, postgres://{}@{}:{}/{}",
-                                        &db_config.postgres_user,
                                         &db_config.postgres_hostname,
-                                        config.database.postgres_port,
-                                        &db_config.postgres_db);
-                                                    None
-                                                }
-                                            }
+                                        db_config.postgres_port,
+                                        &db_config.postgres_user,
+                                        &db_config.postgres_password,
+                                        &db_config.postgres_db,
+                                    ).await {
+                                        Ok(pool) => {
+                                            db_pool = pool;
+                                            health_status.lock().await.postgres = Ok(());
+                                            db_pool.get().ok()
+                                        },
+                                        Err(_e) => {
+                                            let err_message = format!("Failed to recreate db pool, postgres://{}@{}:{}/{}",
+                                                                      &db_config.postgres_user,
+                                                                      &db_config.postgres_hostname,
+                                                                      config.database.postgres_port,
+                                                                      &db_config.postgres_db);
+                                            error!("{}", &err_message);
+                                            health_status.lock().await.postgres = Err(err_message);
+                                            None
+                                        }
+                                    }
                                 }
                             };
                             let conn = if let Some(c) = conn {
+                                health_status.lock().await.postgres = Ok(());
                                 c
                             } else {
-                                error!("Unable to connect to postgres://{}@{}:{}/{} to get current epoch and poll status",
-                                &db_config.postgres_user,
-                                &db_config.postgres_hostname,
-                                config.database.postgres_port,
-                                &db_config.postgres_db,
-                            );
+                                let err_message = format!("Unable to connect to postgres://{}@{}:{}/{} to get current epoch and poll status",
+                                                          &db_config.postgres_user,
+                                                          &db_config.postgres_hostname,
+                                                          config.database.postgres_port,
+                                                          &db_config.postgres_db);
+                                error!("{}", &err_message);
+                                health_status.lock().await.postgres =
+                                    Err(err_message);
                                 continue;
                             };
                             let config = config.clone();
@@ -684,20 +734,41 @@ async fn polling_loop(
                                     )
                                     .await
                                     {
-                                        Ok(client) => client,
+                                        Ok(client) => {
+                                            health_status
+                                                .lock()
+                                                .await
+                                                .state_server = Ok(());
+                                            client
+                                        }
                                         Err(e) => {
                                             // In case of error, continue with the loop, try to connect again after interval
-                                            error!("Failed to connect to state server endpoint {}: {}", &config.state_server_endpoint, e.to_string());
-                                            return (); // return from spanned background task
+                                            let err_message = format!("Failed to connect to state server endpoint {}: {}", &config.state_server_endpoint, e);
+                                            error!("{}", &err_message);
+                                            health_status
+                                                .lock()
+                                                .await
+                                                .state_server =
+                                                Err(err_message);
+                                            return; // return from spanned background task
                                         }
                                     };
                                 let db_epoch_index =
-                                    get_current_db_epoch_async(
+                                    match get_current_db_epoch_async(
                                         EpochIndexType::Input,
                                         conn,
                                     )
                                     .await
-                                    .unwrap_or_default();
+                                    {
+                                        Ok(value) => value,
+                                        Err(e) => {
+                                            health_status
+                                                .lock()
+                                                .await
+                                                .postgres = Err(e.to_string());
+                                            return;
+                                        }
+                                    };
 
                                 if let Err(e) = poll_state(
                                     &message_tx,
@@ -707,10 +778,13 @@ async fn polling_loop(
                                 )
                                 .await
                                 {
-                                    error!(
-                                        "Error pooling get state from delegate server {}",
-                                        e.to_string()
-                                    );
+                                    let err_message = format!("Error pooling get state from delegate server {}", e);
+                                    error!("{}", &err_message);
+                                    health_status.lock().await.state_server =
+                                        Err(err_message);
+                                } else {
+                                    health_status.lock().await.state_server =
+                                        Ok(());
                                 }
                             });
                         }
@@ -831,6 +905,7 @@ async fn sync_state(
 async fn sync_data(
     message_tx: mpsc::Sender<rollups_data::database::Message>,
     config: Arc<IndexerConfig>,
+    health_status: Arc<async_mutex::Mutex<HealthStatus>>,
 ) -> Result<(), crate::error::Error> {
     // Sync notices from machine manager
     info!("Syncing up to date data from machine manager");
@@ -843,7 +918,12 @@ async fn sync_data(
     let sync_server_manager_task = backoff::future::retry(
         backoff::ExponentialBackoff::default(),
         || async {
-            info!("Connecting for sync to server manager {}", &mm_endpoint);
+            let message = format!(
+                "Connecting for sync to server manager {}",
+                &mm_endpoint
+            );
+            info!("{}", &message);
+            health_status.lock().await.server_manager = Err(message);
             let client = ServerManagerClient::connect(mm_endpoint.to_string())
                 .await
                 .context(super::error::TonicTransportError)
@@ -860,13 +940,17 @@ async fn sync_data(
             {
                 Ok(()) => {
                     info!("Machine manager sync finished successfully");
+                    health_status.lock().await.server_manager = Ok(());
                     Ok(())
                 }
                 Err(e) => {
-                    error!(
+                    let err_message = format!(
                         "Failed to sync from server manager, details: {}",
-                        e.to_string()
+                        e
                     );
+                    error!("{}", &err_message);
+                    health_status.lock().await.server_manager =
+                        Err(err_message);
                     Err(rollups_data::new_backoff_err(e))
                 }
             }
@@ -925,9 +1009,12 @@ async fn sync_data(
 pub async fn run(
     config: IndexerConfig,
     message_tx: mpsc::Sender<rollups_data::database::Message>,
+    health_status: Arc<async_mutex::Mutex<HealthStatus>>,
 ) -> Result<(), crate::error::Error> {
     let config = Arc::new(config);
-    match sync_data(message_tx.clone(), config.clone()).await {
+    match sync_data(message_tx.clone(), config.clone(), health_status.clone())
+        .await
+    {
         Ok(()) => {}
         Err(e) => {
             error!("Failed to sync data: {}", e.to_string());
@@ -935,7 +1022,7 @@ pub async fn run(
     }
 
     // Start polling loop
-    polling_loop(config, message_tx).await
+    polling_loop(config, message_tx, health_status).await
 }
 
 pub mod testing {

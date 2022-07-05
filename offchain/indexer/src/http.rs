@@ -17,11 +17,13 @@ use actix_web::{
 };
 use async_mutex::Mutex;
 use std::sync::Arc;
+use tracing::info;
 
 pub struct HealthStatus {
     pub state_server: Result<(), String>,
     pub server_manager: Result<(), String>,
     pub postgres: Result<(), String>,
+    pub indexer_status: Result<(), String>,
 }
 
 struct HttpContext {
@@ -33,6 +35,10 @@ pub async fn start_http_service(
     port: u16,
     health_status: Arc<Mutex<HealthStatus>>,
 ) -> std::io::Result<()> {
+    info!(
+        "Starting indexer health endpoint at address: {}:{}",
+        host, port
+    );
     HttpServer::new(move || {
         let http_context = HttpContext {
             health_status: health_status.clone(),
@@ -54,18 +60,21 @@ async fn healthz(http_context: web::Data<HttpContext>) -> impl Responder {
     if let Err(e) = &status.state_server {
         HttpResponse::BadRequest()
             .content_type("text/html; charset=utf-8")
-            .body(format!("Faulty indexer do to state server problems: {}", e))
+            .body(format!(
+                "Faulty indexer due to state server problems: {}",
+                e
+            ))
     } else if let Err(e) = &status.server_manager {
         HttpResponse::BadRequest()
             .content_type("text/html; charset=utf-8")
             .body(format!(
-                "Faulty indexer do to server manager problems: {}",
+                "Faulty indexer due to server manager problems: {}",
                 e
             ))
     } else if let Err(e) = &status.postgres {
         HttpResponse::BadRequest()
             .content_type("text/html; charset=utf-8")
-            .body(format!("Faulty indexer do to database problems: {}", e))
+            .body(format!("Faulty indexer due to database problems: {}", e))
     } else {
         HttpResponse::Ok()
             .content_type("text/html; charset=utf-8")

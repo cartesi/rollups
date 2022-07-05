@@ -153,7 +153,7 @@ pub fn connect_to_database_with_retry(
     );
 
     let connection_manager: ConnectionManager<PgConnection> =
-        ConnectionManager::new(postgres_endpoint.clone());
+        ConnectionManager::new(postgres_endpoint);
 
     let op = || {
         info!(
@@ -284,7 +284,7 @@ pub fn perform_diesel_setup(
     );
 
     std::process::Command::new("diesel")
-        .arg(&format!("setup"))
+        .arg("setup")
         .arg(&format!("--database-url={}", postgres_endpoint))
         .arg(&format!("--migration-dir={}", migration_folder))
         .output()

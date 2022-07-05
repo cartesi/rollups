@@ -99,22 +99,23 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let (message_tx, message_rx) =
         mpsc::channel::<rollups_data::database::Message>(128);
 
-    // Shared state variable
+    // Shared health status state variable
     let health_status = Arc::new(Mutex::new(http::HealthStatus {
         server_manager: Ok(()),
         state_server: Ok(()),
         postgres: Ok(()),
+        indexer_status: Ok(()),
     }));
 
     // Run database and data services
     tokio::select! {
-        db_service_result = db_service::run(indexer_config.clone(), message_rx) => {
+        db_service_result = db_service::run(indexer_config.clone(), message_rx, health_status.clone()) => {
             match db_service_result {
                 Ok(_) => info!("db service terminated successfully"),
                 Err(e) => error!("db service terminated with error: {}", e)
             }
         },
-        data_service_result = data_service::run(indexer_config.clone(), message_tx) => {
+        data_service_result = data_service::run(indexer_config.clone(), message_tx, health_status.clone()) => {
             match data_service_result {
                 Ok(_) => info!("data service terminated successfully"),
                 Err(e) => error!("data service terminated with error: {}", e)

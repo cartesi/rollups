@@ -9,13 +9,14 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+use async_mutex::Mutex;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use ethers::core::types::Address;
 use ethers::types::U256;
-use rollups_data::database::{DbInput, DbNotice, DbReport};
 use rstest::*;
 use serial_test::serial;
 use std::future::Future;
+use std::sync::Arc;
 
 mod common;
 use common::{
@@ -23,13 +24,16 @@ use common::{
     test_data::get_test_epoch_status_01, PATH_TO_MIGRATION_FOLDER, POSTGRES_DB,
     POSTGRES_HOSTNAME, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER,
 };
-use indexer::config::{IndexerConfig, PostgresConfig};
 
 use crate::common::test_data::get_test_state_response_01;
 use indexer::data_service::testing::{
     test_process_epoch_status_response, test_process_state_response,
 };
-use rollups_data::database::Message;
+use indexer::{
+    config::{IndexerConfig, PostgresConfig},
+    http::HealthStatus,
+};
+use rollups_data::database::{DbInput, DbNotice, DbReport, Message};
 
 #[allow(dead_code)]
 struct Context {
@@ -39,6 +43,15 @@ struct Context {
 
 impl Drop for Context {
     fn drop(&mut self) {}
+}
+
+fn new_health_status() -> Arc<Mutex<HealthStatus>> {
+    Arc::new(Mutex::new(HealthStatus {
+        server_manager: Ok(()),
+        state_server: Ok(()),
+        postgres: Ok(()),
+        indexer_status: Ok(()),
+    }))
 }
 
 #[fixture]
@@ -228,7 +241,7 @@ async fn test_notice_retrieval_and_insertion(
 
     let postgres_endpoint = context.postgres_endpoint.clone();
     tokio::select! {
-        db_service_result = indexer::db_service::run(indexer_config.clone(), message_rx) => {
+        db_service_result = indexer::db_service::run(indexer_config.clone(), message_rx, new_health_status()) => {
             match db_service_result {
                 Ok(_) => {println!("db service terminated successfully"); Ok(())},
                 Err(e) => {println!("db service terminated with error: {}", e); Err(Box::new(e))}
@@ -380,7 +393,7 @@ async fn test_report_retrieval_and_insertion(
 
     let postgres_endpoint = context.postgres_endpoint.clone();
     tokio::select! {
-        db_service_result = indexer::db_service::run(indexer_config.clone(), message_rx) => {
+        db_service_result = indexer::db_service::run(indexer_config.clone(), message_rx, new_health_status()) => {
             match db_service_result {
                 Ok(_) => {println!("db service terminated successfully"); Ok(())},
                 Err(e) => {println!("db service terminated with error: {}", e); Err(Box::new(e))}
@@ -546,7 +559,7 @@ async fn test_input_retrieval_and_insertion(
 
     let postgres_endpoint = context.postgres_endpoint.clone();
     tokio::select! {
-        db_service_result = indexer::db_service::run(indexer_config.clone(), message_rx) => {
+        db_service_result = indexer::db_service::run(indexer_config.clone(), message_rx, new_health_status()) => {
             match db_service_result {
                 Ok(_) => {println!("db service terminated successfully"); Ok(())},
                 Err(e) => {println!("db service terminated with error: {}", e); Err(Box::new(e))}
