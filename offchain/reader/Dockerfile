@@ -20,13 +20,14 @@ COPY --from=planner /usr/src/app/offchain/recipe.json recipe.json
 
 RUN <<EOF
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends cmake
-curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.20.1/protoc-3.20.1-linux-x86_64.zip
-unzip protoc-3.20.1-linux-x86_64.zip -d $HOME/.local
+export ARCH=$(uname -m | sed 's/aarch64/aarch_64/')
+curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.20.1/protoc-3.20.1-linux-$ARCH.zip
+unzip protoc-3.20.1-linux-$ARCH.zip -d $HOME/.local
 export PATH="$PATH:$HOME/.local/bin"
 cargo chef cook --release --recipe-path recipe.json
 EOF
 
-# buld application
+# build application
 WORKDIR /usr/src/app/offchain
 COPY . /usr/src/app
 RUN cargo build --release --bin reader
