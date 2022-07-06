@@ -77,15 +77,21 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                 &postgres_config.postgres_migration_folder,
             ) {
                 Ok(process_output) => {
-                    info!(
-                        "Successfully performed migrations, result={:?}", process_output
-                    );
+                    if process_output.status.success() {
+                        info!("Migration successfully performed for database {}", postgres_config.postgres_db)
+                    } else {
+                        error!("Error while performing migrations of database {} diesel setup exit status: {}, error output: {}",
+                            postgres_config.postgres_db, process_output.status, std::str::from_utf8(&process_output.stderr).unwrap_or_default());
+                        panic!("Migration failed!");
+                    }
                 }
                 Err(e) => {
                     error!(
-                        "Unable to perform migrations of database {} error details: {}",
+                        "Error while performing migrations of database {} error details: {}",
                         postgres_config.postgres_db, e.to_string()
                     );
+                    panic!("Migration failed!");
+
                 }
             };
         })
