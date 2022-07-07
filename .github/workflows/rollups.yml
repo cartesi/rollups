@@ -1,63 +1,35 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Rollups
 on:
-    pull_request:
-        paths:
-            - onchain/rollups/**
-            - .github/workflows/rollups.yml
-    push:
-        tags:
-            - v*
+  pull_request:
+    paths:
+      - onchain/rollups/**
+      - .github/workflows/rollups.yml
+  push:
+    tags:
+      - v*
 jobs:
-    build:
-        runs-on: ubuntu-20.04
-        defaults:
-            run:
-                working-directory: onchain/rollups
-        steps:
-            - uses: actions/checkout@v3
-              with:
-                  submodules: recursive
-                  token: ${{ secrets.CI_TOKEN }}
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: "16"
-            - run: yarn install
-            - run: yarn test
-            
-            - name: Set up QEMU
-              id: qemu
-              uses: docker/setup-qemu-action@v2
+  test:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: onchain/rollups
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.CI_TOKEN }}
 
-            - name: Set up Docker Buildx
-              id: buildx
-              uses: docker/setup-buildx-action@v2
-            
-            - name: Docker meta
-              id: docker_meta
-              uses: docker/metadata-action@v3
-              with:
-                  images: ${{ secrets.DOCKER_ORGANIZATION }}/rollups-hardhat
-                  tags: |
-                      type=ref,event=branch
-                      type=semver,pattern={{version}}
-            
-            - name: Login to Docker Hub
-              uses: docker/login-action@v2
-              with:
-                  username: ${{ secrets.DOCKER_USERNAME }}
-                  password: ${{ secrets.DOCKER_PASSWORD }}
-            
-            - name: Build and push docker image
-              id: docker_build
-              uses: docker/bake-action@v2
-              with:
-                  files: |
-                    ./docker-bake.hcl
-                    ${{ steps.docker_meta.outputs.bake-file }}
-                  targets: hardhat
-                  builder: ${{ steps.buildx.outputs.name }}
-                  push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
-                  set: |
-                    *.cache-from=type=gha
-                    *.cache-to=type=gha,mode=max
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+      - run: yarn install
+      - run: yarn test
+
+  image:
+    needs: test
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: hardhat
+      image-name: rollups-hardhat
+    secrets: inherit

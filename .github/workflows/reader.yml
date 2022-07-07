@@ -1,71 +1,49 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Reader
 on:
-    pull_request:
-        paths:
-            - offchain/reader/**
-            - offchain/data/**
-            - grpc-interfaces/**
-            - .github/workflows/reader.yml
-    push:
-        tags:
-            - v*
+  pull_request:
+    paths:
+      - offchain/reader/**
+      - offchain/data/**
+      - grpc-interfaces/**
+      - .github/workflows/reader.yml
+  push:
+    tags:
+      - v*
 jobs:
-    build:
-        runs-on: ubuntu-20.04
-        steps:
-            - uses: actions/checkout@v3
-              with:
-                  submodules: recursive
-                  token: ${{ secrets.CI_TOKEN }}
-                        
-            - name: Set up Docker Buildx
-              id: buildx
-              uses: docker/setup-buildx-action@v2
-            
-            - name: Docker meta
-              id: docker_meta
-              uses: docker/metadata-action@v4
-              with:
-                  images: ${{ secrets.DOCKER_ORGANIZATION }}/query-server
-                  tags: |
-                      type=ref,event=branch
-                      type=semver,pattern={{version}}
-            
-            - name: Login to Docker Hub
-              uses: docker/login-action@v2
-              with:
-                  username: ${{ secrets.DOCKER_USERNAME }}
-                  password: ${{ secrets.DOCKER_PASSWORD }}
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.CI_TOKEN }}
 
-            - name: Install dependencies for tests
-              run: |
-                  sudo apt-get update -y
-                  sudo DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5 docker-compose
-                  curl https://sh.rustup.rs -sSf | bash -s -- -y
-                  echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
-                  cargo install diesel_cli --no-default-features --features "postgres"
-                  sudo rm -rf /var/lib/apt/lists/*
+      - name: Install dependencies for tests
+        run: |
+          sudo apt-get update -y
+          sudo DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5 docker-compose
+          curl https://sh.rustup.rs -sSf | bash -s -- -y
+          echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
+          cargo install diesel_cli --no-default-features --features "postgres"
+          sudo rm -rf /var/lib/apt/lists/*
 
-            - name: Build reader
-              run: |
-                  cd offchain/reader
-                  cargo build --release
+      - name: Build reader
+        run: |
+          cd offchain/reader
+          cargo build --release
 
-            - name: Execute reader integration tests
-              run: |
-                  cd offchain/reader
-                  docker-compose -f tests/docker-compose.yml up --build -d
-                  RUST_LOG=error ROLLUPS_READER_BINARY_PATH=../target/release/reader cargo test
-                  docker-compose -f tests/docker-compose.yml stop                  
-            
-            - name: Build and push docker image
-              id: docker_build
-              uses: docker/bake-action@v2
-              with:
-                  files: |
-                    ./docker-bake.hcl
-                    ${{ steps.docker_meta.outputs.bake-file }}
-                  targets: reader
-                  builder: ${{ steps.buildx.outputs.name }}
-                  push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
+      - name: Execute reader integration tests
+        run: |
+          cd offchain/reader
+          docker-compose -f tests/docker-compose.yml up --build -d
+          RUST_LOG=error ROLLUPS_READER_BINARY_PATH=../target/release/reader cargo test
+          docker-compose -f tests/docker-compose.yml stop
+
+  image:
+    needs: test
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: reader
+      image-name: query-server
+    secrets: inherit

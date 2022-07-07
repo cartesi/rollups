@@ -1,81 +1,52 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Indexer
 on:
-    pull_request:
-        paths:
-            - offchain/indexer/**
-            - offchain/offchain/**
-            - offchain/data/**
-            - grpc-interfaces/**
-            - onchain/rollups/abi/**
-            - .github/workflows/indexer.yml
-    push:
-        tags:
-            - v*
+  pull_request:
+    paths:
+      - offchain/indexer/**
+      - offchain/offchain/**
+      - offchain/data/**
+      - grpc-interfaces/**
+      - onchain/rollups/abi/**
+      - .github/workflows/indexer.yml
+  push:
+    tags:
+      - v*
 jobs:
-    build:
-        runs-on: ubuntu-20.04
-        steps:
-            - uses: actions/checkout@v3
-              with:
-                  submodules: recursive
-                  token: ${{ secrets.CI_TOKEN }}
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.CI_TOKEN }}
 
-            - name: Set up QEMU
-              id: qemu
-              uses: docker/setup-qemu-action@v2
+      - name: Install dependencies for tests
+        run: |
+          sudo apt-get update -y
+          sudo DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5 docker-compose
+          curl https://sh.rustup.rs -sSf | bash -s -- -y
+          echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
+          cargo install diesel_cli --no-default-features --features "postgres"
+          sudo rm -rf /var/lib/apt/lists/*
 
-            - name: Set up Docker Buildx
-              id: buildx
-              uses: docker/setup-buildx-action@v2
+      - name: Build indexer
+        run: |
+          cd offchain/indexer 
+          cargo build --release
 
-            - name: Docker meta
-              id: docker_meta
-              uses: docker/metadata-action@v4
-              with:
-                  images: ${{ secrets.DOCKER_ORGANIZATION }}/rollups-indexer
-                  tags: |
-                      type=ref,event=branch
-                      type=semver,pattern={{version}}
+      - name: Execute indexer integration tests
+        run: |
+          ls -la
+          cd offchain/indexer
+          docker-compose -f tests/docker-compose.yml up --build -d
+          cargo test
+          docker-compose -f tests/docker-compose.yml stop
 
-            - name: Login to Docker Hub
-              uses: docker/login-action@v2
-              with:
-                  username: ${{ secrets.DOCKER_USERNAME }}
-                  password: ${{ secrets.DOCKER_PASSWORD }}
-
-            - name: Install dependencies for tests
-              run: |
-                  sudo apt-get update -y
-                  sudo DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5 docker-compose
-                  curl https://sh.rustup.rs -sSf | bash -s -- -y
-                  echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
-                  cargo install diesel_cli --no-default-features --features "postgres"
-                  sudo rm -rf /var/lib/apt/lists/*
-
-            - name: Build indexer
-              run: |
-                  cd offchain/indexer 
-                  cargo build --release
-
-            - name: Execute indexer integration tests
-              run: |
-                  ls -la
-                  cd offchain/indexer
-                  docker-compose -f tests/docker-compose.yml up --build -d
-                  cargo test
-                  docker-compose -f tests/docker-compose.yml stop
-
-            - name: Build and push docker image
-              id: docker_build
-              uses: docker/bake-action@v2
-              with:
-                  files: |
-                    ./docker-bake.hcl
-                    ${{ steps.docker_meta.outputs.bake-file }}
-                  targets: indexer
-                  builder: ${{ steps.buildx.outputs.name }}
-                  push: ${{ startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/develop') }}
-                  set: |
-                    *.cache-from=type=gha
-                    *.cache-to=type=gha,mode=max
+  image:
+    needs: test
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: indexer
+      image-name: rollups-indexer
+    secrets: inherit
