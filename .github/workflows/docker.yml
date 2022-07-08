@@ -66,3 +66,16 @@ jobs:
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
+
+      - name: Remove Docker image for merged PR
+        if: github.event.pull_request.merged == true
+        run: |
+          # Only run for cartesicorp
+          [[ "${{ secrets.DOCKER_ORGANIZATION}}" -eq "cartesicorp" ]] || echo "No image to remove"; exit 0
+
+          HUB_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d "{\"username\": \"${{ secrets.DOCKER_USERNAME }}\", \"password\": \"${{ secrets.DOCKER_PASSWORD }}\"}" https://hub.docker.com/v2/users/login/ | jq -r .token)
+
+          curl -i -X DELETE \
+            -H "Accept: application/json" \
+            -H "Authorization: JWT $HUB_TOKEN" \
+            https://hub.docker.com/v2/repositories/${{ secrets.DOCKER_ORGANIZATION }}/${{ inputs.image-name }}/tags/pr-${{ github.event.number }}/
