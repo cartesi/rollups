@@ -10,6 +10,8 @@ on:
   push:
     tags:
       - v*
+    branches:
+      - develop
 jobs:
   image:
     uses: ./.github/workflows/docker.yml

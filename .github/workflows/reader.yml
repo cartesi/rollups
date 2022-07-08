@@ -10,6 +10,8 @@ on:
   push:
     tags:
       - v*
+    branches:
+      - develop
 jobs:
   test:
     runs-on: ubuntu-20.04
