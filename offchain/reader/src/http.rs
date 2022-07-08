@@ -11,6 +11,7 @@
  * the License.
  */
 
+use actix_cors::Cors;
 /// Http service serving graphql queries
 use actix_web::{
     middleware::Logger, web, web::Data, App, HttpResponse, HttpServer,
@@ -57,9 +58,12 @@ pub async fn start_service(
             health_status: health_status.clone(),
         };
 
+        let cors = Cors::permissive();
+
         App::new()
             .app_data(Data::new(http_context))
             .wrap(Logger::default())
+            .wrap(cors)
             .service(graphql)
             .service(juniper_playground)
             .service(health)
