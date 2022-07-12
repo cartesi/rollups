@@ -151,7 +151,7 @@ contract OutputFacet is IOutput {
                 getIntraDrivePosition(_v.inputIndex, KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
                 _outputEpochLog2Size,
-                keccak256(abi.encodePacked(_v.outputHashesRootHash)),
+                _v.outputHashesRootHash,
                 _v.outputHashesInEpochSiblings
             ) == _outputsEpochRootHash,
             "outputsEpochRootHash incorrect"
