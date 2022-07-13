@@ -18,6 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployer } = await getNamedAccounts();
 
     const opts: DeployOptions = {
+        deterministicDeployment: true,
         from: deployer,
         log: true,
     };
