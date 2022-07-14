@@ -27,7 +27,7 @@ pub async fn get_test_epoch_status_01(
     GetEpochStatusResponse {
         session_id: session_id.to_string(),
         epoch_index,
-        state: EpochState::Active.into(),
+        state: EpochState::Finished.into(),
         most_recent_machine_hash: Some(Hash {
             data: hex::decode(
                 "2510d0c35cf16959188e78c078477efc3c6cb65dd83182534a5a8594eb931d0e"

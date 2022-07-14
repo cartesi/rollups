@@ -195,10 +195,18 @@ pub(crate) fn insert_notice(
         .map_err(|e| crate::error::Error::DieselError { source: e })?
         > 0
     {
-        // Notice already in the database, skip insert
-        trace!("Notice session_id {} epoch_index {} input_index {} notice_index {}  already in the database",
-                db_notice.session_id, db_notice.epoch_index, db_notice.input_index, db_notice.notice_index);
-        return Ok(None);
+        let notice_id = notices
+            .filter(epoch_index.eq(&db_notice.epoch_index))
+            .filter(session_id.eq(&db_notice.session_id))
+            .filter(input_index.eq(&db_notice.input_index))
+            .filter(notice_index.eq(&db_notice.notice_index))
+            .select(id)
+            .get_result::<i32>(conn)
+            .map_err(|e| crate::error::Error::DieselError { source: e })?;
+        // Notice already in the database, skip insert, get notice id
+        trace!("Notice session_id {} epoch_index {} input_index {} notice_index {}  already in the database with id={}",
+                db_notice.session_id, db_notice.epoch_index, db_notice.input_index, db_notice.notice_index, notice_id);
+        return Ok(Some(notice_id));
     }
 
     // Write notice to database
@@ -265,10 +273,18 @@ pub(crate) fn insert_voucher(
         .map_err(|e| crate::error::Error::DieselError { source: e })?
         > 0
     {
-        // Voucher is already in the database, skip insert
-        trace!("Voucher epoch_index {} input_index {} notice_index {}  already in the database",
-                db_voucher.epoch_index, db_voucher.input_index, db_voucher.voucher_index);
-        return Ok(None);
+        // Voucher is already in the database, skip insert, get voucher id
+        let voucher_id = vouchers
+            .filter(epoch_index.eq(&db_voucher.epoch_index))
+            .filter(input_index.eq(&db_voucher.input_index))
+            .filter(voucher_index.eq(&db_voucher.voucher_index))
+            .filter(destination.eq(&db_voucher.destination))
+            .select(id)
+            .get_result::<i32>(conn)
+            .map_err(|e| crate::error::Error::DieselError { source: e })?;
+        trace!("Voucher epoch_index {} input_index {} notice_index {}  already in the database with id={}",
+                db_voucher.epoch_index, db_voucher.input_index, db_voucher.voucher_index, voucher_id);
+        return Ok(Some(voucher_id));
     }
 
     // Write voucher to database
@@ -575,25 +591,27 @@ async fn db_loop(
                                 Ok(new_notice_id) => {
                                     if let Some(notice_id) = new_notice_id {
                                         notice.id = notice_id;
-                                        // Insert related notice proof to database, update notice record with proof_id
-                                        match insert_proof(&proof, &conn) {
-                                                Ok(new_proof_id) => {
-                                                    notice.proof_id = new_proof_id;
-                                                    if let Err(err) = update_notice(&notice, &conn) {
-                                                        let err_message = format!("Failed to update notice with id {} for proof id {:?}, error {}",
-                                                            &notice.id, notice.proof_id, err);
-                                                        warn!("{}", &err_message);
+                                        if let Some(proof) = &proof {
+                                            // Insert related notice proof to database, update notice record with proof_id
+                                            match insert_proof(&proof, &conn) {
+                                                    Ok(new_proof_id) => {
+                                                        notice.proof_id = new_proof_id;
+                                                        if let Err(err) = update_notice(&notice, &conn) {
+                                                            let err_message = format!("Failed to update notice with id {} for proof id {:?}, error {}",
+                                                                &notice.id, notice.proof_id, err);
+                                                            warn!("{}", &err_message);
+                                                            return Err(err_message);
+                                                        }
+                                                    },
+                                                    Err(err) => {
+                                                        let err_message = format!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
+                                                            &proof.output_hashes_root_hash, &proof.vouchers_epoch_root_hash, &proof.notices_epoch_root_hash,
+                                                        &proof.machine_state_hash, err);
+                                                        error!("{}", &err_message);
                                                         return Err(err_message);
                                                     }
-                                                },
-                                                Err(err) => {
-                                                    let err_message = format!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
-                                                        &proof.output_hashes_root_hash, &proof.vouchers_epoch_root_hash, &proof.notices_epoch_root_hash,
-                                                    &proof.machine_state_hash, err);
-                                                    error!("{}", &err_message);
-                                                    return Err(err_message);
-                                                }
-                                            };
+                                                };
+                                            }
                                         }
                                     }
                                 Err(err) => {
@@ -643,25 +661,27 @@ async fn db_loop(
                                 Ok(new_voucher_id) => {
                                     if let Some(voucher_id) = new_voucher_id {
                                         voucher.id = voucher_id;
-                                        // Insert related voucher proof to database, update voucher record with proof_id
-                                        match insert_proof(&proof, &conn) {
-                                            Ok(new_proof_id) => {
-                                                voucher.proof_id = new_proof_id;
-                                                if let Err(err) = update_voucher(&voucher, &conn) {
-                                                    let err_message = format!("Failed to update voucher with id {} for proof id {:?}, error {}",
-                                                        &voucher.id, voucher.proof_id, err);
+                                        if let Some(proof) = &proof {
+                                            // Insert related voucher proof to database, update voucher record with proof_id
+                                            match insert_proof(&proof, &conn) {
+                                                Ok(new_proof_id) => {
+                                                    voucher.proof_id = new_proof_id;
+                                                    if let Err(err) = update_voucher(&voucher, &conn) {
+                                                        let err_message = format!("Failed to update voucher with id {} for proof id {:?}, error {}",
+                                                            &voucher.id, voucher.proof_id, err);
+                                                        error!("{}", &err_message);
+                                                        return Err(err_message);
+                                                    }
+                                                },
+                                                Err(err) => {
+                                                    let err_message = format!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
+                                                        &proof.output_hashes_root_hash, &proof.vouchers_epoch_root_hash, &proof.notices_epoch_root_hash,
+                                                    &proof.machine_state_hash, err);
                                                     error!("{}", &err_message);
                                                     return Err(err_message);
                                                 }
-                                            },
-                                            Err(err) => {
-                                                let err_message = format!("Proof output_hashes_root_hash {} vouchers_epoch_root_hash {} notices_epoch_root_hash {} machine_state_hash {} is lost, error: {}",
-                                                    &proof.output_hashes_root_hash, &proof.vouchers_epoch_root_hash, &proof.notices_epoch_root_hash,
-                                                &proof.machine_state_hash, err);
-                                                error!("{}", &err_message);
-                                                return Err(err_message);
-                                            }
-                                        };
+                                            };
+                                        }
                                     }
                                 }
                                 Err(err) => {

@@ -112,8 +112,8 @@ pub struct DbReport {
 /// in the database
 #[derive(Debug)]
 pub enum Message {
-    Notice(DbProof, DbNotice),
-    Voucher(DbProof, DbVoucher),
+    Notice(Option<DbProof>, DbNotice),
+    Voucher(Option<DbProof>, DbVoucher),
     Report(DbReport),
     Input(DbInput),
 }

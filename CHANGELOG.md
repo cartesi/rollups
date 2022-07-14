@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Remove hardhat-rollups
 
+### Changed
+
+- Fix indexer to store proofs only when epoch is finished
+
 ## [0.4.0] 2022-07-04
 
 ### Changed

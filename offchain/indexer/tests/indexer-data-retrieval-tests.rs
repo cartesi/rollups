@@ -139,10 +139,14 @@ async fn test_notice_processing(
         if let Some(message) = message_rx.recv().await {
             match message {
                 Message::Notice(proof, notice) => {
-                    assert_eq!(proof.machine_state_hash, "0x2510d0c35cf16959188e78c078477efc3c6cb65dd83182534a5a8594eb931d0e");
-                    assert_eq!(proof.output_hashes_root_hash, "0x2dc67e41d15edb6548fae2bad020dac70b1df0c6372de66ae6a8b97669d0780d");
-                    assert_eq!(proof.vouchers_epoch_root_hash, "0x45e736cc98814c3e09141fa61122137749589a6b127032fbac63346c7f7bf8a1");
-                    assert_eq!(proof.output_hashes_root_hash, "0x2dc67e41d15edb6548fae2bad020dac70b1df0c6372de66ae6a8b97669d0780d");
+                    if let Some(proof) = proof {
+                        assert_eq!(proof.machine_state_hash, "0x2510d0c35cf16959188e78c078477efc3c6cb65dd83182534a5a8594eb931d0e");
+                        assert_eq!(proof.output_hashes_root_hash, "0x2dc67e41d15edb6548fae2bad020dac70b1df0c6372de66ae6a8b97669d0780d");
+                        assert_eq!(proof.vouchers_epoch_root_hash, "0x45e736cc98814c3e09141fa61122137749589a6b127032fbac63346c7f7bf8a1");
+                        assert_eq!(proof.output_hashes_root_hash, "0x2dc67e41d15edb6548fae2bad020dac70b1df0c6372de66ae6a8b97669d0780d");
+                    } else {
+                        panic!("missing proof");
+                    }
                     assert_eq!(notice.id, 0);
                     assert_eq!(
                         notice.session_id.as_str(),

@@ -35,8 +35,8 @@ use tracing::{debug, error, info, trace};
 use crate::grpc::{
     cartesi_machine, server_manager,
     server_manager::{
-        server_manager_client::ServerManagerClient, GetEpochStatusRequest,
-        GetEpochStatusResponse, GetSessionStatusRequest,
+        server_manager_client::ServerManagerClient, EpochState,
+        GetEpochStatusRequest, GetEpochStatusResponse, GetSessionStatusRequest,
         GetSessionStatusResponse,
     },
     state_server::{
@@ -135,6 +135,7 @@ async fn process_epoch_status_response(
     session_id: &str,
     epoch_index: u64,
 ) -> Result<u64, crate::error::Error> {
+    let epoch_state = epoch_status_response.state();
     for input in epoch_status_response.processed_inputs {
         // Process reports
         for (rindex, report) in input.reports.iter().enumerate() {
@@ -167,47 +168,52 @@ async fn process_epoch_status_response(
                         trace!("Process epoch status: sending voucher with session id {}, epoch_index {} input_index {} voucher_index {} voucher {:?}",
                                 session_id, epoch_index, input.input_index, &vindex, voucher);
 
-                        // Construct and send notice proof
-                        let proof = DbProof {
-                            id: 0,
-                            machine_state_hash: "0x".to_string() + hex::encode(&epoch_status_response
-                                .most_recent_machine_hash
-                                .as_ref()
-                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
-                                .data,
-                            ).as_str(),
-                            vouchers_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
-                                .most_recent_vouchers_epoch_root_hash
-                                .as_ref()
-                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
-                                .data,
-                            ).as_str(),
-                            notices_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
-                                .most_recent_notices_epoch_root_hash
-                                .as_ref()
-                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
-                                .data,
-                            ).as_str(),
-                            output_hashes_root_hash:  "0x".to_string() + hex::encode(&voucher.keccak_in_voucher_hashes
-                                .as_ref()
-                                .unwrap_or(&Default::default())
-                                .root_hash
-                                .as_ref()
-                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
-                                .data,
-                            ).as_str(),
-                            keccak_in_hashes_siblings: voucher.keccak_in_voucher_hashes
-                                .as_ref()
-                                .unwrap_or(&Default::default())
-                                .sibling_hashes
-                                .iter()
-                                .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect(),
-                            output_hashes_in_epoch_siblings:    input.voucher_hashes_in_epoch
-                                .as_ref()
-                                .unwrap_or(&Default::default())
-                                .sibling_hashes
-                                .iter()
-                                .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect()
+                        // Construct and send voucher proof only when epoch is finished
+                        let proof = match epoch_state {
+                            EpochState::Finished => {
+                                Some(DbProof {
+                                    id: 0,
+                                    machine_state_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                        .most_recent_machine_hash
+                                        .as_ref()
+                                        .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                        .data,
+                                    ).as_str(),
+                                    vouchers_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                        .most_recent_vouchers_epoch_root_hash
+                                        .as_ref()
+                                        .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                        .data,
+                                    ).as_str(),
+                                    notices_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                        .most_recent_notices_epoch_root_hash
+                                        .as_ref()
+                                        .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                        .data,
+                                    ).as_str(),
+                                    output_hashes_root_hash:  "0x".to_string() + hex::encode(&voucher.keccak_in_voucher_hashes
+                                        .as_ref()
+                                        .unwrap_or(&Default::default())
+                                        .root_hash
+                                        .as_ref()
+                                        .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                        .data,
+                                    ).as_str(),
+                                    keccak_in_hashes_siblings: voucher.keccak_in_voucher_hashes
+                                        .as_ref()
+                                        .unwrap_or(&Default::default())
+                                        .sibling_hashes
+                                        .iter()
+                                        .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect(),
+                                    output_hashes_in_epoch_siblings:    input.voucher_hashes_in_epoch
+                                        .as_ref()
+                                        .unwrap_or(&Default::default())
+                                        .sibling_hashes
+                                        .iter()
+                                        .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect()
+                                })
+                            },
+                            EpochState::Active => None,
                         };
 
                         // Send voucher to db service
@@ -237,47 +243,52 @@ async fn process_epoch_status_response(
                         trace!("Process epoch status: sending notice with session id {}, epoch_index {} input_index {} notice_index {}",
                                 session_id, epoch_index, input.input_index, &nindex);
 
-                        // Construct and send notice proof
-                        let proof = DbProof {
-                            id: 0,
-                            machine_state_hash: "0x".to_string() + hex::encode(&epoch_status_response
-                                .most_recent_machine_hash
-                                .as_ref()
-                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
-                                .data,
-                            ).as_str(),
-                            vouchers_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
-                                .most_recent_vouchers_epoch_root_hash
-                                .as_ref()
-                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
-                                .data,
-                            ).as_str(),
-                            notices_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
-                                .most_recent_notices_epoch_root_hash
-                                .as_ref()
-                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
-                                .data,
-                            ).as_str(),
-                            output_hashes_root_hash:  "0x".to_string() + hex::encode(&notice.keccak_in_notice_hashes
-                                .as_ref()
-                                .unwrap_or(&Default::default())
-                                .root_hash
-                                .as_ref()
-                                .unwrap_or(&cartesi_machine::Hash { data: vec![] })
-                                .data,
-                            ).as_str(),
-                            keccak_in_hashes_siblings: notice.keccak_in_notice_hashes
-                                .as_ref()
-                                .unwrap_or(&Default::default())
-                                .sibling_hashes
-                                .iter()
-                                .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect(),
-                            output_hashes_in_epoch_siblings:    input.notice_hashes_in_epoch
-                                .as_ref()
-                                .unwrap_or(&Default::default())
-                                .sibling_hashes
-                                .iter()
-                                .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect()
+                        // Construct and send notice proof only when epoch is finished
+                        let proof = match epoch_state {
+                            EpochState::Finished => {
+                                Some(DbProof {
+                                    id: 0,
+                                    machine_state_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                        .most_recent_machine_hash
+                                        .as_ref()
+                                        .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                        .data,
+                                    ).as_str(),
+                                    vouchers_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                        .most_recent_vouchers_epoch_root_hash
+                                        .as_ref()
+                                        .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                        .data,
+                                    ).as_str(),
+                                    notices_epoch_root_hash: "0x".to_string() + hex::encode(&epoch_status_response
+                                        .most_recent_notices_epoch_root_hash
+                                        .as_ref()
+                                        .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                        .data,
+                                    ).as_str(),
+                                    output_hashes_root_hash:  "0x".to_string() + hex::encode(&notice.keccak_in_notice_hashes
+                                        .as_ref()
+                                        .unwrap_or(&Default::default())
+                                        .root_hash
+                                        .as_ref()
+                                        .unwrap_or(&cartesi_machine::Hash { data: vec![] })
+                                        .data,
+                                    ).as_str(),
+                                    keccak_in_hashes_siblings: notice.keccak_in_notice_hashes
+                                        .as_ref()
+                                        .unwrap_or(&Default::default())
+                                        .sibling_hashes
+                                        .iter()
+                                        .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect(),
+                                    output_hashes_in_epoch_siblings:    input.notice_hashes_in_epoch
+                                        .as_ref()
+                                        .unwrap_or(&Default::default())
+                                        .sibling_hashes
+                                        .iter()
+                                        .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect()
+                                })
+                            },
+                            EpochState::Active => None,
                         };
 
                         // Send notice to db service
