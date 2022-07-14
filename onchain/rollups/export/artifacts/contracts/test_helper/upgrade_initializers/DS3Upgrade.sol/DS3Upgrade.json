@@ -1,0 +1,48 @@
+{
+  "contractName": "DS3Upgrade",
+  "sourceName": "contracts/test_helper/upgrade_initializers/DS3Upgrade.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "z",
+          "type": "uint32"
+        }
+      ],
+      "name": "upgrade",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610130806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063a6af585414602d575b600080fd5b60cd603836600460cf565b7ff85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1c547fc47562ccbe325ce9e309f81a37bccc9baa9b4a3de9b8d88bd7e4f2b6e504ca95805467ffffffffffffffff191663ffffffff80841691909117640100000000938490048216909302929092176bffffffff00000000000000001916680100000000000000009390921692909202179055565b005b60006020828403121560e057600080fd5b813563ffffffff8116811460f357600080fd5b939250505056fea2646970667358221220b8bcb7b44ffdd890b3ab53cf709803e2d19605968b895630635ccf617d6a9e7664736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c8063a6af585414602d575b600080fd5b60cd603836600460cf565b7ff85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1c547fc47562ccbe325ce9e309f81a37bccc9baa9b4a3de9b8d88bd7e4f2b6e504ca95805467ffffffffffffffff191663ffffffff80841691909117640100000000938490048216909302929092176bffffffff00000000000000001916680100000000000000009390921692909202179055565b005b60006020828403121560e057600080fd5b813563ffffffff8116811460f357600080fd5b939250505056fea2646970667358221220b8bcb7b44ffdd890b3ab53cf709803e2d19605968b895630635ccf617d6a9e7664736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "60800",
+        "executionCost": "111",
+        "totalCost": "60911"
+      },
+      "external": {
+        "upgrade(uint32)": "26653"
+      }
+    },
+    "methodIdentifiers": {
+      "upgrade(uint32)": "a6af5854"
+    }
+  }
+}

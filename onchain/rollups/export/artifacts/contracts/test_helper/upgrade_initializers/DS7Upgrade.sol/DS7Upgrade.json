@@ -1,0 +1,48 @@
+{
+  "contractName": "DS7Upgrade",
+  "sourceName": "contracts/test_helper/upgrade_initializers/DS7Upgrade.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint128",
+          "name": "y",
+          "type": "uint128"
+        }
+      ],
+      "name": "upgrade",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5060dc8061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063027f53bf14602d575b600080fd5b607660383660046078565b7fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcc80546001600160801b03928316600160801b029216919091179055565b005b600060208284031215608957600080fd5b81356001600160801b0381168114609f57600080fd5b939250505056fea2646970667358221220d4e0977514d393e00723d2ea3590ae1ecfeee63a9ef106e55daa9ecb28fe564164736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c8063027f53bf14602d575b600080fd5b607660383660046078565b7fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcc80546001600160801b03928316600160801b029216919091179055565b005b600060208284031215608957600080fd5b81356001600160801b0381168114609f57600080fd5b939250505056fea2646970667358221220d4e0977514d393e00723d2ea3590ae1ecfeee63a9ef106e55daa9ecb28fe564164736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "44000",
+        "executionCost": "93",
+        "totalCost": "44093"
+      },
+      "external": {
+        "upgrade(uint128)": "24498"
+      }
+    },
+    "methodIdentifiers": {
+      "upgrade(uint128)": "027f53bf"
+    }
+  }
+}

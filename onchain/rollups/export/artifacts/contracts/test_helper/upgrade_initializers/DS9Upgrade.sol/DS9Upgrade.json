@@ -1,0 +1,42 @@
+{
+  "contractName": "DS9Upgrade",
+  "sourceName": "contracts/test_helper/upgrade_initializers/DS9Upgrade.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "upgrade",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5060db8061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063d55ec69714602d575b600080fd5b60a37ff85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1c547f5ec71f1de84ac97dcb4fa9dee8ec0041b0b869b58ab1882dcca1632a34f94b7c805464010000000080840463ffffffff90811690910267ffffffffffffffff19909216931692909217919091179055565b00fea2646970667358221220ffaf4ef99abfedb11af278e1901a063309bbe63d43fb3dc98fe48c668007dd4864736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c8063d55ec69714602d575b600080fd5b60a37ff85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1c547f5ec71f1de84ac97dcb4fa9dee8ec0041b0b869b58ab1882dcca1632a34f94b7c805464010000000080840463ffffffff90811690910267ffffffffffffffff19909216931692909217919091179055565b00fea2646970667358221220ffaf4ef99abfedb11af278e1901a063309bbe63d43fb3dc98fe48c668007dd4864736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "43800",
+        "executionCost": "93",
+        "totalCost": "43893"
+      },
+      "external": {
+        "upgrade()": "26504"
+      }
+    },
+    "methodIdentifiers": {
+      "upgrade()": "d55ec697"
+    }
+  }
+}

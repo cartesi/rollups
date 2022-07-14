@@ -1,0 +1,42 @@
+{
+  "contractName": "DS6Downgrade",
+  "sourceName": "contracts/test_helper/upgrade_initializers/DS6Downgrade.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "downgrade",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b50608d8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806306ce466414602d575b600080fd5b605560007fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcc55565b00fea26469706673582212203630b77c08ed2d26ffc473a14c04ec40222e074524aa16b27529c757246e991c64736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c806306ce466414602d575b600080fd5b605560007fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcc55565b00fea26469706673582212203630b77c08ed2d26ffc473a14c04ec40222e074524aa16b27529c757246e991c64736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "28200",
+        "executionCost": "81",
+        "totalCost": "28281"
+      },
+      "external": {
+        "downgrade()": "5116"
+      }
+    },
+    "methodIdentifiers": {
+      "downgrade()": "06ce4664"
+    }
+  }
+}

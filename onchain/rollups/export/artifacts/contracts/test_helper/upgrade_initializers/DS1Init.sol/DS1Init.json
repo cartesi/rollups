@@ -1,0 +1,53 @@
+{
+  "contractName": "DS1Init",
+  "sourceName": "contracts/test_helper/upgrade_initializers/DS1Init.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "x",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "y",
+          "type": "uint32"
+        }
+      ],
+      "name": "init",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610102806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063dca75ea314602d575b600080fd5b60846038366004609e565b7ff85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1c805463ffffffff9283166401000000000267ffffffffffffffff199091169390921692909217179055565b005b803563ffffffff81168114609957600080fd5b919050565b6000806040838503121560b057600080fd5b60b7836086565b915060c3602084016086565b9050925092905056fea26469706673582212203fdd1edfad1efbafa657ef60b64dbd13a58d5f768ae2bc99071e1e943f6e0a7564736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c8063dca75ea314602d575b600080fd5b60846038366004609e565b7ff85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1c805463ffffffff9283166401000000000267ffffffffffffffff199091169390921692909217179055565b005b803563ffffffff81168114609957600080fd5b919050565b6000806040838503121560b057600080fd5b60b7836086565b915060c3602084016086565b9050925092905056fea26469706673582212203fdd1edfad1efbafa657ef60b64dbd13a58d5f768ae2bc99071e1e943f6e0a7564736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "51600",
+        "executionCost": "105",
+        "totalCost": "51705"
+      },
+      "external": {
+        "init(uint32,uint32)": "infinite"
+      }
+    },
+    "methodIdentifiers": {
+      "init(uint32,uint32)": "dca75ea3"
+    }
+  }
+}

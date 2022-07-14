@@ -1,0 +1,32 @@
+{
+  "contractName": "LibDS4",
+  "sourceName": "contracts/test_helper/libraries/LibDS4.sol",
+  "abi": [],
+  "bytecode": "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea26469706673582212208bd79ad986009f8523ea2965edecfd531e351793f068f2a33058fa6bb33c6b9a64736f6c634300080d0033",
+  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea26469706673582212208bd79ad986009f8523ea2965edecfd531e351793f068f2a33058fa6bb33c6b9a64736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "17200",
+        "executionCost": "103",
+        "totalCost": "17303"
+      },
+      "internal": {
+        "diamondStorage()": "infinite"
+      }
+    },
+    "methodIdentifiers": {}
+  }
+}

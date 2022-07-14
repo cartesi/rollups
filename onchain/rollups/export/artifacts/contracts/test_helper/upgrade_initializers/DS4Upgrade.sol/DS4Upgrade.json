@@ -1,0 +1,42 @@
+{
+  "contractName": "DS4Upgrade",
+  "sourceName": "contracts/test_helper/upgrade_initializers/DS4Upgrade.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "upgrade",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b5060c88061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063d55ec69714602d575b600080fd5b7ff85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1c547fff42502b340deee9bf2882182aa543c5e13678ef8c456702ec177872cd324d08805464010000000090920463ffffffff1663ffffffff1990921691909117905500fea2646970667358221220f8f61065ead49ea231508e1e458ef69d285f21f0ee33991fe309fe2f6a1ce13064736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c8063d55ec69714602d575b600080fd5b7ff85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1c547fff42502b340deee9bf2882182aa543c5e13678ef8c456702ec177872cd324d08805464010000000090920463ffffffff1663ffffffff1990921691909117905500fea2646970667358221220f8f61065ead49ea231508e1e458ef69d285f21f0ee33991fe309fe2f6a1ce13064736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "40000",
+        "executionCost": "93",
+        "totalCost": "40093"
+      },
+      "external": {
+        "upgrade()": "26457"
+      }
+    },
+    "methodIdentifiers": {
+      "upgrade()": "d55ec697"
+    }
+  }
+}

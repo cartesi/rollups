@@ -1,0 +1,48 @@
+{
+  "contractName": "DS6Init",
+  "sourceName": "contracts/test_helper/upgrade_initializers/DS6Init.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "x",
+          "type": "uint256"
+        }
+      ],
+      "name": "init",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b5060ac8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063b7b0422d14602d575b600080fd5b605c6038366004605e565b7fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcc55565b005b600060208284031215606f57600080fd5b503591905056fea2646970667358221220454d5684efda5334ebc565d09660a3abd2a1657d94926021ffb828b76ce268fa64736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c8063b7b0422d14602d575b600080fd5b605c6038366004605e565b7fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcc55565b005b600060208284031215606f57600080fd5b503591905056fea2646970667358221220454d5684efda5334ebc565d09660a3abd2a1657d94926021ffb828b76ce268fa64736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "34400",
+        "executionCost": "87",
+        "totalCost": "34487"
+      },
+      "external": {
+        "init(uint256)": "22290"
+      }
+    },
+    "methodIdentifiers": {
+      "init(uint256)": "b7b0422d"
+    }
+  }
+}

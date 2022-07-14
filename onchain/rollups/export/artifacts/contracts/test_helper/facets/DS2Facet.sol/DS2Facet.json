@@ -1,0 +1,93 @@
+{
+  "contractName": "DS2Facet",
+  "sourceName": "contracts/test_helper/facets/DS2Facet.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getX",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getY",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "x",
+          "type": "uint64"
+        }
+      ],
+      "name": "setX",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "y",
+          "type": "uint32"
+        }
+      ],
+      "name": "setY",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506101e6806100206000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c80630b7f1665146100515780631468db5e146100885780635197c7aa146100d1578063ff22c8f8146100fa575b600080fd5b60008051602061019183398151915254600160401b900463ffffffff1660405163ffffffff90911681526020015b60405180910390f35b6100cf610096366004610139565b60008051602061019183398151915280546bffffffff00000000000000001916600160401b63ffffffff90931692909202919091179055565b005b6000805160206101918339815191525460405167ffffffffffffffff909116815260200161007f565b6100cf610108366004610166565b600080516020610191833981519152805467ffffffffffffffff191667ffffffffffffffff92909216919091179055565b60006020828403121561014b57600080fd5b813563ffffffff8116811461015f57600080fd5b9392505050565b60006020828403121561017857600080fd5b813567ffffffffffffffff8116811461015f57600080fdfee4ee398a3d02354d9a3ac168ae8277dc2d94a1d705b084735cf8863231e2654fa2646970667358221220d10db9977482aa5b1c5eb828ed1a6aa02c8e86015f42e6616bc9ddafe66f247b64736f6c634300080d0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c80630b7f1665146100515780631468db5e146100885780635197c7aa146100d1578063ff22c8f8146100fa575b600080fd5b60008051602061019183398151915254600160401b900463ffffffff1660405163ffffffff90911681526020015b60405180910390f35b6100cf610096366004610139565b60008051602061019183398151915280546bffffffff00000000000000001916600160401b63ffffffff90931692909202919091179055565b005b6000805160206101918339815191525460405167ffffffffffffffff909116815260200161007f565b6100cf610108366004610166565b600080516020610191833981519152805467ffffffffffffffff191667ffffffffffffffff92909216919091179055565b60006020828403121561014b57600080fd5b813563ffffffff8116811461015f57600080fd5b9392505050565b60006020828403121561017857600080fd5b813567ffffffffffffffff8116811461015f57600080fdfee4ee398a3d02354d9a3ac168ae8277dc2d94a1d705b084735cf8863231e2654fa2646970667358221220d10db9977482aa5b1c5eb828ed1a6aa02c8e86015f42e6616bc9ddafe66f247b64736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "97200",
+        "executionCost": "147",
+        "totalCost": "97347"
+      },
+      "external": {
+        "getX()": "infinite",
+        "getY()": "infinite",
+        "setX(uint64)": "24565",
+        "setY(uint32)": "24541"
+      }
+    },
+    "methodIdentifiers": {
+      "getX()": "5197c7aa",
+      "getY()": "0b7f1665",
+      "setX(uint64)": "ff22c8f8",
+      "setY(uint32)": "1468db5e"
+    }
+  }
+}

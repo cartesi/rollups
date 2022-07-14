@@ -1,0 +1,20 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint128",
+        "name": "x",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "y",
+        "type": "uint128"
+      }
+    ],
+    "name": "init",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

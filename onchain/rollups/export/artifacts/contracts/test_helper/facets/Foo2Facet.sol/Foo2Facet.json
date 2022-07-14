@@ -1,0 +1,48 @@
+{
+  "contractName": "Foo2Facet",
+  "sourceName": "contracts/test_helper/facets/Foo2Facet.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "foo",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b50607780601d6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063c298557814602d575b600080fd5b600a60405190815260200160405180910390f3fea26469706673582212202d70abb3995117c4c350758d9066cdbd4d9630f307936b361fa08796dc0aa73064736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c8063c298557814602d575b600080fd5b600a60405190815260200160405180910390f3fea26469706673582212202d70abb3995117c4c350758d9066cdbd4d9630f307936b361fa08796dc0aa73064736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "23800",
+        "executionCost": "75",
+        "totalCost": "23875"
+      },
+      "external": {
+        "foo()": "146"
+      }
+    },
+    "methodIdentifiers": {
+      "foo()": "c2985578"
+    }
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "contractName": "DS3Facet",
+  "sourceName": "contracts/test_helper/facets/DS3Facet.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getX",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getY",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getZ",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "x",
+          "type": "uint32"
+        }
+      ],
+      "name": "setX",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "y",
+          "type": "uint32"
+        }
+      ],
+      "name": "setY",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "z",
+          "type": "uint32"
+        }
+      ],
+      "name": "setZ",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610223806100206000396000f3fe608060405234801561001057600080fd5b50600436106100625760003560e01c80630b7f1665146100675780631468db5e1461009f5780632f135d0c146100e55780635197c7aa1461010757806389dc616014610122578063eb421e2f14610169575b600080fd5b6000805160206101ce83398151915254640100000000900463ffffffff165b60405163ffffffff909116815260200160405180910390f35b6100e36100ad3660046101a0565b6000805160206101ce833981519152805467ffffffff00000000191664010000000063ffffffff90931692909202919091179055565b005b6000805160206101ce83398151915254600160401b900463ffffffff16610086565b6000805160206101ce8339815191525463ffffffff16610086565b6100e36101303660046101a0565b6000805160206101ce83398151915280546bffffffff00000000000000001916600160401b63ffffffff90931692909202919091179055565b6100e36101773660046101a0565b6000805160206101ce833981519152805463ffffffff191663ffffffff92909216919091179055565b6000602082840312156101b257600080fd5b813563ffffffff811681146101c657600080fd5b939250505056fec47562ccbe325ce9e309f81a37bccc9baa9b4a3de9b8d88bd7e4f2b6e504ca95a264697066735822122072e89e1228a9d36c13be4962b5fa42978c78c1f561e0f74ad4a54404cee36bc264736f6c634300080d0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100625760003560e01c80630b7f1665146100675780631468db5e1461009f5780632f135d0c146100e55780635197c7aa1461010757806389dc616014610122578063eb421e2f14610169575b600080fd5b6000805160206101ce83398151915254640100000000900463ffffffff165b60405163ffffffff909116815260200160405180910390f35b6100e36100ad3660046101a0565b6000805160206101ce833981519152805467ffffffff00000000191664010000000063ffffffff90931692909202919091179055565b005b6000805160206101ce83398151915254600160401b900463ffffffff16610086565b6000805160206101ce8339815191525463ffffffff16610086565b6100e36101303660046101a0565b6000805160206101ce83398151915280546bffffffff00000000000000001916600160401b63ffffffff90931692909202919091179055565b6100e36101773660046101a0565b6000805160206101ce833981519152805463ffffffff191663ffffffff92909216919091179055565b6000602082840312156101b257600080fd5b813563ffffffff811681146101c657600080fd5b939250505056fec47562ccbe325ce9e309f81a37bccc9baa9b4a3de9b8d88bd7e4f2b6e504ca95a264697066735822122072e89e1228a9d36c13be4962b5fa42978c78c1f561e0f74ad4a54404cee36bc264736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "109400",
+        "executionCost": "159",
+        "totalCost": "109559"
+      },
+      "external": {
+        "getX()": "infinite",
+        "getY()": "infinite",
+        "getZ()": "infinite",
+        "setX(uint32)": "24609",
+        "setY(uint32)": "24535",
+        "setZ(uint32)": "24607"
+      }
+    },
+    "methodIdentifiers": {
+      "getX()": "5197c7aa",
+      "getY()": "0b7f1665",
+      "getZ()": "2f135d0c",
+      "setX(uint32)": "eb421e2f",
+      "setY(uint32)": "1468db5e",
+      "setZ(uint32)": "89dc6160"
+    }
+  }
+}

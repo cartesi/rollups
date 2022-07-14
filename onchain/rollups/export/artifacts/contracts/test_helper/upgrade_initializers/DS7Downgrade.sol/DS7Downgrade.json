@@ -1,0 +1,42 @@
+{
+  "contractName": "DS7Downgrade",
+  "sourceName": "contracts/test_helper/upgrade_initializers/DS7Downgrade.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "downgrade",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b5060d68061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806306ce466414602d575b600080fd5b7fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcc547ff85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1c8054600160801b830463ffffffff90811664010000000002931667ffffffffffffffff199091161791909117905500fea264697066735822122097b6e6d7008f04482e5d4039973c35210f77afa52202f1e9d9b8c436cbd26ced64736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c806306ce466414602d575b600080fd5b7fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcc547ff85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1c8054600160801b830463ffffffff90811664010000000002931667ffffffffffffffff199091161791909117905500fea264697066735822122097b6e6d7008f04482e5d4039973c35210f77afa52202f1e9d9b8c436cbd26ced64736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "42800",
+        "executionCost": "93",
+        "totalCost": "42893"
+      },
+      "external": {
+        "downgrade()": "26483"
+      }
+    },
+    "methodIdentifiers": {
+      "downgrade()": "06ce4664"
+    }
+  }
+}

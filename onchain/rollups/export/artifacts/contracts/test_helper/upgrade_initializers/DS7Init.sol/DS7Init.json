@@ -1,0 +1,53 @@
+{
+  "contractName": "DS7Init",
+  "sourceName": "contracts/test_helper/upgrade_initializers/DS7Init.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint128",
+          "name": "x",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "y",
+          "type": "uint128"
+        }
+      ],
+      "name": "init",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5060f18061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063a191fe2814602d575b600080fd5b60706038366004608d565b6001600160801b03908116600160801b029116177fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcc55565b005b80356001600160801b0381168114608857600080fd5b919050565b60008060408385031215609f57600080fd5b60a6836072565b915060b2602084016072565b9050925092905056fea26469706673582212208fd7ad0c8485049cfa5df0106cf17a059da898f5ac19280c60b432237607d84764736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c8063a191fe2814602d575b600080fd5b60706038366004608d565b6001600160801b03908116600160801b029116177fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcc55565b005b80356001600160801b0381168114608857600080fd5b919050565b60008060408385031215609f57600080fd5b60a6836072565b915060b2602084016072565b9050925092905056fea26469706673582212208fd7ad0c8485049cfa5df0106cf17a059da898f5ac19280c60b432237607d84764736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "48200",
+        "executionCost": "99",
+        "totalCost": "48299"
+      },
+      "external": {
+        "init(uint128,uint128)": "infinite"
+      }
+    },
+    "methodIdentifiers": {
+      "init(uint128,uint128)": "a191fe28"
+    }
+  }
+}

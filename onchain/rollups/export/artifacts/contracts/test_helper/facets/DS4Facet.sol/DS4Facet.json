@@ -1,0 +1,63 @@
+{
+  "contractName": "DS4Facet",
+  "sourceName": "contracts/test_helper/facets/DS4Facet.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getY",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "y",
+          "type": "uint32"
+        }
+      ],
+      "name": "setY",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5061011b806100206000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80630b7f16651460375780631468db5e146072575b600080fd5b7fff42502b340deee9bf2882182aa543c5e13678ef8c456702ec177872cd324d08546040805163ffffffff9092168252519081900360200190f35b60b8607d36600460ba565b7fff42502b340deee9bf2882182aa543c5e13678ef8c456702ec177872cd324d08805463ffffffff191663ffffffff92909216919091179055565b005b60006020828403121560cb57600080fd5b813563ffffffff8116811460de57600080fd5b939250505056fea2646970667358221220b6a22163f2b1516c2c08d2808745d30398ceca0565134f5c133e1f97fd4252be64736f6c634300080d0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c80630b7f16651460375780631468db5e146072575b600080fd5b7fff42502b340deee9bf2882182aa543c5e13678ef8c456702ec177872cd324d08546040805163ffffffff9092168252519081900360200190f35b60b8607d36600460ba565b7fff42502b340deee9bf2882182aa543c5e13678ef8c456702ec177872cd324d08805463ffffffff191663ffffffff92909216919091179055565b005b60006020828403121560cb57600080fd5b813563ffffffff8116811460de57600080fd5b939250505056fea2646970667358221220b6a22163f2b1516c2c08d2808745d30398ceca0565134f5c133e1f97fd4252be64736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "56600",
+        "executionCost": "105",
+        "totalCost": "56705"
+      },
+      "external": {
+        "getY()": "2258",
+        "setY(uint32)": "24488"
+      }
+    },
+    "methodIdentifiers": {
+      "getY()": "0b7f1665",
+      "setY(uint32)": "1468db5e"
+    }
+  }
+}

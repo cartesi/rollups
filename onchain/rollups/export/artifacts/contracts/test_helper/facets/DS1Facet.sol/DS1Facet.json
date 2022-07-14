@@ -1,0 +1,93 @@
+{
+  "contractName": "DS1Facet",
+  "sourceName": "contracts/test_helper/facets/DS1Facet.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getX",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getY",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "x",
+          "type": "uint32"
+        }
+      ],
+      "name": "setX",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "y",
+          "type": "uint32"
+        }
+      ],
+      "name": "setY",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506101a4806100206000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c80630b7f1665146100515780631468db5e146100895780635197c7aa146100cf578063eb421e2f146100ea575b600080fd5b60008051602061014f83398151915254640100000000900463ffffffff165b60405163ffffffff909116815260200160405180910390f35b6100cd610097366004610121565b60008051602061014f833981519152805467ffffffff00000000191664010000000063ffffffff90931692909202919091179055565b005b60008051602061014f8339815191525463ffffffff16610070565b6100cd6100f8366004610121565b60008051602061014f833981519152805463ffffffff191663ffffffff92909216919091179055565b60006020828403121561013357600080fd5b813563ffffffff8116811461014757600080fd5b939250505056fef85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1ca2646970667358221220fc523ed4437f84f54b90c1936c1d3f09e620d26e0689703ece3a789011ed2b9664736f6c634300080d0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c80630b7f1665146100515780631468db5e146100895780635197c7aa146100cf578063eb421e2f146100ea575b600080fd5b60008051602061014f83398151915254640100000000900463ffffffff165b60405163ffffffff909116815260200160405180910390f35b6100cd610097366004610121565b60008051602061014f833981519152805467ffffffff00000000191664010000000063ffffffff90931692909202919091179055565b005b60008051602061014f8339815191525463ffffffff16610070565b6100cd6100f8366004610121565b60008051602061014f833981519152805463ffffffff191663ffffffff92909216919091179055565b60006020828403121561013357600080fd5b813563ffffffff8116811461014757600080fd5b939250505056fef85303be6bcde94f0463a6aa7a400c61c189a370c649530913625784ad517b1ca2646970667358221220fc523ed4437f84f54b90c1936c1d3f09e620d26e0689703ece3a789011ed2b9664736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "84000",
+        "executionCost": "135",
+        "totalCost": "84135"
+      },
+      "external": {
+        "getX()": "infinite",
+        "getY()": "infinite",
+        "setX(uint32)": "24565",
+        "setY(uint32)": "24535"
+      }
+    },
+    "methodIdentifiers": {
+      "getX()": "5197c7aa",
+      "getY()": "0b7f1665",
+      "setX(uint32)": "eb421e2f",
+      "setY(uint32)": "1468db5e"
+    }
+  }
+}

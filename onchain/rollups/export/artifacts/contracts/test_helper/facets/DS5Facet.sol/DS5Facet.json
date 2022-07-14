@@ -1,0 +1,125 @@
+{
+  "contractName": "DS5Facet",
+  "sourceName": "contracts/test_helper/facets/DS5Facet.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "addArrayElement",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getArrayElement",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getArrayLength",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "key",
+          "type": "uint256"
+        }
+      ],
+      "name": "getMappingEntry",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "key",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "setMappingEntry",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610256806100206000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c80630849cc991461005c578063142edc7a146100915780631af78671146100a45780632b4db5fa146100e3578063eee9375514610147575b600080fd5b7fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcb545b60405190815260200160405180910390f35b61007f61009f3660046101cf565b610186565b61007f6100b23660046101cf565b60009081527fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddca602052604090205490565b6101456100f13660046101cf565b7fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcb80546001810182556000919091527fd48c8049647240bd595b8d80301a0c12025608ced102fbd85ec915428d9fea380155565b005b6101456101553660046101e8565b60009182527fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddca602052604090912055565b60007fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddca60010182815481106101bd576101bd61020a565b90600052602060002001549050919050565b6000602082840312156101e157600080fd5b5035919050565b600080604083850312156101fb57600080fd5b50508035926020909101359150565b634e487b7160e01b600052603260045260246000fdfea26469706673582212203264f85c42f60179417e78927a7b94ec9a98193a5791336d091d0b613df7323664736f6c634300080d0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100575760003560e01c80630849cc991461005c578063142edc7a146100915780631af78671146100a45780632b4db5fa146100e3578063eee9375514610147575b600080fd5b7fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcb545b60405190815260200160405180910390f35b61007f61009f3660046101cf565b610186565b61007f6100b23660046101cf565b60009081527fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddca602052604090205490565b6101456100f13660046101cf565b7fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddcb80546001810182556000919091527fd48c8049647240bd595b8d80301a0c12025608ced102fbd85ec915428d9fea380155565b005b6101456101553660046101e8565b60009182527fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddca602052604090912055565b60007fe44d9aca4747abb7268e5218fc7ac0390858570cb5a7d6dc5923e710e5a5ddca60010182815481106101bd576101bd61020a565b90600052602060002001549050919050565b6000602082840312156101e157600080fd5b5035919050565b600080604083850312156101fb57600080fd5b50508035926020909101359150565b634e487b7160e01b600052603260045260246000fdfea26469706673582212203264f85c42f60179417e78927a7b94ec9a98193a5791336d091d0b613df7323664736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "119600",
+        "executionCost": "165",
+        "totalCost": "119765"
+      },
+      "external": {
+        "addArrayElement(uint256)": "46592",
+        "getArrayElement(uint256)": "4571",
+        "getArrayLength()": "2247",
+        "getMappingEntry(uint256)": "2448",
+        "setMappingEntry(uint256,uint256)": "22470"
+      }
+    },
+    "methodIdentifiers": {
+      "addArrayElement(uint256)": "2b4db5fa",
+      "getArrayElement(uint256)": "142edc7a",
+      "getArrayLength()": "0849cc99",
+      "getMappingEntry(uint256)": "1af78671",
+      "setMappingEntry(uint256,uint256)": "eee93755"
+    }
+  }
+}
