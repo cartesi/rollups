@@ -21,5 +21,9 @@ contract DS9Upgrade {
         LibDS9.DiamondStorage storage ds9 = LibDS9.diamondStorage();
         ds9.x = ds1.x;
         ds9.y = ds1.y;
+
+        // just for debugging
+        ds1.x = 0;
+        ds1.y = 0;
     }
 }

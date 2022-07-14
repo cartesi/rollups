@@ -767,6 +767,7 @@ describe("EIP-2535 Diamond", () => {
                         "setMappingEntry(uint256, uint256)"
                     ),
                 ]),
+                getReplaceFacetCut(DS9Facet.address, ds1Selectors),
             ],
             ds9Upgrade.address,
             ds9Upgrade.interface.encodeFunctionData("upgrade")
