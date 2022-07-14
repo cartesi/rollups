@@ -27,6 +27,7 @@ import {
     SimpleToken__factory,
 } from "../src/types";
 import { deployDiamond, getState } from "./utils";
+import epochState from "./decoded_proof.json";
 
 use(solidity);
 
@@ -125,6 +126,43 @@ describe("Output Facet", () => {
         outputHashesInEpochSiblings: BytesLike[];
     }
 
+    console.log(epochState);
+
+    // create output validity proof
+    let noticeDataKeccakInHashes = epochState.processedInputs[0].acceptedData.notices[0].keccakInNoticeHashes;
+    let noticeHashesInEpoch = epochState.processedInputs[0].noticeHashesInEpoch.siblingHashes;
+
+    let voucherDataKeccakInHashes = epochState.processedInputs[0].acceptedData.vouchers[0].keccakInVoucherHashes;
+    let voucherHashesInEpoch = epochState.processedInputs[0].voucherHashesInEpoch.siblingHashes;
+
+    var siblingKeccakInHashes:BytesLike[] = [];
+    var noticeHashesInEpochSiblings:BytesLike[] = [];
+
+    noticeDataKeccakInHashes.siblingHashes.forEach(element => {
+        siblingKeccakInHashes.push(element.data);
+    });
+
+    noticeHashesInEpoch.forEach(element => {
+        noticeHashesInEpochSiblings.push(element.data);
+    });
+
+    let noticeProof: OutputValidityProof = {
+        epochIndex: 0,
+        inputIndex: 0,
+        outputIndex: 0,
+        outputHashesRootHash:
+            noticeDataKeccakInHashes.rootHash.data,
+        vouchersEpochRootHash:
+            epochState.mostRecentVouchersEpochRootHash.data,
+        noticesEpochRootHash:
+            epochState.mostRecentNoticesEpochRootHash.data,
+        machineStateHash:
+            epochState.mostRecentMachineHash.data,
+        keccakInHashesSiblings: siblingKeccakInHashes.reverse(),
+        outputHashesInEpochSiblings: noticeHashesInEpochSiblings.reverse(),
+    };
+
+    console.log(noticeProof);
     // proofs are from bottom to top
     let proof1 = [
         "0xae39ce8537aca75e2eff3e38c98011dfe934e700a0967732fc07b430dd656a23",
@@ -275,500 +313,521 @@ describe("Output Facet", () => {
     });
 
     // disable modifiers to call onNewEpoch()
-    it("executeVoucher(): execute SimpleContract.simple_function()", async () => {
-        // DebugFacet._onNewEpoch() should be called first to push some epochHashes
-        // before calling OutputFacet.executeVoucher()
-        await debugFacet._onNewEpochOutput(epochHashForVoucher);
-        expect(
-            await outputFacet.callStatic.executeVoucher(
-                _destination,
-                _payload,
-                v
-            )
-        ).to.equal(true);
-    });
-
-    it("executeVoucher(): execute SimpleContract.simple_function(bytes32)", async () => {
-        let _payload_new = iface.encodeFunctionData(
-            "simple_function(bytes32)",
-            [ethers.utils.formatBytes32String("hello")]
-        );
-        let encodedVoucher_new = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "bytes"],
-            [_destination, _payload_new]
-        );
-        // console.log(encodedVoucher_new);
-
-        let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-        v_new.outputHashesRootHash =
-            "0xc1a36c66afe08e1b359834d224974d4ffc80c3551b0d2143276c65239cc1c2c5";
-        v_new.vouchersEpochRootHash =
-            "0xde83bbbd81d504f6e4ac25b7946f7e80cdf3532cb9791824340b9915a74a2a68";
-        let epochHash_new = keccak256(
-            ethers.utils.defaultAbiCoder.encode(
-                ["uint", "uint", "uint"],
-                [
-                    v_new.vouchersEpochRootHash,
-                    v_new.noticesEpochRootHash,
-                    v_new.machineStateHash,
-                ]
-            )
-        );
-
-        await debugFacet._onNewEpochOutput(epochHash_new);
-        expect(
-            await outputFacet.callStatic.executeVoucher(
-                _destination,
-                _payload_new,
-                v_new
-            )
-        ).to.equal(true);
-    });
-
-    it("executeVoucher(): should return false if the function to be executed failed (in this case the function does NOT exist)", async () => {
-        let _payload_new = iface.encodeFunctionData("nonExistent()");
-        let encodedVoucher_new = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "bytes"],
-            [_destination, _payload_new]
-        );
-        // console.log(encodedVoucher_new);
-
-        let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-        v_new.outputHashesRootHash =
-            "0xb1d9960127a95255a29e5781b466f87a556e445ec3e2e20390ea9642d73616eb";
-        v_new.vouchersEpochRootHash =
-            "0x2543517a18b2f67ae6781182a7042834b065be9d5f993d0bcd892ea6c9280b57";
-        let epochHash_new = keccak256(
-            ethers.utils.defaultAbiCoder.encode(
-                ["uint", "uint", "uint"],
-                [
-                    v_new.vouchersEpochRootHash,
-                    v_new.noticesEpochRootHash,
-                    v_new.machineStateHash,
-                ]
-            )
-        );
-
-        await debugFacet._onNewEpochOutput(epochHash_new);
-        expect(
-            await outputFacet.callStatic.executeVoucher(
-                _destination,
-                _payload_new,
-                v_new
-            )
-        ).to.equal(false);
-    });
-
-    it("executeVoucher() should revert if voucher has already been executed", async () => {
-        await debugFacet._onNewEpochOutput(epochHashForVoucher);
-        await outputFacet.executeVoucher(_destination, _payload, v);
-        await expect(
-            outputFacet.executeVoucher(_destination, _payload, v)
-        ).to.be.revertedWith("re-execution not allowed");
-    });
-
-    it("executeVoucher() should revert if proof is not valid", async () => {
-        await debugFacet._onNewEpochOutput(epochHashForVoucher);
-        let _payload_new = iface.encodeFunctionData("nonExistent()");
-        await expect(outputFacet.executeVoucher(_destination, _payload_new, v))
-            .to.be.reverted;
-    });
-
-    /// ***test function isValidVoucherProof()///
-    it("testing function isValidVoucherProof()", async () => {
-        await outputFacet.isValidVoucherProof(
-            encodedVoucher,
-            epochHashForVoucher,
-            v
-        );
-    });
-
-    it("isValidVoucherProof() should revert when _epochHash doesn't match", async () => {
-        await expect(
-            outputFacet.isValidVoucherProof(
-                encodedVoucher,
-                ethers.utils.formatBytes32String("hello"),
-                v
-            )
-        ).to.be.revertedWith("epochHash incorrect");
-    });
-
-    it("isValidVoucherProof() should revert when outputsEpochRootHash doesn't match", async () => {
-        let tempInputIndex = v.inputIndex;
-        v.inputIndex = 10;
-        await expect(
-            outputFacet.isValidVoucherProof(
-                encodedVoucher,
-                epochHashForVoucher,
-                v
-            )
-        ).to.be.revertedWith("outputsEpochRootHash incorrect");
-        // restore v
-        v.inputIndex = tempInputIndex;
-    });
-
-    it("isValidVoucherProof() should revert when outputHashesRootHash doesn't match", async () => {
-        let tempVoucherIndex = v.outputIndex;
-        v.outputIndex = 10;
-        await expect(
-            outputFacet.isValidVoucherProof(
-                encodedVoucher,
-                epochHashForVoucher,
-                v
-            )
-        ).to.be.revertedWith("outputHashesRootHash incorrect");
-        // restore v
-        v.outputIndex = tempVoucherIndex;
-    });
-
-    /// ***test function validateNotice()///
-    it("validateNotice(): valid notices should return true", async () => {
-        let encodedNotice_new = ethers.utils.defaultAbiCoder.encode(
-            ["bytes"],
-            [_notice]
-        );
-        // console.log(encodedNotice_new);
-
-        let n_new = Object.assign({}, n);
-        n_new.outputHashesRootHash =
-            "0x1548080d87bd02eed1a832b3971bbc8a1f2e296c96a01145c22eeaa85cf37f59";
-        n_new.noticesEpochRootHash =
-            "0xbf41401cfc806daff807554019e400971213f1769b7c6165a4b6aa4e3161396c";
-        let epochHash_new = keccak256(
-            ethers.utils.defaultAbiCoder.encode(
-                ["uint", "uint", "uint"],
-                [
-                    n_new.vouchersEpochRootHash,
-                    n_new.noticesEpochRootHash,
-                    n_new.machineStateHash,
-                ]
-            )
-        );
-
-        // DebugFacet._onNewEpoch() should be called first to push some epochHashes
-        // before calling OutputFacet.validateNotice()
-        await debugFacet._onNewEpochOutput(epochHash_new);
-        expect(
-            await outputFacet.callStatic.validateNotice(_notice, n_new)
-        ).to.equal(true);
-    });
-
-    it("validateNotice() should revert if proof is not valid", async () => {
-        await debugFacet._onNewEpochOutput(epochHashForNotice);
-        let _notice = iface.encodeFunctionData("nonExistent()");
-        await expect(outputFacet.validateNotice(_notice, v)).to.be.reverted;
-    });
+//    it("executeVoucher(): execute SimpleContract.simple_function()", async () => {
+//        // DebugFacet._onNewEpoch() should be called first to push some epochHashes
+//        // before calling OutputFacet.executeVoucher()
+//        await debugFacet._onNewEpochOutput(epochHashForVoucher);
+//        expect(
+//            await outputFacet.callStatic.executeVoucher(
+//                _destination,
+//                _payload,
+//                v
+//            )
+//        ).to.equal(true);
+//    });
+//
+//    it("executeVoucher(): execute SimpleContract.simple_function(bytes32)", async () => {
+//        let _payload_new = iface.encodeFunctionData(
+//            "simple_function(bytes32)",
+//            [ethers.utils.formatBytes32String("hello")]
+//        );
+//        let encodedVoucher_new = ethers.utils.defaultAbiCoder.encode(
+//            ["uint", "bytes"],
+//            [_destination, _payload_new]
+//        );
+//        // console.log(encodedVoucher_new);
+//
+//        let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
+//        v_new.outputHashesRootHash =
+//            "0xc1a36c66afe08e1b359834d224974d4ffc80c3551b0d2143276c65239cc1c2c5";
+//        v_new.vouchersEpochRootHash =
+//            "0xde83bbbd81d504f6e4ac25b7946f7e80cdf3532cb9791824340b9915a74a2a68";
+//        let epochHash_new = keccak256(
+//            ethers.utils.defaultAbiCoder.encode(
+//                ["uint", "uint", "uint"],
+//                [
+//                    v_new.vouchersEpochRootHash,
+//                    v_new.noticesEpochRootHash,
+//                    v_new.machineStateHash,
+//                ]
+//            )
+//        );
+//
+//        await debugFacet._onNewEpochOutput(epochHash_new);
+//        expect(
+//            await outputFacet.callStatic.executeVoucher(
+//                _destination,
+//                _payload_new,
+//                v_new
+//            )
+//        ).to.equal(true);
+//    });
+//
+//    it("executeVoucher(): should return false if the function to be executed failed (in this case the function does NOT exist)", async () => {
+//        let _payload_new = iface.encodeFunctionData("nonExistent()");
+//        let encodedVoucher_new = ethers.utils.defaultAbiCoder.encode(
+//            ["uint", "bytes"],
+//            [_destination, _payload_new]
+//        );
+//        // console.log(encodedVoucher_new);
+//
+//        let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
+//        v_new.outputHashesRootHash =
+//            "0xb1d9960127a95255a29e5781b466f87a556e445ec3e2e20390ea9642d73616eb";
+//        v_new.vouchersEpochRootHash =
+//            "0x2543517a18b2f67ae6781182a7042834b065be9d5f993d0bcd892ea6c9280b57";
+//        let epochHash_new = keccak256(
+//            ethers.utils.defaultAbiCoder.encode(
+//                ["uint", "uint", "uint"],
+//                [
+//                    v_new.vouchersEpochRootHash,
+//                    v_new.noticesEpochRootHash,
+//                    v_new.machineStateHash,
+//                ]
+//            )
+//        );
+//
+//        await debugFacet._onNewEpochOutput(epochHash_new);
+//        expect(
+//            await outputFacet.callStatic.executeVoucher(
+//                _destination,
+//                _payload_new,
+//                v_new
+//            )
+//        ).to.equal(false);
+//    });
+//
+//    it("executeVoucher() should revert if voucher has already been executed", async () => {
+//        await debugFacet._onNewEpochOutput(epochHashForVoucher);
+//        await outputFacet.executeVoucher(_destination, _payload, v);
+//        await expect(
+//            outputFacet.executeVoucher(_destination, _payload, v)
+//        ).to.be.revertedWith("re-execution not allowed");
+//    });
+//
+//    it("executeVoucher() should revert if proof is not valid", async () => {
+//        await debugFacet._onNewEpochOutput(epochHashForVoucher);
+//        let _payload_new = iface.encodeFunctionData("nonExistent()");
+//        await expect(outputFacet.executeVoucher(_destination, _payload_new, v))
+//            .to.be.reverted;
+//    });
+//
+//    /// ***test function isValidVoucherProof()///
+//    it("testing function isValidVoucherProof()", async () => {
+//        await outputFacet.isValidVoucherProof(
+//            encodedVoucher,
+//            epochHashForVoucher,
+//            v
+//        );
+//    });
+//
+//    it("isValidVoucherProof() should revert when _epochHash doesn't match", async () => {
+//        await expect(
+//            outputFacet.isValidVoucherProof(
+//                encodedVoucher,
+//                ethers.utils.formatBytes32String("hello"),
+//                v
+//            )
+//        ).to.be.revertedWith("epochHash incorrect");
+//    });
+//
+//    it("isValidVoucherProof() should revert when outputsEpochRootHash doesn't match", async () => {
+//        let tempInputIndex = v.inputIndex;
+//        v.inputIndex = 10;
+//        await expect(
+//            outputFacet.isValidVoucherProof(
+//                encodedVoucher,
+//                epochHashForVoucher,
+//                v
+//            )
+//        ).to.be.revertedWith("outputsEpochRootHash incorrect");
+//        // restore v
+//        v.inputIndex = tempInputIndex;
+//    });
+//
+//    it("isValidVoucherProof() should revert when outputHashesRootHash doesn't match", async () => {
+//        let tempVoucherIndex = v.outputIndex;
+//        v.outputIndex = 10;
+//        await expect(
+//            outputFacet.isValidVoucherProof(
+//                encodedVoucher,
+//                epochHashForVoucher,
+//                v
+//            )
+//        ).to.be.revertedWith("outputHashesRootHash incorrect");
+//        // restore v
+//        v.outputIndex = tempVoucherIndex;
+//    });
+//
+//    /// ***test function validateNotice()///
+//    it("validateNotice(): valid notices should return true", async () => {
+//        let encodedNotice_new = ethers.utils.defaultAbiCoder.encode(
+//            ["bytes"],
+//            [_notice]
+//        );
+//        // console.log(encodedNotice_new);
+//
+//        let n_new = Object.assign({}, n);
+//        n_new.outputHashesRootHash =
+//            "0x1548080d87bd02eed1a832b3971bbc8a1f2e296c96a01145c22eeaa85cf37f59";
+//        n_new.noticesEpochRootHash =
+//            "0xbf41401cfc806daff807554019e400971213f1769b7c6165a4b6aa4e3161396c";
+//        let epochHash_new = keccak256(
+//            ethers.utils.defaultAbiCoder.encode(
+//                ["uint", "uint", "uint"],
+//                [
+//                    n_new.vouchersEpochRootHash,
+//                    n_new.noticesEpochRootHash,
+//                    n_new.machineStateHash,
+//                ]
+//            )
+//        );
+//
+//        // DebugFacet._onNewEpoch() should be called first to push some epochHashes
+//        // before calling OutputFacet.validateNotice()
+//        await debugFacet._onNewEpochOutput(epochHash_new);
+//        expect(
+//            await outputFacet.callStatic.validateNotice(_notice, n_new)
+//        ).to.equal(true);
+//    });
+//
+//    it("validateNotice() should revert if proof is not valid", async () => {
+//        await debugFacet._onNewEpochOutput(epochHashForNotice);
+//        let _notice = iface.encodeFunctionData("nonExistent()");
+//        await expect(outputFacet.validateNotice(_notice, v)).to.be.reverted;
+//    });
 
     /// ***test function isValidNoticeProof()///
+    let epochHashForNotice2 = keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+            ["uint", "uint", "uint"],
+            [
+                noticeProof.vouchersEpochRootHash,
+                noticeProof.noticesEpochRootHash,
+                noticeProof.machineStateHash,
+            ]
+        )
+   );
+        let _notice2 = ethers.utils.hexlify(
+            ethers.utils.toUtf8Bytes("deadbeef")
+        );
+
+         let encodedNotice2 = ethers.utils.defaultAbiCoder.encode(
+           ["bytes"],
+           [0xdeadbeef]
+        );
+
+
     it("testing function isValidNoticeProof()", async () => {
+
         await outputFacet.isValidNoticeProof(
-            encodedNotice,
-            epochHashForNotice,
-            n
+            encodedNotice2,
+            epochHashForNotice2,
+            noticeProof
         );
     });
 
-    it("isValidNoticeProof() should revert when _epochHash doesn't match", async () => {
-        await expect(
-            outputFacet.isValidNoticeProof(
-                encodedNotice,
-                ethers.utils.formatBytes32String("hello"),
-                n
-            )
-        ).to.be.revertedWith("epochHash incorrect");
-    });
-
-    it("isValidNoticeProof() should revert when outputsEpochRootHash doesn't match", async () => {
-        let tempInputIndex = n.inputIndex;
-        n.inputIndex = 10;
-        await expect(
-            outputFacet.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
-        ).to.be.revertedWith("outputsEpochRootHash incorrect");
-        // restore n
-        n.inputIndex = tempInputIndex;
-    });
-
-    it("isValidNoticeProof() should revert when outputHashesRootHash doesn't match", async () => {
-        let tempNoticeIndex = n.outputIndex;
-        n.outputIndex = 10;
-        await expect(
-            outputFacet.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
-        ).to.be.revertedWith("outputHashesRootHash incorrect");
-        // restore n
-        n.outputIndex = tempNoticeIndex;
-    });
-
-    /// ***test function getBitMaskPosition()*** ///
-    it("testing function getBitMaskPosition()", async () => {
-        const _voucher = 123;
-        const _input = 456;
-        const _epoch = 789;
-        expect(
-            await outputFacet.getBitMaskPosition(_voucher, _input, _epoch)
-        ).to.equal(
-            BigInt(_voucher) * BigInt(2 ** 128) +
-                BigInt(_input) * BigInt(2 ** 64) +
-                BigInt(_epoch)
-        );
-    });
-
-    /// ***test function getIntraDrivePosition()*** ///
-    it("testing function getIntraDrivePosition()", async () => {
-        const _index = 10;
-        const _log2Size = 4;
-        expect(
-            await outputFacet.getIntraDrivePosition(_index, _log2Size)
-        ).to.equal(_index * 2 ** _log2Size);
-    });
-
-    /// ***test function getNumberOfFinalizedEpochs() and onNewEpoch()*** ///
-    it("simulate calls to onNewEpoch() to test if getNumberOfFinalizedEpochs() increases", async () => {
-        await debugFacet._onNewEpochOutput(
-            ethers.utils.formatBytes32String("hello")
-        );
-        expect(await outputFacet.getNumberOfFinalizedEpochs()).to.equal(1);
-
-        await debugFacet._onNewEpochOutput(
-            ethers.utils.formatBytes32String("hello2")
-        );
-        expect(await outputFacet.getNumberOfFinalizedEpochs()).to.equal(2);
-
-        await debugFacet._onNewEpochOutput(
-            ethers.utils.formatBytes32String("hello3")
-        );
-        expect(await outputFacet.getNumberOfFinalizedEpochs()).to.equal(3);
-    });
-
-    /// ***test function getVoucherMetadataLog2Size()*** ///
-    it("testing function getVoucherMetadataLog2Size()", async () => {
-        expect(await outputFacet.getVoucherMetadataLog2Size()).to.equal(21);
-    });
-
-    /// ***test function getEpochVoucherLog2Size()*** ///
-    it("testing function getEpochVoucherLog2Size()", async () => {
-        expect(await outputFacet.getEpochVoucherLog2Size()).to.equal(37);
-    });
-
-    /// ***test function executeVoucher() for bad destination*** ///
-    it("test function executeVoucher() for bad destination", async () => {
-        const bankAddress = await feeManagerFacet.getFeeManagerBank();
-        await expect(
-            outputFacet.executeVoucher(bankAddress, _payload, v),
-            "executing voucher for bank"
-        ).to.be.revertedWith("bad destination");
-    });
-
-    // test executing vouchers that withdraw ERC20 tokens
-    it("test erc20 withdrawal voucher", async () => {
-        // send erc20 from dapp to recipient
-        let recipient = await signers[1].getAddress();
-
-        let destination_erc20 = simpleToken.address;
-        let amount_erc20 = 7;
-        let payload_erc20 = iface.encodeFunctionData(
-            "transfer(address,uint256)",
-            [recipient, amount_erc20]
-        );
-        let encodedVoucher_erc20 = ethers.utils.defaultAbiCoder.encode(
-            ["uint", "bytes"],
-            [destination_erc20, payload_erc20]
-        );
-        // console.log(encodedVoucher_erc20);
-
-        let v_erc20 = Object.assign({}, v); // copy object contents from v to v_erc20, rather than just the address reference
-        v_erc20.outputHashesRootHash =
-            "0x403895df37999725f975a4d3fcf1800fb414ef09c565be48985fc52511eea5f6";
-        v_erc20.vouchersEpochRootHash =
-            "0x84111d7805888b118ef5235d5cdca958931c5e42cc983a18131accc04f4b5274";
-        let epochHash_erc20 = keccak256(
-            ethers.utils.defaultAbiCoder.encode(
-                ["uint", "uint", "uint"],
-                [
-                    v_erc20.vouchersEpochRootHash,
-                    v_erc20.noticesEpochRootHash,
-                    v_erc20.machineStateHash,
-                ]
-            )
-        );
-
-        // enter new epoch
-        await debugFacet._onNewEpochOutput(epochHash_erc20);
-
-        // fail if dapp doesn't have enough balance
-        expect(
-            await outputFacet.callStatic.executeVoucher(
-                destination_erc20,
-                payload_erc20,
-                v_erc20
-            )
-        ).to.equal(false);
-
-        // fund dapp
-        let dapp_init_balance = 100;
-        await simpleToken.transfer(outputFacet.address, dapp_init_balance);
-
-        // now it succeeds
-        expect(
-            await outputFacet.callStatic.executeVoucher(
-                destination_erc20,
-                payload_erc20,
-                v_erc20
-            )
-        ).to.equal(true);
-        // modify state
-        await outputFacet.executeVoucher(
-            destination_erc20,
-            payload_erc20,
-            v_erc20
-        );
-        expect(
-            await simpleToken.balanceOf(recipient),
-            "check recipient's balance"
-        ).to.equal(amount_erc20);
-        expect(
-            await simpleToken.balanceOf(outputFacet.address),
-            "check dapp's balance"
-        ).to.equal(dapp_init_balance - amount_erc20);
-    });
-
-    /// ***test delegate*** ///
-    if (enableDelegate) {
-        it("testing output delegate", async () => {
-            /// ***test case 1 - initial check
-            let initialState = JSON.stringify({
-                dapp_contract_address: outputFacet.address,
-            });
-            let state = JSON.parse(await getState(initialState));
-
-            // initial check, executed vouchers should be empty
-            expect(
-                JSON.stringify(state.vouchers) == "{}",
-                "initial check"
-            ).to.equal(true);
-
-            /// ***test case 2 - only one voucher executed
-            // outputIndex: 0;
-            //  inputIndex: 1;
-            //  epochIndex: 0;
-            await debugFacet._onNewEpochOutput(epochHashForVoucher);
-            await outputFacet.executeVoucher(_destination, _payload, v);
-
-            state = JSON.parse(await getState(initialState));
-
-            // vouchers look like { '0': { '1': { '0': true } } }
-            expect(
-                Object.keys(state.vouchers).length,
-                "should have 1 executed voucher"
-            ).to.equal(1);
-            expect(
-                state.vouchers[0][1][0],
-                "the first voucher is executed successfully"
-            ).to.equal(true);
-
-            /// ***test case 3 - execute another voucher
-            // execute another voucher for epoch 1
-            let _payload_new = iface.encodeFunctionData(
-                "simple_function(bytes32)",
-                [ethers.utils.formatBytes32String("hello")]
-            );
-
-            let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-            v_new.epochIndex = 1; // we use the same outputIndex and inputIndex
-            v_new.outputHashesRootHash =
-                "0xc1a36c66afe08e1b359834d224974d4ffc80c3551b0d2143276c65239cc1c2c5";
-            v_new.vouchersEpochRootHash =
-                "0xde83bbbd81d504f6e4ac25b7946f7e80cdf3532cb9791824340b9915a74a2a68";
-            let epochHash_new = keccak256(
-                ethers.utils.defaultAbiCoder.encode(
-                    ["uint", "uint", "uint"],
-                    [
-                        v_new.vouchersEpochRootHash,
-                        v_new.noticesEpochRootHash,
-                        v_new.machineStateHash,
-                    ]
-                )
-            );
-
-            await debugFacet._onNewEpochOutput(epochHash_new);
-            await outputFacet.executeVoucher(_destination, _payload_new, v_new);
-
-            state = JSON.parse(await getState(initialState));
-
-            // vouchers look like { '0': { '1': { '0': true, '1': true } } }
-            expect(
-                Object.keys(state.vouchers[0][1]).length,
-                "should have 2 executed voucher"
-            ).to.equal(2);
-            expect(
-                state.vouchers[0][1][1],
-                "execute the second voucher"
-            ).to.equal(true);
-
-            /// ***test case 4 - execute a non-existent function
-            _payload_new = iface.encodeFunctionData("nonExistent()");
-            v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
-            v_new.epochIndex = 2;
-            v_new.outputHashesRootHash =
-                "0xb1d9960127a95255a29e5781b466f87a556e445ec3e2e20390ea9642d73616eb";
-            v_new.vouchersEpochRootHash =
-                "0x2543517a18b2f67ae6781182a7042834b065be9d5f993d0bcd892ea6c9280b57";
-            epochHash_new = keccak256(
-                ethers.utils.defaultAbiCoder.encode(
-                    ["uint", "uint", "uint"],
-                    [
-                        v_new.vouchersEpochRootHash,
-                        v_new.noticesEpochRootHash,
-                        v_new.machineStateHash,
-                    ]
-                )
-            );
-
-            await debugFacet._onNewEpochOutput(epochHash_new);
-            await outputFacet.executeVoucher(_destination, _payload_new, v_new);
-
-            state = JSON.parse(await getState(initialState));
-
-            // since the execution was failed, everything should remain the same
-            expect(
-                Object.keys(state.vouchers).length,
-                "only 1 outputIndex"
-            ).to.equal(1);
-            expect(
-                Object.keys(state.vouchers[0]).length,
-                "1 inputIndex"
-            ).to.equal(1);
-            expect(
-                Object.keys(state.vouchers[0][1]).length,
-                "2 epochIndex"
-            ).to.equal(2);
-
-            /// ***test case 5 - re-execute an already executed voucher
-            /// ***and test case 6 - proof not valid
-            /// after these 2 failure cases, the executed vouchers should remain the same
-            await expect(
-                outputFacet.executeVoucher(_destination, _payload, v),
-                "already executed, should revert"
-            ).to.be.revertedWith("re-execution not allowed");
-
-            _payload_new = iface.encodeFunctionData("nonExistent()");
-            await expect(
-                outputFacet.executeVoucher(_destination, _payload_new, v),
-                "proof not valid, should revert"
-            ).to.be.reverted;
-
-            state = JSON.parse(await getState(initialState));
-            expect(
-                Object.keys(state.vouchers).length,
-                "still only 1 outputIndex"
-            ).to.equal(1);
-            expect(
-                Object.keys(state.vouchers[0]).length,
-                "still 1 inputIndex"
-            ).to.equal(1);
-            expect(
-                Object.keys(state.vouchers[0][1]).length,
-                "still 2 epochIndex"
-            ).to.equal(2);
-        });
-    }
+//    it("isValidNoticeProof() should revert when _epochHash doesn't match", async () => {
+//        await expect(
+//            outputFacet.isValidNoticeProof(
+//                encodedNotice,
+//                ethers.utils.formatBytes32String("hello"),
+//                n
+//            )
+//        ).to.be.revertedWith("epochHash incorrect");
+//    });
+//
+//    it("isValidNoticeProof() should revert when outputsEpochRootHash doesn't match", async () => {
+//        let tempInputIndex = n.inputIndex;
+//        n.inputIndex = 10;
+//        await expect(
+//            outputFacet.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
+//        ).to.be.revertedWith("outputsEpochRootHash incorrect");
+//        // restore n
+//        n.inputIndex = tempInputIndex;
+//    });
+//
+//    it("isValidNoticeProof() should revert when outputHashesRootHash doesn't match", async () => {
+//        let tempNoticeIndex = n.outputIndex;
+//        n.outputIndex = 10;
+//        await expect(
+//            outputFacet.isValidNoticeProof(encodedNotice, epochHashForNotice, n)
+//        ).to.be.revertedWith("outputHashesRootHash incorrect");
+//        // restore n
+//        n.outputIndex = tempNoticeIndex;
+//    });
+//
+//    /// ***test function getBitMaskPosition()*** ///
+//    it("testing function getBitMaskPosition()", async () => {
+//        const _voucher = 123;
+//        const _input = 456;
+//        const _epoch = 789;
+//        expect(
+//            await outputFacet.getBitMaskPosition(_voucher, _input, _epoch)
+//        ).to.equal(
+//            BigInt(_voucher) * BigInt(2 ** 128) +
+//                BigInt(_input) * BigInt(2 ** 64) +
+//                BigInt(_epoch)
+//        );
+//    });
+//
+//    /// ***test function getIntraDrivePosition()*** ///
+//    it("testing function getIntraDrivePosition()", async () => {
+//        const _index = 10;
+//        const _log2Size = 4;
+//        expect(
+//            await outputFacet.getIntraDrivePosition(_index, _log2Size)
+//        ).to.equal(_index * 2 ** _log2Size);
+//    });
+//
+//    /// ***test function getNumberOfFinalizedEpochs() and onNewEpoch()*** ///
+//    it("simulate calls to onNewEpoch() to test if getNumberOfFinalizedEpochs() increases", async () => {
+//        await debugFacet._onNewEpochOutput(
+//            ethers.utils.formatBytes32String("hello")
+//        );
+//        expect(await outputFacet.getNumberOfFinalizedEpochs()).to.equal(1);
+//
+//        await debugFacet._onNewEpochOutput(
+//            ethers.utils.formatBytes32String("hello2")
+//        );
+//        expect(await outputFacet.getNumberOfFinalizedEpochs()).to.equal(2);
+//
+//        await debugFacet._onNewEpochOutput(
+//            ethers.utils.formatBytes32String("hello3")
+//        );
+//        expect(await outputFacet.getNumberOfFinalizedEpochs()).to.equal(3);
+//    });
+//
+//    /// ***test function getVoucherMetadataLog2Size()*** ///
+//    it("testing function getVoucherMetadataLog2Size()", async () => {
+//        expect(await outputFacet.getVoucherMetadataLog2Size()).to.equal(21);
+//    });
+//
+//    /// ***test function getEpochVoucherLog2Size()*** ///
+//    it("testing function getEpochVoucherLog2Size()", async () => {
+//        expect(await outputFacet.getEpochVoucherLog2Size()).to.equal(37);
+//    });
+//
+//    /// ***test function executeVoucher() for bad destination*** ///
+//    it("test function executeVoucher() for bad destination", async () => {
+//        const bankAddress = await feeManagerFacet.getFeeManagerBank();
+//        await expect(
+//            outputFacet.executeVoucher(bankAddress, _payload, v),
+//            "executing voucher for bank"
+//        ).to.be.revertedWith("bad destination");
+//    });
+//
+//    // test executing vouchers that withdraw ERC20 tokens
+//    it("test erc20 withdrawal voucher", async () => {
+//        // send erc20 from dapp to recipient
+//        let recipient = await signers[1].getAddress();
+//
+//        let destination_erc20 = simpleToken.address;
+//        let amount_erc20 = 7;
+//        let payload_erc20 = iface.encodeFunctionData(
+//            "transfer(address,uint256)",
+//            [recipient, amount_erc20]
+//        );
+//        let encodedVoucher_erc20 = ethers.utils.defaultAbiCoder.encode(
+//            ["uint", "bytes"],
+//            [destination_erc20, payload_erc20]
+//        );
+//        // console.log(encodedVoucher_erc20);
+//
+//        let v_erc20 = Object.assign({}, v); // copy object contents from v to v_erc20, rather than just the address reference
+//        v_erc20.outputHashesRootHash =
+//            "0x403895df37999725f975a4d3fcf1800fb414ef09c565be48985fc52511eea5f6";
+//        v_erc20.vouchersEpochRootHash =
+//            "0x84111d7805888b118ef5235d5cdca958931c5e42cc983a18131accc04f4b5274";
+//        let epochHash_erc20 = keccak256(
+//            ethers.utils.defaultAbiCoder.encode(
+//                ["uint", "uint", "uint"],
+//                [
+//                    v_erc20.vouchersEpochRootHash,
+//                    v_erc20.noticesEpochRootHash,
+//                    v_erc20.machineStateHash,
+//                ]
+//            )
+//        );
+//
+//        // enter new epoch
+//        await debugFacet._onNewEpochOutput(epochHash_erc20);
+//
+//        // fail if dapp doesn't have enough balance
+//        expect(
+//            await outputFacet.callStatic.executeVoucher(
+//                destination_erc20,
+//                payload_erc20,
+//                v_erc20
+//            )
+//        ).to.equal(false);
+//
+//        // fund dapp
+//        let dapp_init_balance = 100;
+//        await simpleToken.transfer(outputFacet.address, dapp_init_balance);
+//
+//        // now it succeeds
+//        expect(
+//            await outputFacet.callStatic.executeVoucher(
+//                destination_erc20,
+//                payload_erc20,
+//                v_erc20
+//            )
+//        ).to.equal(true);
+//        // modify state
+//        await outputFacet.executeVoucher(
+//            destination_erc20,
+//            payload_erc20,
+//            v_erc20
+//        );
+//        expect(
+//            await simpleToken.balanceOf(recipient),
+//            "check recipient's balance"
+//        ).to.equal(amount_erc20);
+//        expect(
+//            await simpleToken.balanceOf(outputFacet.address),
+//            "check dapp's balance"
+//        ).to.equal(dapp_init_balance - amount_erc20);
+//    });
+//
+//    /// ***test delegate*** ///
+//    if (enableDelegate) {
+//        it("testing output delegate", async () => {
+//            /// ***test case 1 - initial check
+//            let initialState = JSON.stringify({
+//                dapp_contract_address: outputFacet.address,
+//            });
+//            let state = JSON.parse(await getState(initialState));
+//
+//            // initial check, executed vouchers should be empty
+//            expect(
+//                JSON.stringify(state.vouchers) == "{}",
+//                "initial check"
+//            ).to.equal(true);
+//
+//            /// ***test case 2 - only one voucher executed
+//            // outputIndex: 0;
+//            //  inputIndex: 1;
+//            //  epochIndex: 0;
+//            await debugFacet._onNewEpochOutput(epochHashForVoucher);
+//            await outputFacet.executeVoucher(_destination, _payload, v);
+//
+//            state = JSON.parse(await getState(initialState));
+//
+//            // vouchers look like { '0': { '1': { '0': true } } }
+//            expect(
+//                Object.keys(state.vouchers).length,
+//                "should have 1 executed voucher"
+//            ).to.equal(1);
+//            expect(
+//                state.vouchers[0][1][0],
+//                "the first voucher is executed successfully"
+//            ).to.equal(true);
+//
+//            /// ***test case 3 - execute another voucher
+//            // execute another voucher for epoch 1
+//            let _payload_new = iface.encodeFunctionData(
+//                "simple_function(bytes32)",
+//                [ethers.utils.formatBytes32String("hello")]
+//            );
+//
+//            let v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
+//            v_new.epochIndex = 1; // we use the same outputIndex and inputIndex
+//            v_new.outputHashesRootHash =
+//                "0xc1a36c66afe08e1b359834d224974d4ffc80c3551b0d2143276c65239cc1c2c5";
+//            v_new.vouchersEpochRootHash =
+//                "0xde83bbbd81d504f6e4ac25b7946f7e80cdf3532cb9791824340b9915a74a2a68";
+//            let epochHash_new = keccak256(
+//                ethers.utils.defaultAbiCoder.encode(
+//                    ["uint", "uint", "uint"],
+//                    [
+//                        v_new.vouchersEpochRootHash,
+//                        v_new.noticesEpochRootHash,
+//                        v_new.machineStateHash,
+//                    ]
+//                )
+//            );
+//
+//            await debugFacet._onNewEpochOutput(epochHash_new);
+//            await outputFacet.executeVoucher(_destination, _payload_new, v_new);
+//
+//            state = JSON.parse(await getState(initialState));
+//
+//            // vouchers look like { '0': { '1': { '0': true, '1': true } } }
+//            expect(
+//                Object.keys(state.vouchers[0][1]).length,
+//                "should have 2 executed voucher"
+//            ).to.equal(2);
+//            expect(
+//                state.vouchers[0][1][1],
+//                "execute the second voucher"
+//            ).to.equal(true);
+//
+//            /// ***test case 4 - execute a non-existent function
+//            _payload_new = iface.encodeFunctionData("nonExistent()");
+//            v_new = Object.assign({}, v); // copy object contents from v to v_new, rather than just the address reference
+//            v_new.epochIndex = 2;
+//            v_new.outputHashesRootHash =
+//                "0xb1d9960127a95255a29e5781b466f87a556e445ec3e2e20390ea9642d73616eb";
+//            v_new.vouchersEpochRootHash =
+//                "0x2543517a18b2f67ae6781182a7042834b065be9d5f993d0bcd892ea6c9280b57";
+//            epochHash_new = keccak256(
+//                ethers.utils.defaultAbiCoder.encode(
+//                    ["uint", "uint", "uint"],
+//                    [
+//                        v_new.vouchersEpochRootHash,
+//                        v_new.noticesEpochRootHash,
+//                        v_new.machineStateHash,
+//                    ]
+//                )
+//            );
+//
+//            await debugFacet._onNewEpochOutput(epochHash_new);
+//            await outputFacet.executeVoucher(_destination, _payload_new, v_new);
+//
+//            state = JSON.parse(await getState(initialState));
+//
+//            // since the execution was failed, everything should remain the same
+//            expect(
+//                Object.keys(state.vouchers).length,
+//                "only 1 outputIndex"
+//            ).to.equal(1);
+//            expect(
+//                Object.keys(state.vouchers[0]).length,
+//                "1 inputIndex"
+//            ).to.equal(1);
+//            expect(
+//                Object.keys(state.vouchers[0][1]).length,
+//                "2 epochIndex"
+//            ).to.equal(2);
+//
+//            /// ***test case 5 - re-execute an already executed voucher
+//            /// ***and test case 6 - proof not valid
+//            /// after these 2 failure cases, the executed vouchers should remain the same
+//            await expect(
+//                outputFacet.executeVoucher(_destination, _payload, v),
+//                "already executed, should revert"
+//            ).to.be.revertedWith("re-execution not allowed");
+//
+//            _payload_new = iface.encodeFunctionData("nonExistent()");
+//            await expect(
+//                outputFacet.executeVoucher(_destination, _payload_new, v),
+//                "proof not valid, should revert"
+//            ).to.be.reverted;
+//
+//            state = JSON.parse(await getState(initialState));
+//            expect(
+//                Object.keys(state.vouchers).length,
+//                "still only 1 outputIndex"
+//            ).to.equal(1);
+//            expect(
+//                Object.keys(state.vouchers[0]).length,
+//                "still 1 inputIndex"
+//            ).to.equal(1);
+//            expect(
+//                Object.keys(state.vouchers[0][1]).length,
+//                "still 2 epochIndex"
+//            ).to.equal(2);
+//        });
+//    }
 });
