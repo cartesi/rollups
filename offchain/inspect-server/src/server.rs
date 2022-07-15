@@ -26,20 +26,21 @@ pub fn create(
     config: &Config,
     inspect_client: InspectClient,
 ) -> std::io::Result<Server> {
+    let path_prefix = config.path_prefix.clone().unwrap_or(String::from(""));
+    let path = path_prefix + "/{payload:.*}";
     let server = HttpServer::new(move || {
         let cors = Cors::permissive();
         App::new()
             .app_data(web::Data::new(inspect_client.clone()))
             .wrap(middleware::Logger::default())
             .wrap(cors)
-            .service(inspect)
+            .service(web::resource(path.clone()).route(web::get().to(inspect)))
     })
     .bind(config.inspect_server_address.clone())?
     .run();
     Ok(server)
 }
 
-#[actix_web::get("/{payload:.*}")]
 async fn inspect(
     payload: web::Path<String>,
     inspect_client: web::Data<InspectClient>,

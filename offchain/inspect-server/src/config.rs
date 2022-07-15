@@ -30,6 +30,7 @@ pub struct Config {
     pub inspect_server_address: String,
     pub server_manager_address: String,
     pub session_id: String,
+    pub path_prefix: Option<String>,
 }
 
 impl Config {
@@ -62,10 +63,14 @@ impl Config {
                 err: String::from("Must specify session id"),
             })?;
 
+        let path_prefix: Option<String> =
+            env_cli_config.path_prefix.or(file_config.path_prefix);
+
         Ok(Self {
             inspect_server_address,
             server_manager_address,
             session_id,
+            path_prefix,
         })
     }
 }
@@ -85,6 +90,10 @@ struct EnvCLIConfig {
     #[structopt(long, env)]
     session_id: Option<String>,
 
+    /// Path prefix for the inspect server URL
+    #[structopt(long, env)]
+    path_prefix: Option<String>,
+
     /// Path to the config file
     #[structopt(long, env)]
     pub config_path: Option<String>,
@@ -95,4 +104,5 @@ struct FileConfig {
     inspect_server_address: Option<String>,
     server_manager_address: Option<String>,
     session_id: Option<String>,
+    path_prefix: Option<String>,
 }
