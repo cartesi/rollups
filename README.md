@@ -39,7 +39,7 @@ graph LR
         ValidatorManagerFacet
     end
     Bank -- transfer, transferFrom --> CTSI["CTSI Token"]
-    ERC20PortalFacet -- transfer, transferFrom --> ERC20["Any ERC-20 Token"]
+    ERC20PortalFacet -- transferFrom --> ERC20["Any ERC-20 Token"]
     ERC721PortalFacet -- safeTransferFrom --> ERC721["Any ERC-721 Token (NFT)"]
     EtherPortalFacet -- Ether transfer --> Anyone
     FeeManagerFacet -- transferTokens --> Bank
