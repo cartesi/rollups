@@ -9,7 +9,6 @@ generated-src
 node_modules
 src/proto/stateserver*
 src/types
-test/*/
 .vscode
 .node*
 .env
