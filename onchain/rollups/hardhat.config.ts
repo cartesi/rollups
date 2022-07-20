@@ -53,21 +53,8 @@ const config: HardhatUserConfig = {
             accounts: mnemonic ? { mnemonic } : undefined,
         },
         mainnet: infuraNetwork("mainnet", 1, 6283185),
-        ropsten: infuraNetwork("ropsten", 3, 6283185),
-        rinkeby: infuraNetwork("rinkeby", 4, 6283185),
-        kovan: infuraNetwork("kovan", 42, 6283185),
         goerli: infuraNetwork("goerli", 5, 6283185),
         polygon_mumbai: infuraNetwork("polygon-mumbai", 80001),
-        bsc_testnet: {
-            url: "https://data-seed-prebsc-1-s1.binance.org:8545",
-            chainId: 97,
-            accounts: mnemonic ? { mnemonic } : undefined,
-        },
-        avax_fuji: {
-            url: "https://api.avax-test.network/ext/bc/C/rpc",
-            chainId: 43113,
-            accounts: mnemonic ? { mnemonic } : undefined,
-        },
     },
     solidity: {
         version: "0.8.13",
@@ -110,18 +97,6 @@ const config: HardhatUserConfig = {
                 ppath("@cartesi/util", "/deployments/mainnet"),
                 ppath("@cartesi/token", "/deployments/mainnet"),
             ],
-            ropsten: [
-                ppath("@cartesi/util", "/deployments/ropsten"),
-                ppath("@cartesi/token", "/deployments/ropsten"),
-            ],
-            rinkeby: [
-                ppath("@cartesi/util", "/deployments/rinkeby"),
-                ppath("@cartesi/token", "/deployments/rinkeby"),
-            ],
-            kovan: [
-                ppath("@cartesi/util", "/deployments/kovan"),
-                ppath("@cartesi/token", "/deployments/kovan"),
-            ],
             goerli: [
                 ppath("@cartesi/util", "/deployments/goerli"),
                 ppath("@cartesi/token", "/deployments/goerli"),
@@ -129,14 +104,6 @@ const config: HardhatUserConfig = {
             polygon_mumbai: [
                 ppath("@cartesi/util", "/deployments/matic_testnet"),
                 ppath("@cartesi/token", "/deployments/polygon_mumbai"),
-            ],
-            bsc_testnet: [
-                ppath("@cartesi/util", "/deployments/bsc_testnet"),
-                ppath("@cartesi/token", "/deployments/bsc_testnet"),
-            ],
-            avax_fuji: [
-                ppath("@cartesi/util", "/deployments/avax_testnet"),
-                ppath("@cartesi/token", "/deployments/avax_fuji"),
             ],
         },
     },

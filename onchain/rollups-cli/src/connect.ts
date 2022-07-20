@@ -22,12 +22,7 @@ import {
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
 } from "@cartesi/rollups";
-import ropsten from "@cartesi/rollups/export/abi/ropsten.json";
-import rinkeby from "@cartesi/rollups/export/abi/rinkeby.json";
 import goerli from "@cartesi/rollups/export/abi/goerli.json";
-import kovan from "@cartesi/rollups/export/abi/kovan.json";
-import bsc_testnet from "@cartesi/rollups/export/abi/bsc_testnet.json";
-import avax_fuji from "@cartesi/rollups/export/abi/avax_fuji.json";
 import polygon_mumbai from "@cartesi/rollups/export/abi/polygon_mumbai.json";
 
 type DeploymentContract = {
@@ -42,12 +37,7 @@ type Deployment = {
 };
 
 const deployments: Record<number, Deployment> = {
-    3: ropsten,
-    4: rinkeby,
     5: goerli,
-    42: kovan,
-    97: bsc_testnet,
-    43113: avax_fuji,
     80001: polygon_mumbai,
 };
 
