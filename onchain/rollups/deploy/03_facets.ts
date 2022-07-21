@@ -23,7 +23,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     };
 
     const Bitmask = await deployments.get("Bitmask");
-    const Merkle = await deployments.get("Merkle");
+    const MerkleV2 = await deployments.get("MerkleV2");
     const LibClaimsMask = await deployments.get("LibClaimsMask");
 
     await deployments.deploy("ERC20PortalFacet", opts);
@@ -41,7 +41,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         ...opts,
         libraries: {
             Bitmask: Bitmask.address,
-            Merkle: Merkle.address,
+            MerkleV2: MerkleV2.address,
         },
     });
     await deployments.deploy("RollupsFacet", {

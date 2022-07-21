@@ -14,7 +14,7 @@
 pragma solidity ^0.8.0;
 
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
-import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
+import {MerkleV2} from "@cartesi/util/contracts/MerkleV2.sol";
 
 import {IOutput, OutputValidityProof} from "../interfaces/IOutput.sol";
 
@@ -147,7 +147,7 @@ contract OutputFacet is IOutput {
 
         // prove that output metadata memory range is contained in epoch's output memory range
         require(
-            Merkle.getRootAfterReplacementInDrive(
+            MerkleV2.getRootAfterReplacementInDrive(
                 getIntraDrivePosition(_v.inputIndex, KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
                 _outputEpochLog2Size,
@@ -174,7 +174,7 @@ contract OutputFacet is IOutput {
         //     )
         // is contained in it. We can't simply use hashOfOutput because the
         // log2size of the leaf is three (8 bytes) not  five (32 bytes)
-        bytes32 merkleRootOfHashOfOutput = Merkle.getMerkleRootFromBytes(
+        bytes32 merkleRootOfHashOfOutput = MerkleV2.getMerkleRootFromBytes(
             abi.encodePacked(keccak256(_encodedOutput)),
             KECCAK_LOG2_SIZE
         );
@@ -182,7 +182,7 @@ contract OutputFacet is IOutput {
         // prove that merkle root hash of bytes(hashOfOutput) is contained
         // in the output metadata array memory range
         require(
-            Merkle.getRootAfterReplacementInDrive(
+            MerkleV2.getRootAfterReplacementInDrive(
                 getIntraDrivePosition(_v.outputIndex, KECCAK_LOG2_SIZE),
                 KECCAK_LOG2_SIZE,
                 _outputHashesLog2Size,

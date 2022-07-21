@@ -9,16 +9,11 @@
         "copy-dts": "copyfiles -u 1 \"src/**/*.d.ts\" dist/src",
         "compile": "hardhat compile",
         "deploy": "run-s deploy:development",
-        "deploy:testnet": "run-s deploy:ropsten deploy:rinkeby deploy:kovan deploy:goerli deploy:polygon_mumbai deploy:bsc_testnet deploy:avax_fuji",
+        "deploy:testnet": "run-s deploy:goerli deploy:polygon_mumbai",
         "deploy:development": "hardhat deploy --network localhost",
-        "deploy:ropsten": "hardhat deploy --network ropsten --export export/abi/ropsten.json",
-        "deploy:rinkeby": "hardhat deploy --network rinkeby --export export/abi/rinkeby.json",
-        "deploy:kovan": "hardhat deploy --network kovan --export export/abi/kovan.json",
         "deploy:goerli": "hardhat deploy --network goerli --export export/abi/goerli.json",
         "deploy:mainnet": "hardhat deploy --network mainnet --export export/abi/mainnet.json",
         "deploy:polygon_mumbai": "hardhat deploy --network polygon_mumbai --export export/abi/polygon_mumbai.json",
-        "deploy:bsc_testnet": "hardhat deploy --network bsc_testnet --export export/abi/bsc_testnet.json",
-        "deploy:avax_fuji": "hardhat deploy --network avax_fuji --export export/abi/avax_fuji.json",
         "export": "hardhat export-artifacts export/artifacts --hide-sources --including-empty-bytecode --including-no-public-functions",
         "info": "npm-scripts-info",
         "prepack": "run-s build tsc:prod copy-dts",
@@ -31,9 +26,8 @@
         "tsc:prod": "tsc -p tsconfig.prod.json"
     },
     "dependencies": {
-        "@cartesi/logger": "^0.7.4",
-        "@cartesi/token": "^1.4.0",
-        "@cartesi/util": "^3.1.2",
+        "@cartesi/token": "^1.5.1",
+        "@cartesi/util": "^4.0.0",
         "@openzeppelin/contracts": "^4.5.0"
     },
     "devDependencies": {
