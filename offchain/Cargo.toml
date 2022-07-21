@@ -4,10 +4,10 @@ members = [
   "state-server",
   "types",
 
-  "data",
-  "indexer",
-  "inspect-server",
-  "reader"
+  # "data",
+  # "indexer",
+  # "inspect-server",
+  # "reader"
 ]
 
 [patch.cartesi]

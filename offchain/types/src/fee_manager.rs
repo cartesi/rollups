@@ -407,7 +407,7 @@ fn calculate_uncommitted_balance(
     let mut total_claims = U256::zero();
     for i in 0..MAX_NUM_VALIDATORS {
         if let Some(num_claims_struct) = num_claims[i] {
-            total_claims = total_claims + num_claims_struct.num_claims_mades;
+            total_claims = total_claims + num_claims_struct.num_claims_made;
         }
     }
 
