@@ -3,9 +3,28 @@ name = "state-server"
 version = "0.1.0"
 edition = "2021"
 
+
 [[bin]]
 name = "rollups-state-server"
 path = "src/rollups-state-server.rs"
+
+[[bin]]
+name = "input-state-server"
+path = "src/input-state-server.rs"
+
+[[bin]]
+name = "output-state-server"
+path = "src/output-state-server.rs"
+
+[[bin]]
+name = "fee-manager-state-server"
+path = "src/fee-manager-state-server.rs"
+
+[[bin]]
+name = "validator-manager-state-server"
+path = "src/validator-manager-state-server.rs"
+
+
 
 [dependencies]
 block-history = { version = "0.3", registry = "cartesi" }

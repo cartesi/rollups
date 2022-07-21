@@ -130,9 +130,7 @@ describe("FeeManager Facet", () => {
         token = SimpleToken__factory.connect(tokenAddress, signers[0]);
 
         // for delegate
-        initialState = JSON.stringify({
-            dapp_contract_address: feeManagerFacet.address,
-        });
+        initialState = JSON.stringify(feeManagerFacet.address);
     });
 
     it("test initial feePerClaim", async () => {

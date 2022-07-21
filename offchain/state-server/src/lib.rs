@@ -20,9 +20,13 @@ where
     tracing::trace!("Starting rollups state-server with config `{:?}`", config);
 
     let provider = create_provider(&config).await?;
-    let env = create_env(&config, Arc::clone(&provider))?;
     let block_subscriber =
         create_block_subscriber(&config, Arc::clone(&provider)).await?;
+    let env = create_env(
+        &config,
+        Arc::clone(&provider),
+        Arc::clone(&block_subscriber.block_archive),
+    )?;
 
     let server = StateServer::<_, _, F>::new(block_subscriber, env);
 
@@ -55,9 +59,11 @@ async fn create_provider(
 fn create_env(
     config: &config::StateServerConfig,
     provider: Arc<ServerProvider>,
+    block_archive: Arc<block_history::BlockArchive<ServerProvider>>,
 ) -> Result<Arc<StateFoldEnvironment<ServerProvider, ()>>> {
     let env = StateFoldEnvironment::new(
         provider,
+        Some(block_archive),
         config.state_fold.safety_margin,
         config.state_fold.genesis_block,
         config.state_fold.query_limit_error_codes.clone(),

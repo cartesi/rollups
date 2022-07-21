@@ -1,9 +1,11 @@
 use crate::{
     accumulating_epoch::AccumulatingEpoch,
     epoch::{ContractPhase, EpochState},
+    epoch_initial_state::EpochInitialState,
     fee_manager::FeeManagerState,
-    finalized_epoch::FinalizedEpochs,
+    finalized_epochs::FinalizedEpochs,
     output::OutputState,
+    rollups_initial_state::RollupsInitialState,
     sealed_epoch::{EpochWithClaims, SealedEpochState},
     validator_manager::ValidatorManagerState,
     FoldableError,
@@ -11,10 +13,7 @@ use crate::{
 use anyhow::{anyhow, Context, Error};
 use async_trait::async_trait;
 use contracts::diamond_init::*;
-use ethers::{
-    providers::Middleware,
-    types::{Address, U256},
-};
+use ethers::{providers::Middleware, types::U256};
 use serde::{Deserialize, Serialize};
 use state_fold::{
     FoldMiddleware, Foldable, StateFoldEnvironment, SyncMiddleware,
@@ -30,23 +29,26 @@ pub enum PhaseState {
 
     /// `current_epoch` is no longer accepting inputs but hasn't yet received
     /// a claim
-    EpochSealedAwaitingFirstClaim { sealed_epoch: AccumulatingEpoch },
+    EpochSealedAwaitingFirstClaim {
+        sealed_epoch: Arc<AccumulatingEpoch>,
+    },
 
     /// Epoch has been claimed but a dispute has yet to arise
-    AwaitingConsensusNoConflict { claimed_epoch: EpochWithClaims },
+    AwaitingConsensusNoConflict { claimed_epoch: Arc<EpochWithClaims> },
 
     /// Epoch being claimed was previously challenged and there is a standing
     /// claim that can be challenged
     AwaitingConsensusAfterConflict {
-        claimed_epoch: EpochWithClaims,
+        claimed_epoch: Arc<EpochWithClaims>,
         challenge_period_base_ts: U256,
     },
+
     /// Consensus was not reached but the last 'challenge_period' is over. Epoch
     /// can be finalized at any time by anyone
-    ConsensusTimeout { claimed_epoch: EpochWithClaims },
+    ConsensusTimeout { claimed_epoch: Arc<EpochWithClaims> },
 
     /// Unreacheable
-    AwaitingDispute { claimed_epoch: EpochWithClaims },
+    AwaitingDispute { claimed_epoch: Arc<EpochWithClaims> },
     // TODO: add dispute timeout when disputes are turned on.
 }
 
@@ -66,29 +68,26 @@ pub struct ImmutableState {
 
     /// timestamp of the contract creation
     pub contract_creation_timestamp: U256,
-
-    /// decentralized application contract address
-    pub dapp_contract_address: Address,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RollupsState {
-    pub constants: ImmutableState,
+    pub constants: Arc<ImmutableState>,
+    pub rollups_initial_state: Arc<RollupsInitialState>,
 
-    pub initial_epoch: U256,
-    pub finalized_epochs: FinalizedEpochs,
-    pub current_epoch: AccumulatingEpoch,
+    pub finalized_epochs: Arc<FinalizedEpochs>,
+    pub current_epoch: Arc<AccumulatingEpoch>,
 
-    pub current_phase: PhaseState,
+    pub current_phase: Arc<PhaseState>,
 
-    pub output_state: OutputState,
-    pub validator_manager_state: ValidatorManagerState,
-    pub fee_manager_state: FeeManagerState,
+    pub output_state: Arc<OutputState>,
+    pub validator_manager_state: Arc<ValidatorManagerState>,
+    pub fee_manager_state: Arc<FeeManagerState>,
 }
 
 #[async_trait]
 impl Foldable for RollupsState {
-    type InitialState = (Address, U256);
+    type InitialState = Arc<RollupsInitialState>;
     type Error = FoldableError;
     type UserData = ();
 
@@ -98,10 +97,10 @@ impl Foldable for RollupsState {
         env: &StateFoldEnvironment<M, Self::UserData>,
         access: Arc<SyncMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let (dapp_contract_address, epoch_number) = *initial_state;
-
-        let diamond_init =
-            DiamondInit::new(dapp_contract_address, Arc::clone(&access));
+        let diamond_init = DiamondInit::new(
+            *initial_state.dapp_contract_address,
+            Arc::clone(&access),
+        );
 
         // Retrieve constants from contract creation event
         let constants = {
@@ -130,23 +129,16 @@ impl Foldable for RollupsState {
                 .context("Block not found")?
                 .timestamp;
 
-            ImmutableState::from(&(
-                create_event,
-                timestamp,
-                dapp_contract_address,
-            ))
+            Arc::new(ImmutableState::from(&(create_event, timestamp)))
         };
 
-        let raw_contract_state = EpochState::get_state_for_block(
-            &(dapp_contract_address, epoch_number),
-            block,
-            env,
-        )
-        .await?
-        .state;
+        let raw_contract_state =
+            EpochState::get_state_for_block(&initial_state, block, env)
+                .await?
+                .state;
 
         let output_state = OutputState::get_state_for_block(
-            &constants.dapp_contract_address,
+            &initial_state.dapp_contract_address,
             block,
             env,
         )
@@ -155,7 +147,7 @@ impl Foldable for RollupsState {
 
         let validator_manager_state =
             ValidatorManagerState::get_state_for_block(
-                &dapp_contract_address,
+                &initial_state.dapp_contract_address,
                 block,
                 env,
             )
@@ -163,7 +155,7 @@ impl Foldable for RollupsState {
             .state;
 
         let fee_manager_state = FeeManagerState::get_state_for_block(
-            &constants.dapp_contract_address,
+            &initial_state.dapp_contract_address,
             block,
             env,
         )
@@ -174,7 +166,7 @@ impl Foldable for RollupsState {
             raw_contract_state,
             constants,
             block,
-            &epoch_number,
+            Arc::clone(initial_state),
             output_state,
             validator_manager_state,
             fee_manager_state,
@@ -187,28 +179,25 @@ impl Foldable for RollupsState {
         env: &StateFoldEnvironment<M, Self::UserData>,
         _access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let constants = previous_state.constants.clone();
-        let dapp_contract_address = constants.dapp_contract_address;
+        let dapp_contract_address =
+            &previous_state.rollups_initial_state.dapp_contract_address;
 
         let raw_contract_state = EpochState::get_state_for_block(
-            &(dapp_contract_address, previous_state.initial_epoch),
+            &previous_state.rollups_initial_state,
             block,
             env,
         )
         .await?
         .state;
 
-        let output_state = OutputState::get_state_for_block(
-            &dapp_contract_address,
-            block,
-            env,
-        )
-        .await?
-        .state;
+        let output_state =
+            OutputState::get_state_for_block(dapp_contract_address, block, env)
+                .await?
+                .state;
 
         let validator_manager_state =
             ValidatorManagerState::get_state_for_block(
-                &dapp_contract_address,
+                dapp_contract_address,
                 block,
                 env,
             )
@@ -225,9 +214,9 @@ impl Foldable for RollupsState {
 
         Ok(convert_raw_to_logical(
             raw_contract_state,
-            constants,
+            Arc::clone(&previous_state.constants),
             block,
-            &previous_state.initial_epoch,
+            Arc::clone(&previous_state.rollups_initial_state),
             output_state,
             validator_manager_state,
             fee_manager_state,
@@ -239,13 +228,13 @@ impl Foldable for RollupsState {
 // of what is being presented by the blockchain. Logical state is the semantic
 // intepretation of that, which will be used for offchain decision making
 fn convert_raw_to_logical(
-    contract_state: EpochState,
-    constants: ImmutableState,
+    contract_state: Arc<EpochState>,
+    constants: Arc<ImmutableState>,
     block: &Block,
-    initial_epoch: &U256,
-    output_state: OutputState,
-    validator_manager_state: ValidatorManagerState,
-    fee_manager_state: FeeManagerState,
+    rollups_initial_state: Arc<RollupsInitialState>,
+    output_state: Arc<OutputState>,
+    validator_manager_state: Arc<ValidatorManagerState>,
+    fee_manager_state: Arc<FeeManagerState>,
 ) -> RollupsState {
     // If the raw state is InputAccumulation but it has expired, then the raw
     // state's `current_epoch` becomes the sealed epoch, and the logic state's
@@ -256,7 +245,7 @@ fn convert_raw_to_logical(
     // would trigger a phase change to AwaitingConsensus.
     let mut current_epoch_no_inputs: Option<U256> = None;
 
-    let phase_state = match contract_state.current_phase {
+    let phase_state = Arc::new(match &contract_state.current_phase {
         ContractPhase::InputAccumulation {} => {
             // Last phase change timestamp is the timestamp of input
             // accumulation start if contract in InputAccumulation.
@@ -275,8 +264,14 @@ fn convert_raw_to_logical(
             if block.timestamp
                 > input_accumulation_start_timestamp + constants.input_duration
             {
-                current_epoch_no_inputs =
-                    Some(contract_state.current_epoch.epoch_number + 1);
+                current_epoch_no_inputs = Some(
+                    contract_state
+                        .current_epoch
+                        .epoch_initial_state
+                        .epoch_number
+                        + 1u64,
+                );
+
                 PhaseState::EpochSealedAwaitingFirstClaim {
                     sealed_epoch: contract_state.current_epoch.clone(),
                 }
@@ -289,15 +284,22 @@ fn convert_raw_to_logical(
             sealed_epoch,
             round_start,
         } => {
+            let sealed_epoch = Arc::clone(sealed_epoch);
+
             // The raw phase change might have happened because a claim arrived
             // or because a new input arrived. This determines if the logical
             // phase is EpochAwaintFirstClaim or SealedEpochNoClaims
-            match sealed_epoch {
-                SealedEpochState::SealedEpochNoClaims { sealed_epoch } => {
+            match *sealed_epoch {
+                SealedEpochState::SealedEpochNoClaims { ref sealed_epoch } => {
+                    let sealed_epoch = Arc::clone(sealed_epoch);
                     PhaseState::EpochSealedAwaitingFirstClaim { sealed_epoch }
                 }
 
-                SealedEpochState::SealedEpochWithClaims { claimed_epoch } => {
+                SealedEpochState::SealedEpochWithClaims {
+                    ref claimed_epoch,
+                } => {
+                    let claimed_epoch = Arc::clone(claimed_epoch);
+
                     let first_claim_timestamp =
                         claimed_epoch.claims.first_claim_timestamp();
 
@@ -313,7 +315,7 @@ fn convert_raw_to_logical(
                     // after a dispute.
                     let time_of_last_move = std::cmp::max(
                         first_claim_timestamp,
-                        phase_change_timestamp,
+                        *phase_change_timestamp,
                     );
 
                     // Check if Consensus timed out or, using the first claim
@@ -330,7 +332,7 @@ fn convert_raw_to_logical(
                     } else {
                         PhaseState::AwaitingConsensusAfterConflict {
                             claimed_epoch,
-                            challenge_period_base_ts: phase_change_timestamp,
+                            challenge_period_base_ts: *phase_change_timestamp,
                         }
                     }
                 }
@@ -342,38 +344,44 @@ fn convert_raw_to_logical(
         ContractPhase::AwaitingDispute { .. } => {
             unreachable!()
         }
-    };
+    });
 
     // Figures out if the current accumulating epoch is empty (new) or if it
     // was previously created. The distinction comes from the two possible
     // transitions to AwaitingConsensus, either a new input or a claim
     let current_epoch = if let Some(epoch_number) = current_epoch_no_inputs {
-        AccumulatingEpoch::new(constants.dapp_contract_address, epoch_number)
+        let epoch_initial_state = Arc::new(EpochInitialState {
+            dapp_contract_address: Arc::clone(
+                &rollups_initial_state.dapp_contract_address,
+            ),
+            epoch_number,
+        });
+
+        AccumulatingEpoch::new(epoch_initial_state)
     } else {
-        contract_state.current_epoch
+        Arc::clone(&contract_state.current_epoch)
     };
 
     RollupsState {
         constants,
-        initial_epoch: *initial_epoch,
         current_phase: phase_state,
-        finalized_epochs: contract_state.finalized_epochs,
+        finalized_epochs: Arc::clone(&contract_state.finalized_epochs),
         current_epoch,
         output_state,
         validator_manager_state,
         fee_manager_state,
+        rollups_initial_state: Arc::clone(&rollups_initial_state),
     }
 }
 
 // Fetches the Rollups constants from the contract creation event
-impl From<&(RollupsInitializedFilter, U256, Address)> for ImmutableState {
-    fn from(src: &(RollupsInitializedFilter, U256, Address)) -> Self {
-        let (ev, ts, dapp_contract_address) = src;
+impl From<&(RollupsInitializedFilter, U256)> for ImmutableState {
+    fn from(src: &(RollupsInitializedFilter, U256)) -> Self {
+        let (ev, ts) = src;
         Self {
             input_duration: ev.input_duration,
             challenge_period: ev.challenge_period,
             contract_creation_timestamp: ts.clone(),
-            dapp_contract_address: *dapp_contract_address,
         }
     }
 }

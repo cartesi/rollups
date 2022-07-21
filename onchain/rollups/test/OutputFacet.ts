@@ -508,9 +508,7 @@ describe("Output Facet", () => {
     if (enableDelegate) {
         it("testing output delegate", async () => {
             /// ***test case 1 - initial check
-            let initialState = JSON.stringify({
-                dapp_contract_address: outputFacet.address,
-            });
+            let initialState = JSON.stringify(outputFacet.address);
             let state = JSON.parse(await getState(initialState));
 
             // initial check, executed vouchers should be empty

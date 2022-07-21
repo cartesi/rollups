@@ -101,8 +101,8 @@ describe("Rollups Facet", () => {
 
         initialEpoch = "0x0";
         initialState = JSON.stringify({
-            initial_epoch: initialEpoch,
             dapp_contract_address: diamond.address,
+            initial_epoch: initialEpoch,
         });
     });
 
@@ -613,7 +613,7 @@ describe("Rollups Facet", () => {
         */
 
         it("test delegate", async () => {
-            let state = JSON.parse(await getState(initialState)).state;
+            let state = JSON.parse(await getState(initialState));
 
             // *** initial test ***
 
@@ -631,13 +631,13 @@ describe("Rollups Facet", () => {
                 "contract creation timestamp does not match"
             ).to.equal(contract_creation_time);
             expect(
-                state.constants.dapp_contract_address,
+                state.rollups_initial_state.dapp_contract_address,
                 "rollups contract address does not match"
             ).to.equal(rollupsFacet.address.toLowerCase());
 
             // test initial_epoch
             expect(
-                state.initial_epoch,
+                state.rollups_initial_state.initial_epoch,
                 "initial epoch does not match"
             ).to.equal(initialEpoch);
 
@@ -647,18 +647,19 @@ describe("Rollups Facet", () => {
                 "initial finalized_epochs.finalized_epochs does not match"
             ).to.equal(0);
             expect(
-                state.finalized_epochs.initial_epoch,
+                state.finalized_epochs.rollups_initial_state.initial_epoch,
                 "finalized_epochs.initial_epoch does not match"
             ).to.equal(initialEpoch);
             expect(
-                state.finalized_epochs.dapp_contract_address,
+                state.finalized_epochs.rollups_initial_state
+                    .dapp_contract_address,
                 "finalized_epochs.dapp_contract_address does not match"
             ).to.equal(rollupsFacet.address.toLowerCase());
 
             // test initial current_epoch
             checkCurrentEpochNum(state, initialEpoch);
             expect(
-                state.current_epoch.inputs.epoch_number,
+                state.current_epoch.inputs.epoch_initial_state.epoch_number,
                 "initial current_epoch.inputs.epoch_number does not match"
             ).to.equal(initialEpoch);
             expect(
@@ -666,7 +667,7 @@ describe("Rollups Facet", () => {
                 "only initial inputs"
             ).to.equal(NUM_OF_INITIAL_INPUTS);
             expect(
-                state.current_epoch.dapp_contract_address,
+                state.current_epoch.epoch_initial_state.dapp_contract_address,
                 "current_epoch.dapp_contract_address does not match"
             ).to.equal(rollupsFacet.address.toLowerCase());
             expect(
@@ -689,20 +690,20 @@ describe("Rollups Facet", () => {
                 "phase incorrect because inputDuration not over"
             ).to.be.revertedWith("Phase != AwaitingConsensus");
 
-            state = JSON.parse(await getState(initialState)).state; // update state
+            state = JSON.parse(await getState(initialState)); // update state
             checkCurrentPhase(state, "InputAccumulation");
 
             // *** EPOCH 0: input duration has past, now make a claim ***
             await increaseTimeAndMine(inputDuration / 2 + 1);
             await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
-            state = JSON.parse(await getState(initialState)).state; // update state
+            state = JSON.parse(await getState(initialState)); // update state
             checkCurrentEpochNum(state, "0x1");
             checkCurrentPhase(state, "AwaitingConsensusNoConflict");
             expect(
                 parseInt(
                     state.current_phase.AwaitingConsensusNoConflict
-                        .claimed_epoch.epoch_number,
+                        .claimed_epoch.epoch_initial_state.epoch_number,
                     16
                 ),
                 "claimed epoch"
@@ -735,7 +736,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
-            state = JSON.parse(await getState(initialState)).state; // update state
+            state = JSON.parse(await getState(initialState)); // update state
             expect(
                 state.current_phase.AwaitingConsensusNoConflict.claimed_epoch
                     .claims.claims[ethers.utils.formatBytes32String("hello")]
@@ -759,7 +760,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
-            state = JSON.parse(await getState(initialState)).state; // update state
+            state = JSON.parse(await getState(initialState)); // update state
             await checkFinalizedEpoch(
                 state,
                 0,
@@ -771,12 +772,12 @@ describe("Rollups Facet", () => {
             // *** EPOCH 1: sealed epoch ***
             await increaseTimeAndMine(inputDuration + 1);
 
-            state = JSON.parse(await getState(initialState)).state; // update state
+            state = JSON.parse(await getState(initialState)); // update state
             checkCurrentEpochNum(state, "0x2");
             checkCurrentPhase(state, "EpochSealedAwaitingFirstClaim");
             expect(
                 state.current_phase.EpochSealedAwaitingFirstClaim.sealed_epoch
-                    .epoch_number,
+                    .epoch_initial_state.epoch_number,
                 "the sealed epoch number does not match"
             ).to.equal("0x1");
 
@@ -791,10 +792,10 @@ describe("Rollups Facet", () => {
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("not hello1"));
 
-            state = JSON.parse(await getState(initialState)).state; // update state
+            state = JSON.parse(await getState(initialState)); // update state
             expect(
                 state.current_phase.AwaitingConsensusAfterConflict.claimed_epoch
-                    .epoch_number,
+                    .epoch_initial_state.epoch_number,
                 "claims are for epoch 1"
             ).to.equal("0x1");
             expect(
@@ -831,17 +832,18 @@ describe("Rollups Facet", () => {
             // *** EPOCH 1: consensus waiting period times out ***
             await increaseTimeAndMine(challengePeriod + 1);
 
-            state = JSON.parse(await getState(initialState)).state; // update state
+            state = JSON.parse(await getState(initialState)); // update state
             checkCurrentPhase(state, "ConsensusTimeout");
             expect(
-                state.current_phase.ConsensusTimeout.claimed_epoch.epoch_number,
+                state.current_phase.ConsensusTimeout.claimed_epoch
+                    .epoch_initial_state.epoch_number,
                 "epoch number when ConsensusTimeout"
             ).to.equal("0x1");
 
             // *** EPOCH 1 -> 2: finalize after consensus times out ***
             await rollupsFacet.finalizeEpoch();
 
-            state = JSON.parse(await getState(initialState)).state; // update state
+            state = JSON.parse(await getState(initialState)); // update state
             // now can test the finalized epoch 1
             await checkFinalizedEpoch(
                 state,
@@ -861,7 +863,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("not hello2"));
 
-            state = JSON.parse(await getState(initialState)).state; // update state
+            state = JSON.parse(await getState(initialState)); // update state
             checkCurrentEpochNum(state, "0x3");
             checkCurrentPhase(state, "InputAccumulation");
             await checkFinalizedEpoch(
@@ -882,7 +884,7 @@ function checkCurrentPhase(state: any, phase: string) {
 
 function checkCurrentEpochNum(state: any, epoch: string) {
     expect(
-        state.current_epoch.epoch_number,
+        state.current_epoch.epoch_initial_state.epoch_number,
         "current epoch number does not match"
     ).to.equal(epoch);
 }

@@ -1,9 +1,9 @@
-use crate::{input::EpochInputState, FoldableError};
-use async_trait::async_trait;
-use ethers::{
-    providers::Middleware,
-    types::{Address, U256},
+use crate::{
+    epoch_initial_state::EpochInitialState, input::EpochInputState,
+    FoldableError,
 };
+use async_trait::async_trait;
+use ethers::providers::Middleware;
 use serde::{Deserialize, Serialize};
 use state_fold::{
     FoldMiddleware, Foldable, StateFoldEnvironment, SyncMiddleware,
@@ -14,24 +14,22 @@ use std::sync::Arc;
 /// Active epoch currently receiving inputs
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AccumulatingEpoch {
-    pub epoch_number: U256,
-    pub inputs: EpochInputState,
-    pub dapp_contract_address: Address,
+    pub inputs: Arc<EpochInputState>,
+    pub epoch_initial_state: Arc<EpochInitialState>,
 }
 
 impl AccumulatingEpoch {
-    pub fn new(dapp_contract_address: Address, epoch_number: U256) -> Self {
-        Self {
-            epoch_number,
-            inputs: EpochInputState::new(epoch_number, dapp_contract_address),
-            dapp_contract_address,
-        }
+    pub fn new(epoch_initial_state: Arc<EpochInitialState>) -> Arc<Self> {
+        Arc::new(Self {
+            inputs: EpochInputState::new(Arc::clone(&epoch_initial_state)),
+            epoch_initial_state,
+        })
     }
 }
 
 #[async_trait]
 impl Foldable for AccumulatingEpoch {
-    type InitialState = (Address, U256);
+    type InitialState = Arc<EpochInitialState>;
     type Error = FoldableError;
     type UserData = ();
 
@@ -41,20 +39,14 @@ impl Foldable for AccumulatingEpoch {
         env: &StateFoldEnvironment<M, Self::UserData>,
         _access: Arc<SyncMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let (dapp_contract_address, epoch_number) = *initial_state;
+        let inputs =
+            EpochInputState::get_state_for_block(initial_state, block, env)
+                .await?
+                .state;
 
-        let inputs = EpochInputState::get_state_for_block(
-            &(dapp_contract_address, epoch_number),
-            block,
-            env,
-        )
-        .await?
-        .state;
-
-        Ok(AccumulatingEpoch {
+        Ok(Self {
             inputs,
-            epoch_number,
-            dapp_contract_address,
+            epoch_initial_state: Arc::clone(initial_state),
         })
     }
 
@@ -64,22 +56,20 @@ impl Foldable for AccumulatingEpoch {
         env: &StateFoldEnvironment<M, Self::UserData>,
         _access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let epoch_number = previous_state.epoch_number.clone();
-        let dapp_contract_address =
-            previous_state.dapp_contract_address.clone();
+        let epoch_initial_state =
+            Arc::clone(&previous_state.epoch_initial_state);
 
         let inputs = EpochInputState::get_state_for_block(
-            &(dapp_contract_address, epoch_number),
+            &epoch_initial_state,
             block,
             env,
         )
         .await?
         .state;
 
-        Ok(AccumulatingEpoch {
-            epoch_number,
+        Ok(Self {
             inputs,
-            dapp_contract_address,
+            epoch_initial_state,
         })
     }
 }

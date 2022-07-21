@@ -18,7 +18,7 @@ import { BigNumber } from "ethers";
 import { DeployOptions } from "hardhat-deploy/types";
 import { ServiceError } from "@grpc/grpc-js";
 import createClient from "./client";
-import { GetStateResponse__Output } from "../generated-src/proto/StateServer/GetStateResponse";
+import { BlockState__Output } from "../generated-src/proto/StateFoldServer/BlockState";
 import { getFacetCuts, productionFacetNames } from "../src/utils";
 import {
     CartesiDAppFactory,
@@ -68,18 +68,19 @@ export const getInputHash = (
     return input_hash;
 };
 
-export const getState = async (jsonInitialState: string) => {
+export const getState = async (jsonData: string) => {
     return new Promise<string>((resolve, reject) => {
-        client.GetState(
-            { jsonInitialState },
+        const initialState = { jsonData };
+        client.QueryState(
+            { initialState, queryBlock: null },
             (
                 err: ServiceError | null,
-                response: GetStateResponse__Output | undefined
+                response: BlockState__Output | undefined
             ) => {
-                if (err || !response?.jsonState) {
+                if (err || !response?.state?.jsonData) {
                     return reject(err ?? `no response`);
                 }
-                return resolve(response.jsonState);
+                return resolve(response.state.jsonData);
             }
         );
     });

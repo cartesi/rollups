@@ -29,7 +29,7 @@ do
     test_script_path="test/${test_script_name}.ts"
 
     # run delegate server
-    "${server_script_path}" --sf-safety-margin 0 >> /dev/null 2>&1 &
+    "${server_script_path}" --sf-safety-margin 0 & # >> /dev/null 2>&1 &
     delegate_server_pid=$!
     echo "Running ${server_script_path} (pid=${delegate_server_pid})"
     sleep 3

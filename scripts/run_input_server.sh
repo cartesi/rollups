@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./offchain/target/debug/output_server_main $@ input
+./offchain/target/debug/input-state-server $@

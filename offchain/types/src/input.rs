@@ -1,3 +1,4 @@
+use crate::epoch_initial_state::EpochInitialState;
 use crate::FoldableError;
 use anyhow::Context;
 use async_trait::async_trait;
@@ -21,18 +22,16 @@ use std::sync::Arc;
 /// Set of inputs at some epoch
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct EpochInputState {
-    pub epoch_number: U256,
-    pub inputs: Vector<Input>,
-    pub dapp_contract_address: Address,
+    pub inputs: Vector<Arc<Input>>,
+    pub epoch_initial_state: Arc<EpochInitialState>,
 }
 
 impl EpochInputState {
-    pub fn new(epoch_number: U256, dapp_contract_address: Address) -> Self {
-        Self {
-            epoch_number,
+    pub fn new(epoch_initial_state: Arc<EpochInitialState>) -> Arc<Self> {
+        Arc::new(Self {
             inputs: Vector::new(),
-            dapp_contract_address,
-        }
+            epoch_initial_state,
+        })
     }
 }
 
@@ -65,7 +64,7 @@ impl Input {
 
 #[async_trait]
 impl Foldable for EpochInputState {
-    type InitialState = (Address, U256);
+    type InitialState = Arc<EpochInitialState>;
     type Error = FoldableError;
     type UserData = ();
 
@@ -75,27 +74,25 @@ impl Foldable for EpochInputState {
         _env: &StateFoldEnvironment<M, Self::UserData>,
         access: Arc<SyncMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let (dapp_contract_address, epoch_number) = initial_state.clone();
-
-        let contract = InputFacet::new(dapp_contract_address, access);
+        let contract =
+            InputFacet::new(*initial_state.dapp_contract_address, access);
 
         // Retrieve `InputAdded` events
         let events = contract
             .input_added_filter()
-            .topic1(epoch_number)
+            .topic1(initial_state.epoch_number)
             .query_with_meta()
             .await
             .context("Error querying for input added events")?;
 
-        let mut inputs: Vector<Input> = Vector::new();
+        let mut inputs: Vector<Arc<Input>> = Vector::new();
         for ev in events {
-            inputs.push_back(ev.into());
+            inputs.push_back(Arc::new(ev.into()));
         }
 
         Ok(EpochInputState {
-            epoch_number,
             inputs,
-            dapp_contract_address,
+            epoch_initial_state: initial_state.clone(),
         })
     }
 
@@ -105,7 +102,9 @@ impl Foldable for EpochInputState {
         _env: &StateFoldEnvironment<M, Self::UserData>,
         access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let dapp_contract_address = previous_state.dapp_contract_address;
+        let dapp_contract_address =
+            &previous_state.epoch_initial_state.dapp_contract_address;
+
         // If not in bloom copy previous state
         if !(fold_utils::contains_address(
             &block.logs_bloom,
@@ -117,24 +116,23 @@ impl Foldable for EpochInputState {
             return Ok(previous_state.clone());
         }
 
-        let contract = InputFacet::new(dapp_contract_address, access);
+        let contract = InputFacet::new(**dapp_contract_address, access);
 
         let events = contract
             .input_added_filter()
-            .topic1(previous_state.epoch_number)
+            .topic1(previous_state.epoch_initial_state.epoch_number)
             .query()
             .await
             .context("Error querying for input added events")?;
 
         let mut inputs = previous_state.inputs.clone();
         for ev in events {
-            inputs.push_back((ev, block).into());
+            inputs.push_back(Arc::new((ev, block).into()));
         }
 
         Ok(EpochInputState {
-            epoch_number: previous_state.epoch_number,
             inputs,
-            dapp_contract_address,
+            epoch_initial_state: previous_state.epoch_initial_state.clone(),
         })
     }
 }

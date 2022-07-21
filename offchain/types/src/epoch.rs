@@ -1,15 +1,15 @@
-use crate::accumulating_epoch::AccumulatingEpoch;
-use crate::finalized_epoch::FinalizedEpochs;
-use crate::sealed_epoch::{EpochWithClaims, SealedEpochState};
-use crate::FoldableError;
+use crate::{
+    accumulating_epoch::AccumulatingEpoch,
+    epoch_initial_state::EpochInitialState,
+    finalized_epochs::FinalizedEpochs,
+    rollups_initial_state::RollupsInitialState,
+    sealed_epoch::{EpochWithClaims, SealedEpochState},
+    FoldableError,
+};
 use anyhow::{anyhow, Context, Error};
 use async_trait::async_trait;
 use contracts::rollups_facet::*;
-use ethers::{
-    prelude::EthEvent,
-    providers::Middleware,
-    types::{Address, U256},
-};
+use ethers::{prelude::EthEvent, providers::Middleware, types::U256};
 use state_fold::{
     utils as fold_utils, FoldMiddleware, Foldable, StateFoldEnvironment,
     SyncMiddleware,
@@ -21,23 +21,22 @@ use std::sync::Arc;
 pub enum ContractPhase {
     InputAccumulation {},
     AwaitingConsensus {
-        sealed_epoch: SealedEpochState,
+        sealed_epoch: Arc<SealedEpochState>,
         round_start: U256,
     },
     AwaitingDispute {
-        sealed_epoch: EpochWithClaims,
+        sealed_epoch: Arc<EpochWithClaims>,
     },
 }
 
 #[derive(Clone, Debug)]
 pub struct EpochState {
-    pub initial_epoch: U256,
     pub current_phase: ContractPhase,
-    pub finalized_epochs: FinalizedEpochs,
-    pub current_epoch: AccumulatingEpoch,
+    pub finalized_epochs: Arc<FinalizedEpochs>,
+    pub current_epoch: Arc<AccumulatingEpoch>,
     /// Timestamp of last contract phase change
     pub phase_change_timestamp: Option<U256>,
-    dapp_contract_address: Address,
+    pub rollups_initial_state: Arc<RollupsInitialState>,
 }
 
 /// Epoch StateActor Delegate, which implements `sync` and `fold`.
@@ -45,7 +44,7 @@ pub struct EpochState {
 /// emitted events
 #[async_trait]
 impl Foldable for EpochState {
-    type InitialState = (Address, U256);
+    type InitialState = Arc<RollupsInitialState>;
     type Error = FoldableError;
     type UserData = ();
 
@@ -55,23 +54,29 @@ impl Foldable for EpochState {
         env: &StateFoldEnvironment<M, Self::UserData>,
         access: Arc<SyncMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let (dapp_contract_address, initial_epoch) = *(initial_state);
-
-        let contract =
-            RollupsFacet::new(dapp_contract_address, Arc::clone(&access));
+        let contract = RollupsFacet::new(
+            *initial_state.dapp_contract_address,
+            Arc::clone(&access),
+        );
 
         // retrieve list of finalized epochs from FinalizedEpochFoldDelegate
-        let finalized_epochs = FinalizedEpochs::get_state_for_block(
-            &(dapp_contract_address, initial_epoch),
-            block,
-            env,
-        )
-        .await
-        .context("Finalized epoch state fold error")?
-        .state;
+        let finalized_epochs =
+            FinalizedEpochs::get_state_for_block(initial_state, block, env)
+                .await
+                .context("Finalized epoch state fold error")?
+                .state;
 
         // The index of next epoch is the number of finalized epochs
-        let next_epoch = finalized_epochs.next_epoch();
+        let epoch_initial_state = {
+            let next_epoch = finalized_epochs.next_epoch();
+
+            Arc::new(EpochInitialState {
+                dapp_contract_address: Arc::clone(
+                    &initial_state.dapp_contract_address,
+                ),
+                epoch_number: next_epoch,
+            })
+        };
 
         // Retrieve events emitted by the blockchain on phase changes
         let phase_change_events = contract
@@ -101,7 +106,7 @@ impl Foldable for EpochState {
             // either accumulating inputs or sealed epoch with no claims/new inputs
             Some((PhaseChangeFilter { new_phase: 0 }, _)) | None => {
                 let current_epoch = AccumulatingEpoch::get_state_for_block(
-                    &(dapp_contract_address, next_epoch),
+                    &epoch_initial_state,
                     block,
                     env,
                 )
@@ -114,7 +119,7 @@ impl Foldable for EpochState {
             // can be SealedEpochNoClaims or SealedEpochWithClaims
             Some((PhaseChangeFilter { new_phase: 1 }, _)) => {
                 let sealed_epoch = SealedEpochState::get_state_for_block(
-                    &(dapp_contract_address, next_epoch),
+                    &epoch_initial_state,
                     block,
                     env,
                 )
@@ -122,7 +127,7 @@ impl Foldable for EpochState {
                 .state;
 
                 let current_epoch = AccumulatingEpoch::get_state_for_block(
-                    &(dapp_contract_address, next_epoch + 1u64),
+                    &epoch_initial_state,
                     block,
                     env,
                 )
@@ -145,7 +150,7 @@ impl Foldable for EpochState {
             // AwaitingDispute
             Some((PhaseChangeFilter { new_phase: 2 }, _)) => {
                 let sealed_epoch = SealedEpochState::get_state_for_block(
-                    &(dapp_contract_address, next_epoch),
+                    &epoch_initial_state,
                     block,
                     env,
                 )
@@ -153,7 +158,7 @@ impl Foldable for EpochState {
                 .state;
 
                 let current_epoch = AccumulatingEpoch::get_state_for_block(
-                    &(dapp_contract_address, next_epoch + 1u64),
+                    &epoch_initial_state,
                     block,
                     env,
                 )
@@ -162,7 +167,7 @@ impl Foldable for EpochState {
 
                 (
                     ContractPhase::AwaitingDispute {
-                        sealed_epoch: match sealed_epoch {
+                        sealed_epoch: match &*sealed_epoch {
                             // If there are no claims then the contract can't
                             // be in AwaitingDispute phase
                             SealedEpochState::SealedEpochNoClaims {
@@ -174,9 +179,10 @@ impl Foldable for EpochState {
                                 )
                                 .into());
                             }
+
                             SealedEpochState::SealedEpochWithClaims {
                                 claimed_epoch,
-                            } => claimed_epoch,
+                            } => Arc::clone(claimed_epoch),
                         },
                     },
                     current_epoch,
@@ -196,10 +202,9 @@ impl Foldable for EpochState {
         Ok(EpochState {
             current_phase,
             phase_change_timestamp,
-            initial_epoch,
             finalized_epochs,
             current_epoch,
-            dapp_contract_address,
+            rollups_initial_state: Arc::clone(&initial_state),
         })
     }
 
@@ -209,7 +214,10 @@ impl Foldable for EpochState {
         env: &StateFoldEnvironment<M, Self::UserData>,
         access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let dapp_contract_address = previous_state.dapp_contract_address;
+        let dapp_contract_address = Arc::clone(
+            &previous_state.rollups_initial_state.dapp_contract_address,
+        );
+
         // Check if there was (possibly) some log emited on this block.
         if !(fold_utils::contains_address(
             &block.logs_bloom,
@@ -220,16 +228,18 @@ impl Foldable for EpochState {
         )) {
             // Current phase has not changed, but we need to update the
             // sub-states.
-            let current_epoch = AccumulatingEpoch::get_state_for_block(
-                &(
-                    dapp_contract_address,
-                    previous_state.current_epoch.epoch_number,
-                ),
-                block,
-                env,
-            )
-            .await?
-            .state;
+            let current_epoch = {
+                let epoch_initial_state =
+                    &previous_state.current_epoch.epoch_initial_state;
+
+                AccumulatingEpoch::get_state_for_block(
+                    epoch_initial_state,
+                    block,
+                    env,
+                )
+                .await?
+                .state
+            };
 
             let current_phase = match &previous_state.current_phase {
                 ContractPhase::InputAccumulation {} => {
@@ -240,13 +250,20 @@ impl Foldable for EpochState {
                     sealed_epoch,
                     round_start,
                 } => {
-                    let sealed_epoch = SealedEpochState::get_state_for_block(
-                        &(dapp_contract_address, sealed_epoch.epoch_number()),
-                        block,
-                        env,
-                    )
-                    .await?
-                    .state;
+                    let sealed_epoch = {
+                        let epoch_initial_state = Arc::new(EpochInitialState {
+                            dapp_contract_address,
+                            epoch_number: sealed_epoch.epoch_number(),
+                        });
+
+                        SealedEpochState::get_state_for_block(
+                            &epoch_initial_state,
+                            block,
+                            env,
+                        )
+                        .await?
+                        .state
+                    };
 
                     ContractPhase::AwaitingConsensus {
                         sealed_epoch,
@@ -255,16 +272,21 @@ impl Foldable for EpochState {
                 }
 
                 ContractPhase::AwaitingDispute { sealed_epoch } => {
-                    let sealed_epoch = SealedEpochState::get_state_for_block(
-                        &(dapp_contract_address, sealed_epoch.epoch_number),
-                        block,
-                        env,
-                    )
-                    .await?
-                    .state;
+                    let sealed_epoch = {
+                        let epoch_initial_state =
+                            &sealed_epoch.epoch_initial_state;
+
+                        SealedEpochState::get_state_for_block(
+                            epoch_initial_state,
+                            block,
+                            env,
+                        )
+                        .await?
+                        .state
+                    };
 
                     ContractPhase::AwaitingDispute {
-                        sealed_epoch: match sealed_epoch {
+                        sealed_epoch: match &*sealed_epoch {
                             SealedEpochState::SealedEpochNoClaims {
                                 sealed_epoch,
                             } => {
@@ -276,7 +298,7 @@ impl Foldable for EpochState {
                             }
                             SealedEpochState::SealedEpochWithClaims {
                                 claimed_epoch,
-                            } => claimed_epoch,
+                            } => Arc::clone(claimed_epoch),
                         },
                     }
                 }
@@ -286,23 +308,37 @@ impl Foldable for EpochState {
                 current_phase,
                 current_epoch,
                 phase_change_timestamp: previous_state.phase_change_timestamp,
-                initial_epoch: previous_state.initial_epoch,
                 finalized_epochs: previous_state.finalized_epochs.clone(),
-                dapp_contract_address,
+                rollups_initial_state: Arc::clone(
+                    &previous_state.rollups_initial_state,
+                ),
             });
         }
 
-        let contract = RollupsFacet::new(dapp_contract_address, access);
+        let contract = RollupsFacet::new(*dapp_contract_address, access);
 
         let finalized_epochs = FinalizedEpochs::get_state_for_block(
-            &(dapp_contract_address, previous_state.initial_epoch),
+            &previous_state.rollups_initial_state,
             block,
             env,
         )
         .await?
         .state;
 
-        let next_epoch = finalized_epochs.next_epoch();
+        let (epoch_initial_state, next_epoch_initial_state) = {
+            let next_epoch = finalized_epochs.next_epoch();
+
+            (
+                Arc::new(EpochInitialState {
+                    dapp_contract_address: Arc::clone(&dapp_contract_address),
+                    epoch_number: next_epoch,
+                }),
+                Arc::new(EpochInitialState {
+                    dapp_contract_address,
+                    epoch_number: next_epoch + 1u64,
+                }),
+            )
+        };
 
         let phase_change_events = contract
             .phase_change_filter()
@@ -314,7 +350,7 @@ impl Foldable for EpochState {
             // InputAccumulation
             Some(PhaseChangeFilter { new_phase: 0 }) | None => {
                 let current_epoch = AccumulatingEpoch::get_state_for_block(
-                    &(dapp_contract_address, next_epoch),
+                    &epoch_initial_state,
                     block,
                     env,
                 )
@@ -329,14 +365,15 @@ impl Foldable for EpochState {
                 // not yet finalized. One sealead, which can't receive new
                 // inputs and one active, accumulating new inputs
                 let sealed_epoch = SealedEpochState::get_state_for_block(
-                    &(dapp_contract_address, next_epoch),
+                    &epoch_initial_state,
                     block,
                     env,
                 )
                 .await?
                 .state;
+
                 let current_epoch = AccumulatingEpoch::get_state_for_block(
-                    &(dapp_contract_address, next_epoch + 1u64),
+                    &next_epoch_initial_state,
                     block,
                     env,
                 )
@@ -361,7 +398,7 @@ impl Foldable for EpochState {
                 // not yet finalized. One sealead, which can't receive new
                 // inputs and one active, accumulating new inputs
                 let sealed_epoch = SealedEpochState::get_state_for_block(
-                    &(dapp_contract_address, next_epoch),
+                    &epoch_initial_state,
                     block,
                     env,
                 )
@@ -369,7 +406,7 @@ impl Foldable for EpochState {
                 .state;
 
                 let current_epoch = AccumulatingEpoch::get_state_for_block(
-                    &(dapp_contract_address, next_epoch + 1u64),
+                    &next_epoch_initial_state,
                     block,
                     env,
                 )
@@ -378,7 +415,7 @@ impl Foldable for EpochState {
 
                 (
                     ContractPhase::AwaitingDispute {
-                        sealed_epoch: match sealed_epoch {
+                        sealed_epoch: match &*sealed_epoch {
                             SealedEpochState::SealedEpochNoClaims {
                                 sealed_epoch,
                             } => {
@@ -390,7 +427,7 @@ impl Foldable for EpochState {
                             }
                             SealedEpochState::SealedEpochWithClaims {
                                 claimed_epoch,
-                            } => claimed_epoch,
+                            } => Arc::clone(&claimed_epoch),
                         },
                     },
                     current_epoch,
@@ -417,9 +454,10 @@ impl Foldable for EpochState {
             current_phase,
             current_epoch,
             phase_change_timestamp,
-            initial_epoch: previous_state.initial_epoch,
             finalized_epochs,
-            dapp_contract_address,
+            rollups_initial_state: Arc::clone(
+                &previous_state.rollups_initial_state,
+            ),
         })
     }
 }

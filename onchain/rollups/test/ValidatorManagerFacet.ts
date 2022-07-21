@@ -80,9 +80,7 @@ describe("Validator Manager Facet", async () => {
         challengePeriod = (await rollupsFacet.getChallengePeriod()).toNumber();
 
         // initial state for delegate
-        initialState = JSON.stringify({
-            dapp_contract_address: validatorManagerFacet.address,
-        });
+        initialState = JSON.stringify(validatorManagerFacet.address);
     });
 
     it("check initial consensusGoalMask", async () => {

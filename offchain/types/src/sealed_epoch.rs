@@ -1,5 +1,6 @@
 use crate::{
-    accumulating_epoch::AccumulatingEpoch, input::EpochInputState,
+    accumulating_epoch::AccumulatingEpoch,
+    epoch_initial_state::EpochInitialState, input::EpochInputState,
     FoldableError,
 };
 use anyhow::{Context, Error};
@@ -21,49 +22,50 @@ use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub enum SealedEpochState {
-    SealedEpochNoClaims { sealed_epoch: AccumulatingEpoch },
-    SealedEpochWithClaims { claimed_epoch: EpochWithClaims },
+    SealedEpochNoClaims {
+        sealed_epoch: Arc<AccumulatingEpoch>,
+    },
+    SealedEpochWithClaims {
+        claimed_epoch: Arc<EpochWithClaims>,
+    },
 }
 
 impl SealedEpochState {
+    pub fn epoch_initial_state(&self) -> Arc<EpochInitialState> {
+        match self {
+            SealedEpochState::SealedEpochNoClaims { sealed_epoch } => {
+                Arc::clone(&sealed_epoch.epoch_initial_state)
+            }
+            SealedEpochState::SealedEpochWithClaims { claimed_epoch } => {
+                Arc::clone(&claimed_epoch.epoch_initial_state)
+            }
+        }
+    }
+
     pub fn epoch_number(&self) -> U256 {
-        match self {
-            SealedEpochState::SealedEpochNoClaims { sealed_epoch } => {
-                sealed_epoch.epoch_number
-            }
-            SealedEpochState::SealedEpochWithClaims { claimed_epoch } => {
-                claimed_epoch.epoch_number
-            }
-        }
+        self.epoch_initial_state().epoch_number
     }
 
-    pub fn dapp_contract_address(&self) -> Address {
-        match self {
-            SealedEpochState::SealedEpochNoClaims { sealed_epoch } => {
-                sealed_epoch.dapp_contract_address
-            }
-            SealedEpochState::SealedEpochWithClaims { claimed_epoch } => {
-                claimed_epoch.dapp_contract_address
-            }
-        }
+    pub fn dapp_contract_address(&self) -> Arc<Address> {
+        Arc::clone(&self.epoch_initial_state().dapp_contract_address)
     }
 
-    pub fn claims(&self) -> Option<Claims> {
+    pub fn claims(&self) -> Option<Arc<Claims>> {
         match self {
             SealedEpochState::SealedEpochNoClaims { .. } => None,
             SealedEpochState::SealedEpochWithClaims { claimed_epoch } => {
-                Some(claimed_epoch.claims.clone())
+                Some(Arc::clone(&claimed_epoch.claims))
             }
         }
     }
 
-    pub fn inputs(&self) -> EpochInputState {
+    pub fn inputs(&self) -> Arc<EpochInputState> {
         match self {
             SealedEpochState::SealedEpochNoClaims { sealed_epoch } => {
-                sealed_epoch.inputs.clone()
+                Arc::clone(&sealed_epoch.inputs)
             }
             SealedEpochState::SealedEpochWithClaims { claimed_epoch } => {
-                claimed_epoch.inputs.clone()
+                Arc::clone(&claimed_epoch.inputs)
             }
         }
     }
@@ -72,10 +74,9 @@ impl SealedEpochState {
 /// Sealed epoch with one or more claims
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct EpochWithClaims {
-    pub epoch_number: U256,
-    pub claims: Claims,
-    pub inputs: EpochInputState,
-    pub dapp_contract_address: Address,
+    pub claims: Arc<Claims>,
+    pub inputs: Arc<EpochInputState>,
+    pub epoch_initial_state: Arc<EpochInitialState>,
 }
 
 /// Set of claims
@@ -158,7 +159,7 @@ impl IntoIterator for Claims {
 
 #[async_trait]
 impl Foldable for SealedEpochState {
-    type InitialState = (Address, U256);
+    type InitialState = Arc<EpochInitialState>;
     type Error = FoldableError;
     type UserData = ();
 
@@ -168,37 +169,36 @@ impl Foldable for SealedEpochState {
         env: &StateFoldEnvironment<M, Self::UserData>,
         access: Arc<SyncMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let (dapp_contract_address, epoch_number) = initial_state.clone();
-
-        let contract =
-            RollupsFacet::new(dapp_contract_address, Arc::clone(&access));
+        let contract = RollupsFacet::new(
+            *initial_state.dapp_contract_address,
+            Arc::clone(&access),
+        );
 
         // Inputs of epoch
-        let inputs = EpochInputState::get_state_for_block(
-            &(dapp_contract_address, epoch_number),
-            block,
-            env,
-        )
-        .await?
-        .state;
+        let inputs =
+            EpochInputState::get_state_for_block(initial_state, block, env)
+                .await?
+                .state;
 
         // Get all claim events of epoch
         let claim_events = contract
             .claim_filter()
-            .topic1(epoch_number.clone())
+            .topic1(initial_state.epoch_number)
             .query_with_meta()
             .await
             .context("Error querying for rollups claims")?;
 
         // If there are no claim, state is SealedEpochNoClaims
         if claim_events.is_empty() {
-            return Ok(SealedEpochState::SealedEpochNoClaims {
-                sealed_epoch: AccumulatingEpoch {
-                    epoch_number,
-                    inputs,
-                    dapp_contract_address,
-                },
-            });
+            let sealed_epoch = AccumulatingEpoch::get_state_for_block(
+                initial_state,
+                block,
+                env,
+            )
+            .await?
+            .state;
+
+            return Ok(SealedEpochState::SealedEpochNoClaims { sealed_epoch });
         }
 
         let mut claims: Option<Claims> = None;
@@ -231,12 +231,11 @@ impl Foldable for SealedEpochState {
         }
 
         Ok(SealedEpochState::SealedEpochWithClaims {
-            claimed_epoch: EpochWithClaims {
-                epoch_number,
+            claimed_epoch: Arc::new(EpochWithClaims {
                 inputs,
-                claims: claims.unwrap(),
-                dapp_contract_address,
-            },
+                claims: Arc::new(claims.unwrap()),
+                epoch_initial_state: Arc::clone(initial_state),
+            }),
         })
     }
 
@@ -246,17 +245,17 @@ impl Foldable for SealedEpochState {
         _env: &StateFoldEnvironment<M, Self::UserData>,
         access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
+        let epoch_initial_state = previous_state.epoch_initial_state();
+
         // Check if there was (possibly) some log emited on this block.
         // As finalized epochs' inputs will not change, we can return early
         // without querying the input StateFold.
-        let dapp_contract_address =
-            previous_state.dapp_contract_address().clone();
         if !(fold_utils::contains_address(
             &block.logs_bloom,
-            &dapp_contract_address,
+            &epoch_initial_state.dapp_contract_address,
         ) && fold_utils::contains_topic(
             &block.logs_bloom,
-            &previous_state.epoch_number(),
+            &epoch_initial_state.epoch_number,
         ) && fold_utils::contains_topic(
             &block.logs_bloom,
             &ClaimFilter::signature(),
@@ -265,7 +264,10 @@ impl Foldable for SealedEpochState {
         }
 
         let epoch_number = previous_state.epoch_number().clone();
-        let contract = RollupsFacet::new(dapp_contract_address, access);
+        let contract = RollupsFacet::new(
+            *epoch_initial_state.dapp_contract_address,
+            access,
+        );
 
         // Get claim events of epoch at this block hash
         let claim_events = contract
@@ -280,7 +282,8 @@ impl Foldable for SealedEpochState {
             return Ok(previous_state.clone());
         }
 
-        let mut claims: Option<Claims> = previous_state.claims();
+        let mut claims: Option<Claims> =
+            previous_state.claims().map(|x| (*x).clone());
 
         for (claim_event, _) in claim_events {
             claims = Some(match claims {
@@ -308,12 +311,11 @@ impl Foldable for SealedEpochState {
 
         // don't need to re-update inputs because epoch is sealed
         Ok(SealedEpochState::SealedEpochWithClaims {
-            claimed_epoch: EpochWithClaims {
-                epoch_number,
+            claimed_epoch: Arc::new(EpochWithClaims {
                 inputs: previous_state.inputs(),
-                claims: claims.unwrap(),
-                dapp_contract_address,
-            },
+                claims: Arc::new(claims.unwrap()),
+                epoch_initial_state,
+            }),
         })
     }
 }

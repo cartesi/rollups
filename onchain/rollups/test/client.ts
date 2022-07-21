@@ -13,12 +13,12 @@
 import * as protoLoader from "@grpc/proto-loader";
 import * as grpc from "@grpc/grpc-js";
 
-import { ProtoGrpcType } from "../generated-src/proto/stateserver";
+import { ProtoGrpcType } from "../generated-src/proto/state-fold-server";
 
 const createClient = (address: string = "0.0.0.0:50051") => {
     // load proto definition
     const packageDefinition = protoLoader.loadSync(
-        "../../grpc-interfaces/stateserver.proto"
+        "../../grpc-interfaces/state-fold-server.proto"
     );
 
     // turn into proto object
@@ -27,7 +27,7 @@ const createClient = (address: string = "0.0.0.0:50051") => {
     ) as unknown as ProtoGrpcType;
 
     // create client
-    return new proto.StateServer.DelegateManager(
+    return new proto.StateFoldServer.StateFold(
         address,
         grpc.credentials.createInsecure()
     );

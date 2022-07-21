@@ -21,7 +21,7 @@
         "start": "hardhat node",
         "test": "run-s build test:protoc test:hardhat",
         "test:hardhat": "hardhat test",
-        "test:protoc": "proto-loader-gen-types --grpcLib @grpc/grpc-js --outDir generated-src/proto ../../grpc-interfaces/stateserver.proto",
+        "test:protoc": "proto-loader-gen-types --grpcLib @grpc/grpc-js --outDir generated-src/proto ../../grpc-interfaces/state-fold-server.proto",
         "tsc": "tsc",
         "tsc:prod": "tsc -p tsconfig.prod.json"
     },

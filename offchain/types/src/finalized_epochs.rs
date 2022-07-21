@@ -1,12 +1,14 @@
-use crate::input::EpochInputState;
-use crate::FoldableError;
+use crate::{
+    epoch_initial_state::EpochInitialState, input::EpochInputState,
+    rollups_initial_state::RollupsInitialState, FoldableError,
+};
 use anyhow::Context;
 use async_trait::async_trait;
 use contracts::rollups_facet::*;
 use ethers::{
     prelude::EthEvent,
     providers::Middleware,
-    types::{Address, H256, U256, U64},
+    types::{H256, U256, U64},
 };
 use im::Vector;
 use serde::{Deserialize, Serialize};
@@ -23,7 +25,7 @@ use std::sync::Arc;
 pub struct FinalizedEpoch {
     pub epoch_number: U256,
     pub hash: H256,
-    pub inputs: EpochInputState,
+    pub inputs: Arc<EpochInputState>,
 
     /// Hash of block in which epoch was finalized
     pub finalized_block_hash: H256,
@@ -36,28 +38,23 @@ pub struct FinalizedEpoch {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FinalizedEpochs {
     /// Set of `FinalizedEpoch`
-    pub finalized_epochs: Vector<FinalizedEpoch>,
-
-    /// The first epoch that will be included in `finalized_epochs`
-    pub initial_epoch: U256,
-
-    pub dapp_contract_address: Address,
+    pub finalized_epochs: Vector<Arc<FinalizedEpoch>>,
+    pub rollups_initial_state: Arc<RollupsInitialState>,
 }
 
 impl FinalizedEpochs {
-    pub fn new(initial_epoch: U256, dapp_contract_address: Address) -> Self {
+    pub fn new(rollups_initial_state: Arc<RollupsInitialState>) -> Self {
         Self {
             finalized_epochs: Vector::new(),
-            initial_epoch,
-            dapp_contract_address,
+            rollups_initial_state,
         }
     }
 
-    pub fn get_epoch(&self, index: usize) -> Option<FinalizedEpoch> {
-        if index >= self.initial_epoch.as_usize()
-            && index < self.next_epoch().as_usize()
-        {
-            let actual_index = index - self.initial_epoch.as_usize();
+    pub fn get_epoch(&self, index: usize) -> Option<Arc<FinalizedEpoch>> {
+        let initial_epoch = self.rollups_initial_state.initial_epoch.as_usize();
+
+        if index >= initial_epoch && index < self.next_epoch().as_usize() {
+            let actual_index = index - initial_epoch;
             Some(self.finalized_epochs[actual_index].clone())
         } else {
             None
@@ -65,7 +62,7 @@ impl FinalizedEpochs {
     }
 
     pub fn next_epoch(&self) -> U256 {
-        self.initial_epoch + self.finalized_epochs.len()
+        self.rollups_initial_state.initial_epoch + self.finalized_epochs.len()
     }
 
     fn epoch_number_consistent(&self, epoch_number: &U256) -> bool {
@@ -74,7 +71,10 @@ impl FinalizedEpochs {
 
     /// If `finalized_epoch.epoch_number` is not consistent, this method fails
     /// to insert epoch and returns false.
-    pub fn insert_epoch(&mut self, finalized_epoch: FinalizedEpoch) -> bool {
+    pub fn insert_epoch(
+        &mut self,
+        finalized_epoch: Arc<FinalizedEpoch>,
+    ) -> bool {
         if !self.epoch_number_consistent(&finalized_epoch.epoch_number) {
             return false;
         }
@@ -86,7 +86,7 @@ impl FinalizedEpochs {
 
 #[async_trait]
 impl Foldable for FinalizedEpochs {
-    type InitialState = (Address, U256);
+    type InitialState = Arc<RollupsInitialState>;
     type Error = FoldableError;
     type UserData = ();
 
@@ -96,9 +96,8 @@ impl Foldable for FinalizedEpochs {
         env: &StateFoldEnvironment<M, Self::UserData>,
         access: Arc<SyncMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let (dapp_contract_address, initial_epoch) = *initial_state;
-
-        let contract = RollupsFacet::new(dapp_contract_address, access);
+        let contract =
+            RollupsFacet::new(*initial_state.dapp_contract_address, access);
 
         // Retrieve FinalizeEpoch events
         let epoch_finalized_events = contract
@@ -108,20 +107,30 @@ impl Foldable for FinalizedEpochs {
             .context("Error querying for rollups finalized epochs")?;
 
         let mut finalized_epochs =
-            FinalizedEpochs::new(initial_epoch, dapp_contract_address);
+            FinalizedEpochs::new(Arc::clone(&initial_state));
 
         // If number of epoch finalized events is smaller than the specified
         // `inital_epoch` then no update is needed
-        if epoch_finalized_events.len() < initial_epoch.as_usize() {
+        if epoch_finalized_events.len() < initial_state.initial_epoch.as_usize()
+        {
             return Ok(finalized_epochs);
         }
 
-        let slice = &epoch_finalized_events[initial_epoch.as_usize()..];
+        let slice =
+            &epoch_finalized_events[initial_state.initial_epoch.as_usize()..];
+
         // For every event in `epoch_finalized_events`, considering the
         // `initial_epoch` slice, add a `FinalizedEpoch` to the list
         for (ev, meta) in slice {
+            let epoch_initial_state = Arc::new(EpochInitialState {
+                dapp_contract_address: Arc::clone(
+                    &initial_state.dapp_contract_address,
+                ),
+                epoch_number: ev.epoch_number,
+            });
+
             let inputs = EpochInputState::get_state_for_block(
-                &(dapp_contract_address, ev.epoch_number),
+                &epoch_initial_state,
                 block,
                 env,
             )
@@ -136,7 +145,7 @@ impl Foldable for FinalizedEpochs {
                 finalized_block_number: meta.block_number,
             };
 
-            let inserted = finalized_epochs.insert_epoch(epoch);
+            let inserted = finalized_epochs.insert_epoch(Arc::new(epoch));
             assert!(inserted);
         }
 
@@ -149,14 +158,15 @@ impl Foldable for FinalizedEpochs {
         env: &StateFoldEnvironment<M, Self::UserData>,
         access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
-        let dapp_contract_address = previous_state.dapp_contract_address;
+        let dapp_contract_address =
+            &previous_state.rollups_initial_state.dapp_contract_address;
 
         // Check if there was (possibly) some log emited on this block.
         // As finalized epochs' inputs will not change, we can return early
         // without querying the input StateFold.
         if !(fold_utils::contains_address(
             &block.logs_bloom,
-            &dapp_contract_address,
+            dapp_contract_address,
         ) && fold_utils::contains_topic(
             &block.logs_bloom,
             &previous_state.next_epoch(),
@@ -167,7 +177,7 @@ impl Foldable for FinalizedEpochs {
             return Ok(previous_state.clone());
         }
 
-        let contract = RollupsFacet::new(dapp_contract_address, access);
+        let contract = RollupsFacet::new(**dapp_contract_address, access);
 
         // Retrieve finalized epoch events
         let epoch_finalized_events = contract
@@ -186,21 +196,26 @@ impl Foldable for FinalizedEpochs {
                 continue;
             }
 
+            let epoch_initial_state = Arc::new(EpochInitialState {
+                dapp_contract_address: Arc::clone(&dapp_contract_address),
+                epoch_number: ev.epoch_number,
+            });
+
             let inputs = EpochInputState::get_state_for_block(
-                &(dapp_contract_address, ev.epoch_number),
+                &epoch_initial_state,
                 block,
                 env,
             )
             .await?
             .state;
 
-            let epoch = FinalizedEpoch {
+            let epoch = Arc::new(FinalizedEpoch {
                 epoch_number: ev.epoch_number,
                 hash: ev.epoch_hash.into(),
                 inputs,
                 finalized_block_hash: meta.block_hash,
                 finalized_block_number: meta.block_number,
-            };
+            });
 
             let inserted = finalized_epochs.insert_epoch(epoch);
             assert!(inserted);
