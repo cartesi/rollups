@@ -30,7 +30,8 @@ pub struct Config {
     pub inspect_server_address: String,
     pub server_manager_address: String,
     pub session_id: String,
-    pub path_prefix: Option<String>,
+    pub inspect_path_prefix: String,
+    pub healthcheck_path: String,
 }
 
 impl Config {
@@ -63,14 +64,31 @@ impl Config {
                 err: String::from("Must specify session id"),
             })?;
 
-        let path_prefix: Option<String> =
-            env_cli_config.path_prefix.or(file_config.path_prefix);
+        let healthcheck_path: String = env_cli_config
+            .healthcheck_path
+            .or(file_config.healthcheck_path)
+            .map(check_path_prefix)
+            .unwrap_or(Ok(String::from("/healthz")))?;
+
+        let inspect_path_prefix: String = env_cli_config
+            .inspect_path_prefix
+            .or(file_config.inspect_path_prefix)
+            .map(check_path_prefix)
+            .unwrap_or(Ok(String::from("/inspect")))?;
+        if inspect_path_prefix == healthcheck_path {
+            return Err(BadConfigurationError {
+                err: String::from(
+                    "inspect path must be different from healthcheck path",
+                ),
+            });
+        }
 
         Ok(Self {
             inspect_server_address,
             server_manager_address,
             session_id,
-            path_prefix,
+            inspect_path_prefix,
+            healthcheck_path,
         })
     }
 }
@@ -92,7 +110,11 @@ struct EnvCLIConfig {
 
     /// Path prefix for the inspect server URL
     #[structopt(long, env)]
-    path_prefix: Option<String>,
+    inspect_path_prefix: Option<String>,
+
+    /// Path for the healthcheck check
+    #[structopt(long, env)]
+    healthcheck_path: Option<String>,
 
     /// Path to the config file
     #[structopt(long, env)]
@@ -104,5 +126,19 @@ struct FileConfig {
     inspect_server_address: Option<String>,
     server_manager_address: Option<String>,
     session_id: Option<String>,
-    path_prefix: Option<String>,
+    inspect_path_prefix: Option<String>,
+    healthcheck_path: Option<String>,
+}
+
+fn check_path_prefix(prefix: String) -> Result<String, BadConfigurationError> {
+    let re = regex::Regex::new(r"^/[a-z]+$").unwrap();
+    if re.is_match(&prefix) {
+        Ok(prefix)
+    } else {
+        Err(BadConfigurationError {
+            err: String::from(
+                "invalid path prefix, it should be in the format `/[a-z]+`.",
+            ),
+        })
+    }
 }

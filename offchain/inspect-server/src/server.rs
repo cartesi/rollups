@@ -26,19 +26,33 @@ pub fn create(
     config: &Config,
     inspect_client: InspectClient,
 ) -> std::io::Result<Server> {
-    let path_prefix = config.path_prefix.clone().unwrap_or(String::from(""));
-    let path = path_prefix + "/{payload:.*}";
+    let inspect_path = config.inspect_path_prefix.clone() + "/{payload:.*}";
+    let healthcheck_path = config.healthcheck_path.clone();
     let server = HttpServer::new(move || {
         let cors = Cors::permissive();
         App::new()
             .app_data(web::Data::new(inspect_client.clone()))
             .wrap(middleware::Logger::default())
             .wrap(cors)
-            .service(web::resource(path.clone()).route(web::get().to(inspect)))
+            .service(web::resource("/").route(web::get().to(healthcheck)))
+            .service(
+                web::resource(healthcheck_path.clone())
+                    .route(web::get().to(healthcheck)),
+            )
+            .service(
+                web::resource(inspect_path.clone())
+                    .route(web::get().to(inspect)),
+            )
     })
     .bind(config.inspect_server_address.clone())?
     .run();
     Ok(server)
+}
+
+/// The healthcheck is dummy because the inspect server doesn't maintain a permanent connection
+/// with the server manager
+async fn healthcheck() -> HttpResponse {
+    HttpResponse::Ok().finish()
 }
 
 async fn inspect(

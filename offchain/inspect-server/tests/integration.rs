@@ -100,7 +100,6 @@ async fn test_exception() {
         vec![],
         Some(payload.bytes().collect()),
         CompletionStatus::Exception,
-        None,
     )
     .await;
     let response = send_request("hello", 200)
@@ -118,7 +117,7 @@ async fn test_exception() {
 #[tokio::test]
 #[serial_test::serial]
 async fn test_error_when_server_manager_is_down() {
-    let inspect_server = InspectServerWrapper::start(None).await;
+    let inspect_server = InspectServerWrapper::start().await;
     let err_msg = send_request("hello", 502)
         .await
         .expect_err("failed to obtain response");
@@ -129,33 +128,12 @@ async fn test_error_when_server_manager_is_down() {
     inspect_server.stop().await;
 }
 
-#[tokio::test]
-#[serial_test::serial]
-async fn test_custom_path_prefix() {
-    let servers = setup(
-        "hello".as_bytes(),
-        vec![],
-        None,
-        CompletionStatus::Accepted,
-        Some(String::from("/inspect")),
-    )
-    .await;
-    let response = send_request("inspect/hello", 200)
-        .await
-        .expect("failed to obtain response");
-    assert_eq!(response.status, "Accepted");
-    assert_eq!(response.reports.len(), 0);
-    assert_eq!(response.exception_payload, None);
-    teardown(servers).await;
-}
-
 async fn test_payload(sent_payload: &str, expected_payload: &str) {
     let servers = setup(
         expected_payload.as_bytes(),
         vec![],
         None,
         CompletionStatus::Accepted,
-        None,
     )
     .await;
     let response = send_request(sent_payload, 200)
@@ -173,7 +151,6 @@ async fn test_reports(reports: Vec<Report>) {
         reports.clone(),
         None,
         CompletionStatus::Accepted,
-        None,
     )
     .await;
     let response = send_request("hello", 200)
@@ -197,7 +174,7 @@ async fn send_request(
     payload: &str,
     expected_status: u16,
 ) -> Result<HttpInspectResponse, String> {
-    let url = format!("http://{}/{}", INSPECT_SERVER_ADDRESS, payload);
+    let url = format!("http://{}/inspect/{}", INSPECT_SERVER_ADDRESS, payload);
     let response = reqwest::get(url).await.expect("failed to send inspect");
     assert_eq!(response.status(), expected_status);
     if response.status() == 200 {
@@ -221,7 +198,6 @@ async fn setup(
     returned_reports: Vec<Report>,
     returned_exception: Option<Vec<u8>>,
     returned_completion_status: CompletionStatus,
-    path_prefix: Option<String>,
 ) -> (MockServerManagerWrapper, InspectServerWrapper) {
     let _ = env_logger::builder()
         .filter_level(log::LevelFilter::Info)
@@ -234,7 +210,7 @@ async fn setup(
         returned_completion_status,
     )
     .await;
-    let inspect_server = InspectServerWrapper::start(path_prefix).await;
+    let inspect_server = InspectServerWrapper::start().await;
     (server_manager, inspect_server)
 }
 
@@ -256,12 +232,13 @@ struct InspectServerWrapper {
 impl InspectServerWrapper {
     /// Start the inspect server in another thread.
     /// This function blocks until the server is ready.
-    async fn start(path_prefix: Option<String>) -> Self {
+    async fn start() -> Self {
         let config = Config {
             inspect_server_address: INSPECT_SERVER_ADDRESS.to_string(),
             server_manager_address: SERVER_MANAGER_ADDRESS.to_string(),
             session_id: SESSION_ID.to_string(),
-            path_prefix,
+            inspect_path_prefix: String::from("/inspect"),
+            healthcheck_path: String::from("/healthz"),
         };
         let inspect_client = InspectClient::new(&config);
         let (handle_tx, handle_rx) = oneshot::channel();

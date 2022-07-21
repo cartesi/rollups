@@ -2043,6 +2043,7 @@ dependencies = [
  "hex",
  "log",
  "prost 0.10.4",
+ "regex",
  "reqwest",
  "serde",
  "serial_test 0.7.0",
