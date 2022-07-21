@@ -78,7 +78,8 @@ impl Foldable for ValidatorManagerState {
             RollupsFacet::new(dapp_contract_address, Arc::clone(&middleware));
 
         // declare variables
-        let mut num_claims: [Option<NumClaims>; 8] = [None; 8];
+        let mut num_claims: [Option<NumClaims>; MAX_NUM_VALIDATORS] =
+            [None; MAX_NUM_VALIDATORS];
         let mut validators_removed: Vec<Address> = Vec::new();
 
         // validators that have claimed in the current unfinalized epoch

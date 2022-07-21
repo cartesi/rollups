@@ -14,7 +14,6 @@ use ethers::{
     prelude::{EthEvent, Middleware},
     types::{Address, U256},
 };
-use im::HashMap;
 use serde::{Deserialize, Serialize};
 use state_fold::{
     utils as fold_utils, FoldMiddleware, Foldable, StateFoldEnvironment,
@@ -157,6 +156,16 @@ impl Foldable for FeeManagerState {
         let diamond_init =
             DiamondInit::new(*dapp_contract_address, Arc::clone(&access));
 
+        // obtain #claims validators made from Validator Manager
+        let validator_manager_state =
+            ValidatorManagerState::get_state_for_block(
+                &dapp_contract_address,
+                block,
+                env,
+            )
+            .await?
+            .state;
+
         // `FeeManagerInitialized` event
         let events = diamond_init
             .fee_manager_initialized_filter()
@@ -189,21 +198,15 @@ impl Foldable for FeeManagerState {
             .context("Error querying for fee redeemed events")?;
         let mut num_redeemed: [Option<NumRedeemed>; MAX_NUM_VALIDATORS] =
             [None; MAX_NUM_VALIDATORS];
-        let mut validator_redeemed_sums: HashMap<Address, U256> =
-            HashMap::new();
         for ev in events.iter() {
-            match validator_redeemed_sums.get(&ev.validator) {
-                Some(amount) => {
-                    validator_redeemed_sums[&ev.validator] = amount + ev.claims
-                }
-                None => validator_redeemed_sums[&ev.validator] = ev.claims,
+            if validator_manager_state
+                .validators_removed
+                .contains(&ev.validator)
+            {
+                // skip validator if it's removed in Validator Manager state
+                continue;
             }
-        }
-        for (index, sum) in validator_redeemed_sums.iter().enumerate() {
-            num_redeemed[index] = Some(NumRedeemed {
-                validator_address: *sum.0,
-                num_claims_redeemed: *sum.1,
-            });
+            find_and_increase(&mut num_redeemed, &ev.validator, &ev.claims);
         }
 
         // obtain fee manager bank balance
@@ -217,16 +220,6 @@ impl Foldable for FeeManagerState {
         .state;
 
         let bank_balance = bank_state.balance;
-
-        // obtain #claims validators made from Validator Manager
-        let validator_manager_state =
-            ValidatorManagerState::get_state_for_block(
-                &dapp_contract_address,
-                block,
-                env,
-            )
-            .await?
-            .state;
 
         // uncommitted balance
         let uncommitted_balance = calculate_uncommitted_balance(
@@ -295,6 +288,15 @@ impl Foldable for FeeManagerState {
 
         let contract = FeeManagerFacet::new(dapp_contract_address, access);
 
+        let validator_manager_state =
+            ValidatorManagerState::get_state_for_block(
+                &dapp_contract_address,
+                block,
+                env,
+            )
+            .await?
+            .state;
+
         // `FeePerClaimReset` event
         let events = contract
             .fee_per_claim_reset_filter()
@@ -313,54 +315,30 @@ impl Foldable for FeeManagerState {
             .await
             .context("Error querying for fee redeemed events")?;
         // newly redeemed
-        let mut validator_redeemed_sums: HashMap<Address, U256> =
-            HashMap::new();
         for ev in events.iter() {
-            let amount = validator_redeemed_sums
-                .get(&ev.validator)
-                .map(|v| *v)
-                .unwrap_or(U256::zero());
-
-            validator_redeemed_sums.insert(ev.validator, amount + ev.claims);
-        }
-        // update to the state.num_redeemed array
-        for (&validator_address, &newly_redeemed) in
-            validator_redeemed_sums.iter()
-        {
-            let mut found = false;
-            // find if address exist in the array
-            for index in 0..MAX_NUM_VALIDATORS {
-                if let Some(num_redeemed_struct) = &state.num_redeemed[index] {
-                    let address = num_redeemed_struct.validator_address;
-                    let pre_redeemed = num_redeemed_struct.num_claims_redeemed;
-                    if address == validator_address {
-                        // found validator, update #redeemed
-                        state.num_redeemed[index] = Some(NumRedeemed {
-                            validator_address: address,
-                            num_claims_redeemed: pre_redeemed + newly_redeemed,
-                        });
-                        found = true;
-                        break;
-                    }
-                }
+            if validator_manager_state
+                .validators_removed
+                .contains(&ev.validator)
+            {
+                // skip validator if it's removed in Validator Manager state
+                continue;
             }
-            // if not found
-            if found == false {
-                let mut create_new = false;
+            find_and_increase(
+                &mut state.num_redeemed,
+                &ev.validator,
+                &ev.claims,
+            );
+        }
 
-                for index in 0..MAX_NUM_VALIDATORS {
-                    if let None = state.num_redeemed[index] {
-                        state.num_redeemed[index] = Some(NumRedeemed {
-                            validator_address,
-                            num_claims_redeemed: newly_redeemed,
-                        });
-                        create_new = true;
-                        break;
-                    };
-                }
-
-                if create_new == false {
-                    panic!("no space for validator {}", validator_address);
+        // remove validator's existing num_redeemed if it's newly removed from Validator Manager state
+        for index in 0..MAX_NUM_VALIDATORS {
+            if let Some(num_redeemed_struct) = &state.num_redeemed[index] {
+                let address = num_redeemed_struct.validator_address;
+                if validator_manager_state
+                    .validators_removed
+                    .contains(&address)
+                {
+                    state.num_redeemed[index] = None;
                 }
             }
         }
@@ -375,15 +353,6 @@ impl Foldable for FeeManagerState {
         .state;
 
         state.bank_balance = bank_state.balance;
-
-        let validator_manager_state =
-            ValidatorManagerState::get_state_for_block(
-                &dapp_contract_address,
-                block,
-                env,
-            )
-            .await?
-            .state;
 
         // uncommitted balance
         state.uncommitted_balance = calculate_uncommitted_balance(
@@ -427,4 +396,44 @@ fn calculate_uncommitted_balance(
     let uncommitted_balance = i128::try_from(bank_balance.as_u128()).unwrap()
         - i128::try_from(to_be_redeemed_fees.as_u128()).unwrap();
     uncommitted_balance
+}
+
+fn find_and_increase(
+    num_redeemed: &mut [Option<NumRedeemed>; MAX_NUM_VALIDATORS],
+    addr: &Address,
+    num: &U256,
+) {
+    // find if address exist in the array
+    for i in 0..MAX_NUM_VALIDATORS {
+        if let Some(num_redeemed_struct) = num_redeemed[i] {
+            let address = num_redeemed_struct.validator_address;
+            let number = num_redeemed_struct.num_claims_redeemed;
+            if address == *addr {
+                // found validator, update #redeemed
+                num_redeemed[i] = Some(NumRedeemed {
+                    validator_address: address,
+                    num_claims_redeemed: number + num,
+                });
+                return;
+            }
+        }
+    }
+
+    // if not found
+    let mut create_new = false;
+
+    for i in 0..MAX_NUM_VALIDATORS {
+        if let None = num_redeemed[i] {
+            num_redeemed[i] = Some(NumRedeemed {
+                validator_address: *addr,
+                num_claims_redeemed: *num,
+            });
+            create_new = true;
+            break;
+        };
+    }
+
+    if create_new == false {
+        panic!("no space for validator {}", addr);
+    }
 }
