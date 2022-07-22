@@ -69,13 +69,12 @@ impl Foldable for ValidatorManagerState {
         access: Arc<SyncMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
         let dapp_contract_address = *initial_state;
-        let middleware = access.get_inner();
         let validator_manager_facet = ValidatorManagerFacet::new(
             dapp_contract_address,
-            Arc::clone(&middleware),
+            Arc::clone(&access),
         );
         let rollups_facet =
-            RollupsFacet::new(dapp_contract_address, Arc::clone(&middleware));
+            RollupsFacet::new(dapp_contract_address, Arc::clone(&access));
 
         // declare variables
         let mut num_claims: [Option<NumClaims>; MAX_NUM_VALIDATORS] =
@@ -171,8 +170,8 @@ impl Foldable for ValidatorManagerState {
     async fn fold<M: Middleware + 'static>(
         previous_state: &Self,
         block: &Block,
-        env: &StateFoldEnvironment<M, Self::UserData>,
-        _access: Arc<FoldMiddleware<M>>,
+        _env: &StateFoldEnvironment<M, Self::UserData>,
+        access: Arc<FoldMiddleware<M>>,
     ) -> Result<Self, Self::Error> {
         let dapp_contract_address = previous_state.dapp_contract_address;
         // the following logic is: if `dapp_contract_address` and any of the Validator Manager
@@ -195,13 +194,12 @@ impl Foldable for ValidatorManagerState {
             return Ok(previous_state.clone());
         }
 
-        let middleware = env.inner_middleware();
         let validator_manager_facet = ValidatorManagerFacet::new(
             dapp_contract_address,
-            Arc::clone(&middleware),
+            Arc::clone(&access),
         );
         let rollups_facet =
-            RollupsFacet::new(dapp_contract_address, Arc::clone(&middleware));
+            RollupsFacet::new(dapp_contract_address, Arc::clone(&access));
         let mut state = previous_state.clone();
 
         // retrive events
