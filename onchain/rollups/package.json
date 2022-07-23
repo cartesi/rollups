@@ -28,7 +28,7 @@
     "dependencies": {
         "@cartesi/token": "^1.5.1",
         "@cartesi/util": "^4.0.0",
-        "@openzeppelin/contracts": "^4.5.0"
+        "@openzeppelin/contracts": "^4.7.1"
     },
     "devDependencies": {
         "@grpc/grpc-js": "^1.6.7",
