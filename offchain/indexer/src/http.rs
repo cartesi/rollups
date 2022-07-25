@@ -72,7 +72,7 @@ async fn healthz(http_context: web::Data<HttpContext>) -> impl Responder {
                 e
             ))
     } else if let Err(e) = &status.postgres {
-        HttpResponse::BadRequest()
+        HttpResponse::ServiceUnavailable()
             .content_type("text/html; charset=utf-8")
             .body(format!("Faulty indexer due to database problems: {}", e))
     } else {

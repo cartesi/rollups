@@ -85,7 +85,7 @@ async fn health() -> impl Responder {
 async fn healthz(http_context: web::Data<HttpContext>) -> impl Responder {
     let status = http_context.health_status.lock().await;
     if let Err(e) = &status.reader {
-        HttpResponse::BadRequest()
+        HttpResponse::ServiceUnavailable()
             .content_type("text/html; charset=utf-8")
             .body(format!("Faulty reader state: {}", e))
     } else {
