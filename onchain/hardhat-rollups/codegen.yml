@@ -1,8 +1,0 @@
-schema: ../../offchain/data/graphql/typeDefs.graphql
-documents: ./graphql/queries.graphql
-generates:
-    ./src/generated/graphql/index.ts:
-        plugins:
-            - typescript
-            - typescript-operations
-            - typed-document-node

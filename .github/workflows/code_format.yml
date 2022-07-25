@@ -3,24 +3,23 @@ name: Code Format
 on: [push]
 jobs:
     onchain:
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-22.04
         defaults:
             run:
                 working-directory: onchain
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
             - uses: actions/setup-node@v1
               with:
                   node-version: "16"
             - run: yarn install
             - run: yarn prettier:rollups
-            - run: yarn prettier:hardhat-rollups
     
     offchain:
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-22.04
         defaults:
             run:
                 working-directory: offchain
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
             - run: cargo fmt --all -- --check

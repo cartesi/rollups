@@ -14,7 +14,6 @@ WORKDIR /app
 
 # build dependencies
 COPY package.json yarn.lock ./
-COPY hardhat-rollups/package.json ./hardhat-rollups/
 COPY rollups/package.json ./rollups/
 COPY rollups-cli/package.json ./rollups-cli/
 RUN yarn install
