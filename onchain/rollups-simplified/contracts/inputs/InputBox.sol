@@ -23,7 +23,11 @@ contract InputBox {
     event DirectInputAdded();
     event IndirectInputAdded(address sender, bytes input, uint256 value);
 
-    function addDirectInput(bytes calldata _input) payable public returns (bytes32) {
+    function addDirectInput(bytes calldata _input)
+        public
+        payable
+        returns (bytes32)
+    {
         // TODO require EOA account
         bytes32 inputHash = computeInputHash(
             msg.sender,
@@ -41,7 +45,11 @@ contract InputBox {
         return inputHash;
     }
 
-    function addIndirectInput(bytes calldata _input) payable public returns (bytes32) {
+    function addIndirectInput(bytes calldata _input)
+        public
+        payable
+        returns (bytes32)
+    {
         bytes32 inputHash = computeInputHash(
             msg.sender,
             block.number,
