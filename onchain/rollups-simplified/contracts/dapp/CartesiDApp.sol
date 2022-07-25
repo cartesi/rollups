@@ -19,10 +19,16 @@ import {IHistory} from "../history/IHistory.sol";
 import {LibOutputValidation} from "../library/LibOutputValidation.sol";
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract CartesiDApp is ICartesiDApp, ReentrancyGuard, Ownable {
+contract CartesiDApp is
+    ICartesiDApp,
+    IERC721Receiver,
+    ReentrancyGuard,
+    Ownable
+{
     using Bitmask for mapping(uint256 => uint256);
 
     IAuthority consensus;
@@ -164,5 +170,20 @@ contract CartesiDApp is ICartesiDApp, ReentrancyGuard, Ownable {
             --historyIndex;
         }
         return histories[historyIndex].historyAddress;
+    }
+
+    /// @notice Handle the receipt of an NFT
+    /// @dev The ERC721 smart contract calls this function on the recipient
+    ///      after a `transfer`. This function MAY throw to revert and reject the
+    ///      transfer. Return of other than the magic value MUST result in the
+    ///      transaction being reverted.
+    /// @return this function selector unless throwing
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }
