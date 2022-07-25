@@ -1,11 +1,11 @@
 {
-    "sessionId": "default_session_id",
-    "state": "FINISHED",
+    "sessionId": "0x75e7daba5b6c7acb22a2789d",
+    "state": "0x148348487103",
     "mostRecentMachineHash": {
-        "data": "0x2ab18cd89cb83d24403783e7b243cd157b55c3115c8a183ada760de851bff2e9"
+        "data": "0x0400008561ea843eaddf95832db42308d4e1934e2097006a1067e6876eeb9280"
     },
     "mostRecentVouchersEpochRootHash": {
-        "data": "0x5333c74a68a72650e012c3e6170b81c8c15e3073f0f0ab5b9c4d227e345ac29d"
+        "data": "0x5e16916dd92bdd7403f450c897f37c303346ef3f4bad3f189a281c36fa969cc6"
     },
     "mostRecentNoticesEpochRootHash": {
         "data": "0x5897c91ba5721789dd6645b967cfd419f77c00b3e8bfcf04705a4ecaed7067d4"
@@ -22,7 +22,7 @@
                 },
                 "log2RootSize": "37",
                 "rootHash": {
-                    "data": "0x5333c74a68a72650e012c3e6170b81c8c15e3073f0f0ab5b9c4d227e345ac29d"
+                    "data": "0x5e16916dd92bdd7403f450c897f37c303346ef3f4bad3f189a281c36fa969cc6"
                 },
                 "siblingHashes": [
                     {
@@ -116,7 +116,7 @@
                         "data": "0x890740a8eb06ce9be422cb8da5cdafc2b58c0a5e24036c578de2a433c828ff7d"
                     },
                     {
-                        "data": "0xe764602d5ca4279c5fe92b0247bb67d5bfaa3d11239b9fb4e2d04b167bc82ef3"
+                        "data": "0x209e05c5d2aea580bab7e02c379b8c2633a8e801d919ef82192bab559196fb92"
                     },
                     {
                         "data": "0xc1a36c66afe08e1b359834d224974d4ffc80c3551b0d2143276c65239cc1c2c5"
@@ -658,7 +658,11 @@
                     }
                 ]
             },
-            "reports": [{ "payload": "0x8dc21a77" }]
+            "reports": [
+                {
+                    "payload": "0x8dc21a77"
+                }
+            ]
         },
         {
             "inputIndex": "1",
@@ -673,7 +677,7 @@
                 },
                 "log2RootSize": "37",
                 "rootHash": {
-                    "data": "0x5333c74a68a72650e012c3e6170b81c8c15e3073f0f0ab5b9c4d227e345ac29d"
+                    "data": "0x5e16916dd92bdd7403f450c897f37c303346ef3f4bad3f189a281c36fa969cc6"
                 },
                 "siblingHashes": [
                     {
@@ -767,7 +771,7 @@
                         "data": "0x890740a8eb06ce9be422cb8da5cdafc2b58c0a5e24036c578de2a433c828ff7d"
                     },
                     {
-                        "data": "0xe764602d5ca4279c5fe92b0247bb67d5bfaa3d11239b9fb4e2d04b167bc82ef3"
+                        "data": "0x209e05c5d2aea580bab7e02c379b8c2633a8e801d919ef82192bab559196fb92"
                     },
                     {
                         "data": "0x4b4a2f8901a6d21a05b2ed3579a77fd687542503bc6f4f50e591816ba134c043"
@@ -1034,7 +1038,7 @@
                         "address": {
                             "data": "0x16fdde9a2750c66ed3b465e136ea299d92bd24ed"
                         },
-                        "payload": "rjEsi2hlbGxvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "payload": "0xae312c8b68656c6c6f000000000000000000000000000000000000000000000000000000",
                         "keccakInVoucherHashes": {
                             "targetAddress": "1616904192",
                             "log2TargetSize": "5",
@@ -1245,7 +1249,7 @@
                         "keccak": {
                             "data": "0x6f83fe9032f3d815dd5365c4a4c6500fb54a8a8c68b2239d1657d5e288183634"
                         },
-                        "payload": "rjEsi2hlbGxvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "payload": "0xae312c8b68656c6c6f000000000000000000000000000000000000000000000000000000",
                         "keccakInNoticeHashes": {
                             "targetAddress": "1619001344",
                             "log2TargetSize": "5",
@@ -1312,7 +1316,7 @@
             },
             "reports": [
                 {
-                    "payload": "rjEsi2hlbGxvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                    "payload": "0xae312c8b68656c6c6f000000000000000000000000000000000000000000000000000000"
                 }
             ]
         },
@@ -1329,7 +1333,7 @@
                 },
                 "log2RootSize": "37",
                 "rootHash": {
-                    "data": "0x5333c74a68a72650e012c3e6170b81c8c15e3073f0f0ab5b9c4d227e345ac29d"
+                    "data": "0x5e16916dd92bdd7403f450c897f37c303346ef3f4bad3f189a281c36fa969cc6"
                 },
                 "siblingHashes": [
                     {
@@ -1426,7 +1430,7 @@
                         "data": "0x6b62abf902649366d56dd46b6eb84cfeeddc09663e197f2721e43cb6e904d4e7"
                     },
                     {
-                        "data": "0x403895df37999725f975a4d3fcf1800fb414ef09c565be48985fc52511eea5f6"
+                        "data": "0xce14787abe3fc7d47e272549acb60cfe0d002725138166bd1ef2690116846ebb"
                     }
                 ]
             },
@@ -1966,22 +1970,26 @@
                     }
                 ]
             },
-            "reports": [{ "payload": "0xe12ee5ab" }]
+            "reports": [
+                {
+                    "payload": "0xe12ee5ab"
+                }
+            ]
         },
         {
             "inputIndex": "3",
             "mostRecentMachineHash": {
-                "data": "0x2ab18cd89cb83d24403783e7b243cd157b55c3115c8a183ada760de851bff2e9"
+                "data": "0x0400008561ea843eaddf95832db42308d4e1934e2097006a1067e6876eeb9280"
             },
             "voucherHashesInEpoch": {
                 "targetAddress": "96",
                 "log2TargetSize": "5",
                 "targetHash": {
-                    "data": "0x403895df37999725f975a4d3fcf1800fb414ef09c565be48985fc52511eea5f6"
+                    "data": "0xce14787abe3fc7d47e272549acb60cfe0d002725138166bd1ef2690116846ebb"
                 },
                 "log2RootSize": "37",
                 "rootHash": {
-                    "data": "0x5333c74a68a72650e012c3e6170b81c8c15e3073f0f0ab5b9c4d227e345ac29d"
+                    "data": "0x5e16916dd92bdd7403f450c897f37c303346ef3f4bad3f189a281c36fa969cc6"
                 },
                 "siblingHashes": [
                     {
@@ -2196,11 +2204,11 @@
                     "targetAddress": "1616904192",
                     "log2TargetSize": "21",
                     "targetHash": {
-                        "data": "0x403895df37999725f975a4d3fcf1800fb414ef09c565be48985fc52511eea5f6"
+                        "data": "0xce14787abe3fc7d47e272549acb60cfe0d002725138166bd1ef2690116846ebb"
                     },
                     "log2RootSize": "64",
                     "rootHash": {
-                        "data": "0x2ab18cd89cb83d24403783e7b243cd157b55c3115c8a183ada760de851bff2e9"
+                        "data": "0x0400008561ea843eaddf95832db42308d4e1934e2097006a1067e6876eeb9280"
                     },
                     "siblingHashes": [
                         {
@@ -2300,10 +2308,10 @@
                             "data": "0x3abc751df07437834ba5acb32328a396994aebb3c40f759c2d6d7a3cb5377e55"
                         },
                         {
-                            "data": "0xf1538308d40202c15f067ce17f99f86b8cb0f604a93324ab37127a9b72df0bd3"
+                            "data": "0x1a4c282ec41e18e25a93ffc974e646cbb2c68728a106c74585bc9c79945d09bf"
                         },
                         {
-                            "data": "0x149496e34de1099a01880b2e01051d3514d7b8568c9c032d8acafdb0ae564789"
+                            "data": "0x46c797f0ab1595625b3ce7836b952b8ef6396f4189c4347dcb162885932d1117"
                         },
                         {
                             "data": "0xca249a4ac960e59b5618568e4d0fe209b08dd7332fe5ecf52d20d40cef73748e"
@@ -2330,28 +2338,28 @@
                             "data": "0xd6aaeafba353acd8fdec186653e5db9b8cedd01b563f13bb537fff23db287fe6"
                         },
                         {
-                            "data": "0x2c25245b5cb282dac2a86f1b53e93341ca4c6e92cf4ba44242a7de7be963b3bb"
+                            "data": "0x84b94cf995dd8f2f3e79378cb48ca21d24e682b17dd9ac0693766f668f334084"
                         }
                     ]
                 },
                 "vouchers": [
                     {
                         "keccak": {
-                            "data": "0x1274d15bb559d778ee5175426931fb2670790def06167b3ae6eef72cdc2d826f"
+                            "data": "0xe006eb03ad6704da88c4d0d004b3fea2ca7b18de139d88c3f8c85dc33d81841d"
                         },
                         "address": {
-                            "data": "0xc310e30ae36f57ba245c6a05870993cf79e2db10"
+                            "data": "0x49204136bd31f33eaa230d9af9ec1df3139ffe66"
                         },
                         "payload": "0xa9059cbb00000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c80000000000000000000000000000000000000000000000000000000000000007",
                         "keccakInVoucherHashes": {
                             "targetAddress": "1616904192",
                             "log2TargetSize": "5",
                             "targetHash": {
-                                "data": "0x81b41fa51bcb305bbda42430c0fa513a430ee2c480c35e1fb12ee4a6d83b0328"
+                                "data": "0xd70985935849b8d3a9286f10f684a752425c15f3837350e22fa5350bd1026b03"
                             },
                             "log2RootSize": "21",
                             "rootHash": {
-                                "data": "0x403895df37999725f975a4d3fcf1800fb414ef09c565be48985fc52511eea5f6"
+                                "data": "0xce14787abe3fc7d47e272549acb60cfe0d002725138166bd1ef2690116846ebb"
                             },
                             "siblingHashes": [
                                 {
@@ -2414,7 +2422,7 @@
                     },
                     "log2RootSize": "64",
                     "rootHash": {
-                        "data": "0x2ab18cd89cb83d24403783e7b243cd157b55c3115c8a183ada760de851bff2e9"
+                        "data": "0x0400008561ea843eaddf95832db42308d4e1934e2097006a1067e6876eeb9280"
                     },
                     "siblingHashes": [
                         {
@@ -2514,10 +2522,10 @@
                             "data": "0x3abc751df07437834ba5acb32328a396994aebb3c40f759c2d6d7a3cb5377e55"
                         },
                         {
-                            "data": "0xf1538308d40202c15f067ce17f99f86b8cb0f604a93324ab37127a9b72df0bd3"
+                            "data": "0x1a4c282ec41e18e25a93ffc974e646cbb2c68728a106c74585bc9c79945d09bf"
                         },
                         {
-                            "data": "0x149496e34de1099a01880b2e01051d3514d7b8568c9c032d8acafdb0ae564789"
+                            "data": "0x46c797f0ab1595625b3ce7836b952b8ef6396f4189c4347dcb162885932d1117"
                         },
                         {
                             "data": "0xca249a4ac960e59b5618568e4d0fe209b08dd7332fe5ecf52d20d40cef73748e"
@@ -2538,7 +2546,7 @@
                             "data": "0x3e2337b715f6ac9a6a272622fdc2d67fcfe1da3459f8dab4ed7e40a657a54c36"
                         },
                         {
-                            "data": "0x7cd08e14811911db250acbbdf1caaa4ef3bdd11e976c0f3434807be62387f1a9"
+                            "data": "0xaf870c1a0f6efab8bc29fe481733d360289e6ac35fc7826e0e3c191d5fe8a5a5"
                         },
                         {
                             "data": "0x13e466a8935afff58bb533b3ef5d27fba63ee6b0fd9e67ff20af9d50deee3f8b"
