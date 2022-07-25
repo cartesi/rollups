@@ -78,7 +78,7 @@ describe("ERC721Portal Facet", async () => {
         await expect(
             simpleNFT.ownerOf(invalidTokenId),
             "Check owner of nonexistent token"
-        ).to.be.revertedWith("ERC721: owner query for nonexistent token");
+        ).to.be.revertedWith("ERC721: invalid token ID");
     });
 
     it("If addInput reverts, no token should be transfered", async () => {
@@ -210,9 +210,7 @@ describe("ERC721Portal Facet", async () => {
         await expect(
             debugFacet._erc721Withdrawal(data),
             "Expect withdrawal to revert"
-        ).to.be.revertedWith(
-            "ERC721: transfer caller is not owner nor approved"
-        );
+        ).to.be.revertedWith("ERC721: caller is not token owner nor approved");
     });
 
     it("erc721Withdrawal should emit ERC721Withdrawn and return true", async () => {
