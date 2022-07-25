@@ -1017,7 +1017,9 @@ pub async fn run(
     {
         Ok(()) => {}
         Err(e) => {
+            // If unable to sync, exit indexer
             error!("Failed to sync data: {}", e.to_string());
+            return Err(e);
         }
     }
 
