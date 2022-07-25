@@ -128,7 +128,7 @@ async fn graphql(
                 .body(value),
             Err(err) => {
                 let error_message = format!(
-                            "unable to execute query, internal server error, details: {}", err.to_string()
+                            "unable to execute query, internal server error, details: {}", err
                         );
                 return HttpResponse::BadRequest().body(error_message);
             }
@@ -136,7 +136,7 @@ async fn graphql(
         Err(err) => {
             let error_message = format!(
                 "unable to execute query, internal server error, details: {}",
-                err.to_string()
+                err
             );
             return HttpResponse::BadRequest().body(error_message);
         }

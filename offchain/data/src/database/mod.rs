@@ -26,7 +26,7 @@ pub const CURRENT_INPUT_EPOCH_INDEX: &str = "current_input_epoch_index";
 pub const POOL_CONNECTION_SIZE: u32 = 3;
 
 /// Struct representing Epoch in the database
-#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[derive(Insertable, Queryable, Debug, PartialEq, Eq)]
 #[table_name = "epochs"]
 pub struct DbEpoch {
     pub id: i32,
@@ -34,7 +34,7 @@ pub struct DbEpoch {
 }
 
 /// Struct representing Input in the database
-#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[derive(Insertable, Queryable, Debug, PartialEq, Eq)]
 #[table_name = "inputs"]
 pub struct DbInput {
     pub id: i32,
@@ -48,7 +48,7 @@ pub struct DbInput {
 }
 
 /// Struct representing Notice in the database
-#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[derive(Insertable, Queryable, Debug, PartialEq, Eq)]
 #[table_name = "notices"]
 pub struct DbNotice {
     // Numerical id of notice in database, used as cursor in connection pattern
@@ -65,7 +65,7 @@ pub struct DbNotice {
 }
 
 /// Struct representing Proof in the database
-#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[derive(Insertable, Queryable, Debug, PartialEq, Eq)]
 #[table_name = "proofs"]
 pub struct DbProof {
     // Numerical id of proof in database, used as cursor in connection pattern
@@ -80,7 +80,7 @@ pub struct DbProof {
 }
 
 /// Struct representing Voucher in the database
-#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[derive(Insertable, Queryable, Debug, PartialEq, Eq)]
 #[table_name = "vouchers"]
 pub struct DbVoucher {
     // Numerical id of voucher in database, used as cursor in connection pattern
@@ -96,7 +96,7 @@ pub struct DbVoucher {
 }
 
 /// Struct representing Report in the database
-#[derive(Insertable, Queryable, Debug, PartialEq)]
+#[derive(Insertable, Queryable, Debug, PartialEq, Eq)]
 #[table_name = "reports"]
 pub struct DbReport {
     // Numerical id of report in database, used as cursor in connection pattern
