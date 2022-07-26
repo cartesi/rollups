@@ -2,6 +2,11 @@
 name = "types"
 version = "0.1.0"
 edition = "2021"
+authors = [
+  "Felipe Argento <felipe.argento@cartesi.io>",
+  "Gabriel Coutinho <gabriel.coutinho@cartesi.io>",
+  "Roman Hodulák <roman.hodulak@cartesi.io>",
+]
 
 [dependencies]
 state-fold = { version = "0.3", registry = "cartesi" }

@@ -42,6 +42,7 @@ pub struct FeeManagerState {
     pub uncommitted_balance: i128,
 }
 
+#[derive(Debug)]
 pub struct FeeIncentiveStrategy {
     pub num_buffer_epochs: usize,
     pub num_claims_trigger_redeem: usize,

@@ -1,0 +1,41 @@
+[package]
+name = "dispatcher"
+license = "Apache-2.0"
+version = "0.1.0"
+edition = "2021"
+authors = [
+  "Felipe Argento <felipe.argento@cartesi.io>",
+  "Gabriel Coutinho <gabriel.coutinho@cartesi.io>",
+]
+
+[[bin]]
+name = "rollups-dispatcher"
+path = "src/main.rs"
+
+[dependencies]
+state-fold = { version = "0.3", registry = "cartesi" }
+state-fold-types = { version = "0.3", registry = "cartesi", features = ["ethers"] }
+state-client-lib =  { version = "0.3", registry = "cartesi" }
+tx-manager = { version = "0.2", registry = "cartesi" }
+
+contracts = { path = "../contracts" }
+types = { path = "../types" }
+
+anyhow = "1"
+im = { version = "15", features = ["serde"] }
+snafu = "0.7"
+structopt = "0.3"
+
+prost = "0.10"
+tonic = "0.7"
+
+async-recursion = "0.3"
+async-trait = "0.1"
+futures = "0.3"
+tokio = { version = "1", features = ["sync", "macros", "rt-multi-thread"] }
+tokio-stream = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[build-dependencies]
+tonic-build = "0.7"
