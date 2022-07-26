@@ -6,6 +6,7 @@ on:
       - offchain/inspect-server/**
       - grpc-interfaces/**
       - .github/workflows/inspect-server.yml
+      - .github/workflows/docker.yml
   push:
     tags:
       - v*

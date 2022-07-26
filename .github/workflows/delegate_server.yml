@@ -9,6 +9,7 @@ on:
       - onchain/rollups/abi/**
       - onchain/rollups/test/**
       - .github/workflows/delegate_server.yml
+      - .github/workflows/docker.yml
   push:
     tags:
       - v*

@@ -5,6 +5,7 @@ on:
     paths:
       - onchain/rollups/**
       - .github/workflows/rollups.yml
+      - .github/workflows/docker.yml
   push:
     tags:
       - v*

@@ -9,6 +9,7 @@ on:
       - grpc-interfaces/**
       - onchain/rollups/abi/**
       - .github/workflows/indexer.yml
+      - .github/workflows/docker.yml
   push:
     tags:
       - v*
