@@ -102,7 +102,7 @@ const config: HardhatUserConfig = {
                 ppath("@cartesi/token", "/deployments/goerli"),
             ],
             polygon_mumbai: [
-                ppath("@cartesi/util", "/deployments/matic_testnet"),
+                ppath("@cartesi/util", "/deployments/polygon_mumbai"),
                 ppath("@cartesi/token", "/deployments/polygon_mumbai"),
             ],
         },

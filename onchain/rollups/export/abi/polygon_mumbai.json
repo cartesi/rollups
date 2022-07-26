@@ -3,7 +3,7 @@
   "chainId": "80001",
   "contracts": {
     "Bank": {
-      "address": "0xb1e1eb803CE016b62821FBf683c93E827C3089B1",
+      "address": "0xfFdc83653E1ec5E07d57219dc23ea7C458aD2628",
       "abi": [
         {
           "inputs": [
@@ -137,7 +137,7 @@
       ]
     },
     "CartesiDAppFactory": {
-      "address": "0x6381a2879919AC66a30b9Cd194828dB544e1D93C",
+      "address": "0x7cB0A55687eC513B1836aC9eCbBEf79afe749A8C",
       "abi": [
         {
           "inputs": [
@@ -377,7 +377,7 @@
       ]
     },
     "DiamondCutFacet": {
-      "address": "0x0E31192c81d9C6D5c5B1561e09FC5a3EBD3f88Ca",
+      "address": "0x063844eCcAA8ED283c8ef62E287ca5966BDbb039",
       "abi": [
         {
           "anonymous": false,
@@ -464,7 +464,7 @@
       ]
     },
     "DiamondInit": {
-      "address": "0xe85096B74DEE4e4EbF86F263928bB316115aD555",
+      "address": "0xD37315Dfe5531D05e63CB1681B6ec7B281C084c3",
       "abi": [
         {
           "anonymous": false,
@@ -568,7 +568,7 @@
       ]
     },
     "DiamondLoupeFacet": {
-      "address": "0x6b6029087abFcebD08d3EFE848A832C2431bFF75",
+      "address": "0x54B9605eb908f771Ba652d6350B2e55Cfda33Bf6",
       "abi": [
         {
           "inputs": [
@@ -668,7 +668,7 @@
       ]
     },
     "ERC20PortalFacet": {
-      "address": "0xEB210376951EBc154361d205CAb80a6eBcC4a756",
+      "address": "0x43FA3cf46367a12C13D42175611A9d3b1A43440E",
       "abi": [
         {
           "anonymous": false,
@@ -733,7 +733,7 @@
       ]
     },
     "ERC721PortalFacet": {
-      "address": "0x6afbB2cdd255Ea130a0B0cF52408610AA3438123",
+      "address": "0x7388C1B5de7954c4B1d12B974C5e9669a84D30Ed",
       "abi": [
         {
           "anonymous": false,
@@ -853,7 +853,7 @@
       ]
     },
     "EtherPortalFacet": {
-      "address": "0xb79960e28819fE97ECF9F951344fbc325b9E17CA",
+      "address": "0x081bD5316a1B9b71fc82e80d181337370C1E585C",
       "abi": [
         {
           "anonymous": false,
@@ -940,7 +940,7 @@
       ]
     },
     "FeeManagerFacet": {
-      "address": "0x55578d2098Fd079946FdB6f985Df712a51626441",
+      "address": "0xf2e009Bd619Eb8435Ec9e98cF629961133f58959",
       "abi": [
         {
           "anonymous": false,
@@ -1054,7 +1054,7 @@
       ]
     },
     "InputFacet": {
-      "address": "0x0323CA7f7733cEd032BB8fbbA46Ef97e58a7C411",
+      "address": "0xAeE0f38EC17BbA23fAf79D951D319f2b331eB01b",
       "abi": [
         {
           "anonymous": false,
@@ -1160,11 +1160,11 @@
       ]
     },
     "LibClaimsMask": {
-      "address": "0x29B33E43Bed18B6f3cA2913d074FeAc5f14d3185",
+      "address": "0x30340C656A534a7D4A3c9218876A6ea396962371",
       "abi": []
     },
     "LibDiamond": {
-      "address": "0x077a6dcFCFc0B24b9ac14cEe439470c96580Db36",
+      "address": "0x7323967fda4e2Cf2351DAB3A2d4C24Ca2c502901",
       "abi": [
         {
           "anonymous": false,
@@ -1230,11 +1230,11 @@
       ]
     },
     "LibDisputeManager": {
-      "address": "0x345fA4EBDbB15F4Ec40C3097d4ec521044cD5a56",
+      "address": "0x7D1Df45707D730871e56d089d9F33299Ca8af1cf",
       "abi": []
     },
     "LibFeeManager": {
-      "address": "0x4A468057d99dC4B2364B87Fcf31023eE69E1bFC5",
+      "address": "0xf711d86cD711cb443171c525aC265DFAb6Fc0E22",
       "abi": [
         {
           "anonymous": false,
@@ -1271,7 +1271,7 @@
       ]
     },
     "LibInput": {
-      "address": "0xE1B9c48ECC4D98865AD991775E886496D8De8651",
+      "address": "0x03A90b458fA7AC5c6458A45A890fFBcCEE7CC902",
       "abi": [
         {
           "anonymous": false,
@@ -1313,11 +1313,11 @@
       ]
     },
     "LibOutput": {
-      "address": "0x78aa7764A209f7994b917637F7623A7Ecb8B1119",
+      "address": "0x88C3ce046Ac65a44D5384692e0E25De70853F5C7",
       "abi": []
     },
     "LibRollups": {
-      "address": "0x75d93c94e46f3FAE92f78c3B9FD51F2DBCC51a6A",
+      "address": "0xF7Bf4CecE65f8a3CaE8232D8dce7f63e74De0C54",
       "abi": [
         {
           "anonymous": false,
@@ -1379,7 +1379,7 @@
       ]
     },
     "LibValidatorManager": {
-      "address": "0xbEF95E6fE7720851b6Db5294369CE8De058d69e8",
+      "address": "0x6435525a77147A5472B4cFaaa8Eb00024F974162",
       "abi": [
         {
           "anonymous": false,
@@ -1447,7 +1447,7 @@
       ]
     },
     "OutputFacet": {
-      "address": "0xF5f0f051E213b438B6602D18cb84948B76F73781",
+      "address": "0xE26f117671D8f46E0fdDf171140E2Ca74cF1B0a9",
       "abi": [
         {
           "anonymous": false,
@@ -1795,11 +1795,82 @@
           "outputs": [],
           "stateMutability": "pure",
           "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes",
+              "name": "_notice",
+              "type": "bytes"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "epochIndex",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "inputIndex",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "outputIndex",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "outputHashesRootHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "vouchersEpochRootHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "noticesEpochRootHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "machineStateHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32[]",
+                  "name": "keccakInHashesSiblings",
+                  "type": "bytes32[]"
+                },
+                {
+                  "internalType": "bytes32[]",
+                  "name": "outputHashesInEpochSiblings",
+                  "type": "bytes32[]"
+                }
+              ],
+              "internalType": "struct OutputValidityProof",
+              "name": "_v",
+              "type": "tuple"
+            }
+          ],
+          "name": "validateNotice",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
         }
       ]
     },
     "OwnershipFacet": {
-      "address": "0xA79dcEd55C64df6693F26eE67ba84f40bda7d639",
+      "address": "0x418Fa91dA411Ee64495f4af95F7D725fCD7Ea2f3",
       "abi": [
         {
           "anonymous": false,
@@ -1849,7 +1920,7 @@
       ]
     },
     "RollupsFacet": {
-      "address": "0x4C5C0Dc309FDBC5EcE674897E1DF70cB8aF49c51",
+      "address": "0xdf3F3aB8357f4c54fBc6574797fAF846a3a7284A",
       "abi": [
         {
           "anonymous": false,
@@ -2047,7 +2118,7 @@
       ]
     },
     "ValidatorManagerFacet": {
-      "address": "0xCF9d0ee322f3ACF4fB5F324128097268A7c8caF0",
+      "address": "0x4036187D2d3e1753D03644db76bF3453A1f1DeA7",
       "abi": [
         {
           "anonymous": false,
@@ -2224,11 +2295,102 @@
       ]
     },
     "Bitmask": {
-      "address": "0x6Fc1eACde8ec4898711Ec3b03bbCc666361A136A",
+      "address": "0x598b68c8234F201aC984Bd33D7678D2E3aC8f179",
       "abi": []
     },
     "BitsManipulation": {
-      "address": "0xa5e4CbdF1767f0406ec5dee4aDb8125F4a637C64",
+      "address": "0x9fB2a46ca249b56E89F9956d8552E5Df1161E340",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "int32",
+              "name": "number",
+              "type": "int32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "wordSize",
+              "type": "uint32"
+            }
+          ],
+          "name": "int32SignExtension",
+          "outputs": [
+            {
+              "internalType": "int32",
+              "name": "",
+              "type": "int32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint32",
+              "name": "num",
+              "type": "uint32"
+            }
+          ],
+          "name": "uint32SwapEndian",
+          "outputs": [
+            {
+              "internalType": "uint32",
+              "name": "",
+              "type": "uint32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint64",
+              "name": "number",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "wordSize",
+              "type": "uint64"
+            }
+          ],
+          "name": "uint64SignExtension",
+          "outputs": [
+            {
+              "internalType": "uint64",
+              "name": "",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint64",
+              "name": "num",
+              "type": "uint64"
+            }
+          ],
+          "name": "uint64SwapEndian",
+          "outputs": [
+            {
+              "internalType": "uint64",
+              "name": "",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ]
+    },
+    "BitsManipulationLibrary": {
+      "address": "0xc411FDBCac6537051A4339FD30823467D573bE64",
       "abi": [
         {
           "inputs": [
@@ -2319,7 +2481,126 @@
       ]
     },
     "CartesiMath": {
-      "address": "0x3f8B458Dd717DE4c625b227eD2f62c1DB2589BF0",
+      "address": "0xcacE06faF7Aa8bb3232f9AD3Ad652338dbe58558",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "clz",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "ctz",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "getLog2Floor",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "getLog2TableTimes1M",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "isPowerOf2",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "log2ApproxTimes1M",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ]
+    },
+    "CartesiMathV2": {
+      "address": "0x627bF4558cb62028fA3d398Aa6bBEF5B5AAFE2ad",
       "abi": [
         {
           "inputs": [
@@ -2438,7 +2719,151 @@
       ]
     },
     "Merkle": {
-      "address": "0xDA9aafbDcda3a5DDFE0D1372ebd6201efE7F2324",
+      "address": "0xD47860593fe40b3D0E04460e54bFE0b84E1E6922",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32[]",
+              "name": "hashes",
+              "type": "bytes32[]"
+            }
+          ],
+          "name": "calculateRootFromPowerOfTwo",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "number",
+              "type": "uint256"
+            }
+          ],
+          "name": "getLog2Floor",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint8",
+              "name": "_log2Size",
+              "type": "uint8"
+            }
+          ],
+          "name": "getPristineHash",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint64",
+              "name": "_position",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes8",
+              "name": "_value",
+              "type": "bytes8"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "proof",
+              "type": "bytes32[]"
+            }
+          ],
+          "name": "getRoot",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint64",
+              "name": "_position",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint8",
+              "name": "_logOfSize",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_drive",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "siblings",
+              "type": "bytes32[]"
+            }
+          ],
+          "name": "getRootWithDrive",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "number",
+              "type": "uint256"
+            }
+          ],
+          "name": "isPowerOf2",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ]
+    },
+    "MerkleV2": {
+      "address": "0x381e64Cb649A98E2B2FBb440E528A44D21B5B9c0",
       "abi": [
         {
           "inputs": [
@@ -2567,8 +2992,32 @@
         }
       ]
     },
+    "UnrolledCordic": {
+      "address": "0x82a2fac7211cE5b0D44B7BC63C09716e1c4fF3D6",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "val",
+              "type": "uint256"
+            }
+          ],
+          "name": "log2Times1e18",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ]
+    },
     "WorkerAuthManagerImpl": {
-      "address": "0x7A488CCc689D8596fcdd599868Df8053806EE60e",
+      "address": "0x85C1929cC1794dd7c25d16d095a09318Cc57d174",
       "abi": [
         {
           "inputs": [
@@ -2713,7 +3162,7 @@
       ]
     },
     "WorkerManagerAuthManagerImpl": {
-      "address": "0x2c3C02219dc8be4E63e357467f1Ba8Ac77c5bfdb",
+      "address": "0x7001C93E443D7D9950A9ff71A82FD258132c72Ef",
       "abi": [
         {
           "anonymous": false,
@@ -3089,7 +3538,7 @@
       ]
     },
     "WorkerManagerImpl": {
-      "address": "0x02dABCbC3886A72b39C3Ea88F8979B66F56b892B",
+      "address": "0x767F4294434be981447B6d23f9565d02A6858fF2",
       "abi": [
         {
           "anonymous": false,
@@ -3781,336 +4230,6 @@
           ],
           "name": "Approval",
           "type": "event"
-        }
-      ]
-    },
-    "CartesiTokenTimelock": {
-      "address": "0xD0c5b5fD1Cc6e2D04B156B2A891c39289fa1D3c1",
-      "abi": [
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "beneficiary",
-          "outputs": [
-            {
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "constant": false,
-          "inputs": [],
-          "name": "release",
-          "outputs": [],
-          "payable": false,
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "releaseTime",
-          "outputs": [
-            {
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "token",
-          "outputs": [
-            {
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "name": "token",
-              "type": "address"
-            },
-            {
-              "name": "beneficiary",
-              "type": "address"
-            },
-            {
-              "name": "releaseTime",
-              "type": "uint256"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "nonpayable",
-          "type": "constructor"
-        }
-      ]
-    },
-    "MineTimelock": {
-      "address": "0x87916D9A2D492a416F5185dDb7936517b05219DE",
-      "abi": [
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "beneficiary",
-          "outputs": [
-            {
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "constant": false,
-          "inputs": [],
-          "name": "renounceOwnership",
-          "outputs": [],
-          "payable": false,
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "constant": false,
-          "inputs": [],
-          "name": "release",
-          "outputs": [],
-          "payable": false,
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "owner",
-          "outputs": [
-            {
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "isOwner",
-          "outputs": [
-            {
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "releaseTime",
-          "outputs": [
-            {
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "constant": false,
-          "inputs": [
-            {
-              "name": "beneficiary",
-              "type": "address"
-            }
-          ],
-          "name": "changeBeneficiary",
-          "outputs": [],
-          "payable": false,
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "constant": false,
-          "inputs": [
-            {
-              "name": "newOwner",
-              "type": "address"
-            }
-          ],
-          "name": "transferOwnership",
-          "outputs": [],
-          "payable": false,
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "token",
-          "outputs": [
-            {
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "name": "token",
-              "type": "address"
-            },
-            {
-              "name": "beneficiary",
-              "type": "address"
-            },
-            {
-              "name": "releaseTime",
-              "type": "uint256"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "nonpayable",
-          "type": "constructor"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": false,
-              "name": "newBeneficiary",
-              "type": "address"
-            }
-          ],
-          "name": "BeneficiaryUpdated",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "previousOwner",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "name": "newOwner",
-              "type": "address"
-            }
-          ],
-          "name": "OwnershipTransferred",
-          "type": "event"
-        }
-      ]
-    },
-    "SimpleFaucet": {
-      "address": "0x5D0b6484ead30c79A1f5bF9a0E3722A41b97d44f",
-      "abi": [
-        {
-          "constant": true,
-          "inputs": [
-            {
-              "name": "_address",
-              "type": "address"
-            }
-          ],
-          "name": "allowedToWithdraw",
-          "outputs": [
-            {
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "constant": false,
-          "inputs": [],
-          "name": "requestTokens",
-          "outputs": [],
-          "payable": false,
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "tokenInstance",
-          "outputs": [
-            {
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "waitTime",
-          "outputs": [
-            {
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "constant": true,
-          "inputs": [],
-          "name": "tokenAmount",
-          "outputs": [
-            {
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "name": "_tokenInstance",
-              "type": "address"
-            }
-          ],
-          "payable": false,
-          "stateMutability": "nonpayable",
-          "type": "constructor"
         }
       ]
     }
