@@ -68,6 +68,7 @@ fn create_env(
         config.state_fold.genesis_block,
         config.state_fold.query_limit_error_codes.clone(),
         config.state_fold.concurrent_events_fetch,
+        10000,
         (),
     );
 

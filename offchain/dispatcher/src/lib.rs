@@ -1,5 +1,5 @@
-pub mod main_loop;
 pub mod config;
+pub mod main_loop;
 
 mod machine;
 mod rollups_dispatcher;

@@ -1,5 +1,5 @@
-pub mod rollup_server;
 pub mod config;
+pub mod rollup_server;
 
 use state_fold_types::ethabi::ethereum_types::{H256, U256};
 use types::input::Input;
