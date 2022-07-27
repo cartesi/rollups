@@ -5,7 +5,7 @@ pushd onchain/rollups >/dev/null
 npx hardhat node --no-deploy >> /dev/null 2>&1 &
 hardhat_pid=$!
 echo "Running hardhat node (pid=${hardhat_pid})"
-sleep 3
+sleep 15
 popd >/dev/null
 
 tests=(
