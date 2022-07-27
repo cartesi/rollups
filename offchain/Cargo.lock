@@ -582,6 +582,8 @@ dependencies = [
 [[package]]
 name = "block-history"
 version = "0.3.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "6a9e8c02cc9b62886cb236bc24adc24472a2b350df94a71e3e2247035bfcfaf8"
 dependencies = [
  "async-stream",
  "snafu 0.7.1",
@@ -3584,6 +3586,8 @@ dependencies = [
 [[package]]
 name = "state-client-lib"
 version = "0.3.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "2306607fa0645ec3539817f399583c6afa2b9ce303deaa382f302c583483bdff"
 dependencies = [
  "async-trait",
  "serde",
@@ -3600,6 +3604,8 @@ dependencies = [
 [[package]]
 name = "state-fold"
 version = "0.3.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "6c283db5ca2c0d2d413a90d3de2faf803dbd665c4a524375c9dd0057fd1a1f58"
 dependencies = [
  "async-recursion 1.0.0",
  "async-trait",
@@ -3614,6 +3620,8 @@ dependencies = [
 [[package]]
 name = "state-fold-types"
 version = "0.3.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "0720c0602d72b611dc21e516f884393a803f22cc0cc94423018859dbfb545207"
 dependencies = [
  "anyhow",
  "ethabi",
@@ -3646,6 +3654,8 @@ dependencies = [
 [[package]]
 name = "state-server-common"
 version = "0.3.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "a163e6a5f6ed575ee14ca961a76360ff0ce451bd4af8756eb4456d9b330a2ac0"
 dependencies = [
  "anyhow",
  "prost",
@@ -3660,6 +3670,8 @@ dependencies = [
 [[package]]
 name = "state-server-lib"
 version = "0.3.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "90974aa888a1fd6d7e0d90ba3569d9a99b51e29bfc6bec556505c348991899c0"
 dependencies = [
  "block-history",
  "futures 0.3.21",
@@ -4199,6 +4211,8 @@ dependencies = [
 [[package]]
 name = "tx-manager"
 version = "0.2.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "658e62f13c0f8467a34d76ea9c8be81f8b5eccfd8d8f89661ba6d2527a4b1b74"
 dependencies = [
  "async-recursion 1.0.0",
  "async-trait",

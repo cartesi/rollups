@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./offchain/target/debug/rollups-state-server $@
+./offchain/target/debug/rollups_state_server "$@"

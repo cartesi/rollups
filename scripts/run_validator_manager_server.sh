@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./offchain/target/debug/validator-manager-state-server $@
+./offchain/target/debug/validator_manager_state_server "$@"

@@ -7,8 +7,8 @@ variable "DOCKER_ORGANIZATION" {
   default = "cartesi"
 }
 
-target "delegate_server" {
-  tags = ["${DOCKER_ORGANIZATION}/delegate-server:${TAG}"]
+target "rollups-state-server" {
+  tags = ["${DOCKER_ORGANIZATION}/rollups-state-server:${TAG}"]
 }
 
 target "dispatcher" {

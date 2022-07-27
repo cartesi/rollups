@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./offchain/target/debug/output-state-server $@
+./offchain/target/debug/output_state_server "$@"

@@ -9,7 +9,7 @@ authors = [
 ]
 
 [[bin]]
-name = "rollups-dispatcher"
+name = "rollups_dispatcher"
 path = "src/main.rs"
 
 [dependencies]

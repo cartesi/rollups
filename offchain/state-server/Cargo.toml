@@ -10,24 +10,24 @@ authors = [
 
 
 [[bin]]
-name = "rollups-state-server"
-path = "src/rollups-state-server.rs"
+name = "rollups_state_server"
+path = "src/rollups_state_server.rs"
 
 [[bin]]
-name = "input-state-server"
-path = "src/input-state-server.rs"
+name = "input_state_server"
+path = "src/input_state_server.rs"
 
 [[bin]]
-name = "output-state-server"
-path = "src/output-state-server.rs"
+name = "output_state_server"
+path = "src/output_state_server.rs"
 
 [[bin]]
-name = "fee-manager-state-server"
-path = "src/fee-manager-state-server.rs"
+name = "fee_manager_state_server"
+path = "src/fee_manager_state_server.rs"
 
 [[bin]]
-name = "validator-manager-state-server"
-path = "src/validator-manager-state-server.rs"
+name = "validator_manager_state_server"
+path = "src/validator_manager_state_server.rs"
 
 
 
