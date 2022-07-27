@@ -26,7 +26,7 @@ jobs:
           cd offchain
           cargo build
           cd ..
-          ./scripts/delegate_tests.sh
+          ./scripts/state_server_tests.sh
         env:
           CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
 

@@ -181,7 +181,7 @@ yarn test:protoc
 Now you can run the delegate test bench script.
 
 ```sh
-./scripts/delegate_tests.sh
+./scripts/state_server_tests.sh
 ```
 
 ## License
