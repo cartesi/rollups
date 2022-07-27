@@ -2,12 +2,6 @@
 name: Dispatcher
 on:
   pull_request:
-    paths:
-      - offchain/dispatcher/**
-      - grpc-interfaces/**
-      - onchain/rollups/abi/**
-      - .github/workflows/dispatcher.yml
-      - .github/workflows/docker.yml
   push:
     tags:
       - v*

@@ -2,12 +2,6 @@
 name: Reader
 on:
   pull_request:
-    paths:
-      - offchain/reader/**
-      - offchain/data/**
-      - grpc-interfaces/**
-      - .github/workflows/reader.yml
-      - .github/workflows/docker.yml
   push:
     tags:
       - v*

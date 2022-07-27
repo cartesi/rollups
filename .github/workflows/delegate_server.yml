@@ -2,14 +2,6 @@
 name: Delegate Server
 on:
   pull_request:
-    paths:
-      - offchain/delegate_server/**
-      - offchain/dispatcher/**
-      - grpc-interfaces/**
-      - onchain/rollups/abi/**
-      - onchain/rollups/test/**
-      - .github/workflows/delegate_server.yml
-      - .github/workflows/docker.yml
   push:
     tags:
       - v*

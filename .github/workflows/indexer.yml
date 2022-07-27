@@ -2,14 +2,6 @@
 name: Indexer
 on:
   pull_request:
-    paths:
-      - offchain/indexer/**
-      - offchain/dispatcher/**
-      - offchain/data/**
-      - grpc-interfaces/**
-      - onchain/rollups/abi/**
-      - .github/workflows/indexer.yml
-      - .github/workflows/docker.yml
   push:
     tags:
       - v*
