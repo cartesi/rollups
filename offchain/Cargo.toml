@@ -6,10 +6,10 @@ members = [
 
   "dispatcher",
 
-  # "data",
-  # "indexer",
-  # "inspect-server",
-  # "reader"
+  "data",
+  "indexer",
+  "inspect-server",
+  "reader"
 ]
 
 [patch.cartesi]

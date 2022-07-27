@@ -22,6 +22,11 @@ pub enum Error {
     #[snafu(display("Tonic transport error: {:?}", source))]
     TonicTransportError { source: tonic::transport::Error },
 
+    #[snafu(display("StateFoldServer error: {:?}", source))]
+    StateFoldServerError {
+        source: state_client_lib::error::StateServerError,
+    },
+
     #[snafu(display("Serialize error: {}", source))]
     SerializeError { source: serde_json::Error },
 

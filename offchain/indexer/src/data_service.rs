@@ -18,19 +18,27 @@ use crate::db_service::{get_current_db_epoch_async, EpochIndexType};
 use crate::error::new_indexer_tokio_err;
 use crate::http::HealthStatus;
 use async_mutex::Mutex;
-use ethers::core::types::{Address, U256};
-use offchain::fold::types::{
-    AccumulatingEpoch, EpochWithClaims, Input, PhaseState, RollupsState,
-};
 use rollups_data::database::{
     DbInput, DbNotice, DbProof, DbReport, DbVoucher, Message,
 };
 use snafu::ResultExt;
-use state_fold::types::BlockState;
+use state_fold_types::{
+    ethabi::ethereum_types::{Address, U256},
+    BlockState, QueryBlock,
+};
 use std::ops::Add;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, trace};
+use types::{
+    accumulating_epoch::AccumulatingEpoch,
+    input::Input,
+    rollups::{PhaseState, RollupsState},
+    rollups_initial_state::RollupsInitialState,
+    sealed_epoch::EpochWithClaims,
+};
+
+use state_client_lib::{GrpcStateFoldClient, StateServer};
 
 use crate::grpc::{
     cartesi_machine, server_manager,
@@ -39,11 +47,12 @@ use crate::grpc::{
         GetEpochStatusRequest, GetEpochStatusResponse, GetSessionStatusRequest,
         GetSessionStatusResponse,
     },
-    state_server::{
-        delegate_manager_client::DelegateManagerClient, GetStateRequest,
-        GetStateResponse,
-    },
 };
+
+type RollupsStateServer =
+    GrpcStateFoldClient<RollupsInitialState, RollupsState>;
+
+const CONFIRMATIONS: usize = 10;
 
 /// Connect to Cartesi server manager using backoff strategy
 async fn connect_to_server_manager_with_retry(
@@ -65,15 +74,21 @@ async fn connect_to_server_manager_with_retry(
 /// Connect to Cartesi State Server using backoff strategy
 async fn connect_to_state_server_with_retry(
     state_server_endpoint: &str,
-) -> Result<DelegateManagerClient<tonic::transport::Channel>, crate::error::Error>
-{
+) -> Result<RollupsStateServer, crate::error::Error> {
     let endpoint = state_server_endpoint.to_string();
     debug!("Connecting to state server {}", endpoint);
     let op = || async {
-        DelegateManagerClient::connect(endpoint.clone())
+        tonic::transport::Channel::from_shared(state_server_endpoint.to_owned())
+            .expect(&format!(
+                "invalid state-fold-server uri {}",
+                state_server_endpoint
+            ))
+            .connect()
             .await
+            .map(GrpcStateFoldClient::new_from_channel)
             .map_err(rollups_data::new_backoff_err)
     };
+
     backoff::future::retry(backoff::ExponentialBackoff::default(), op)
         .await
         .context(super::error::TonicTransportError)
@@ -108,22 +123,6 @@ async fn get_session_status(
 
     Ok(client
         .get_session_status(tonic::Request::new(request.clone()))
-        .await
-        .context(crate::error::TonicStatusError)?
-        .into_inner())
-}
-
-/// Get state from state server (a.k.a delegate manager)
-async fn get_state(
-    client: &mut DelegateManagerClient<tonic::transport::Channel>,
-    initial_state: &str,
-) -> Result<GetStateResponse, crate::error::Error> {
-    let request = GetStateRequest {
-        json_initial_state: initial_state.into(),
-    };
-
-    Ok(client
-        .get_state(tonic::Request::new(request.clone()))
         .await
         .context(crate::error::TonicStatusError)?
         .into_inner())
@@ -358,13 +357,9 @@ async fn poll_epoch_status(
 }
 
 async fn process_state_response(
-    state_response: GetStateResponse,
+    block_state: BlockState<RollupsState>,
     message_tx: &mpsc::Sender<Message>,
 ) -> Result<(), crate::error::Error> {
-    let block_state: BlockState<RollupsState> =
-        serde_json::from_str(&state_response.json_state)
-            .context(super::error::DeserializeError)?;
-
     async fn send_input(
         index: usize,
         epoch_index: i32,
@@ -395,7 +390,8 @@ async fn process_state_response(
     }
 
     // Process first inputs from finalized epochs
-    for finalized_epoch in block_state.state.finalized_epochs.finalized_epochs {
+    for finalized_epoch in &block_state.state.finalized_epochs.finalized_epochs
+    {
         for (index, input) in finalized_epoch.inputs.inputs.iter().enumerate() {
             debug!("Poll state: processing finalized input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
                     &input.sender, finalized_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
@@ -411,16 +407,17 @@ async fn process_state_response(
 
     async fn process_accumulating_epoch(
         message_tx: &mpsc::Sender<Message>,
-        accumulating_epoch: AccumulatingEpoch,
+        accumulating_epoch: &Arc<AccumulatingEpoch>,
     ) {
         for (index, input) in
             accumulating_epoch.inputs.inputs.iter().enumerate()
         {
             debug!("Poll state: processing accumulating epoch input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
-                    &input.sender, accumulating_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
+                    &input.sender, accumulating_epoch.epoch_initial_state.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
             send_input(
                 index,
-                accumulating_epoch.epoch_number.as_u32() as i32,
+                accumulating_epoch.epoch_initial_state.epoch_number.as_u32()
+                    as i32,
                 input,
                 message_tx,
             )
@@ -430,14 +427,14 @@ async fn process_state_response(
 
     async fn process_epoch_with_claims(
         message_tx: &mpsc::Sender<Message>,
-        claimed_epoch: EpochWithClaims,
+        claimed_epoch: &Arc<EpochWithClaims>,
     ) {
         for (index, input) in claimed_epoch.inputs.inputs.iter().enumerate() {
             debug!("Poll state: processing claimed epoch input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
-                    &input.sender, claimed_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
+                    &input.sender, claimed_epoch.epoch_initial_state.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
             send_input(
                 index,
-                claimed_epoch.epoch_number.as_u32() as i32,
+                claimed_epoch.epoch_initial_state.epoch_number.as_u32() as i32,
                 input,
                 message_tx,
             )
@@ -450,11 +447,11 @@ async fn process_state_response(
         "Poll state: pooling state server, current rollups phase is {:?}",
         block_state.state.current_phase
     );
-    match block_state.state.current_phase {
+    match &*block_state.state.current_phase {
         PhaseState::EpochSealedAwaitingFirstClaim { sealed_epoch } => {
             debug!(
                 "Poll state: processing sealed epoch {} while awaiting first claim",
-                sealed_epoch.epoch_number
+                sealed_epoch.epoch_initial_state.epoch_number
             );
             process_accumulating_epoch(message_tx, sealed_epoch).await;
         }
@@ -464,7 +461,7 @@ async fn process_state_response(
         | PhaseState::AwaitingDispute { claimed_epoch } => {
             debug!(
                 "Poll state: processing claimed epoch {}",
-                claimed_epoch.epoch_number
+                claimed_epoch.epoch_initial_state.epoch_number
             );
             process_epoch_with_claims(message_tx, claimed_epoch).await;
         }
@@ -474,7 +471,7 @@ async fn process_state_response(
         } => {
             debug!(
                 "Poll state: processing claimed epoch {}, challenge period base ts {}",
-                claimed_epoch.epoch_number, challenge_period_base_ts
+                claimed_epoch.epoch_initial_state.epoch_number, challenge_period_base_ts
             );
             process_epoch_with_claims(message_tx, claimed_epoch).await;
         }
@@ -483,9 +480,13 @@ async fn process_state_response(
     // Process current epoch
     debug!(
         "Poll state: processing current epoch {}",
-        block_state.state.current_epoch.epoch_number
+        block_state
+            .state
+            .current_epoch
+            .epoch_initial_state
+            .epoch_number
     );
-    process_accumulating_epoch(message_tx, block_state.state.current_epoch)
+    process_accumulating_epoch(message_tx, &block_state.state.current_epoch)
         .await;
 
     Ok(())
@@ -495,27 +496,33 @@ async fn process_state_response(
 /// Process inputs ad send to db service
 async fn poll_state(
     message_tx: &mpsc::Sender<Message>,
-    client: &mut DelegateManagerClient<tonic::transport::Channel>,
+    client: &RollupsStateServer,
     dapp_contract_address: Address,
     initial_epoch: i32,
+    depth: usize,
 ) -> Result<(), crate::error::Error> {
-    let initial_state = (U256::from(initial_epoch), dapp_contract_address);
-    let json_initial_state = serde_json::to_string(&initial_state)
-        .context(super::error::SerializeError)?;
+    let initial_state = RollupsInitialState {
+        dapp_contract_address: Arc::new(dapp_contract_address),
+        initial_epoch: U256::from(initial_epoch),
+    };
 
     debug!(
-        "Poll state: json state server retrieve initial state argument: {:?}",
-        &json_initial_state
+        "Poll state: state server retrieve initial state argument: {:?}",
+        &initial_state
     );
 
-    let state_response = get_state(client, &json_initial_state).await?;
+    let state = client
+        .query_state(&initial_state, QueryBlock::BlockDepth(depth))
+        .await
+        .context(super::error::StateFoldServerError)?;
+
     trace!(
         "Poll state: state received for initial state {:?} is {:?}",
-        &json_initial_state,
-        state_response
+        &initial_state,
+        state
     );
 
-    process_state_response(state_response, message_tx).await
+    process_state_response(state, message_tx).await
 }
 
 /// Polling task type
@@ -786,6 +793,7 @@ async fn polling_loop(
                                     &mut state_server_client,
                                     config.dapp_contract_address,
                                     db_epoch_index,
+                                    CONFIRMATIONS,
                                 )
                                 .await
                                 {
@@ -870,7 +878,7 @@ async fn sync_epoch_status(
 /// in database
 async fn sync_state(
     message_tx: mpsc::Sender<rollups_data::database::Message>,
-    mut client: DelegateManagerClient<tonic::transport::Channel>,
+    mut client: RollupsStateServer,
     postgres_config: &PostgresConfig,
     dapp_contract_address: Address,
 ) -> Result<(), crate::error::Error> {
@@ -904,6 +912,7 @@ async fn sync_state(
         &mut client,
         dapp_contract_address,
         db_epoch_index as i32,
+        CONFIRMATIONS,
     )
     .await
     {
@@ -977,10 +986,17 @@ async fn sync_data(
                 "Connecting for sync to state server {}",
                 &state_server_endpoint
             );
-            let client = DelegateManagerClient::connect(
-                state_server_endpoint.to_string(),
+
+            let client = tonic::transport::Channel::from_shared(
+                state_server_endpoint.to_owned(),
             )
+            .expect(&format!(
+                "invalid state-fold-server uri {}",
+                state_server_endpoint
+            ))
+            .connect()
             .await
+            .map(GrpcStateFoldClient::new_from_channel)
             .context(super::error::TonicTransportError)
             .map_err(rollups_data::new_backoff_err)?;
 
@@ -1057,9 +1073,9 @@ pub mod testing {
     }
 
     pub async fn test_process_state_response(
-        state_response: GetStateResponse,
+        block_state: BlockState<RollupsState>,
         message_tx: &mpsc::Sender<Message>,
     ) -> Result<(), crate::error::Error> {
-        process_state_response(state_response, message_tx).await
+        process_state_response(block_state, message_tx).await
     }
 }

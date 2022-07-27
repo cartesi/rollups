@@ -11,10 +11,9 @@
 
 use async_mutex::Mutex;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use ethers::core::types::Address;
-use ethers::types::U256;
 use rstest::*;
 use serial_test::serial;
+use state_fold_types::ethabi::ethereum_types::{Address, U256};
 use std::future::Future;
 use std::sync::Arc;
 

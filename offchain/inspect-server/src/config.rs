@@ -40,7 +40,7 @@ impl Config {
     pub fn initialize() -> Result<Self, BadConfigurationError> {
         let env_cli_config = EnvCLIConfig::from_args();
         let file_config: FileConfig =
-            configuration::config::load_config_file(env_cli_config.config_path)
+            load_config_file(env_cli_config.config_path)
                 .map_err(|e| BadConfigurationError { err: e.to_string() })?;
 
         let inspect_server_address: String = env_cli_config
@@ -140,5 +140,25 @@ fn check_path_prefix(prefix: String) -> Result<String, BadConfigurationError> {
                 "invalid path prefix, it should be in the format `/[a-z]+`.",
             ),
         })
+    }
+}
+
+fn load_config_file<T: Default + serde::de::DeserializeOwned>(
+    // path to the config file if provided
+    config_file: Option<String>,
+) -> anyhow::Result<T> {
+    use anyhow::Context;
+
+    match config_file {
+        Some(config) => {
+            let s = std::fs::read_to_string(&config)
+                .context(format!("Fail to read config file {}", config))?;
+
+            let file_config: T = toml::from_str(&s)
+                .context(format!("Fail to parse config {}", config))?;
+
+            Ok(file_config)
+        }
+        None => Ok(T::default()),
     }
 }

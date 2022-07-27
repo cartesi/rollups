@@ -11,11 +11,11 @@ path = "src/main.rs"
 
 [dependencies]
 rollups-data = { path = "../data" }
-offchain-core = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
-configuration = { git = "https://github.com/cartesi/offchain-utils", tag = "v0.1.0" }
-state-fold = { version = "0.2", registry = "cartesi" }
-offchain = { path = "../offchain" }
+types = { path = "../types" }
+state-client-lib =  { version = "0.3", registry = "cartesi" }
+state-fold-types = { version = "0.3", registry = "cartesi" }
 
+anyhow = "1"
 structopt = "0.3"
 snafu = "0.6"
 tokio = { version = "1.0.1", features = ["full"] }
@@ -25,9 +25,9 @@ serde_json = "1.0"
 prost = "0.10"
 diesel = {version = "1.4", features = ["chrono", "postgres", "r2d2", "uuidv07", "serde_json", "numeric"]}
 uuid = { version = "0.8", features = ["v5"] }
+toml = "0.5"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-ethers = { version = "0.5.3", features = [ "legacy", "ws" ] }
 hex = "0.4.3"
 chrono = "0.4"
 async-mutex = "1.4"

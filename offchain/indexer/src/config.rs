@@ -15,17 +15,15 @@
 /// Configuration to the indexer can be provided using command line options, environment variables
 /// or configuration file. In general, command line indexer parameters take precedence over environment variables
 /// and environment variables take precedence over same parameter from file configuration
-use configuration::error as config_error;
-
 use serde::Deserialize;
-use snafu::ResultExt;
 
-use ethers::core::types::{Address, U256};
+use state_fold_types::ethabi::ethereum_types::{Address, U256};
 
 use std::fs;
 use std::str::FromStr;
 use tracing::{error, warn};
 
+use anyhow::Context;
 use structopt::StructOpt;
 
 /// Application configuration generated from
@@ -144,14 +142,13 @@ impl IndexerConfig {
     /// and environment variables. If  indexer config path is provided
     /// read indexer configuration from the file. Mix all parameters taking
     /// into account precedence to form final IndexerConfig
-    pub fn initialize() -> config_error::Result<Self> {
+    pub fn initialize() -> anyhow::Result<Self> {
         let app_config = ApplicationCLIConfig::from_args();
         let env_cli_config = app_config.indexer_config;
 
         let file_config: IndexerFileConfig = {
-            let c: FileConfig = configuration::config::load_config_file(
-                env_cli_config.indexer_config_path,
-            )?;
+            let c: FileConfig =
+                load_config_file(env_cli_config.indexer_config_path)?;
             c.indexer_config
         };
 
@@ -159,92 +156,57 @@ impl IndexerConfig {
             .dapp_contract_address
             .or(file_config.dapp_contract_address)
         {
-            Address::from_str(&a).map_err(|e| {
-                config_error::FileError {
-                    err: format!(
-                        "DApp contract address string ill-formed: {}",
-                        e
-                    ),
-                }
-                .build()
-            })?
+            Address::from_str(&a).context(format!(
+                "DApp contract address string ill-formed: {}",
+                a
+            ))?
         } else {
             let path = env_cli_config
                 .dapp_contract_address_file
-                .ok_or(snafu::NoneError)
-                .context(config_error::FileError {
-                    err: "Must specify either dapp_contract_address or dapp_contract_address_file",
-                })?;
+                .context("Must specify either dapp_contract_address or dapp_contract_address_file")?;
 
-            let contents = fs::read_to_string(path.clone()).map_err(|e| {
-                config_error::FileError {
-                    err: format!("Could not read file at path {}: {}", path, e),
-                }
-                .build()
-            })?;
+            let contents = fs::read_to_string(path.clone())
+                .context(format!("Could not read file at path {}", path))?;
 
-            Address::from_str(contents.trim()).map_err(|e| {
-                config_error::FileError {
-                    err: format!(
-                        "DApp contract address string ill-formed: {}",
-                        e
-                    ),
-                }
-                .build()
-            })?
+            Address::from_str(contents.trim()).context(format!(
+                "DApp contract address string ill-formed: {}",
+                contents
+            ))?
         };
 
         let state_server_endpoint: String = env_cli_config
             .state_server_endpoint
             .or(file_config.state_server_endpoint)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specify state server endpoint",
-            })?;
+            .context("Must specify state server endpoint")?;
 
         let initial_epoch: U256 = U256::from(
             env_cli_config
                 .initial_epoch
                 .or(file_config.initial_epoch)
-                .ok_or(snafu::NoneError)
-                .context(config_error::FileError {
-                    err: "Must specify initial epoch",
-                })?,
+                .context("Must specify initial epoch")?,
         );
 
         // Polling interval
         let interval: u64 = env_cli_config
             .interval
             .or(file_config.interval)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specify interval",
-            })?;
+            .context("Must specify interval")?;
 
         // Cartesi server manager endpoint
         let mm_endpoint: String = env_cli_config
             .mm_endpoint
             .or(file_config.mm_endpoint)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specify machine manager endpoint",
-            })?;
+            .context("Must specify machine manager endpoint")?;
 
         let session_id: String = env_cli_config
             .session_id
             .or(file_config.session_id)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specify session id endpoint",
-            })?;
+            .context("Must specify session id endpoint")?;
 
         let postgres_hostname: String = env_cli_config
             .postgres_hostname
             .or(file_config.postgres_hostname)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specify postgres hostname",
-            })?;
+            .context("Must specify postgres hostname")?;
 
         // We use default postgres port if no other provided
         let postgres_port: u16 = env_cli_config
@@ -255,10 +217,7 @@ impl IndexerConfig {
         let postgres_user: String = env_cli_config
             .postgres_user
             .or(file_config.postgres_user)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specify postgres user",
-            })?;
+            .context("Must specify postgres user")?;
 
         let postgres_password_file: Option<String> = env_cli_config
             .postgres_password_file
@@ -273,11 +232,15 @@ impl IndexerConfig {
             match std::fs::read_to_string(&password_filename) {
                 Ok(password) => {
                     if env_cli_config.postgres_password.is_some() {
-                        warn!(concat!("Both `postgres_password` and `postgres_password_file` arguments are set, ",
-                            "using `postgres_password_file`"));
+                        warn!(
+                            concat!("Both `postgres_password` and `postgres_password_file` arguments are set, ",
+                            "using `postgres_password_file`")
+                        );
                     } else if file_config.postgres_password.is_some() {
-                        warn!(concat!("Both `postgres_password` in config file and `postgres_password_file` ",
-                            "arguments are set, using `postgres_password_file`"));
+                        warn!(
+                            concat!("Both `postgres_password` in config file and `postgres_password_file` ",
+                            "arguments are set, using `postgres_password_file`")
+                        );
                     }
                     Some(password)
                 }
@@ -296,27 +259,18 @@ impl IndexerConfig {
         let postgres_password: String = password_from_file
             .or(env_cli_config.postgres_password)
             .or(file_config.postgres_password)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specify postgres password",
-            })?;
+            .context("Must specify postgres password")?;
 
         let postgres_db: String = env_cli_config
             .postgres_db
             .clone()
             .or(file_config.postgres_db)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specify postgres database",
-            })?;
+            .context("Must specify postgres database")?;
 
         let postgres_migration_folder: String = env_cli_config
             .postgres_migration_folder
             .or(file_config.postgres_migration_folder)
-            .ok_or(snafu::NoneError)
-            .context(config_error::FileError {
-                err: "Must specify postgres migration folder",
-            })?;
+            .context("Must specify postgres migration folder")?;
 
         let http_health_hostname: String = env_cli_config
             .http_health_hostname
@@ -345,5 +299,23 @@ impl IndexerConfig {
             },
             health_endpoint: (http_health_hostname, http_health_port),
         })
+    }
+}
+
+fn load_config_file<T: Default + serde::de::DeserializeOwned>(
+    // path to the config file if provided
+    config_file: Option<String>,
+) -> anyhow::Result<T> {
+    match config_file {
+        Some(config) => {
+            let s = std::fs::read_to_string(&config)
+                .context(format!("Fail to read config file {}", config))?;
+
+            let file_config: T = toml::from_str(&s)
+                .context(format!("Fail to parse config {}", config))?;
+
+            Ok(file_config)
+        }
+        None => Ok(T::default()),
     }
 }
