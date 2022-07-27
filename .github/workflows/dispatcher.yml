@@ -3,7 +3,7 @@ name: Dispatcher
 on:
   pull_request:
     paths:
-      - offchain/offchain/**
+      - offchain/dispatcher/**
       - grpc-interfaces/**
       - onchain/rollups/abi/**
       - .github/workflows/dispatcher.yml

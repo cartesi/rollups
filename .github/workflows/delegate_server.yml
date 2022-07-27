@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - offchain/delegate_server/**
-      - offchain/offchain/**
+      - offchain/dispatcher/**
       - grpc-interfaces/**
       - onchain/rollups/abi/**
       - onchain/rollups/test/**

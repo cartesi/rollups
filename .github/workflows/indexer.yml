@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - offchain/indexer/**
-      - offchain/offchain/**
+      - offchain/dispatcher/**
       - offchain/data/**
       - grpc-interfaces/**
       - onchain/rollups/abi/**
