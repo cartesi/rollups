@@ -10,6 +10,11 @@
         "internalType": "address",
         "name": "_inputBox",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_cartesiDAppFactory",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -21,17 +26,36 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_owner",
+        "name": "owner",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_inputBox",
+        "name": "inputBox",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "cartesiDAppFactory",
         "type": "address"
       }
     ],
     "name": "AuthorityCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newFactoryAddress",
+        "type": "address"
+      }
+    ],
+    "name": "DappFactoryChanged",
     "type": "event"
   },
   {
@@ -54,17 +78,30 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [],
-    "name": "dappCreated",
-    "type": "event"
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_cartesiDAppFactory",
+        "type": "address"
+      }
+    ],
+    "name": "changeFactoryImpl",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_templateHash",
+        "type": "bytes32"
+      }
+    ],
     "name": "createDApp",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract CartesiDApp",
         "name": "",
         "type": "address"
       }

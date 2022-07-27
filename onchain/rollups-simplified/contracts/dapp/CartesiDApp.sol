@@ -25,6 +25,7 @@ contract CartesiDApp is ReentrancyGuard, Ownable {
     using Bitmask for mapping(uint256 => uint256);
 
     address consensus;
+    bytes32 templateHash; // state hash of the cartesi machine at t0
     bytes32[] finalizedHashes;
     mapping(uint256 => uint256) voucherBitmask;
 
@@ -37,8 +38,9 @@ contract CartesiDApp is ReentrancyGuard, Ownable {
     event NewConsensus(address newConsensus);
     event VoucherExecuted(uint256 voucherPosition);
 
-    constructor(address _consensus) {
+    constructor(address _consensus, bytes32 _templateHash) {
         transferOwnership(_consensus);
+        templateHash = _templateHash;
     }
 
     function submitFinalizedHash(

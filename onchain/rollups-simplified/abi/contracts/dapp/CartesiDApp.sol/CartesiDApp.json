@@ -5,6 +5,11 @@
         "internalType": "address",
         "name": "_consensus",
         "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_templateHash",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "nonpayable",

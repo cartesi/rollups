@@ -14,18 +14,29 @@
 pragma solidity ^0.8.13;
 
 import {ICartesiDApp} from "../../dapp/ICartesiDApp.sol";
-//import {ICartesiDAppFactory} from "../../dapp/ICartesiDAppFactory.sol";
+import {CartesiDApp} from "../../dapp/CartesiDApp.sol";
+import {ICartesiDAppFactory} from "../../dapp/ICartesiDAppFactory.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Authority is Ownable {
-    event AuthorityCreated(address _owner, address _inputBox);
-    event dappCreated();
+    event AuthorityCreated(
+        address owner,
+        address inputBox,
+        address cartesiDAppFactory
+    );
+    event DappFactoryChanged(address newFactoryAddress);
 
     uint256 lastFinalizedInput;
+    ICartesiDAppFactory cartesiDAppFactory;
 
-    constructor(address _owner, address _inputBox) {
+    constructor(
+        address _owner,
+        address _inputBox,
+        address _cartesiDAppFactory
+    ) {
         transferOwnership(_owner);
-        emit AuthorityCreated(_owner, _inputBox);
+        cartesiDAppFactory = ICartesiDAppFactory(_cartesiDAppFactory);
+        emit AuthorityCreated(_owner, _inputBox, _cartesiDAppFactory);
     }
 
     function submitFinalizedHash(
@@ -37,9 +48,16 @@ contract Authority is Ownable {
     }
 
     // TODO: should this be payable? or only owner
-    function createDApp() public returns (address) {
-        //       CartesiDAppFactory.
+    function createDApp(bytes32 _templateHash)
+        public
+        onlyOwner
+        returns (CartesiDApp)
+    {
+        return cartesiDAppFactory.newApplication(_templateHash);
     }
 
-    ///changeFactoryImpl((
+    function changeFactoryImpl(address _cartesiDAppFactory) public onlyOwner {
+        cartesiDAppFactory = ICartesiDAppFactory(_cartesiDAppFactory);
+        emit DappFactoryChanged(_cartesiDAppFactory);
+    }
 }
