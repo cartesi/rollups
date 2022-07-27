@@ -37,6 +37,8 @@ jobs:
         run: |
           cd offchain/indexer 
           cargo build --release
+        env:
+          CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
 
       - name: Execute indexer integration tests
         run: |
@@ -45,6 +47,8 @@ jobs:
           docker-compose -f tests/docker-compose.yml up --build -d
           cargo test
           docker-compose -f tests/docker-compose.yml stop
+        env:
+          CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
 
   image:
     needs: test

@@ -35,6 +35,8 @@ jobs:
           cargo build
           cd ..
           ./scripts/delegate_tests.sh
+        env:
+          CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
 
   image:
     needs: test

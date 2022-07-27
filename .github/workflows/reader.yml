@@ -35,6 +35,8 @@ jobs:
         run: |
           cd offchain/reader
           cargo build --release
+        env:
+          CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
 
       - name: Execute reader integration tests
         run: |
@@ -42,6 +44,8 @@ jobs:
           docker-compose -f tests/docker-compose.yml up --build -d
           RUST_LOG=error ROLLUPS_READER_BINARY_PATH=../target/release/reader cargo test
           docker-compose -f tests/docker-compose.yml stop
+        env:
+          CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
 
   image:
     needs: test

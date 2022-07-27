@@ -26,6 +26,8 @@ jobs:
       - name: Run tests
         run: cargo test
         working-directory: offchain/inspect-server
+        env:
+          CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
 
   image:
     needs: test
