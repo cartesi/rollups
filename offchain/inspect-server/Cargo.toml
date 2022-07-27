@@ -17,7 +17,7 @@ hex = "0.4"
 log = "0.4"
 prost = "0.10"
 regex = "1"
-serde = { version = "1.0", features = ["rc"] }
+serde = { version = "1.0", features = ["rc", "derive"] }
 snafu = "0.6"
 structopt = "0.3"
 tokio = { version = "1.19", features = ["macros", "time", "rt-multi-thread"] }
@@ -25,7 +25,7 @@ toml = "0.5"
 tonic = "0.7"
 
 [dev-dependencies]
-reqwest = "0.11"
+reqwest = { version = "0.11", features = ["json"] }
 serial_test = "0.7"
 
 [build-dependencies]
