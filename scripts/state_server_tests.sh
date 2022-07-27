@@ -28,25 +28,25 @@ do
     server_script_path="./scripts/run_${server_script_name}_server.sh"
     test_script_path="test/${test_script_name}.ts"
 
-    # run delegate server
+    # run state server
     "${server_script_path}" --sf-safety-margin 0 >> /dev/null 2>&1 &
-    delegate_server_pid=$!
-    echo "Running ${server_script_path} (pid=${delegate_server_pid})"
+    state_server_pid=$!
+    echo "Running ${server_script_path} (pid=${state_server_pid})"
     sleep 3
 
     # run test
     pushd onchain/rollups >/dev/null
-    DELEGATE_TEST=1 npx hardhat test "${test_script_path}" --network localhost
+    STATE_FOLD_TEST=1 npx hardhat test "${test_script_path}" --network localhost
     if [ "$?" -ne "0" ]; then
-        pkill -P "${delegate_server_pid}"
+        pkill -P "${state_server_pid}"
         kill "${hardhat_pid}"
         exit 1
     fi
     popd >/dev/null
 
-    # kill delegate server
-    pkill -P "${delegate_server_pid}"
-    # in the case that delegate server did not launch successfully, exits with error code 1
+    # kill state server
+    pkill -P "${state_server_pid}"
+    # in the case that state server did not launch successfully, exits with error code 1
     if [ "$?" -ne "0" ]; then
         kill "${hardhat_pid}"
         exit 1

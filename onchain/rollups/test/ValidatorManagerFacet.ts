@@ -27,7 +27,7 @@ import { deployDiamond, getState, increaseTimeAndMine } from "./utils";
 use(solidity);
 
 describe("Validator Manager Facet", async () => {
-    let enableDelegate = process.env["DELEGATE_TEST"];
+    let enableStateFold = process.env["STATE_FOLD_TEST"];
 
     var signers: Signer[];
     var rollupsFacet: RollupsFacet;
@@ -47,7 +47,7 @@ describe("Validator Manager Facet", async () => {
         Conflict,
     }
 
-    let initialState: string; // for delegate
+    let initialState: string; // for foldable
 
     // Increase the current time in the network by just above
     // the input duration and force a block to be mined
@@ -79,7 +79,7 @@ describe("Validator Manager Facet", async () => {
         inputDuration = (await rollupsFacet.getInputDuration()).toNumber();
         challengePeriod = (await rollupsFacet.getChallengePeriod()).toNumber();
 
-        // initial state for delegate
+        // initial state for foldable
         initialState = JSON.stringify(validatorManagerFacet.address);
     });
 
@@ -112,12 +112,12 @@ describe("Validator Manager Facet", async () => {
         ).to.equal(validators.length);
     });
 
-    if (enableDelegate) {
-        it("check initial delegate", async () => {
+    if (enableStateFold) {
+        it("check initial foldable", async () => {
             let state = JSON.parse(await getState(initialState));
 
-            // check `num_claims` in delegate
-            // in delegates, `num_claims` is hard-coded to have 8 Options
+            // check `num_claims` in foldable
+            // in foldable, `num_claims` is hard-coded to have 8 Options
             expect(state.num_claims.length, "should have 8 Options").to.equal(
                 8
             );
@@ -128,25 +128,25 @@ describe("Validator Manager Facet", async () => {
                 ).to.equal(null);
             }
 
-            // check `claiming` in delegate
+            // check `claiming` in foldable
             expect(
                 state.claiming.length,
                 "`claiming` should be empty initially"
             ).to.equal(0);
 
-            // check `validators_removed` in delegate
+            // check `validators_removed` in foldable
             expect(
                 state.validators_removed.length,
                 "`validators_removed` should be empty initially"
             ).to.equal(0);
 
-            // check `num_finalized_epochs` in delegate
+            // check `num_finalized_epochs` in foldable
             expect(
                 state.num_finalized_epochs,
                 "initial epoch should be 0"
             ).to.equal("0x0");
 
-            // check `dapp_contract_address` in delegate
+            // check `dapp_contract_address` in foldable
             expect(
                 state.dapp_contract_address,
                 "dapp contract address should be same as validator manager facet address"
@@ -200,7 +200,7 @@ describe("Validator Manager Facet", async () => {
     it("onClaim NoConflict and Consensus", async () => {
         var claim = "0x" + "1".repeat(64);
         var currentAgreementMask = 0;
-        if (!enableDelegate) {
+        if (!enableStateFold) {
             // if validators keep agreeing there is no conflict
             for (var i = 0; i < validators.length - 1; i++) {
                 // callStatic: check return value
@@ -282,7 +282,7 @@ describe("Validator Manager Facet", async () => {
                 "check currentAgreementMask"
             ).to.equal(currentAgreementMask);
         } else {
-            // test delegate
+            // test foldable
             for (var i = 0; i < validators.length - 1; i++) {
                 await passInputAccumulationPeriod();
                 await rollupsFacet.connect(signers[i]).claim(claim);
@@ -357,7 +357,7 @@ describe("Validator Manager Facet", async () => {
     it("onClaim with different claims should return conflict", async () => {
         var claim = "0x" + "1".repeat(64);
         var claim2 = "0x" + "2".repeat(64);
-        if (!enableDelegate) {
+        if (!enableStateFold) {
             await expect(
                 debugFacet._onClaim(validators[0], claim),
                 "first claim should not generate conflict"
@@ -402,7 +402,7 @@ describe("Validator Manager Facet", async () => {
                 "check currentAgreementMask"
             ).to.equal(currentAgreementMask);
         } else {
-            // test delegate
+            // test foldable
             await passInputAccumulationPeriod();
             await rollupsFacet.connect(signers[0]).claim(claim);
             await rollupsFacet.connect(signers[1]).claim(claim2); // conflict
@@ -445,7 +445,7 @@ describe("Validator Manager Facet", async () => {
     });
 
     it("onDisputeEnd with no conflict after", async () => {
-        // delegate test for this is the same as the previous one
+        // foldable test for this is the same as the previous one
         // namely the "onClaim with different claims should return conflict"
 
         var claim = "0x" + "1".repeat(64);
@@ -505,7 +505,7 @@ describe("Validator Manager Facet", async () => {
         var claim2 = "0x" + "2".repeat(64);
         var lastValidator = validators[validators.length - 1];
 
-        if (!enableDelegate) {
+        if (!enableStateFold) {
             // all validators agree but last one
             for (var i = 0; i < validators.length - 1; i++) {
                 await debugFacet._onClaim(validators[i], claim);
@@ -542,7 +542,7 @@ describe("Validator Manager Facet", async () => {
                     [validators[0], address_zero]
                 );
         } else {
-            // test delegate
+            // test foldable
             await passInputAccumulationPeriod();
             for (let i = 0; i < 8 - 1; i++) {
                 await rollupsFacet.connect(signers[i]).claim(claim);
@@ -597,7 +597,7 @@ describe("Validator Manager Facet", async () => {
         var claim2 = "0x" + "2".repeat(64);
         var lastValidator = validators[validators.length - 1];
 
-        if (!enableDelegate) {
+        if (!enableStateFold) {
             // all validators agree but last one
             for (var i = 0; i < validators.length - 1; i++) {
                 await debugFacet._onClaim(validators[i], claim);
@@ -677,7 +677,7 @@ describe("Validator Manager Facet", async () => {
                     [lastValidator, address_zero]
                 );
         } else {
-            // test delegate
+            // test foldable
             await passInputAccumulationPeriod();
             // let signers[0] have the correct claim and all others have false claim
             await rollupsFacet.connect(signers[0]).claim(claim);
@@ -745,8 +745,8 @@ describe("Validator Manager Facet", async () => {
     });
 
     it("onDisputeEnd validators but the last two defending lost claim", async () => {
-        // no delegate test here because we can't control who wins the dispute in delegates
-        // but the previous delegate test should have the same effect
+        // no foldable test here because we can't control who wins the dispute in foldable
+        // but the previous foldable test should have the same effect
         // namely the "onDisputeEnd multiple validators defending lost claim"
         var claim = "0x" + "1".repeat(64);
         var claim2 = "0x" + "2".repeat(64);
@@ -833,7 +833,7 @@ describe("Validator Manager Facet", async () => {
     it("onNewEpoch", async () => {
         var claim = "0x" + "1".repeat(64);
 
-        if (!enableDelegate) {
+        if (!enableStateFold) {
             // one validator claims
             await debugFacet._onClaim(validators[0], claim);
 
@@ -861,13 +861,13 @@ describe("Validator Manager Facet", async () => {
                 "current claim should reset"
             ).to.equal(hash_zero);
         } else {
-            // test delegate
+            // test foldable
             await passInputAccumulationPeriod();
             await rollupsFacet.connect(signers[0]).claim(claim);
 
             // only signers[0] claimed and new epoch begins
             // instead of using `debugFacet._onNewEpochVM();`
-            // delegate needs to use `rollupsFacet.finalizeEpoch();`
+            // foldable needs to use `rollupsFacet.finalizeEpoch();`
             // so that Rollups will emit claim events with the correct epoch value
             await passChallengePeriod();
             await rollupsFacet.finalizeEpoch();
@@ -914,7 +914,7 @@ describe("Validator Manager Facet", async () => {
         var claim = "0x" + "1".repeat(64);
         var claim2 = "0x" + "2".repeat(64);
 
-        if (!enableDelegate) {
+        if (!enableStateFold) {
             // check initial #claims
             for (var i = 0; i < validators.length; i++) {
                 expect(
@@ -1014,7 +1014,7 @@ describe("Validator Manager Facet", async () => {
                 "#claims for validator1 should increase by 1 (for index)"
             ).to.equal(2);
         } else {
-            // test delegate
+            // test foldable
             await passInputAccumulationPeriod();
             for (let i = 0; i < 7; i++) {
                 await rollupsFacet.connect(signers[i]).claim(claim);
@@ -1029,7 +1029,7 @@ describe("Validator Manager Facet", async () => {
 
             // only until the epoch finalized, will their #claims increase
             // instead of using `debugFacet._onNewEpochVM();`
-            // delegate needs to use `rollupsFacet.finalizeEpoch();`
+            // foldable needs to use `rollupsFacet.finalizeEpoch();`
             // so that Rollups will emit claim events with the correct epoch value
             await passChallengePeriod();
             await rollupsFacet.finalizeEpoch();
@@ -1070,7 +1070,7 @@ describe("Validator Manager Facet", async () => {
 
                 // finalize epoch
                 // instead of using `debugFacet._onNewEpochVM();`
-                // delegate needs to use `rollupsFacet.finalizeEpoch();`
+                // foldable needs to use `rollupsFacet.finalizeEpoch();`
                 // so that Rollups will emit claim events with the correct epoch value
                 await passChallengePeriod();
                 await rollupsFacet.finalizeEpoch();

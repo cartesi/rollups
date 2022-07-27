@@ -50,7 +50,7 @@ use(solidity);
 //       notices and vouchers are different. We use 2 notices from the original script. The notice proofs will not change.
 
 describe("Output Facet", () => {
-    let enableDelegate = process.env["DELEGATE_TEST"];
+    let enableStateFold = process.env["STATE_FOLD_TEST"];
 
     let signers: Signer[];
     let outputFacet: OutputFacet;
@@ -504,9 +504,9 @@ describe("Output Facet", () => {
         ).to.equal(dapp_init_balance - amount_erc20);
     });
 
-    /// ***test delegate*** ///
-    if (enableDelegate) {
-        it("testing output delegate", async () => {
+    /// ***test foldable*** ///
+    if (enableStateFold) {
+        it("testing output foldable", async () => {
             /// ***test case 1 - initial check
             let initialState = JSON.stringify(outputFacet.address);
             let state = JSON.parse(await getState(initialState));

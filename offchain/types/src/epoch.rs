@@ -39,8 +39,8 @@ pub struct EpochState {
     pub rollups_initial_state: Arc<RollupsInitialState>,
 }
 
-/// Epoch StateActor Delegate, which implements `sync` and `fold`.
-/// It uses the subdelegates to extracts the raw state from blockchain
+/// Epoch StateActor Foldables, which implements `sync` and `fold`.
+/// It uses nested foldables to extracts the raw state from blockchain
 /// emitted events
 #[async_trait]
 impl Foldable for EpochState {

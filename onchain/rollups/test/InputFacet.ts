@@ -31,7 +31,7 @@ import {
 use(solidity);
 
 describe("Input Facet", () => {
-    let enableDelegate = process.env["DELEGATE_TEST"];
+    let enableStateFold = process.env["STATE_FOLD_TEST"];
 
     let signer: Signer;
     let inputFacet: InputFacet;
@@ -103,8 +103,8 @@ describe("Input Facet", () => {
     it("addInput should not revert if input length == 0", async () => {
         await addInputAndIncreaseCounter([]);
 
-        // test delegate
-        if (enableDelegate) {
+        // test foldable
+        if (enableStateFold) {
             let initialState = JSON.stringify({
                 dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
@@ -135,8 +135,8 @@ describe("Input Facet", () => {
             "input should still revert because metadata doesnt fit"
         ).to.be.revertedWith("input len: [0,driveSize]");
 
-        // test delegate
-        if (enableDelegate) {
+        // test foldable
+        if (enableStateFold) {
             let initialState = JSON.stringify({
                 dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
@@ -174,8 +174,8 @@ describe("Input Facet", () => {
             "Now it's epoch 1, getNumberOfInputs() returns the number of inputs from epoch 0"
         ).to.equal(numOfInputsToAdd + NUM_OF_INITIAL_INPUTS);
 
-        // test delegate
-        if (enableDelegate) {
+        // test foldable
+        if (enableStateFold) {
             let initialState = JSON.stringify({
                 dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
@@ -249,8 +249,8 @@ describe("Input Facet", () => {
             input
         );
 
-        // test delegate
-        if (enableDelegate) {
+        // test foldable
+        if (enableStateFold) {
             let initialState = JSON.stringify({
                 dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
@@ -282,8 +282,8 @@ describe("Input Facet", () => {
             "use callStatic to view the return value"
         ).to.equal(inputHash);
 
-        // test delegate
-        if (enableDelegate) {
+        // test foldable
+        if (enableStateFold) {
             await addInputAndIncreaseCounter(input);
 
             let initialState = JSON.stringify({
@@ -373,8 +373,8 @@ describe("Input Facet", () => {
             "get the first input in input box 1"
         ).to.equal(inputHash);
 
-        // test delegate for epoch 1
-        if (enableDelegate) {
+        // test foldable for epoch 1
+        if (enableStateFold) {
             let initialState = JSON.stringify({
                 dapp_contract_address: inputFacet.address,
                 epoch_number: "0x1",
@@ -431,6 +431,6 @@ describe("Input Facet", () => {
             "inbox shouldnt change if notifyInput returns false (2)"
         ).to.equal(1);
 
-        // there isn't a concept of input box in the delegate
+        // there isn't a concept of input box in the foldable
     });
 });

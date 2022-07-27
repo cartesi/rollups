@@ -263,7 +263,7 @@ impl Foldable for FeeManagerState {
             &block.logs_bloom,
             &FeeRedeemedFilter::signature(),
         ) || fold_utils::contains_topic(
-            // the following evernts are to update validator manager delegate
+            // the following evernts are to update validator manager foldable
             &block.logs_bloom,
             &DisputeEndedFilter::signature(),
         ) || fold_utils::contains_topic(

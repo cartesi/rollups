@@ -169,7 +169,7 @@ cd onchain/rollups
 yarn test
 ```
 
-### Testing the delegate server
+### Testing the state-server
 
 In order to generate the `.proto` files for Typescript, run the following commands once.
 
@@ -178,7 +178,7 @@ cd onchain/rollups
 yarn test:protoc
 ```
 
-Now you can run the delegate test bench script.
+Now you can run the foldable tests bench script.
 
 ```sh
 ./scripts/state_server_tests.sh

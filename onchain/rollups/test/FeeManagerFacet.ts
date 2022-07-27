@@ -33,7 +33,7 @@ import { deployDiamond, getState, increaseTimeAndMine } from "./utils";
 use(solidity);
 
 describe("FeeManager Facet", () => {
-    let enableDelegate = process.env["DELEGATE_TEST"];
+    let enableStateFold = process.env["STATE_FOLD_TEST"];
 
     let signers: Signer[];
     let token: SimpleToken;
@@ -44,7 +44,7 @@ describe("FeeManager Facet", () => {
     let debugFacet: DebugFacet;
     let tokenSupply = 1000000; // assume FeeManagerImpl contract owner has 1 million tokens (ignore decimals)
     let initialFeePerClaim = 10; // set initial fees per claim as 10 token
-    let initialState: string; // for delegate
+    let initialState: string; // for foldable
     let inputDuration: number;
     let challengePeriod: number;
 
@@ -129,7 +129,7 @@ describe("FeeManager Facet", () => {
         const tokenAddress = await bank.getToken();
         token = SimpleToken__factory.connect(tokenAddress, signers[0]);
 
-        // for delegate
+        // for foldable
         initialState = JSON.stringify(feeManagerFacet.address);
     });
 
@@ -140,14 +140,15 @@ describe("FeeManager Facet", () => {
         ).to.equal(initialFeePerClaim);
     });
 
-    if (enableDelegate) {
-        it("test delegate initial data", async () => {
+    if (enableStateFold) {
+        it("test foldable initial data", async () => {
             let state = JSON.parse(await getState(initialState));
 
             // dapp_contract_address
-            expect(state.dapp_contract_address, "delegate address").to.equal(
-                feeManagerFacet.address.toLowerCase()
-            );
+            expect(
+                state.dapp_contract_address,
+                "foldable dapp address"
+            ).to.equal(feeManagerFacet.address.toLowerCase());
             // bank_address
             expect(state.bank_address, "bank address").to.equal(
                 bank.address.toLowerCase()
@@ -189,8 +190,8 @@ describe("FeeManager Facet", () => {
         let amount = 10000;
         await fundFeeManager(amount);
 
-        // test delegate
-        if (enableDelegate) {
+        // test foldable
+        if (enableStateFold) {
             let state = JSON.parse(await getState(initialState));
             expect(
                 parseInt(state.bank_balance, 16),
@@ -209,8 +210,8 @@ describe("FeeManager Facet", () => {
         // again, fund 10000 tokens
         await fundFeeManager(amount);
 
-        // test delegate
-        if (enableDelegate) {
+        // test foldable
+        if (enableStateFold) {
             let state = JSON.parse(await getState(initialState));
             expect(
                 parseInt(state.bank_balance, 16),
@@ -313,7 +314,7 @@ describe("FeeManager Facet", () => {
     });
 
     it("redeemFee on his/her own", async () => {
-        if (!enableDelegate) {
+        if (!enableStateFold) {
             //owner funds FeeManager
             let amount = 10000;
             await fundFeeManager(amount);
@@ -376,7 +377,7 @@ describe("FeeManager Facet", () => {
                 "validator now has totally 30*initialFeePerClaim tokens"
             ).to.equal(30 * initialFeePerClaim);
         } else {
-            // test delegate
+            // test foldable
             var claim = "0x" + "1".repeat(64);
             // let signers[1] make 10 claims
             let num_claims = 10;
@@ -464,7 +465,7 @@ describe("FeeManager Facet", () => {
     });
 
     it("redeemFee on other's behalf", async () => {
-        if (!enableDelegate) {
+        if (!enableStateFold) {
             //owner fund FeeManager
             let amount = 10000;
             await fundFeeManager(amount);
@@ -498,7 +499,7 @@ describe("FeeManager Facet", () => {
                 "signers[0] helped signers[1]: signers[0] balance doesn't change"
             ).to.equal(tokenSupply - amount);
         } else {
-            // test delegate
+            // test foldable
             var claim = "0x" + "1".repeat(64);
             // let signers[1] make 10 claims
             let num_claims = 10;
@@ -552,7 +553,7 @@ describe("FeeManager Facet", () => {
 
     // reset fee per claim
     it("reset feePerClaim", async () => {
-        if (!enableDelegate) {
+        if (!enableStateFold) {
             //owner fund FeeManager
             let amount = 10000;
             await fundFeeManager(amount);
@@ -656,7 +657,7 @@ describe("FeeManager Facet", () => {
                 "feeManager's bank balance is decreased by 10*newFeePerClaim"
             ).to.equal(bank_balance_after.toNumber() - 10 * newFeePerClaim);
         } else {
-            // test delegate
+            // test foldable
             var claim = "0x" + "1".repeat(64);
             // let signers[1] make 10 claims
             let num_claims = 10;
@@ -730,7 +731,7 @@ describe("FeeManager Facet", () => {
 
     // when a validator gets removed
     it("test when a validator gets removed", async () => {
-        if (!enableDelegate) {
+        if (!enableStateFold) {
             //owner fund FeeManager
             let amount = 10000;
             await fundFeeManager(amount);
@@ -771,7 +772,7 @@ describe("FeeManager Facet", () => {
                 "after losing dispute, its #redeems gets cleared"
             ).to.equal(0);
         } else {
-            // test delegate
+            // test foldable
             var claim = "0x" + "1".repeat(64);
             var claim2 = "0x" + "2".repeat(64);
             // deposit 10k to fee manager
@@ -864,7 +865,7 @@ describe("FeeManager Facet", () => {
         }
     });
 
-    if (enableDelegate) {
+    if (enableStateFold) {
         it("test whether #redeems gets cleared for validators who lost disputes", async () => {
             // owner fund FeeManager
             let init_fund = 10000;
@@ -894,7 +895,7 @@ describe("FeeManager Facet", () => {
             // signers[2] will be used for epoch 2
             await rollupsFacet.connect(signers[2]).claim(claim);
 
-            // update delegate
+            // update state
             let state = JSON.parse(await getState(initialState));
 
             // if it's run in sync function, lost validator is not added at all,
@@ -965,7 +966,7 @@ describe("FeeManager Facet", () => {
             // now finalize epoch 1
             await passChallengePeriod();
             await rollupsFacet.finalizeEpoch();
-            // update delegate
+            // update state
             state = JSON.parse(await getState(initialState));
 
             // *** EPOCH 2 ***
@@ -984,7 +985,7 @@ describe("FeeManager Facet", () => {
             await passInputAccumulationPeriod();
             await rollupsFacet.connect(signers[0]).claim(claim);
             await rollupsFacet.connect(signers[2]).claim(claim2);
-            // update delegate
+            // update state
             state = JSON.parse(await getState(initialState));
 
             // ** check uncommitted_balance

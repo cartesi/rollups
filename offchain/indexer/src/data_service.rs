@@ -797,7 +797,7 @@ async fn polling_loop(
                                 )
                                 .await
                                 {
-                                    let err_message = format!("Error pooling get state from delegate server {}", e);
+                                    let err_message = format!("Error pooling get state from state fold server {}", e);
                                     error!("{}", &err_message);
                                     health_status.lock().await.state_server =
                                         Err(err_message);

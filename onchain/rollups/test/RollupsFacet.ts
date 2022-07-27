@@ -29,7 +29,7 @@ describe("Rollups Facet", () => {
     /// for testing Rollups when modifiers are off, set this to false
     let permissionModifiersOn = true;
 
-    let enableDelegate = process.env["DELEGATE_TEST"];
+    let enableStateFold = process.env["STATE_FOLD_TEST"];
 
     let rollupsFacet: RollupsFacet;
     let diamondInit: DiamondInit;
@@ -69,7 +69,7 @@ describe("Rollups Facet", () => {
     // creation timestamp for rollups
     let contract_creation_time: any;
 
-    // initial var for delegate
+    // initial var for foldable
     let initialEpoch: any;
     let initialState: any;
 
@@ -556,9 +556,9 @@ describe("Rollups Facet", () => {
         expect(await rollupsFacet.getCurrentEpoch()).to.equal(epochNum);
     });
 
-    // test delegate
-    if (enableDelegate) {
-        /* example Rollups delegate output looks like 
+    // test foldable
+    if (enableStateFold) {
+        /* example Rollups StateFold output looks like 
         {
             constants: {
                 input_duration: '0x15180',
@@ -612,7 +612,7 @@ describe("Rollups Facet", () => {
         }
         */
 
-        it("test delegate", async () => {
+        it("test foldable", async () => {
             let state = JSON.parse(await getState(initialState));
 
             // *** initial test ***
@@ -729,7 +729,7 @@ describe("Rollups Facet", () => {
                 ),
                 "the timestamp of the first claim does not match"
             ).to.equal((await ethers.provider.getBlock("latest")).timestamp);
-            // inputs are tested in the input delegate tests
+            // inputs are tested in the input foldable tests
 
             // *** EPOCH 0: claim to reach consensus ***
             await rollupsFacet

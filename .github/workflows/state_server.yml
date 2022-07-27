@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: Delegate Server
+name: State Server
 on:
   pull_request:
   push:
@@ -16,7 +16,7 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CI_TOKEN }}
 
-      - name: run delegate tests
+      - name: run state server tests
         run: |
           cd onchain/rollups
           yarn install
@@ -34,6 +34,6 @@ jobs:
     needs: test
     uses: ./.github/workflows/docker.yml
     with:
-      target: delegate_server
-      image-name: delegate-server
+      target: rollups-state-server
+      image-name: rollups-state-server
     secrets: inherit
