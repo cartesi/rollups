@@ -3,22 +3,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_owner",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_inputBox",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_history",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_cartesiDAppFactory",
+        "name": "consensus",
         "type": "address"
       }
     ],
@@ -31,42 +16,29 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "owner",
+        "name": "dapp",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "inputBox",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "history",
-        "type": "address"
+        "internalType": "bytes32",
+        "name": "finalizedClaim",
+        "type": "bytes32"
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "cartesiDAppFactory",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "lastFinalizedInput",
+        "type": "uint256"
       }
     ],
-    "name": "AuthorityCreated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "newFactoryAddress",
-        "type": "address"
-      }
-    ],
-    "name": "DappFactoryChanged",
+    "name": "NewFinalizedClaim",
     "type": "event"
   },
   {
@@ -92,42 +64,50 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_cartesiDAppFactory",
+        "name": "",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
-    "name": "changeFactoryImpl",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "finalizedClaims",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_templateHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "createDApp",
-    "outputs": [
-      {
-        "internalType": "contract ICartesiDApp",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getHistoryAddress",
-    "outputs": [
-      {
         "internalType": "address",
-        "name": "",
+        "name": "_dapp",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "getClaim",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",

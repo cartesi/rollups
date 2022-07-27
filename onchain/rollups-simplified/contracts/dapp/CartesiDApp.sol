@@ -14,6 +14,8 @@
 pragma solidity ^0.8.13;
 
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
+import {IAuthority} from "../consensus/authority/IAuthority.sol";
+import {IHistory} from "../history/IHistory.sol";
 import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 
@@ -24,9 +26,9 @@ contract CartesiDApp is ReentrancyGuard, Ownable {
     using CanonicalMachine for CanonicalMachine.Log2Size;
     using Bitmask for mapping(uint256 => uint256);
 
-    address consensus;
+    IAuthority consensus;
+    IHistory history;
     bytes32 templateHash; // state hash of the cartesi machine at t0
-    bytes32[] finalizedHashes;
     mapping(uint256 => uint256) voucherBitmask;
 
     event NewFinalizedHash(
@@ -40,20 +42,9 @@ contract CartesiDApp is ReentrancyGuard, Ownable {
 
     constructor(address _consensus, bytes32 _templateHash) {
         transferOwnership(_consensus);
+        consensus = IAuthority(_consensus);
+        history = IHistory(consensus.getHistoryAddress());
         templateHash = _templateHash;
-    }
-
-    function submitFinalizedHash(
-        bytes32 _finalizedHash,
-        uint256 _lastFinalizedInput
-    ) external onlyOwner {
-        emit NewFinalizedHash(
-            finalizedHashes.length,
-            _finalizedHash,
-            _lastFinalizedInput
-        );
-
-        finalizedHashes.push(_finalizedHash);
     }
 
     /// @param epochIndex which epoch the output belongs to
@@ -91,7 +82,13 @@ contract CartesiDApp is ReentrancyGuard, Ownable {
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
 
         // check if validity proof matches the voucher provided
-        isValidVoucherProof(encodedVoucher, finalizedHashes[_v.epochIndex], _v);
+        bytes32[] memory claimProofs;
+        bytes32 claim = history.getClaim(
+            address(this),
+            _v.epochIndex,
+            claimProofs
+        );
+        isValidVoucherProof(encodedVoucher, claim, _v);
 
         uint256 voucherPosition = getBitMaskPosition(
             _v.outputIndex,

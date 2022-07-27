@@ -14,17 +14,24 @@
 pragma solidity ^0.8.13;
 
 import {ICartesiDAppFactory} from "./ICartesiDAppFactory.sol";
+import {ICartesiDApp} from "./ICartesiDApp.sol";
 import {CartesiDApp} from "./CartesiDApp.sol";
 
 contract CartesiDAppFactory is ICartesiDAppFactory {
     function newApplication(bytes32 _templateHash)
         public
-        returns (CartesiDApp)
+        returns (ICartesiDApp)
     {
         // msg.sender should be the consensus address
-        CartesiDApp application = new CartesiDApp(msg.sender, _templateHash);
+        ICartesiDApp application = ICartesiDApp(
+            address(new CartesiDApp(msg.sender, _templateHash))
+        );
 
-        emit ApplicationCreated(application, _templateHash, msg.sender);
+        emit ApplicationCreated(
+            address(application),
+            _templateHash,
+            msg.sender
+        );
         return application;
     }
 }

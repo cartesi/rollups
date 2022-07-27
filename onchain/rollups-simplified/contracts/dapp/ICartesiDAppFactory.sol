@@ -13,7 +13,7 @@
 // @title Cartesi DApp Factory interface
 pragma solidity ^0.8.13;
 
-import {CartesiDApp} from "./CartesiDApp.sol";
+import {ICartesiDApp} from "./ICartesiDApp.sol";
 
 interface ICartesiDAppFactory {
     /// @notice Deploy a new application
@@ -21,13 +21,13 @@ interface ICartesiDAppFactory {
     /// @return application address of new application
     function newApplication(bytes32 _templateHash)
         external
-        returns (CartesiDApp);
+        returns (ICartesiDApp);
 
     /// @notice Event emitted when a new application is deployed
     /// @param application application address
     /// @param templateHash state hash of the cartesi machine at t0
     event ApplicationCreated(
-        CartesiDApp indexed application,
+        address indexed application,
         bytes32 templateHash,
         address creator
     );

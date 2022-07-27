@@ -13,51 +13,61 @@
 // @title Authority
 pragma solidity ^0.8.13;
 
+import {IAuthority} from "./IAuthority.sol";
 import {ICartesiDApp} from "../../dapp/ICartesiDApp.sol";
-import {CartesiDApp} from "../../dapp/CartesiDApp.sol";
 import {ICartesiDAppFactory} from "../../dapp/ICartesiDAppFactory.sol";
+import {IHistory} from "../../history/IHistory.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Authority is Ownable {
-    event AuthorityCreated(
-        address owner,
-        address inputBox,
-        address cartesiDAppFactory
-    );
-    event DappFactoryChanged(address newFactoryAddress);
-
+contract Authority is IAuthority, Ownable {
     uint256 lastFinalizedInput;
     ICartesiDAppFactory cartesiDAppFactory;
+    IHistory history;
 
     constructor(
         address _owner,
         address _inputBox,
+        address _history,
         address _cartesiDAppFactory
     ) {
         transferOwnership(_owner);
+        history = IHistory(_history);
         cartesiDAppFactory = ICartesiDAppFactory(_cartesiDAppFactory);
-        emit AuthorityCreated(_owner, _inputBox, _cartesiDAppFactory);
+        emit AuthorityCreated(_owner, _inputBox, _history, _cartesiDAppFactory);
     }
 
-    function submitFinalizedHash(
-        bytes32 _finalizedHash,
-        uint256 _lastFinalizedInput,
-        ICartesiDApp _dapp
-    ) external onlyOwner {
-        _dapp.submitFinalizedHash(_finalizedHash, _lastFinalizedInput);
+    function submitFinalizedClaim(
+        address _dapp,
+        uint256 _epoch,
+        bytes32 _finalizedClaim,
+        uint256 _lastFinalizedInput
+    ) external override onlyOwner {
+        history.submitFinalizedClaim(
+            _dapp,
+            _epoch,
+            _finalizedClaim,
+            _lastFinalizedInput
+        );
     }
 
-    // TODO: should this be payable? or only owner
     function createDApp(bytes32 _templateHash)
         public
-        onlyOwner
-        returns (CartesiDApp)
+        override
+        returns (ICartesiDApp)
     {
         return cartesiDAppFactory.newApplication(_templateHash);
     }
 
-    function changeFactoryImpl(address _cartesiDAppFactory) public onlyOwner {
+    function changeFactoryImpl(address _cartesiDAppFactory)
+        public
+        override
+        onlyOwner
+    {
         cartesiDAppFactory = ICartesiDAppFactory(_cartesiDAppFactory);
         emit DappFactoryChanged(_cartesiDAppFactory);
+    }
+
+    function getHistoryAddress() public view override returns (address) {
+        return address(history);
     }
 }

@@ -353,24 +353,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_finalizedHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_lastFinalizedInput",
-        "type": "uint256"
-      }
-    ],
-    "name": "submitFinalizedHash",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "newOwner",
         "type": "address"

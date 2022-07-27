@@ -4,7 +4,7 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "contract CartesiDApp",
+        "internalType": "address",
         "name": "application",
         "type": "address"
       },
@@ -13,6 +13,12 @@
         "internalType": "bytes32",
         "name": "templateHash",
         "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
       }
     ],
     "name": "ApplicationCreated",
@@ -29,7 +35,7 @@
     "name": "newApplication",
     "outputs": [
       {
-        "internalType": "contract CartesiDApp",
+        "internalType": "contract ICartesiDApp",
         "name": "",
         "type": "address"
       }
