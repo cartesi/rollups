@@ -15,6 +15,7 @@
 # deps install
 FROM rust:1.61.0-bullseye AS chef
 
+ENV CARGO_REGISTRIES_CARTESI_INDEX=https://github.com/cartesi/crates-index
 RUN rustup component add rustfmt
 RUN cargo install cargo-chef
 
