@@ -46,3 +46,4 @@ structopt = "0.3"
 
 tokio = { version = "1", features = ["macros", "sync", "rt-multi-thread"] }
 tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

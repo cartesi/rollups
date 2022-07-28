@@ -3649,6 +3649,7 @@ dependencies = [
  "structopt",
  "tokio",
  "tracing",
+ "tracing-subscriber",
  "types",
 ]
 
