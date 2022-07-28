@@ -5,6 +5,7 @@ use tx_manager::config::{Error as TxError, TxEnvCLIConfig, TxManagerConfig};
 use state_fold_types::ethers::types::{Address, U256};
 
 use snafu::{ResultExt, Snafu};
+use std::str::FromStr;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Clone)]
@@ -19,11 +20,31 @@ pub struct DispatcherEnvCLIConfig {
     #[structopt(flatten)]
     pub mm_config: MMEnvCLIConfig,
 
-    pub rd_dapp_contract_address: Option<Address>,
+    /// Address of rollups dapp
+    #[structopt(long, env)]
+    pub rd_dapp_contract_address: Option<String>,
+
+    /// Path to file with address of rollups dapp
+    #[structopt(long, env)]
+    pub rd_dapp_contract_address_file: Option<String>,
+
+    /// First epoch that dispatcher will look at. Default zero.
+    #[structopt(long, env)]
     pub rd_initial_epoch: Option<U256>,
 
+    /// Minimum required fee for making claims. A value of zero means an
+    /// altruistic validator; the node will always make claims regardless
+    /// of fee.
+    #[structopt(long, env)]
     pub rd_minimum_required_fee: Option<U256>,
+
+    /// Number of future claim fees that the fee manager should have
+    /// uncommitted.
+    #[structopt(long, env)]
     pub rd_num_buffer_epochs: Option<usize>,
+
+    /// Number of claims before validator redeems fee.
+    #[structopt(long, env)]
     pub rd_num_claims_trigger_redeem: Option<usize>,
 }
 
@@ -54,6 +75,12 @@ pub enum Error {
 
     #[snafu(display("Configuration missing dapp address"))]
     MissingDappAddress {},
+
+    #[snafu(display("Dapp address string parse error"))]
+    DappAddressParseError { source: rustc_hex::FromHexError },
+
+    #[snafu(display("Dapp address read file error"))]
+    DappAddressReadFileError { source: std::io::Error },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -79,10 +106,21 @@ impl DispatcherConfig {
         let mm_config = MMConfig::initialize(env_cli_config.mm_config)
             .context(MachineManagerSnafu)?;
 
-        let dapp_contract_address = env_cli_config
-            .rd_dapp_contract_address
-            .ok_or(snafu::NoneError)
-            .context(MissingDappAddressSnafu)?;
+        let dapp_contract_address =
+            if let Some(a) = env_cli_config.rd_dapp_contract_address {
+                Address::from_str(&a).context(DappAddressParseSnafu)?
+            } else {
+                let path = env_cli_config
+                    .rd_dapp_contract_address_file
+                    .ok_or(snafu::NoneError)
+                    .context(MissingDappAddressSnafu)?;
+
+                let contents = std::fs::read_to_string(path.clone())
+                    .context(DappAddressReadFileSnafu)?;
+
+                Address::from_str(&contents.trim().to_string())
+                    .context(DappAddressParseSnafu)?
+            };
 
         let initial_epoch = env_cli_config
             .rd_initial_epoch

@@ -1065,6 +1065,7 @@ dependencies = [
  "futures 0.3.21",
  "im",
  "prost",
+ "rustc-hex",
  "snafu 0.7.1",
  "state-client-lib",
  "state-fold",
