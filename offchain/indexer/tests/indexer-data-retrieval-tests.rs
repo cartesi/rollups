@@ -24,7 +24,7 @@ use common::{
     POSTGRES_HOSTNAME, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER,
 };
 
-use crate::common::test_data::get_test_state_response_01;
+use crate::common::test_data::get_test_block_state_01;
 use indexer::data_service::testing::{
     test_process_epoch_status_response, test_process_state_response,
 };
@@ -419,7 +419,7 @@ async fn test_input_processing(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let _context = context_migrated_db.await;
 
-    let state_response = get_test_state_response_01().await;
+    let state_response = get_test_block_state_01().await;
     let (message_tx, mut message_rx) =
         tokio::sync::mpsc::channel::<rollups_data::database::Message>(128);
     println!("Processing inputs...");
@@ -494,7 +494,7 @@ async fn test_input_retrieval_and_insertion(
     context_migrated_db: impl Future<Output = Context>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let context = context_migrated_db.await;
-    let state_response = get_test_state_response_01().await;
+    let state_response = get_test_block_state_01().await;
     let (message_tx, message_rx) =
         tokio::sync::mpsc::channel::<rollups_data::database::Message>(128);
     tokio::spawn(async move {
