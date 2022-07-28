@@ -54,6 +54,8 @@ pub struct IndexerEnvCLIConfig {
     pub interval: Option<u64>,
     #[structopt(long)]
     pub initial_epoch: Option<u64>,
+    #[structopt(long, env)]
+    pub confirmations: Option<usize>,
     #[structopt(long)]
     pub mm_endpoint: Option<String>,
     #[structopt(long)]
@@ -92,6 +94,7 @@ pub struct IndexerFileConfig {
     pub state_server_endpoint: Option<String>,
     pub interval: Option<u64>,
     pub initial_epoch: Option<u64>,
+    pub confirmations: Option<usize>,
     pub mm_endpoint: Option<String>,
     pub session_id: Option<String>,
     pub postgres_hostname: Option<String>,
@@ -130,12 +133,15 @@ pub struct IndexerConfig {
     pub dapp_contract_address: Address,
     pub state_server_endpoint: String,
     pub initial_epoch: U256,
+    pub confirmations: usize,
     pub interval: u64,
     pub mm_endpoint: String,
     pub session_id: String,
     pub database: PostgresConfig,
     pub health_endpoint: (String, u16),
 }
+
+const DEFAULT_CONFIRMATIONS: usize = 0;
 
 impl IndexerConfig {
     /// Generate application config from command line arguments and
@@ -185,6 +191,11 @@ impl IndexerConfig {
                 .or(file_config.initial_epoch)
                 .context("Must specify initial epoch")?,
         );
+
+        let confirmations = env_cli_config
+            .confirmations
+            .or(file_config.confirmations)
+            .unwrap_or(DEFAULT_CONFIRMATIONS);
 
         // Polling interval
         let interval: u64 = env_cli_config
@@ -286,6 +297,7 @@ impl IndexerConfig {
             dapp_contract_address,
             state_server_endpoint,
             initial_epoch,
+            confirmations,
             interval,
             mm_endpoint,
             session_id,

@@ -52,8 +52,6 @@ use crate::grpc::{
 type RollupsStateServer =
     GrpcStateFoldClient<RollupsInitialState, RollupsState>;
 
-const CONFIRMATIONS: usize = 10;
-
 /// Connect to Cartesi server manager using backoff strategy
 async fn connect_to_server_manager_with_retry(
     mm_endpoint: &str,
@@ -793,7 +791,7 @@ async fn polling_loop(
                                     &mut state_server_client,
                                     config.dapp_contract_address,
                                     db_epoch_index,
-                                    CONFIRMATIONS,
+                                    config.confirmations,
                                 )
                                 .await
                                 {
@@ -881,6 +879,7 @@ async fn sync_state(
     mut client: RollupsStateServer,
     postgres_config: &PostgresConfig,
     dapp_contract_address: Address,
+    confirmations: usize,
 ) -> Result<(), crate::error::Error> {
     let conn = rollups_data::database::connect_to_database_with_retry_async(
         &postgres_config.postgres_hostname,
@@ -912,7 +911,7 @@ async fn sync_state(
         &mut client,
         dapp_contract_address,
         db_epoch_index as i32,
-        CONFIRMATIONS,
+        confirmations,
     )
     .await
     {
@@ -1006,6 +1005,7 @@ async fn sync_data(
                 client,
                 &config.database,
                 config.dapp_contract_address,
+                config.confirmations,
             )
             .await
             {

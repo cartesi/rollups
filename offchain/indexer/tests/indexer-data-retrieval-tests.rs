@@ -89,6 +89,7 @@ async fn context_migrated_db() -> Context {
             state_server_endpoint: "".to_string(),
             dapp_contract_address: Address::default(),
             initial_epoch: U256::from(0),
+            confirmations: 0,
             interval: 10,
             database: PostgresConfig {
                 postgres_migration_folder: PATH_TO_MIGRATION_FOLDER.to_string(),
