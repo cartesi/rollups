@@ -20,8 +20,8 @@ contract History is IHistory, Ownable {
     // mapping from dapp address => epoch => claim
     mapping(address => mapping(uint256 => bytes32)) public finalizedClaims;
 
-    constructor(address consensus) {
-        transferOwnership(consensus);
+    constructor(address _consensus) {
+        migrateToConsensus(_consensus);
     }
 
     function submitFinalizedClaim(
@@ -41,11 +41,17 @@ contract History is IHistory, Ownable {
         );
     }
 
+    // this is for the case when new consensus uses the same history
+    function migrateToConsensus(address _consensus) public override onlyOwner {
+        transferOwnership(_consensus);
+        emit NewConsensus(_consensus);
+    }
+
     // in this version, the 3rd parameter is ignored
     function getClaim(
         address _dapp,
         uint256 _epoch,
-        bytes32[] calldata
+        bytes calldata
     ) external view override returns (bytes32) {
         return finalizedClaims[_dapp][_epoch];
     }

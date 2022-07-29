@@ -21,10 +21,12 @@ interface IHistory {
         uint256 _lastFinalizedInput
     ) external;
 
+    function migrateToConsensus(address _consensus) external;
+
     function getClaim(
         address _dapp,
         uint256 _epoch,
-        bytes32[] calldata
+        bytes calldata
     ) external view returns (bytes32);
 
     event NewFinalizedClaim(
@@ -33,4 +35,6 @@ interface IHistory {
         bytes32 finalizedClaim,
         uint256 lastFinalizedInput
     );
+
+    event NewConsensus(address newConsensus);
 }

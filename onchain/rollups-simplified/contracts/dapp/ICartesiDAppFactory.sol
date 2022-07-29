@@ -19,7 +19,7 @@ interface ICartesiDAppFactory {
     /// @notice Deploy a new application
     /// @param _templateHash state hash of the cartesi machine at t0
     /// @return application address of new application
-    function newApplication(bytes32 _templateHash)
+    function newApplication(address _dappOwner, bytes32 _templateHash)
         external
         returns (ICartesiDApp);
 
@@ -28,7 +28,7 @@ interface ICartesiDAppFactory {
     /// @param templateHash state hash of the cartesi machine at t0
     event ApplicationCreated(
         address indexed application,
-        bytes32 templateHash,
-        address creator
+        address dappOwner,
+        bytes32 templateHash
     );
 }

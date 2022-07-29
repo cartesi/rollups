@@ -18,14 +18,18 @@ import {ICartesiDApp} from "../../dapp/ICartesiDApp.sol";
 interface IAuthority {
     function submitFinalizedClaim(
         address _dapp,
-        uint256 _epoch,
         bytes32 _finalizedClaim,
         uint256 _lastFinalizedInput
     ) external;
 
-    function createDApp(bytes32 _templateHash) external returns (ICartesiDApp);
+    function createDApp(address _dappOwner, bytes32 _templateHash)
+        external
+        returns (ICartesiDApp);
 
     function changeFactoryImpl(address _cartesiDAppFactory) external;
+
+    function migrateHistoryToConsensus(address _history, address _consensus)
+        external;
 
     function getHistoryAddress() external view returns (address);
 

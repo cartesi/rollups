@@ -38,24 +38,28 @@ contract Authority is IAuthority, Ownable {
 
     function submitFinalizedClaim(
         address _dapp,
-        uint256 _epoch,
         bytes32 _finalizedClaim,
         uint256 _lastFinalizedInput
     ) external override onlyOwner {
+        ICartesiDApp dapp = ICartesiDApp(_dapp);
+        uint256 epoch = dapp.getEpoch();
+
         history.submitFinalizedClaim(
             _dapp,
-            _epoch,
+            epoch,
             _finalizedClaim,
             _lastFinalizedInput
         );
+
+        dapp.finalizeEpoch();
     }
 
-    function createDApp(bytes32 _templateHash)
+    function createDApp(address _dappOwner, bytes32 _templateHash)
         public
         override
         returns (ICartesiDApp)
     {
-        return cartesiDAppFactory.newApplication(_templateHash);
+        return cartesiDAppFactory.newApplication(_dappOwner, _templateHash);
     }
 
     function changeFactoryImpl(address _cartesiDAppFactory)
@@ -65,6 +69,14 @@ contract Authority is IAuthority, Ownable {
     {
         cartesiDAppFactory = ICartesiDAppFactory(_cartesiDAppFactory);
         emit DappFactoryChanged(_cartesiDAppFactory);
+    }
+
+    function migrateHistoryToConsensus(address _history, address _consensus)
+        public
+        override
+        onlyOwner
+    {
+        IHistory(_history).migrateToConsensus(_consensus);
     }
 
     function getHistoryAddress() public view override returns (address) {

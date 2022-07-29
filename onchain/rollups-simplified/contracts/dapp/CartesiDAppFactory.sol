@@ -18,19 +18,20 @@ import {ICartesiDApp} from "./ICartesiDApp.sol";
 import {CartesiDApp} from "./CartesiDApp.sol";
 
 contract CartesiDAppFactory is ICartesiDAppFactory {
-    function newApplication(bytes32 _templateHash)
+    function newApplication(address _dappOwner, bytes32 _templateHash)
         public
+        override
         returns (ICartesiDApp)
     {
         // msg.sender should be the consensus address
         ICartesiDApp application = ICartesiDApp(
-            address(new CartesiDApp(msg.sender, _templateHash))
+            address(new CartesiDApp(_dappOwner, msg.sender, _templateHash))
         );
 
         emit ApplicationCreated(
             address(application),
-            _templateHash,
-            msg.sender
+            _dappOwner,
+            _templateHash
         );
         return application;
     }

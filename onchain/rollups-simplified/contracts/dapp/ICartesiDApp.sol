@@ -13,9 +13,27 @@
 // @title ICartesi DApp
 pragma solidity ^0.8.13;
 
+import {LibOutputValidation} from "../library/LibOutputValidation.sol";
+
 interface ICartesiDApp {
-    function submitFinalizedHash(
-        bytes32 _finalizedHash,
-        uint256 _lastFinalizedInput
-    ) external;
+    function executeVoucher(
+        address _destination,
+        bytes calldata _payload,
+        LibOutputValidation.OutputValidityProof calldata _v
+    ) external returns (bool);
+
+    function validateNotice(
+        bytes calldata _notice,
+        LibOutputValidation.OutputValidityProof calldata _v
+    ) external view returns (bool);
+
+    function migrateToConsensus(address _consensus) external;
+
+    function finalizeEpoch() external;
+
+    function getEpoch() external view returns (uint256);
+
+    event NewConsensus(address newConsensus);
+
+    event VoucherExecuted(uint256 voucherPosition);
 }

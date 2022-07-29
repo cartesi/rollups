@@ -13,59 +13,36 @@
 // @title Cartesi DApp
 pragma solidity ^0.8.13;
 
-import {CanonicalMachine} from "../common/CanonicalMachine.sol";
+import {ICartesiDApp} from "./ICartesiDApp.sol";
 import {IAuthority} from "../consensus/authority/IAuthority.sol";
 import {IHistory} from "../history/IHistory.sol";
-import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
+import {LibOutputValidation} from "../library/LibOutputValidation.sol";
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract CartesiDApp is ReentrancyGuard, Ownable {
-    using CanonicalMachine for CanonicalMachine.Log2Size;
+contract CartesiDApp is ICartesiDApp, ReentrancyGuard, Ownable {
     using Bitmask for mapping(uint256 => uint256);
 
     IAuthority consensus;
-    IHistory history;
-    bytes32 templateHash; // state hash of the cartesi machine at t0
+    // state hash of the cartesi machine at t0
+    bytes32 immutable templateHash;
     mapping(uint256 => uint256) voucherBitmask;
+    // we use the following mapping as an array to store all histories used
+    uint256 historyLength;
+    mapping(uint256 => LibOutputValidation.HistoryBound) histories;
 
-    event NewFinalizedHash(
-        uint256 indexed index,
-        bytes32 finalizedHash,
-        uint256 lastFinalizedInput
-    );
+    uint256 epoch;
 
-    event NewConsensus(address newConsensus);
-    event VoucherExecuted(uint256 voucherPosition);
-
-    constructor(address _consensus, bytes32 _templateHash) {
-        transferOwnership(_consensus);
-        consensus = IAuthority(_consensus);
-        history = IHistory(consensus.getHistoryAddress());
+    constructor(
+        address _owner,
+        address _consensus,
+        bytes32 _templateHash
+    ) {
+        transferOwnership(_owner);
+        migrateToConsensus(_consensus);
         templateHash = _templateHash;
-    }
-
-    /// @param epochIndex which epoch the output belongs to
-    /// @param inputIndex which input, inside the epoch, the output belongs to
-    /// @param outputIndex index of output inside the input
-    /// @param outputHashesRootHash merkle root of all epoch's output metadata hashes
-    /// @param vouchersEpochRootHash merkle root of all epoch's voucher metadata hashes
-    /// @param noticesEpochRootHash merkle root of all epoch's notice metadata hashes
-    /// @param machineStateHash hash of the machine state claimed this epoch
-    /// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range
-    /// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range
-    struct OutputValidityProof {
-        uint64 epochIndex;
-        uint64 inputIndex;
-        uint64 outputIndex;
-        bytes32 outputHashesRootHash;
-        bytes32 vouchersEpochRootHash;
-        bytes32 noticesEpochRootHash;
-        bytes32 machineStateHash;
-        bytes32[] keccakInHashesSiblings;
-        bytes32[] outputHashesInEpochSiblings;
     }
 
     /// @notice executes voucher
@@ -77,20 +54,22 @@ contract CartesiDApp is ReentrancyGuard, Ownable {
     function executeVoucher(
         address _destination,
         bytes calldata _payload,
-        OutputValidityProof calldata _v
-    ) public nonReentrant returns (bool) {
+        LibOutputValidation.OutputValidityProof calldata _v
+    ) public override nonReentrant returns (bool) {
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
 
-        // check if validity proof matches the voucher provided
-        bytes32[] memory claimProofs;
+        bytes memory claimProofs;
+        IHistory history = IHistory(getHistoryAddress(_v.epochIndex));
         bytes32 claim = history.getClaim(
             address(this),
             _v.epochIndex,
             claimProofs
         );
-        isValidVoucherProof(encodedVoucher, claim, _v);
 
-        uint256 voucherPosition = getBitMaskPosition(
+        // reverts if validity proof doesnt match
+        LibOutputValidation.isValidVoucherProof(encodedVoucher, claim, _v);
+
+        uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _v.outputIndex,
             _v.inputIndex,
             _v.epochIndex
@@ -114,128 +93,76 @@ contract CartesiDApp is ReentrancyGuard, Ownable {
         return succ;
     }
 
-    /// TODO: extend documentation
-    /// @notice enforceProofValidity reverts if the proof is invalid
-    ///  @dev _outputsEpochRootHash must be _v.vouchersEpochRootHash or
-    ///                                  or _v.noticesEpochRootHash
-    function enforceProofValidity(
-        bytes memory _encodedOutput,
-        bytes32 _epochHash,
-        bytes32 _outputsEpochRootHash,
-        uint256 _outputEpochLog2Size,
-        uint256 _outputHashesLog2Size,
-        OutputValidityProof calldata _v
-    ) internal pure {
-        // prove that outputs hash is represented in a finalized epoch
-        require(
-            keccak256(
-                abi.encodePacked(
-                    _v.vouchersEpochRootHash,
-                    _v.noticesEpochRootHash,
-                    _v.machineStateHash
-                )
-            ) == _epochHash,
-            "epochHash incorrect"
+    /// @notice validates notice
+    /// @param _notice notice to be verified
+    /// @param _v validity proof for this notice
+    /// @return true if notice is valid
+    function validateNotice(
+        bytes calldata _notice,
+        LibOutputValidation.OutputValidityProof calldata _v
+    ) public view override returns (bool) {
+        bytes memory encodedNotice = abi.encode(_notice);
+
+        bytes memory claimProofs;
+        IHistory history = IHistory(getHistoryAddress(_v.epochIndex));
+        bytes32 claim = history.getClaim(
+            address(this),
+            _v.epochIndex,
+            claimProofs
         );
 
-        // prove that output metadata memory range is contained in epoch's output memory range
-        require(
-            Merkle.getRootAfterReplacementInDrive(
-                CanonicalMachine.getIntraMemoryRangePosition(
-                    _v.inputIndex,
-                    CanonicalMachine.KECCAK_LOG2_SIZE
-                ),
-                CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
-                _outputEpochLog2Size,
-                keccak256(abi.encodePacked(_v.outputHashesRootHash)),
-                _v.outputHashesInEpochSiblings
-            ) == _outputsEpochRootHash,
-            "outputsEpochRootHash incorrect"
-        );
+        // reverts if validity proof doesnt match
+        LibOutputValidation.isValidNoticeProof(encodedNotice, claim, _v);
 
-        // The hash of the output is converted to bytes (abi.encode) and
-        // treated as data. The metadata output memory range stores that data while
-        // being indifferent to its contents. To prove that the received
-        // output is contained in the metadata output memory range we need to
-        // prove that x, where:
-        // x = keccak(
-        //          keccak(
-        //              keccak(hashOfOutput[0:7]),
-        //              keccak(hashOfOutput[8:15])
-        //          ),
-        //          keccak(
-        //              keccak(hashOfOutput[16:23]),
-        //              keccak(hashOfOutput[24:31])
-        //          )
-        //     )
-        // is contained in it. We can't simply use hashOfOutput because the
-        // log2size of the leaf is three (8 bytes) not  five (32 bytes)
-        bytes32 merkleRootOfHashOfOutput = Merkle.getMerkleRootFromBytes(
-            abi.encodePacked(keccak256(_encodedOutput)),
-            CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize()
-        );
-
-        // prove that merkle root hash of bytes(hashOfOutput) is contained
-        // in the output metadata array memory range
-        require(
-            Merkle.getRootAfterReplacementInDrive(
-                CanonicalMachine.getIntraMemoryRangePosition(
-                    _v.outputIndex,
-                    CanonicalMachine.KECCAK_LOG2_SIZE
-                ),
-                CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
-                _outputHashesLog2Size,
-                merkleRootOfHashOfOutput,
-                _v.keccakInHashesSiblings
-            ) == _v.outputHashesRootHash,
-            "outputHashesRootHash incorrect"
-        );
+        return true;
     }
 
-    /// @notice isValidVoucherProof reverts if the proof is invalid
-    function isValidVoucherProof(
-        bytes memory _encodedVoucher,
-        bytes32 _epochHash,
-        OutputValidityProof calldata _v
-    ) public pure {
-        enforceProofValidity(
-            _encodedVoucher,
-            _epochHash,
-            _v.vouchersEpochRootHash,
-            CanonicalMachine.EPOCH_VOUCHER_LOG2_SIZE.uint64OfSize(),
-            CanonicalMachine.VOUCHER_METADATA_LOG2_SIZE.uint64OfSize(),
-            _v
-        );
+    function migrateToConsensus(address _consensus) public override onlyOwner {
+        consensus = IAuthority(_consensus);
+        // check if history address changes
+        address newHistory = consensus.getHistoryAddress();
+        if (
+            historyLength > 0 &&
+            histories[historyLength - 1].historyAddress != newHistory
+        ) {
+            // set epoch upper bound for current history before setting the new history address
+            histories[historyLength - 1].epochUpperBound = uint64(epoch - 1);
+            histories[historyLength++].historyAddress = newHistory;
+        } else if (historyLength == 0) {
+            histories[historyLength++].historyAddress = newHistory;
+        }
+        emit NewConsensus(_consensus);
     }
 
-    /// @notice isValidNoticeProof reverts if the proof is invalid
-    function isValidNoticeProof(
-        bytes memory _encodedNotice,
-        bytes32 _epochHash,
-        OutputValidityProof calldata _v
-    ) public pure {
-        enforceProofValidity(
-            _encodedNotice,
-            _epochHash,
-            _v.noticesEpochRootHash,
-            CanonicalMachine.EPOCH_NOTICE_LOG2_SIZE.uint64OfSize(),
-            CanonicalMachine.NOTICE_METADATA_LOG2_SIZE.uint64OfSize(),
-            _v
-        );
+    function finalizeEpoch() public override {
+        // only callable by consensus
+        require(msg.sender == address(consensus), "only consensus");
+
+        // check if history address changes
+        address newHistory = consensus.getHistoryAddress();
+        // historyLength is greater than 0
+        if (histories[historyLength - 1].historyAddress != newHistory) {
+            // set epoch upper bound for current history before setting the new history address
+            histories[historyLength - 1].epochUpperBound = uint64(epoch - 1);
+            histories[historyLength++].historyAddress = newHistory;
+        }
+
+        ++epoch;
     }
 
-    /// @notice get voucher position on bitmask
-    /// @param _voucher of voucher inside the input
-    /// @param _input which input, inside the epoch, the voucher belongs to
-    /// @param _epoch which epoch the voucher belongs to
-    /// @return position of that voucher on bitmask
-    function getBitMaskPosition(
-        uint256 _voucher,
-        uint256 _input,
-        uint256 _epoch
-    ) public pure returns (uint256) {
-        // voucher * 2 ** 128 + input * 2 ** 64 + epoch
-        // this can't overflow because its impossible to have > 2**128 vouchers
-        return (((_voucher << 128) | (_input << 64)) | _epoch);
+    function getEpoch() public view override returns (uint256) {
+        return epoch;
+    }
+
+    function getHistoryAddress(uint256 _epoch) internal view returns (address) {
+        require(historyLength > 0, "no history yet");
+        uint256 historyIndex = historyLength - 1;
+        while (
+            historyIndex > 0 &&
+            histories[historyIndex - 1].epochUpperBound >= _epoch
+        ) {
+            --historyIndex;
+        }
+        return histories[historyIndex].historyAddress;
     }
 }

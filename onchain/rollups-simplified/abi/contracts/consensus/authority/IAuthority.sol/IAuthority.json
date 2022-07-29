@@ -59,6 +59,11 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_dappOwner",
+        "type": "address"
+      },
+      {
         "internalType": "bytes32",
         "name": "_templateHash",
         "type": "bytes32"
@@ -92,13 +97,26 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_dapp",
+        "name": "_history",
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "_epoch",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "_consensus",
+        "type": "address"
+      }
+    ],
+    "name": "migrateHistoryToConsensus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_dapp",
+        "type": "address"
       },
       {
         "internalType": "bytes32",

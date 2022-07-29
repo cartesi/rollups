@@ -5,6 +5,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "newConsensus",
+        "type": "address"
+      }
+    ],
+    "name": "NewConsensus",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "dapp",
         "type": "address"
       },
@@ -43,9 +56,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes32[]",
-        "name": "_proofs",
-        "type": "bytes32[]"
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
       }
     ],
     "name": "getClaim",
@@ -57,6 +70,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_consensus",
+        "type": "address"
+      }
+    ],
+    "name": "migrateToConsensus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

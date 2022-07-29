@@ -10,15 +10,15 @@
       },
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "templateHash",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "dappOwner",
+        "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "creator",
-        "type": "address"
+        "internalType": "bytes32",
+        "name": "templateHash",
+        "type": "bytes32"
       }
     ],
     "name": "ApplicationCreated",
@@ -26,6 +26,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "_dappOwner",
+        "type": "address"
+      },
       {
         "internalType": "bytes32",
         "name": "_templateHash",

@@ -3,12 +3,25 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "consensus",
+        "name": "_consensus",
         "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newConsensus",
+        "type": "address"
+      }
+    ],
+    "name": "NewConsensus",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -97,9 +110,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes32[]",
+        "internalType": "bytes",
         "name": "",
-        "type": "bytes32[]"
+        "type": "bytes"
       }
     ],
     "name": "getClaim",
@@ -111,6 +124,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_consensus",
+        "type": "address"
+      }
+    ],
+    "name": "migrateToConsensus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
