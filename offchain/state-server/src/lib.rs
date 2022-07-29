@@ -10,6 +10,7 @@ use anyhow::Result;
 use std::sync::Arc;
 use tokio::sync::oneshot;
 
+#[tracing::instrument(level = "trace")]
 pub async fn run_server<F: Foldable<UserData = ()> + 'static>(
     config: config::StateServerConfig,
 ) -> Result<()>

@@ -20,18 +20,23 @@ use types::{
 use anyhow::{bail, Result};
 use std::sync::Arc;
 use tokio_stream::{Stream, StreamExt};
-use tracing::{error, instrument, warn};
+use tracing::{debug, error, instrument, trace, warn};
 
-#[instrument(level = "trace")]
+#[instrument(level = "trace", skip_all)]
 pub async fn run(config: DispatcherConfig) -> Result<()> {
+    debug!("Setting up dispatcher with config: {:?}", config);
+
+    trace!("Creating state-server connection");
     let state_server = create_state_server(&config.sc_config).await?;
 
+    trace!("Starting block subscription with confirmations");
     let block_subscription = create_block_subscription(
         &state_server,
         config.sc_config.default_confirmations,
     )
     .await?;
 
+    trace!("Creating transaction manager");
     let tx_sender = create_tx_sender(
         &config.tx_config,
         config.dapp_contract_address,
@@ -44,9 +49,11 @@ pub async fn run(config: DispatcherConfig) -> Result<()> {
         initial_epoch: config.initial_epoch,
     };
 
+    trace!("Creating dispatcher");
     let dispatcher =
         create_dispatcher(&config, config.tx_config.sender).await?;
 
+    trace!("Entering main loop...");
     main_loop(
         block_subscription,
         &state_server,
@@ -57,7 +64,7 @@ pub async fn run(config: DispatcherConfig) -> Result<()> {
     .await
 }
 
-#[instrument(level = "trace", skip(client, block_subscription))]
+#[instrument(level = "trace", skip_all)]
 async fn main_loop<
     TS: TxSender + Sync + Send,
     MM: MachineInterface + Send + Sync,
@@ -79,6 +86,12 @@ async fn main_loop<
     loop {
         match block_subscription.next().await {
             Some(Ok(BlockStreamItem::NewBlock(b))) => {
+                trace!(
+                    "Received block number {} and hash {:?}, parent: {:?}",
+                    b.number,
+                    b.hash,
+                    b.parent_hash
+                );
                 tx_sender = process_block(
                     &b,
                     client,
@@ -89,8 +102,15 @@ async fn main_loop<
                 .await?
             }
 
-            Some(Ok(BlockStreamItem::Reorg(_))) => {
-                error!("Deep blockchain reorg, bailing");
+            Some(Ok(BlockStreamItem::Reorg(bs))) => {
+                error!(
+                    "Deep blockchain reorg of {} blocks; new latest has number {:?}, hash {:?}, and parent {:?}",
+                    bs.len(),
+                    bs.last().map(|b| b.number),
+                    bs.last().map(|b| b.hash),
+                    bs.last().map(|b| b.parent_hash)
+                );
+                error!("Bailing...");
                 bail!("Deep blockchain reorg");
             }
 
@@ -105,7 +125,7 @@ async fn main_loop<
     }
 }
 
-#[instrument(level = "trace", skip(client))]
+#[instrument(level = "trace", skip_all)]
 async fn process_block<
     TS: TxSender + Sync + Send,
     MM: MachineInterface + Send + Sync,
@@ -123,6 +143,9 @@ async fn process_block<
 
     tx_sender: TS,
 ) -> Result<TS> {
+    trace!("Querying state");
     let state = client.query_state(initial_state, block.hash).await?;
+
+    trace!("Reacting to state");
     dispatcher.react(state, tx_sender).await
 }

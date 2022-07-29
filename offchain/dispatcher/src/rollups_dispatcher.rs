@@ -38,7 +38,7 @@ where
         }
     }
 
-    #[instrument(level = "trace")]
+    #[instrument(level = "trace", skip_all)]
     pub async fn react<TS: TxSender + Sync + Send>(
         &self,
         block_state: BlockState<RollupsState>,
@@ -331,7 +331,7 @@ where
     /// Returns true if react can continue, false otherwise, as well as the new
     /// `mm_epoch_status`.
     #[async_recursion]
-    #[instrument(level = "trace")]
+    #[instrument(level = "trace", skip_all)]
     async fn enqueue_inputs_of_finalized_epochs(
         &self,
         state: &RollupsState,
@@ -405,7 +405,7 @@ where
         Ok((false, mm_epoch_status))
     }
 
-    #[instrument(level = "trace")]
+    #[instrument(level = "trace", skip_all)]
     async fn enqueue_inputs_for_accumulating_epoch(
         &self,
         mm_epoch_status: &EpochStatus,
@@ -425,7 +425,7 @@ where
         .await
     }
 
-    #[instrument(level = "trace")]
+    #[instrument(level = "trace", skip_all)]
     async fn update_sealed_epoch(
         &self,
         sealed_inputs: &Vector<Arc<Input>>,
@@ -456,7 +456,7 @@ where
         Ok(true)
     }
 
-    #[instrument(level = "trace")]
+    #[instrument(level = "trace", skip_all)]
     async fn enqueue_remaning_inputs(
         &self,
         mm_epoch_status: &EpochStatus,
