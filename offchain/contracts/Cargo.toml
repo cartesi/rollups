@@ -9,9 +9,9 @@ authors = [
 ]
 
 [dependencies]
-state-fold-types = { features = ["ethers"], version = "0.3", registry = "cartesi" }
+state-fold-types = { features = ["ethers"], version = "0.4", registry = "cartesi" }
 serde_json = "1"
 
 [build-dependencies]
-state-fold-types = { features = ["ethers"], version = "0.3", registry = "cartesi" }
+state-fold-types = { features = ["ethers"], version = "0.4", registry = "cartesi" }
 serde_json = "1"

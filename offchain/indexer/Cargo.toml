@@ -12,8 +12,8 @@ path = "src/main.rs"
 [dependencies]
 rollups-data = { path = "../data" }
 types = { path = "../types" }
-state-client-lib =  { version = "0.3", registry = "cartesi" }
-state-fold-types = { version = "0.3", registry = "cartesi" }
+state-client-lib =  { version = "0.4", registry = "cartesi" }
+state-fold-types = { version = "0.4", registry = "cartesi" }
 
 anyhow = "1"
 structopt = "0.3"
