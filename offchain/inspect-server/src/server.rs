@@ -12,8 +12,8 @@
 
 use actix_cors::Cors;
 use actix_web::{
-    dev::Server, error, middleware, web, App, HttpResponse, HttpServer,
-    Responder,
+    dev::Server, error, middleware, web, App, HttpRequest, HttpResponse,
+    HttpServer, Responder,
 };
 use serde::{Deserialize, Serialize};
 
@@ -56,9 +56,14 @@ async fn healthcheck() -> HttpResponse {
 }
 
 async fn inspect(
+    request: HttpRequest,
     payload: web::Path<String>,
     inspect_client: web::Data<InspectClient>,
 ) -> actix_web::error::Result<impl Responder> {
+    let mut payload = payload.into_inner();
+    if let Some(query) = request.uri().query() {
+        payload = payload + "?" + query;
+    }
     let payload = payload.as_bytes().to_vec();
     let response = inspect_client.inspect(payload).await?;
     let http_response = HttpInspectResponse::from(response);

@@ -61,6 +61,26 @@ async fn test_payload_with_slashes() {
 
 #[tokio::test]
 #[serial_test::serial]
+async fn test_payload_with_path_and_query() {
+    test_payload(
+        "user/data?key=value&key2=value2",
+        "user/data?key=value&key2=value2",
+    )
+    .await;
+}
+
+#[tokio::test]
+#[serial_test::serial]
+async fn test_raw_json_payload() {
+    test_payload(
+        r#"{"key": ["value1", "value2"]}"#,
+        r#"{"key": ["value1", "value2"]}"#,
+    )
+    .await;
+}
+
+#[tokio::test]
+#[serial_test::serial]
 async fn test_payload_with_empty_payload() {
     test_payload("", "").await;
 }
