@@ -34,6 +34,12 @@ RUN cargo build --release --bin rollups_dispatcher
 ## runtime
 FROM debian:bullseye-slim AS runtime
 
+RUN <<EOF
+apt-get update
+DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
+rm -rf /var/lib/apt/lists/*
+EOF
+
 COPY --from=builder /usr/src/app/offchain/target/release/rollups_dispatcher /usr/local/bin
 
 ENTRYPOINT ["rollups_dispatcher"]
