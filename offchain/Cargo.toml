@@ -11,3 +11,9 @@ members = [
   "inspect-server",
   "reader"
 ]
+
+[patch.cartesi]
+block-history = { path = "../../state-fold/block-history/" }
+state-fold = { path = "../../state-fold/state-fold/" }
+state-fold-types = { path = "../../state-fold/state-fold-types/" }
+state-server-lib = { path = "../../state-fold/state-server-lib/" }

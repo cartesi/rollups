@@ -34,17 +34,9 @@ where
     let server_address = config.server_address;
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
 
-    let (signal_handle, server_handle) = tokio::join!(
-        tokio::spawn(async { wait_for_signal(shutdown_tx).await }),
-        tokio::spawn(async move {
-            start_server(server_address, server, shutdown_rx).await
-        })
-    );
+    tokio::spawn(async { wait_for_signal(shutdown_tx).await });
 
-    signal_handle?;
-    server_handle??;
-
-    Ok(())
+    Ok(start_server(server_address, server, shutdown_rx).await?)
 }
 
 type ServerProvider = Provider<Ws>;
