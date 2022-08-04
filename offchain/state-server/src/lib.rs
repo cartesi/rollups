@@ -1,5 +1,5 @@
 use state_fold::{Foldable, StateFoldEnvironment};
-use state_fold_types::ethers::providers::{Provider, Ws};
+use state_fold_types::ethers::providers::{Http, Provider};
 use state_server_lib::{
     config,
     grpc_server::StateServer,
@@ -20,7 +20,7 @@ where
 {
     tracing::trace!("Starting rollups state-server with config `{:?}`", config);
 
-    let provider = create_provider(&config).await?;
+    let provider = create_provider(&config)?;
     let block_subscriber =
         create_block_subscriber(&config, Arc::clone(&provider)).await?;
     let env = create_env(
@@ -39,13 +39,14 @@ where
     Ok(start_server(server_address, server, shutdown_rx).await?)
 }
 
-type ServerProvider = Provider<Ws>;
+type ServerProvider = Provider<Http>;
 
-async fn create_provider(
+fn create_provider(
     config: &config::StateServerConfig,
 ) -> Result<Arc<ServerProvider>> {
-    let endpoint = config.block_history.ws_endpoint.clone();
-    let provider = Provider::connect(endpoint).await?;
+    let provider = Provider::<Http>::try_from(
+        config.block_history.http_endpoint.to_owned(),
+    )?;
     Ok(Arc::new(provider))
 }
 
@@ -74,6 +75,7 @@ async fn create_block_subscriber(
 ) -> Result<Arc<block_history::BlockSubscriber<ServerProvider>>> {
     let block_subscriber = block_history::BlockSubscriber::start(
         Arc::clone(&provider),
+        config.block_history.ws_endpoint.to_owned(),
         config.block_history.block_timeout,
         config.block_history.max_depth,
     )

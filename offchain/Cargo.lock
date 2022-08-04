@@ -614,7 +614,9 @@ dependencies = [
 
 [[package]]
 name = "block-history"
-version = "0.4.0"
+version = "0.5.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "53fed6aabfafa413e990d1c3301705b27a081defcadaed611428c7f065606e8b"
 dependencies = [
  "async-stream",
  "snafu 0.7.1",
@@ -4105,16 +4107,16 @@ dependencies = [
 
 [[package]]
 name = "state-client-lib"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "7991550ed58c3e81898c037d04a644e1e5fffa5bc35dc2b02da8f4c71d4e1103"
+checksum = "bb3904a4dfe0a5d5c53e5598654629a33904a6ebf498b294dc6de4735bdacf4c"
 dependencies = [
  "async-trait",
  "serde",
  "serde_json",
  "snafu 0.7.1",
  "state-fold-types",
- "state-server-common 0.4.0 (registry+https://github.com/cartesi/crates-index)",
+ "state-server-common",
  "structopt",
  "tokio",
  "tokio-stream",
@@ -4123,7 +4125,9 @@ dependencies = [
 
 [[package]]
 name = "state-fold"
-version = "0.4.0"
+version = "0.5.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "9b1c7edb0e12e130cb564c0bfbfd1962660299905e6b576eabcf93daa05fb4fc"
 dependencies = [
  "async-recursion 1.0.0",
  "async-trait",
@@ -4137,7 +4141,9 @@ dependencies = [
 
 [[package]]
 name = "state-fold-types"
-version = "0.4.0"
+version = "0.5.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "3205dab4860f59a73e57ce6a2885c6f68a80e39395d8f4d3a62d66621b53d3da"
 dependencies = [
  "anyhow",
  "ethabi",
@@ -4170,23 +4176,9 @@ dependencies = [
 
 [[package]]
 name = "state-server-common"
-version = "0.4.0"
-dependencies = [
- "anyhow",
- "prost",
- "serde",
- "serde_json",
- "snafu 0.7.1",
- "state-fold-types",
- "tonic",
- "tonic-build",
-]
-
-[[package]]
-name = "state-server-common"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "b6efa3b909d4516b8a40532e1015dff7d67ac76f8ca2ba8af07ab13f6beb08a3"
+checksum = "d0274f5cdcd17b3dad9c29a691935da7398ec1691841216aa08aa0af3ab963df"
 dependencies = [
  "anyhow",
  "prost",
@@ -4200,7 +4192,9 @@ dependencies = [
 
 [[package]]
 name = "state-server-lib"
-version = "0.4.0"
+version = "0.5.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "620db8fb015e982939c772a9851d92aed3593bfec5eb0697393fdc1aa9d9df48"
 dependencies = [
  "block-history",
  "futures 0.3.21",
@@ -4209,7 +4203,7 @@ dependencies = [
  "snafu 0.7.1",
  "state-fold",
  "state-fold-types",
- "state-server-common 0.4.0",
+ "state-server-common",
  "structopt",
  "tokio",
  "tokio-stream",
