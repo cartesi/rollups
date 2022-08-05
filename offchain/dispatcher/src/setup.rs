@@ -13,7 +13,7 @@ use state_fold_types::{
     ethers::{
         middleware::SignerMiddleware,
         providers::{Http, Provider},
-        signers::{coins_bip39::English, MnemonicBuilder, Signer},
+        signers::Signer,
         types::Address,
     },
     BlockStreamItem,
@@ -85,18 +85,7 @@ pub async fn create_tx_sender(
                 config.provider_http_endpoint.to_owned(),
             )?;
 
-            let wallet = MnemonicBuilder::<English>::default()
-                .phrase(config.mnemonic.as_str())
-                .build()?
-                .with_chain_id(config.chain_id);
-
-            assert_eq!(
-                wallet.address(),
-                config.sender,
-                "mnemonic public key does not match sender"
-            );
-
-            SignerMiddleware::new(provider, wallet)
+            SignerMiddleware::new(provider, config.wallet.clone())
         };
 
         let database = FileSystemDatabase::new(config.database_path.to_owned());
@@ -117,7 +106,7 @@ pub async fn create_tx_sender(
         tx_manager,
         config.default_confirmations,
         priority,
-        config.sender,
+        config.wallet.address(),
         dapp_contract_address,
     ))
 }

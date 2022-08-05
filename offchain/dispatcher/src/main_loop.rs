@@ -10,7 +10,7 @@ use crate::{
 };
 
 use state_client_lib::{error::StateServerError, StateServer};
-use state_fold_types::{Block, BlockStreamItem};
+use state_fold_types::{ethers::signers::Signer, Block, BlockStreamItem};
 use tx_manager::transaction::Priority;
 
 use types::{
@@ -51,7 +51,7 @@ pub async fn run(config: DispatcherConfig) -> Result<()> {
 
     trace!("Creating dispatcher");
     let dispatcher =
-        create_dispatcher(&config, config.tx_config.sender).await?;
+        create_dispatcher(&config, config.tx_config.wallet.address()).await?;
 
     trace!("Entering main loop...");
     main_loop(
