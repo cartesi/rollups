@@ -20,8 +20,7 @@ use state_fold_types::{
 };
 use tx_manager::{
     config::TxManagerConfig, database::FileSystemDatabase,
-    gas_oracle::ETHGasStationOracle,
-    manager::Configuration as TxTimeConfiguration, transaction::Priority,
+    gas_oracle::ETHGasStationOracle, Priority, TimeConfiguration,
     TransactionManager,
 };
 
@@ -100,17 +99,14 @@ pub async fn create_tx_sender(
             SignerMiddleware::new(provider, wallet)
         };
 
-        let gas_oracle =
-            ETHGasStationOracle::new(config.gas_oracle_api_key.to_owned());
-
         let database = FileSystemDatabase::new(config.database_path.to_owned());
 
         let (tx_manager, _) = TransactionManager::new(
             provider,
-            gas_oracle,
+            None::<ETHGasStationOracle>,
             database,
             config.chain_id.into(),
-            TxTimeConfiguration::default(),
+            TimeConfiguration::default(),
         )
         .await?;
 
