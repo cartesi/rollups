@@ -201,12 +201,14 @@ async fn process_epoch_status_response(
                                         .unwrap_or(&Default::default())
                                         .sibling_hashes
                                         .iter()
+                                        .rev()
                                         .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect(),
                                     output_hashes_in_epoch_siblings:    input.voucher_hashes_in_epoch
                                         .as_ref()
                                         .unwrap_or(&Default::default())
                                         .sibling_hashes
                                         .iter()
+                                        .rev()
                                         .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect()
                                 })
                             },
@@ -276,12 +278,14 @@ async fn process_epoch_status_response(
                                         .unwrap_or(&Default::default())
                                         .sibling_hashes
                                         .iter()
+                                        .rev()
                                         .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect(),
                                     output_hashes_in_epoch_siblings:    input.notice_hashes_in_epoch
                                         .as_ref()
                                         .unwrap_or(&Default::default())
                                         .sibling_hashes
                                         .iter()
+                                        .rev()
                                         .map(|hash| "0x".to_string() + hex::encode(&hash.data).as_str()).collect()
                                 })
                             },
