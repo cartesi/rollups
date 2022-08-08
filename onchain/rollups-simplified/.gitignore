@@ -1,5 +1,6 @@
 /artifacts
 cache
+forge-cache
 contracts.json
 coverage*
 deployments/localhost
@@ -7,9 +8,9 @@ deployments/*/solcInputs/*.json
 dist
 generated-src
 node_modules
+out/
 src/proto/stateserver*
 src/types
-test/*/
 .vscode
 .node*
 .env
