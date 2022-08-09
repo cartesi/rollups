@@ -1,5 +1,7 @@
 use state_fold::{Foldable, StateFoldEnvironment};
-use state_fold_types::ethers::providers::{Http, Provider};
+use state_fold_types::ethers::providers::{
+    Http, HttpRateLimitRetryPolicy, Provider, RetryClient,
+};
 use state_server_lib::{
     config,
     grpc_server::StateServer,
@@ -9,6 +11,10 @@ use state_server_lib::{
 use anyhow::Result;
 use std::sync::Arc;
 use tokio::sync::oneshot;
+use url::Url;
+
+const MAX_RETRIES: u32 = 10;
+const INITIAL_BACKOFF: u64 = 1000;
 
 #[tracing::instrument(level = "trace")]
 pub async fn run_server<F: Foldable<UserData = ()> + 'static>(
@@ -39,14 +45,22 @@ where
     Ok(start_server(server_address, server, shutdown_rx).await?)
 }
 
-type ServerProvider = Provider<Http>;
+type ServerProvider = Provider<RetryClient<Http>>;
 
 fn create_provider(
     config: &config::StateServerConfig,
 ) -> Result<Arc<ServerProvider>> {
-    let provider = Provider::<Http>::try_from(
-        config.block_history.http_endpoint.to_owned(),
-    )?;
+    let http = Http::new(Url::parse(&config.block_history.http_endpoint)?);
+
+    let retry_client = RetryClient::new(
+        http,
+        Box::new(HttpRateLimitRetryPolicy),
+        MAX_RETRIES,
+        INITIAL_BACKOFF,
+    );
+
+    let provider = Provider::new(retry_client);
+
     Ok(Arc::new(provider))
 }
 
