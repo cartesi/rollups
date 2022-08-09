@@ -16,5 +16,5 @@ pub trait TxSender: std::fmt::Debug + Sized {
 
     async fn send_finalize_tx(self, epoch_number: U256) -> Result<Self>;
 
-    async fn send_redeem_tx(self, validator_redeemed: U256) -> Result<Self>;
+    async fn send_redeem_tx(self) -> Result<Self>;
 }

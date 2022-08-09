@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use state_fold_types::{ethers::types::Address, BlockState};
 
-use tracing::{instrument, trace};
+use tracing::{instrument, trace, warn};
 
 #[derive(Debug)]
 pub struct RollupsDispatcher<MM> {
@@ -46,29 +46,28 @@ where
     ) -> Result<TS> {
         let state = block_state.state;
 
-        // redeem fees if the number of redeemable claims has reached the trigger level
-        if state.fee_manager_state.should_redeem(
-            &state.validator_manager_state,
-            self.sender,
-            &self.fee_incentive_strategy,
-        ) {
-            let validator_redeemed = state
-                .fee_manager_state
-                .num_redeemed_for_validator(self.sender.clone());
+        {
+            // redeem fees if the number of redeemable claims has reached the
+            // trigger level and the bank has enough balance.
+            if state.fee_manager_state.should_redeem(
+                &state.validator_manager_state,
+                self.sender,
+                &self.fee_incentive_strategy,
+            ) {
+                tx_sender = tx_sender.send_redeem_tx().await?;
+            }
 
-            tx_sender = tx_sender.send_redeem_tx(validator_redeemed).await?;
-        }
-
-        // Will not work if fee manager has insufficient uncommitted_balance
-        let should_work =
-            state.fee_manager_state.sufficient_uncommitted_balance(
+            // Will work if fee manager has sufficient uncommitted balance or
+            // if the node is altruistic.
+            let should_work = state.fee_manager_state.should_work(
                 &state.validator_manager_state,
                 &self.fee_incentive_strategy,
             );
 
-        if !should_work {
-            trace!("Fee Manager has insufficient uncommitted balance");
-            return Ok(tx_sender);
+            if !should_work {
+                warn!("Fee Manager has insufficient uncommitted balance");
+                return Ok(tx_sender);
+            }
         }
 
         trace!("Querying machine manager for current epoch status");

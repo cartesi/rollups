@@ -170,7 +170,7 @@ where
     }
 
     #[instrument(level = "trace")]
-    async fn send_redeem_tx(self, _validator_redeemed: U256) -> Result<Self> {
+    async fn send_redeem_tx(self) -> Result<Self> {
         let redeem_tx = {
             let call = self
                 .constants

@@ -72,6 +72,24 @@ impl FeeManagerState {
         let num_claims_trigger_redeem =
             U256::from(strategy.num_claims_trigger_redeem);
 
+        let redeemable_claims =
+            self.redeemable_claims(validator_manager_state, validator_address);
+
+        let redeemable_fee = redeemable_claims * self.fee_per_claim;
+
+        let redeem_threshold_hit =
+            redeemable_claims >= num_claims_trigger_redeem;
+
+        let sufficient_balance = self.bank_balance >= redeemable_fee;
+
+        redeem_threshold_hit && sufficient_balance
+    }
+
+    pub fn redeemable_claims(
+        &self,
+        validator_manager_state: &ValidatorManagerState,
+        validator_address: Address,
+    ) -> U256 {
         let validator_claims =
             validator_manager_state.num_claims_for_validator(validator_address);
         let validator_redeemed =
@@ -82,7 +100,7 @@ impl FeeManagerState {
         );
         let num_redeemable_claims = validator_claims - validator_redeemed;
 
-        num_redeemable_claims >= num_claims_trigger_redeem
+        num_redeemable_claims
     }
 
     pub fn num_redeemed_for_validator(
@@ -105,7 +123,7 @@ impl FeeManagerState {
         validator_redeemed
     }
 
-    pub fn sufficient_uncommitted_balance(
+    pub fn should_work(
         &self,
         validator_manager_state: &ValidatorManagerState,
         strategy: &FeeIncentiveStrategy,
@@ -118,6 +136,14 @@ impl FeeManagerState {
             return false;
         }
 
+        self.sufficient_uncommitted_balance(validator_manager_state, strategy)
+    }
+
+    pub fn sufficient_uncommitted_balance(
+        &self,
+        validator_manager_state: &ValidatorManagerState,
+        strategy: &FeeIncentiveStrategy,
+    ) -> bool {
         let validators_removed =
             validator_manager_state.validators_removed.len();
 
