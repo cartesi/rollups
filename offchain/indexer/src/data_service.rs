@@ -446,7 +446,7 @@ async fn process_state_response(
 
     // Check for current phase state, process inputs accordingly
     info!(
-        "Poll state: pooling state server, current rollups phase is {:?}",
+        "Poll state: polling state server, current rollups phase is {:?}",
         block_state.state.current_phase
     );
     match &*block_state.state.current_phase {
@@ -644,7 +644,7 @@ async fn polling_loop(
                                                 )
                                                     .await
                                                 {
-                                                    let err_message = format!("Error pooling epoch status for epoch {}: {}", epoch_index, e);
+                                                    let err_message = format!("Error polling epoch status for epoch {}: {}", epoch_index, e);
                                                     error!("{}", err_message);
                                                     health_status
                                                         .lock()
@@ -664,7 +664,7 @@ async fn polling_loop(
                                     Err(e) => {
                                         let last_epoch_index =
                                             *last_epoch_index.lock().await;
-                                        let err_message = format!("Error pooling epoch status for epoch index {}: {}", last_epoch_index, e);
+                                        let err_message = format!("Error polling epoch status for epoch index {}: {}", last_epoch_index, e);
                                         error!("{}", &err_message);
                                         health_status
                                             .lock()
@@ -799,7 +799,7 @@ async fn polling_loop(
                                 )
                                 .await
                                 {
-                                    let err_message = format!("Error pooling get state from state fold server {}", e);
+                                    let err_message = format!("Error polling get state from state fold server {}", e);
                                     error!("{}", &err_message);
                                     health_status.lock().await.state_server =
                                         Err(err_message);
@@ -869,7 +869,7 @@ async fn sync_epoch_status(
         )
         .await
         {
-            error!("Error pooling epoch status {}", e.to_string());
+            error!("Error polling epoch status {}", e.to_string());
         }
     }
 
@@ -919,7 +919,7 @@ async fn sync_state(
     )
     .await
     {
-        error!("Error pooling epoch status {}", e.to_string());
+        error!("Error polling epoch status {}", e.to_string());
     }
 
     Ok(())
