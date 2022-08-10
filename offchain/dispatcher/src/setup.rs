@@ -12,7 +12,7 @@ use state_client_lib::{
 use state_fold_types::{
     ethers::{
         middleware::SignerMiddleware,
-        providers::{Http, Provider},
+        providers::{Http, HttpRateLimitRetryPolicy, Provider, RetryClient},
         signers::Signer,
         types::Address,
     },
@@ -32,8 +32,12 @@ use types::{
 use anyhow::Result;
 use tokio_stream::{Stream, StreamExt};
 use tonic::transport::Channel;
+use url::Url;
 
 const BUFFER_LEN: usize = 256;
+
+const MAX_RETRIES: u32 = 10;
+const INITIAL_BACKOFF: u64 = 1000;
 
 pub async fn create_state_server(
     config: &SCConfig,
@@ -81,9 +85,16 @@ pub async fn create_tx_sender(
 ) -> Result<impl TxSender> {
     let tx_manager = {
         let provider = {
-            let provider = Provider::<Http>::try_from(
-                config.provider_http_endpoint.to_owned(),
-            )?;
+            let http = Http::new(Url::parse(&config.provider_http_endpoint)?);
+
+            let retry_client = RetryClient::new(
+                http,
+                Box::new(HttpRateLimitRetryPolicy),
+                MAX_RETRIES,
+                INITIAL_BACKOFF,
+            );
+
+            let provider = Provider::new(retry_client);
 
             SignerMiddleware::new(provider, config.wallet.clone())
         };

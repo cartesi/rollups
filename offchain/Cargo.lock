@@ -1311,6 +1311,7 @@ dependencies = [
  "tracing-subscriber",
  "tx-manager",
  "types",
+ "url",
 ]
 
 [[package]]
