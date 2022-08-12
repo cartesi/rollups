@@ -4,7 +4,7 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "address",
+        "internalType": "contract ICartesiDApp",
         "name": "application",
         "type": "address"
       },
@@ -19,6 +19,12 @@
         "internalType": "bytes32",
         "name": "templateHash",
         "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract IConsensus",
+        "name": "consensus",
+        "type": "address"
       }
     ],
     "name": "ApplicationCreated",
@@ -35,6 +41,11 @@
         "internalType": "bytes32",
         "name": "_templateHash",
         "type": "bytes32"
+      },
+      {
+        "internalType": "contract IConsensus",
+        "name": "_consensus",
+        "type": "address"
       }
     ],
     "name": "newApplication",

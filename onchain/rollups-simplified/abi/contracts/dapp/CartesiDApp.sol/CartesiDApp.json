@@ -7,14 +7,14 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "_consensus",
-        "type": "address"
-      },
-      {
         "internalType": "bytes32",
         "name": "_templateHash",
         "type": "bytes32"
+      },
+      {
+        "internalType": "contract IConsensus",
+        "name": "_consensus",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -25,7 +25,7 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
+        "internalType": "contract IConsensus",
         "name": "newConsensus",
         "type": "address"
       }
@@ -78,12 +78,12 @@
         "type": "bytes"
       },
       {
+        "internalType": "bytes",
+        "name": "_claimData",
+        "type": "bytes"
+      },
+      {
         "components": [
-          {
-            "internalType": "uint64",
-            "name": "epochIndex",
-            "type": "uint64"
-          },
           {
             "internalType": "uint64",
             "name": "inputIndex",
@@ -125,7 +125,7 @@
             "type": "bytes32[]"
           }
         ],
-        "internalType": "struct LibOutputValidation.OutputValidityProof",
+        "internalType": "struct OutputValidityProof",
         "name": "_v",
         "type": "tuple"
       }
@@ -143,19 +143,25 @@
   },
   {
     "inputs": [],
-    "name": "finalizeEpoch",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "getConsensus",
+    "outputs": [
+      {
+        "internalType": "contract IConsensus",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "getEpoch",
+    "name": "getTemplateHash",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "bytes32",
         "name": "",
-        "type": "uint256"
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -164,8 +170,8 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_consensus",
+        "internalType": "contract IConsensus",
+        "name": "_newConsensus",
         "type": "address"
       }
     ],
@@ -249,12 +255,12 @@
         "type": "bytes"
       },
       {
+        "internalType": "bytes",
+        "name": "_claimData",
+        "type": "bytes"
+      },
+      {
         "components": [
-          {
-            "internalType": "uint64",
-            "name": "epochIndex",
-            "type": "uint64"
-          },
           {
             "internalType": "uint64",
             "name": "inputIndex",
@@ -296,7 +302,7 @@
             "type": "bytes32[]"
           }
         ],
-        "internalType": "struct LibOutputValidation.OutputValidityProof",
+        "internalType": "struct OutputValidityProof",
         "name": "_v",
         "type": "tuple"
       }

@@ -15,24 +15,28 @@ pragma solidity ^0.8.13;
 
 import {ICartesiDAppFactory} from "./ICartesiDAppFactory.sol";
 import {ICartesiDApp} from "./ICartesiDApp.sol";
+import {IConsensus} from "../consensus/IConsensus.sol";
 import {CartesiDApp} from "./CartesiDApp.sol";
 
 contract CartesiDAppFactory is ICartesiDAppFactory {
-    function newApplication(address _dappOwner, bytes32 _templateHash)
-        public
-        override
-        returns (ICartesiDApp)
-    {
-        // msg.sender should be the consensus address
-        ICartesiDApp application = ICartesiDApp(
-            address(new CartesiDApp(_dappOwner, msg.sender, _templateHash))
+    function newApplication(
+        address _dappOwner,
+        bytes32 _templateHash,
+        IConsensus _consensus
+    ) external override returns (ICartesiDApp) {
+        ICartesiDApp application = new CartesiDApp(
+            _dappOwner,
+            _templateHash,
+            _consensus
         );
 
         emit ApplicationCreated(
-            address(application),
+            application,
             _dappOwner,
-            _templateHash
+            _templateHash,
+            _consensus
         );
+
         return application;
     }
 }

@@ -48,7 +48,7 @@ library CanonicalMachine {
     /// @param _index index of intra memory range
     /// @param _log2Size of intra memory range
     function getIntraMemoryRangePosition(uint64 _index, Log2Size _log2Size)
-        public
+        internal
         pure
         returns (uint64)
     {

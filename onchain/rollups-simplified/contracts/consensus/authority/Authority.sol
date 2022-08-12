@@ -13,73 +13,94 @@
 // @title Authority
 pragma solidity ^0.8.13;
 
-import {IAuthority} from "./IAuthority.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
+import {IConsensus} from "../IConsensus.sol";
+import {InputBox} from "../../inputs/InputBox.sol";
 import {ICartesiDApp} from "../../dapp/ICartesiDApp.sol";
 import {ICartesiDAppFactory} from "../../dapp/ICartesiDAppFactory.sol";
 import {IHistory} from "../../history/IHistory.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Authority is IAuthority, Ownable {
-    uint256 lastFinalizedInput;
-    ICartesiDAppFactory cartesiDAppFactory;
+contract Authority is IConsensus, Ownable {
+    ICartesiDAppFactory dappFactory;
     IHistory history;
 
     constructor(
         address _owner,
-        address _inputBox,
-        address _history,
-        address _cartesiDAppFactory
+        InputBox _inputBox,
+        IHistory _history,
+        ICartesiDAppFactory _dappFactory
     ) {
         transferOwnership(_owner);
-        history = IHistory(_history);
-        cartesiDAppFactory = ICartesiDAppFactory(_cartesiDAppFactory);
-        emit AuthorityCreated(_owner, _inputBox, _history, _cartesiDAppFactory);
+        history = _history;
+        dappFactory = _dappFactory;
+        emit ConsensusCreated(_owner, _inputBox, _history, _dappFactory);
     }
 
-    function submitFinalizedClaim(
-        address _dapp,
-        bytes32 _finalizedClaim,
-        uint256 _lastFinalizedInput
-    ) external override onlyOwner {
-        ICartesiDApp dapp = ICartesiDApp(_dapp);
-        uint256 epoch = dapp.getEpoch();
-
-        history.submitFinalizedClaim(
-            _dapp,
-            epoch,
-            _finalizedClaim,
-            _lastFinalizedInput
-        );
-
-        dapp.finalizeEpoch();
+    /// @dev Will fail if history has migrated to another consensus
+    function submitClaim(address _dapp, bytes calldata _data)
+        external
+        override
+        onlyOwner
+    {
+        history.submitClaim(_dapp, _data);
     }
 
     function createDApp(address _dappOwner, bytes32 _templateHash)
-        public
+        external
         override
         returns (ICartesiDApp)
     {
-        return cartesiDAppFactory.newApplication(_dappOwner, _templateHash);
+        return dappFactory.newApplication(_dappOwner, _templateHash, this);
     }
 
-    function changeFactoryImpl(address _cartesiDAppFactory)
-        public
+    function migrateHistoryToConsensus(address _consensus)
+        external
         override
         onlyOwner
     {
-        cartesiDAppFactory = ICartesiDAppFactory(_cartesiDAppFactory);
-        emit DappFactoryChanged(_cartesiDAppFactory);
+        history.migrateToConsensus(_consensus);
     }
 
-    function migrateHistoryToConsensus(address _history, address _consensus)
-        public
+    function setHistory(IHistory _history) external override onlyOwner {
+        history = _history;
+        emit NewHistory(_history);
+    }
+
+    /// @dev The new factory implementation must have the same interface.
+    ///      If the interface of the factory must change, you need to deploy
+    ///      a new version of the consensus contract and migrate to it.
+    function setDAppFactory(ICartesiDAppFactory _dappFactory)
+        external
         override
         onlyOwner
     {
-        IHistory(_history).migrateToConsensus(_consensus);
+        dappFactory = _dappFactory;
+        emit NewDAppFactory(_dappFactory);
     }
 
-    function getHistoryAddress() public view override returns (address) {
-        return address(history);
+    function getHistory() external view override returns (IHistory) {
+        return history;
+    }
+
+    function getDAppFactory()
+        external
+        view
+        override
+        returns (ICartesiDAppFactory)
+    {
+        return dappFactory;
+    }
+
+    function getEpochHash(address _dapp, bytes calldata _data)
+        external
+        view
+        returns (
+            bytes32,
+            uint256,
+            uint256
+        )
+    {
+        return history.getEpochHash(_dapp, _data);
     }
 }

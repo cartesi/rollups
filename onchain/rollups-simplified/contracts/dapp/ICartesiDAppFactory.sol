@@ -14,21 +14,33 @@
 pragma solidity ^0.8.13;
 
 import {ICartesiDApp} from "./ICartesiDApp.sol";
+import {IConsensus} from "../consensus/IConsensus.sol";
 
 interface ICartesiDAppFactory {
-    /// @notice Deploy a new application
-    /// @param _templateHash state hash of the cartesi machine at t0
-    /// @return application address of new application
-    function newApplication(address _dappOwner, bytes32 _templateHash)
-        external
-        returns (ICartesiDApp);
+    // Events
 
     /// @notice Event emitted when a new application is deployed
-    /// @param application application address
+    /// @param application application contract
+    /// @param dappOwner dapp owner address
     /// @param templateHash state hash of the cartesi machine at t0
+    /// @param consensus consensus contract
     event ApplicationCreated(
-        address indexed application,
+        ICartesiDApp indexed application,
         address dappOwner,
-        bytes32 templateHash
+        bytes32 templateHash,
+        IConsensus consensus
     );
+
+    // Permissionless functions
+
+    /// @notice Deploy a new application
+    /// @param _dappOwner dapp owner address
+    /// @param _templateHash state hash of the cartesi machine at t0
+    /// @param _consensus consensus contract
+    /// @return new application contract
+    function newApplication(
+        address _dappOwner,
+        bytes32 _templateHash,
+        IConsensus _consensus
+    ) external returns (ICartesiDApp);
 }

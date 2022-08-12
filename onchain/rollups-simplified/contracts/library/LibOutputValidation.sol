@@ -16,36 +16,27 @@ pragma solidity ^0.8.13;
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 
+/// @param inputIndex which input, in the epoch, the output belongs to
+/// @param outputIndex index of output inside the input
+/// @param outputHashesRootHash merkle root of all epoch's output metadata hashes
+/// @param vouchersEpochRootHash merkle root of all epoch's voucher metadata hashes
+/// @param noticesEpochRootHash merkle root of all epoch's notice metadata hashes
+/// @param machineStateHash hash of the machine state claimed this epoch
+/// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range
+/// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range
+struct OutputValidityProof {
+    uint64 inputIndex;
+    uint64 outputIndex;
+    bytes32 outputHashesRootHash;
+    bytes32 vouchersEpochRootHash;
+    bytes32 noticesEpochRootHash;
+    bytes32 machineStateHash;
+    bytes32[] keccakInHashesSiblings;
+    bytes32[] outputHashesInEpochSiblings;
+}
+
 library LibOutputValidation {
     using CanonicalMachine for CanonicalMachine.Log2Size;
-
-    /// @param epochIndex which epoch the output belongs to
-    /// @param inputIndex which input, inside the epoch, the output belongs to
-    /// @param outputIndex index of output inside the input
-    /// @param outputHashesRootHash merkle root of all epoch's output metadata hashes
-    /// @param vouchersEpochRootHash merkle root of all epoch's voucher metadata hashes
-    /// @param noticesEpochRootHash merkle root of all epoch's notice metadata hashes
-    /// @param machineStateHash hash of the machine state claimed this epoch
-    /// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range
-    /// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range
-    struct OutputValidityProof {
-        uint64 epochIndex;
-        uint64 inputIndex;
-        uint64 outputIndex;
-        bytes32 outputHashesRootHash;
-        bytes32 vouchersEpochRootHash;
-        bytes32 noticesEpochRootHash;
-        bytes32 machineStateHash;
-        bytes32[] keccakInHashesSiblings;
-        bytes32[] outputHashesInEpochSiblings;
-    }
-
-    struct HistoryBound {
-        address historyAddress;
-        // the epoch upper bound the history is used
-        // the same history address is still possible to be used again in the future
-        uint64 epochUpperBound;
-    }
 
     /// TODO: extend documentation
     /// @notice enforceProofValidity reverts if the proof is invalid
@@ -58,7 +49,7 @@ library LibOutputValidation {
         uint256 _outputEpochLog2Size,
         uint256 _outputHashesLog2Size,
         OutputValidityProof calldata _v
-    ) public pure {
+    ) internal pure {
         // prove that outputs hash is represented in a finalized epoch
         require(
             keccak256(
@@ -130,7 +121,7 @@ library LibOutputValidation {
         bytes memory _encodedVoucher,
         bytes32 _epochHash,
         OutputValidityProof calldata _v
-    ) public pure {
+    ) internal pure {
         enforceProofValidity(
             _encodedVoucher,
             _epochHash,
@@ -146,7 +137,7 @@ library LibOutputValidation {
         bytes memory _encodedNotice,
         bytes32 _epochHash,
         OutputValidityProof calldata _v
-    ) public pure {
+    ) internal pure {
         enforceProofValidity(
             _encodedNotice,
             _epochHash,
@@ -159,16 +150,16 @@ library LibOutputValidation {
 
     /// @notice get voucher position on bitmask
     /// @param _voucher of voucher inside the input
-    /// @param _input which input, inside the epoch, the voucher belongs to
-    /// @param _epoch which epoch the voucher belongs to
+    /// @param _input which input, inside the input box, the voucher belongs to
     /// @return position of that voucher on bitmask
-    function getBitMaskPosition(
-        uint256 _voucher,
-        uint256 _input,
-        uint256 _epoch
-    ) public pure returns (uint256) {
-        // voucher * 2 ** 128 + input * 2 ** 64 + epoch
-        // this can't overflow because its impossible to have > 2**128 vouchers
-        return (((_voucher << 128) | (_input << 64)) | _epoch);
+    function getBitMaskPosition(uint256 _voucher, uint256 _input)
+        internal
+        pure
+        returns (uint256)
+    {
+        // voucher * 2 ** 128 + input
+        // this can't overflow because it is impossible to have > 2**128 vouchers
+        // and because we are assuming there won't be 2 ** 128 inputs on the input box
+        return (((_voucher << 128) | _input));
     }
 }

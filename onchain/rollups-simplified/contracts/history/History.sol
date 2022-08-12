@@ -13,46 +13,85 @@
 // @title History
 pragma solidity ^0.8.13;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
 import {IHistory} from "./IHistory.sol";
 
 contract History is IHistory, Ownable {
-    // mapping from dapp address => epoch => claim
-    mapping(address => mapping(uint256 => bytes32)) public finalizedClaims;
-
-    constructor(address _consensus) {
-        migrateToConsensus(_consensus);
+    struct Claim {
+        bytes32 epochHash;
+        uint256 lastClaimInputIndex;
     }
 
-    function submitFinalizedClaim(
-        address _dapp,
-        uint256 _epoch,
-        bytes32 _finalizedClaim,
-        uint256 _lastFinalizedInput
-    ) external override onlyOwner {
-        // overwrite claim even if it's not empty
-        finalizedClaims[_dapp][_epoch] = _finalizedClaim;
+    // mapping from dapp address => FCII => LCII + epoch hash
+    mapping(address => mapping(uint256 => Claim)) claims;
 
-        emit NewFinalizedClaim(
-            _dapp,
-            _epoch,
-            _finalizedClaim,
-            _lastFinalizedInput
+    // mapping from dapp address => input index lower bound
+    mapping(address => uint256) inputIndexLowerBounds;
+
+    function submitClaim(address _dapp, bytes calldata _data)
+        external
+        override
+        onlyOwner
+    {
+        (
+            bytes32 epochHash,
+            uint256 firstClaimInputIndex,
+            uint256 lastClaimInputIndex
+        ) = abi.decode(_data, (bytes32, uint256, uint256));
+
+        require(
+            firstClaimInputIndex <= lastClaimInputIndex,
+            "History: new FCII > new LCII"
         );
+
+        require(
+            firstClaimInputIndex >= inputIndexLowerBounds[_dapp],
+            "History: new FCII < IILB"
+        );
+
+        inputIndexLowerBounds[_dapp] = lastClaimInputIndex + 1;
+        claims[_dapp][firstClaimInputIndex] = Claim({
+            epochHash: epochHash,
+            lastClaimInputIndex: lastClaimInputIndex
+        });
+
+        emit NewClaim(_dapp, _data);
     }
 
-    // this is for the case when new consensus uses the same history
-    function migrateToConsensus(address _consensus) public override onlyOwner {
+    function getEpochHash(address _dapp, bytes calldata _data)
+        external
+        view
+        override
+        returns (
+            bytes32,
+            uint256,
+            uint256
+        )
+    {
+        (uint256 firstClaimInputIndex, uint256 epochInputIndex) = abi.decode(
+            _data,
+            (uint256, uint256)
+        );
+
+        Claim memory claim = claims[_dapp][firstClaimInputIndex];
+
+        uint256 inputIndex = firstClaimInputIndex + epochInputIndex;
+
+        require(
+            inputIndex <= claim.lastClaimInputIndex,
+            "History: bad epoch input index"
+        );
+
+        return (claim.epochHash, inputIndex, epochInputIndex);
+    }
+
+    // emits an `OwnershipTransfered` event (see `Ownable`)
+    function migrateToConsensus(address _consensus)
+        external
+        override
+        onlyOwner
+    {
         transferOwnership(_consensus);
-        emit NewConsensus(_consensus);
-    }
-
-    // in this version, the 3rd parameter is ignored
-    function getClaim(
-        address _dapp,
-        uint256 _epoch,
-        bytes calldata
-    ) external view override returns (bytes32) {
-        return finalizedClaims[_dapp][_epoch];
     }
 }

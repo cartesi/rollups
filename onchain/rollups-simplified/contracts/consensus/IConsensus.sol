@@ -10,21 +10,47 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-// @title History interface
+// @title Authority interface
 pragma solidity ^0.8.13;
 
-interface IHistory {
+import {InputBox} from "../inputs/InputBox.sol";
+import {IHistory} from "../history/IHistory.sol";
+import {ICartesiDApp} from "../dapp/ICartesiDApp.sol";
+import {ICartesiDAppFactory} from "../dapp/ICartesiDAppFactory.sol";
+
+interface IConsensus {
     // Events
 
-    event NewClaim(address dapp, bytes data);
+    event ConsensusCreated(
+        address owner,
+        InputBox inputBox,
+        IHistory history,
+        ICartesiDAppFactory dappFactory
+    );
+
+    event NewHistory(IHistory history);
+
+    event NewDAppFactory(ICartesiDAppFactory dappFactory);
 
     // Permissioned functions
 
     function submitClaim(address _dapp, bytes calldata _data) external;
 
-    function migrateToConsensus(address _consensus) external;
+    function setHistory(IHistory _history) external;
+
+    function setDAppFactory(ICartesiDAppFactory _dappFactory) external;
+
+    function migrateHistoryToConsensus(address _consensus) external;
 
     // Permissionless functions
+
+    function createDApp(address _dappOwner, bytes32 _templateHash)
+        external
+        returns (ICartesiDApp);
+
+    function getHistory() external view returns (IHistory);
+
+    function getDAppFactory() external view returns (ICartesiDAppFactory);
 
     function getEpochHash(address _dapp, bytes calldata _data)
         external

@@ -5,42 +5,17 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "newConsensus",
-        "type": "address"
-      }
-    ],
-    "name": "NewConsensus",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "dapp",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "epoch",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "finalizedClaim",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "lastFinalizedInput",
-        "type": "uint256"
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
       }
     ],
-    "name": "NewFinalizedClaim",
+    "name": "NewClaim",
     "type": "event"
   },
   {
@@ -51,22 +26,27 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "_epoch",
-        "type": "uint256"
-      },
-      {
         "internalType": "bytes",
-        "name": "",
+        "name": "_data",
         "type": "bytes"
       }
     ],
-    "name": "getClaim",
+    "name": "getEpochHash",
     "outputs": [
       {
         "internalType": "bytes32",
-        "name": "",
+        "name": "epochHash_",
         "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "inputIndex_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epochInputIndex_",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -93,22 +73,12 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "_epoch",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_finalizedClaim",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_lastFinalizedInput",
-        "type": "uint256"
+        "internalType": "bytes",
+        "name": "_data",
+        "type": "bytes"
       }
     ],
-    "name": "submitFinalizedClaim",
+    "name": "submitClaim",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -13,27 +13,36 @@
 // @title ICartesi DApp
 pragma solidity ^0.8.13;
 
-import {LibOutputValidation} from "../library/LibOutputValidation.sol";
+import {IConsensus} from "../consensus/IConsensus.sol";
+import {OutputValidityProof} from "../library/LibOutputValidation.sol";
 
 interface ICartesiDApp {
+    // Events
+
+    event NewConsensus(IConsensus newConsensus);
+
+    event VoucherExecuted(uint256 voucherPosition);
+
+    // Permissioned functions
+
+    function migrateToConsensus(IConsensus _newConsensus) external;
+
+    // Permissionless functions
+
     function executeVoucher(
         address _destination,
         bytes calldata _payload,
-        LibOutputValidation.OutputValidityProof calldata _v
+        bytes calldata _claimData,
+        OutputValidityProof calldata _v
     ) external returns (bool);
 
     function validateNotice(
         bytes calldata _notice,
-        LibOutputValidation.OutputValidityProof calldata _v
+        bytes calldata _claimData,
+        OutputValidityProof calldata _v
     ) external view returns (bool);
 
-    function migrateToConsensus(address _consensus) external;
+    function getTemplateHash() external view returns (bytes32);
 
-    function finalizeEpoch() external;
-
-    function getEpoch() external view returns (uint256);
-
-    event NewConsensus(address newConsensus);
-
-    event VoucherExecuted(uint256 voucherPosition);
+    function getConsensus() external view returns (IConsensus);
 }

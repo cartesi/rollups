@@ -14,6 +14,8 @@
 pragma solidity ^0.8.13;
 
 interface IERC20Portal {
+    // Permissionless functions
+
     /// @notice Deposits ERC-20 tokens into DApp's balance
     ///         and adds an input to signal such deposit.
     ///         The caller must allow this contract to withdraw

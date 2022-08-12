@@ -14,6 +14,8 @@
 pragma solidity ^0.8.13;
 
 interface IEtherPortal {
+    // Permissionless functions
+
     /// @notice Deposits Ether into DApp's balance
     ///         and adds an input to signal such deposit.
     /// @param _dapp The address of the DApp

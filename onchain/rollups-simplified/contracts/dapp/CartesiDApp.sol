@@ -14,9 +14,8 @@
 pragma solidity ^0.8.13;
 
 import {ICartesiDApp} from "./ICartesiDApp.sol";
-import {IAuthority} from "../consensus/authority/IAuthority.sol";
-import {IHistory} from "../history/IHistory.sol";
-import {LibOutputValidation} from "../library/LibOutputValidation.sol";
+import {IConsensus} from "../consensus/IConsensus.sol";
+import {LibOutputValidation, OutputValidityProof} from "../library/LibOutputValidation.sol";
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -31,54 +30,45 @@ contract CartesiDApp is
 {
     using Bitmask for mapping(uint256 => uint256);
 
-    IAuthority consensus;
-    // state hash of the cartesi machine at t0
     bytes32 immutable templateHash;
     mapping(uint256 => uint256) voucherBitmask;
-    // we use the following mapping as an array to store all histories used
-    uint256 historyLength;
-    mapping(uint256 => LibOutputValidation.HistoryBound) histories;
-
-    uint256 epoch;
+    IConsensus consensus;
 
     constructor(
         address _owner,
-        address _consensus,
-        bytes32 _templateHash
+        bytes32 _templateHash,
+        IConsensus _consensus
     ) {
         transferOwnership(_owner);
-        migrateToConsensus(_consensus);
         templateHash = _templateHash;
+        consensus = _consensus;
     }
 
     /// @notice executes voucher
     /// @param _destination address that will execute the payload
     /// @param _payload payload to be executed by destination
+    /// @param _claimData claim data to be handed to consensus
     /// @param _v validity proof for this encoded voucher
     /// @return true if voucher was executed successfully
     /// @dev  vouchers can only be executed once
     function executeVoucher(
         address _destination,
         bytes calldata _payload,
-        LibOutputValidation.OutputValidityProof calldata _v
-    ) public override nonReentrant returns (bool) {
-        bytes memory encodedVoucher = abi.encode(_destination, _payload);
+        bytes calldata _claimData,
+        OutputValidityProof calldata _v
+    ) external override nonReentrant returns (bool) {
+        bytes32 epochHash;
+        uint256 inputIndex;
 
-        bytes memory claimProofs;
-        IHistory history = IHistory(getHistoryAddress(_v.epochIndex));
-        bytes32 claim = history.getClaim(
-            address(this),
-            _v.epochIndex,
-            claimProofs
-        );
+        (epochHash, inputIndex) = getEpochHashAndInputIndex(_claimData, _v);
 
         // reverts if validity proof doesnt match
-        LibOutputValidation.isValidVoucherProof(encodedVoucher, claim, _v);
+        bytes memory encodedVoucher = abi.encode(_destination, _payload);
+        LibOutputValidation.isValidVoucherProof(encodedVoucher, epochHash, _v);
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _v.outputIndex,
-            _v.inputIndex,
-            _v.epochIndex
+            inputIndex
         );
 
         // check if voucher has been executed
@@ -101,75 +91,57 @@ contract CartesiDApp is
 
     /// @notice validates notice
     /// @param _notice notice to be verified
+    /// @param _claimData claim data to be handed to consensus
     /// @param _v validity proof for this notice
     /// @return true if notice is valid
     function validateNotice(
         bytes calldata _notice,
-        LibOutputValidation.OutputValidityProof calldata _v
-    ) public view override returns (bool) {
+        bytes calldata _claimData,
+        OutputValidityProof calldata _v
+    ) external view override returns (bool) {
+        bytes32 epochHash;
+
+        (epochHash, ) = getEpochHashAndInputIndex(_claimData, _v);
+
+        // reverts if proof doesnt match
         bytes memory encodedNotice = abi.encode(_notice);
-
-        bytes memory claimProofs;
-        IHistory history = IHistory(getHistoryAddress(_v.epochIndex));
-        bytes32 claim = history.getClaim(
-            address(this),
-            _v.epochIndex,
-            claimProofs
-        );
-
-        // reverts if validity proof doesnt match
-        LibOutputValidation.isValidNoticeProof(encodedNotice, claim, _v);
+        LibOutputValidation.isValidNoticeProof(encodedNotice, epochHash, _v);
 
         return true;
     }
 
-    function migrateToConsensus(address _consensus) public override onlyOwner {
-        consensus = IAuthority(_consensus);
-        // check if history address changes
-        address newHistory = consensus.getHistoryAddress();
-        if (
-            historyLength > 0 &&
-            histories[historyLength - 1].historyAddress != newHistory
-        ) {
-            // set epoch upper bound for current history before setting the new history address
-            histories[historyLength - 1].epochUpperBound = uint64(epoch - 1);
-            histories[historyLength++].historyAddress = newHistory;
-        } else if (historyLength == 0) {
-            histories[historyLength++].historyAddress = newHistory;
-        }
-        emit NewConsensus(_consensus);
+    function migrateToConsensus(IConsensus _newConsensus)
+        external
+        override
+        onlyOwner
+    {
+        consensus = _newConsensus;
+        emit NewConsensus(_newConsensus);
     }
 
-    function finalizeEpoch() public override {
-        // only callable by consensus
-        require(msg.sender == address(consensus), "only consensus");
-
-        // check if history address changes
-        address newHistory = consensus.getHistoryAddress();
-        // historyLength is greater than 0
-        if (histories[historyLength - 1].historyAddress != newHistory) {
-            // set epoch upper bound for current history before setting the new history address
-            histories[historyLength - 1].epochUpperBound = uint64(epoch - 1);
-            histories[historyLength++].historyAddress = newHistory;
-        }
-
-        ++epoch;
+    function getTemplateHash() external view override returns (bytes32) {
+        return templateHash;
     }
 
-    function getEpoch() public view override returns (uint256) {
-        return epoch;
+    function getConsensus() external view override returns (IConsensus) {
+        return consensus;
     }
 
-    function getHistoryAddress(uint256 _epoch) internal view returns (address) {
-        require(historyLength > 0, "no history yet");
-        uint256 historyIndex = historyLength - 1;
-        while (
-            historyIndex > 0 &&
-            histories[historyIndex - 1].epochUpperBound >= _epoch
-        ) {
-            --historyIndex;
-        }
-        return histories[historyIndex].historyAddress;
+    function getEpochHashAndInputIndex(
+        bytes calldata _claimData,
+        OutputValidityProof calldata _v
+    ) internal view returns (bytes32 epochHash_, uint256 inputIndex_) {
+        uint256 epochInputIndex;
+
+        (epochHash_, inputIndex_, epochInputIndex) = consensus.getEpochHash(
+            address(this),
+            _claimData
+        );
+
+        require(
+            _v.inputIndex == epochInputIndex,
+            "epoch input indices don't match"
+        );
     }
 
     /// @notice Handle the receipt of an NFT

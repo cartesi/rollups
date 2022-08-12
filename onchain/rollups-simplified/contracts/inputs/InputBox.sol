@@ -24,7 +24,7 @@ contract InputBox {
     event IndirectInputAdded(address sender, bytes input, uint256 value);
 
     function addDirectInput(bytes calldata _input)
-        public
+        external
         payable
         returns (bytes32)
     {
@@ -46,7 +46,7 @@ contract InputBox {
     }
 
     function addIndirectInput(bytes calldata _input)
-        public
+        external
         payable
         returns (bytes32)
     {
