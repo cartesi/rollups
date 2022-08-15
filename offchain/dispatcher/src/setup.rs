@@ -18,6 +18,7 @@ use state_fold_types::{
     },
     BlockStreamItem,
 };
+use tracing::warn;
 use tx_manager::{
     config::TxManagerConfig, database::FileSystemDatabase,
     gas_oracle::ETHGasStationOracle, Priority, TimeConfiguration,
@@ -29,7 +30,8 @@ use types::{
     rollups_initial_state::RollupsInitialState,
 };
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use std::sync::Arc;
 use tokio_stream::{Stream, StreamExt};
 use tonic::transport::Channel;
 use url::Url;
@@ -77,7 +79,7 @@ pub async fn create_block_subscription(
 
     Ok(s)
 }
-
+/*
 pub async fn create_tx_sender(
     config: &TxManagerConfig,
     dapp_contract_address: Address,
@@ -109,6 +111,72 @@ pub async fn create_tx_sender(
             TimeConfiguration::default(),
         )
         .await?;
+
+        tx_manager
+    };
+
+    Ok(BulletproofTxSender::new(
+        tx_manager,
+        config.default_confirmations,
+        priority,
+        config.wallet.address(),
+        dapp_contract_address,
+    ))
+}
+*/
+
+pub async fn create_tx_sender(
+    config: &TxManagerConfig,
+    dapp_contract_address: Address,
+    priority: Priority,
+) -> Result<impl TxSender> {
+    let tx_manager = {
+        let provider = {
+            let http = Http::new(Url::parse(&config.provider_http_endpoint)?);
+
+            let retry_client = RetryClient::new(
+                http,
+                Box::new(HttpRateLimitRetryPolicy),
+                MAX_RETRIES,
+                INITIAL_BACKOFF,
+            );
+
+            let provider = Provider::new(retry_client);
+
+            Arc::new(SignerMiddleware::new(provider, config.wallet.clone()))
+        };
+
+        let database = FileSystemDatabase::new(config.database_path.to_owned());
+
+        let tx_manager = match TransactionManager::new(
+            provider.clone(),
+            None::<ETHGasStationOracle>,
+            database,
+            config.chain_id.into(),
+            TimeConfiguration::default(),
+        )
+        .await
+        {
+            Ok((m, _)) => m,
+
+            Err(tx_manager::Error::NonceTooLow { .. }) => {
+                warn!("Nonce too low! Clearing tx database");
+
+                let database =
+                    FileSystemDatabase::new(config.database_path.to_owned());
+
+                TransactionManager::new_ignore_pending(
+                    provider,
+                    None::<ETHGasStationOracle>,
+                    database,
+                    config.chain_id.into(),
+                    TimeConfiguration::default(),
+                )
+                .await?
+            }
+
+            Err(e) => return Err(anyhow!(e)),
+        };
 
         tx_manager
     };
