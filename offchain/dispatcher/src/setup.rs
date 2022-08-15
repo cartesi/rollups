@@ -79,51 +79,6 @@ pub async fn create_block_subscription(
 
     Ok(s)
 }
-/*
-pub async fn create_tx_sender(
-    config: &TxManagerConfig,
-    dapp_contract_address: Address,
-    priority: Priority,
-) -> Result<impl TxSender> {
-    let tx_manager = {
-        let provider = {
-            let http = Http::new(Url::parse(&config.provider_http_endpoint)?);
-
-            let retry_client = RetryClient::new(
-                http,
-                Box::new(HttpRateLimitRetryPolicy),
-                MAX_RETRIES,
-                INITIAL_BACKOFF,
-            );
-
-            let provider = Provider::new(retry_client);
-
-            SignerMiddleware::new(provider, config.wallet.clone())
-        };
-
-        let database = FileSystemDatabase::new(config.database_path.to_owned());
-
-        let (tx_manager, _) = TransactionManager::new(
-            provider,
-            None::<ETHGasStationOracle>,
-            database,
-            config.chain_id.into(),
-            TimeConfiguration::default(),
-        )
-        .await?;
-
-        tx_manager
-    };
-
-    Ok(BulletproofTxSender::new(
-        tx_manager,
-        config.default_confirmations,
-        priority,
-        config.wallet.address(),
-        dapp_contract_address,
-    ))
-}
-*/
 
 pub async fn create_tx_sender(
     config: &TxManagerConfig,

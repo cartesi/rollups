@@ -4820,6 +4820,8 @@ dependencies = [
 [[package]]
 name = "tx-manager"
 version = "0.6.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "e341cb6576895703e6b11c6b4a78806f2671bfb37bdc22dba15d171283751866"
 dependencies = [
  "async-recursion 1.0.0",
  "async-trait",

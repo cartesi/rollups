@@ -11,6 +11,3 @@ members = [
   "inspect-server",
   "reader"
 ]
-
-[patch.cartesi]
-tx-manager = { version = "0.6", registry = "cartesi", path = "../../tx-manager/" }
