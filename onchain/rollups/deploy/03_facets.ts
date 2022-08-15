@@ -25,18 +25,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const Bitmask = await deployments.get("Bitmask");
     const MerkleV2 = await deployments.get("MerkleV2");
-    const LibClaimsMask = await deployments.get("LibClaimsMask");
 
     await deployments.deploy("ERC20PortalFacet", opts);
     await deployments.deploy("ERC721PortalFacet", opts);
     await deployments.deploy("EtherPortalFacet", opts);
-    await deployments.deploy("FeeManagerFacet", {
-        ...opts,
-        libraries: {
-            LibClaimsMask: LibClaimsMask.address,
-        },
-    });
-
+    await deployments.deploy("FeeManagerFacet", opts);
     await deployments.deploy("InputFacet", opts);
     await deployments.deploy("OutputFacet", {
         ...opts,
@@ -45,18 +38,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             MerkleV2: MerkleV2.address,
         },
     });
-    await deployments.deploy("RollupsFacet", {
-        ...opts,
-        libraries: {
-            LibClaimsMask: LibClaimsMask.address,
-        },
-    });
-    await deployments.deploy("ValidatorManagerFacet", {
-        ...opts,
-        libraries: {
-            LibClaimsMask: LibClaimsMask.address,
-        },
-    });
+    await deployments.deploy("RollupsFacet", opts);
+    await deployments.deploy("ValidatorManagerFacet", opts);
 };
 
 export default func;

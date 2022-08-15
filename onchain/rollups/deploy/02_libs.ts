@@ -23,17 +23,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         log: true,
     };
 
-    const LibClaimsMask = await deployments.deploy("LibClaimsMask", opts);
-
+    await deployments.deploy("LibClaimsMask", opts);
     await deployments.deploy("LibInput", opts);
     await deployments.deploy("LibOutput", opts);
-    await deployments.deploy("LibValidatorManager", {
-        ...opts,
-        libraries: {
-            LibClaimsMask: LibClaimsMask.address,
-        },
-    });
-
+    await deployments.deploy("LibValidatorManager", opts);
     await deployments.deploy("LibDisputeManager", opts);
     await deployments.deploy("LibFeeManager", opts);
     await deployments.deploy("LibRollups", opts);

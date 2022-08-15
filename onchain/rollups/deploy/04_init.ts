@@ -23,13 +23,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         log: true,
     };
 
-    const LibClaimsMask = await deployments.get("LibClaimsMask");
-    await deployments.deploy("DiamondInit", {
-        ...opts,
-        libraries: {
-            LibClaimsMask: LibClaimsMask.address,
-        },
-    });
+    await deployments.deploy("DiamondInit", opts);
 };
 
 export default func;
