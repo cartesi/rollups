@@ -34,6 +34,6 @@ jobs:
     needs: test
     uses: ./.github/workflows/docker.yml
     with:
-      target: rollups-state-server
+      target: state-server
       image-name: rollups-state-server
     secrets: inherit

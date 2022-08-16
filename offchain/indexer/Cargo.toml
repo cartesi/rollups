@@ -6,7 +6,7 @@ authors = ["victornogueira <victor.nogueira@cartesi.io>", "marko atanasievski <m
 edition = "2021"
 
 [[bin]]
-name = "indexer_main"
+name = "rollups_indexer"
 path = "src/main.rs"
 
 [dependencies]

@@ -7,7 +7,7 @@ variable "DOCKER_ORGANIZATION" {
   default = "cartesi"
 }
 
-target "rollups-state-server" {
+target "state-server" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-state-server:${TAG}"]
 }
 
