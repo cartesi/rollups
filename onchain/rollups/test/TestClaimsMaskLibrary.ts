@@ -28,21 +28,9 @@ describe("Test LibClaimsMask", () => {
         // get signers
         signers = await ethers.getSigners();
 
-        // deploy LibClaimsMask
-        const deployedLibClaimsMask = await deployments.deploy(
-            "LibClaimsMask",
-            {
-                from: await signers[0].getAddress(),
-            }
-        );
-        const libClaimsMaskAddress = deployedLibClaimsMask.address;
-
         // deploy TestLibClaimsMask
         const { address } = await deployments.deploy("TestLibClaimsMask", {
             from: await signers[0].getAddress(),
-            libraries: {
-                LibClaimsMask: libClaimsMaskAddress,
-            },
         });
         libClaimsMask = TestLibClaimsMask__factory.connect(address, signers[0]);
     });

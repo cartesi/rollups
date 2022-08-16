@@ -23,7 +23,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         log: true,
     };
 
-    await deployments.deploy("LibDiamond", opts);
     await deployments.deploy("DiamondCutFacet", opts);
     await deployments.deploy("DiamondLoupeFacet", opts);
     await deployments.deploy("OwnershipFacet", opts);

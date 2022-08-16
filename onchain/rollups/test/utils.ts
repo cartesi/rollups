@@ -135,13 +135,7 @@ export const deployFactory = deployments.createFixture(
 
         // deploy the debug facet if `debug` is true
         if (options.debug) {
-            const LibClaimsMask = await deployments.get("LibClaimsMask");
-            await deployments.deploy("DebugFacet", {
-                ...opts,
-                libraries: {
-                    LibClaimsMask: LibClaimsMask.address,
-                },
-            });
+            await deployments.deploy("DebugFacet", opts);
         }
 
         // list all facet names

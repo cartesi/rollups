@@ -43,11 +43,5 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 export default func;
-func.dependencies = [
-    "RollupsLibs",
-    "RollupsFacets",
-    "RollupsInit",
-    "RollupsDiamond",
-    "Bank",
-];
+func.dependencies = ["RollupsFacets", "RollupsInit", "RollupsDiamond", "Bank"];
 func.tags = ["RollupsFactory"];
