@@ -48,7 +48,7 @@ FROM builder as reader_build
 RUN cargo build --release --bin reader
 
 # grpc readiness probe
-FROM golang:1.18.3-bullseye as grpc_health_probe
+FROM golang:1.19.0-bullseye as grpc_health_probe
 RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
 
 ## runtimes
