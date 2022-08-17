@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] 2022-08-17
+
 ### Added
 
 - Inspect server
 - Add path prefix option to inspect server
 - Validate notice function to OutputFacet
-- Add healthcheck to inspect server
 
 ### Changed
 
