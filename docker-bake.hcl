@@ -5,6 +5,13 @@ group "default" {
   targets = ["state-server", "dispatcher", "indexer", "inspect-server", "reader", "hardhat", "rollups-cli"]
 }
 
+target "deps" {
+  inherits   = ["docker-metadata-action"]
+  dockerfile = "offchain/Dockerfile"
+  target     = "builder"
+  context    = "."
+}
+
 target "state-server" {
   inherits   = ["docker-metadata-action"]
   dockerfile = "offchain/Dockerfile"

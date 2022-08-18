@@ -2,26 +2,15 @@
 name: Code Format
 on: [push]
 jobs:
-    onchain:
-        runs-on: ubuntu-22.04
-        defaults:
-            run:
-                working-directory: onchain
-        steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-node@v1
-              with:
-                  node-version: "16"
-            - run: yarn install
-            - run: yarn prettier:rollups
-    
-    offchain:
-        runs-on: ubuntu-22.04
-        defaults:
-            run:
-                working-directory: offchain
-        steps:
-            - uses: actions/checkout@v3
-            - run: cargo fmt --all -- --check
-              env:
-                CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
+  onchain:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: onchain
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "16"
+      - run: yarn install
+      - run: yarn prettier:rollups

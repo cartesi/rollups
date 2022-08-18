@@ -1,0 +1,161 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Build
+on: [pull_request]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    services:
+      postgres_indexer:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_indexer
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5434:5432
+      postgres_reader:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_reader
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5435:5432
+    env:
+      CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
+    defaults:
+      run:
+        working-directory: offchain
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.CI_TOKEN }}
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            offchain/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+      - run: cargo install diesel_cli --no-default-features --features "postgres" --force
+      - run: cargo fmt --all -- --check
+      - run: cargo check --workspace
+      - run: cargo test --no-run
+      - run: cargo test
+        env:
+          ROLLUPS_READER_BINARY_PATH: ../target/debug/reader
+
+  build_docker:
+    runs-on: ubuntu-22.04
+    needs: test
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.CI_TOKEN }}
+
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Docker meta
+        id: docker_meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,format=long
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build docker images
+        id: docker_build
+        uses: docker/bake-action@v2
+        with:
+          files: ./docker-bake.hcl
+          targets: deps
+          builder: ${{ steps.buildx.outputs.name }}
+          load: true
+          set: |
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
+
+  dispatcher:
+    needs: build_docker
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: dispatcher
+      image-name: rollups-dispatcher
+    secrets: inherit
+
+  state_server:
+    needs: build_docker
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: state-server
+      image-name: rollups-state-server
+    secrets: inherit
+
+  indexer:
+    needs: build_docker
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: indexer
+      image-name: rollups-indexer
+    secrets: inherit
+
+  reader:
+    needs: build_docker
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: reader
+      image-name: query-server
+    secrets: inherit
+
+  inspect_server:
+    needs: build_docker
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: inspect-server
+      image-name: rollups-inspect-server
+    secrets: inherit
+
+  hardhat:
+    needs: build_docker
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: hardhat
+      image-name: rollups-hardhat
+    secrets: inherit
+
+  rollups_cli:
+    needs: build_docker
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: rollups-cli
+      image-name: rollups-cli
+    secrets: inherit
