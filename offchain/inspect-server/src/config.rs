@@ -30,6 +30,7 @@ pub struct Config {
     pub inspect_server_address: String,
     pub server_manager_address: String,
     pub session_id: String,
+    pub queue_size: usize,
     pub inspect_path_prefix: String,
     pub healthcheck_path: String,
 }
@@ -64,6 +65,11 @@ impl Config {
                 err: String::from("Must specify session id"),
             })?;
 
+        let queue_size: usize = env_cli_config
+            .queue_size
+            .or(file_config.queue_size)
+            .unwrap_or(100);
+
         let healthcheck_path: String = env_cli_config
             .healthcheck_path
             .or(file_config.healthcheck_path)
@@ -87,6 +93,7 @@ impl Config {
             inspect_server_address,
             server_manager_address,
             session_id,
+            queue_size,
             inspect_path_prefix,
             healthcheck_path,
         })
@@ -116,6 +123,10 @@ struct EnvCLIConfig {
     #[structopt(long, env)]
     healthcheck_path: Option<String>,
 
+    /// Queue size for concurrent inspect requests
+    #[structopt(long, env)]
+    queue_size: Option<usize>,
+
     /// Path to the config file
     #[structopt(long, env)]
     pub config_path: Option<String>,
@@ -126,6 +137,7 @@ struct FileConfig {
     inspect_server_address: Option<String>,
     server_manager_address: Option<String>,
     session_id: Option<String>,
+    queue_size: Option<usize>,
     inspect_path_prefix: Option<String>,
     healthcheck_path: Option<String>,
 }

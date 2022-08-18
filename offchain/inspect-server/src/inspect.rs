@@ -11,6 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 use snafu::Snafu;
+use tokio::sync::{mpsc, oneshot};
 
 use crate::config::Config;
 use crate::grpc::server_manager::{
@@ -31,39 +32,87 @@ pub enum InspectError {
 
 #[derive(Clone)]
 pub struct InspectClient {
-    address: String,
-    session_id: String,
+    inspect_tx: mpsc::Sender<InspectRequest>,
 }
 
+/// The inspect client is a wrapper that just sends the inspect requests to another thread and
+/// waits for the result. The actual request to the server manager is done by the handle_inspect
+/// function.
 impl InspectClient {
     pub fn new(config: &Config) -> Self {
-        Self {
-            address: config.server_manager_address.clone(),
-            session_id: config.session_id.clone(),
-        }
+        let (inspect_tx, inspect_rx) = mpsc::channel(config.queue_size);
+        let address = config.server_manager_address.clone();
+        let session_id = config.session_id.clone();
+        tokio::spawn(handle_inspect(address, session_id, inspect_rx));
+        Self { inspect_tx }
     }
 
     pub async fn inspect(
         &self,
         payload: Vec<u8>,
     ) -> Result<InspectStateResponse, InspectError> {
-        let endpoint = format!("http://{}", self.address);
-        let mut client =
-            ServerManagerClient::connect(endpoint).await.map_err(|e| {
-                InspectError::FailedToConnect {
-                    message: e.to_string(),
-                }
-            })?;
-        let request = InspectStateRequest {
-            session_id: self.session_id.clone(),
-            query_payload: payload,
+        let (response_tx, response_rx) = oneshot::channel();
+        let request = InspectRequest {
+            payload,
+            response_tx,
         };
-        client
-            .inspect_state(request)
-            .await
-            .map(|result| result.into_inner())
-            .map_err(|e| InspectError::InspectFailed {
-                message: e.message().to_string(),
-            })
+        if let Err(e) = self.inspect_tx.try_send(request) {
+            return Err(InspectError::InspectFailed {
+                message: e.to_string(),
+            });
+        } else {
+            log::debug!("inspect request added to the queue");
+        }
+        response_rx.await.expect("handle_inspect never fails")
+    }
+}
+
+struct InspectRequest {
+    payload: Vec<u8>,
+    response_tx: oneshot::Sender<Result<InspectStateResponse, InspectError>>,
+}
+
+fn respond(
+    response_tx: oneshot::Sender<Result<InspectStateResponse, InspectError>>,
+    response: Result<InspectStateResponse, InspectError>,
+) {
+    if let Err(_) = response_tx.send(response) {
+        log::warn!("failed to respond inspect request (client dropped)");
+    }
+}
+
+/// Loop that answers requests comming from inspect_rx.
+async fn handle_inspect(
+    address: String,
+    session_id: String,
+    mut inspect_rx: mpsc::Receiver<InspectRequest>,
+) {
+    let endpoint = format!("http://{}", address);
+    while let Some(request) = inspect_rx.recv().await {
+        match ServerManagerClient::connect(endpoint.clone()).await {
+            Err(e) => {
+                respond(
+                    request.response_tx,
+                    Err(InspectError::FailedToConnect {
+                        message: e.to_string(),
+                    }),
+                );
+            }
+            Ok(mut client) => {
+                log::debug!("inspect request received {:?}", request.payload);
+                let grpc_request = InspectStateRequest {
+                    session_id: session_id.clone(),
+                    query_payload: request.payload,
+                };
+                let response = client
+                    .inspect_state(grpc_request)
+                    .await
+                    .map(|result| result.into_inner())
+                    .map_err(|e| InspectError::InspectFailed {
+                        message: e.message().to_string(),
+                    });
+                respond(request.response_tx, response);
+            }
+        }
     }
 }

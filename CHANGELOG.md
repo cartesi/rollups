@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Deploy to Arbitrum Goerli and Optimism Goerli
+- Add queue to serialize concurrent requests in inspect-server
 
 ## [0.5.0] 2022-08-17
 

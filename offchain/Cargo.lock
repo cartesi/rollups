@@ -2386,6 +2386,7 @@ dependencies = [
  "actix-web",
  "anyhow",
  "env_logger",
+ "futures 0.3.21",
  "hex",
  "log",
  "prost",

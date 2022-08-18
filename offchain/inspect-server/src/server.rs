@@ -141,7 +141,7 @@ fn hex_encode(payload: Vec<u8>) -> String {
 
 impl From<InspectError> for error::Error {
     fn from(e: InspectError) -> error::Error {
-        log::warn!("failed to inspect: {}", e.to_string());
+        log::warn!("{}", e.to_string());
         match e {
             InspectError::FailedToConnect { .. } => {
                 error::ErrorBadGateway(e.to_string())
