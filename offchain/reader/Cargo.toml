@@ -6,7 +6,7 @@ license = "Apache-2.0"
 authors = ["marko atanasievski <marko.atanasievski@cartesi.io>"]
 
 [dependencies]
-diesel = {version = "1.4.8", features = ["postgres", "r2d2"]}
+diesel = {version = "1.4", features = ["postgres", "r2d2"]}
 rollups-data = { path = "../data" }
 juniper = "0.15.9"
 hex = "0.4.3"
@@ -25,5 +25,5 @@ async-mutex = "1.4"
 [dev-dependencies]
 rstest = "0.12.0"
 serial_test = "0.5.1"
-diesel_migrations = { version = "1.4.0", features = ["postgres"]}
+diesel_migrations = { version = "1.4", features = ["postgres"]}
 hyper = { version = "0.14", features = ["http1", "runtime", "client"] }
