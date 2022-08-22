@@ -37,7 +37,7 @@ contract EtherPortal is IEtherPortal {
             msg.value, //                Ether amount (32B)
             _data //                     L2 data (arbitrary size)
         );
-        inputBox.addIndirectInput(input);
+        inputBox.addIndirectInput(_dapp, input);
 
         // We used to call `transfer()` but it's not considered safe,
         // as it assumes gas costs are immutable (they are not).

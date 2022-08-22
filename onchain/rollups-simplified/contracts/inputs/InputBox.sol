@@ -18,16 +18,23 @@ import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 contract InputBox {
     using CanonicalMachine for CanonicalMachine.Log2Size;
 
-    bytes32[] public inputBox;
+    mapping(address => bytes32[]) public inputBoxes;
 
     event DirectInputAdded();
-    event IndirectInputAdded(address sender, bytes input, uint256 value);
+    event IndirectInputAdded(
+        address dapp,
+        address sender,
+        bytes input,
+        uint256 value
+    );
 
-    function addDirectInput(bytes calldata _input)
-        external
+    function addDirectInput(address _dapp, bytes calldata _input)
+        public
         payable
         returns (bytes32)
     {
+        bytes32[] storage inputBox = inputBoxes[_dapp];
+
         // TODO require EOA account
         bytes32 inputHash = computeInputHash(
             msg.sender,
@@ -45,11 +52,13 @@ contract InputBox {
         return inputHash;
     }
 
-    function addIndirectInput(bytes calldata _input)
-        external
+    function addIndirectInput(address _dapp, bytes calldata _input)
+        public
         payable
         returns (bytes32)
     {
+        bytes32[] storage inputBox = inputBoxes[_dapp];
+
         bytes32 inputHash = computeInputHash(
             msg.sender,
             block.number,
@@ -61,7 +70,7 @@ contract InputBox {
         // add input to correct inbox
         inputBox.push(inputHash);
 
-        emit IndirectInputAdded(msg.sender, _input, msg.value);
+        emit IndirectInputAdded(_dapp, msg.sender, _input, msg.value);
 
         return inputHash;
     }
