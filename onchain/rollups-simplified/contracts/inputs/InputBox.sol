@@ -24,13 +24,11 @@ contract InputBox {
     event IndirectInputAdded(
         address dapp,
         address sender,
-        bytes input,
-        uint256 value
+        bytes input
     );
 
     function addDirectInput(address _dapp, bytes calldata _input)
         public
-        payable
         returns (bytes32)
     {
         bytes32[] storage inputBox = inputBoxes[_dapp];
@@ -54,7 +52,6 @@ contract InputBox {
 
     function addIndirectInput(address _dapp, bytes calldata _input)
         public
-        payable
         returns (bytes32)
     {
         bytes32[] storage inputBox = inputBoxes[_dapp];
@@ -70,7 +67,7 @@ contract InputBox {
         // add input to correct inbox
         inputBox.push(inputHash);
 
-        emit IndirectInputAdded(_dapp, msg.sender, _input, msg.value);
+        emit IndirectInputAdded(_dapp, msg.sender, _input);
 
         return inputHash;
     }

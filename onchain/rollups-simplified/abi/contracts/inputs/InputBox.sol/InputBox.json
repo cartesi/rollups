@@ -25,12 +25,6 @@
         "internalType": "bytes",
         "name": "input",
         "type": "bytes"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "value",
-        "type": "uint256"
       }
     ],
     "name": "IndirectInputAdded",
@@ -57,7 +51,7 @@
         "type": "bytes32"
       }
     ],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -81,7 +75,7 @@
         "type": "bytes32"
       }
     ],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
