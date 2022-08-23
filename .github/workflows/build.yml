@@ -62,6 +62,9 @@ jobs:
 
   build_docker:
     runs-on: ubuntu-22.04
+    permissions:
+      packages: write
+      contents: read
     needs: test
     steps:
       - uses: actions/checkout@v3
@@ -96,13 +99,24 @@ jobs:
         id: docker_build
         uses: docker/bake-action@v2
         with:
-          files: ./docker-bake.hcl
+          files: |
+            ./docker-bake.hcl
+            ${{ steps.docker_meta.outputs.bake-file }}
           targets: deps
           builder: ${{ steps.buildx.outputs.name }}
-          load: true
+          push: true
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
+
+      - uses: snok/container-retention-policy@v1
+        with:
+          image-names: rollups
+          cut-off: one second ago UTC
+          timestamp-to-use: updated_at
+          account-type: org
+          org-name: ${{ github.repository_owner }}
+          token: ${{ secrets.GHCR_TOKEN }}
 
   dispatcher:
     needs: build_docker
