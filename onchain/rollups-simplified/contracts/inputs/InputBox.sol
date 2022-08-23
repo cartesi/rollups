@@ -20,37 +20,9 @@ contract InputBox {
 
     mapping(address => bytes32[]) public inputBoxes;
 
-    event DirectInputAdded();
-    event IndirectInputAdded(
-        address dapp,
-        address sender,
-        bytes input
-    );
+    event InputAdded(address dapp, address sender, bytes input);
 
-    function addDirectInput(address _dapp, bytes calldata _input)
-        public
-        returns (bytes32)
-    {
-        bytes32[] storage inputBox = inputBoxes[_dapp];
-
-        // TODO require EOA account
-        bytes32 inputHash = computeInputHash(
-            msg.sender,
-            block.number,
-            block.timestamp,
-            _input,
-            inputBox.length
-        );
-
-        // add input to correct inbox
-        inputBox.push(inputHash);
-
-        emit DirectInputAdded();
-
-        return inputHash;
-    }
-
-    function addIndirectInput(address _dapp, bytes calldata _input)
+    function addInput(address _dapp, bytes calldata _input)
         public
         returns (bytes32)
     {
@@ -67,7 +39,8 @@ contract InputBox {
         // add input to correct inbox
         inputBox.push(inputHash);
 
-        emit IndirectInputAdded(_dapp, msg.sender, _input);
+        // block.number and timestamp can be retrieved by the event metadata itself
+        emit InputAdded(_dapp, msg.sender, _input);
 
         return inputHash;
     }

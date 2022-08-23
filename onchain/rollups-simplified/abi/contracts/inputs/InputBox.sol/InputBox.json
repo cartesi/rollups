@@ -1,12 +1,6 @@
 [
   {
     "anonymous": false,
-    "inputs": [],
-    "name": "DirectInputAdded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
     "inputs": [
       {
         "indexed": false,
@@ -27,7 +21,7 @@
         "type": "bytes"
       }
     ],
-    "name": "IndirectInputAdded",
+    "name": "InputAdded",
     "type": "event"
   },
   {
@@ -43,31 +37,7 @@
         "type": "bytes"
       }
     ],
-    "name": "addDirectInput",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_dapp",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_input",
-        "type": "bytes"
-      }
-    ],
-    "name": "addIndirectInput",
+    "name": "addInput",
     "outputs": [
       {
         "internalType": "bytes32",
