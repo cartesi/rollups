@@ -20,7 +20,7 @@ contract InputBox {
 
     mapping(address => bytes32[]) public inputBoxes;
 
-    event InputAdded(address dapp, address sender, bytes input);
+    event InputAdded(address indexed dapp, address sender, bytes input);
 
     function addInput(address _dapp, bytes calldata _input)
         public
