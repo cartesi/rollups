@@ -38,12 +38,11 @@ contract ERC20Portal is IERC20Portal {
             : InputHeaders.ERC20_DEPOSIT_FALSE;
         bytes memory input = abi.encodePacked(
             header, //     Header (1B)
-            _dapp, //      DApp contract (20B)
             _token, //     Token contract (20B)
             msg.sender, // Token sender (20B)
             _amount, //    Amount of tokens (32B)
             _data //       L2 data (arbitrary size)
         );
-        inputBox.addIndirectInput(input);
+        inputBox.addInput(_dapp, input);
     }
 }

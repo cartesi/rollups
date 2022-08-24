@@ -37,13 +37,12 @@ contract ERC721Portal is IERC721Portal {
         // callback function that can call this function again
         bytes memory input = abi.encodePacked(
             InputHeaders.ERC721_DEPOSIT, // Header (1B)
-            _dapp, //                       DApp contract (20B)
             _token, //                      Token contract (20B)
             msg.sender, //                  Token sender (20B)
             _tokenId, //                    Token identifier (32B)
             _data //                        L2 data (arbitrary size)
         );
-        inputBox.addIndirectInput(input);
+        inputBox.addInput(_dapp, input);
 
         IERC721(_token).safeTransferFrom(msg.sender, _dapp, _tokenId);
     }

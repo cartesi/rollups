@@ -32,7 +32,6 @@ contract EtherPortal is IEtherPortal {
         // We first add the input to avoid reentrancy attacks
         bytes memory input = abi.encodePacked(
             InputHeaders.ETH_DEPOSIT, // Header (1B)
-            _dapp, //                    DApp contract (20B)
             msg.sender, //               Ether sender (20B)
             msg.value, //                Ether amount (32B)
             _data //                     L2 data (arbitrary size)
