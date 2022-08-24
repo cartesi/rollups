@@ -17,24 +17,19 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IConsensus} from "../IConsensus.sol";
 import {InputBox} from "../../inputs/InputBox.sol";
-import {ICartesiDApp} from "../../dapp/ICartesiDApp.sol";
-import {ICartesiDAppFactory} from "../../dapp/ICartesiDAppFactory.sol";
 import {IHistory} from "../../history/IHistory.sol";
 
 contract Authority is IConsensus, Ownable {
-    ICartesiDAppFactory dappFactory;
     IHistory history;
 
     constructor(
         address _owner,
         InputBox _inputBox,
-        IHistory _history,
-        ICartesiDAppFactory _dappFactory
+        IHistory _history
     ) {
         transferOwnership(_owner);
         history = _history;
-        dappFactory = _dappFactory;
-        emit ConsensusCreated(_owner, _inputBox, _history, _dappFactory);
+        emit ConsensusCreated(_owner, _inputBox, _history);
     }
 
     /// @dev Will fail if history has migrated to another consensus
@@ -44,14 +39,6 @@ contract Authority is IConsensus, Ownable {
         onlyOwner
     {
         history.submitClaim(_dapp, _data);
-    }
-
-    function createDApp(address _dappOwner, bytes32 _templateHash)
-        external
-        override
-        returns (ICartesiDApp)
-    {
-        return dappFactory.newApplication(_dappOwner, _templateHash, this);
     }
 
     function migrateHistoryToConsensus(address _consensus)
@@ -67,29 +54,8 @@ contract Authority is IConsensus, Ownable {
         emit NewHistory(_history);
     }
 
-    /// @dev The new factory implementation must have the same interface.
-    ///      If the interface of the factory must change, you need to deploy
-    ///      a new version of the consensus contract and migrate to it.
-    function setDAppFactory(ICartesiDAppFactory _dappFactory)
-        external
-        override
-        onlyOwner
-    {
-        dappFactory = _dappFactory;
-        emit NewDAppFactory(_dappFactory);
-    }
-
     function getHistory() external view override returns (IHistory) {
         return history;
-    }
-
-    function getDAppFactory()
-        external
-        view
-        override
-        returns (ICartesiDAppFactory)
-    {
-        return dappFactory;
     }
 
     function getEpochHash(address _dapp, bytes calldata _data)

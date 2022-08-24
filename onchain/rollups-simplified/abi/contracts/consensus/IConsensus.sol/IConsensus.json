@@ -19,28 +19,9 @@
         "internalType": "contract IHistory",
         "name": "history",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "contract ICartesiDAppFactory",
-        "name": "dappFactory",
-        "type": "address"
       }
     ],
     "name": "ConsensusCreated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "contract ICartesiDAppFactory",
-        "name": "dappFactory",
-        "type": "address"
-      }
-    ],
-    "name": "NewDAppFactory",
     "type": "event"
   },
   {
@@ -55,43 +36,6 @@
     ],
     "name": "NewHistory",
     "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_dappOwner",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_templateHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "createDApp",
-    "outputs": [
-      {
-        "internalType": "contract ICartesiDApp",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getDAppFactory",
-    "outputs": [
-      {
-        "internalType": "contract ICartesiDAppFactory",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
   },
   {
     "inputs": [
@@ -149,19 +93,6 @@
       }
     ],
     "name": "migrateHistoryToConsensus",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "contract ICartesiDAppFactory",
-        "name": "_dappFactory",
-        "type": "address"
-      }
-    ],
-    "name": "setDAppFactory",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

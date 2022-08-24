@@ -15,22 +15,13 @@ pragma solidity ^0.8.13;
 
 import {InputBox} from "../inputs/InputBox.sol";
 import {IHistory} from "../history/IHistory.sol";
-import {ICartesiDApp} from "../dapp/ICartesiDApp.sol";
-import {ICartesiDAppFactory} from "../dapp/ICartesiDAppFactory.sol";
 
 interface IConsensus {
     // Events
 
-    event ConsensusCreated(
-        address owner,
-        InputBox inputBox,
-        IHistory history,
-        ICartesiDAppFactory dappFactory
-    );
+    event ConsensusCreated(address owner, InputBox inputBox, IHistory history);
 
     event NewHistory(IHistory history);
-
-    event NewDAppFactory(ICartesiDAppFactory dappFactory);
 
     // Permissioned functions
 
@@ -38,19 +29,11 @@ interface IConsensus {
 
     function setHistory(IHistory _history) external;
 
-    function setDAppFactory(ICartesiDAppFactory _dappFactory) external;
-
     function migrateHistoryToConsensus(address _consensus) external;
 
     // Permissionless functions
 
-    function createDApp(address _dappOwner, bytes32 _templateHash)
-        external
-        returns (ICartesiDApp);
-
     function getHistory() external view returns (IHistory);
-
-    function getDAppFactory() external view returns (ICartesiDAppFactory);
 
     function getEpochHash(address _dapp, bytes calldata _data)
         external
