@@ -279,7 +279,7 @@ describe("EIP-2535 Diamond", () => {
             diamondCut([getAddFacetCut(Foo1Facet.address, selectors)]),
             "Can't add function again"
         ).to.be.revertedWith(
-            "LibDiamondCut: Can't add function that already exists'"
+            "LibDiamondCut: Can't add function that already exists"
         );
     });
 
@@ -298,7 +298,7 @@ describe("EIP-2535 Diamond", () => {
             diamondCut([getRemoveFacetCut(selectors)]),
             "Can't remove function that wasn't added"
         ).to.be.revertedWith(
-            "LibDiamondCut: Can't remove function that doesn't exist'"
+            "LibDiamondCut: Can't remove function that doesn't exist"
         );
     });
 
