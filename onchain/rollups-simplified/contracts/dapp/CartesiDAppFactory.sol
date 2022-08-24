@@ -20,21 +20,21 @@ import {CartesiDApp} from "./CartesiDApp.sol";
 
 contract CartesiDAppFactory is ICartesiDAppFactory {
     function newApplication(
+        IConsensus _consensus,
         address _dappOwner,
-        bytes32 _templateHash,
-        IConsensus _consensus
+        bytes32 _templateHash
     ) external override returns (ICartesiDApp) {
         ICartesiDApp application = new CartesiDApp(
+            _consensus,
             _dappOwner,
-            _templateHash,
-            _consensus
+            _templateHash
         );
 
         emit ApplicationCreated(
             application,
+            _consensus,
             _dappOwner,
-            _templateHash,
-            _consensus
+            _templateHash
         );
 
         return application;

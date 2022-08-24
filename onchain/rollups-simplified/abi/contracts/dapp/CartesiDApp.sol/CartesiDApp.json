@@ -2,6 +2,11 @@
   {
     "inputs": [
       {
+        "internalType": "contract IConsensus",
+        "name": "_consensus",
+        "type": "address"
+      },
+      {
         "internalType": "address",
         "name": "_owner",
         "type": "address"
@@ -10,11 +15,6 @@
         "internalType": "bytes32",
         "name": "_templateHash",
         "type": "bytes32"
-      },
-      {
-        "internalType": "contract IConsensus",
-        "name": "_consensus",
-        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",

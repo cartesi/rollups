@@ -35,9 +35,9 @@ contract CartesiDApp is
     IConsensus consensus;
 
     constructor(
+        IConsensus _consensus,
         address _owner,
-        bytes32 _templateHash,
-        IConsensus _consensus
+        bytes32 _templateHash
     ) {
         transferOwnership(_owner);
         templateHash = _templateHash;

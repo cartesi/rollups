@@ -21,26 +21,26 @@ interface ICartesiDAppFactory {
 
     /// @notice Event emitted when a new application is deployed
     /// @param application application contract
+    /// @param consensus consensus contract
     /// @param dappOwner dapp owner address
     /// @param templateHash state hash of the cartesi machine at t0
-    /// @param consensus consensus contract
     event ApplicationCreated(
         ICartesiDApp indexed application,
+        IConsensus indexed consensus,
         address dappOwner,
-        bytes32 templateHash,
-        IConsensus consensus
+        bytes32 templateHash
     );
 
     // Permissionless functions
 
     /// @notice Deploy a new application
+    /// @param _consensus consensus contract
     /// @param _dappOwner dapp owner address
     /// @param _templateHash state hash of the cartesi machine at t0
-    /// @param _consensus consensus contract
     /// @return new application contract
     function newApplication(
+        IConsensus _consensus,
         address _dappOwner,
-        bytes32 _templateHash,
-        IConsensus _consensus
+        bytes32 _templateHash
     ) external returns (ICartesiDApp);
 }

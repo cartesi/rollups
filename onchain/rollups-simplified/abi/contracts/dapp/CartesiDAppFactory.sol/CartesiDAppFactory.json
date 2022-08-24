@@ -9,6 +9,12 @@
         "type": "address"
       },
       {
+        "indexed": true,
+        "internalType": "contract IConsensus",
+        "name": "consensus",
+        "type": "address"
+      },
+      {
         "indexed": false,
         "internalType": "address",
         "name": "dappOwner",
@@ -19,12 +25,6 @@
         "internalType": "bytes32",
         "name": "templateHash",
         "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "contract IConsensus",
-        "name": "consensus",
-        "type": "address"
       }
     ],
     "name": "ApplicationCreated",
@@ -32,6 +32,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "contract IConsensus",
+        "name": "_consensus",
+        "type": "address"
+      },
       {
         "internalType": "address",
         "name": "_dappOwner",
@@ -41,11 +46,6 @@
         "internalType": "bytes32",
         "name": "_templateHash",
         "type": "bytes32"
-      },
-      {
-        "internalType": "contract IConsensus",
-        "name": "_consensus",
-        "type": "address"
       }
     ],
     "name": "newApplication",
