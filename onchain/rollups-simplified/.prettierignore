@@ -6,3 +6,6 @@ export
 generated-src
 src/types
 abi
+out
+lib
+forge-cache
