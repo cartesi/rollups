@@ -20,8 +20,8 @@ import {InputHeaders} from "../common/InputHeaders.sol";
 contract EtherPortal is IEtherPortal {
     InputBox public immutable inputBox;
 
-    constructor(address _inputBox) {
-        inputBox = InputBox(_inputBox);
+    constructor(InputBox _inputBox) {
+        inputBox = _inputBox;
     }
 
     function depositEther(address _dapp, bytes calldata _data)
