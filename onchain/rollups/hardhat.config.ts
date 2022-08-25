@@ -55,6 +55,8 @@ const config: HardhatUserConfig = {
         mainnet: infuraNetwork("mainnet", 1, 6283185),
         goerli: infuraNetwork("goerli", 5, 6283185),
         polygon_mumbai: infuraNetwork("polygon-mumbai", 80001),
+        arbitrum_goerli: infuraNetwork("arbitrum-goerli", 421613),
+        optimism_goerli: infuraNetwork("optimism-goerli", 420),
     },
     solidity: {
         version: "0.8.13",
@@ -104,6 +106,14 @@ const config: HardhatUserConfig = {
             polygon_mumbai: [
                 ppath("@cartesi/util", "/deployments/polygon_mumbai"),
                 ppath("@cartesi/token", "/deployments/polygon_mumbai"),
+            ],
+            arbitrum_goerli: [
+                ppath("@cartesi/util", "/deployments/arbitrum_goerli"),
+                ppath("@cartesi/token", "/deployments/arbitrum_goerli"),
+            ],
+            optimism_goerli: [
+                ppath("@cartesi/util", "/deployments/optimism_goerli"),
+                ppath("@cartesi/token", "/deployments/optimism_goerli"),
             ],
         },
     },

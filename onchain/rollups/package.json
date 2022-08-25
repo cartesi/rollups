@@ -9,11 +9,13 @@
         "copy-dts": "copyfiles -u 1 \"src/**/*.d.ts\" dist/src",
         "compile": "hardhat compile",
         "deploy": "run-s deploy:development",
-        "deploy:testnet": "run-s deploy:goerli deploy:polygon_mumbai",
+        "deploy:testnet": "run-s deploy:goerli deploy:polygon_mumbai deploy:arbitrum_goerli deploy:optimism_goerli",
         "deploy:development": "hardhat deploy --network localhost",
         "deploy:goerli": "hardhat deploy --network goerli --export export/abi/goerli.json",
         "deploy:mainnet": "hardhat deploy --network mainnet --export export/abi/mainnet.json",
         "deploy:polygon_mumbai": "hardhat deploy --network polygon_mumbai --export export/abi/polygon_mumbai.json",
+        "deploy:arbitrum_goerli": "hardhat deploy --network arbitrum_goerli --export export/abi/arbitrum_goerli.json",
+        "deploy:optimism_goerli": "hardhat deploy --network optimism_goerli --export export/abi/optimism_goerli.json",
         "export": "hardhat export-artifacts export/artifacts --hide-sources --including-empty-bytecode --including-no-public-functions",
         "info": "npm-scripts-info",
         "prepack": "run-s build tsc:prod copy-dts",
@@ -26,8 +28,8 @@
         "tsc:prod": "tsc -p tsconfig.prod.json"
     },
     "dependencies": {
-        "@cartesi/token": "^1.5.1",
-        "@cartesi/util": "^4.0.0",
+        "@cartesi/token": "^1.6.0",
+        "@cartesi/util": "^4.1.0",
         "@openzeppelin/contracts": "^4.7.1"
     },
     "devDependencies": {

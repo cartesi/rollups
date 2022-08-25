@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Deploy to Arbitrum Goerli and Optimism Goerli
+
 ## [0.5.0] 2022-08-17
 
 ### Added

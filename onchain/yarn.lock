@@ -23,17 +23,17 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@cartesi/token@^1.5.1":
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/@cartesi/token/-/token-1.5.1.tgz#0afe07e0a765812f3ae2c169453dae6bebed992d"
-  integrity sha512-R5PRZTLh5Rh1rsOZGZ5OV0sast8efvDmHlBWwgNlGFd8gxrbhslSFJsLvUSgjeu7xai4meDjQu1g21ahQT4YrQ==
+"@cartesi/token@^1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@cartesi/token/-/token-1.6.0.tgz#1a9084dc38ee9e0fc9f4b340d69868353bdc1fda"
+  integrity sha512-rGG+X2kuBqOLJ0a67DKCaRKGqivfZFJyGeFPMvXiHkyK8EQt/3zcU+J3N+x+QIlV8bI7WoqcgZ+58lu/okBlLA==
   dependencies:
     "@openzeppelin/contracts" "^2.5.0"
 
-"@cartesi/util@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@cartesi/util/-/util-4.0.0.tgz#f10d09c85f0faf13b1f538e64973858e3b26c3d5"
-  integrity sha512-ovjzZyw2W3arhPtVmJC2QvNh4QKC4H+3kZJwNOUphm7himybxoiNrbOE+zRm4Jcxu+Ivd281TN6s59yUSmFpOw==
+"@cartesi/util@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@cartesi/util/-/util-4.1.0.tgz#90e6884567c32f41a4bfa04c1ccc86aa42ff8140"
+  integrity sha512-zYBSoHxGwUTjNN10vg7BxzqUqWfWEr+EXdgmDshFcxIShgGzW/5+zXqMID2K7QNPII0n9dk0o+KmUm/nY7QuZA==
   dependencies:
     "@openzeppelin/contracts" "3.2.1-solc-0.7"
 
