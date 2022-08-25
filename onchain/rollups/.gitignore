@@ -13,3 +13,4 @@ src/types
 .node*
 .env
 .DS_Store
+*.log

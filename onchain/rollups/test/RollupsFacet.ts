@@ -20,7 +20,8 @@ import {
     RollupsFacet,
     RollupsFacet__factory,
 } from "../src/types";
-import { deployDiamond, getState, increaseTimeAndMine } from "./utils";
+import { deployDiamond, increaseTimeAndMine } from "./utils";
+import * as stateServer from "./StateServer";
 
 use(solidity);
 
@@ -29,7 +30,7 @@ describe("Rollups Facet", () => {
     /// for testing Rollups when modifiers are off, set this to false
     let permissionModifiersOn = true;
 
-    let enableStateFold = process.env["STATE_FOLD_TEST"];
+    const enableStateFold = process.env.STATE_FOLD_TEST;
 
     let rollupsFacet: RollupsFacet;
     let diamondInit: DiamondInit;
@@ -72,6 +73,9 @@ describe("Rollups Facet", () => {
     // initial var for foldable
     let initialEpoch: any;
     let initialState: any;
+
+    before(stateServer.rollups);
+    after(stateServer.kill);
 
     beforeEach(async () => {
         await deployments.fixture();
@@ -612,8 +616,8 @@ describe("Rollups Facet", () => {
         }
         */
 
-        it("test foldable", async () => {
-            let state = JSON.parse(await getState(initialState));
+        it("test foldable", async function (this: stateServer.StateServerContext) {
+            let state = JSON.parse(await this.getState(initialState));
 
             // *** initial test ***
 
@@ -690,14 +694,14 @@ describe("Rollups Facet", () => {
                 "phase incorrect because inputDuration not over"
             ).to.be.revertedWith("Phase != AwaitingConsensus");
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await this.getState(initialState)); // update state
             checkCurrentPhase(state, "InputAccumulation");
 
             // *** EPOCH 0: input duration has past, now make a claim ***
             await increaseTimeAndMine(inputDuration / 2 + 1);
             await rollupsFacet.claim(ethers.utils.formatBytes32String("hello"));
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await this.getState(initialState)); // update state
             checkCurrentEpochNum(state, "0x1");
             checkCurrentPhase(state, "AwaitingConsensusNoConflict");
             expect(
@@ -736,7 +740,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await this.getState(initialState)); // update state
             expect(
                 state.current_phase.AwaitingConsensusNoConflict.claimed_epoch
                     .claims.claims[ethers.utils.formatBytes32String("hello")]
@@ -760,7 +764,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("hello"));
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await this.getState(initialState)); // update state
             await checkFinalizedEpoch(
                 state,
                 0,
@@ -772,7 +776,7 @@ describe("Rollups Facet", () => {
             // *** EPOCH 1: sealed epoch ***
             await increaseTimeAndMine(inputDuration + 1);
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await this.getState(initialState)); // update state
             checkCurrentEpochNum(state, "0x2");
             checkCurrentPhase(state, "EpochSealedAwaitingFirstClaim");
             expect(
@@ -792,7 +796,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[1])
                 .claim(ethers.utils.formatBytes32String("not hello1"));
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await this.getState(initialState)); // update state
             expect(
                 state.current_phase.AwaitingConsensusAfterConflict.claimed_epoch
                     .epoch_initial_state.epoch_number,
@@ -832,7 +836,7 @@ describe("Rollups Facet", () => {
             // *** EPOCH 1: consensus waiting period times out ***
             await increaseTimeAndMine(challengePeriod + 1);
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await this.getState(initialState)); // update state
             checkCurrentPhase(state, "ConsensusTimeout");
             expect(
                 state.current_phase.ConsensusTimeout.claimed_epoch
@@ -843,7 +847,7 @@ describe("Rollups Facet", () => {
             // *** EPOCH 1 -> 2: finalize after consensus times out ***
             await rollupsFacet.finalizeEpoch();
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await this.getState(initialState)); // update state
             // now can test the finalized epoch 1
             await checkFinalizedEpoch(
                 state,
@@ -863,7 +867,7 @@ describe("Rollups Facet", () => {
                 .connect(signers[2])
                 .claim(ethers.utils.formatBytes32String("not hello2"));
 
-            state = JSON.parse(await getState(initialState)); // update state
+            state = JSON.parse(await this.getState(initialState)); // update state
             checkCurrentEpochNum(state, "0x3");
             checkCurrentPhase(state, "InputAccumulation");
             await checkFinalizedEpoch(

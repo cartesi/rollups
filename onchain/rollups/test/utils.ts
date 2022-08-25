@@ -16,20 +16,14 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { BytesLike } from "@ethersproject/bytes";
 import { BigNumber } from "ethers";
 import { DeployOptions } from "hardhat-deploy/types";
-import { ServiceError } from "@grpc/grpc-js";
-import createClient from "./client";
-import { BlockState__Output } from "../generated-src/proto/StateFoldServer/BlockState";
 import { getFacetCuts, productionFacetNames } from "../src/utils";
 import {
     CartesiDAppFactory,
     ICartesiDAppFactory,
     CartesiDAppFactory__factory,
     CartesiDApp__factory,
-    SimpleNFT,
     SimpleNFT__factory,
 } from "../src/types";
-
-const client = createClient();
 
 // Calculate input hash based on
 // input: data itself interpreted by L2
@@ -66,24 +60,6 @@ export const getInputHash = (
 
     // return the input hash
     return input_hash;
-};
-
-export const getState = async (jsonData: string) => {
-    return new Promise<string>((resolve, reject) => {
-        const initialState = { jsonData };
-        client.QueryState(
-            { initialState, queryBlock: null },
-            (
-                err: ServiceError | null,
-                response: BlockState__Output | undefined
-            ) => {
-                if (err || !response?.state?.jsonData) {
-                    return reject(err ?? `no response`);
-                }
-                return resolve(response.state.jsonData);
-            }
-        );
-    });
 };
 
 export interface TestBankOptions {

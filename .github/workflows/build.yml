@@ -60,12 +60,66 @@ jobs:
         env:
           ROLLUPS_READER_BINARY_PATH: ../target/debug/reader
 
+  test_onchain:
+    runs-on: ubuntu-22.04
+    needs: test
+    env:
+      CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
+    services:
+      hardhat:
+        image: cartesi/hardhat-node
+        ports:
+          - 8545:8545
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.CI_TOKEN }}
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            offchain/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+      - run: cargo build
+        working-directory: offchain
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - run: yarn install
+        working-directory: onchain/rollups
+      - run: yarn build
+        working-directory: onchain/rollups
+      - run: yarn test:protoc
+        working-directory: onchain/rollups
+
+      - run: npx hardhat test --network localhost
+        working-directory: onchain/rollups
+        env:
+          STATE_FOLD_TEST: true
+
+      - name: Save logs of state server execution
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: state-server-logs
+          path: |
+            onchain/rollups/logs
+
   build_docker:
     runs-on: ubuntu-22.04
     permissions:
       packages: write
       contents: read
-    needs: test
+    needs:
+      - test
+      - test_onchain
     steps:
       - uses: actions/checkout@v3
         with:

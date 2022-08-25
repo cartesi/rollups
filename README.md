@@ -91,7 +91,7 @@ The Validator Manager module was created to help DApps manage their claims, clai
 - If the claim is valid, doesn’t disagree with any of the other claims in the epoch, and does not generate consensus, it returns a “No Conflict” response.
 - If the claim is valid but disagrees with another claim for that epoch, it warns Cartesi Rollups Manager that a conflict is happening and what are the conflicting claims and claimants involved. When that dispute is resolved the validator manager module gets notified so it can deal however it likes with the validators involved. In our initially suggested implementation, the loser of a dispute gets removed from the validator set.
 - If the claim is valid, agrees with all other claims in that epoch, and is the last claim to be received, it lets Cartesi Rollups know that consensus was reached. This allows the rollups DApp to finalize the epoch and allow for the execution of its vouchers.
-Regardless of what the name might suggest, validators do not interact with this module at all.
+  Regardless of what the name might suggest, validators do not interact with this module at all.
 
 ## Fee Manager and Bank
 
@@ -171,17 +171,18 @@ yarn test
 
 ### Testing the state-server
 
-In order to generate the `.proto` files for Typescript, run the following commands once.
+Make sure you built the offchain code:
+
+```sh
+cd offchain
+cargo build
+```
+
+Now you can run the onchain tests alongside the state servers by running the following commands:
 
 ```sh
 cd onchain/rollups
-yarn test:protoc
-```
-
-Now you can run the foldable tests bench script.
-
-```sh
-./scripts/state_server_tests.sh
+STATE_FOLD_TEST=true yarn test
 ```
 
 ## License

@@ -22,12 +22,13 @@ import {
     ValidatorManagerFacet,
     ValidatorManagerFacet__factory,
 } from "../src/types";
-import { deployDiamond, getState, increaseTimeAndMine } from "./utils";
+import { deployDiamond, increaseTimeAndMine } from "./utils";
+import * as stateServer from "./StateServer";
 
 use(solidity);
 
 describe("Validator Manager Facet", async () => {
-    let enableStateFold = process.env["STATE_FOLD_TEST"];
+    const enableStateFold = process.env.STATE_FOLD_TEST;
 
     var signers: Signer[];
     var rollupsFacet: RollupsFacet;
@@ -83,6 +84,9 @@ describe("Validator Manager Facet", async () => {
         initialState = JSON.stringify(validatorManagerFacet.address);
     });
 
+    before(stateServer.validator_manager);
+    after(stateServer.kill);
+
     it("check initial consensusGoalMask", async () => {
         let initConsensusGoalMask = (1 << validators.length) - 1;
         expect(
@@ -113,8 +117,8 @@ describe("Validator Manager Facet", async () => {
     });
 
     if (enableStateFold) {
-        it("check initial foldable", async () => {
-            let state = JSON.parse(await getState(initialState));
+        it("check initial foldable", async function (this: stateServer.StateServerContext) {
+            let state = JSON.parse(await this.getState(initialState));
 
             // check `num_claims` in foldable
             // in foldable, `num_claims` is hard-coded to have 8 Options
@@ -197,7 +201,7 @@ describe("Validator Manager Facet", async () => {
         }
     });
 
-    it("onClaim NoConflict and Consensus", async () => {
+    it("onClaim NoConflict and Consensus", async function (this: stateServer.StateServerContext) {
         var claim = "0x" + "1".repeat(64);
         var currentAgreementMask = 0;
         if (!enableStateFold) {
@@ -286,7 +290,7 @@ describe("Validator Manager Facet", async () => {
             for (var i = 0; i < validators.length - 1; i++) {
                 await passInputAccumulationPeriod();
                 await rollupsFacet.connect(signers[i]).claim(claim);
-                let state = JSON.parse(await getState(initialState));
+                let state = JSON.parse(await this.getState(initialState));
 
                 // each round there should be 1 more validator in `claiming`
                 for (var j = 0; j <= i; j++) {
@@ -322,7 +326,7 @@ describe("Validator Manager Facet", async () => {
             // validator manager's `onNewEpoch()` will be called when there's Consensus
             await rollupsFacet.connect(signers[7]).claim(claim); // Consensus
 
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
             // now enters new epoch and validators in `claiming` will be cleared
             // and their `num_claims` will increase
             expect(state.claiming.length, "`claiming` is cleared").to.equal(0);
@@ -354,7 +358,7 @@ describe("Validator Manager Facet", async () => {
         }
     });
 
-    it("onClaim with different claims should return conflict", async () => {
+    it("onClaim with different claims should return conflict", async function (this: stateServer.StateServerContext) {
         var claim = "0x" + "1".repeat(64);
         var claim2 = "0x" + "2".repeat(64);
         if (!enableStateFold) {
@@ -406,7 +410,7 @@ describe("Validator Manager Facet", async () => {
             await passInputAccumulationPeriod();
             await rollupsFacet.connect(signers[0]).claim(claim);
             await rollupsFacet.connect(signers[1]).claim(claim2); // conflict
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
             // signers[0] wins the disputes, will be in `claiming`
             expect(
                 state.claiming.length,
@@ -500,7 +504,7 @@ describe("Validator Manager Facet", async () => {
         ).to.equal(consensusGoalMask);
     });
 
-    it("onDisputeEnd with consensus after", async () => {
+    it("onDisputeEnd with consensus after", async function (this: stateServer.StateServerContext) {
         var claim = "0x" + "1".repeat(64);
         var claim2 = "0x" + "2".repeat(64);
         var lastValidator = validators[validators.length - 1];
@@ -549,7 +553,7 @@ describe("Validator Manager Facet", async () => {
             }
             // conflict and then consensus right after
             await rollupsFacet.connect(signers[7]).claim(claim2);
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
 
             // since there was a consensus, 7 validators who claimed correctly
             // are added to `num_claims`
@@ -592,7 +596,7 @@ describe("Validator Manager Facet", async () => {
         }
     });
 
-    it("onDisputeEnd multiple validators defending lost claim", async () => {
+    it("onDisputeEnd multiple validators defending lost claim", async function (this: stateServer.StateServerContext) {
         var claim = "0x" + "1".repeat(64);
         var claim2 = "0x" + "2".repeat(64);
         var lastValidator = validators[validators.length - 1];
@@ -683,7 +687,7 @@ describe("Validator Manager Facet", async () => {
             await rollupsFacet.connect(signers[0]).claim(claim);
             for (let i = 1; i < 8 - 1; i++) {
                 await rollupsFacet.connect(signers[i]).claim(claim2);
-                let state = JSON.parse(await getState(initialState));
+                let state = JSON.parse(await this.getState(initialState));
 
                 // only signers[0] is in the `claiming`
                 expect(
@@ -710,7 +714,7 @@ describe("Validator Manager Facet", async () => {
             // once the last validator enters a dispute, the current epoch will end
             // only signers[0] will be moved from `claiming` to `num_claims`
             await rollupsFacet.connect(signers[7]).claim(claim2);
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
 
             expect(state.num_finalized_epochs, "enter epoch 1").to.equal("0x1");
 
@@ -830,7 +834,7 @@ describe("Validator Manager Facet", async () => {
             );
     });
 
-    it("onNewEpoch", async () => {
+    it("onNewEpoch", async function (this: stateServer.StateServerContext) {
         var claim = "0x" + "1".repeat(64);
 
         if (!enableStateFold) {
@@ -873,7 +877,7 @@ describe("Validator Manager Facet", async () => {
             await rollupsFacet.finalizeEpoch();
             await passInputAccumulationPeriod();
 
-            let state = JSON.parse(await getState(initialState));
+            const state = JSON.parse(await this.getState(initialState));
 
             // only signers[0] in `num_claims`
             expect(
@@ -910,7 +914,7 @@ describe("Validator Manager Facet", async () => {
         }
     });
 
-    it("test #claims", async () => {
+    it("test #claims", async function (this: stateServer.StateServerContext) {
         var claim = "0x" + "1".repeat(64);
         var claim2 = "0x" + "2".repeat(64);
 
@@ -1019,7 +1023,7 @@ describe("Validator Manager Facet", async () => {
             for (let i = 0; i < 7; i++) {
                 await rollupsFacet.connect(signers[i]).claim(claim);
             }
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
             for (let i = 0; i < 8; i++) {
                 expect(
                     state.num_claims[i],
@@ -1034,7 +1038,7 @@ describe("Validator Manager Facet", async () => {
             await passChallengePeriod();
             await rollupsFacet.finalizeEpoch();
             await passInputAccumulationPeriod();
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
 
             for (let i = 0; i < 7; i++) {
                 expect(
@@ -1057,7 +1061,7 @@ describe("Validator Manager Facet", async () => {
                 await rollupsFacet.connect(signers[0]).claim(claim);
 
                 // signers[0] should be in the `claiming`
-                state = JSON.parse(await getState(initialState));
+                state = JSON.parse(await this.getState(initialState));
                 expect(
                     state.claiming[0],
                     "signers[0] should be in the `claiming`"
@@ -1076,7 +1080,7 @@ describe("Validator Manager Facet", async () => {
                 await rollupsFacet.finalizeEpoch();
                 await passInputAccumulationPeriod();
 
-                state = JSON.parse(await getState(initialState));
+                state = JSON.parse(await this.getState(initialState));
                 // check how #claims is increasing
                 expect(
                     state.num_claims[0].validator_address,
@@ -1092,7 +1096,7 @@ describe("Validator Manager Facet", async () => {
             // and #claims will be cleared
             await rollupsFacet.connect(signers[0]).claim(claim);
             await rollupsFacet.connect(signers[1]).claim(claim2);
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
 
             // now signers[1] will be removed from `num_claims`
             // and added into `validators_removed`

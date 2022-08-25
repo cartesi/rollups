@@ -28,12 +28,13 @@ import {
     SimpleToken,
     SimpleToken__factory,
 } from "../src/types";
-import { deployDiamond, getState, increaseTimeAndMine } from "./utils";
+import { deployDiamond, increaseTimeAndMine } from "./utils";
+import * as stateServer from "./StateServer";
 
 use(solidity);
 
 describe("FeeManager Facet", () => {
-    let enableStateFold = process.env["STATE_FOLD_TEST"];
+    const enableStateFold = process.env.STATE_FOLD_TEST;
 
     let signers: Signer[];
     let token: SimpleToken;
@@ -95,6 +96,9 @@ describe("FeeManager Facet", () => {
         ).to.equal(dappBankBalance.add(amount));
     }
 
+    before(stateServer.fee_manager);
+    after(stateServer.kill);
+
     beforeEach(async () => {
         await deployments.fixture();
 
@@ -141,8 +145,8 @@ describe("FeeManager Facet", () => {
     });
 
     if (enableStateFold) {
-        it("test foldable initial data", async () => {
-            let state = JSON.parse(await getState(initialState));
+        it("test foldable initial data", async function (this: stateServer.StateServerContext) {
+            const state = JSON.parse(await this.getState(initialState));
 
             // dapp_contract_address
             expect(
@@ -180,7 +184,7 @@ describe("FeeManager Facet", () => {
         );
     });
 
-    it("fund the FeeManager contract and emit event", async () => {
+    it("fund the FeeManager contract and emit event", async function (this: stateServer.StateServerContext) {
         expect(
             await token.balanceOf(bank.address),
             "initially the bank has no erc20 tokens"
@@ -192,7 +196,7 @@ describe("FeeManager Facet", () => {
 
         // test foldable
         if (enableStateFold) {
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
             expect(
                 parseInt(state.bank_balance, 16),
                 "fee manager bank has 10k tokens deposited"
@@ -212,7 +216,7 @@ describe("FeeManager Facet", () => {
 
         // test foldable
         if (enableStateFold) {
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
             expect(
                 parseInt(state.bank_balance, 16),
                 "fee manager bank has 20k tokens deposited"
@@ -313,7 +317,7 @@ describe("FeeManager Facet", () => {
         ).to.be.revertedWith("nothing to redeem yet");
     });
 
-    it("redeemFee on his/her own", async () => {
+    it("redeemFee on his/her own", async function (this: stateServer.StateServerContext) {
         if (!enableStateFold) {
             //owner funds FeeManager
             let amount = 10000;
@@ -388,7 +392,7 @@ describe("FeeManager Facet", () => {
                 await rollupsFacet.finalizeEpoch();
             }
 
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
             // since fee manager doesn't have any deposit yet
             // now its balance is 0 and uncommitted balance is negative
             expect(state.bank_balance, "balance is 0").to.equal("0x0");
@@ -404,7 +408,7 @@ describe("FeeManager Facet", () => {
             let amount = state.uncommitted_balance * -1;
             await fundFeeManager(amount);
             // update state
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
             expect(
                 parseInt(state.bank_balance, 16),
                 "balance should be 100"
@@ -420,7 +424,7 @@ describe("FeeManager Facet", () => {
                 .redeemFee(await signers[1].getAddress());
 
             // update state
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
 
             // signers[1] should be in `num_redeemed`
             expect(
@@ -452,7 +456,7 @@ describe("FeeManager Facet", () => {
             // make another deposit to fee manager
             await fundFeeManager(10000);
             // update state
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
             expect(
                 parseInt(state.bank_balance, 16),
                 "the bank_balance should be 10k"
@@ -464,7 +468,7 @@ describe("FeeManager Facet", () => {
         }
     });
 
-    it("redeemFee on other's behalf", async () => {
+    it("redeemFee on other's behalf", async function (this: stateServer.StateServerContext) {
         if (!enableStateFold) {
             //owner fund FeeManager
             let amount = 10000;
@@ -514,7 +518,7 @@ describe("FeeManager Facet", () => {
             // let signers[0] help signers[1] redeem fee
             await feeManagerFacet.redeemFee(await signers[1].getAddress());
 
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
             // signers[1] should be in `num_redeemed`
             expect(
                 state.num_redeemed[0].validator_address,
@@ -552,7 +556,7 @@ describe("FeeManager Facet", () => {
     });
 
     // reset fee per claim
-    it("reset feePerClaim", async () => {
+    it("reset feePerClaim", async function (this: stateServer.StateServerContext) {
         if (!enableStateFold) {
             //owner fund FeeManager
             let amount = 10000;
@@ -674,7 +678,7 @@ describe("FeeManager Facet", () => {
             let newFeePerClaim = 30;
             await feeManagerFacet.resetFeePerClaim(newFeePerClaim);
 
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
             // now the fee_per_claim should be `newFeePerClaim`
             expect(
                 parseInt(state.fee_per_claim, 16),
@@ -715,7 +719,7 @@ describe("FeeManager Facet", () => {
             await passChallengePeriod();
             await rollupsFacet.finalizeEpoch();
             // update state
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
             // bank_balance should stay the same
             expect(
                 state.bank_balance,
@@ -730,7 +734,7 @@ describe("FeeManager Facet", () => {
     });
 
     // when a validator gets removed
-    it("test when a validator gets removed", async () => {
+    it("test when a validator gets removed", async function (this: stateServer.StateServerContext) {
         if (!enableStateFold) {
             //owner fund FeeManager
             let amount = 10000;
@@ -793,7 +797,7 @@ describe("FeeManager Facet", () => {
 
             // there will be totally 8 claims that can be redeemed
             // signers[0] has 2 and signers[1] has none
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
             // uncommitted_balance will less 8 claims
             expect(
                 state.uncommitted_balance,
@@ -825,7 +829,7 @@ describe("FeeManager Facet", () => {
             }
 
             // update state
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
             // for signers[0]
             expect(
                 state.num_redeemed[0].validator_address,
@@ -866,7 +870,7 @@ describe("FeeManager Facet", () => {
     });
 
     if (enableStateFold) {
-        it("test whether #redeems gets cleared for validators who lost disputes", async () => {
+        it("test whether #redeems gets cleared for validators who lost disputes", async function (this: stateServer.StateServerContext) {
             // owner fund FeeManager
             let init_fund = 10000;
             await fundFeeManager(init_fund);
@@ -896,7 +900,7 @@ describe("FeeManager Facet", () => {
             await rollupsFacet.connect(signers[2]).claim(claim);
 
             // update state
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
 
             // if it's run in sync function, lost validator is not added at all,
             //    so there will be a null at the end
@@ -967,7 +971,7 @@ describe("FeeManager Facet", () => {
             await passChallengePeriod();
             await rollupsFacet.finalizeEpoch();
             // update state
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
 
             // *** EPOCH 2 ***
 
@@ -986,7 +990,7 @@ describe("FeeManager Facet", () => {
             await rollupsFacet.connect(signers[0]).claim(claim);
             await rollupsFacet.connect(signers[2]).claim(claim2);
             // update state
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
 
             // ** check uncommitted_balance
             // now there are 8 (was 10) finalized claims because signers[2]'s 2 claims are removed

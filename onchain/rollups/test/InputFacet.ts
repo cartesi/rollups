@@ -21,17 +21,13 @@ import {
     InputFacet__factory,
     RollupsFacet__factory,
 } from "../src/types";
-import {
-    deployDiamond,
-    getState,
-    getInputHash,
-    increaseTimeAndMine,
-} from "./utils";
+import { deployDiamond, getInputHash, increaseTimeAndMine } from "./utils";
+import * as stateServer from "./StateServer";
 
 use(solidity);
 
 describe("Input Facet", () => {
-    let enableStateFold = process.env["STATE_FOLD_TEST"];
+    const enableStateFold = process.env.STATE_FOLD_TEST;
 
     let signer: Signer;
     let inputFacet: InputFacet;
@@ -82,6 +78,9 @@ describe("Input Facet", () => {
         expect(eventArgs.input, "Input").to.equal("0x" + input.toString("hex"));
     }
 
+    before(stateServer.input);
+    after(stateServer.kill);
+
     beforeEach(async () => {
         await deployments.fixture();
 
@@ -100,7 +99,7 @@ describe("Input Facet", () => {
         inputDuration = (await rollupsFacet.getInputDuration()).toNumber();
     });
 
-    it("addInput should not revert if input length == 0", async () => {
+    it("addInput should not revert if input length == 0", async function (this: stateServer.StateServerContext) {
         await addInputAndIncreaseCounter([]);
 
         // test foldable
@@ -110,7 +109,7 @@ describe("Input Facet", () => {
                 epoch_number: "0x0",
             });
 
-            let state = JSON.parse(await getState(initialState));
+            const state = JSON.parse(await this.getState(initialState));
 
             expect(
                 state.inputs.length,
@@ -119,10 +118,10 @@ describe("Input Facet", () => {
         }
     });
 
-    it("addInput should revert if input is larger than drive (log2Size=7)", async () => {
-        let input_300_bytes = Buffer.from("a".repeat(300), "utf-8");
+    it("addInput should revert if input is larger than drive (log2Size=7)", async function (this: stateServer.StateServerContext) {
+        const input_300_bytes = Buffer.from("a".repeat(300), "utf-8");
         // one extra byte
-        let input_257_bytes = Buffer.from("a".repeat(257), "utf-8");
+        const input_257_bytes = Buffer.from("a".repeat(257), "utf-8");
 
         await expect(
             inputFacet.addInput(input_300_bytes),
@@ -142,7 +141,7 @@ describe("Input Facet", () => {
                 epoch_number: "0x0",
             });
 
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
 
             expect(
                 state.inputs.length,
@@ -151,8 +150,8 @@ describe("Input Facet", () => {
         }
     });
 
-    it("addInput should add input to inbox", async () => {
-        let input = Buffer.from("a".repeat(64), "utf-8");
+    it("addInput should add input to inbox", async function (this: stateServer.StateServerContext) {
+        const input = Buffer.from("a".repeat(64), "utf-8");
         const numOfInputsToAdd = 3;
 
         for (let i = 0; i < numOfInputsToAdd; i++) {
@@ -180,7 +179,7 @@ describe("Input Facet", () => {
                 dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
             });
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
             expect(
                 state.inputs.length,
                 "number of inputs doesn't match for epoch 0"
@@ -190,24 +189,24 @@ describe("Input Facet", () => {
                 dapp_contract_address: inputFacet.address,
                 epoch_number: "0x1",
             });
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
             expect(state.inputs.length, "only 1 input for epoch 1").to.equal(1);
         }
     });
 
     it("internal inputs should have DApps address as sender", async () => {
-        let block = await ethers.provider.getBlock("latest");
+        const block = await ethers.provider.getBlock("latest");
         await passInputAccumulationPeriod();
 
         // switch input boxes before testing getInput()
         await addInputAndIncreaseCounter("0x00");
 
-        let input = Buffer.from("".repeat(64), "utf-8");
-        let sender = inputFacet.address;
-        let epochNumber = 0x0;
-        let inputIndex = NUM_OF_INITIAL_INPUTS - 1;
+        const input = Buffer.from("".repeat(64), "utf-8");
+        const sender = inputFacet.address;
+        const epochNumber = 0x0;
+        const inputIndex = NUM_OF_INITIAL_INPUTS - 1;
 
-        let inputHash = getInputHash(
+        const inputHash = getInputHash(
             input,
             sender,
             block.number,
@@ -230,16 +229,16 @@ describe("Input Facet", () => {
         );
     });
 
-    it("emit event InputAdded", async () => {
+    it("emit event InputAdded", async function (this: stateServer.StateServerContext) {
         let input = Buffer.from("a".repeat(64), "utf-8");
 
-        let tx = await addInputAndIncreaseCounter(input);
-        let receipt = await tx.wait();
-        let block = await ethers.provider.getBlock(receipt.blockNumber);
+        const tx = await addInputAndIncreaseCounter(input);
+        const receipt = await tx.wait();
+        const block = await ethers.provider.getBlock(receipt.blockNumber);
 
-        let sender = await signer.getAddress();
-        let epochNumber = 0x0;
-        let inputIndex = numberOfInputs - 1; // latest input
+        const sender = await signer.getAddress();
+        const epochNumber = 0x0;
+        const inputIndex = numberOfInputs - 1; // latest input
 
         await checkInputAddedEventArgs(
             epochNumber,
@@ -251,12 +250,12 @@ describe("Input Facet", () => {
 
         // test foldable
         if (enableStateFold) {
-            let initialState = JSON.stringify({
+            const initialState = JSON.stringify({
                 dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
             });
 
-            let state = JSON.parse(await getState(initialState));
+            const state = JSON.parse(await this.getState(initialState));
 
             expect(state.inputs.length, "initial input + new input").to.equal(
                 NUM_OF_INITIAL_INPUTS + 1
@@ -264,11 +263,11 @@ describe("Input Facet", () => {
         }
     });
 
-    it("test return value of addInput()", async () => {
+    it("test return value of addInput()", async function (this: stateServer.StateServerContext) {
         const input = Buffer.from("a".repeat(64), "utf-8");
-        let block = await ethers.provider.getBlock("latest");
+        const block = await ethers.provider.getBlock("latest");
 
-        let inputHash = getInputHash(
+        const inputHash = getInputHash(
             input,
             await signer.getAddress(),
             block.number,
@@ -286,12 +285,12 @@ describe("Input Facet", () => {
         if (enableStateFold) {
             await addInputAndIncreaseCounter(input);
 
-            let initialState = JSON.stringify({
+            const initialState = JSON.stringify({
                 dapp_contract_address: inputFacet.address,
                 epoch_number: "0x0",
             });
 
-            let state = JSON.parse(await getState(initialState));
+            const state = JSON.parse(await this.getState(initialState));
 
             // checking the input hash is essentially checking the
             // sender address, block timestamp, and payload
@@ -299,7 +298,7 @@ describe("Input Facet", () => {
             // during epoch 0, state.inputs[0] is an initial/default input
 
             // index of the lastly(newly) added input for epoch 0
-            let index_input_epoch0 = NUM_OF_INITIAL_INPUTS;
+            const index_input_epoch0 = NUM_OF_INITIAL_INPUTS;
             expect(
                 state.inputs[index_input_epoch0].sender,
                 "check the recorded sender address"
@@ -318,8 +317,8 @@ describe("Input Facet", () => {
         }
     });
 
-    it("test getInput()", async () => {
-        let input = Buffer.from("a".repeat(64), "utf-8");
+    it("test getInput()", async function (this: stateServer.StateServerContext) {
+        const input = Buffer.from("a".repeat(64), "utf-8");
         await addInputAndIncreaseCounter(input);
 
         // test for input box 0
@@ -340,10 +339,10 @@ describe("Input Facet", () => {
 
         // switch input boxes before testing getInput()
         await addInputAndIncreaseCounter(input);
-        let block_epoch1 = await ethers.provider.getBlock("latest");
+        const block_epoch1 = await ethers.provider.getBlock("latest");
 
         // index of the lastly(newly) added input for epoch 0
-        let index_input_epoch0 = NUM_OF_INITIAL_INPUTS;
+        const index_input_epoch0 = NUM_OF_INITIAL_INPUTS;
         expect(
             await inputFacet.getInput(index_input_epoch0),
             "input hash doesn't match for the newly added input in epoch 0"
@@ -351,7 +350,7 @@ describe("Input Facet", () => {
 
         // test for input box 1
         // calculate input hash
-        let index_input_epoch1 = 0;
+        const index_input_epoch1 = 0;
         inputHash = getInputHash(
             input,
             await signer.getAddress(),
@@ -375,12 +374,12 @@ describe("Input Facet", () => {
 
         // test foldable for epoch 1
         if (enableStateFold) {
-            let initialState = JSON.stringify({
+            const initialState = JSON.stringify({
                 dapp_contract_address: inputFacet.address,
                 epoch_number: "0x1",
             });
 
-            let state = JSON.parse(await getState(initialState));
+            const state = JSON.parse(await this.getState(initialState));
             expect(
                 state.inputs[index_input_epoch1].sender,
                 "check the recorded sender address for epoch 1"
@@ -400,7 +399,7 @@ describe("Input Facet", () => {
     });
 
     it("getCurrentInbox should return correct inbox", async () => {
-        let input = Buffer.from("a".repeat(64), "utf-8");
+        const input = Buffer.from("a".repeat(64), "utf-8");
 
         expect(
             await inputFacet.getCurrentInbox(),

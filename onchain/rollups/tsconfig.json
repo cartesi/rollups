@@ -1,11 +1,10 @@
 {
     "compilerOptions": {
         "declaration": true,
-        "composite": true,
         "target": "es2018",
         "module": "commonjs",
         "allowJs": true,
-        "strict": true,
+        "strict": false,
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "outDir": "dist"

@@ -26,9 +26,10 @@ import {
     SimpleToken,
     SimpleToken__factory,
 } from "../src/types";
-import { deployDiamond, getState } from "./utils";
+import { deployDiamond } from "./utils";
 import epochStateN from "./outputProofs/decoded_proof_notice.json";
 import epochStateV from "./outputProofs/decoded_proof_voucher.json";
+import * as stateServer from "./StateServer";
 
 use(solidity);
 
@@ -50,7 +51,7 @@ use(solidity);
 //       notices and vouchers are different. We use 2 notices from the original script. The notice proofs will not change.
 
 describe("Output Facet", () => {
-    let enableStateFold = process.env["STATE_FOLD_TEST"];
+    const enableStateFold = process.env.STATE_FOLD_TEST;
 
     let signers: Signer[];
     let outputFacet: OutputFacet;
@@ -67,7 +68,7 @@ describe("Output Facet", () => {
     let simpleToken: SimpleToken;
 
     const setupTest = deployments.createFixture(
-        async ({ deployments, ethers }, options) => {
+        async ({ deployments, ethers }) => {
             const diamond = await deployDiamond({ debug: true });
             signers = await ethers.getSigners();
 
@@ -108,6 +109,9 @@ describe("Output Facet", () => {
         await deployments.fixture();
         await setupTest();
     });
+
+    before(stateServer.output);
+    after(stateServer.kill);
 
     interface OutputValidityProof {
         epochIndex: number;
@@ -452,7 +456,7 @@ describe("Output Facet", () => {
     });
 
     // test executing vouchers that withdraw ERC20 tokens
-    it("test erc20 withdrawal voucher", async () => {
+    it("test erc20 withdrawal voucher", async function (this: stateServer.StateServerContext) {
         // send erc20 from dapp to recipient
         let recipient = await signers[1].getAddress();
 
@@ -506,10 +510,10 @@ describe("Output Facet", () => {
 
     /// ***test foldable*** ///
     if (enableStateFold) {
-        it("testing output foldable", async () => {
+        it("testing output foldable", async function () {
             /// ***test case 1 - initial check
             let initialState = JSON.stringify(outputFacet.address);
-            let state = JSON.parse(await getState(initialState));
+            let state = JSON.parse(await this.getState(initialState));
 
             // initial check, executed vouchers should be empty
             expect(
@@ -525,7 +529,7 @@ describe("Output Facet", () => {
                 voucherProof
             );
 
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
 
             // vouchers look like { '0': { '0': { '0': true } } }
             // format: {voucher_index: {input_index: {epoch_index:}}}
@@ -550,7 +554,7 @@ describe("Output Facet", () => {
                 voucherProof1
             );
 
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
 
             // vouchers look like { '0': { '0': { '0': true }, '1': { '0': true } } }
             // format: {voucher_index: {input_index: {epoch_index:}}}
@@ -572,7 +576,7 @@ describe("Output Facet", () => {
                 voucherProof2
             );
 
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
 
             // since the execution was failed (function doesn't exist), everything should remain the same
             expect(
@@ -614,7 +618,7 @@ describe("Output Facet", () => {
                 "proof not valid, should revert"
             ).to.be.reverted;
 
-            state = JSON.parse(await getState(initialState));
+            state = JSON.parse(await this.getState(initialState));
             expect(
                 Object.keys(state.vouchers).length,
                 "still only 1 outputIndex"
