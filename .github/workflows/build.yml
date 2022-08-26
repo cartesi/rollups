@@ -1,6 +1,12 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Build
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    tags:
+      - v*
+    branches:
+      - develop
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
