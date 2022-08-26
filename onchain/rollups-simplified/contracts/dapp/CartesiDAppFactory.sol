@@ -31,10 +31,10 @@ contract CartesiDAppFactory is ICartesiDAppFactory {
         );
 
         emit ApplicationCreated(
-            application,
             _consensus,
             _dappOwner,
-            _templateHash
+            _templateHash,
+            application
         );
 
         return application;

@@ -20,15 +20,15 @@ interface ICartesiDAppFactory {
     // Events
 
     /// @notice Event emitted when a new application is deployed
-    /// @param application application contract
     /// @param consensus consensus contract
     /// @param dappOwner dapp owner address
     /// @param templateHash state hash of the cartesi machine at t0
+    /// @param application application contract
     event ApplicationCreated(
-        ICartesiDApp indexed application,
         IConsensus indexed consensus,
         address dappOwner,
-        bytes32 templateHash
+        bytes32 templateHash,
+        ICartesiDApp application
     );
 
     // Permissionless functions
