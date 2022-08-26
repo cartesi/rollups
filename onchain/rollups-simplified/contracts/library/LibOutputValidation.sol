@@ -71,7 +71,7 @@ library LibOutputValidation {
                 ),
                 CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
                 _outputEpochLog2Size,
-                keccak256(abi.encodePacked(_v.outputHashesRootHash)),
+                _v.outputHashesRootHash,
                 _v.outputHashesInEpochSiblings
             ) == _outputsEpochRootHash,
             "outputsEpochRootHash incorrect"
