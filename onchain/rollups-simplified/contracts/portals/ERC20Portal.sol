@@ -22,17 +22,17 @@ import {InputHeaders} from "../common/InputHeaders.sol";
 contract ERC20Portal is IERC20Portal {
     InputBox public immutable inputBox;
 
-    constructor(address _inputBox) {
-        inputBox = InputBox(_inputBox);
+    constructor(InputBox _inputBox) {
+        inputBox = _inputBox;
     }
 
     function depositERC20Tokens(
-        address _token,
+        IERC20 _token,
         address _dapp,
         uint256 _amount,
         bytes calldata _data
     ) external override {
-        bool success = IERC20(_token).transferFrom(msg.sender, _dapp, _amount);
+        bool success = _token.transferFrom(msg.sender, _dapp, _amount);
         bytes1 header = success
             ? InputHeaders.ERC20_DEPOSIT_TRUE
             : InputHeaders.ERC20_DEPOSIT_FALSE;
