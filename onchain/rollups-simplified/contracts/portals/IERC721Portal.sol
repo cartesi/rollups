@@ -13,6 +13,8 @@
 /// @title ERC-721 Portal
 pragma solidity ^0.8.13;
 
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
 interface IERC721Portal {
     // Permissionless functions
 
@@ -20,12 +22,12 @@ interface IERC721Portal {
     ///         and adds an input to signal such deposit.
     ///         The caller must allow this contract to withdraw
     ///         such token from their account.
-    /// @param _token The address of the ERC-721 contract
+    /// @param _token The ERC-721 contract
     /// @param _dapp The address of the DApp
     /// @param _tokenId The identifier of the NFT being transferred
     /// @param _data Additional data to be interpreted by L2
     function depositERC721Token(
-        address _token,
+        IERC721 _token,
         address _dapp,
         uint256 _tokenId,
         bytes calldata _data

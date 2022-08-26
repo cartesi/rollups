@@ -22,12 +22,12 @@ import {InputHeaders} from "../common/InputHeaders.sol";
 contract ERC721Portal is IERC721Portal {
     InputBox public immutable inputBox;
 
-    constructor(address _inputBox) {
-        inputBox = InputBox(_inputBox);
+    constructor(InputBox _inputBox) {
+        inputBox = _inputBox;
     }
 
     function depositERC721Token(
-        address _token,
+        IERC721 _token,
         address _dapp,
         uint256 _tokenId,
         bytes calldata _data
@@ -44,6 +44,6 @@ contract ERC721Portal is IERC721Portal {
         );
         inputBox.addInput(_dapp, input);
 
-        IERC721(_token).safeTransferFrom(msg.sender, _dapp, _tokenId);
+        _token.safeTransferFrom(msg.sender, _dapp, _tokenId);
     }
 }
