@@ -16,13 +16,13 @@ pragma solidity ^0.8.13;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IERC20Portal} from "./IERC20Portal.sol";
-import {InputBox} from "../inputs/InputBox.sol";
+import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputHeaders} from "../common/InputHeaders.sol";
 
 contract ERC20Portal is IERC20Portal {
-    InputBox public immutable inputBox;
+    IInputBox public immutable inputBox;
 
-    constructor(InputBox _inputBox) {
+    constructor(IInputBox _inputBox) {
         inputBox = _inputBox;
     }
 

@@ -16,6 +16,7 @@ pragma solidity ^0.8.13;
 import {Test} from "forge-std/Test.sol";
 import {EtherPortal} from "contracts/portals/EtherPortal.sol";
 import {IEtherPortal} from "contracts/portals/IEtherPortal.sol";
+import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {InputBox} from "contracts/inputs/InputBox.sol";
 import {InputHeaders} from "contracts/common/InputHeaders.sol";
 
@@ -26,7 +27,7 @@ contract BadEtherReceiver {
 }
 
 contract EtherPortalTest is Test {
-    InputBox inputBox;
+    IInputBox inputBox;
     IEtherPortal etherPortal;
     address alice;
     address dapp;
@@ -70,7 +71,7 @@ contract EtherPortalTest is Test {
         assertEq(address(etherPortal).balance, portalsBalanceBefore);
 
         // Check the DApp's input box
-        inputBox.inputBoxes(dapp, 0);
+        assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
     function testRevertsFailedTransfer(uint256 value, bytes calldata data)

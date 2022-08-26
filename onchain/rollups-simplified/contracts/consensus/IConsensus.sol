@@ -13,13 +13,13 @@
 // @title Authority interface
 pragma solidity ^0.8.13;
 
-import {InputBox} from "../inputs/InputBox.sol";
+import {IInputBox} from "../inputs/IInputBox.sol";
 import {IHistory} from "../history/IHistory.sol";
 
 interface IConsensus {
     // Events
 
-    event ConsensusCreated(address owner, InputBox inputBox, IHistory history);
+    event ConsensusCreated(address owner, IInputBox inputBox, IHistory history);
 
     event NewHistory(IHistory history);
 

@@ -13,22 +13,20 @@
 // @title Input Box
 pragma solidity ^0.8.13;
 
-import {CanonicalMachine} from "../common/CanonicalMachine.sol";
+import {IInputBox} from "./IInputBox.sol";
+import {LibInput} from "../library/LibInput.sol";
 
-contract InputBox {
-    using CanonicalMachine for CanonicalMachine.Log2Size;
-
+contract InputBox is IInputBox {
     mapping(address => bytes32[]) public inputBoxes;
-
-    event InputAdded(address indexed dapp, address sender, bytes input);
 
     function addInput(address _dapp, bytes calldata _input)
         public
+        override
         returns (bytes32)
     {
         bytes32[] storage inputBox = inputBoxes[_dapp];
 
-        bytes32 inputHash = computeInputHash(
+        bytes32 inputHash = LibInput.computeInputHash(
             msg.sender,
             block.number,
             block.timestamp,
@@ -45,32 +43,12 @@ contract InputBox {
         return inputHash;
     }
 
-    function computeInputHash(
-        address sender,
-        uint256 blockNumber,
-        uint256 blockTimestamp,
-        bytes calldata input,
-        uint256 inputIndex
-    ) internal pure returns (bytes32) {
-        // TODO guarantee that unwrapping is worth the gas cost
-        require(
-            input.length <=
-                (1 << CanonicalMachine.INPUT_MAX_LOG2_SIZE.uint64OfSize()),
-            "input len: [0,driveSize]"
-        );
-
-        bytes32 keccakMetadata = keccak256(
-            abi.encode(
-                sender,
-                blockNumber,
-                blockTimestamp,
-                0, //TODO decide how to deal with epoch index
-                inputIndex // input index
-            )
-        );
-
-        bytes32 keccakInput = keccak256(input);
-
-        return keccak256(abi.encode(keccakMetadata, keccakInput));
+    function getNumberOfInputs(address _dapp)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        return inputBoxes[_dapp].length;
     }
 }

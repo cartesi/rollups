@@ -16,7 +16,7 @@ pragma solidity ^0.8.13;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IConsensus} from "../IConsensus.sol";
-import {InputBox} from "../../inputs/InputBox.sol";
+import {IInputBox} from "../../inputs/IInputBox.sol";
 import {IHistory} from "../../history/IHistory.sol";
 
 contract Authority is IConsensus, Ownable {
@@ -24,7 +24,7 @@ contract Authority is IConsensus, Ownable {
 
     constructor(
         address _owner,
-        InputBox _inputBox,
+        IInputBox _inputBox,
         IHistory _history
     ) {
         transferOwnership(_owner);

@@ -19,6 +19,7 @@ import {IERC721Portal} from "contracts/portals/IERC721Portal.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {InputBox} from "contracts/inputs/InputBox.sol";
 import {InputHeaders} from "contracts/common/InputHeaders.sol";
 
@@ -53,7 +54,7 @@ contract BadERC721Receiver is IERC721Receiver {
 }
 
 contract ERC721PortalTest is Test {
-    InputBox inputBox;
+    IInputBox inputBox;
     IERC721Portal erc721Portal;
     IERC721 token;
     address alice;
@@ -103,9 +104,7 @@ contract ERC721PortalTest is Test {
         assertEq(token.ownerOf(tokenId), dapp);
 
         // Check the DApp's input box
-        inputBox.inputBoxes(dapp, 0);
-        vm.expectRevert();
-        inputBox.inputBoxes(dapp, 1);
+        assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
     function testERC721DepositContract(uint256 tokenId, bytes calldata data)
@@ -147,9 +146,7 @@ contract ERC721PortalTest is Test {
         assertEq(token.ownerOf(tokenId), dapp);
 
         // Check the DApp's input box
-        inputBox.inputBoxes(dapp, 0);
-        vm.expectRevert();
-        inputBox.inputBoxes(dapp, 1);
+        assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
     function testRevertsNoApproval(uint256 tokenId, bytes calldata data)
@@ -170,8 +167,7 @@ contract ERC721PortalTest is Test {
         erc721Portal.depositERC721Token(token, dapp, tokenId, data);
 
         // Check the DApp's input box
-        vm.expectRevert();
-        inputBox.inputBoxes(dapp, 0);
+        assertEq(inputBox.getNumberOfInputs(dapp), 0);
     }
 
     function testRevertsNonImplementer(uint256 tokenId, bytes calldata data)
@@ -195,7 +191,6 @@ contract ERC721PortalTest is Test {
         erc721Portal.depositERC721Token(token, dapp, tokenId, data);
 
         // Check the DApp's input box
-        vm.expectRevert();
-        inputBox.inputBoxes(dapp, 0);
+        assertEq(inputBox.getNumberOfInputs(dapp), 0);
     }
 }

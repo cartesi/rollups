@@ -14,13 +14,13 @@
 pragma solidity ^0.8.13;
 
 import {IEtherPortal} from "./IEtherPortal.sol";
-import {InputBox} from "../inputs/InputBox.sol";
+import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputHeaders} from "../common/InputHeaders.sol";
 
 contract EtherPortal is IEtherPortal {
-    InputBox public immutable inputBox;
+    IInputBox public immutable inputBox;
 
-    constructor(InputBox _inputBox) {
+    constructor(IInputBox _inputBox) {
         inputBox = _inputBox;
     }
 

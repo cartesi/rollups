@@ -16,13 +16,13 @@ pragma solidity ^0.8.13;
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {IERC721Portal} from "./IERC721Portal.sol";
-import {InputBox} from "../inputs/InputBox.sol";
+import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputHeaders} from "../common/InputHeaders.sol";
 
 contract ERC721Portal is IERC721Portal {
-    InputBox public immutable inputBox;
+    IInputBox public immutable inputBox;
 
-    constructor(InputBox _inputBox) {
+    constructor(IInputBox _inputBox) {
         inputBox = _inputBox;
     }
 
