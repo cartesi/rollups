@@ -13,7 +13,7 @@
 // @title Cartesi DApp Factory interface
 pragma solidity ^0.8.13;
 
-import {ICartesiDApp} from "./ICartesiDApp.sol";
+import {CartesiDApp} from "./CartesiDApp.sol";
 import {IConsensus} from "../consensus/IConsensus.sol";
 
 interface ICartesiDAppFactory {
@@ -28,7 +28,7 @@ interface ICartesiDAppFactory {
         IConsensus indexed consensus,
         address dappOwner,
         bytes32 templateHash,
-        ICartesiDApp application
+        CartesiDApp application
     );
 
     // Permissionless functions
@@ -42,5 +42,5 @@ interface ICartesiDAppFactory {
         IConsensus _consensus,
         address _dappOwner,
         bytes32 _templateHash
-    ) external returns (ICartesiDApp);
+    ) external returns (CartesiDApp);
 }

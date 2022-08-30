@@ -14,7 +14,6 @@
 pragma solidity ^0.8.13;
 
 import {ICartesiDAppFactory} from "./ICartesiDAppFactory.sol";
-import {ICartesiDApp} from "./ICartesiDApp.sol";
 import {IConsensus} from "../consensus/IConsensus.sol";
 import {CartesiDApp} from "./CartesiDApp.sol";
 
@@ -23,8 +22,8 @@ contract CartesiDAppFactory is ICartesiDAppFactory {
         IConsensus _consensus,
         address _dappOwner,
         bytes32 _templateHash
-    ) external override returns (ICartesiDApp) {
-        ICartesiDApp application = new CartesiDApp(
+    ) external override returns (CartesiDApp) {
+        CartesiDApp application = new CartesiDApp(
             _consensus,
             _dappOwner,
             _templateHash
