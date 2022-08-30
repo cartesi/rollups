@@ -102,6 +102,19 @@ jobs:
         with:
           node-version: "16"
 
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - run: yarn install
+        working-directory: onchain/rollups-simplified
+      - run: yarn build
+        working-directory: onchain/rollups-simplified
+
+      - run: forge test -vvv
+        working-directory: onchain/rollups-simplified
+
       - run: yarn install
         working-directory: onchain/rollups
       - run: yarn build
@@ -113,6 +126,7 @@ jobs:
         working-directory: onchain/rollups
         env:
           STATE_FOLD_TEST: true
+
 
       - name: Save logs of state server execution
         uses: actions/upload-artifact@v3
