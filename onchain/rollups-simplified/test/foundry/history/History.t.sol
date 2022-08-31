@@ -71,11 +71,13 @@ contract HistoryTest is Test {
         uint256 fcii,
         uint256 lcii
     ) public {
+        vm.assume(fcii <= type(uint128).max);
+        vm.assume(lcii <= type(uint128).max);
         vm.assume(fcii <= lcii);
-        vm.assume(lcii < type(uint256).max); // otherwise `lcii + 1` would overflow
         bytes memory data = abi.encode(epochHash, fcii, lcii);
         vm.expectEmit(false, false, false, true, address(history));
-        emit NewClaim(dapp, data);
+        bytes memory eventData = abi.encode(0, epochHash, fcii, lcii);
+        emit NewClaim(dapp, eventData);
         history.submitClaim(dapp, data);
     }
 
@@ -86,16 +88,17 @@ contract HistoryTest is Test {
         uint256 fcii,
         uint256 lcii
     ) public {
+        vm.assume(fcii <= type(uint128).max);
+        vm.assume(lcii <= type(uint128).max);
         vm.assume(alice != address(this));
         vm.startPrank(alice);
         vm.assume(fcii <= lcii);
-        vm.assume(lcii < type(uint256).max); // otherwise `lcii + 1` would overflow
         vm.expectRevert("Ownable: caller is not the owner");
         bytes memory data = abi.encode(epochHash, fcii, lcii);
         history.submitClaim(dapp, data);
     }
 
-    function testRevertsLowerBound(
+    function testRevertsOverlap(
         address dapp,
         bytes32 epochHash1,
         bytes32 epochHash2,
@@ -104,12 +107,15 @@ contract HistoryTest is Test {
         uint256 lcii1,
         uint256 lcii2
     ) public {
+        vm.assume(fcii1 <= type(uint128).max);
+        vm.assume(lcii1 <= type(uint128).max);
+        vm.assume(fcii2 <= type(uint128).max);
+        vm.assume(lcii2 <= type(uint128).max);
         testSubmitClaim(dapp, epochHash1, fcii1, lcii1);
         vm.assume(fcii2 <= lcii1); // overlaps with previous claim
         vm.assume(fcii2 <= lcii2);
-        vm.assume(lcii2 < type(uint256).max);
         bytes memory data = abi.encode(epochHash2, fcii2, lcii2);
-        vm.expectRevert("History: new FCII < IILB");
+        vm.expectRevert("History: FI <= previous LI");
         history.submitClaim(dapp, data);
     }
 
@@ -122,29 +128,15 @@ contract HistoryTest is Test {
         uint256 lcii1,
         uint256 lcii2
     ) public {
+        vm.assume(fcii1 <= type(uint128).max);
+        vm.assume(lcii1 <= type(uint128).max);
+        vm.assume(fcii2 <= type(uint128).max);
+        vm.assume(lcii2 <= type(uint128).max);
         testSubmitClaim(dapp, epochHash1, fcii1, lcii1);
         vm.assume(fcii2 > lcii1);
         vm.assume(fcii2 > lcii2); // first claim input index is larger than last one
-        vm.assume(lcii2 < type(uint256).max);
         bytes memory data = abi.encode(epochHash2, fcii2, lcii2);
-        vm.expectRevert("History: new FCII > new LCII");
-        history.submitClaim(dapp, data);
-    }
-
-    function testRevertsOverflow(
-        address dapp,
-        bytes32 epochHash1,
-        bytes32 epochHash2,
-        uint256 fcii1,
-        uint256 fcii2,
-        uint256 lcii1
-    ) public {
-        uint256 lcii2 = type(uint256).max; // lcii2 + 1 overflows
-        testSubmitClaim(dapp, epochHash1, fcii1, lcii1);
-        vm.assume(fcii2 > lcii1);
-        vm.assume(fcii2 <= lcii2);
-        bytes memory data = abi.encode(epochHash2, fcii2, lcii2);
-        vm.expectRevert(stdError.arithmeticError);
+        vm.expectRevert("History: FI > LI");
         history.submitClaim(dapp, data);
     }
 
@@ -159,11 +151,13 @@ contract HistoryTest is Test {
         bytes32 epochHash,
         uint256 fcii,
         uint256 lcii,
-        uint256 epochInputIndex
+        uint256 inputIndex
     ) public {
+        vm.assume(fcii <= type(uint128).max);
+        vm.assume(lcii <= type(uint128).max);
         testSubmitClaim(dapp, epochHash, fcii, lcii);
-        vm.assume(epochInputIndex <= lcii - fcii);
-        bytes memory data = abi.encode(fcii, epochInputIndex);
+        vm.assume(fcii <= inputIndex && inputIndex <= lcii);
+        bytes memory data = abi.encode(0, inputIndex);
 
         (
             bytes32 retEpochHash,
@@ -172,8 +166,8 @@ contract HistoryTest is Test {
         ) = history.getEpochHash(dapp, data);
 
         assertEq(retEpochHash, epochHash);
-        assertEq(retInputIndex, fcii + epochInputIndex);
-        assertEq(retEpochInputIndex, epochInputIndex);
+        assertEq(retInputIndex, inputIndex);
+        assertEq(retEpochInputIndex, inputIndex - fcii);
     }
 
     function testRevertsGetEpochHashEncoding(address dapp) public {
@@ -182,45 +176,19 @@ contract HistoryTest is Test {
         history.getEpochHash(dapp, data);
     }
 
-    function testFirstInputClaim(address dapp) public {
-        bytes memory data = abi.encode(0, 0);
-
-        (
-            bytes32 retEpochHash,
-            uint256 retInputIndex,
-            uint256 retEpochInputIndex
-        ) = history.getEpochHash(dapp, data);
-
-        assertEq(retEpochHash, bytes32(0));
-        assertEq(retInputIndex, 0);
-        assertEq(retEpochInputIndex, 0);
-    }
-
-    function testRevertsEpochIndexOverflow(
-        address dapp,
-        uint256 epochInputIndex
-    ) public {
-        vm.assume(epochInputIndex < type(uint256).max);
-        bytes memory data = abi.encode(
-            type(uint256).max - epochInputIndex,
-            epochInputIndex + 1
-        );
-        vm.expectRevert(stdError.arithmeticError);
-        history.getEpochHash(dapp, data);
-    }
-
     function testRevertsBadEpochInputIndex(
         address dapp,
         bytes32 epochHash,
         uint256 fcii,
         uint256 lcii,
-        uint256 epochInputIndex
+        uint256 inputIndex
     ) public {
+        vm.assume(fcii <= type(uint128).max);
+        vm.assume(lcii <= type(uint128).max);
         testSubmitClaim(dapp, epochHash, fcii, lcii);
-        vm.assume(epochInputIndex > lcii - fcii);
-        vm.assume(epochInputIndex <= type(uint256).max - fcii); // to avoid overflows
-        bytes memory data = abi.encode(fcii, epochInputIndex);
-        vm.expectRevert("History: bad epoch input index");
+        vm.assume(inputIndex > lcii);
+        bytes memory data = abi.encode(0, inputIndex);
+        vm.expectRevert("History: bad input index");
         history.getEpochHash(dapp, data);
     }
 }
