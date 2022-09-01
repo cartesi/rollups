@@ -93,10 +93,15 @@ describe("Output Facet", () => {
             simpleContractAddress = simpleContract.address;
 
             // deploy simple token to test ERC20 withdrawals
+            // deterministic deployment address is determined by
+            // caller address, salt, contract bytecode, constructor arguments
+            // ref: https://docs.soliditylang.org/en/latest/control-structures.html#salted-contract-creations-create2
             const SimpleToken_deploy = await deployments.deploy("SimpleToken", {
                 from: await signers[0].getAddress(),
                 args: [initialSupply],
-                deterministicDeployment: true, // deployed address is calculated based on contract bytecode, constructor arguments, deployer address...
+                deterministicDeployment: true,
+                // deterministicDeployment:
+                //     "0x000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266",
             });
             simpleToken = SimpleToken__factory.connect(
                 SimpleToken_deploy.address,

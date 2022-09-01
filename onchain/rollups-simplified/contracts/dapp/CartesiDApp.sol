@@ -58,9 +58,9 @@ contract CartesiDApp is
         OutputValidityProof calldata _v
     ) external override nonReentrant returns (bool) {
         bytes32 epochHash;
-        uint256 inputIndex;
+        uint256 uniInputIndex;
 
-        (epochHash, inputIndex) = getEpochHashAndInputIndex(_claimData, _v);
+        (epochHash, uniInputIndex) = getEpochHashAndInputIndex(_claimData, _v);
 
         // reverts if validity proof doesnt match
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
@@ -68,12 +68,12 @@ contract CartesiDApp is
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _v.outputIndex,
-            inputIndex
+            uniInputIndex
         );
 
         // check if voucher has been executed
         require(
-            voucherBitmask.getBit(voucherPosition),
+            !voucherBitmask.getBit(voucherPosition),
             "re-execution not allowed"
         );
 
@@ -130,10 +130,10 @@ contract CartesiDApp is
     function getEpochHashAndInputIndex(
         bytes calldata _claimData,
         OutputValidityProof calldata _v
-    ) internal view returns (bytes32 epochHash_, uint256 inputIndex_) {
+    ) internal view returns (bytes32 epochHash_, uint256 uniInputIndex_) {
         uint256 epochInputIndex;
 
-        (epochHash_, inputIndex_, epochInputIndex) = consensus.getEpochHash(
+        (epochHash_, uniInputIndex_, epochInputIndex) = consensus.getEpochHash(
             address(this),
             _claimData
         );
