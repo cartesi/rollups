@@ -52,7 +52,6 @@ pub struct Config {
     endpoint: String,
     session_id: String,
 
-    storage_directory_prefix: String,
     machine_directory: String,
     machine_runtime: MachineRuntimeConfig,
     active_epoch_index: u64,
@@ -96,7 +95,7 @@ impl Config {
         Self {
             endpoint,
             session_id,
-            storage_directory_prefix: "default_storage_directory".to_owned(), // TODO
+
             active_epoch_index: 0,
             machine_directory,
             machine_runtime,
@@ -109,7 +108,6 @@ impl Config {
 #[derive(Debug)]
 pub struct MachineManager {
     session_id: String,
-    storage_directory_prefix: String,
     client: Mutex<ServerManagerClient<Channel>>,
 }
 
@@ -148,7 +146,6 @@ impl MachineManager {
 
         Ok(Self {
             session_id: config.session_id,
-            storage_directory_prefix: config.storage_directory_prefix,
             client: Mutex::new(client),
         })
     }
@@ -236,11 +233,7 @@ impl MachineInterface for MachineManager {
             session_id: self.session_id.clone(),
             active_epoch_index: epoch_number.as_u64(),
             processed_input_count: input_count.as_u64(),
-            storage_directory: format!(
-                "{}_{}",
-                self.storage_directory_prefix,
-                epoch_number.as_u64()
-            ),
+            storage_directory: "".to_owned(),
         });
 
         let _finish_response = client
