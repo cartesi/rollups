@@ -67,6 +67,7 @@ contract History is IHistory, Ownable {
             firstIndex,
             lastIndex
         );
+
         emit NewClaim(_dapp, eventData);
     }
 
