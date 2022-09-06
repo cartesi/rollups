@@ -39,7 +39,7 @@ cargo run -- --inspect-server-address localhost:5002 --server-manager-address lo
 2. Then, you could submit an inspect request with payload "mypayload" by sending a GET HTTP request as follows:
 
 ```
-curl http://localhost:5002/mypayload
+curl http://localhost:5002/inspect/mypayload
 ```
 
 ## Tests
