@@ -153,7 +153,7 @@ library LibOutputValidation {
     /// @param _input which input, inside the input box, the voucher belongs to
     /// @return position of that voucher on bitmask
     function getBitMaskPosition(uint256 _voucher, uint256 _input)
-        public
+        internal
         pure
         returns (uint256)
     {

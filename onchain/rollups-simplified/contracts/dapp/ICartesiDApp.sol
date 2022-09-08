@@ -71,4 +71,6 @@ interface ICartesiDApp {
     /// @notice Get the current consensus
     /// @return The current consensus
     function getConsensus() external view returns (IConsensus);
+
+    function withdrawEther(address _receiver, uint256 _value) external;
 }

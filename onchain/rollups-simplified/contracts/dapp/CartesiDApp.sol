@@ -34,6 +34,14 @@ contract CartesiDApp is
     mapping(uint256 => uint256) voucherBitmask;
     IConsensus consensus;
 
+    bool lock;
+    modifier noReentrancyForEther() {
+        require(!lock, "reentrancy not allowed");
+        lock = true;
+        _;
+        lock = false;
+    }
+
     constructor(
         IConsensus _consensus,
         address _owner,
@@ -142,6 +150,18 @@ contract CartesiDApp is
             _v.epochInputIndex == epochInputIndex,
             "epoch input indices don't match"
         );
+    }
+
+    receive() external payable {}
+
+    function withdrawEther(address _receiver, uint256 _value)
+        external
+        override
+        noReentrancyForEther
+    {
+        require(msg.sender == address(this), "only itself");
+        (bool sent, ) = _receiver.call{value: _value}("");
+        require(sent, "withdrawEther failed");
     }
 
     /// @notice Handle the receipt of an NFT

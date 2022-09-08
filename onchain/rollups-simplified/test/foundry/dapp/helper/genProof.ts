@@ -5,7 +5,7 @@ import epochStateN from "./decoded_proof_notice.json";
 // run `npx ts-node genProof.ts` to generate Solidity version of proofs from json files
 // If json file needs to be updated, instructions below are similar as in the `test/OutputFacet.ts` file
 // 1. uncomment `console.log` in `CartesiDApp.t.sol` file to see what the values of payload and destination should be.
-// 2. we need to use the script `gen-proofs.sh` here[1]. It originally has 2 vouchers/notices. Make it into 4.
+// 2. we need to use the script `gen-proofs.sh` here[1]. It originally has 2 vouchers/notices. Make it into 6.
 //    Replace `PAYLOAD` and `MSG_SENDER` accordingly.
 //    For Apple silicon users, use long duration of `sleep` command before `# Finish epoch`. For example, `sleep 10`.
 // 3. `gen-proofs.sh` outputs a JSON file with proofs in base64 encoding. This tool[2] converts base64 to hex.
@@ -22,19 +22,21 @@ import epochStateN from "./decoded_proof_notice.json";
 
 // If no need to generate sol codes for some scenarios, comment them out
 
-// There are 4 scenarios of vouchers
+// Scenarios of vouchers:
 // 0: simple_function()
 // 1: simple_function(bytes32)
 // 2: nonExistent()
 // 3: SimpleToken.transfer(address,uint256)
+// 4: ether transfer
+// 5: NFT transfer
 let buildSolForVouchers = [
     //0,
     //1,
     //2,
-    3,
+    3, 4, 5,
 ];
 
-// There are 2 scenarios of notices
+// Scenarios of notices:
 // 0: "0xdeadbeef"
 // 1: "0xbeefdead"
 let buildSolForNotices = [0, 1];
