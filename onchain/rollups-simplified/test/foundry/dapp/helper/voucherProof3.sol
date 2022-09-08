@@ -9,7 +9,7 @@
         OutputValidityProof public proof;
 
         constructor() {
-            proof.inputIndex = 3;
+            proof.epochInputIndex = 3;
             proof.outputIndex = 0;
             proof.outputHashesRootHash = 0x61653750526852dadb4769de56106142926643654bce2bd830f5f1fe0ea04ddb;
             proof.vouchersEpochRootHash = 0x7c5c24c5093c811278984513151764077560f102c84e84d0ac8d005c10b2d2f5;

@@ -86,9 +86,9 @@ contract CartesiDAppTest is Test {
         IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        uint256 _uniInputIndex
+        uint256 _inputIndex
     ) public {
-        setupForVoucher(_consensus, _owner, _templateHash, _uniInputIndex);
+        setupForVoucher(_consensus, _owner, _templateHash, _inputIndex);
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(token.balanceOf(address(dapp)), 0);
@@ -113,7 +113,7 @@ contract CartesiDAppTest is Test {
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
                 voucherProof.outputIndex,
-                _uniInputIndex
+                _inputIndex
             )
         );
 
@@ -138,9 +138,9 @@ contract CartesiDAppTest is Test {
         IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        uint256 _uniInputIndex
+        uint256 _inputIndex
     ) public {
-        setupForVoucher(_consensus, _owner, _templateHash, _uniInputIndex);
+        setupForVoucher(_consensus, _owner, _templateHash, _inputIndex);
 
         // fund dapp
         uint256 dapp_init_balance = 100;
@@ -167,9 +167,9 @@ contract CartesiDAppTest is Test {
         IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        uint256 _uniInputIndex
+        uint256 _inputIndex
     ) public {
-        setupForVoucher(_consensus, _owner, _templateHash, _uniInputIndex);
+        setupForVoucher(_consensus, _owner, _templateHash, _inputIndex);
 
         // epochHash incorrect
         bytes32 epochHashForVoucher = bytes32("wrong epoch hash");
@@ -178,8 +178,8 @@ contract CartesiDAppTest is Test {
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
             abi.encode(
                 epochHashForVoucher,
-                _uniInputIndex,
-                voucherProof.inputIndex
+                _inputIndex,
+                voucherProof.epochInputIndex
             )
         );
         // epect revert
@@ -192,12 +192,12 @@ contract CartesiDAppTest is Test {
         IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        uint256 _uniInputIndex
+        uint256 _inputIndex
     ) public {
-        setupForVoucher(_consensus, _owner, _templateHash, _uniInputIndex);
+        setupForVoucher(_consensus, _owner, _templateHash, _inputIndex);
 
         // alter epoch input index
-        voucherProof.inputIndex += 1;
+        voucherProof.epochInputIndex += 1;
         // epect revert
         vm.expectRevert("epoch input indices don't match");
         // perform call
@@ -208,9 +208,9 @@ contract CartesiDAppTest is Test {
         IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        uint256 _uniInputIndex
+        uint256 _inputIndex
     ) public {
-        setupForVoucher(_consensus, _owner, _templateHash, _uniInputIndex);
+        setupForVoucher(_consensus, _owner, _templateHash, _inputIndex);
 
         // alter outputHashesRootHash
         voucherProof.outputHashesRootHash = bytes32(0);
@@ -224,9 +224,9 @@ contract CartesiDAppTest is Test {
         IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        uint256 _uniInputIndex
+        uint256 _inputIndex
     ) public {
-        setupForVoucher(_consensus, _owner, _templateHash, _uniInputIndex);
+        setupForVoucher(_consensus, _owner, _templateHash, _inputIndex);
 
         // alter outputIndex
         voucherProof.outputIndex += 1;
@@ -240,14 +240,14 @@ contract CartesiDAppTest is Test {
         IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        uint256 _uniInputIndex
+        uint256 _inputIndex
     ) internal {
         vm.assume(address(_consensus) != address(0) && _owner != address(0));
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
 
         // copy proof from contract to storage
         (
-            voucherProof.inputIndex,
+            voucherProof.epochInputIndex,
             voucherProof.outputIndex,
             voucherProof.outputHashesRootHash,
             voucherProof.vouchersEpochRootHash,
@@ -272,8 +272,8 @@ contract CartesiDAppTest is Test {
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
             abi.encode(
                 epochHashForVoucher,
-                _uniInputIndex,
-                voucherProof.inputIndex
+                _inputIndex,
+                voucherProof.epochInputIndex
             )
         );
     }
@@ -284,7 +284,7 @@ contract CartesiDAppTest is Test {
         IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        uint256 _uniInputIndex
+        uint256 _inputIndex
     ) public {
         // *** setup for notice0 ***
         vm.assume(address(_consensus) != address(0) && _owner != address(0));
@@ -293,7 +293,7 @@ contract CartesiDAppTest is Test {
         NoticeProofSol0 nSol0 = new NoticeProofSol0();
         // proof
         (
-            notice0Proof.inputIndex,
+            notice0Proof.epochInputIndex,
             notice0Proof.outputIndex,
             notice0Proof.outputHashesRootHash,
             notice0Proof.vouchersEpochRootHash,
@@ -316,8 +316,8 @@ contract CartesiDAppTest is Test {
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
             abi.encode(
                 epochHashForNotice,
-                _uniInputIndex,
-                notice0Proof.inputIndex
+                _inputIndex,
+                notice0Proof.epochInputIndex
             )
         );
         // *** finish setup ***
@@ -337,7 +337,7 @@ contract CartesiDAppTest is Test {
         IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        uint256 _uniInputIndex
+        uint256 _inputIndex
     ) public {
         // *** setup for notice1 ***
         vm.assume(address(_consensus) != address(0) && _owner != address(0));
@@ -346,7 +346,7 @@ contract CartesiDAppTest is Test {
         NoticeProofSol1 nSol1 = new NoticeProofSol1();
         // proof
         (
-            notice1Proof.inputIndex,
+            notice1Proof.epochInputIndex,
             notice1Proof.outputIndex,
             notice1Proof.outputHashesRootHash,
             notice1Proof.vouchersEpochRootHash,
@@ -369,8 +369,8 @@ contract CartesiDAppTest is Test {
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
             abi.encode(
                 epochHashForNotice,
-                _uniInputIndex,
-                notice1Proof.inputIndex
+                _inputIndex,
+                notice1Proof.epochInputIndex
             )
         );
         // *** finish setup ***

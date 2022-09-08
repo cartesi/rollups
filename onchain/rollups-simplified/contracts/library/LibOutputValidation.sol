@@ -16,7 +16,7 @@ pragma solidity ^0.8.13;
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 
-/// @param inputIndex which input, in the epoch, the output belongs to
+/// @param epochInputIndex which input, in the epoch, the output belongs to
 /// @param outputIndex index of output inside the input
 /// @param outputHashesRootHash merkle root of all epoch's output metadata hashes
 /// @param vouchersEpochRootHash merkle root of all epoch's voucher metadata hashes
@@ -25,7 +25,7 @@ import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 /// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range
 /// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range
 struct OutputValidityProof {
-    uint64 inputIndex;
+    uint64 epochInputIndex;
     uint64 outputIndex;
     bytes32 outputHashesRootHash;
     bytes32 vouchersEpochRootHash;
@@ -66,7 +66,7 @@ library LibOutputValidation {
         require(
             Merkle.getRootAfterReplacementInDrive(
                 CanonicalMachine.getIntraMemoryRangePosition(
-                    _v.inputIndex,
+                    _v.epochInputIndex,
                     CanonicalMachine.KECCAK_LOG2_SIZE
                 ),
                 CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),

@@ -40,7 +40,7 @@ let buildSolForVouchers = [
 let buildSolForNotices = [0, 1];
 
 interface OutputValidityProof {
-    inputIndex: number;
+    epochInputIndex: number;
     outputIndex: number;
     outputHashesRootHash: BytesLike;
     vouchersEpochRootHash: BytesLike;
@@ -50,12 +50,12 @@ interface OutputValidityProof {
     outputHashesInEpochSiblings: BytesLike[];
 }
 
-function setupVoucherProof(inputIndex: number): OutputValidityProof {
+function setupVoucherProof(epochInputIndex: number): OutputValidityProof {
     let voucherDataKeccakInHashes =
-        epochStateV.processedInputs[inputIndex].acceptedData.vouchers[0]
+        epochStateV.processedInputs[epochInputIndex].acceptedData.vouchers[0]
             .keccakInVoucherHashes;
     let voucherHashesInEpoch =
-        epochStateV.processedInputs[inputIndex].voucherHashesInEpoch
+        epochStateV.processedInputs[epochInputIndex].voucherHashesInEpoch
             .siblingHashes;
     var siblingKeccakInHashesV: BytesLike[] = [];
     var voucherHashesInEpochSiblings: BytesLike[] = [];
@@ -66,7 +66,7 @@ function setupVoucherProof(inputIndex: number): OutputValidityProof {
         voucherHashesInEpochSiblings.push(element.data);
     });
     let voucherProof: OutputValidityProof = {
-        inputIndex: inputIndex,
+        epochInputIndex: epochInputIndex,
         outputIndex: 0,
         outputHashesRootHash: voucherDataKeccakInHashes.rootHash.data,
         vouchersEpochRootHash: epochStateV.mostRecentVouchersEpochRootHash.data,
@@ -78,12 +78,12 @@ function setupVoucherProof(inputIndex: number): OutputValidityProof {
     return voucherProof;
 }
 
-function setupNoticeProof(inputIndex: number): OutputValidityProof {
+function setupNoticeProof(epochInputIndex: number): OutputValidityProof {
     let noticeDataKeccakInHashes =
-        epochStateN.processedInputs[inputIndex].acceptedData.notices[0]
+        epochStateN.processedInputs[epochInputIndex].acceptedData.notices[0]
             .keccakInNoticeHashes;
     let noticeHashesInEpoch =
-        epochStateN.processedInputs[inputIndex].noticeHashesInEpoch
+        epochStateN.processedInputs[epochInputIndex].noticeHashesInEpoch
             .siblingHashes;
     var siblingKeccakInHashesN: BytesLike[] = [];
     var noticeHashesInEpochSiblingsN: BytesLike[] = [];
@@ -94,7 +94,7 @@ function setupNoticeProof(inputIndex: number): OutputValidityProof {
         noticeHashesInEpochSiblingsN.push(element.data);
     });
     let noticeProof: OutputValidityProof = {
-        inputIndex: inputIndex,
+        epochInputIndex: epochInputIndex,
         outputIndex: 0,
         outputHashesRootHash: noticeDataKeccakInHashes.rootHash.data,
         vouchersEpochRootHash: epochStateN.mostRecentVouchersEpochRootHash.data,
@@ -116,8 +116,8 @@ function buildSolCodes(p: OutputValidityProof): string {
     contract Proof {\n\
         OutputValidityProof public proof;\n\n\
         constructor() {\n\
-            proof.inputIndex = ' +
-        p.inputIndex +
+            proof.epochInputIndex = ' +
+        p.epochInputIndex +
         ";\n\
             proof.outputIndex = " +
         p.outputIndex +
