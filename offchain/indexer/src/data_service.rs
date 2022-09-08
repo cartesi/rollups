@@ -345,7 +345,7 @@ async fn poll_epoch_status(
         }
     };
 
-    info!("Poll epoch status: polling for epoch {}", epoch_index);
+    debug!("Poll epoch status: polling for epoch {}", epoch_index);
     let epoch_status_response =
         get_epoch_status(client, session_id, epoch_index).await?;
 
@@ -445,7 +445,7 @@ async fn process_state_response(
     }
 
     // Check for current phase state, process inputs accordingly
-    info!(
+    debug!(
         "Poll state: polling state server, current rollups phase is {:?}",
         block_state.state.current_phase
     );

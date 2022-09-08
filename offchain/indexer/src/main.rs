@@ -43,7 +43,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             .init();
     }
 
-    info!("Starting rollup indexer service");
+    info!("Starting rollups indexer service");
     let indexer_config =
         IndexerConfig::initialize().map_err(|e| BadConfiguration {
             err: format!("Fail to initialize indexer config: {}", e),
