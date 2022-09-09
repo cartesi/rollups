@@ -25,7 +25,7 @@ interface IConsensus {
 
     // Permissioned functions
 
-    function submitClaim(address _dapp, bytes calldata _data) external;
+    function submitClaim(address _dapp, bytes calldata _claim) external;
 
     function setHistory(IHistory _history) external;
 
@@ -35,7 +35,7 @@ interface IConsensus {
 
     function getHistory() external view returns (IHistory);
 
-    function getEpochHash(address _dapp, bytes calldata _data)
+    function getEpochHash(address _dapp, bytes calldata _claimProof)
         external
         view
         returns (

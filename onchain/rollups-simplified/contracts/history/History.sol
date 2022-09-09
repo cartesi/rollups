@@ -29,7 +29,7 @@ contract History is IHistory, Ownable {
     // mapping from dapp address => input index lower bound
     mapping(address => uint256) inputIndexLowerBounds;
 
-    function submitClaim(address _dapp, bytes calldata _data)
+    function submitClaim(address _dapp, bytes calldata _claim)
         external
         override
         onlyOwner
@@ -38,7 +38,7 @@ contract History is IHistory, Ownable {
             bytes32 epochHash,
             uint256 firstClaimInputIndex,
             uint256 lastClaimInputIndex
-        ) = abi.decode(_data, (bytes32, uint256, uint256));
+        ) = abi.decode(_claim, (bytes32, uint256, uint256));
 
         require(
             firstClaimInputIndex <= lastClaimInputIndex,
@@ -56,10 +56,10 @@ contract History is IHistory, Ownable {
             lastClaimInputIndex: lastClaimInputIndex
         });
 
-        emit NewClaim(_dapp, _data);
+        emit NewClaim(_dapp, _claim);
     }
 
-    function getEpochHash(address _dapp, bytes calldata _data)
+    function getEpochHash(address _dapp, bytes calldata _claimProof)
         external
         view
         override
@@ -70,7 +70,7 @@ contract History is IHistory, Ownable {
         )
     {
         (uint256 firstClaimInputIndex, uint256 epochInputIndex) = abi.decode(
-            _data,
+            _claimProof,
             (uint256, uint256)
         );
 

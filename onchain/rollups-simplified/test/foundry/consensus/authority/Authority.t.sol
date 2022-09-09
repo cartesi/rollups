@@ -98,7 +98,7 @@ contract AuthorityTest is Test {
         IInputBox _inputBox,
         IHistory _history,
         address _dapp,
-        bytes calldata _data
+        bytes calldata _claim
     ) public {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
@@ -108,17 +108,21 @@ contract AuthorityTest is Test {
         // mocking history
         vm.mockCall(
             address(_history),
-            abi.encodeWithSelector(IHistory.submitClaim.selector, _dapp, _data),
+            abi.encodeWithSelector(
+                IHistory.submitClaim.selector,
+                _dapp,
+                _claim
+            ),
             ""
         );
 
         // will fail as not called from owner
         vm.expectRevert("Ownable: caller is not the owner");
-        authority.submitClaim(_dapp, _data);
+        authority.submitClaim(_dapp, _claim);
 
         // can only be called by owner
         vm.prank(_owner);
-        authority.submitClaim(_dapp, _data);
+        authority.submitClaim(_dapp, _claim);
     }
 
     function testSetHistory(
@@ -155,7 +159,7 @@ contract AuthorityTest is Test {
         IInputBox _inputBox,
         IHistory _history,
         address _dapp,
-        bytes calldata _data,
+        bytes calldata _claimProof,
         bytes32 _r0,
         uint256 _r1,
         uint256 _r2
@@ -171,7 +175,7 @@ contract AuthorityTest is Test {
             abi.encodeWithSelector(
                 IHistory.getEpochHash.selector,
                 _dapp,
-                _data
+                _claimProof
             ),
             abi.encode(_r0, _r1, _r2)
         );
@@ -179,7 +183,7 @@ contract AuthorityTest is Test {
         // perform call
         (bytes32 r0, uint256 r1, uint256 r2) = authority.getEpochHash(
             _dapp,
-            _data
+            _claimProof
         );
 
         // check result

@@ -33,12 +33,12 @@ contract Authority is IConsensus, Ownable {
     }
 
     /// @dev Will fail if history has migrated to another consensus
-    function submitClaim(address _dapp, bytes calldata _data)
+    function submitClaim(address _dapp, bytes calldata _claim)
         external
         override
         onlyOwner
     {
-        history.submitClaim(_dapp, _data);
+        history.submitClaim(_dapp, _claim);
     }
 
     function migrateHistoryToConsensus(address _consensus)
@@ -58,7 +58,7 @@ contract Authority is IConsensus, Ownable {
         return history;
     }
 
-    function getEpochHash(address _dapp, bytes calldata _data)
+    function getEpochHash(address _dapp, bytes calldata _claimProof)
         external
         view
         returns (
@@ -67,6 +67,6 @@ contract Authority is IConsensus, Ownable {
             uint256
         )
     {
-        return history.getEpochHash(_dapp, _data);
+        return history.getEpochHash(_dapp, _claimProof);
     }
 }

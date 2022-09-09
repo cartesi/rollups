@@ -16,17 +16,17 @@ pragma solidity ^0.8.13;
 interface IHistory {
     // Events
 
-    event NewClaim(address dapp, bytes data);
+    event NewClaim(address dapp, bytes claim);
 
     // Permissioned functions
 
-    function submitClaim(address _dapp, bytes calldata _data) external;
+    function submitClaim(address _dapp, bytes calldata _claim) external;
 
     function migrateToConsensus(address _consensus) external;
 
     // Permissionless functions
 
-    function getEpochHash(address _dapp, bytes calldata _data)
+    function getEpochHash(address _dapp, bytes calldata _claimProof)
         external
         view
         returns (
