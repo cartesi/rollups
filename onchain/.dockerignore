@@ -1,2 +1,5 @@
 **/node_modules
 **/dist
+rollups/artifacts
+rollups/cache
+rollups/test

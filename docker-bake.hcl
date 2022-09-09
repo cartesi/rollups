@@ -2,7 +2,7 @@
 target "docker-metadata-action" {}
 
 group "default" {
-  targets = ["state-server", "dispatcher", "indexer", "inspect-server", "reader", "hardhat", "rollups-cli"]
+  targets = ["state-server", "dispatcher", "indexer", "inspect-server", "reader", "hardhat", "cli"]
 }
 
 target "deps" {
@@ -49,11 +49,12 @@ target "reader" {
 
 target "hardhat" {
   inherits = ["docker-metadata-action"]
-  context  = "./onchain/rollups"
+  context  = "./onchain"
+  target   = "hardhat"
 }
 
-target "rollups-cli" {
-  inherits   = ["docker-metadata-action"]
-  context    = "./onchain"
-  dockerfile = "./rollups-cli/Dockerfile"
+target "cli" {
+  inherits = ["docker-metadata-action"]
+  context  = "./onchain"
+  target   = "cli"
 }

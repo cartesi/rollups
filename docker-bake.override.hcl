@@ -31,6 +31,6 @@ target "hardhat" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-hardhat:${TAG}"]
 }
 
-target "rollups-cli" {
+target "cli" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-cli:${TAG}"]
 }

@@ -226,10 +226,10 @@ jobs:
       image-name: rollups-hardhat
     secrets: inherit
 
-  rollups_cli:
+  cli:
     needs: build_docker
     uses: ./.github/workflows/docker.yml
     with:
-      target: rollups-cli
+      target: cli
       image-name: rollups-cli
     secrets: inherit
