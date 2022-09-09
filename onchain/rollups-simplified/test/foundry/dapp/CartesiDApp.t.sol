@@ -14,6 +14,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
+import {ICartesiDApp} from "contracts/dapp/ICartesiDApp.sol";
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
 import {Proof as VoucherProofSol3} from "./helper/voucherProof3.sol";
@@ -24,7 +25,13 @@ import {Proof as NoticeProofSol1} from "./helper/noticeProof1.sol";
 import {OutputValidityProof, LibOutputValidation} from "contracts/library/LibOutputValidation.sol";
 import {SimpleToken} from "./helper/SimpleToken.sol";
 import {SimpleNFT} from "./helper/SimpleNFT.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "forge-std/console.sol";
+
+contract EtherReceiver {
+    receive() external payable {}
+}
 
 contract CartesiDAppTest is Test {
     CartesiDApp dapp;
@@ -38,7 +45,7 @@ contract CartesiDAppTest is Test {
     address constant recipient = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
     bytes constant payload =
         abi.encodeWithSelector(
-            bytes4(keccak256("transfer(address,uint256)")),
+            IERC20.transfer.selector,
             recipient,
             transferAmount
         );
@@ -264,7 +271,7 @@ contract CartesiDAppTest is Test {
 
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
-            abi.encode(
+            abi.encodePacked(
                 voucherProof.vouchersEpochRootHash,
                 voucherProof.noticesEpochRootHash,
                 voucherProof.machineStateHash
@@ -299,7 +306,7 @@ contract CartesiDAppTest is Test {
             salt: bytes32(bytes20(dappOwner))
         }(consensus, dappOwner, templateHash);
         bytes memory etherPayload = abi.encodeWithSelector(
-            bytes4(keccak256("withdrawEther(address,uint256)")),
+            ICartesiDApp.withdrawEther.selector,
             recipient,
             transferAmount
         );
@@ -320,7 +327,7 @@ contract CartesiDAppTest is Test {
         voucherProof.outputHashesInEpochSiblings = pSol4.getArray2();
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
-            abi.encode(
+            abi.encodePacked(
                 voucherProof.vouchersEpochRootHash,
                 voucherProof.noticesEpochRootHash,
                 voucherProof.machineStateHash
@@ -394,24 +401,56 @@ contract CartesiDAppTest is Test {
         );
     }
 
-    function testWithdrawEther(
+    function testWithdrawEtherContract(
         IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        address _receiver,
         uint256 _value
     ) public {
         vm.assume(_owner != address(0));
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
         vm.assume(_owner != address(dapp));
-        vm.assume(_value < address(this).balance);
-        vm.assume(
-            _receiver != address(0x0000000000000000000000000000000000000009)
-        );
-        // assume _receiver is not a contract
+        vm.assume(_value <= address(this).balance);
+        address receiver = address(new EtherReceiver());
+
+        // fund dapp
+        (bool sent, ) = address(dapp).call{value: _value}("");
+        require(sent, "fail to fund dapp");
+
+        // withdrawEther cannot be called by `this`
+        vm.expectRevert("only itself");
+        dapp.withdrawEther(receiver, _value);
+
+        // withdrawEther cannot be called by any address not equal to dapp address
+        vm.expectRevert("only itself");
+        vm.prank(_owner);
+        dapp.withdrawEther(receiver, _value);
+
+        // can only be called by dapp itself
+        uint256 preBalance = receiver.balance;
+        vm.prank(address(dapp));
+        dapp.withdrawEther(receiver, _value);
+        assertEq(receiver.balance, preBalance + _value);
+    }
+
+
+    function testWithdrawEtherEOA(
+        IConsensus _consensus,
+        address _owner,
+        bytes32 _templateHash,
+        uint256 _receiverSeed,
+        uint256 _value
+    ) public {
+        vm.assume(_owner != address(0));
+        dapp = new CartesiDApp(_consensus, _owner, _templateHash);
+        vm.assume(_owner != address(dapp));
+        vm.assume(_value <= address(this).balance);
+        address receiver = address(uint160(bytes20(keccak256(abi.encode(_receiverSeed)))));
+
+        // assume receiver is not a contract
         uint256 codeSize;
         assembly {
-            codeSize := extcodesize(_receiver)
+            codeSize := extcodesize(receiver)
         }
         vm.assume(codeSize == 0);
 
@@ -421,18 +460,18 @@ contract CartesiDAppTest is Test {
 
         // withdrawEther cannot be called by `this`
         vm.expectRevert("only itself");
-        dapp.withdrawEther(_receiver, _value);
+        dapp.withdrawEther(receiver, _value);
 
         // withdrawEther cannot be called by any address not equal to dapp address
         vm.expectRevert("only itself");
         vm.prank(_owner);
-        dapp.withdrawEther(_receiver, _value);
+        dapp.withdrawEther(receiver, _value);
 
         // can only be called by dapp itself
-        uint256 preBalance = _receiver.balance;
+        uint256 preBalance = receiver.balance;
         vm.prank(address(dapp));
-        dapp.withdrawEther(_receiver, _value);
-        assertEq(_receiver.balance, preBalance + _value);
+        dapp.withdrawEther(receiver, _value);
+        assertEq(receiver.balance, preBalance + _value);
     }
 
     // test NFT transfer
@@ -454,7 +493,7 @@ contract CartesiDAppTest is Test {
             salt: bytes32(bytes20(dappOwner))
         }(consensus, dappOwner, templateHash);
         bytes memory NFTPayload = abi.encodeWithSelector(
-            bytes4(keccak256("transferFrom(address,address,uint256)")),
+            IERC721.transferFrom.selector,
             deterministicDapp, // from
             recipient, // to
             0 // tokenId
@@ -476,7 +515,7 @@ contract CartesiDAppTest is Test {
         voucherProof.outputHashesInEpochSiblings = pSol5.getArray2();
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
-            abi.encode(
+            abi.encodePacked(
                 voucherProof.vouchersEpochRootHash,
                 voucherProof.noticesEpochRootHash,
                 voucherProof.machineStateHash
@@ -571,7 +610,7 @@ contract CartesiDAppTest is Test {
         notice0Proof.outputHashesInEpochSiblings = nSol0.getArray2();
         // epoch hash
         bytes32 epochHashForNotice = keccak256(
-            abi.encode(
+            abi.encodePacked(
                 notice0Proof.vouchersEpochRootHash,
                 notice0Proof.noticesEpochRootHash,
                 notice0Proof.machineStateHash
@@ -624,7 +663,7 @@ contract CartesiDAppTest is Test {
         notice1Proof.outputHashesInEpochSiblings = nSol1.getArray2();
         // epoch hash
         bytes32 epochHashForNotice = keccak256(
-            abi.encode(
+            abi.encodePacked(
                 notice1Proof.vouchersEpochRootHash,
                 notice1Proof.noticesEpochRootHash,
                 notice1Proof.machineStateHash
