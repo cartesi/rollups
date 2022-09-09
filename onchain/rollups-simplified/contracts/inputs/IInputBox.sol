@@ -14,15 +14,22 @@
 pragma solidity ^0.8.13;
 
 interface IInputBox {
-    // Events
-
+    /// @notice Emitted when an input is added
+    /// @param dapp The address of the DApp that received the input
+    /// @param sender The address that sent the input
+    /// @param input The contents of the input
     event InputAdded(address indexed dapp, address sender, bytes input);
 
-    // Functions
-
+    /// @notice Adds input to a DApp's input box
+    /// @param _dapp The address of the DApp that to receive input
+    /// @param _input The contents of the input
+    /// @return The hash of the input sent
     function addInput(address _dapp, bytes calldata _input)
         external
         returns (bytes32);
 
+    /// @notice Gets the number of inputs a DApp has received
+    /// @param _dapp The address of the DApp
+    /// @return Number of inputs in the _dapp input box
     function getNumberOfInputs(address _dapp) external view returns (uint256);
 }
