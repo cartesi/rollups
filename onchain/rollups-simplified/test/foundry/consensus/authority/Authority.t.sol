@@ -19,6 +19,29 @@ import {IConsensus} from "contracts/consensus/IConsensus.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {IHistory} from "contracts/history/IHistory.sol";
 
+contract HistoryReverts is IHistory {
+    function submitClaim(address, bytes calldata) external pure override {
+        revert();
+    }
+
+    function migrateToConsensus(address) external pure override {
+        revert();
+    }
+
+    function getEpochHash(address, bytes calldata)
+        external
+        pure
+        override
+        returns (
+            bytes32,
+            uint256,
+            uint256
+        )
+    {
+        revert();
+    }
+}
+
 contract AuthorityTest is Test {
     Authority authority;
 
@@ -190,5 +213,32 @@ contract AuthorityTest is Test {
         assertEq(_r0, r0);
         assertEq(_r1, r1);
         assertEq(_r2, r2);
+    }
+
+    // test behaviors when history reverts
+    function testHistoryReverts(
+        address _owner,
+        IInputBox _inputBox,
+        address _dapp,
+        bytes calldata _claim,
+        address _consensus,
+        bytes calldata _claimProof
+    ) public {
+        vm.assume(_owner != address(0));
+
+        HistoryReverts historyR = new HistoryReverts();
+
+        authority = new Authority(_owner, _inputBox, historyR);
+
+        vm.expectRevert();
+        vm.prank(_owner);
+        authority.submitClaim(_dapp, _claim);
+
+        vm.expectRevert();
+        vm.prank(_owner);
+        authority.migrateHistoryToConsensus(_consensus);
+
+        vm.expectRevert();
+        authority.getEpochHash(_dapp, _claimProof);
     }
 }
