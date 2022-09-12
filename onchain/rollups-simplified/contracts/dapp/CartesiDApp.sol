@@ -146,10 +146,7 @@ contract CartesiDApp is
 
     receive() external payable {}
 
-    function withdrawEther(address _receiver, uint256 _value)
-        external
-        override
-    {
+    function withdrawEther(address _receiver, uint256 _value) external {
         require(msg.sender == address(this), "only itself");
         (bool sent, ) = _receiver.call{value: _value}("");
         require(sent, "withdrawEther failed");

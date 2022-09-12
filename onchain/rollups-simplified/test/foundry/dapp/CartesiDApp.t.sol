@@ -306,7 +306,7 @@ contract CartesiDAppTest is Test {
             salt: bytes32(bytes20(dappOwner))
         }(consensus, dappOwner, templateHash);
         bytes memory etherPayload = abi.encodeWithSelector(
-            ICartesiDApp.withdrawEther.selector,
+            CartesiDApp.withdrawEther.selector,
             recipient,
             transferAmount
         );
@@ -433,7 +433,6 @@ contract CartesiDAppTest is Test {
         assertEq(receiver.balance, preBalance + _value);
     }
 
-
     function testWithdrawEtherEOA(
         IConsensus _consensus,
         address _owner,
@@ -445,7 +444,9 @@ contract CartesiDAppTest is Test {
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
         vm.assume(_owner != address(dapp));
         vm.assume(_value <= address(this).balance);
-        address receiver = address(uint160(bytes20(keccak256(abi.encode(_receiverSeed)))));
+        address receiver = address(
+            bytes20(keccak256(abi.encode(_receiverSeed)))
+        );
 
         // assume receiver is not a contract
         uint256 codeSize;
