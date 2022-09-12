@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 // @title ICartesi DApp
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import {IConsensus} from "../consensus/IConsensus.sol";
 import {OutputValidityProof} from "../library/LibOutputValidation.sol";

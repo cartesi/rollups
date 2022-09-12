@@ -310,7 +310,7 @@ contract CartesiDAppTest is Test {
             recipient,
             transferAmount
         );
-        // console.log(address(deterministicDapp));
+        console.log(address(deterministicDapp));
         // console.logBytes(etherPayload);
 
         // copy proof from contract to storage
@@ -500,7 +500,7 @@ contract CartesiDAppTest is Test {
             0 // tokenId
         );
         // console.log(address(snft));
-        // console.logBytes(NFTPayload);
+        console.logBytes(NFTPayload);
 
         // copy proof from contract to storage
         VoucherProofSol5 pSol5 = new VoucherProofSol5();
