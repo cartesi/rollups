@@ -52,7 +52,6 @@ contract HistoryTest is Test {
 
     function testRevertsMigrationNotOwner(address alice, address bob) public {
         vm.assume(alice != address(this));
-        vm.assume(alice != address(0));
         vm.assume(bob != address(0));
         vm.expectRevert("Ownable: caller is not the owner");
         vm.startPrank(alice);
@@ -68,79 +67,44 @@ contract HistoryTest is Test {
 
     function testRevertsRenouncingNotOwner(address alice) public {
         vm.assume(alice != address(this));
-        vm.assume(alice != address(0));
         vm.expectRevert("Ownable: caller is not the owner");
         vm.startPrank(alice);
         history.renounceOwnership();
         testInitialConsensus(); // consensus hasn't changed
     }
 
-    function isUint128(uint256 n) internal {
-        vm.assume(n <= type(uint128).max);
-    }
-
     function submitClaim(
         address dapp,
         bytes32 epochHash,
-        uint256 fi,
-        uint256 li,
-        uint256 claimIndex
+        uint128 fi,
+        uint128 li
     ) internal {
-        isUint128(li);
-        vm.assume(fi <= li); // by transitivity, `fi` also fits in a uint128
+        vm.assume(fi <= li);
         vm.expectEmit(false, false, false, true, address(history));
-        emit NewClaim(dapp, abi.encode(claimIndex, epochHash, fi, li));
-        history.submitClaim(dapp, abi.encode(epochHash, fi, li));
+        bytes memory encodedClaim = abi.encode(epochHash, fi, li);
+        emit NewClaim(dapp, encodedClaim);
+        history.submitClaim(dapp, encodedClaim);
     }
 
     function testSubmitClaims(
         address dapp,
         bytes32[2] calldata epochHash,
-        uint256[2] calldata fi,
-        uint256[2] calldata li
+        uint128[2] calldata fi,
+        uint128[2] calldata li
     ) public {
         vm.assume(fi[1] > li[0]);
         for (uint256 i; i < 2; ++i) {
-            submitClaim(dapp, epochHash[i], fi[i], li[i], i);
+            submitClaim(dapp, epochHash[i], fi[i], li[i]);
         }
-    }
-
-    function testRevertsFirstOverflow(
-        address dapp,
-        bytes32 epochHash,
-        uint256 fi,
-        uint256 li
-    ) public {
-        vm.assume(fi > type(uint128).max); // overflows
-        vm.assume(fi <= li);
-        vm.expectRevert("SafeCast: value doesn't fit in 128 bits");
-        bytes memory data = abi.encode(epochHash, fi, li);
-        history.submitClaim(dapp, data);
-    }
-
-    function testRevertsLastOverflow(
-        address dapp,
-        bytes32 epochHash,
-        uint256 fi,
-        uint256 li
-    ) public {
-        isUint128(fi);
-        vm.assume(li > type(uint128).max); // overflows
-        vm.assume(fi <= li);
-        vm.expectRevert("SafeCast: value doesn't fit in 128 bits");
-        bytes memory data = abi.encode(epochHash, fi, li);
-        history.submitClaim(dapp, data);
     }
 
     function testRevertsSubmitNotOwner(
         address alice,
         address dapp,
         bytes32 epochHash,
-        uint256 fi,
-        uint256 li
+        uint128 fi,
+        uint128 li
     ) public {
-        isUint128(fi);
-        isUint128(li);
         vm.assume(alice != address(this));
         vm.startPrank(alice);
         vm.assume(fi <= li);
@@ -153,14 +117,12 @@ contract HistoryTest is Test {
         address dapp,
         bytes32 epochHash1,
         bytes32 epochHash2,
-        uint256 fi1,
-        uint256 fi2,
-        uint256 li1,
-        uint256 li2
+        uint128 fi1,
+        uint128 fi2,
+        uint128 li1,
+        uint128 li2
     ) public {
-        submitClaim(dapp, epochHash1, fi1, li1, 0);
-        isUint128(fi2);
-        isUint128(li2);
+        submitClaim(dapp, epochHash1, fi1, li1);
         vm.assume(fi2 <= li2);
         vm.assume(fi2 <= li1); // overlaps with previous claim
         bytes memory data = abi.encode(epochHash2, fi2, li2);
@@ -172,14 +134,12 @@ contract HistoryTest is Test {
         address dapp,
         bytes32 epochHash1,
         bytes32 epochHash2,
-        uint256 fi1,
-        uint256 fi2,
-        uint256 li1,
-        uint256 li2
+        uint128 fi1,
+        uint128 fi2,
+        uint128 li1,
+        uint128 li2
     ) public {
-        submitClaim(dapp, epochHash1, fi1, li1, 0);
-        isUint128(fi2);
-        isUint128(li2);
+        submitClaim(dapp, epochHash1, fi1, li1);
         vm.assume(fi2 > li2); // starts after it ends
         vm.assume(fi2 > li1);
         bytes memory data = abi.encode(epochHash2, fi2, li2);
@@ -188,9 +148,8 @@ contract HistoryTest is Test {
     }
 
     function testRevertsSubmitClaimEncoding(address dapp) public {
-        bytes memory data = "";
         vm.expectRevert();
-        history.submitClaim(dapp, data);
+        history.submitClaim(dapp, "");
     }
 
     function checkEpochHash(
@@ -216,59 +175,45 @@ contract HistoryTest is Test {
     function testGetEpochHash(
         address dapp,
         bytes32[2] calldata epochHash,
-        uint256[2] calldata fi,
-        uint256[2] calldata li
+        uint128[2] calldata fi,
+        uint128[2] calldata li
     ) public {
         testSubmitClaims(dapp, epochHash, fi, li);
-
         for (uint256 i; i < epochHash.length; ++i) {
             checkEpochHash(dapp, i, fi[i], epochHash[i], 0);
             checkEpochHash(dapp, i, li[i], epochHash[i], li[i] - fi[i]);
-            uint256 mi = (fi[i] + li[i]) / 2;
-            checkEpochHash(dapp, i, mi, epochHash[i], mi - fi[i]);
         }
     }
 
     function testRevertsGetEpochHashEncoding(address dapp) public {
-        bytes memory data = "";
         vm.expectRevert();
-        history.getEpochHash(dapp, data);
+        history.getEpochHash(dapp, "");
     }
 
-    function testRevertsBadInputIndex1(
+    function testRevertsBadInputIndexAfter(
         address dapp,
         bytes32 epochHash,
-        uint256 fi,
-        uint256 li,
+        uint128 fi,
+        uint128 li,
         uint256 inputIndex
     ) public {
-        submitClaim(dapp, epochHash, fi, li, 0);
         vm.assume(inputIndex > li);
-        bytes memory data = abi.encode(0, inputIndex);
+        submitClaim(dapp, epochHash, fi, li);
         vm.expectRevert("History: bad input index");
-        history.getEpochHash(dapp, data);
+        history.getEpochHash(dapp, abi.encode(0, inputIndex));
     }
 
-    function testRevertsBadInputIndex2(
+    function testRevertsBadInputIndexBefore(
         address dapp,
         bytes32 epochHash,
-        uint256 fi,
-        uint256 li,
+        uint128 fi,
+        uint128 li,
         uint256 inputIndex
     ) public {
-        submitClaim(dapp, epochHash, fi, li, 0);
         vm.assume(inputIndex < fi);
-        bytes memory data = abi.encode(0, inputIndex);
+        submitClaim(dapp, epochHash, fi, li);
         vm.expectRevert("History: bad input index");
-        history.getEpochHash(dapp, data);
-    }
-
-    function submitSeveralClaims(address dapp, bytes32[] calldata epochHash)
-        internal
-    {
-        for (uint256 i; i < epochHash.length; ++i) {
-            submitClaim(dapp, epochHash[i], i, i, i);
-        }
+        history.getEpochHash(dapp, abi.encode(0, inputIndex));
     }
 
     function testRevertsBadClaimIndex(
@@ -277,10 +222,14 @@ contract HistoryTest is Test {
         uint256 claimIndex,
         uint256 inputIndex
     ) public {
-        submitSeveralClaims(dapp, epochHash);
         vm.assume(claimIndex >= epochHash.length);
-        bytes memory data = abi.encode(claimIndex, inputIndex);
+
+        // submit several claims with 1 input each
+        for (uint128 i; i < epochHash.length; ++i) {
+            submitClaim(dapp, epochHash[i], i, i);
+        }
+
         vm.expectRevert(stdError.indexOOBError);
-        history.getEpochHash(dapp, data);
+        history.getEpochHash(dapp, abi.encode(claimIndex, inputIndex));
     }
 }

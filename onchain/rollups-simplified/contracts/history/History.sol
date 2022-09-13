@@ -14,13 +14,10 @@
 pragma solidity ^0.8.13;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {IHistory} from "./IHistory.sol";
 
 contract History is IHistory, Ownable {
-    using SafeCast for uint256;
-
     struct Claim {
         bytes32 epochHash;
         uint128 firstIndex;
@@ -30,45 +27,27 @@ contract History is IHistory, Ownable {
     // mapping from dapp address => array of claims
     mapping(address => Claim[]) claims;
 
-    function submitClaim(address _dapp, bytes calldata _claim)
+    function submitClaim(address _dapp, bytes calldata _encodedClaim)
         external
         override
         onlyOwner
     {
-        (bytes32 epochHash, uint256 firstIndex, uint256 lastIndex) = abi.decode(
-            _claim,
-            (bytes32, uint256, uint256)
-        );
+        Claim memory claim = abi.decode(_encodedClaim, (Claim));
 
-        require(firstIndex <= lastIndex, "History: FI > LI");
+        require(claim.firstIndex <= claim.lastIndex, "History: FI > LI");
 
         Claim[] storage dappClaims = claims[_dapp];
         uint256 numDAppClaims = dappClaims.length;
 
-        if (numDAppClaims > 0) {
-            Claim storage prevDAppClaim = dappClaims[numDAppClaims - 1];
-            require(
-                firstIndex > prevDAppClaim.lastIndex,
-                "History: FI <= previous LI"
-            );
-        }
-
-        dappClaims.push(
-            Claim({
-                epochHash: epochHash,
-                firstIndex: firstIndex.toUint128(),
-                lastIndex: lastIndex.toUint128()
-            })
+        require(
+            numDAppClaims == 0 ||
+                (claim.firstIndex > dappClaims[numDAppClaims - 1].lastIndex),
+            "History: FI <= previous LI"
         );
 
-        bytes memory eventData = abi.encode(
-            numDAppClaims,
-            epochHash,
-            firstIndex,
-            lastIndex
-        );
+        dappClaims.push(claim);
 
-        emit NewClaim(_dapp, eventData);
+        emit NewClaim(_dapp, _encodedClaim);
     }
 
     function getEpochHash(address _dapp, bytes calldata _claimProof)
@@ -93,7 +72,13 @@ contract History is IHistory, Ownable {
             "History: bad input index"
         );
 
-        uint256 epochInputIndex = inputIndex - claim.firstIndex;
+        uint256 epochInputIndex;
+
+        unchecked {
+            // This should not underflow because we've checked that
+            // `claim.firstIndex <= inputIndex` in the `require` above
+            epochInputIndex = inputIndex - claim.firstIndex;
+        }
 
         return (claim.epochHash, inputIndex, epochInputIndex);
     }

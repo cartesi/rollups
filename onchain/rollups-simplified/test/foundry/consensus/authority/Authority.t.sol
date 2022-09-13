@@ -131,11 +131,7 @@ contract AuthorityTest is Test {
         // mocking history
         vm.mockCall(
             address(_history),
-            abi.encodeWithSelector(
-                IHistory.submitClaim.selector,
-                _dapp,
-                _claim
-            ),
+            abi.encodeWithSelector(IHistory.submitClaim.selector),
             ""
         );
 
