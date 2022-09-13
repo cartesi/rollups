@@ -11,13 +11,15 @@
 // specific language governing permissions and limitations under the License.
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tonic_build::configure().compile(
-        &[
-            "../../grpc-interfaces/versioning.proto",
-            "../../grpc-interfaces/server-manager.proto",
-        ],
-        &["../../grpc-interfaces"],
-    )?;
+    tonic_build::configure()
+        .protoc_arg("--experimental_allow_proto3_optional")
+        .compile(
+            &[
+                "../../grpc-interfaces/versioning.proto",
+                "../../grpc-interfaces/server-manager.proto",
+            ],
+            &["../../grpc-interfaces"],
+        )?;
     println!("cargo:rerun-if-changed=../../grpc-interfaces/versioning.proto");
     println!(
         "cargo:rerun-if-changed=../../grpc-interfaces/server-manager.proto"

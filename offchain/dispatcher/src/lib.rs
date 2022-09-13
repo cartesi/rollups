@@ -1,4 +1,5 @@
 pub mod config;
+pub mod http_health;
 pub mod main_loop;
 
 mod machine;

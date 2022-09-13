@@ -2,6 +2,8 @@ use crate::machine::config::{Error as MMError, MMConfig, MMEnvCLIConfig};
 use state_client_lib::config::{Error as SCError, SCConfig, SCEnvCLIConfig};
 use tx_manager::config::{Error as TxError, TxEnvCLIConfig, TxManagerConfig};
 
+use crate::http_health::config::{HealthCheckConfig, HealthCheckEnvCLIConfig};
+
 use state_fold_types::ethers::types::{Address, U256};
 
 use snafu::{ResultExt, Snafu};
@@ -19,6 +21,9 @@ pub struct DispatcherEnvCLIConfig {
 
     #[structopt(flatten)]
     pub mm_config: MMEnvCLIConfig,
+
+    #[structopt(flatten)]
+    pub hc_config: HealthCheckEnvCLIConfig,
 
     /// Address of rollups dapp
     #[structopt(long, env)]
@@ -53,6 +58,7 @@ pub struct DispatcherConfig {
     pub sc_config: SCConfig,
     pub tx_config: TxManagerConfig,
     pub mm_config: MMConfig,
+    pub hc_config: HealthCheckConfig,
 
     pub dapp_contract_address: Address,
     pub initial_epoch: U256,
@@ -106,6 +112,8 @@ impl DispatcherConfig {
         let mm_config = MMConfig::initialize(env_cli_config.mm_config)
             .context(MachineManagerSnafu)?;
 
+        let hc_config = HealthCheckConfig::initialize(env_cli_config.hc_config);
+
         let dapp_contract_address =
             if let Some(a) = env_cli_config.rd_dapp_contract_address {
                 Address::from_str(&a).context(DappAddressParseSnafu)?
@@ -147,6 +155,7 @@ impl DispatcherConfig {
             sc_config,
             tx_config,
             mm_config,
+            hc_config,
 
             dapp_contract_address,
             initial_epoch,

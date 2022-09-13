@@ -18,11 +18,7 @@ FROM chef AS builder
 
 RUN <<EOF
 DEBIAN_FRONTEND="noninteractive" apt-get update
-DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends cmake
-export ARCH=$(uname -m | sed 's/aarch64/aarch_64/')
-curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.20.1/protoc-3.20.1-linux-$ARCH.zip
-unzip protoc-3.20.1-linux-$ARCH.zip -d $HOME/.local
-export PATH="$PATH:$HOME/.local/bin"
+DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends cmake libprotobuf-dev protobuf-compiler
 EOF
 
 WORKDIR /usr/src/app/offchain

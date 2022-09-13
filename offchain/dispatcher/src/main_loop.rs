@@ -70,6 +70,7 @@ async fn main_loop<
     MM: MachineInterface + Send + Sync,
 >(
     mut block_subscription: impl Stream<Item = Result<BlockStreamItem, StateServerError>>
+        + Send
         + std::marker::Unpin,
 
     client: &impl StateServer<

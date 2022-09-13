@@ -419,6 +419,8 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "serde",
+ "serde_json",
+ "serde_urlencoded",
  "sync_wrapper",
  "tokio",
  "tower",
@@ -614,13 +616,13 @@ dependencies = [
 
 [[package]]
 name = "block-history"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "53fed6aabfafa413e990d1c3301705b27a081defcadaed611428c7f065606e8b"
+checksum = "0ecd5d6f79de6456d0062492090c14a2d47fe4ad46a1fe3ffe3c533294a55079"
 dependencies = [
  "async-stream",
  "snafu 0.7.1",
- "state-fold-types",
+ "state-fold-types 0.6.0",
  "structopt",
  "tokio",
  "tokio-stream",
@@ -1001,7 +1003,7 @@ name = "contracts"
 version = "0.7.0"
 dependencies = [
  "serde_json",
- "state-fold-types",
+ "state-fold-types 0.5.0",
 ]
 
 [[package]]
@@ -1293,20 +1295,22 @@ dependencies = [
  "anyhow",
  "async-recursion 0.3.2",
  "async-trait",
+ "axum",
+ "backoff",
  "contracts",
  "futures 0.3.21",
  "im",
- "prost",
+ "prost 0.11.0",
  "rustc-hex",
  "snafu 0.7.1",
  "state-client-lib",
  "state-fold",
- "state-fold-types",
+ "state-fold-types 0.6.0",
  "structopt",
  "tokio",
  "tokio-stream",
- "tonic",
- "tonic-build",
+ "tonic 0.8.1",
+ "tonic-build 0.8.0",
  "tracing",
  "tracing-subscriber",
  "tx-manager",
@@ -2334,7 +2338,7 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "hex",
- "prost",
+ "prost 0.11.0",
  "rollups-data",
  "rstest",
  "serde",
@@ -2342,12 +2346,12 @@ dependencies = [
  "serial_test 0.5.1",
  "snafu 0.6.10",
  "state-client-lib",
- "state-fold-types",
+ "state-fold-types 0.6.0",
  "structopt",
  "tokio",
  "toml",
- "tonic",
- "tonic-build",
+ "tonic 0.8.1",
+ "tonic-build 0.8.0",
  "tracing",
  "tracing-subscriber",
  "types",
@@ -2389,7 +2393,7 @@ dependencies = [
  "futures 0.3.21",
  "hex",
  "log",
- "prost",
+ "prost 0.10.4",
  "regex",
  "reqwest",
  "serde",
@@ -2398,8 +2402,8 @@ dependencies = [
  "structopt",
  "tokio",
  "toml",
- "tonic",
- "tonic-build",
+ "tonic 0.7.2",
+ "tonic-build 0.7.2",
 ]
 
 [[package]]
@@ -3203,7 +3207,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71adf41db68aa0daaefc69bb30bcd68ded9b9abaad5d1fbb6304c4fb390e083e"
 dependencies = [
  "bytes",
- "prost-derive",
+ "prost-derive 0.10.1",
+]
+
+[[package]]
+name = "prost"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "399c3c31cdec40583bb68f0b18403400d01ec4289c383aa047560439952c4dd7"
+dependencies = [
+ "bytes",
+ "prost-derive 0.11.0",
 ]
 
 [[package]]
@@ -3221,8 +3235,28 @@ dependencies = [
  "log",
  "multimap",
  "petgraph",
- "prost",
- "prost-types",
+ "prost 0.10.4",
+ "prost-types 0.10.1",
+ "regex",
+ "tempfile",
+ "which",
+]
+
+[[package]]
+name = "prost-build"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f835c582e6bd972ba8347313300219fed5bfa52caf175298d860b61ff6069bb"
+dependencies = [
+ "bytes",
+ "heck 0.4.0",
+ "itertools",
+ "lazy_static",
+ "log",
+ "multimap",
+ "petgraph",
+ "prost 0.11.0",
+ "prost-types 0.11.1",
  "regex",
  "tempfile",
  "which",
@@ -3242,13 +3276,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost-derive"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7345d5f0e08c0536d7ac7229952590239e77abf0a0100a1b1d890add6ea96364"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "prost-types"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d0a014229361011dc8e69c8a1ec6c2e8d0f2af7c91e3ea3f5b2170298461e68"
 dependencies = [
  "bytes",
- "prost",
+ "prost 0.10.4",
+]
+
+[[package]]
+name = "prost-types"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4dfaa718ad76a44b3415e6c4d53b17c8f99160dcb3a99b10470fce8ad43f6e3e"
+dependencies = [
+ "bytes",
+ "prost 0.11.0",
 ]
 
 [[package]]
@@ -4109,34 +4166,34 @@ dependencies = [
 
 [[package]]
 name = "state-client-lib"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "bb3904a4dfe0a5d5c53e5598654629a33904a6ebf498b294dc6de4735bdacf4c"
+checksum = "40137e32eca283a1997d210fdb00fa39b945fd40a9035963904181b430121a92"
 dependencies = [
  "async-trait",
  "serde",
  "serde_json",
  "snafu 0.7.1",
- "state-fold-types",
+ "state-fold-types 0.6.0",
  "state-server-common",
  "structopt",
  "tokio",
  "tokio-stream",
- "tonic",
+ "tonic 0.8.1",
 ]
 
 [[package]]
 name = "state-fold"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "9b1c7edb0e12e130cb564c0bfbfd1962660299905e6b576eabcf93daa05fb4fc"
+checksum = "e7052276b382b03cbea29f681b26ea9070cdb5527578e6b030ce25001e1e96b1"
 dependencies = [
  "async-recursion 1.0.0",
  "async-trait",
  "block-history",
  "futures 0.3.21",
  "snafu 0.7.1",
- "state-fold-types",
+ "state-fold-types 0.6.0",
  "structopt",
  "tokio",
 ]
@@ -4159,6 +4216,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "state-fold-types"
+version = "0.6.0"
+source = "registry+https://github.com/cartesi/crates-index"
+checksum = "02b16fab910b07755d08804a5096a3a3281c09c6e93a094dd00d19054361b2ba"
+dependencies = [
+ "anyhow",
+ "ethabi",
+ "ethers",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "snafu 0.7.1",
+ "toml",
+]
+
+[[package]]
 name = "state-server"
 version = "0.7.0"
 dependencies = [
@@ -4167,7 +4241,7 @@ dependencies = [
  "serde",
  "snafu 0.7.1",
  "state-fold",
- "state-fold-types",
+ "state-fold-types 0.6.0",
  "state-server-lib",
  "structopt",
  "tokio",
@@ -4179,25 +4253,25 @@ dependencies = [
 
 [[package]]
 name = "state-server-common"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "d0274f5cdcd17b3dad9c29a691935da7398ec1691841216aa08aa0af3ab963df"
+checksum = "2ba6db745b4e88d22c08ddb198b87886691884463badb0eabcd5f443f59f4cd7"
 dependencies = [
  "anyhow",
- "prost",
+ "prost 0.11.0",
  "serde",
  "serde_json",
  "snafu 0.7.1",
- "state-fold-types",
- "tonic",
- "tonic-build",
+ "state-fold-types 0.6.0",
+ "tonic 0.8.1",
+ "tonic-build 0.8.0",
 ]
 
 [[package]]
 name = "state-server-lib"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "620db8fb015e982939c772a9851d92aed3593bfec5eb0697393fdc1aa9d9df48"
+checksum = "10d3148ba3679a2a239523fcfcf9962cb17cd63d632956f84e33aa39f353e1de"
 dependencies = [
  "block-history",
  "futures 0.3.21",
@@ -4205,12 +4279,12 @@ dependencies = [
  "serde_json",
  "snafu 0.7.1",
  "state-fold",
- "state-fold-types",
+ "state-fold-types 0.6.0",
  "state-server-common",
  "structopt",
  "tokio",
  "tokio-stream",
- "tonic",
+ "tonic 0.8.1",
  "tonic-health",
  "tracing",
 ]
@@ -4627,8 +4701,40 @@ dependencies = [
  "hyper-timeout",
  "percent-encoding",
  "pin-project",
- "prost",
- "prost-derive",
+ "prost 0.10.4",
+ "prost-derive 0.10.1",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tower",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+ "tracing-futures",
+]
+
+[[package]]
+name = "tonic"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11cd56bdb54ef93935a6a79dbd1d91f1ebd4c64150fd61654031fd6b8b775c91"
+dependencies = [
+ "async-stream",
+ "async-trait",
+ "axum",
+ "base64 0.13.0",
+ "bytes",
+ "futures-core",
+ "futures-util",
+ "h2",
+ "http",
+ "http-body",
+ "hyper",
+ "hyper-timeout",
+ "percent-encoding",
+ "pin-project",
+ "prost 0.11.0",
+ "prost-derive 0.11.0",
  "tokio",
  "tokio-stream",
  "tokio-util",
@@ -4647,24 +4753,36 @@ checksum = "d9263bf4c9bfaae7317c1c2faf7f18491d2fe476f70c414b73bf5d445b00ffa1"
 dependencies = [
  "prettyplease",
  "proc-macro2",
- "prost-build",
+ "prost-build 0.10.4",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "tonic-build"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2fbcd2800e34e743b9ae795867d5f77b535d3a3be69fd731e39145719752df8c"
+dependencies = [
+ "prettyplease",
+ "proc-macro2",
+ "prost-build 0.11.1",
  "quote",
  "syn",
 ]
 
 [[package]]
 name = "tonic-health"
-version = "0.6.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9da1806c3ff2f02fb6d9b62fc72a2f3b6429c7f2f5d87861f548156708afcd71"
+checksum = "632faf60b81a5b5f439d9635102b2b2921ee39171faf14f3e0008d99f98689f1"
 dependencies = [
  "async-stream",
  "bytes",
- "prost",
+ "prost 0.11.0",
  "tokio",
  "tokio-stream",
- "tonic",
- "tonic-build",
+ "tonic 0.8.1",
 ]
 
 [[package]]
@@ -4854,7 +4972,7 @@ dependencies = [
  "im",
  "serde",
  "state-fold",
- "state-fold-types",
+ "state-fold-types 0.6.0",
 ]
 
 [[package]]

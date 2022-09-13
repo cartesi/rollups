@@ -59,6 +59,7 @@ pub async fn create_block_subscription(
     confirmations: usize,
 ) -> Result<
     impl Stream<Item = Result<BlockStreamItem, StateServerError>>
+        + Send
         + std::marker::Unpin,
 > {
     let s = client.subscribe_blocks(confirmations).await?;

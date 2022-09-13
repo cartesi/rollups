@@ -13,14 +13,17 @@
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Generate Rust grpc clients for Cartesi entitines
-    tonic_build::configure().build_server(false).compile(
-        &[
-            "../../grpc-interfaces/versioning.proto",
-            "../../grpc-interfaces/server-manager.proto",
-            "../../grpc-interfaces/stateserver.proto",
-        ],
-        &["../../grpc-interfaces"],
-    )?;
+    tonic_build::configure()
+        .protoc_arg("--experimental_allow_proto3_optional")
+        .build_server(false)
+        .compile(
+            &[
+                "../../grpc-interfaces/versioning.proto",
+                "../../grpc-interfaces/server-manager.proto",
+                "../../grpc-interfaces/stateserver.proto",
+            ],
+            &["../../grpc-interfaces"],
+        )?;
 
     println!("cargo:rerun-if-changed=../../grpc-interfaces/versioning.proto");
 

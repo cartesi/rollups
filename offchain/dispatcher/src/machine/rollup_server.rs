@@ -11,9 +11,9 @@ use async_trait::async_trait;
 use im::Vector;
 use std::convert::TryInto;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 use tonic::transport::Channel;
+use tracing::{info, instrument, trace};
 
 use cartesi_machine::{
     ConcurrencyConfig, DhdRuntimeConfig, MachineRuntimeConfig, Void,
@@ -48,6 +48,7 @@ impl From<GetEpochStatusResponse> for EpochStatus {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Config {
     endpoint: String,
     session_id: String,
@@ -95,7 +96,6 @@ impl Config {
         Self {
             endpoint,
             session_id,
-
             active_epoch_index: 0,
             machine_directory,
             machine_runtime,
@@ -108,20 +108,37 @@ impl Config {
 #[derive(Debug)]
 pub struct MachineManager {
     session_id: String,
-    client: Mutex<ServerManagerClient<Channel>>,
+    client: ServerManagerClient<Channel>,
 }
 
 impl MachineManager {
+    #[instrument(level = "trace", skip_all)]
     pub async fn new(config: Config) -> Result<Self> {
-        let mut client = ServerManagerClient::connect(config.endpoint)
-            .await
-            .context("Failed to connect to server manager grpc")?;
+        let client = {
+            let op = || async {
+                trace!("Connecting to server-manager at `{}`", config.endpoint);
 
-        let get_status_request = tonic::Request::new(Void {});
-        let status_response = client
-            .get_status(get_status_request)
-            .await
-            .context("`get_status` request failed")?;
+                Ok(ServerManagerClient::connect(config.endpoint.clone())
+                    .await
+                    .context("Failed to connect to server manager grpc")?)
+            };
+
+            backoff::future::retry(backoff::ExponentialBackoff::default(), op)
+                .await
+                .context("connection to server-manager failed")?
+        };
+
+        let status_response = {
+            let op = || async {
+                trace!("Requesting server-manager status");
+                let get_status_request = tonic::Request::new(Void {});
+                Ok(client.clone().get_status(get_status_request).await?)
+            };
+
+            backoff::future::retry(backoff::ExponentialBackoff::default(), op)
+                .await
+                .context("`get_status` request failed")?
+        };
 
         let session_exists = status_response
             .into_inner()
@@ -129,65 +146,112 @@ impl MachineManager {
             .contains(&config.session_id);
 
         if !session_exists {
-            let new_session_request =
-                tonic::Request::new(StartSessionRequest {
-                    session_id: config.session_id.clone(),
-                    machine_directory: config.machine_directory.clone(),
-                    runtime: Some(config.machine_runtime.clone()),
-                    active_epoch_index: config.active_epoch_index,
-                    server_cycles: Some(config.server_cycles),
-                    server_deadline: Some(config.server_deadline),
-                });
-            let _response = client
-                .start_session(new_session_request)
-                .await
-                .context("`start_session` request failed")?;
+            info!(
+                "server-manager session doesn't exist, starting session `{}`.",
+                config.session_id
+            );
+
+            let op = || async {
+                trace!("Requesting server-manager start session");
+                let config = config.clone();
+                let new_session_request =
+                    tonic::Request::new(StartSessionRequest {
+                        session_id: config.session_id.clone(),
+                        machine_directory: config.machine_directory.clone(),
+                        runtime: Some(config.machine_runtime.clone()),
+                        active_epoch_index: config.active_epoch_index,
+                        server_cycles: Some(config.server_cycles),
+                        server_deadline: Some(config.server_deadline),
+                    });
+
+                Ok(client.clone().start_session(new_session_request).await?)
+            };
+
+            let _ = backoff::future::retry(
+                backoff::ExponentialBackoff::default(),
+                op,
+            )
+            .await
+            .context("`start_session` request failed")?;
+        } else {
+            info!(
+                "server-manager session `{}` already started, skipping session creation.",
+                config.session_id
+            );
         }
 
         Ok(Self {
             session_id: config.session_id,
-            client: Mutex::new(client),
+            client,
         })
     }
 }
 
 #[async_trait]
 impl MachineInterface for MachineManager {
+    #[instrument(level = "trace", skip_all)]
     async fn get_current_epoch_status(&self) -> Result<EpochStatus> {
-        let mut client = self.client.lock().await;
+        let client = self.client.clone();
 
         // Get session status
-        let get_session_request =
-            tonic::Request::new(GetSessionStatusRequest {
-                session_id: self.session_id.clone(),
-            });
+        let session_response = {
+            let op = || async {
+                trace!(
+                    "Requesting server-manager status of session `{}`",
+                    self.session_id
+                );
 
-        let session_response = client
-            .get_session_status(get_session_request)
-            .await
-            .context("`get_status` request failed")?;
+                let get_session_request =
+                    tonic::Request::new(GetSessionStatusRequest {
+                        session_id: self.session_id.clone(),
+                    });
+
+                Ok(client
+                    .clone()
+                    .get_session_status(get_session_request)
+                    .await?)
+            };
+
+            backoff::future::retry(backoff::ExponentialBackoff::default(), op)
+                .await
+                .context("`get_status` request failed")?
+                .into_inner()
+        };
 
         // Get epoch status
-        let get_epoch_request = tonic::Request::new(GetEpochStatusRequest {
-            session_id: self.session_id.clone(),
-            epoch_index: session_response.into_inner().active_epoch_index,
-        });
+        let epoch_response = {
+            let op = || async {
+                trace!(
+                    "Requesting server-manager status of epoch `{}` in session `{}`",
+                    session_response.active_epoch_index,
+                    self.session_id
+                );
 
-        let epoch_response = client
-            .get_epoch_status(get_epoch_request)
-            .await
-            .context("`get_epoch_status` request failed")?;
+                let get_epoch_request =
+                    tonic::Request::new(GetEpochStatusRequest {
+                        session_id: self.session_id.clone(),
+                        epoch_index: session_response.active_epoch_index,
+                    });
+
+                Ok(client.clone().get_epoch_status(get_epoch_request).await?)
+            };
+
+            backoff::future::retry(backoff::ExponentialBackoff::default(), op)
+                .await
+                .context("`get_epoch_status` request failed")?
+        };
 
         Ok(epoch_response.into_inner().into())
     }
 
+    #[instrument(level = "trace", skip_all)]
     async fn enqueue_inputs(
         &self,
         epoch_number: U256,
         first_input_index: U256,
         inputs: Vector<Arc<Input>>,
     ) -> Result<()> {
-        let mut client = self.client.lock().await;
+        let client = self.client.clone();
 
         let epoch_index = epoch_number.as_u64();
 
@@ -204,60 +268,104 @@ impl MachineInterface for MachineManager {
                 input_index,
             };
 
-            let advance_state_request =
-                tonic::Request::new(AdvanceStateRequest {
-                    session_id: self.session_id.clone(),
-                    active_epoch_index: epoch_index,
-                    current_input_index: input_index,
-                    input_metadata: Some(input_metadata),
-                    input_payload: (*input.payload).clone(),
-                });
+            let _advance_response = {
+                let op = || async {
+                    trace!(
+                        "Requesting server-manager advance state in epoch `{}`, input `{}`, in session `{}`",
+                        epoch_index,
+                        input_index,
+                        self.session_id
+                    );
 
-            let _advance_response = client
-                .advance_state(advance_state_request)
+                    let advance_state_request =
+                        tonic::Request::new(AdvanceStateRequest {
+                            session_id: self.session_id.clone(),
+                            active_epoch_index: epoch_index,
+                            current_input_index: input_index,
+                            input_metadata: Some(input_metadata.clone()),
+                            input_payload: (*input.payload).clone(),
+                        });
+
+                    Ok(client
+                        .clone()
+                        .advance_state(advance_state_request)
+                        .await?)
+                };
+
+                backoff::future::retry(
+                    backoff::ExponentialBackoff::default(),
+                    op,
+                )
                 .await
-                .context("`advance_state` request failed")?;
+                .context("`advance_state` request failed")?
+            };
         }
 
         Ok(())
     }
 
+    #[instrument(level = "trace", skip_all)]
     async fn finish_epoch(
         &self,
         epoch_number: U256,
         input_count: U256,
     ) -> Result<()> {
-        let mut client = self.client.lock().await;
+        let client = self.client.clone();
 
-        let finish_epoch_request = tonic::Request::new(FinishEpochRequest {
-            session_id: self.session_id.clone(),
-            active_epoch_index: epoch_number.as_u64(),
-            processed_input_count: input_count.as_u64(),
-            storage_directory: "".to_owned(),
-        });
+        let _finish_response = {
+            let op = || async {
+                trace!(
+                    "Requesting server-manager finish epoch `{}` of session `{}`",
+                    epoch_number.as_u64(),
+                    self.session_id
+                );
 
-        let _finish_response = client
-            .finish_epoch(finish_epoch_request)
-            .await
-            .context("`finish_epoch` request failed")?;
+                let finish_epoch_request =
+                    tonic::Request::new(FinishEpochRequest {
+                        session_id: self.session_id.clone(),
+                        active_epoch_index: epoch_number.as_u64(),
+                        processed_input_count: input_count.as_u64(),
+                        storage_directory: "".to_owned(),
+                    });
+
+                Ok(client.clone().finish_epoch(finish_epoch_request).await?)
+            };
+
+            backoff::future::retry(backoff::ExponentialBackoff::default(), op)
+                .await
+                .context("`advance_state` request failed")?
+        };
 
         Ok(())
     }
 
+    #[instrument(level = "trace", skip_all)]
     async fn get_epoch_claim(&self, epoch_number: U256) -> Result<H256> {
-        let mut client = self.client.lock().await;
+        let client = self.client.clone();
 
         // Get epoch status
-        let get_epoch_request = tonic::Request::new(GetEpochStatusRequest {
-            session_id: self.session_id.clone(),
-            epoch_index: epoch_number.as_u64(),
-        });
+        let epoch_response = {
+            let op = || async {
+                trace!(
+                    "Requesting server-manager  epoch `{}` of session `{}`",
+                    epoch_number.as_u64(),
+                    self.session_id
+                );
 
-        let epoch_response = client
-            .get_epoch_status(get_epoch_request)
-            .await
-            .context("`get_epoch_status` request failed")?
-            .into_inner();
+                let get_epoch_request =
+                    tonic::Request::new(GetEpochStatusRequest {
+                        session_id: self.session_id.clone(),
+                        epoch_index: epoch_number.as_u64(),
+                    });
+
+                Ok(client.clone().get_epoch_status(get_epoch_request).await?)
+            };
+
+            backoff::future::retry(backoff::ExponentialBackoff::default(), op)
+                .await
+                .context("`get_epoch_status` request failed")?
+                .into_inner()
+        };
 
         let vouchers_metadata_hash = epoch_response
             .most_recent_vouchers_epoch_root_hash

@@ -74,7 +74,7 @@ where
         let mm_epoch_status =
             self.machine_manager.get_current_epoch_status().await?;
 
-        trace!("Current epoch status: {:#?}", mm_epoch_status);
+        trace!("Current epoch status: {:?}", mm_epoch_status);
 
         let (should_continue, mm_epoch_status) = self
             .enqueue_inputs_of_finalized_epochs(&state, mm_epoch_status)
@@ -103,7 +103,7 @@ where
 
             PhaseState::EpochSealedAwaitingFirstClaim { sealed_epoch } => {
                 trace!("EpochSealedAwaitingFirstClaim phase");
-                trace!("Sealed epoch: {:#?}", sealed_epoch);
+                trace!("Sealed epoch: {:?}", sealed_epoch);
 
                 // On EpochSealedAwaitingFirstClaim we have two unfinalized epochs:
                 // sealed and accumulating.
@@ -168,7 +168,7 @@ where
                 ..
             } => {
                 trace!("AwaitingConsensusNoConflict or AwaitingConsensusAfterConflict  phase");
-                trace!("Claimed epoch: {:#?}", claimed_epoch);
+                trace!("Claimed epoch: {:?}", claimed_epoch);
 
                 let sealed_epoch_number = state.finalized_epochs.next_epoch();
                 let mm_epoch_status = if mm_epoch_status.epoch_number
@@ -237,7 +237,7 @@ where
 
             PhaseState::ConsensusTimeout { claimed_epoch } => {
                 trace!("ConsensusTimeout phase");
-                trace!("Claimed epoch: {:#?}", claimed_epoch);
+                trace!("Claimed epoch: {:?}", claimed_epoch);
 
                 let sealed_epoch_number = state.finalized_epochs.next_epoch();
                 let mm_epoch_status = if mm_epoch_status.epoch_number

@@ -48,6 +48,8 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CI_TOKEN }}
+      - name: 📦 Install protoc
+        run: sudo apt update && sudo apt install -y protobuf-compiler libprotobuf-dev
       - uses: actions/cache@v3
         with:
           path: |
@@ -81,6 +83,8 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CI_TOKEN }}
+      - name: 📦 Install protoc
+        run: sudo apt update && sudo apt install -y protobuf-compiler libprotobuf-dev
       - uses: actions/cache@v3
         with:
           path: |
