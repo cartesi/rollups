@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] 2022-09-13
+
 ### Added
 
 - Deploy to Arbitrum Goerli and Optimism Goerli
@@ -86,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Specific ERC-20 Portal
 - Deprecated mock contracts
 
+[0.6.0]: https://github.com/cartesi/rollups/releases/tag/v0.6.0
 [0.5.0]: https://github.com/cartesi/rollups/releases/tag/v0.5.0
 [0.4.0]: https://github.com/cartesi/rollups/releases/tag/v0.4.0
 [0.3.0]: https://github.com/cartesi/rollups/releases/tag/v0.3.0
