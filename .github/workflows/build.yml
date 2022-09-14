@@ -115,6 +115,7 @@ jobs:
           files: |
             ./docker-bake.hcl
             ${{ steps.docker_meta.outputs.bake-file }}
+            ./docker-bake.platforms.hcl
           targets: deps
           builder: ${{ steps.buildx.outputs.name }}
           push: true
