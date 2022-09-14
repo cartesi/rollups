@@ -19,16 +19,32 @@ import {OutputValidityProof} from "../library/LibOutputValidation.sol";
 interface ICartesiDApp {
     // Events
 
+    /// @notice A new consensus is used
+    /// @param newConsensus The new consensus
     event NewConsensus(IConsensus newConsensus);
 
-    event VoucherExecuted(uint256 voucherPosition);
+    /// @notice A voucher was executed from the DApp
+    /// @param voucherId A number that uniquely identifies the voucher
+    ///                  amongst all vouchers emitted by this DApp
+    event VoucherExecuted(uint256 voucherId);
 
     // Permissioned functions
 
+    /// @notice Migrate the DApp to a new consensus
+    /// @param _newConsensus The new consensus
+    /// @dev Should have access control
     function migrateToConsensus(IConsensus _newConsensus) external;
 
     // Permissionless functions
 
+    /// @notice Execute a voucher
+    /// @param _destination The contract that will execute the payload
+    /// @param _payload The ABI-encoded function call
+    /// @param _claimData An auxiliary proof for retrieving the claim
+    /// @param _v A validity proof for the voucher
+    /// @return Whether the voucher was executed successfully or not
+    /// @dev The encoding of _claimData might vary depending on the history implementation
+    /// @dev Each voucher can only be executed once
     function executeVoucher(
         address _destination,
         bytes calldata _payload,
@@ -36,13 +52,23 @@ interface ICartesiDApp {
         OutputValidityProof calldata _v
     ) external returns (bool);
 
+    /// @notice Validate a notice
+    /// @param _notice The notice
+    /// @param _claimData An auxiliary proof for retrieving the claim
+    /// @param _v A validity proof for the notice
+    /// @return Whether the notice is valid or not
+    /// @dev The encoding of _claimData might vary depending on the history implementation
     function validateNotice(
         bytes calldata _notice,
         bytes calldata _claimData,
         OutputValidityProof calldata _v
     ) external view returns (bool);
 
+    /// @notice Get the DApp's template hash
+    /// @return The DApp's template hash
     function getTemplateHash() external view returns (bytes32);
 
+    /// @notice Get the current consensus
+    /// @return The current consensus
     function getConsensus() external view returns (IConsensus);
 }
