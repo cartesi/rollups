@@ -15,3 +15,4 @@ macro_rules! contract {
 contract!(input_box);
 contract!(cartesi_dapp);
 contract!(authority);
+contract!(history);

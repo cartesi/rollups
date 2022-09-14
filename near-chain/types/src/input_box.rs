@@ -39,6 +39,8 @@ pub struct DAppInputBox {
     pub inputs: Arc<Vector<Arc<Input>>>,
 }
 
+// TODO create hashmap from dapp into DAppInputBox
+
 #[async_trait]
 impl Foldable for DAppInputBox {
     type InitialState = Arc<DAppInputBoxInitialState>;

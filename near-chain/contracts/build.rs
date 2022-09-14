@@ -15,6 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("InputBox", "inputs/InputBox", "input_box.rs"),
         ("CartesiDApp", "dapp/CartesiDApp", "cartesi_dapp.rs"),
         ("Authority", "consensus/authority/Authority", "authority.rs"),
+        ("History", "history/History", "history.rs"),
         // ("ERC20", "ERC20", "erc20_contract.rs"),
     ];
 
