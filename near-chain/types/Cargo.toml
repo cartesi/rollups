@@ -9,8 +9,8 @@ authors = [
 ]
 
 [dependencies]
-state-fold = { version = "0.2", registry = "cartesi" }
-state-fold-types = { version = "0.2", registry = "cartesi", features = ["ethers"] }
+state-fold = { version = "0.5", registry = "cartesi" }
+state-fold-types = { version = "0.5", registry = "cartesi", features = ["ethers"] }
 contracts = { path = "../contracts" }
 
 async-trait = "0.1"

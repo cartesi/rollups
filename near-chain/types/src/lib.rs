@@ -1,7 +1,7 @@
 pub mod error;
 pub mod input_box;
 
-mod utils;
+pub mod utils;
 
 pub use error::*;
 
