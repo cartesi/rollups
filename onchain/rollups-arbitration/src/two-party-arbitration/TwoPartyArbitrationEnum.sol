@@ -5,10 +5,10 @@ pragma solidity ^0.8.13;
 // WITH ARGUMENT `code-generation-scripts/enum-data/two_party_arbitration`,
 // AND OUTPUT AT `src/two-party-arbitration/TwoPartyArbitrationEnum.sol`.
 
-import "./src/partition/PartitionEnum.sol";
-import "./src/epoch-hash-split/EpochHashSplitEnum.sol";
-import "./src/splice/SpliceMachineEnum.sol";
-import "./src/memory-manager/MemoryManager.sol";
+import "src/partition/PartitionEnum.sol";
+import "src/epoch-hash-split/EpochHashSplitEnum.sol";
+import "src/splice/SpliceMachineEnum.sol";
+import "src/memory-manager/MemoryManager.sol";
 
 library TwoPartyArbitrationEnum {
 

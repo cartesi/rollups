@@ -25,7 +25,7 @@ contract TestEpochHashSplit is Test {
         Merkle.Hash preAdvanceOutputs_ = Merkle.Hash.wrap(INITIAL_HASH);
         Partition.Divergence memory divergence_ = createDivergence();
         divergence_.beforeHash = bytes32(0xad3228b676f7d3cd4284a5443f17f1962b36e491b30a40b2405849e597ba5fb5);
-        //emit log_bytes32(keccak256(abi.encode(Merkle.Hash.unwrap(preAdvanceMachine_), Merkle.Hash.unwrap(preAdvanceOutputs_))));
+        
         EpochHashSplit.WaitingSubhashes memory waitingSubhashes_ = 
             EpochHashSplit.createSplit(
                 divergence_,

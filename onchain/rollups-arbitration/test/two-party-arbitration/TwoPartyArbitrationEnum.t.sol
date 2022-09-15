@@ -194,16 +194,20 @@ contract TestTwoPartyArbitrationEnum is Test {
         
         TwoPartyArbitration.Context memory contextMachineSplice =
             TwoPartyArbitration.splitMachineDisagree(newEpochHashSplit);
+
+        TwoPartyArbitrationEnum.getMachineSpliceVariant(
+            contextMachineSplice.state
+        );
         
-        SpliceMachineEnum.T memory machineSplice2 =
+        /*SpliceMachineEnum.T memory machineSplice2 =
             TwoPartyArbitrationEnum.getMachineSpliceVariant(
                 contextMachineSplice.state
-            );
-
-        // COMPARE THIS BUT HOW CAN WE UNBOX IT assertTrue(contextMachineSplice.state == machineSplice2 )
+            );*/
+        // TODO: COMPARE THIS BUT WE HAVE TO UNBOX IT FIRST 
+        //assertTrue(contextMachineSplice.state == machineSplice2 )
         /*assertTrue(machineSplice2.preAdvanceMachine == postAdvanceMachine_);
         assertTrue(machineSplice2.postAdvanceMachineClaim == postAdvanceOutputs_);*/
-        //still TODO
+        
     }
 
     /*

@@ -47,11 +47,7 @@ library EpochHashSplit {
             advanceStateDivergence.beforeHash,
             "supplied hashes don't match epoch hash"
         );
-        /*require(
-            keccak256(abi.encode(Merkle.Hash.unwrap(preAdvanceOutputs), Merkle.Hash.unwrap(preAdvanceMachine))) ==
-            advanceStateDivergence.beforeHash,
-            "supplied hashes don't match epoch hash"
-        );*/
+
         return WaitingSubhashes(
             preAdvanceMachine,
             preAdvanceOutputs,
@@ -65,13 +61,8 @@ library EpochHashSplit {
         Merkle.Hash postAdvanceMachineClaim,
         Merkle.Hash postAdvanceOutputsClaim
     ) external pure returns(WaitingDivergence memory) {
-        /*require(
-            postAdvanceOutputsClaim.concatAndHash(postAdvanceMachineClaim) ==
-            waitingSubhashes.postAdvanceEpochHashClaim,
-            "supplied hashes don't match divergence epoch hash"
-        );*/
         require(
-            keccak256(abi.encode(Merkle.Hash.unwrap(postAdvanceOutputsClaim), Merkle.Hash.unwrap(postAdvanceMachineClaim))) ==
+            postAdvanceOutputsClaim.concatAndHash(postAdvanceMachineClaim) ==
             waitingSubhashes.postAdvanceEpochHashClaim,
             "supplied hashes don't match divergence epoch hash"
         );
@@ -90,7 +81,7 @@ library EpochHashSplit {
     ) external pure returns(MachineDisagree memory) {
         return MachineDisagree(
             waitingDivergence.preAdvanceMachine,
-            waitingDivergence.postAdvanceMachineClaim, //id: we dont necesarily have to put that is a claiming 
+            waitingDivergence.postAdvanceMachineClaim,
             waitingDivergence.inputIndex
         );
     }
@@ -103,7 +94,6 @@ library EpochHashSplit {
             waitingDivergence.postAdvanceMachineClaim,
             waitingDivergence.postAdvanceOutputsClaim,
             waitingDivergence.inputIndex
-            //id: why do we need to pass the state of the machine also?
         );
     }
 }

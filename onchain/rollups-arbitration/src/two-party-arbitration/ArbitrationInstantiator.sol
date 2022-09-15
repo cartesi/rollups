@@ -7,10 +7,10 @@ contract TwoPartyArbitrationInstantiator {
     using TwoPartyArbitrationEnum for TwoPartyArbitrationEnum.T;
     using TwoPartyArbitration for TwoPartyArbitration.Context;
 
-    enum Status {Uninitialized, Ongoing, ChallengerWon, ClaimerWon} //Id: State
+    enum Status {Uninitialized, Ongoing, ChallengerWon, ClaimerWon}
 
-    mapping(uint256 => bool) statusMapping; // true if challenger won 
-    mapping(uint256 => bytes32) contextHashes; //Id: when arbitration finishes, we delete the contextHash entry so we loose the reference with the stateMapping
+    mapping(uint256 => bool) statusMapping;
+    mapping(uint256 => bytes32) contextHashes; //TODO: (doubt) when arbitration finishes, we delete the contextHash entry so we loose the reference with the stateMapping
     uint256 currentIndex; 
 
     event TwoPartyArbitrationNewContext(
@@ -54,7 +54,7 @@ contract TwoPartyArbitrationInstantiator {
             return Status.Ongoing;
         } else {
             return statusMapping[index] ?
-                Status.ChallengerWon : Status.ClaimerWon; //Id: if there is no statusmapping on arbitration for a index, the default is claimerwon?
+                Status.ChallengerWon : Status.ClaimerWon; //TODO: (doubt) if there is no statusmapping on arbitration for a index, the default is claimerwon?
         }
     }
 

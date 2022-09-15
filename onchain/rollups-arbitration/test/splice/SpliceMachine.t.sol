@@ -15,6 +15,7 @@ import "forge-std/Test.sol";
 import "../../src/splice/SpliceMachine.sol";
 
 contract TestSpliceMachine is Test {
+    
     function setUp() public {
     }
 
@@ -84,7 +85,7 @@ contract TestSpliceMachine is Test {
     bytes32 constant INITIAL_HASH =
         0x0000000000000000000000000000000000000000000000000000000000000000;
     
-    function createWaitingAgreement() public returns (SpliceMachine.WaitingAgreement memory) {
+    function createWaitingAgreement() public pure returns (SpliceMachine.WaitingAgreement memory) {
         EpochHashSplit.MachineDisagree memory machineDisagree_ =
             EpochHashSplit.MachineDisagree(
                 Merkle.Hash.wrap(INITIAL_HASH),

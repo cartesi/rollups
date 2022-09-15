@@ -18,6 +18,7 @@ import { Merkle } from "utils/Merkle.sol";
 
 
 contract TestSpliceMachineEnum is Test {
+    
     function setUp() public {
     }
 
@@ -137,7 +138,7 @@ contract TestSpliceMachineEnum is Test {
     bytes32 constant INITIAL_HASH =
         0x0000000000000000000000000000000000000000000000000000000000000000;
     
-    function createWaitingSplice() internal returns (SpliceMachine.WaitingSpliceClaim memory) {
+    function createWaitingSplice() internal pure returns (SpliceMachine.WaitingSpliceClaim memory) {
         EpochHashSplit.MachineDisagree memory machineDisagree_ =
             EpochHashSplit.MachineDisagree(
                 Merkle.Hash.wrap(INITIAL_HASH),
@@ -150,7 +151,7 @@ contract TestSpliceMachineEnum is Test {
         );
     }
 
-    function createWaitingAgreement() internal returns (SpliceMachine.WaitingAgreement memory) {
+    function createWaitingAgreement() internal pure returns (SpliceMachine.WaitingAgreement memory) {
         EpochHashSplit.MachineDisagree memory machineDisagree_ =
             EpochHashSplit.MachineDisagree(
                 Merkle.Hash.wrap(INITIAL_HASH),

@@ -16,11 +16,7 @@ import "../../src/partition/PartitionEnum.sol";
 import "../../src/partition/Partition.sol";
 
 contract TestPartitionEnum is Test {
-
-    //
-    // Tests
-    //
-
+    
     function setUp() public {}
 
     //

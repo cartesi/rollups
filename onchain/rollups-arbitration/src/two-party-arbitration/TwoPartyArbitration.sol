@@ -92,7 +92,7 @@ library TwoPartyArbitration {
             GameClockLib.newTimerClaimerTurn(
                 block.timestamp,
                 arguments.timeAllowance
-            ), //TIME ALLOWANCE MUST BE BIGGER THAN 0 ON A NEW TURN AND MAYBE SET A DECENT TIME , ON TIMER LIB
+            ), //TODO: TIME ALLOWANCE MUST BE BIGGER THAN 0 ON A NEW TURN AND MAYBE SET A DECENT TIME , ON TIMER LIB
 
             Partition.createPartition(
                 0,

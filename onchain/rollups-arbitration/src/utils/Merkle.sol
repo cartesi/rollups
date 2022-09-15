@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import { Memory } from "./Memory.sol";
 import { Word } from "./Word.sol";
 
-import { Merkle as MerkleLib } from "@cartesi/util/contracts/Merkle.sol";
+import { MerkleV2 as MerkleLib } from "@cartesi/MerkleV2.sol";
 
 library Merkle {
 

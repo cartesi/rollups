@@ -5,7 +5,7 @@ pragma solidity ^0.8.13;
 // WITH ARGUMENT `code-generation-scripts/enum-data/splice_machine`,
 // AND OUTPUT AT `src/splice/SpliceMachineEnum.sol`.
 
-import "./src/SpliceMachine.sol";
+import "./SpliceMachine.sol";
 
 library SpliceMachineEnum {
 
