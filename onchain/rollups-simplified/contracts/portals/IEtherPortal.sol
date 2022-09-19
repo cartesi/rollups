@@ -16,9 +16,10 @@ pragma solidity ^0.8.13;
 interface IEtherPortal {
     // Permissionless functions
 
-    /// @notice Deposits Ether into DApp's balance
-    ///         and adds an input to signal such deposit.
+    /// @notice Transfer Ether to a DApp and add an input to
+    ///         the DApp's input box to signal such operation.
     /// @param _dapp The address of the DApp
     /// @param _data Additional data to be interpreted by L2
+    /// @dev All the value sent through this function is forwarded to the DApp
     function depositEther(address _dapp, bytes calldata _data) external payable;
 }

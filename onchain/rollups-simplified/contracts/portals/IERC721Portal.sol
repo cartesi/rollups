@@ -18,14 +18,14 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 interface IERC721Portal {
     // Permissionless functions
 
-    /// @notice Deposits ERC-721 tokens into DApp's balance
-    ///         and adds an input to signal such deposit.
-    ///         The caller must allow this contract to withdraw
-    ///         such token from their account.
-    /// @param _token The ERC-721 contract
+    /// @notice Transfer an ERC-721 token to a DApp and add an input to
+    ///         the DApp's input box to signal such operation.
+    /// @param _token The ERC-721 token contract
     /// @param _dapp The address of the DApp
     /// @param _tokenId The identifier of the NFT being transferred
     /// @param _data Additional data to be interpreted by L2
+    /// @dev The caller must allow the portal to withdraw the token
+    ///      from their account beforehand.
     function depositERC721Token(
         IERC721 _token,
         address _dapp,

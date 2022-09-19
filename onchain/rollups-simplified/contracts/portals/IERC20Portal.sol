@@ -18,14 +18,14 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 interface IERC20Portal {
     // Permissionless functions
 
-    /// @notice Deposits ERC-20 tokens into DApp's balance
-    ///         and adds an input to signal such deposit.
-    ///         The caller must allow this contract to withdraw
-    ///         at least `_amount` tokens from their account.
-    /// @param _token The ERC-20 contract
+    /// @notice Transfer ERC-20 tokens to a DApp and add an input to
+    ///         the DApp's input box to signal such operation.
+    /// @param _token The ERC-20 token contract
     /// @param _dapp The address of the DApp
     /// @param _amount The amount of tokens to be transferred
     /// @param _data Additional data to be interpreted by L2
+    /// @dev The caller must allow the portal to withdraw at least
+    ///      `_amount` tokens from their account beforehand.
     function depositERC20Tokens(
         IERC20 _token,
         address _dapp,
