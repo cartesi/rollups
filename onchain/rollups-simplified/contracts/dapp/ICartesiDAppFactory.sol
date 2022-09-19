@@ -19,11 +19,11 @@ import {IConsensus} from "../consensus/IConsensus.sol";
 interface ICartesiDAppFactory {
     // Events
 
-    /// @notice Event emitted when a new application is deployed
-    /// @param consensus consensus contract
-    /// @param dappOwner dapp owner address
-    /// @param templateHash state hash of the cartesi machine at t0
-    /// @param application application contract
+    /// @notice A new application was deployed
+    /// @param consensus The consensus to which the DApp is subscribed
+    /// @param dappOwner The address that owns the DApp
+    /// @param templateHash The hash of the initial state of the Cartesi Machine
+    /// @param application The application
     event ApplicationCreated(
         IConsensus indexed consensus,
         address dappOwner,
@@ -34,10 +34,10 @@ interface ICartesiDAppFactory {
     // Permissionless functions
 
     /// @notice Deploy a new application
-    /// @param _consensus consensus contract
-    /// @param _dappOwner dapp owner address
-    /// @param _templateHash state hash of the cartesi machine at t0
-    /// @return new application contract
+    /// @param _consensus The consensus to which the DApp should be subscribed
+    /// @param _dappOwner The address that should own the DApp
+    /// @param _templateHash The hash of the initial state of the Cartesi Machine
+    /// @return The application
     function newApplication(
         IConsensus _consensus,
         address _dappOwner,
