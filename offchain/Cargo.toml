@@ -6,6 +6,9 @@ members = [
 
   "dispatcher",
 
+  "server-manager-broker-proxy",
+  "rollups-events",
+
   "data",
   "indexer",
   "inspect-server",

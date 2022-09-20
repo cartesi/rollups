@@ -222,6 +222,14 @@ jobs:
       image-name: rollups-inspect-server
     secrets: inherit
 
+  server_manager_broker_proxy:
+    needs: build_docker
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: server-manager-broker-proxy
+      image-name: rollups-server-manager-broker-proxy
+    secrets: inherit
+
   hardhat:
     needs: build_docker
     uses: ./.github/workflows/docker.yml

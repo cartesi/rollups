@@ -40,6 +40,9 @@ RUN cargo build --release --bin rollups_dispatcher
 FROM builder as inspect_server_build
 RUN cargo build --release --bin inspect-server
 
+FROM builder as server_manager_broker_proxy_build
+RUN PATH="$PATH:$HOME/.local/bin" cargo build --release --bin server-manager-broker-proxy
+
 FROM builder as reader_build
 RUN cargo build --release --bin reader
 
@@ -77,6 +80,15 @@ rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=dispatcher_build /usr/src/app/offchain/target/release/rollups_dispatcher /usr/local/bin
 ENTRYPOINT ["rollups_dispatcher"]
+
+FROM debian:bullseye-slim AS server_manager_broker_proxy
+RUN <<EOF
+apt-get update
+DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
+rm -rf /var/lib/apt/lists/*
+EOF
+COPY --from=server_manager_broker_proxy_build /usr/src/app/offchain/target/release/server-manager-broker-proxy /usr/local/bin
+ENTRYPOINT ["server-manager-broker-proxy"]
 
 FROM debian:bullseye-slim AS inspect_server
 COPY --from=inspect_server_build /usr/src/app/offchain/target/release/inspect-server /usr/local/bin

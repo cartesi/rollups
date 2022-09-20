@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [Unreleased]
+
+### Added
+
+- Added the rollups-events crate that works as an abstraction to producing and consuming events.
+- Added the server-manager-broker-proxy service to consume events from the broker and manage the server-manager.
+
+### Changed
+
+- Modified the dispatcher to produce rollups events instead of managing the server-manager.
+
 ## [0.7.0] 2022-11-02
 
 ### Changed

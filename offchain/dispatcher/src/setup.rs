@@ -1,6 +1,6 @@
 use crate::{
     config::DispatcherConfig,
-    machine::rollup_server::{Config as MMConfig, MachineManager},
+    machine::rollups_broker::BrokerFacade,
     rollups_dispatcher::RollupsDispatcher,
     tx_sender::{BulletproofTxSender, TxSender},
 };
@@ -145,15 +145,8 @@ pub async fn create_tx_sender(
 pub async fn create_dispatcher(
     config: &DispatcherConfig,
     sender: Address,
-) -> Result<RollupsDispatcher<MachineManager>> {
-    let machine_manager = {
-        let mm_config = MMConfig::new_with_default(
-            config.mm_config.endpoint.to_owned(),
-            config.mm_config.session_id.to_owned(),
-        );
-
-        MachineManager::new(mm_config).await?
-    };
+) -> Result<RollupsDispatcher<BrokerFacade>> {
+    let broker = BrokerFacade::new(config.broker_config.clone()).await?;
 
     let fee_incentive_strategy = FeeIncentiveStrategy {
         minimum_required_fee: config.minimum_required_fee,
@@ -162,7 +155,7 @@ pub async fn create_dispatcher(
     };
 
     Ok(RollupsDispatcher::new(
-        machine_manager,
+        broker,
         fee_incentive_strategy,
         sender,
     ))

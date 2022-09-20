@@ -23,6 +23,10 @@ target "inspect-server" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-inspect-server:${TAG}"]
 }
 
+target "server-manager-broker-proxy" {
+  tags = ["${DOCKER_ORGANIZATION}/rollups-server-manager-broker-proxy:${TAG}"]
+}
+
 target "reader" {
   tags = ["${DOCKER_ORGANIZATION}/query-server:${TAG}"]
 }

@@ -20,6 +20,7 @@ tx-manager =  { version = "0.8", registry = "cartesi" }
 
 contracts = { path = "../contracts" }
 types = { path = "../types" }
+rollups-events = { path = "../rollups-events" }
 
 anyhow = "1"
 im = { version = "15", features = ["serde"] }

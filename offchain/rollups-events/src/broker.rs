@@ -1,0 +1,263 @@
+// Copyright 2022 Cartesi Pte. Ltd.
+//
+// SPDX-License-Identifier: Apache-2.0
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+// CONDITIONS OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the License.
+
+use backoff::{future::retry, ExponentialBackoff};
+use redis::aio::ConnectionManager;
+use redis::streams::{
+    StreamId, StreamRangeReply, StreamReadOptions, StreamReadReply,
+};
+use redis::{AsyncCommands, Client, RedisError};
+use serde::{de::DeserializeOwned, Serialize};
+use snafu::{ResultExt, Snafu};
+use std::fmt;
+
+pub const INITIAL_ID: &'static str = "0";
+
+/// Client that connects to the broker
+#[derive(Clone)]
+pub struct Broker {
+    connection: ConnectionManager,
+    backoff: ExponentialBackoff,
+    consume_timeout: usize,
+}
+
+impl Broker {
+    /// Create a new client
+    /// The broker_address should be in the format redis://host:port/db.
+    #[tracing::instrument(level = "trace", skip_all)]
+    pub async fn new(
+        broker_address: &str,
+        backoff: ExponentialBackoff,
+        consume_timeout: usize,
+    ) -> Result<Self, BrokerError> {
+        tracing::trace!(broker_address, "connecting to broker");
+
+        let connection = retry(backoff.clone(), || async {
+            tracing::trace!("creating Redis Client");
+            let client = Client::open(broker_address)?;
+
+            tracing::trace!("creating Redis ConnectionManager");
+            let connection = ConnectionManager::new(client).await?;
+
+            Ok(connection)
+        })
+        .await
+        .context(ConnectionSnafu)?;
+
+        tracing::trace!("returning successful connection");
+        Ok(Self {
+            connection,
+            backoff,
+            consume_timeout,
+        })
+    }
+
+    /// Produce an event and return its id
+    #[tracing::instrument(level = "trace", skip_all)]
+    pub async fn produce<S: BrokerStream>(
+        &mut self,
+        stream: &S,
+        payload: S::Payload,
+    ) -> Result<String, BrokerError> {
+        tracing::trace!("converting payload to JSON string");
+        let payload =
+            serde_json::to_string(&payload).context(InvalidPayloadSnafu)?;
+
+        let event_id = retry(self.backoff.clone(), || async {
+            tracing::trace!(
+                stream_key = stream.key(),
+                payload,
+                "producing event"
+            );
+            let event_id = self
+                .connection
+                .clone()
+                .xadd(stream.key(), "*", &[("payload", &payload)])
+                .await?;
+
+            Ok(event_id)
+        })
+        .await
+        .context(ConnectionSnafu)?;
+
+        tracing::trace!(event_id, "returning event id");
+        Ok(event_id)
+    }
+
+    /// Peek at the end of the stream
+    /// This function doesn't block; if there is no event in the stream it returns None.
+    #[tracing::instrument(level = "trace", skip_all)]
+    pub async fn peek_latest<S: BrokerStream>(
+        &mut self,
+        stream: &S,
+    ) -> Result<Option<Event<S::Payload>>, BrokerError> {
+        let mut reply = retry(self.backoff.clone(), || async {
+            tracing::trace!(stream_key = stream.key(), "peeking at the stream");
+            let reply: StreamRangeReply = self
+                .connection
+                .clone()
+                .xrevrange_count(stream.key(), "+", "-", 1)
+                .await?;
+
+            Ok(reply)
+        })
+        .await
+        .context(ConnectionSnafu)?;
+
+        if let Some(event) = reply.ids.pop() {
+            tracing::trace!("parsing received event");
+            Some(event.try_into()).transpose()
+        } else {
+            tracing::trace!("stream is empty");
+            Ok(None)
+        }
+    }
+
+    /// Consume the next event in stream
+    /// This function blocks until a new event is available.
+    /// To consume the first event in the stream, last_consumed_id should be INITIAL_ID.
+    #[tracing::instrument(level = "trace", skip_all)]
+    pub async fn consume_block<S: BrokerStream>(
+        &mut self,
+        stream: &S,
+        last_consumed_id: &str,
+    ) -> Result<Event<S::Payload>, BrokerError> {
+        let mut reply = retry(self.backoff.clone(), || async {
+            tracing::trace!(
+                stream_key = stream.key(),
+                last_consumed_id,
+                "consuming event"
+            );
+            let opts = StreamReadOptions::default()
+                .count(1)
+                .block(self.consume_timeout);
+            let reply: StreamReadReply = self
+                .connection
+                .clone()
+                .xread_options(&[stream.key()], &[last_consumed_id], &opts)
+                .await?;
+
+            Ok(reply)
+        })
+        .await
+        .context(ConnectionSnafu)?;
+
+        tracing::trace!("checking for timeout");
+        let mut events = reply.keys.pop().ok_or(BrokerError::ConsumeTimeout)?;
+
+        tracing::trace!("checking if event was received");
+        let event = events.ids.pop().ok_or(BrokerError::FailedToConsume)?;
+
+        tracing::trace!("parsing received event");
+        event.try_into()
+    }
+
+    /// Consume the next event in stream without blocking
+    /// This function returns None if there are no more remaining events.
+    /// To consume the first event in the stream, last_consumed_id should be INITIAL_ID.
+    #[tracing::instrument(level = "trace", skip_all)]
+    pub async fn consume_nonblock<S: BrokerStream>(
+        &mut self,
+        stream: &S,
+        last_consumed_id: &str,
+    ) -> Result<Option<Event<S::Payload>>, BrokerError> {
+        let mut reply = retry(self.backoff.clone(), || async {
+            tracing::trace!(
+                stream_key = stream.key(),
+                last_consumed_id,
+                "consuming event (non-blocking)"
+            );
+            let opts = StreamReadOptions::default().count(1);
+            let reply: StreamReadReply = self
+                .connection
+                .clone()
+                .xread_options(&[stream.key()], &[last_consumed_id], &opts)
+                .await?;
+
+            Ok(reply)
+        })
+        .await
+        .context(ConnectionSnafu)?;
+
+        tracing::trace!("checking if event was received");
+        if let Some(mut events) = reply.keys.pop() {
+            let event = events.ids.pop().ok_or(BrokerError::FailedToConsume)?;
+            tracing::trace!("parsing received event");
+            Some(event.try_into()).transpose()
+        } else {
+            tracing::trace!("stream is empty");
+            Ok(None)
+        }
+    }
+}
+
+/// Custom implementation of Debug because ConnectionManager doesn't implement debug
+impl fmt::Debug for Broker {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Broker")
+            .field("consume_timeout", &self.consume_timeout)
+            .finish()
+    }
+}
+
+/// Trait that defines the type of a stream
+pub trait BrokerStream {
+    type Payload: Serialize + DeserializeOwned;
+    fn key(&self) -> &str;
+}
+
+/// Event that goes through the broker
+#[derive(Debug)]
+pub struct Event<P: Serialize + DeserializeOwned> {
+    pub id: String,
+    pub payload: P,
+}
+
+impl<P: Serialize + DeserializeOwned> TryFrom<StreamId> for Event<P> {
+    type Error = BrokerError;
+
+    #[tracing::instrument(level = "trace", skip_all)]
+    fn try_from(stream_id: StreamId) -> Result<Event<P>, BrokerError> {
+        tracing::trace!("getting event payload");
+        let payload = stream_id
+            .get::<String>("payload")
+            .ok_or(BrokerError::InvalidEvent)?;
+        let id = stream_id.id;
+
+        tracing::trace!(id, payload, "received event");
+
+        tracing::trace!("parsing JSON payload");
+        let payload =
+            serde_json::from_str(&payload).context(InvalidPayloadSnafu)?;
+
+        tracing::trace!("returning event");
+        Ok(Event { id, payload })
+    }
+}
+
+#[derive(Debug, Snafu)]
+pub enum BrokerError {
+    #[snafu(display("error connecting to Redis"))]
+    ConnectionError { source: RedisError },
+
+    #[snafu(display("failed to consume event"))]
+    FailedToConsume,
+
+    #[snafu(display("timed out when consuming event"))]
+    ConsumeTimeout,
+
+    #[snafu(display("event in invalid format"))]
+    InvalidEvent,
+
+    #[snafu(display("error parsing event payload"))]
+    InvalidPayload { source: serde_json::Error },
+}

@@ -1,55 +1,45 @@
-use snafu::{ResultExt, Snafu};
+use std::time::Duration;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Clone, Debug)]
-#[structopt(name = "mm_config", about = "Configuration for server manager")]
-pub struct MMEnvCLIConfig {
-    /// URL of server manager grpc
-    #[structopt(long)]
-    pub mm_endpoint: Option<String>,
+#[structopt(name = "broker_config", about = "Configuration for the broker")]
+pub struct BrokerEnvCLIConfig {
+    /// Address of the broker in the format redis://hostname:port
+    #[structopt(long, env, default_value = "redis://127.0.0.1:6379")]
+    redis_endpoint: String,
 
-    /// Default session ID
-    #[structopt(long)]
-    pub mm_session_id: Option<String>,
+    /// Consume timeout when waiting for the rollups claims in ms
+    #[structopt(long, env, default_value = "300000")]
+    claims_consume_timeout: usize,
+
+    /// The max elapsed time for backoff in ms
+    #[structopt(long, env, default_value = "120000")]
+    broker_backoff_max_elapsed_duration: u64,
 }
 
 #[derive(Clone, Debug)]
-pub struct MMConfig {
-    pub endpoint: String,
-    pub session_id: String,
+pub struct BrokerConfig {
+    pub redis_endpoint: String,
+    pub chain_id: u64,
+    pub dapp_contract_address: [u8; 20],
+    pub claims_consume_timeout: usize,
+    pub backoff_max_elapsed_duration: Duration,
 }
 
-#[derive(Debug, Snafu)]
-pub enum Error {
-    #[snafu(display("Configuration missing server manager endpoint"))]
-    MissingEndpoint {},
-
-    #[snafu(display("Configuration missing server manager session ID"))]
-    MissingSessionId {},
-}
-
-pub type Result<T> = std::result::Result<T, Error>;
-
-impl MMConfig {
-    pub fn initialize_from_args() -> Result<Self> {
-        let env_cli_config = MMEnvCLIConfig::from_args();
-        Self::initialize(env_cli_config)
-    }
-
-    pub fn initialize(env_cli_config: MMEnvCLIConfig) -> Result<Self> {
-        let endpoint = env_cli_config
-            .mm_endpoint
-            .ok_or(snafu::NoneError)
-            .context(MissingEndpointSnafu)?;
-
-        let session_id = env_cli_config
-            .mm_session_id
-            .ok_or(snafu::NoneError)
-            .context(MissingSessionIdSnafu)?;
-
-        Ok(MMConfig {
-            endpoint,
-            session_id,
-        })
+impl BrokerConfig {
+    pub fn initialize(
+        env_cli_config: BrokerEnvCLIConfig,
+        chain_id: u64,
+        dapp_contract_address: [u8; 20],
+    ) -> Self {
+        Self {
+            redis_endpoint: env_cli_config.redis_endpoint,
+            chain_id,
+            dapp_contract_address,
+            claims_consume_timeout: env_cli_config.claims_consume_timeout,
+            backoff_max_elapsed_duration: Duration::from_millis(
+                env_cli_config.broker_backoff_max_elapsed_duration,
+            ),
+        }
     }
 }

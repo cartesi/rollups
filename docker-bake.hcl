@@ -2,7 +2,7 @@
 target "docker-metadata-action" {}
 
 group "default" {
-  targets = ["state-server", "dispatcher", "indexer", "inspect-server", "reader", "hardhat", "cli"]
+  targets = ["state-server", "dispatcher", "indexer", "inspect-server", "reader", "server-manager-broker-proxy", "hardhat", "cli"]
 }
 
 target "deps" {
@@ -44,6 +44,13 @@ target "reader" {
   inherits   = ["docker-metadata-action"]
   dockerfile = "offchain/Dockerfile"
   target     = "reader"
+  context    = "."
+}
+
+target "server-manager-broker-proxy" {
+  inherits   = ["docker-metadata-action"]
+  dockerfile = "offchain/Dockerfile"
+  target     = "server_manager_broker_proxy"
   context    = "."
 }
 

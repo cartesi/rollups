@@ -1,4 +1,4 @@
-use crate::machine::config::{Error as MMError, MMConfig, MMEnvCLIConfig};
+use crate::machine::config::{BrokerConfig, BrokerEnvCLIConfig};
 use state_client_lib::config::{Error as SCError, SCConfig, SCEnvCLIConfig};
 use tx_manager::config::{Error as TxError, TxEnvCLIConfig, TxManagerConfig};
 
@@ -22,7 +22,7 @@ pub struct DispatcherEnvCLIConfig {
     pub tx_config: TxEnvCLIConfig,
 
     #[structopt(flatten)]
-    pub mm_config: MMEnvCLIConfig,
+    pub broker_config: BrokerEnvCLIConfig,
 
     #[structopt(flatten)]
     pub hc_config: HealthCheckEnvCLIConfig,
@@ -59,7 +59,7 @@ pub struct DispatcherEnvCLIConfig {
 pub struct DispatcherConfig {
     pub sc_config: SCConfig,
     pub tx_config: TxManagerConfig,
-    pub mm_config: MMConfig,
+    pub broker_config: BrokerConfig,
     pub hc_config: HealthCheckConfig,
 
     pub dapp_contract_address: Address,
@@ -77,9 +77,6 @@ pub enum Error {
 
     #[snafu(display("TxManager configuration error: {}", source))]
     TxManagerError { source: TxError },
-
-    #[snafu(display("MachineManager configuration error: {}", source))]
-    MachineManagerError { source: MMError },
 
     #[snafu(display("Configuration missing dapp address"))]
     MissingDappAddress {},
@@ -117,9 +114,6 @@ impl DispatcherConfig {
         let tx_config = TxManagerConfig::initialize(env_cli_config.tx_config)
             .context(TxManagerSnafu)?;
 
-        let mm_config = MMConfig::initialize(env_cli_config.mm_config)
-            .context(MachineManagerSnafu)?;
-
         let hc_config = HealthCheckConfig::initialize(env_cli_config.hc_config);
 
         let dapp_contract_address =
@@ -151,6 +145,12 @@ impl DispatcherConfig {
                     .context(DappAddressParseSnafu)?
             };
 
+        let broker_config = BrokerConfig::initialize(
+            env_cli_config.broker_config,
+            tx_config.chain_id,
+            dapp_contract_address.clone().to_fixed_bytes(),
+        );
+
         let initial_epoch = env_cli_config
             .rd_initial_epoch
             .unwrap_or(DEFAULT_INITIAL_EPOCH);
@@ -175,7 +175,7 @@ impl DispatcherConfig {
         Ok(DispatcherConfig {
             sc_config,
             tx_config,
-            mm_config,
+            broker_config,
             hc_config,
 
             dapp_contract_address,
