@@ -44,13 +44,6 @@ contract CartesiDApp is
         consensus = _consensus;
     }
 
-    /// @notice executes voucher
-    /// @param _destination address that will execute the payload
-    /// @param _payload payload to be executed by destination
-    /// @param _claimData claim data to be handed to consensus
-    /// @param _v validity proof for this encoded voucher
-    /// @return true if voucher was executed successfully
-    /// @dev  vouchers can only be executed once
     function executeVoucher(
         address _destination,
         bytes calldata _payload,
@@ -89,11 +82,6 @@ contract CartesiDApp is
         return succ;
     }
 
-    /// @notice validates notice
-    /// @param _notice notice to be verified
-    /// @param _claimData claim data to be handed to consensus
-    /// @param _v validity proof for this notice
-    /// @return true if notice is valid
     function validateNotice(
         bytes calldata _notice,
         bytes calldata _claimData,
@@ -152,12 +140,6 @@ contract CartesiDApp is
         require(sent, "withdrawEther failed");
     }
 
-    /// @notice Handle the receipt of an NFT
-    /// @dev The ERC721 smart contract calls this function on the recipient
-    ///      after a `transfer`. This function MAY throw to revert and reject the
-    ///      transfer. Return of other than the magic value MUST result in the
-    ///      transaction being reverted.
-    /// @return this function selector unless throwing
     function onERC721Received(
         address,
         address,
