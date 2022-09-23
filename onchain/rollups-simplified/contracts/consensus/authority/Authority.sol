@@ -27,7 +27,11 @@ contract Authority is IConsensus, Ownable {
         IInputBox _inputBox,
         IHistory _history
     ) {
-        transferOwnership(_owner);
+        // constructor in Ownable already called `transferOwnership()` to the msg.sender
+        // we only need to call `transferOwnership()` again if msg.sender is not the same as owner
+        if (msg.sender != _owner) {
+            transferOwnership(_owner);
+        }
         history = _history;
         emit ConsensusCreated(_owner, _inputBox, _history);
     }
