@@ -49,6 +49,7 @@ contract CartesiDAppTest is Test {
             recipient,
             transferAmount
         );
+    address constant VM_ADDRESS = 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D;
 
     event VoucherExecuted(uint256 voucherPosition);
     event OwnershipTransferred(
@@ -185,6 +186,9 @@ contract CartesiDAppTest is Test {
 
         // epochHash incorrect
         bytes32 epochHashForVoucher = bytes32("wrong epoch hash");
+        // avoid mocking on vm address
+        vm.assume(address(_consensus) != VM_ADDRESS);
+        // mocking consensus
         vm.mockCall(
             address(_consensus),
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
@@ -278,6 +282,8 @@ contract CartesiDAppTest is Test {
             )
         );
 
+        // avoid mocking on vm address
+        vm.assume(address(_consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(_consensus),
@@ -333,6 +339,8 @@ contract CartesiDAppTest is Test {
                 voucherProof.machineStateHash
             )
         );
+        // avoid mocking on vm address
+        vm.assume(address(consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(consensus),
@@ -522,6 +530,8 @@ contract CartesiDAppTest is Test {
                 voucherProof.machineStateHash
             )
         );
+        // avoid mocking on vm address
+        vm.assume(address(consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(consensus),
@@ -617,6 +627,8 @@ contract CartesiDAppTest is Test {
                 notice0Proof.machineStateHash
             )
         );
+        // avoid mocking on vm address
+        vm.assume(address(_consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(_consensus),
@@ -670,6 +682,8 @@ contract CartesiDAppTest is Test {
                 notice1Proof.machineStateHash
             )
         );
+        // avoid mocking on vm address
+        vm.assume(address(_consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(_consensus),

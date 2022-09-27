@@ -45,6 +45,8 @@ contract HistoryReverts is IHistory {
 contract AuthorityTest is Test {
     Authority authority;
 
+    address constant VM_ADDRESS = 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D;
+
     // events
     event OwnershipTransferred(
         address indexed previousOwner,
@@ -97,6 +99,8 @@ contract AuthorityTest is Test {
 
         authority = new Authority(_owner, _inputBox, _history);
 
+        // avoid mocking on vm address
+        vm.assume(address(_history) != VM_ADDRESS);
         // mocking history
         vm.mockCall(
             address(_history),
@@ -128,6 +132,8 @@ contract AuthorityTest is Test {
 
         authority = new Authority(_owner, _inputBox, _history);
 
+        // avoid mocking on vm address
+        vm.assume(address(_history) != VM_ADDRESS);
         // mocking history
         vm.mockCall(
             address(_history),
@@ -188,6 +194,8 @@ contract AuthorityTest is Test {
 
         authority = new Authority(_owner, _inputBox, _history);
 
+        // avoid mocking on vm address
+        vm.assume(address(_history) != VM_ADDRESS);
         // mocking history
         vm.mockCall(
             address(_history),
