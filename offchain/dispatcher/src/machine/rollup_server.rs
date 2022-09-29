@@ -70,7 +70,7 @@ impl Config {
             }),
 
             concurrency: Some(ConcurrencyConfig {
-                update_merkle_tree: 1000 * 60 * 2,
+                update_merkle_tree: 0,
             }),
         };
 
