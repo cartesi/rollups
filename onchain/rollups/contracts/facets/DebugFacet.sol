@@ -16,6 +16,7 @@ pragma solidity ^0.8.0;
 import {Result} from "../interfaces/IValidatorManager.sol";
 import {Phase} from "../interfaces/IRollups.sol";
 import {IEtherPortal} from "../interfaces/IEtherPortal.sol";
+import {IERC1155Portal} from "../interfaces/IERC1155Portal.sol";
 import {IERC20Portal} from "../interfaces/IERC20Portal.sol";
 import {IERC721Portal} from "../interfaces/IERC721Portal.sol";
 
@@ -96,6 +97,18 @@ contract DebugFacet {
     function _erc721Withdrawal(bytes calldata _data) public returns (bool) {
         IERC721Portal erc721Portal = IERC721Portal(address(this));
         return erc721Portal.erc721Withdrawal(_data);
+    }
+
+    function _erc1155Withdrawal(bytes calldata _data) public returns (bool) {
+        IERC1155Portal erc1155Portal = IERC1155Portal(address(this));
+        return erc1155Portal.erc1155Withdrawal(_data);
+    }
+
+    function _erc1155BatchWithdrawal(
+        bytes calldata _data
+    ) public returns (bool) {
+        IERC1155Portal erc1155Portal = IERC1155Portal(address(this));
+        return erc1155Portal.erc1155BatchWithdrawal(_data);
     }
 
     function _getFeePerClaim() public view returns (uint256) {

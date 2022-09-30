@@ -28,6 +28,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     await deployments.deploy("ERC20PortalFacet", opts);
     await deployments.deploy("ERC721PortalFacet", opts);
+    await deployments.deploy("ERC1155PortalFacet", opts);
     await deployments.deploy("EtherPortalFacet", opts);
     await deployments.deploy("FeeManagerFacet", opts);
     await deployments.deploy("InputFacet", opts);

@@ -23,6 +23,7 @@ import {
     CartesiDAppFactory__factory,
     CartesiDApp__factory,
     SimpleNFT__factory,
+    SimpleSFT__factory,
 } from "../src/types";
 
 // Calculate input hash based on
@@ -290,6 +291,38 @@ export const deploySimpleNFT = deployments.createFixture(
         );
 
         return simpleNFT;
+    }
+);
+
+export interface SimpleSFTOptions {
+    tokenIds?: number[];
+    tokenAmounts?: number[];
+}
+
+export const deploySimpleSFT = deployments.createFixture(
+    async (hre: HardhatRuntimeEnvironment, options: SimpleSFTOptions = {}) => {
+        const { deployments, ethers, getNamedAccounts } = hre;
+        const signers = await ethers.getSigners();
+        const { deployer } = await getNamedAccounts();
+
+        const opts: DeployOptions = {
+            from: deployer,
+            log: true,
+        };
+
+        let tokenIds: number[] = options.tokenIds || [];
+        let tokenAmounts: number[] = options.tokenAmounts || [];
+        const simpleSFTDeployment = await deployments.deploy("SimpleSFT", {
+            ...opts,
+            args: [tokenIds, tokenAmounts],
+        });
+
+        const simpleSFT = SimpleSFT__factory.connect(
+            simpleSFTDeployment.address,
+            signers[0]
+        );
+
+        return simpleSFT;
     }
 );
 

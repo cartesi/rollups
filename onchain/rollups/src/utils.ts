@@ -59,6 +59,7 @@ export const productionFacetNames: string[] = [
     // rollups-related facets
     "ERC20PortalFacet",
     "ERC721PortalFacet",
+    "ERC1155PortalFacet",
     "EtherPortalFacet",
     "FeeManagerFacet",
     "InputFacet",

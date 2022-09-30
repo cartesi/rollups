@@ -73,6 +73,7 @@ Currently, we support the following types of assets:
 - [Ether](https://ethereum.org/en/eth/) (ETH)
 - [ERC-20](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/)
 - [ERC-721](https://ethereum.org/en/developers/docs/standards/tokens/erc-721/) (NFTs)
+- [ERC-1155](https://ethereum.org/en/developers/docs/standards/tokens/erc-1155/) (SFTs)
 
 ## Voucher
 
