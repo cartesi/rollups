@@ -118,19 +118,19 @@ describe("Input Facet", () => {
         }
     });
 
-    it("addInput should revert if input is larger than drive (log2Size=7)", async function (this: stateServer.StateServerContext) {
-        const input_300_bytes = Buffer.from("a".repeat(300), "utf-8");
+    it("addInput should revert if input is larger than drive (log2Size=9)", async function (this: stateServer.StateServerContext) {
+        const input_600_bytes = Buffer.from("a".repeat(600), "utf-8");
         // one extra byte
-        const input_257_bytes = Buffer.from("a".repeat(257), "utf-8");
+        const input_513_bytes = Buffer.from("a".repeat(513), "utf-8");
 
         await expect(
-            inputFacet.addInput(input_300_bytes),
+            inputFacet.addInput(input_600_bytes),
             "input cant be bigger than drive"
         ).to.be.revertedWith("input len: [0,driveSize]");
 
         // input shouldnt fit because of one extra byte
         await expect(
-            inputFacet.addInput(input_257_bytes),
+            inputFacet.addInput(input_513_bytes),
             "input should still revert because metadata doesnt fit"
         ).to.be.revertedWith("input len: [0,driveSize]");
 

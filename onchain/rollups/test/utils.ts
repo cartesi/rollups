@@ -174,7 +174,7 @@ export interface DiamondOptions {
     templateHash?: BytesLike; // defaults to 0x00
     inputDuration?: number | BigNumber; // defaults to 1 day
     challengePeriod?: number | BigNumber; // defaults to 7 days
-    inputLog2Size?: number | BigNumber; // defaults to 8 (thus, 2^8)
+    inputLog2Size?: number | BigNumber; // defaults to 9 (thus, 2^9)
     feePerClaim?: number | BigNumber; // defaults to 10 tokens
     feeManagerBank?: string; // defaults to Bank that uses CTSI
     simpleFeeManagerBank?: boolean; // if true, deploys Bank with SimpleToken
@@ -211,7 +211,7 @@ export const deployDiamond = deployments.createFixture(
         let challengePeriod = options.challengePeriod
             ? options.challengePeriod
             : 7 * DAY;
-        let inputLog2Size = options.inputLog2Size ? options.inputLog2Size : 8;
+        let inputLog2Size = options.inputLog2Size ? options.inputLog2Size : 9;
         let feePerClaim = options.feePerClaim ? options.feePerClaim : 10;
         let feeManagerOwner = options.feeManagerOwner
             ? options.feeManagerOwner

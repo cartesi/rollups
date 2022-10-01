@@ -83,7 +83,7 @@ describe("ERC721Portal Facet", async () => {
 
     it("If addInput reverts, no token should be transfered", async () => {
         const tokenId = tokenIds[1];
-        const data = Buffer.from("a".repeat(258), "utf-8");
+        const data = Buffer.from("a".repeat(516), "utf-8");
 
         await expect(
             simpleNFT[safeTransferFromWithData](
