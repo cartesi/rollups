@@ -18,6 +18,7 @@ contract!(diamond_loupe_facet);
 contract!(erc20_contract);
 contract!(erc20_portal_facet);
 contract!(erc721_portal_facet);
+contract!(erc1155_portal_facet);
 contract!(ether_portal_facet);
 contract!(fee_manager_facet);
 contract!(input_facet);

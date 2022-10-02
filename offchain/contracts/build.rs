@@ -38,6 +38,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "erc721_portal_facet.rs",
         ),
         (
+            "ERC1155PortalFacet",
+            "facets/ERC1155PortalFacet",
+            "erc1155_portal_facet.rs",
+        ),
+        (
             "EtherPortalFacet",
             "facets/EtherPortalFacet",
             "ether_portal_facet.rs",
