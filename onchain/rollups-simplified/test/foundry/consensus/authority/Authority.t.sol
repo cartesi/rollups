@@ -13,7 +13,7 @@
 // @title Authority Test
 pragma solidity ^0.8.13;
 
-import {Test} from "forge-std/Test.sol";
+import {TestBase} from "../../TestBase.sol";
 import {Authority} from "contracts/consensus/authority/Authority.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
@@ -42,10 +42,8 @@ contract HistoryReverts is IHistory {
     }
 }
 
-contract AuthorityTest is Test {
+contract AuthorityTest is TestBase {
     Authority authority;
-
-    address constant VM_ADDRESS = 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D;
 
     // events
     event OwnershipTransferred(
@@ -92,15 +90,13 @@ contract AuthorityTest is Test {
         IInputBox _inputBox,
         IHistory _history,
         address _newConsensus
-    ) public {
+    ) public isMockable(address(_history)) {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
         vm.assume(_newConsensus != address(0));
 
         authority = new Authority(_owner, _inputBox, _history);
 
-        // avoid mocking on vm address
-        vm.assume(address(_history) != VM_ADDRESS);
         // mocking history
         vm.mockCall(
             address(_history),
@@ -126,14 +122,12 @@ contract AuthorityTest is Test {
         IHistory _history,
         address _dapp,
         bytes calldata _claim
-    ) public {
+    ) public isMockable(address(_history)) {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
 
         authority = new Authority(_owner, _inputBox, _history);
 
-        // avoid mocking on vm address
-        vm.assume(address(_history) != VM_ADDRESS);
         // mocking history
         vm.mockCall(
             address(_history),
@@ -188,14 +182,12 @@ contract AuthorityTest is Test {
         bytes32 _r0,
         uint256 _r1,
         uint256 _r2
-    ) public {
+    ) public isMockable(address(_history)) {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
 
         authority = new Authority(_owner, _inputBox, _history);
 
-        // avoid mocking on vm address
-        vm.assume(address(_history) != VM_ADDRESS);
         // mocking history
         vm.mockCall(
             address(_history),

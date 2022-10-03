@@ -13,7 +13,7 @@
 // @title Cartesi DApp Test
 pragma solidity ^0.8.13;
 
-import {Test} from "forge-std/Test.sol";
+import {TestBase} from "../TestBase.sol";
 import {ICartesiDApp} from "contracts/dapp/ICartesiDApp.sol";
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
@@ -33,7 +33,7 @@ contract EtherReceiver {
     receive() external payable {}
 }
 
-contract CartesiDAppTest is Test {
+contract CartesiDAppTest is TestBase {
     CartesiDApp dapp;
     SimpleToken token;
     VoucherProofSol3 pSol3; // auto-generated solidity contract version of proof
@@ -49,8 +49,6 @@ contract CartesiDAppTest is Test {
             recipient,
             transferAmount
         );
-    address constant VM_ADDRESS = 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D;
-
     event VoucherExecuted(uint256 voucherPosition);
     event OwnershipTransferred(
         address indexed previousOwner,
@@ -181,13 +179,11 @@ contract CartesiDAppTest is Test {
         address _owner,
         bytes32 _templateHash,
         uint256 _inputIndex
-    ) public {
+    ) public isMockable(address(_consensus)) {
         setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
 
         // epochHash incorrect
         bytes32 epochHashForVoucher = bytes32("wrong epoch hash");
-        // avoid mocking on vm address
-        vm.assume(address(_consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(_consensus),
@@ -257,7 +253,7 @@ contract CartesiDAppTest is Test {
         address _owner,
         bytes32 _templateHash,
         uint256 _inputIndex
-    ) internal {
+    ) internal isMockable(address(_consensus)) {
         vm.assume(_owner != address(0));
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
 
@@ -282,8 +278,6 @@ contract CartesiDAppTest is Test {
             )
         );
 
-        // avoid mocking on vm address
-        vm.assume(address(_consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(_consensus),
@@ -339,8 +333,6 @@ contract CartesiDAppTest is Test {
                 voucherProof.machineStateHash
             )
         );
-        // avoid mocking on vm address
-        vm.assume(address(consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(consensus),
@@ -530,8 +522,6 @@ contract CartesiDAppTest is Test {
                 voucherProof.machineStateHash
             )
         );
-        // avoid mocking on vm address
-        vm.assume(address(consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(consensus),
@@ -602,7 +592,7 @@ contract CartesiDAppTest is Test {
         address _owner,
         bytes32 _templateHash,
         uint256 _inputIndex
-    ) public {
+    ) public isMockable(address(_consensus)) {
         // *** setup for notice0 ***
         vm.assume(_owner != address(0));
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
@@ -627,8 +617,6 @@ contract CartesiDAppTest is Test {
                 notice0Proof.machineStateHash
             )
         );
-        // avoid mocking on vm address
-        vm.assume(address(_consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(_consensus),
@@ -657,7 +645,7 @@ contract CartesiDAppTest is Test {
         address _owner,
         bytes32 _templateHash,
         uint256 _inputIndex
-    ) public {
+    ) public isMockable(address(_consensus)) {
         // *** setup for notice1 ***
         vm.assume(_owner != address(0));
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
@@ -682,8 +670,6 @@ contract CartesiDAppTest is Test {
                 notice1Proof.machineStateHash
             )
         );
-        // avoid mocking on vm address
-        vm.assume(address(_consensus) != VM_ADDRESS);
         // mocking consensus
         vm.mockCall(
             address(_consensus),
