@@ -69,11 +69,21 @@ impl GraphQLScalar for i64 {
 }
 
 #[derive(GraphQLObject, Debug, Clone)]
-#[graphql(description = "Connection pattern cursor based pagination page info")]
+#[graphql(
+    description = "Page metadata for the cursor-based Connection pagination pattern"
+)]
 pub struct PageInfo {
+    #[graphql(description = "Cursor pointing to the first entry of the page")]
     pub start_cursor: String,
+    #[graphql(description = "Cursor pointing to the last entry of the page")]
     pub end_cursor: String,
+    #[graphql(
+        description = "Indicates if there are additional entries after the end cursor"
+    )]
     pub has_next_page: bool,
+    #[graphql(
+        description = "Indicates if there are additional entries before the start cursor"
+    )]
     pub has_previous_page: bool,
 }
 
@@ -126,13 +136,34 @@ pub struct InputConnection {
 }
 
 #[derive(Debug, Clone, GraphQLInputObject)]
-#[graphql(scalar = RollupsGraphQLScalarValue)]
+#[graphql(
+    scalar = RollupsGraphQLScalarValue,
+    description = "Filter object to restrict results depending on input properties"
+)]
 pub struct InputFilter {
+    #[graphql(
+        description = "Filter only inputs submitted by a specific address"
+    )]
     msg_sender: Option<String>,
+    #[graphql(
+        description = "Filter only inputs recorded in a specific base layer block"
+    )]
     block_number: Option<i64>,
+    #[graphql(
+        description = "Filter only inputs recorded before a specific base layer block"
+    )]
     block_number_lower_than: Option<i64>,
+    #[graphql(
+        description = "Filter only inputs recorded after a specific base layer block"
+    )]
     block_number_greater_than: Option<i64>,
+    #[graphql(
+        description = "Filter only inputs recorded before a specific timestamp, as defined by the base layer"
+    )]
     timestamp_lower_than: Option<i64>,
+    #[graphql(
+        description = "Filter only inputs recorded after a specific timestamp, as defined by the base layer"
+    )]
     timestamp_greater_than: Option<i64>,
 }
 
@@ -163,6 +194,9 @@ pub struct NoticeConnection {
 }
 
 #[derive(Debug, Clone, GraphQLInputObject)]
+#[graphql(
+    description = "Filter object to restrict results depending on notice properties (unused at the moment)"
+)]
 pub struct NoticeFilter {
     dummy: String,
 }
@@ -192,6 +226,9 @@ pub struct ReportConnection {
 }
 
 #[derive(Debug, Clone, GraphQLInputObject)]
+#[graphql(
+    description = "Filter object to restrict results depending on report properties (unused at the moment)"
+)]
 pub struct ReportFilter {
     dummy: String,
 }
@@ -231,7 +268,13 @@ pub struct VoucherConnection {
 }
 
 #[derive(Debug, Clone, GraphQLInputObject)]
+#[graphql(
+    description = "Filter object to restrict results depending on voucher properties"
+)]
 pub struct VoucherFilter {
+    #[graphql(
+        description = "Filter only vouchers that target a specific destination address"
+    )]
     destination: String,
 }
 
