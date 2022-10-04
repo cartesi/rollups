@@ -11,7 +11,7 @@
       {
         "indexed": false,
         "internalType": "bytes",
-        "name": "data",
+        "name": "claim",
         "type": "bytes"
       }
     ],
@@ -27,7 +27,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_data",
+        "name": "_claimProof",
         "type": "bytes"
       }
     ],
@@ -74,7 +74,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_data",
+        "name": "_claim",
         "type": "bytes"
       }
     ],

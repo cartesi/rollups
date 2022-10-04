@@ -1,0 +1,318 @@
+{
+  "contractName": "ICartesiDApp",
+  "sourceName": "contracts/dapp/ICartesiDApp.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "contract IConsensus",
+          "name": "newConsensus",
+          "type": "address"
+        }
+      ],
+      "name": "NewConsensus",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "voucherId",
+          "type": "uint256"
+        }
+      ],
+      "name": "VoucherExecuted",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_destination",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_payload",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_claimData",
+          "type": "bytes"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "epochInputIndex",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "outputIndex",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "outputHashesRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "vouchersEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "noticesEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "machineStateHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "keccakInHashesSiblings",
+              "type": "bytes32[]"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "outputHashesInEpochSiblings",
+              "type": "bytes32[]"
+            }
+          ],
+          "internalType": "struct OutputValidityProof",
+          "name": "_v",
+          "type": "tuple"
+        }
+      ],
+      "name": "executeVoucher",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getConsensus",
+      "outputs": [
+        {
+          "internalType": "contract IConsensus",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getTemplateHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IConsensus",
+          "name": "_newConsensus",
+          "type": "address"
+        }
+      ],
+      "name": "migrateToConsensus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_notice",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_claimData",
+          "type": "bytes"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "epochInputIndex",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "outputIndex",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "outputHashesRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "vouchersEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "noticesEpochRootHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "machineStateHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "keccakInHashesSiblings",
+              "type": "bytes32[]"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "outputHashesInEpochSiblings",
+              "type": "bytes32[]"
+            }
+          ],
+          "internalType": "struct OutputValidityProof",
+          "name": "_v",
+          "type": "tuple"
+        }
+      ],
+      "name": "validateNotice",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "NewConsensus(address)": {
+        "params": {
+          "newConsensus": "The new consensus"
+        }
+      },
+      "VoucherExecuted(uint256)": {
+        "params": {
+          "voucherId": "A number that uniquely identifies the voucher                  amongst all vouchers emitted by this DApp"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "executeVoucher(address,bytes,bytes,(uint64,uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
+        "details": "The encoding of _claimData might vary depending on the history implementationEach voucher can only be executed once",
+        "params": {
+          "_claimData": "An auxiliary proof for retrieving the claim",
+          "_destination": "The contract that will execute the payload",
+          "_payload": "The ABI-encoded function call",
+          "_v": "A validity proof for the voucher"
+        },
+        "returns": {
+          "_0": "Whether the voucher was executed successfully or not"
+        }
+      },
+      "getConsensus()": {
+        "returns": {
+          "_0": "The current consensus"
+        }
+      },
+      "getTemplateHash()": {
+        "returns": {
+          "_0": "The DApp's template hash"
+        }
+      },
+      "migrateToConsensus(address)": {
+        "details": "Should have access control",
+        "params": {
+          "_newConsensus": "The new consensus"
+        }
+      },
+      "validateNotice(bytes,bytes,(uint64,uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
+        "details": "The encoding of _claimData might vary depending on the history implementation",
+        "params": {
+          "_claimData": "An auxiliary proof for retrieving the claim",
+          "_notice": "The notice",
+          "_v": "A validity proof for the notice"
+        },
+        "returns": {
+          "_0": "Whether the notice is valid or not"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "NewConsensus(address)": {
+        "notice": "A new consensus is used"
+      },
+      "VoucherExecuted(uint256)": {
+        "notice": "A voucher was executed from the DApp"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "executeVoucher(address,bytes,bytes,(uint64,uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
+        "notice": "Execute a voucher"
+      },
+      "getConsensus()": {
+        "notice": "Get the current consensus"
+      },
+      "getTemplateHash()": {
+        "notice": "Get the DApp's template hash"
+      },
+      "migrateToConsensus(address)": {
+        "notice": "Migrate the DApp to a new consensus"
+      },
+      "validateNotice(bytes,bytes,(uint64,uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
+        "notice": "Validate a notice"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "executeVoucher(address,bytes,bytes,(uint64,uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "0d758e75",
+      "getConsensus()": "179e740b",
+      "getTemplateHash()": "61b12c66",
+      "migrateToConsensus(address)": "fc411683",
+      "validateNotice(bytes,bytes,(uint64,uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "cba717d1"
+    }
+  }
+}

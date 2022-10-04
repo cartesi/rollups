@@ -22,7 +22,7 @@
       },
       {
         "indexed": false,
-        "internalType": "contract ICartesiDApp",
+        "internalType": "contract CartesiDApp",
         "name": "application",
         "type": "address"
       }
@@ -51,7 +51,7 @@
     "name": "newApplication",
     "outputs": [
       {
-        "internalType": "contract ICartesiDApp",
+        "internalType": "contract CartesiDApp",
         "name": "",
         "type": "address"
       }

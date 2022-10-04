@@ -1,0 +1,301 @@
+{
+  "contractName": "Authority",
+  "sourceName": "contracts/consensus/authority/Authority.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IInputBox",
+          "name": "_inputBox",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IHistory",
+          "name": "_history",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract IInputBox",
+          "name": "inputBox",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract IHistory",
+          "name": "history",
+          "type": "address"
+        }
+      ],
+      "name": "ConsensusCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "contract IHistory",
+          "name": "history",
+          "type": "address"
+        }
+      ],
+      "name": "NewHistory",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_claimProof",
+          "type": "bytes"
+        }
+      ],
+      "name": "getEpochHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getHistory",
+      "outputs": [
+        {
+          "internalType": "contract IHistory",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_consensus",
+          "type": "address"
+        }
+      ],
+      "name": "migrateHistoryToConsensus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IHistory",
+          "name": "_history",
+          "type": "address"
+        }
+      ],
+      "name": "setHistory",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_claim",
+          "type": "bytes"
+        }
+      ],
+      "name": "submitClaim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5060405161086f38038061086f83398101604081905261002f916101de565b610038336100a9565b610041836100f9565b600180546001600160a01b0319166001600160a01b0383811691821790925560408051868416815292851660208401528201527f25b0664e0a40f3e96d12428b372e2f2166432a8e6ac723e7911e81a588061c739060600160405180910390a150505061022b565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6000546001600160a01b031633146101585760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e657260448201526064015b60405180910390fd5b6001600160a01b0381166101bd5760405162461bcd60e51b815260206004820152602660248201527f4f776e61626c653a206e6577206f776e657220697320746865207a65726f206160448201526564647265737360d01b606482015260840161014f565b6101c6816100a9565b50565b6001600160a01b03811681146101c657600080fd5b6000806000606084860312156101f357600080fd5b83516101fe816101c9565b602085015190935061020f816101c9565b6040850151909250610220816101c9565b809150509250925092565b6106358061023a6000396000f3fe608060405234801561001057600080fd5b50600436106100885760003560e01c80639368a3d31161005b5780639368a3d314610102578063aa15efc814610115578063f2fde38b14610126578063f36762ce1461013957600080fd5b8063159c5ea11461008d5780633598e90b146100a2578063715018a6146100d55780638da5cb5b146100dd575b600080fd5b6100a061009b3660046104b3565b61014c565b005b6100b56100b03660046104d7565b6101d3565b604080519384526020840192909252908201526060015b60405180910390f35b6100a061025c565b6000546001600160a01b03165b6040516001600160a01b0390911681526020016100cc565b6100a06101103660046104b3565b610292565b6001546001600160a01b03166100ea565b6100a06101343660046104b3565b61031e565b6100a06101473660046104d7565b6103b9565b6000546001600160a01b0316331461017f5760405162461bcd60e51b81526004016101769061055c565b60405180910390fd5b600180546001600160a01b0319166001600160a01b0383169081179091556040519081527f2bcd43869347a1d42f97ac6042f3d129817abd05a6125f9750fe3724e321d23e9060200160405180910390a150565b600154604051633598e90b60e01b8152600091829182916001600160a01b031690633598e90b9061020c90899089908990600401610591565b606060405180830381865afa158015610229573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061024d91906105d1565b92509250925093509350939050565b6000546001600160a01b031633146102865760405162461bcd60e51b81526004016101769061055c565b610290600061044e565b565b6000546001600160a01b031633146102bc5760405162461bcd60e51b81526004016101769061055c565b60015460405163fc41168360e01b81526001600160a01b0383811660048301529091169063fc41168390602401600060405180830381600087803b15801561030357600080fd5b505af1158015610317573d6000803e3d6000fd5b5050505050565b6000546001600160a01b031633146103485760405162461bcd60e51b81526004016101769061055c565b6001600160a01b0381166103ad5760405162461bcd60e51b815260206004820152602660248201527f4f776e61626c653a206e6577206f776e657220697320746865207a65726f206160448201526564647265737360d01b6064820152608401610176565b6103b68161044e565b50565b6000546001600160a01b031633146103e35760405162461bcd60e51b81526004016101769061055c565b6001546040516379b3b16760e11b81526001600160a01b039091169063f36762ce9061041790869086908690600401610591565b600060405180830381600087803b15801561043157600080fd5b505af1158015610445573d6000803e3d6000fd5b50505050505050565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6001600160a01b03811681146103b657600080fd5b6000602082840312156104c557600080fd5b81356104d08161049e565b9392505050565b6000806000604084860312156104ec57600080fd5b83356104f78161049e565b9250602084013567ffffffffffffffff8082111561051457600080fd5b818601915086601f83011261052857600080fd5b81358181111561053757600080fd5b87602082850101111561054957600080fd5b6020830194508093505050509250925092565b6020808252818101527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572604082015260600190565b6001600160a01b03841681526040602082018190528101829052818360608301376000818301606090810191909152601f909201601f1916010192915050565b6000806000606084860312156105e657600080fd5b835192506020840151915060408401519050925092509256fea2646970667358221220895b4c6a46f70c477d339fd455b17d31fb8345a7c04349db35d179de03fbb54b64736f6c634300080d0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100885760003560e01c80639368a3d31161005b5780639368a3d314610102578063aa15efc814610115578063f2fde38b14610126578063f36762ce1461013957600080fd5b8063159c5ea11461008d5780633598e90b146100a2578063715018a6146100d55780638da5cb5b146100dd575b600080fd5b6100a061009b3660046104b3565b61014c565b005b6100b56100b03660046104d7565b6101d3565b604080519384526020840192909252908201526060015b60405180910390f35b6100a061025c565b6000546001600160a01b03165b6040516001600160a01b0390911681526020016100cc565b6100a06101103660046104b3565b610292565b6001546001600160a01b03166100ea565b6100a06101343660046104b3565b61031e565b6100a06101473660046104d7565b6103b9565b6000546001600160a01b0316331461017f5760405162461bcd60e51b81526004016101769061055c565b60405180910390fd5b600180546001600160a01b0319166001600160a01b0383169081179091556040519081527f2bcd43869347a1d42f97ac6042f3d129817abd05a6125f9750fe3724e321d23e9060200160405180910390a150565b600154604051633598e90b60e01b8152600091829182916001600160a01b031690633598e90b9061020c90899089908990600401610591565b606060405180830381865afa158015610229573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061024d91906105d1565b92509250925093509350939050565b6000546001600160a01b031633146102865760405162461bcd60e51b81526004016101769061055c565b610290600061044e565b565b6000546001600160a01b031633146102bc5760405162461bcd60e51b81526004016101769061055c565b60015460405163fc41168360e01b81526001600160a01b0383811660048301529091169063fc41168390602401600060405180830381600087803b15801561030357600080fd5b505af1158015610317573d6000803e3d6000fd5b5050505050565b6000546001600160a01b031633146103485760405162461bcd60e51b81526004016101769061055c565b6001600160a01b0381166103ad5760405162461bcd60e51b815260206004820152602660248201527f4f776e61626c653a206e6577206f776e657220697320746865207a65726f206160448201526564647265737360d01b6064820152608401610176565b6103b68161044e565b50565b6000546001600160a01b031633146103e35760405162461bcd60e51b81526004016101769061055c565b6001546040516379b3b16760e11b81526001600160a01b039091169063f36762ce9061041790869086908690600401610591565b600060405180830381600087803b15801561043157600080fd5b505af1158015610445573d6000803e3d6000fd5b50505050505050565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6001600160a01b03811681146103b657600080fd5b6000602082840312156104c557600080fd5b81356104d08161049e565b9392505050565b6000806000604084860312156104ec57600080fd5b83356104f78161049e565b9250602084013567ffffffffffffffff8082111561051457600080fd5b818601915086601f83011261052857600080fd5b81358181111561053757600080fd5b87602082850101111561054957600080fd5b6020830194508093505050509250925092565b6020808252818101527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572604082015260600190565b6001600160a01b03841681526040602082018190528101829052818360608301376000818301606090810191909152601f909201601f1916010192915050565b6000806000606084860312156105e657600080fd5b835192506020840151915060408401519050925092509256fea2646970667358221220895b4c6a46f70c477d339fd455b17d31fb8345a7c04349db35d179de03fbb54b64736f6c634300080d0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getEpochHash(address,bytes)": {
+        "details": "The encoding of _claimProof might vary depending on the history implementation"
+      },
+      "getHistory()": {
+        "returns": {
+          "_0": "The current history"
+        }
+      },
+      "migrateHistoryToConsensus(address)": {
+        "params": {
+          "_consensus": "The new consensus"
+        }
+      },
+      "owner()": {
+        "details": "Returns the address of the current owner."
+      },
+      "renounceOwnership()": {
+        "details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner."
+      },
+      "setHistory(address)": {
+        "details": "Should have access control",
+        "params": {
+          "_history": "The new history"
+        }
+      },
+      "submitClaim(address,bytes)": {
+        "details": "Will fail if history has migrated to another consensus"
+      },
+      "transferOwnership(address)": {
+        "details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ConsensusCreated(address,address,address)": {
+        "notice": "A consensus was created"
+      },
+      "NewHistory(address)": {
+        "notice": "A new history is used"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "getHistory()": {
+        "notice": "Get the current history"
+      },
+      "migrateHistoryToConsensus(address)": {
+        "notice": "Migrate the current history to a new consensus"
+      },
+      "setHistory(address)": {
+        "notice": "Point the consensus to a new history"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "317800",
+        "executionCost": "infinite",
+        "totalCost": "infinite"
+      },
+      "external": {
+        "getEpochHash(address,bytes)": "infinite",
+        "getHistory()": "2353",
+        "migrateHistoryToConsensus(address)": "infinite",
+        "owner()": "2387",
+        "renounceOwnership()": "28159",
+        "setHistory(address)": "27759",
+        "submitClaim(address,bytes)": "infinite",
+        "transferOwnership(address)": "infinite"
+      }
+    },
+    "methodIdentifiers": {
+      "getEpochHash(address,bytes)": "3598e90b",
+      "getHistory()": "aa15efc8",
+      "migrateHistoryToConsensus(address)": "9368a3d3",
+      "owner()": "8da5cb5b",
+      "renounceOwnership()": "715018a6",
+      "setHistory(address)": "159c5ea1",
+      "submitClaim(address,bytes)": "f36762ce",
+      "transferOwnership(address)": "f2fde38b"
+    }
+  }
+}

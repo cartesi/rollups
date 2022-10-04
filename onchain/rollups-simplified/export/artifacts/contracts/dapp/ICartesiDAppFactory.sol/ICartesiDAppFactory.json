@@ -1,0 +1,116 @@
+{
+  "contractName": "ICartesiDAppFactory",
+  "sourceName": "contracts/dapp/ICartesiDAppFactory.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "contract IConsensus",
+          "name": "consensus",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "dappOwner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "templateHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract CartesiDApp",
+          "name": "application",
+          "type": "address"
+        }
+      ],
+      "name": "ApplicationCreated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IConsensus",
+          "name": "_consensus",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_dappOwner",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_templateHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "newApplication",
+      "outputs": [
+        {
+          "internalType": "contract CartesiDApp",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "ApplicationCreated(address,address,bytes32,address)": {
+        "params": {
+          "application": "The application",
+          "consensus": "The consensus to which the DApp is subscribed",
+          "dappOwner": "The address that owns the DApp",
+          "templateHash": "The hash of the initial state of the Cartesi Machine"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "newApplication(address,address,bytes32)": {
+        "params": {
+          "_consensus": "The consensus to which the DApp should be subscribed",
+          "_dappOwner": "The address that should own the DApp",
+          "_templateHash": "The hash of the initial state of the Cartesi Machine"
+        },
+        "returns": {
+          "_0": "The application"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ApplicationCreated(address,address,bytes32,address)": {
+        "notice": "A new application was deployed"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "newApplication(address,address,bytes32)": {
+        "notice": "Deploy a new application"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "newApplication(address,address,bytes32)": "3648bfb5"
+    }
+  }
+}

@@ -10,7 +10,7 @@
       },
       {
         "indexed": false,
-        "internalType": "contract InputBox",
+        "internalType": "contract IInputBox",
         "name": "inputBox",
         "type": "address"
       },
@@ -46,7 +46,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_data",
+        "name": "_claimProof",
         "type": "bytes"
       }
     ],
@@ -119,7 +119,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_data",
+        "name": "_claim",
         "type": "bytes"
       }
     ],

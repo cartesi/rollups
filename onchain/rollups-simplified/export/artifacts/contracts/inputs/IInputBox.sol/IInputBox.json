@@ -1,0 +1,134 @@
+{
+  "contractName": "IInputBox",
+  "sourceName": "contracts/inputs/IInputBox.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "dapp",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "input",
+          "type": "bytes"
+        }
+      ],
+      "name": "InputAdded",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_input",
+          "type": "bytes"
+        }
+      ],
+      "name": "addInput",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
+        }
+      ],
+      "name": "getNumberOfInputs",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "InputAdded(address,address,bytes)": {
+        "params": {
+          "dapp": "The address of the DApp",
+          "input": "The contents of the input",
+          "sender": "The address that sent the input"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "addInput(address,bytes)": {
+        "params": {
+          "_dapp": "The address of the DApp",
+          "_input": "The contents of the input"
+        },
+        "returns": {
+          "_0": "The hash of the input plus some extra metadata"
+        }
+      },
+      "getNumberOfInputs(address)": {
+        "params": {
+          "_dapp": "The address of the DApp"
+        },
+        "returns": {
+          "_0": "Number of inputs in the DApp's input box"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "InputAdded(address,address,bytes)": {
+        "notice": "Emitted when an input is added to a DApp's input box"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "addInput(address,bytes)": {
+        "notice": "Add an input to a DApp's input box"
+      },
+      "getNumberOfInputs(address)": {
+        "notice": "Get the number of inputs in a DApp's input box"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "addInput(address,bytes)": "1789cd63",
+      "getNumberOfInputs(address)": "61a93c87"
+    }
+  }
+}

@@ -1,0 +1,221 @@
+{
+  "contractName": "IConsensus",
+  "sourceName": "contracts/consensus/IConsensus.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract IInputBox",
+          "name": "inputBox",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract IHistory",
+          "name": "history",
+          "type": "address"
+        }
+      ],
+      "name": "ConsensusCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "contract IHistory",
+          "name": "history",
+          "type": "address"
+        }
+      ],
+      "name": "NewHistory",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_claimProof",
+          "type": "bytes"
+        }
+      ],
+      "name": "getEpochHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "epochHash_",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "inputIndex_",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "epochInputIndex_",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getHistory",
+      "outputs": [
+        {
+          "internalType": "contract IHistory",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_consensus",
+          "type": "address"
+        }
+      ],
+      "name": "migrateHistoryToConsensus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IHistory",
+          "name": "_history",
+          "type": "address"
+        }
+      ],
+      "name": "setHistory",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_claim",
+          "type": "bytes"
+        }
+      ],
+      "name": "submitClaim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "ConsensusCreated(address,address,address)": {
+        "params": {
+          "history": "The history that the consensus writes to",
+          "inputBox": "The input box used by the consensus",
+          "owner": "The address that owns the consensus"
+        }
+      },
+      "NewHistory(address)": {
+        "params": {
+          "history": "The new history"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "getEpochHash(address,bytes)": {
+        "details": "The encoding of _claimProof might vary depending on the history implementation"
+      },
+      "getHistory()": {
+        "returns": {
+          "_0": "The current history"
+        }
+      },
+      "migrateHistoryToConsensus(address)": {
+        "params": {
+          "_consensus": "The new consensus"
+        }
+      },
+      "setHistory(address)": {
+        "details": "Should have access control",
+        "params": {
+          "_history": "The new history"
+        }
+      },
+      "submitClaim(address,bytes)": {
+        "details": "The encoding of _claim might vary depending on the history implementationShould have access control",
+        "params": {
+          "_claim": "The claim to be submitted to history",
+          "_dapp": "The DApp that the claim is about"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ConsensusCreated(address,address,address)": {
+        "notice": "A consensus was created"
+      },
+      "NewHistory(address)": {
+        "notice": "A new history is used"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "getHistory()": {
+        "notice": "Get the current history"
+      },
+      "migrateHistoryToConsensus(address)": {
+        "notice": "Migrate the current history to a new consensus"
+      },
+      "setHistory(address)": {
+        "notice": "Point the consensus to a new history"
+      },
+      "submitClaim(address,bytes)": {
+        "notice": "Submit a claim to history"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "getEpochHash(address,bytes)": "3598e90b",
+      "getHistory()": "aa15efc8",
+      "migrateHistoryToConsensus(address)": "9368a3d3",
+      "setHistory(address)": "159c5ea1",
+      "submitClaim(address,bytes)": "f36762ce"
+    }
+  }
+}

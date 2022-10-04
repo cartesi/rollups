@@ -58,7 +58,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "voucherPosition",
+        "name": "voucherId",
         "type": "uint256"
       }
     ],
@@ -86,7 +86,7 @@
         "components": [
           {
             "internalType": "uint64",
-            "name": "inputIndex",
+            "name": "epochInputIndex",
             "type": "uint64"
           },
           {
@@ -263,7 +263,7 @@
         "components": [
           {
             "internalType": "uint64",
-            "name": "inputIndex",
+            "name": "epochInputIndex",
             "type": "uint64"
           },
           {
@@ -317,5 +317,27 @@
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_receiver",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_value",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawEther",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]

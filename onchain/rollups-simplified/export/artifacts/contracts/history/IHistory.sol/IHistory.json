@@ -1,0 +1,150 @@
+{
+  "contractName": "IHistory",
+  "sourceName": "contracts/history/IHistory.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "dapp",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "claim",
+          "type": "bytes"
+        }
+      ],
+      "name": "NewClaim",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_claimProof",
+          "type": "bytes"
+        }
+      ],
+      "name": "getEpochHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "epochHash_",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "inputIndex_",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "epochInputIndex_",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_consensus",
+          "type": "address"
+        }
+      ],
+      "name": "migrateToConsensus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_claim",
+          "type": "bytes"
+        }
+      ],
+      "name": "submitClaim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "NewClaim(address,bytes)": {
+        "details": "The encoding of claim might vary depending on the history implementation",
+        "params": {
+          "claim": "The claim that was submitted",
+          "dapp": "The DApp that the claim is about"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "getEpochHash(address,bytes)": {
+        "details": "The encoding of _claimProof might vary depending on the history implementation"
+      },
+      "migrateToConsensus(address)": {
+        "details": "Should have access control",
+        "params": {
+          "_consensus": "The new consensus"
+        }
+      },
+      "submitClaim(address,bytes)": {
+        "details": "The encoding of _claim might vary depending on the history implementationShould have access control",
+        "params": {
+          "_claim": "The claim to be submitted",
+          "_dapp": "The DApp that the claim is about"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "NewClaim(address,bytes)": {
+        "notice": "A new claim was submitted"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "migrateToConsensus(address)": {
+        "notice": "Migrate to a new consensus"
+      },
+      "submitClaim(address,bytes)": {
+        "notice": "Submit a claim"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "getEpochHash(address,bytes)": "3598e90b",
+      "migrateToConsensus(address)": "fc411683",
+      "submitClaim(address,bytes)": "f36762ce"
+    }
+  }
+}
