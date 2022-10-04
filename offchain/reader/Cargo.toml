@@ -1,6 +1,6 @@
 [package]
 name = "reader"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2021"
 license = "Apache-2.0"
 authors = ["marko atanasievski <marko.atanasievski@cartesi.io>"]
