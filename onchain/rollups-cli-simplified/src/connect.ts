@@ -13,12 +13,14 @@ import fs from "fs";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import {
-    // InputFacet,
-    // InputFacet__factory,
-    // OutputFacet,
-    // OutputFacet__factory,
-    // ERC20PortalFacet,
-    // ERC20PortalFacet__factory,
+    InputBox,
+    InputBox__factory,
+    EtherPortal,
+    EtherPortal__factory,
+    ERC20Portal,
+    ERC20Portal__factory,
+    ERC721Portal,
+    ERC721Portal__factory,
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
 } from "@cartesi/rollups-simplified";
@@ -46,9 +48,10 @@ const deployments: Record<number, Deployment> = {
 };
 
 interface RollupsContracts {
-    // inputContract: InputFacet;
-    // outputContract: OutputFacet;
-    // erc20Portal: ERC20PortalFacet;
+    inputContract: InputBox;
+    etherPortal: EtherPortal;
+    erc20Portal: ERC20Portal;
+    erc721Portal: ERC721Portal;
 }
 
 export const rollups = (
@@ -65,22 +68,27 @@ export const rollups = (
         : undefined;
 
     // connect to contracts
-    // const inputContract = InputFacet__factory.connect(
-    //     address,
-    //     signer || provider
-    // );
-    // const outputContract = OutputFacet__factory.connect(
-    //     address,
-    //     signer || provider
-    // );
-    // const erc20Portal = ERC20PortalFacet__factory.connect(
-    //     address,
-    //     signer || provider
-    // );
+    const inputContract = InputBox__factory.connect(
+        address,
+        signer || provider
+    );
+    const etherPortal = EtherPortal__factory.connect(
+        address,
+        signer || provider
+    );
+    const erc20Portal = ERC20Portal__factory.connect(
+        address,
+        signer || provider
+    );
+    const erc721Portal = ERC721Portal__factory.connect(
+        address,
+        signer || provider
+    );
     return {
-        // inputContract,
-        // outputContract,
-        // erc20Portal,
+        inputContract,
+        etherPortal,
+        erc20Portal,
+        erc721Portal,
     };
 };
 
