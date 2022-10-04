@@ -13,19 +13,19 @@ import fs from "fs";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import {
-    InputFacet,
-    InputFacet__factory,
-    OutputFacet,
-    OutputFacet__factory,
-    ERC20PortalFacet,
-    ERC20PortalFacet__factory,
+    // InputFacet,
+    // InputFacet__factory,
+    // OutputFacet,
+    // OutputFacet__factory,
+    // ERC20PortalFacet,
+    // ERC20PortalFacet__factory,
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
-} from "@cartesi/rollups";
-import goerli from "@cartesi/rollups/export/abi/goerli.json";
-import polygon_mumbai from "@cartesi/rollups/export/abi/polygon_mumbai.json";
-import arbitrum_goerli from "@cartesi/rollups/export/abi/arbitrum_goerli.json";
-import optimism_goerli from "@cartesi/rollups/export/abi/optimism_goerli.json";
+} from "@cartesi/rollups-simplified";
+// import goerli from "@cartesi/rollups-simplified/export/abi/goerli.json";
+// import polygon_mumbai from "@cartesi/rollups-simplified/export/abi/polygon_mumbai.json";
+// import arbitrum_goerli from "@cartesi/rollups-simplified/export/abi/arbitrum_goerli.json";
+// import optimism_goerli from "@cartesi/rollups-simplified/export/abi/optimism_goerli.json";
 
 type DeploymentContract = {
     address: string;
@@ -39,16 +39,16 @@ type Deployment = {
 };
 
 const deployments: Record<number, Deployment> = {
-    5: goerli,
-    80001: polygon_mumbai,
-    421613: arbitrum_goerli,
-    420: optimism_goerli,
+    // 5: goerli,
+    // 80001: polygon_mumbai,
+    // 421613: arbitrum_goerli,
+    // 420: optimism_goerli,
 };
 
 interface RollupsContracts {
-    inputContract: InputFacet;
-    outputContract: OutputFacet;
-    erc20Portal: ERC20PortalFacet;
+    // inputContract: InputFacet;
+    // outputContract: OutputFacet;
+    // erc20Portal: ERC20PortalFacet;
 }
 
 export const rollups = (
@@ -65,22 +65,22 @@ export const rollups = (
         : undefined;
 
     // connect to contracts
-    const inputContract = InputFacet__factory.connect(
-        address,
-        signer || provider
-    );
-    const outputContract = OutputFacet__factory.connect(
-        address,
-        signer || provider
-    );
-    const erc20Portal = ERC20PortalFacet__factory.connect(
-        address,
-        signer || provider
-    );
+    // const inputContract = InputFacet__factory.connect(
+    //     address,
+    //     signer || provider
+    // );
+    // const outputContract = OutputFacet__factory.connect(
+    //     address,
+    //     signer || provider
+    // );
+    // const erc20Portal = ERC20PortalFacet__factory.connect(
+    //     address,
+    //     signer || provider
+    // );
     return {
-        inputContract,
-        outputContract,
-        erc20Portal,
+        // inputContract,
+        // outputContract,
+        // erc20Portal,
     };
 };
 

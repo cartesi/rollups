@@ -12,7 +12,7 @@
     },
     "references": [
         {
-            "path": "../rollups/tsconfig.prod.json"
+            "path": "../rollups-simplified/tsconfig.prod.json"
         }
     ]
 }

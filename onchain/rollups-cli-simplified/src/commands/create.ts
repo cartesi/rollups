@@ -11,8 +11,8 @@
 
 import fs from "fs";
 import fse from "fs-extra";
-import { ICartesiDAppFactory } from "@cartesi/rollups";
-import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/ICartesiDAppFactory";
+import { ICartesiDAppFactory } from "@cartesi/rollups-simplified";
+import { ApplicationCreatedEvent } from "@cartesi/rollups-simplified/dist/src/types/contracts/dapp/ICartesiDAppFactory";
 import { Wallet } from "ethers";
 import { Argv } from "yargs";
 import { BlockchainArgs, blockchainBuilder } from "../args";
@@ -20,42 +20,15 @@ import { factory } from "../connect";
 import { safeHandler } from "../util";
 
 interface Args extends BlockchainArgs {
-    diamondOwner?: string;
+    dappOwner?: string;
+    consensusAddress?: string;
     templateHash?: string;
     templateHashFile?: string;
-    inputDuration: number;
-    challengePeriod: number;
-    inputLog2Size: number;
-    feePerClaim: string;
-    feeManagerOwner?: string;
-    validators: string;
     outputFile?: string;
 }
 
 export const command = "create";
 export const describe = "Instantiate rollups application";
-
-/**
- * Process a CSV list of addresses which can also be integers representing account index from mnemonic
- * @param str CSV list of addresses or account indexes
- * @param mnemonic mnemonic to use if account index is used
- * @returns list of addresses
- */
-const validators = (str: string, mnemonic: string): string[] => {
-    const isIndex = (str: string): boolean =>
-        str.match(/^[0-9]+$/) ? true : false;
-
-    const mnemonicAddress = (mnemonic: string, index: number): string =>
-        Wallet.fromMnemonic(mnemonic, `m/44'/60'/0'/0/${index}`).address;
-
-    return str
-        .split(",")
-        .map((address) =>
-            isIndex(address)
-                ? mnemonicAddress(mnemonic, parseInt(address))
-                : address
-        );
-};
 
 /**
  * Read a Cartesi Machine hash from its internal `hash` binary file
@@ -71,8 +44,12 @@ const readTemplateHash = (filename: string): string => {
 
 export const builder = (yargs: Argv<{}>): Argv<Args> => {
     return blockchainBuilder(yargs, true)
-        .option("diamondOwner", {
+        .option("dappOwner", {
             describe: "Rollups contract owner",
+            type: "string",
+        })
+        .option("consensusAddress", {
+            describe: "Consensus contract address",
             type: "string",
         })
         .option("templateHash", {
@@ -82,37 +59,6 @@ export const builder = (yargs: Argv<{}>): Argv<Args> => {
         .option("templateHashFile", {
             describe: "Cartesi Machine template hash file",
             type: "string",
-        })
-        .option("inputDuration", {
-            describe: "Time window of input collection, in seconds",
-            type: "number",
-            default: 86400,
-        })
-        .option("challengePeriod", {
-            describe: "Time window of challenge, in seconds",
-            type: "number",
-            default: 604800,
-        })
-        .option("inputLog2Size", {
-            describe: "Log2 size of input",
-            type: "number",
-            default: 25,
-        })
-        .option("feePerClaim", {
-            describe: "Fee to reward validators for claims",
-            type: "string",
-            default: "10000000000000000000",
-        })
-        .option("feeManagerOwner", {
-            describe:
-                "Fee Manager owner, defaults to the address of the deployer",
-            type: "string",
-        })
-        .option("validators", {
-            describe:
-                "Comma separated list of validator nodes addresses. If item is a number consider as an account index of the defined MNEMONIC",
-            type: "string",
-            default: "0",
         })
         .option("outputFile", {
             describe: "Output file to write application address",
@@ -146,22 +92,11 @@ export const handler = safeHandler<Args>(async (args) => {
     const templateHash =
         args.templateHash || readTemplateHash(args.templateHashFile!);
 
-    // send transaction
-    const config: ICartesiDAppFactory.AppConfigStruct = {
-        diamondOwner: args.diamondOwner || address,
-        templateHash: templateHash,
-        inputDuration: args.inputDuration,
-        challengePeriod: args.challengePeriod,
-        inputLog2Size: args.inputLog2Size,
-        feePerClaim: args.feePerClaim,
-        feeManagerOwner: args.feeManagerOwner || address,
-        validators: validators(args.validators, args.mnemonic!),
-    };
-
-    // print configuration
-    console.log(config);
-
-    const tx = await factoryContract.newApplication(config);
+    const tx = await factoryContract.newApplication(
+        args.consensusAddress!,
+        args.dappOwner || address,
+        templateHash
+    );
     console.log(`transaction: ${tx.hash}`);
     console.log("waiting for confirmation...");
     const receipt = await tx.wait(1);
