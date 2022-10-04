@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.1] 2022-10-04
+
+### Changed
+
+- Fix dispatcher's configuration for server-manager threads
+- Improve documentation of GraphQL API
 
 ## [0.6.0] 2022-09-13
 
@@ -88,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Specific ERC-20 Portal
 - Deprecated mock contracts
 
+[0.6.1]: https://github.com/cartesi/rollups/releases/tag/v0.6.1
 [0.6.0]: https://github.com/cartesi/rollups/releases/tag/v0.6.0
 [0.5.0]: https://github.com/cartesi/rollups/releases/tag/v0.5.0
 [0.4.0]: https://github.com/cartesi/rollups/releases/tag/v0.4.0
