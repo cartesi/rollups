@@ -14,31 +14,30 @@
 pragma solidity >=0.7.0;
 
 interface IInput {
-    /// @notice adds input to correct inbox
+    /// @notice Adds an input to the accumulating epoch's inbox
     /// @param _input bytes array of input
-    /// @return merkle root hash of input
-    /// @dev  msg.sender and timestamp are preppended log2 size
-    ///       has to be calculated offchain taking that into account
+    /// @return hash of the input
+    /// @dev There is a maximum size for the input data that is defined by the DApp
     function addInput(bytes calldata _input) external returns (bytes32);
 
-    /// @notice returns input from correct input inbox
+    /// @notice Returns the hash of the input at the provided input index, for the current sealed epoch
     /// @param _index position of the input on inbox
-    /// @return root hash of input
+    /// @return hash of the input
     function getInput(uint256 _index) external view returns (bytes32);
 
-    /// @notice returns number of inputs on correct inbox
+    /// @notice Returns the number of inputs on the current sealed epoch's inbox
     /// @return number of inputs of non active inbox
     function getNumberOfInputs() external view returns (uint256);
 
-    /// @notice returns active current inbox index
-    /// @return index of current active inbox
+    /// @notice Returns the internal index of the current accumulating inbox
+    /// @return index of current accumulating inbox
     function getCurrentInbox() external view returns (uint256);
 
-    /// @notice input added
+    /// @notice Indicates that an input was added to the accumulating epoch's inbox
     /// @param epochNumber which epoch this input belongs to
     /// @param inputIndex index of the input just added
-    /// @param sender msg.sender
-    /// @param timestamp block.timestamp
+    /// @param sender msg.sender address
+    /// @param timestamp block timestamp
     /// @param input input data
     event InputAdded(
         uint256 indexed epochNumber,
