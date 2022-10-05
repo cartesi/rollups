@@ -11,17 +11,17 @@
 
 import fs from "fs";
 import fse from "fs-extra";
-import { ICartesiDAppFactory } from "@cartesi/rollups-simplified";
-import { ApplicationCreatedEvent } from "@cartesi/rollups-simplified/dist/src/types/contracts/dapp/ICartesiDAppFactory";
 import { Wallet } from "ethers";
 import { Argv } from "yargs";
 import { BlockchainArgs, blockchainBuilder } from "../args";
 import { factory } from "../connect";
 import { safeHandler } from "../util";
 
+import { ApplicationCreatedEvent } from "@cartesi/rollups-simplified/dist/src/types/contracts/dapp/ICartesiDAppFactory";
+
 interface Args extends BlockchainArgs {
     dappOwner?: string;
-    consensusAddress?: string;
+    consensusAddress: string;
     templateHash?: string;
     templateHashFile?: string;
     outputFile?: string;
@@ -51,6 +51,7 @@ export const builder = (yargs: Argv<{}>): Argv<Args> => {
         .option("consensusAddress", {
             describe: "Consensus contract address",
             type: "string",
+            demandOption: true,
         })
         .option("templateHash", {
             describe: "Cartesi Machine template hash",
@@ -93,7 +94,7 @@ export const handler = safeHandler<Args>(async (args) => {
         args.templateHash || readTemplateHash(args.templateHashFile!);
 
     const tx = await factoryContract.newApplication(
-        args.consensusAddress!,
+        args.consensusAddress,
         args.dappOwner || address,
         templateHash
     );

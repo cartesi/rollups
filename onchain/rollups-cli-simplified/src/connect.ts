@@ -13,14 +13,6 @@ import fs from "fs";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import {
-    InputBox,
-    InputBox__factory,
-    EtherPortal,
-    EtherPortal__factory,
-    ERC20Portal,
-    ERC20Portal__factory,
-    ERC721Portal,
-    ERC721Portal__factory,
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
 } from "@cartesi/rollups-simplified";
@@ -45,51 +37,6 @@ const deployments: Record<number, Deployment> = {
     // 80001: polygon_mumbai,
     // 421613: arbitrum_goerli,
     // 420: optimism_goerli,
-};
-
-interface RollupsContracts {
-    inputContract: InputBox;
-    etherPortal: EtherPortal;
-    erc20Portal: ERC20Portal;
-    erc721Portal: ERC721Portal;
-}
-
-export const rollups = (
-    rpc: string,
-    address: string,
-    mnemonic?: string
-): RollupsContracts => {
-    // connect to JSON-RPC provider
-    const provider = new JsonRpcProvider(rpc);
-
-    // create signer to be used to send transactions
-    const signer = mnemonic
-        ? ethers.Wallet.fromMnemonic(mnemonic).connect(provider)
-        : undefined;
-
-    // connect to contracts
-    const inputContract = InputBox__factory.connect(
-        address,
-        signer || provider
-    );
-    const etherPortal = EtherPortal__factory.connect(
-        address,
-        signer || provider
-    );
-    const erc20Portal = ERC20Portal__factory.connect(
-        address,
-        signer || provider
-    );
-    const erc721Portal = ERC721Portal__factory.connect(
-        address,
-        signer || provider
-    );
-    return {
-        inputContract,
-        etherPortal,
-        erc20Portal,
-        erc721Portal,
-    };
 };
 
 export const factory = async (
