@@ -28,7 +28,13 @@ contract HistoryTest is Test {
     function setUp() public {
         vm.expectEmit(true, true, false, false);
         emit OwnershipTransferred(address(0), address(this));
-        history = new History();
+        history = new History(address(this));
+    }
+
+    function testOwner(address owner) public {
+        vm.assume(owner != address(0));
+        history = new History(owner);
+        assertEq(history.owner(), owner);
     }
 
     function testInitialConsensus() public {
