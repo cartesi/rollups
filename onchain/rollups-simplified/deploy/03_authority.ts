@@ -38,10 +38,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
 
     const history = History__factory.connect(History.address, deployerSigner);
-    const tx = await history.migrateToConsensus(Authority.address);
-    const receipt = await tx.wait();
-    if (!receipt.status) {
-        throw Error(`Could not transfer ownership over History to Authority: ${tx.hash}`);
+    const historyOwner = await history.owner();
+
+    if (historyOwner != Authority.address) {
+        const tx = await history.transferOwnership(Authority.address);
+        const receipt = await tx.wait();
+        if (!receipt.status) {
+            throw Error(`Could not transfer ownership over History to Authority: ${tx.hash}`);
+        }
     }
 };
 
