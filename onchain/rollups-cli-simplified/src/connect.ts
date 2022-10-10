@@ -13,6 +13,8 @@ import fs from "fs";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import {
+    Authority,
+    Authority__factory,
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
 } from "@cartesi/rollups-simplified";
@@ -39,50 +41,62 @@ const deployments: Record<number, Deployment> = {
     // 420: optimism_goerli,
 };
 
-export const factory = async (
-    rpc: string,
-    mnemonic?: string,
-    accountIndex?: number,
-    deploymentPath?: string
-): Promise<CartesiDAppFactory> => {
-    // connect to JSON-RPC provider
-    const provider = new JsonRpcProvider(rpc);
+function getContractConnector<T>(contractName: string, contractFactory: any) {
+    return async (
+        rpc: string,
+        mnemonic?: string,
+        accountIndex?: number,
+        deploymentPath?: string
+    ): Promise<T> => {
+        // connect to JSON-RPC provider
+        const provider = new JsonRpcProvider(rpc);
 
-    // create signer to be used to send transactions
-    const signer = mnemonic
-        ? ethers.Wallet.fromMnemonic(
-              mnemonic,
-              `m/44'/60'/0'/0/${accountIndex}`
-          ).connect(provider)
-        : undefined;
+        // create signer to be used to send transactions
+        const signer = mnemonic
+            ? ethers.Wallet.fromMnemonic(
+                  mnemonic,
+                  `m/44'/60'/0'/0/${accountIndex}`
+              ).connect(provider)
+            : undefined;
 
-    const { chainId } = await provider.getNetwork();
+        const { chainId } = await provider.getNetwork();
 
-    let address;
-    switch (chainId) {
-        case 31337: // hardhat
-            if (!deploymentPath) {
-                throw new Error(
-                    `undefined deployment path for network ${31337}`
+        let address;
+        switch (chainId) {
+            case 31337: // hardhat
+                if (!deploymentPath) {
+                    throw new Error(
+                        `undefined deployment path for network ${31337}`
+                    );
+                }
+                if (!fs.existsSync(deploymentPath)) {
+                    throw new Error(
+                        `deployment file '${deploymentPath}' not found`
+                    );
+                }
+                const deployment: Deployment = JSON.parse(
+                    fs.readFileSync(deploymentPath, "utf8")
                 );
-            }
-            if (!fs.existsSync(deploymentPath)) {
-                throw new Error(
-                    `deployment file '${deploymentPath}' not found`
-                );
-            }
-            const deployment: Deployment = JSON.parse(
-                fs.readFileSync(deploymentPath, "utf8")
-            );
-            address = deployment.contracts["CartesiDAppFactory"].address;
-            break;
-        default:
-            const networkDeployment = deployments[chainId];
-            if (!networkDeployment) {
-                throw new Error(`unsupported network ${chainId}`);
-            }
-            address = networkDeployment.contracts["CartesiDAppFactory"].address;
-    }
-    // connect to contracts
-    return CartesiDAppFactory__factory.connect(address, signer || provider);
-};
+                address = deployment.contracts[contractName].address;
+                break;
+            default:
+                const networkDeployment = deployments[chainId];
+                if (!networkDeployment) {
+                    throw new Error(`unsupported network ${chainId}`);
+                }
+                address = networkDeployment.contracts[contractName].address;
+        }
+        // connect to contracts
+        return contractFactory.connect(address, signer || provider);
+    };
+}
+
+export const authority = getContractConnector<Authority>(
+    "Authority",
+    Authority__factory
+);
+
+export const factory = getContractConnector<CartesiDAppFactory>(
+    "CartesiDAppFactory",
+    CartesiDAppFactory__factory
+);
