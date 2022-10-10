@@ -57,9 +57,6 @@ contract CartesiDAppTest is TestBase {
     );
     event NewConsensus(IConsensus newConsensus);
 
-    function setUp() public view {
-    }
-
     function testConstructor(
         IConsensus _consensus,
         address _owner,
