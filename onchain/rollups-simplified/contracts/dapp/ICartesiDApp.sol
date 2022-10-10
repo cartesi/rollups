@@ -10,7 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-// @title ICartesi DApp
+/// @title ICartesi DApp
 pragma solidity 0.8.13;
 
 import {IConsensus} from "../consensus/IConsensus.sol";

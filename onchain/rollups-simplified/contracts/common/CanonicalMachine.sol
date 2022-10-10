@@ -10,7 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-// @title Canonical Machine Constants
+/// @title Canonical Machine Constants
 pragma solidity ^0.8.13;
 
 library CanonicalMachine {
