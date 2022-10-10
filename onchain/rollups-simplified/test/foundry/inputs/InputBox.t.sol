@@ -77,7 +77,7 @@ contract InputBoxTest is Test {
                 i // inputBox.length
             );
             // test if input hash is the same as in InputBox
-            assertEq(inputHash, inputBox.inputBoxes(_dapp, i));
+            assertEq(inputHash, inputBox.getInputHash(_dapp, i));
             // test if input hash is the same as returned from calling addInput() function
             assertEq(inputHash, returnedValues[i]);
         }

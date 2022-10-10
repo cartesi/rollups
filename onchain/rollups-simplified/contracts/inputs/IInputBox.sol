@@ -32,4 +32,13 @@ interface IInputBox {
     /// @param _dapp The address of the DApp
     /// @return Number of inputs in the DApp's input box
     function getNumberOfInputs(address _dapp) external view returns (uint256);
+
+    /// @notice Get the hash of an input in a DApp's input box
+    /// @param _dapp The address of the DApp
+    /// @param _index The index of the input in the DApp's input box
+    /// @return The hash of the input at the provided index in the DApp's input box
+    function getInputHash(address _dapp, uint256 _index)
+        external
+        view
+        returns (bytes32);
 }

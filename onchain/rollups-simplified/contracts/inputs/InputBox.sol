@@ -17,7 +17,7 @@ import {IInputBox} from "./IInputBox.sol";
 import {LibInput} from "../library/LibInput.sol";
 
 contract InputBox is IInputBox {
-    mapping(address => bytes32[]) public inputBoxes;
+    mapping(address => bytes32[]) inputBoxes;
 
     function addInput(address _dapp, bytes calldata _input)
         public
@@ -50,5 +50,14 @@ contract InputBox is IInputBox {
         returns (uint256)
     {
         return inputBoxes[_dapp].length;
+    }
+
+    function getInputHash(address _dapp, uint256 _index)
+        public
+        view
+        override
+        returns (bytes32)
+    {
+        return inputBoxes[_dapp][_index];
     }
 }
