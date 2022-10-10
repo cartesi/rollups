@@ -17,7 +17,7 @@ import { History__factory } from "../src/types";
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments, ethers, getNamedAccounts } = hre;
     const { deployer } = await getNamedAccounts();
-    const [ deployerSigner ] = await ethers.getSigners();
+    const [deployerSigner] = await ethers.getSigners();
 
     const opts: DeployOptions = {
         deterministicDeployment: true,
@@ -44,7 +44,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const tx = await history.transferOwnership(Authority.address);
         const receipt = await tx.wait();
         if (!receipt.status) {
-            throw Error(`Could not transfer ownership over History to Authority: ${tx.hash}`);
+            throw Error(
+                `Could not transfer ownership over History to Authority: ${tx.hash}`
+            );
         }
     }
 };

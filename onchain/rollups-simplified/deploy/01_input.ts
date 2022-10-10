@@ -27,15 +27,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     await deployments.deploy("EtherPortal", {
         ...opts,
-        args: [InputBox.address]
+        args: [InputBox.address],
     });
     await deployments.deploy("ERC20Portal", {
         ...opts,
-        args: [InputBox.address]
+        args: [InputBox.address],
     });
     await deployments.deploy("ERC721Portal", {
         ...opts,
-        args: [InputBox.address]
+        args: [InputBox.address],
     });
 };
 

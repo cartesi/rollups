@@ -30,7 +30,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         libraries: {
             Bitmask: Bitmask.address,
             Merkle: Merkle.address,
-        }
+        },
     });
 };
 
