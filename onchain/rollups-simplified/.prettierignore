@@ -9,3 +9,4 @@ abi
 out
 lib
 forge-cache
+test/foundry/dapp/helper
