@@ -18,10 +18,14 @@ import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputHeaders} from "../common/InputHeaders.sol";
 
 contract EtherPortal is IEtherPortal {
-    IInputBox public immutable inputBox;
+    IInputBox immutable inputBox;
 
     constructor(IInputBox _inputBox) {
         inputBox = _inputBox;
+    }
+
+    function getInputBox() external view override returns (IInputBox) {
+        return inputBox;
     }
 
     function depositEther(address _dapp, bytes calldata _data)

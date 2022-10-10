@@ -13,9 +13,10 @@
 /// @title ERC-721 Portal
 pragma solidity ^0.8.13;
 
+import {IPortal} from "./IPortal.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-interface IERC721Portal {
+interface IERC721Portal is IPortal {
     // Permissionless functions
 
     /// @notice Transfer an ERC-721 token to a DApp and add an input to

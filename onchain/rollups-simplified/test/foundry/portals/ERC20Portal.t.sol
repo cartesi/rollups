@@ -62,6 +62,10 @@ contract ERC20PortalTest is Test {
         dapp = address(0x12345678);
     }
 
+    function testGetInputBox() public {
+        assertEq(address(erc20Portal.getInputBox()), address(inputBox));
+    }
+
     function testERC20DepositTrue(uint256 amount, bytes calldata data) public {
         // Create a normal token
         token = new NormalToken(10000);

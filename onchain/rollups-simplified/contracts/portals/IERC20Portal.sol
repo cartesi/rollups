@@ -13,9 +13,10 @@
 /// @title ERC-20 Portal
 pragma solidity ^0.8.13;
 
+import {IPortal} from "./IPortal.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface IERC20Portal {
+interface IERC20Portal is IPortal {
     // Permissionless functions
 
     /// @notice Transfer ERC-20 tokens to a DApp and add an input to

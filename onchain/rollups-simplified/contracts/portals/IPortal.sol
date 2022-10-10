@@ -10,18 +10,15 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Ether Portal
+/// @title Portal
 pragma solidity ^0.8.13;
 
-import {IPortal} from "./IPortal.sol";
+import {IInputBox} from "../inputs/IInputBox.sol";
 
-interface IEtherPortal is IPortal {
+interface IPortal {
     // Permissionless functions
 
-    /// @notice Transfer Ether to a DApp and add an input to
-    ///         the DApp's input box to signal such operation.
-    /// @param _dapp The address of the DApp
-    /// @param _data Additional data to be interpreted by L2
-    /// @dev All the value sent through this function is forwarded to the DApp
-    function depositEther(address _dapp, bytes calldata _data) external payable;
+    /// @notice Get the input box used by this portal
+    /// @return the input box
+    function getInputBox() external view returns (IInputBox);
 }

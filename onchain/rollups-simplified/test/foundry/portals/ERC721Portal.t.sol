@@ -68,6 +68,10 @@ contract ERC721PortalTest is Test {
         alice = address(0xdeadbeef);
     }
 
+    function testGetInputBox() public {
+        assertEq(address(erc721Portal.getInputBox()), address(inputBox));
+    }
+
     function testERC721DepositEOA(uint256 tokenId, bytes calldata data) public {
         // Assume the DApp is an EOA
         dapp = address(0x12345678);

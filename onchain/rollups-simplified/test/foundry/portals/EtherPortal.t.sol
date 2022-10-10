@@ -41,6 +41,10 @@ contract EtherPortalTest is Test {
         dapp = address(0x12345678);
     }
 
+    function testGetInputBox() public {
+        assertEq(address(etherPortal.getInputBox()), address(inputBox));
+    }
+
     function testEtherDeposit(uint256 value, bytes calldata data) public {
         // Construct the Ether deposit input
         bytes memory input = abi.encodePacked(
