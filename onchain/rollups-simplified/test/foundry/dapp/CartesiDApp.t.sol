@@ -36,9 +36,9 @@ contract EtherReceiver {
 contract CartesiDAppTest is TestBase {
     CartesiDApp dapp;
     SimpleToken token;
-    VoucherProofSol3 pSol3; // auto-generated solidity contract version of proof
     OutputValidityProof voucherProof; // copy proof from contract to storage
 
+    bool constant log_vouchers = false;
     uint256 constant initialSupply = 1000000;
     uint256 constant transferAmount = 7;
     address constant tokenOwner = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
@@ -49,6 +49,7 @@ contract CartesiDAppTest is TestBase {
             recipient,
             transferAmount
         );
+
     event VoucherExecuted(uint256 voucherPosition);
     event OwnershipTransferred(
         address indexed previousOwner,
@@ -56,15 +57,7 @@ contract CartesiDAppTest is TestBase {
     );
     event NewConsensus(IConsensus newConsensus);
 
-    function setUp() public {
-        vm.prank(tokenOwner);
-        // deterministic deployment
-        token = new SimpleToken{salt: bytes32(bytes20(tokenOwner))}(
-            initialSupply
-        );
-        // console.log(address(token));
-        // console.logBytes(payload);
-        pSol3 = new VoucherProofSol3();
+    function setUp() public view {
     }
 
     function testConstructor(
@@ -98,6 +91,13 @@ contract CartesiDAppTest is TestBase {
         uint256 _inputIndex
     ) public {
         setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
+
+        if (log_vouchers) {
+            console.log("voucher 3:");
+            console.log(address(token));
+            console.logBytes(payload);
+            revert("Transaction reverted on purpose to log debug info");
+        }
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(token.balanceOf(address(dapp)), 0);
@@ -257,7 +257,14 @@ contract CartesiDAppTest is TestBase {
         vm.assume(_owner != address(0));
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
 
+        // deploy token contract deterministically
+        vm.prank(tokenOwner);
+        token = new SimpleToken{salt: bytes32(bytes20(tokenOwner))}(
+            initialSupply
+        );
+
         // copy proof from contract to storage
+        VoucherProofSol3 pSol3 = new VoucherProofSol3();
         (
             voucherProof.epochInputIndex,
             voucherProof.outputIndex,
@@ -310,8 +317,12 @@ contract CartesiDAppTest is TestBase {
             recipient,
             transferAmount
         );
-        // console.log(address(deterministicDapp));
-        // console.logBytes(etherPayload);
+        if (log_vouchers) {
+            console.log("voucher 4:");
+            console.log(address(deterministicDapp));
+            console.logBytes(etherPayload);
+            revert("Transaction reverted on purpose to log debug info");
+        }
 
         // copy proof from contract to storage
         VoucherProofSol4 pSol4 = new VoucherProofSol4();
@@ -499,8 +510,12 @@ contract CartesiDAppTest is TestBase {
             recipient, // to
             0 // tokenId
         );
-        // console.log(address(snft));
-        // console.logBytes(NFTPayload);
+        if (log_vouchers) {
+            console.log("voucher 5:");
+            console.log(address(snft));
+            console.logBytes(NFTPayload);
+            revert("Transaction reverted on purpose to log debug info");
+        }
 
         // copy proof from contract to storage
         VoucherProofSol5 pSol5 = new VoucherProofSol5();

@@ -1,17 +1,19 @@
 import { BytesLike } from "@ethersproject/bytes";
-import epochStateV from "./voucher-proof-foundry.json";
-import epochStateN from "./decoded_proof_notice.json";
+import epochStateV from "./voucherProofs.json";
+import epochStateN from "./noticeProofs.json";
 
 // run `npx ts-node genProof.ts` to generate Solidity version of proofs from json files
 // If json file needs to be updated, instructions below are similar as in the `test/OutputFacet.ts` file
-// 1. uncomment `console.log` in `CartesiDApp.t.sol` file to see what the values of payload and destination should be.
-// 2. we need to use the script `gen-proofs.sh` here[1]. It originally has 2 vouchers/notices. Make it into 6.
+// 1. set the boolean state variable `log_vouchers` to `true` in `CartesiDApp.t.sol` file to see what the
+//    values of payload and destination should be.
+// 2. run `forge test -vv` and write down the addresses and payloads of each voucher.
+// 3. we need to use the script `gen-proofs.sh` here[1]. It originally has 2 vouchers/notices. Make it into 6.
 //    Replace `PAYLOAD` and `MSG_SENDER` accordingly.
 //    For Apple silicon users, use long duration of `sleep` command before `# Finish epoch`. For example, `sleep 10`.
-// 3. `gen-proofs.sh` outputs a JSON file with proofs in base64 encoding. This tool[2] converts base64 to hex.
+// 4. `gen-proofs.sh` outputs a JSON file with proofs in base64 encoding. This tool[2] converts base64 to hex.
 //    To install: `pip install base64-to-hex-converter`
-//    To run: `python -m b64to16 proof.json`
-// 4. run this script to generate Solidity version of proofs
+//    To run: `python -m b64to16 epoch-state.json | jq > test/foundry/dapp/helpers/voucherProofs.json`
+// 5. run this script to generate Solidity version of proofs
 //
 // ref links:
 // [1]: https://github.com/cartesi-corp/machine-emulator/tree/feature/gen-proofs/tools/gen-proofs
