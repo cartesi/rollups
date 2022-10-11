@@ -27,8 +27,8 @@ contract Authority is IConsensus, Ownable {
         IInputBox _inputBox,
         IHistory _history
     ) {
-        // constructor in Ownable already called `transferOwnership()` to the msg.sender
-        // we only need to call `transferOwnership()` again if msg.sender is not the same as owner
+        // constructor in Ownable already called `transferOwnership(msg.sender)`, so
+        // we only need to call `transferOwnership(_owner)` if _owner != msg.sender
         if (msg.sender != _owner) {
             transferOwnership(_owner);
         }
@@ -62,7 +62,7 @@ contract Authority is IConsensus, Ownable {
         return history;
     }
 
-    function getEpochHash(address _dapp, bytes calldata _claimProof)
+    function getEpochHash(address _dapp, bytes calldata _claimQuery)
         external
         view
         returns (
@@ -71,6 +71,6 @@ contract Authority is IConsensus, Ownable {
             uint256
         )
     {
-        return history.getEpochHash(_dapp, _claimProof);
+        return history.getEpochHash(_dapp, _claimQuery);
     }
 }

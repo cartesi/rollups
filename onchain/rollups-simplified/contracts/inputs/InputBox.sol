@@ -20,7 +20,7 @@ contract InputBox is IInputBox {
     mapping(address => bytes32[]) inputBoxes;
 
     function addInput(address _dapp, bytes calldata _input)
-        public
+        external
         override
         returns (bytes32)
     {
@@ -44,7 +44,7 @@ contract InputBox is IInputBox {
     }
 
     function getNumberOfInputs(address _dapp)
-        public
+        external
         view
         override
         returns (uint256)
@@ -53,7 +53,7 @@ contract InputBox is IInputBox {
     }
 
     function getInputHash(address _dapp, uint256 _index)
-        public
+        external
         view
         override
         returns (bytes32)

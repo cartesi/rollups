@@ -28,8 +28,8 @@ contract History is IHistory, Ownable {
     mapping(address => Claim[]) claims;
 
     constructor(address _owner) {
-        // constructor in Ownable already called `transferOwnership()` to the msg.sender
-        // we only need to call `transferOwnership()` again if msg.sender is not the same as owner
+        // constructor in Ownable already called `transferOwnership(msg.sender)`, so
+        // we only need to call `transferOwnership(_owner)` if _owner != msg.sender
         if (_owner != msg.sender) {
             transferOwnership(_owner);
         }
@@ -58,7 +58,7 @@ contract History is IHistory, Ownable {
         emit NewClaim(_dapp, _encodedClaim);
     }
 
-    function getEpochHash(address _dapp, bytes calldata _claimProof)
+    function getEpochHash(address _dapp, bytes calldata _claimQuery)
         external
         view
         override
@@ -69,7 +69,7 @@ contract History is IHistory, Ownable {
         )
     {
         (uint256 claimIndex, uint256 inputIndex) = abi.decode(
-            _claimProof,
+            _claimQuery,
             (uint256, uint256)
         );
 

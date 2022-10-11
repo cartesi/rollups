@@ -47,16 +47,18 @@ contract CartesiDApp is
     function executeVoucher(
         address _destination,
         bytes calldata _payload,
-        bytes calldata _claimData,
+        bytes calldata _claimQuery,
         OutputValidityProof calldata _v
     ) external override nonReentrant returns (bool) {
         bytes32 epochHash;
         uint256 inputIndex;
 
-        (epochHash, inputIndex) = getEpochHashAndInputIndex(_claimData, _v);
+        // query the current consensus for the epoch hash
+        (epochHash, inputIndex) = getEpochHashAndInputIndex(_claimQuery, _v);
 
-        // reverts if validity proof doesnt match
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
+
+        // reverts if proof isn't valid
         LibOutputValidation.checkVoucherValidityProof(
             encodedVoucher,
             epochHash,
@@ -88,15 +90,17 @@ contract CartesiDApp is
 
     function validateNotice(
         bytes calldata _notice,
-        bytes calldata _claimData,
+        bytes calldata _claimQuery,
         OutputValidityProof calldata _v
     ) external view override returns (bool) {
         bytes32 epochHash;
 
-        (epochHash, ) = getEpochHashAndInputIndex(_claimData, _v);
+        // query the current consensus for the epoch hash
+        (epochHash, ) = getEpochHashAndInputIndex(_claimQuery, _v);
 
-        // reverts if proof doesnt match
         bytes memory encodedNotice = abi.encode(_notice);
+
+        // reverts if proof isn't valid
         LibOutputValidation.checkNoticeValidityProof(
             encodedNotice,
             epochHash,
@@ -124,14 +128,14 @@ contract CartesiDApp is
     }
 
     function getEpochHashAndInputIndex(
-        bytes calldata _claimData,
+        bytes calldata _claimQuery,
         OutputValidityProof calldata _v
     ) internal view returns (bytes32 epochHash_, uint256 inputIndex_) {
         uint256 epochInputIndex;
 
         (epochHash_, inputIndex_, epochInputIndex) = consensus.getEpochHash(
             address(this),
-            _claimData
+            _claimQuery
         );
 
         require(

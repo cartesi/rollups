@@ -40,13 +40,13 @@ interface IHistory {
 
     /// @notice Get the epoch hash for a given DApp from a claim
     /// @param _dapp The DApp
-    /// @param _claimProof An auxiliary proof for retrieving the claim
+    /// @param _claimQuery Auxiliary data for querying the right claim
     /// @return epochHash_ The epoch hash contained in the claim
     /// @return inputIndex_ The index of the input in the input box
     /// @return epochInputIndex_ The offset between the input in the input box
     //                           and the first input of the epoch in the input box
-    /// @dev The encoding of _claimProof might vary depending on the history implementation
-    function getEpochHash(address _dapp, bytes calldata _claimProof)
+    /// @dev The encoding of _claimQuery might vary depending on the history implementation
+    function getEpochHash(address _dapp, bytes calldata _claimQuery)
         external
         view
         returns (
