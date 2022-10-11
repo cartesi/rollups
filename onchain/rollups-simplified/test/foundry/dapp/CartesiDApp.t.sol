@@ -316,7 +316,7 @@ contract CartesiDAppTest is TestBase {
         );
         if (log_vouchers) {
             console.log("voucher 4:");
-            console.log(address(deterministicDapp));
+            console.log(address(deterministicDapp)); // changes when CartesiDApp bytecode changes
             console.logBytes(etherPayload);
             revert("Transaction reverted on purpose to log debug info");
         }
@@ -510,7 +510,7 @@ contract CartesiDAppTest is TestBase {
         if (log_vouchers) {
             console.log("voucher 5:");
             console.log(address(snft));
-            console.logBytes(NFTPayload);
+            console.logBytes(NFTPayload); // changes when CartesiDApp bytecode changes
             revert("Transaction reverted on purpose to log debug info");
         }
 

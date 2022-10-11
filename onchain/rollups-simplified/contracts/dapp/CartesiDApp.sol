@@ -57,7 +57,11 @@ contract CartesiDApp is
 
         // reverts if validity proof doesnt match
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
-        LibOutputValidation.isValidVoucherProof(encodedVoucher, epochHash, _v);
+        LibOutputValidation.checkVoucherValidityProof(
+            encodedVoucher,
+            epochHash,
+            _v
+        );
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _v.outputIndex,
@@ -93,7 +97,11 @@ contract CartesiDApp is
 
         // reverts if proof doesnt match
         bytes memory encodedNotice = abi.encode(_notice);
-        LibOutputValidation.isValidNoticeProof(encodedNotice, epochHash, _v);
+        LibOutputValidation.checkNoticeValidityProof(
+            encodedNotice,
+            epochHash,
+            _v
+        );
 
         return true;
     }
