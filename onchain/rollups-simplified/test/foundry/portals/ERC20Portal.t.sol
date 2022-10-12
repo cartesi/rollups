@@ -23,14 +23,14 @@ import {InputBox} from "contracts/inputs/InputBox.sol";
 import {InputHeaders} from "contracts/common/InputHeaders.sol";
 
 contract NormalToken is ERC20 {
-    constructor(uint256 initialSupply) ERC20("NormalToken", "NORMAL") {
-        _mint(msg.sender, initialSupply);
+    constructor(uint256 _initialSupply) ERC20("NormalToken", "NORMAL") {
+        _mint(msg.sender, _initialSupply);
     }
 }
 
 contract UntransferableToken is ERC20 {
-    constructor(uint256 initialSupply) ERC20("UntransferableToken", "UTFAB") {
-        _mint(msg.sender, initialSupply);
+    constructor(uint256 _initialSupply) ERC20("UntransferableToken", "UTFAB") {
+        _mint(msg.sender, _initialSupply);
     }
 
     function transfer(address, uint256) public pure override returns (bool) {
@@ -46,6 +46,52 @@ contract UntransferableToken is ERC20 {
     }
 }
 
+contract WatcherToken is ERC20 {
+    IInputBox inputBox;
+
+    event WatchedTransfer(
+        address from,
+        address to,
+        uint256 amount,
+        uint256 numberOfInputs
+    );
+
+    constructor(IInputBox _inputBox, uint256 _initialSupply)
+        ERC20("WatcherToken", "WTCHR")
+    {
+        inputBox = _inputBox;
+        _mint(msg.sender, _initialSupply);
+    }
+
+    function transfer(address _to, uint256 _amount)
+        public
+        override
+        returns (bool)
+    {
+        emit WatchedTransfer(
+            msg.sender,
+            _to,
+            _amount,
+            inputBox.getNumberOfInputs(_to)
+        );
+        return super.transfer(_to, _amount);
+    }
+
+    function transferFrom(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) public override returns (bool) {
+        emit WatchedTransfer(
+            _from,
+            _to,
+            _amount,
+            inputBox.getNumberOfInputs(_to)
+        );
+        return super.transferFrom(_from, _to, _amount);
+    }
+}
+
 contract ERC20PortalTest is Test {
     IInputBox inputBox;
     IERC20Portal erc20Portal;
@@ -54,6 +100,12 @@ contract ERC20PortalTest is Test {
     address dapp;
 
     event InputAdded(address indexed dapp, address sender, bytes input);
+    event WatchedTransfer(
+        address from,
+        address to,
+        uint256 amount,
+        uint256 numberOfInputs
+    );
 
     function setUp() public {
         inputBox = new InputBox();
@@ -68,10 +120,7 @@ contract ERC20PortalTest is Test {
 
     function testERC20DepositTrue(uint256 amount, bytes calldata data) public {
         // Create a normal token
-        token = new NormalToken(10000);
-
-        // Check if `amount` doesn't surpass the total token supply
-        vm.assume(amount <= token.totalSupply());
+        token = new NormalToken(amount);
 
         // Construct the ERC-20 deposit input
         bytes memory input = abi.encodePacked(
@@ -112,7 +161,7 @@ contract ERC20PortalTest is Test {
 
     function testERC20DepositFalse(uint256 amount, bytes calldata data) public {
         // Create untransferable token
-        token = new UntransferableToken(10000);
+        token = new UntransferableToken(amount);
 
         // Construct the ERC-20 deposit input
         bytes memory input = abi.encodePacked(
@@ -151,14 +200,11 @@ contract ERC20PortalTest is Test {
         uint256 amount,
         bytes calldata data
     ) public {
-        // Create a normal token
-        token = new NormalToken(10000);
-
-        // Check if `amount` doesn't surpass the total token supply
-        vm.assume(amount <= token.totalSupply());
-
-        // Check if `amount` is non-zero
+        // Anyone can transfer 0 tokens :-)
         vm.assume(amount > 0);
+
+        // Create a normal token
+        token = new NormalToken(amount);
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
         token.transfer(alice, amount);
@@ -175,11 +221,11 @@ contract ERC20PortalTest is Test {
     function testRevertsInsufficientBalance(uint256 amount, bytes calldata data)
         public
     {
-        // Create a normal token
-        token = new NormalToken(10000);
+        // Check if `amount + 1` won't overflow
+        vm.assume(amount < type(uint256).max);
 
-        // Check if `amount` doesn't surpass the total token supply
-        vm.assume(amount <= token.totalSupply());
+        // Create a normal token
+        token = new NormalToken(amount);
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
         token.transfer(alice, amount);
@@ -194,5 +240,35 @@ contract ERC20PortalTest is Test {
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
+    }
+
+    function testNumberOfInputs(uint256 amount, bytes calldata data) public {
+        // Create a token that records the number of inputs it has received
+        token = new WatcherToken(inputBox, amount);
+
+        // Transfer ERC-20 tokens to Alice and start impersonating her
+        token.transfer(alice, amount);
+        vm.startPrank(alice);
+
+        // Allow the portal to withdraw `amount` tokens from Alice
+        token.approve(address(erc20Portal), amount);
+
+        // Save number of inputs before the deposit
+        uint256 numberOfInputsBefore = inputBox.getNumberOfInputs(dapp);
+
+        // Expect token to be called when no input was added yet
+        vm.expectEmit(false, false, false, true, address(token));
+        emit WatchedTransfer(
+            alice,
+            address(dapp),
+            amount,
+            numberOfInputsBefore
+        );
+
+        // Transfer ERC-20 tokens to DApp
+        erc20Portal.depositERC20Tokens(token, dapp, amount, data);
+
+        // Expect new input
+        assertEq(inputBox.getNumberOfInputs(dapp), numberOfInputsBefore + 1);
     }
 }

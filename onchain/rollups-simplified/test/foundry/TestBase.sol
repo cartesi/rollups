@@ -18,6 +18,7 @@ import {Test} from "forge-std/Test.sol";
 contract TestBase is Test {
     modifier isMockable(address addr) {
         vm.assume(addr != 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        vm.assume(addr != 0xCe71065D4017F316EC606Fe4422e11eB2c47c246);
         _;
     }
 }

@@ -24,13 +24,16 @@ interface IERC721Portal is IPortal {
     /// @param _token The ERC-721 token contract
     /// @param _dapp The address of the DApp
     /// @param _tokenId The identifier of the NFT being transferred
-    /// @param _data Additional data to be interpreted by L2
+    /// @param _L1data Additional data to be interpreted by L1
+    ///                (forwarded to the ERC-721 token contract)
+    /// @param _L2data Additional data to be interpreted by L2
     /// @dev The caller must allow the portal to withdraw the token
     ///      from their account beforehand.
     function depositERC721Token(
         IERC721 _token,
         address _dapp,
         uint256 _tokenId,
-        bytes calldata _data
+        bytes calldata _L1data,
+        bytes calldata _L2data
     ) external;
 }

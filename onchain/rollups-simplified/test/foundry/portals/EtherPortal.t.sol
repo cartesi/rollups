@@ -21,8 +21,27 @@ import {InputBox} from "contracts/inputs/InputBox.sol";
 import {InputHeaders} from "contracts/common/InputHeaders.sol";
 
 contract BadEtherReceiver {
-    fallback() external payable {
+    receive() external payable {
         revert("This contract does not accept Ether");
+    }
+}
+
+contract InputBoxWatcher {
+    IInputBox inputBox;
+
+    event WatchedFallback(
+        address sender,
+        uint256 value,
+        uint256 numberOfInputs
+    );
+
+    constructor(IInputBox _inputBox) {
+        inputBox = _inputBox;
+    }
+
+    receive() external payable {
+        uint256 numberOfInputs = inputBox.getNumberOfInputs(address(this));
+        emit WatchedFallback(msg.sender, msg.value, numberOfInputs);
     }
 }
 
@@ -33,6 +52,11 @@ contract EtherPortalTest is Test {
     address dapp;
 
     event InputAdded(address indexed dapp, address sender, bytes input);
+    event WatchedFallback(
+        address sender,
+        uint256 value,
+        uint256 numberOfInputs
+    );
 
     function setUp() public {
         inputBox = new InputBox();
@@ -89,5 +113,30 @@ contract EtherPortalTest is Test {
         // Expect the deposit to revert with the following message
         vm.expectRevert("EtherPortal: transfer failed");
         etherPortal.depositEther{value: value}(address(badEtherReceiver), data);
+    }
+
+    function testNumberOfInputs(uint256 value, bytes calldata data) public {
+        // Create a contract that records the number of inputs it has received
+        InputBoxWatcher watcher = new InputBoxWatcher(inputBox);
+
+        startHoax(alice, value);
+
+        // Expect new contract to have no inputs yet
+        uint256 numberOfInputsBefore = inputBox.getNumberOfInputs(
+            address(watcher)
+        );
+
+        // Expect WatchedFallback to be emitted
+        vm.expectEmit(false, false, false, true, address(watcher));
+        emit WatchedFallback(address(etherPortal), value, numberOfInputsBefore);
+
+        // Transfer Ether to contract
+        etherPortal.depositEther{value: value}(address(watcher), data);
+
+        // Expect new input
+        assertEq(
+            inputBox.getNumberOfInputs(address(watcher)),
+            numberOfInputsBefore + 1
+        );
     }
 }

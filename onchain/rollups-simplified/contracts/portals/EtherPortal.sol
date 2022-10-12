@@ -33,7 +33,11 @@ contract EtherPortal is IEtherPortal {
         payable
         override
     {
-        // We first add the input to avoid reentrancy attacks
+        // We used to call `transfer()` but it's not considered safe,
+        // as it assumes gas costs are immutable (they are not).
+        (bool success, ) = _dapp.call{value: msg.value}("");
+        require(success, "EtherPortal: transfer failed");
+
         bytes memory input = abi.encodePacked(
             InputHeaders.ETH_DEPOSIT, // Header (1B)
             msg.sender, //               Ether sender (20B)
@@ -41,10 +45,5 @@ contract EtherPortal is IEtherPortal {
             _data //                     L2 data (arbitrary size)
         );
         inputBox.addInput(_dapp, input);
-
-        // We used to call `transfer()` but it's not considered safe,
-        // as it assumes gas costs are immutable (they are not).
-        (bool success, ) = _dapp.call{value: msg.value}("");
-        require(success, "EtherPortal: transfer failed");
     }
 }

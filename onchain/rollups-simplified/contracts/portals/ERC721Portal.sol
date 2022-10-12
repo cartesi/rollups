@@ -34,20 +34,19 @@ contract ERC721Portal is IERC721Portal {
         IERC721 _token,
         address _dapp,
         uint256 _tokenId,
-        bytes calldata _data
+        bytes calldata _L1data,
+        bytes calldata _L2data
     ) external override {
-        // We add the input first to avoid reentrancy attacks
-        // as NFT transfers to contracts trigger a special
-        // callback function that can call this function again
+        _token.safeTransferFrom(msg.sender, _dapp, _tokenId, _L1data);
+
+        bytes memory data = abi.encode(_L1data, _L2data);
         bytes memory input = abi.encodePacked(
             InputHeaders.ERC721_DEPOSIT, // Header (1B)
             _token, //                      Token contract (20B)
             msg.sender, //                  Token sender (20B)
             _tokenId, //                    Token identifier (32B)
-            _data //                        L2 data (arbitrary size)
+            data //                         L1 + L2 data (arbitrary size)
         );
         inputBox.addInput(_dapp, input);
-
-        _token.safeTransferFrom(msg.sender, _dapp, _tokenId);
     }
 }

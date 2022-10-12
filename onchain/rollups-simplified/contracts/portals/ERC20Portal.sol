@@ -37,6 +37,7 @@ contract ERC20Portal is IERC20Portal {
         bytes calldata _data
     ) external override {
         bool success = _token.transferFrom(msg.sender, _dapp, _amount);
+
         bytes1 header = success
             ? InputHeaders.ERC20_DEPOSIT_TRUE
             : InputHeaders.ERC20_DEPOSIT_FALSE;
