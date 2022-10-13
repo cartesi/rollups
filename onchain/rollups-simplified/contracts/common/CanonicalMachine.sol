@@ -14,39 +14,43 @@
 pragma solidity ^0.8.13;
 
 library CanonicalMachine {
+    // Log base 2 of size in bytes
     type Log2Size is uint64;
 
-    Log2Size constant INPUT_MAX_LOG2_SIZE = Log2Size.wrap(25);
-
-    // cartesi machine word log2 size
+    // Machine word size (8 bytes)
     Log2Size constant WORD_LOG2_SIZE = Log2Size.wrap(3);
 
-    // keccak log2 size
-    Log2Size constant KECCAK_LOG2_SIZE = Log2Size.wrap(5);
-
-    // max size of voucher metadata memory range 32 * (2^16) bytes
-    Log2Size constant VOUCHER_METADATA_LOG2_SIZE = Log2Size.wrap(21);
-
-    // max size of notice metadata memory range 32 * (2^16) bytes
-    Log2Size constant NOTICE_METADATA_LOG2_SIZE = Log2Size.wrap(21);
-
-    // max size of epoch voucher memory range 32 * (2^32) bytes
-    Log2Size constant EPOCH_VOUCHER_LOG2_SIZE = Log2Size.wrap(37);
-
-    // max size of epoch notice memory range 32 * (2^32) bytes
-    Log2Size constant EPOCH_NOTICE_LOG2_SIZE = Log2Size.wrap(37);
-
-    // cartesi machine address space log2 size
+    // Machine address space size (2^64 bytes)
     Log2Size constant MACHINE_LOG2_SIZE = Log2Size.wrap(64);
 
+    // Keccak-256 output size (32 bytes)
+    Log2Size constant KECCAK_LOG2_SIZE = Log2Size.wrap(5);
+
+    // Maximum input size (32 megabytes)
+    Log2Size constant INPUT_MAX_LOG2_SIZE = Log2Size.wrap(25);
+
+    // Maximum voucher metadata memory range (2 megabytes)
+    Log2Size constant VOUCHER_METADATA_LOG2_SIZE = Log2Size.wrap(21);
+
+    // Maximum notice metadata memory range (2 megabytes)
+    Log2Size constant NOTICE_METADATA_LOG2_SIZE = Log2Size.wrap(21);
+
+    // Maximum epoch voucher memory range (128 megabytes)
+    Log2Size constant EPOCH_VOUCHER_LOG2_SIZE = Log2Size.wrap(37);
+
+    // Maximum epoch notice memory range (128 megabytes)
+    Log2Size constant EPOCH_NOTICE_LOG2_SIZE = Log2Size.wrap(37);
+
+    /// @notice convert a Log2Size value into its underlying uint64 value
+    /// @param s the Log2Size value
     function uint64OfSize(Log2Size s) internal pure returns (uint64) {
         return Log2Size.unwrap(s);
     }
 
-    /// @notice returns the position of a intra memory range on a memory range
-    //          with  contents with the same size
+    /// @notice returns the position of an intra memory range on a memory range
+    //          with contents with the same size
     /// @param _index index of intra memory range
-    /// @param _log2Size of intra memory range
+    /// @param _log2Size size of intra memory range
     function getIntraMemoryRangePosition(uint64 _index, Log2Size _log2Size)
         internal
         pure
