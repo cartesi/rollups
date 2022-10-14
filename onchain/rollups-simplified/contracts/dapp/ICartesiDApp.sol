@@ -40,7 +40,7 @@ interface ICartesiDApp {
     /// @notice Execute a voucher
     /// @param _destination The contract that will execute the payload
     /// @param _payload The ABI-encoded function call
-    /// @param _claimQuery Auxiliary data for querying the right claim
+    /// @param _claimQuery Data for querying the right claim
     /// @param _v A validity proof for the voucher
     /// @return Whether the voucher was executed successfully or not
     /// @dev The encoding of _claimQuery might vary depending on the history implementation
@@ -54,7 +54,7 @@ interface ICartesiDApp {
 
     /// @notice Validate a notice
     /// @param _notice The notice
-    /// @param _claimQuery Auxiliary data for querying the right claim
+    /// @param _claimQuery Data for querying the right claim
     /// @param _v A validity proof for the notice
     /// @return Whether the notice is valid or not
     /// @dev The encoding of _claimQuery might vary depending on the history implementation

@@ -39,6 +39,7 @@ library LibOutputValidation {
     using CanonicalMachine for CanonicalMachine.Log2Size;
 
     /// @notice Make sure the output proof is valid, otherwise revert
+    /// @param _v the output validity proof
     /// @param _encodedOutput the encoded output
     /// @param _epochHash the hash of the epoch in which the output was generated
     /// @param _outputsEpochRootHash either _v.vouchersEpochRootHash (for vouchers)
@@ -47,14 +48,13 @@ library LibOutputValidation {
     ///                             or EPOCH_NOTICE_LOG2_SIZE (for notices)
     /// @param _outputHashesLog2Size either VOUCHER_METADATA_LOG2_SIZE (for vouchers)
     ///                              or NOTICE_METADATA_LOG2_SIZE (for notices)
-    /// @param _v the output validity proof
-    function checkOutputValidityProof(
+    function validateEncodedOutput(
+        OutputValidityProof calldata _v,
         bytes memory _encodedOutput,
         bytes32 _epochHash,
         bytes32 _outputsEpochRootHash,
         uint256 _outputEpochLog2Size,
-        uint256 _outputHashesLog2Size,
-        OutputValidityProof calldata _v
+        uint256 _outputHashesLog2Size
     ) internal pure {
         // prove that outputs hash is represented in a finalized epoch
         require(
@@ -123,40 +123,40 @@ library LibOutputValidation {
     }
 
     /// @notice Make sure the voucher proof is valid, otherwise revert
+    /// @param _v the output validity proof
     /// @param _encodedVoucher the encoded voucher
     /// @param _epochHash the hash of the epoch in which the voucher was generated
-    /// @param _v the output validity proof
-    function checkVoucherValidityProof(
+    function validateEncodedVoucher(
+        OutputValidityProof calldata _v,
         bytes memory _encodedVoucher,
-        bytes32 _epochHash,
-        OutputValidityProof calldata _v
+        bytes32 _epochHash
     ) internal pure {
-        checkOutputValidityProof(
+        validateEncodedOutput(
+            _v,
             _encodedVoucher,
             _epochHash,
             _v.vouchersEpochRootHash,
             CanonicalMachine.EPOCH_VOUCHER_LOG2_SIZE.uint64OfSize(),
-            CanonicalMachine.VOUCHER_METADATA_LOG2_SIZE.uint64OfSize(),
-            _v
+            CanonicalMachine.VOUCHER_METADATA_LOG2_SIZE.uint64OfSize()
         );
     }
 
     /// @notice Make sure the notice proof is valid, otherwise revert
+    /// @param _v the output validity proof
     /// @param _encodedNotice the encoded notice
     /// @param _epochHash the hash of the epoch in which the notice was generated
-    /// @param _v the output validity proof
-    function checkNoticeValidityProof(
+    function validateEncodedNotice(
+        OutputValidityProof calldata _v,
         bytes memory _encodedNotice,
-        bytes32 _epochHash,
-        OutputValidityProof calldata _v
+        bytes32 _epochHash
     ) internal pure {
-        checkOutputValidityProof(
+        validateEncodedOutput(
+            _v,
             _encodedNotice,
             _epochHash,
             _v.noticesEpochRootHash,
             CanonicalMachine.EPOCH_NOTICE_LOG2_SIZE.uint64OfSize(),
-            CanonicalMachine.NOTICE_METADATA_LOG2_SIZE.uint64OfSize(),
-            _v
+            CanonicalMachine.NOTICE_METADATA_LOG2_SIZE.uint64OfSize()
         );
     }
 

@@ -29,6 +29,7 @@ contract CartesiDApp is
     Ownable
 {
     using Bitmask for mapping(uint256 => uint256);
+    using LibOutputValidation for OutputValidityProof;
 
     bytes32 immutable templateHash;
     mapping(uint256 => uint256) voucherBitmask;
@@ -59,11 +60,7 @@ contract CartesiDApp is
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
 
         // reverts if proof isn't valid
-        LibOutputValidation.checkVoucherValidityProof(
-            encodedVoucher,
-            epochHash,
-            _v
-        );
+        _v.validateEncodedVoucher(encodedVoucher, epochHash);
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _v.outputIndex,
@@ -101,11 +98,7 @@ contract CartesiDApp is
         bytes memory encodedNotice = abi.encode(_notice);
 
         // reverts if proof isn't valid
-        LibOutputValidation.checkNoticeValidityProof(
-            encodedNotice,
-            epochHash,
-            _v
-        );
+        _v.validateEncodedNotice(encodedNotice, epochHash);
 
         return true;
     }

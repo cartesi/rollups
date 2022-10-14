@@ -35,16 +35,16 @@ contract History is IHistory, Ownable {
         }
     }
 
-    function submitClaim(address _dapp, bytes calldata _encodedClaim)
+    function submitClaim(bytes calldata _encodedClaim)
         external
         override
         onlyOwner
     {
-        Claim memory claim = abi.decode(_encodedClaim, (Claim));
+        (address dapp, Claim memory claim) = abi.decode(_encodedClaim, (address, Claim));
 
         require(claim.firstIndex <= claim.lastIndex, "History: FI > LI");
 
-        Claim[] storage dappClaims = claims[_dapp];
+        Claim[] storage dappClaims = claims[dapp];
         uint256 numDAppClaims = dappClaims.length;
 
         require(
@@ -55,7 +55,7 @@ contract History is IHistory, Ownable {
 
         dappClaims.push(claim);
 
-        emit NewClaim(_dapp, _encodedClaim);
+        emit NewClaim(_encodedClaim);
     }
 
     function getEpochHash(address _dapp, bytes calldata _claimQuery)

@@ -32,11 +32,10 @@ interface IConsensus {
     // Permissioned functions
 
     /// @notice Submit a claim to history
-    /// @param _dapp The DApp that the claim is about
-    /// @param _claim The claim to be submitted to history
-    /// @dev The encoding of _claim might vary depending on the history implementation
+    /// @param _claimData Data for submitting a claim
+    /// @dev The encoding of _claimData might vary depending on the history implementation
     /// @dev Should have access control
-    function submitClaim(address _dapp, bytes calldata _claim) external;
+    function submitClaim(bytes calldata _claimData) external;
 
     /// @notice Point the consensus to a new history
     /// @param _history The new history
@@ -56,7 +55,7 @@ interface IConsensus {
 
     /// @notice Get the epoch hash for a given DApp from a claim
     /// @param _dapp The DApp
-    /// @param _claimQuery Auxiliary data for querying the right claim
+    /// @param _claimQuery Data for querying the right claim
     /// @return epochHash_ The epoch hash contained in the claim
     /// @return inputIndex_ The index of the input in the input box
     /// @return epochInputIndex_ The offset between the input in the input box

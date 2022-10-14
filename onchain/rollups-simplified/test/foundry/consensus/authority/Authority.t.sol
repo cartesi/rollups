@@ -20,7 +20,7 @@ import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {IHistory} from "contracts/history/IHistory.sol";
 
 contract HistoryReverts is IHistory {
-    function submitClaim(address, bytes calldata) external pure override {
+    function submitClaim(bytes calldata) external pure override {
         revert();
     }
 
@@ -120,7 +120,6 @@ contract AuthorityTest is TestBase {
         address _owner,
         IInputBox _inputBox,
         IHistory _history,
-        address _dapp,
         bytes calldata _claim
     ) public isMockable(address(_history)) {
         vm.assume(_owner != address(0));
@@ -137,11 +136,11 @@ contract AuthorityTest is TestBase {
 
         // will fail as not called from owner
         vm.expectRevert("Ownable: caller is not the owner");
-        authority.submitClaim(_dapp, _claim);
+        authority.submitClaim(_claim);
 
         // can only be called by owner
         vm.prank(_owner);
-        authority.submitClaim(_dapp, _claim);
+        authority.submitClaim(_claim);
     }
 
     function testSetHistory(
@@ -228,7 +227,7 @@ contract AuthorityTest is TestBase {
 
         vm.expectRevert();
         vm.prank(_owner);
-        authority.submitClaim(_dapp, _claim);
+        authority.submitClaim(_claim);
 
         vm.expectRevert();
         vm.prank(_owner);

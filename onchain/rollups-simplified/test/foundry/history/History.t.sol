@@ -19,7 +19,7 @@ import {History} from "contracts/history/History.sol";
 contract HistoryTest is Test {
     History history;
 
-    event NewClaim(address dapp, bytes data);
+    event NewClaim(bytes data);
     event OwnershipTransferred(
         address indexed previousOwner,
         address indexed newOwner
@@ -87,9 +87,9 @@ contract HistoryTest is Test {
     ) internal {
         vm.assume(fi <= li);
         vm.expectEmit(false, false, false, true, address(history));
-        bytes memory encodedClaim = abi.encode(epochHash, fi, li);
-        emit NewClaim(dapp, encodedClaim);
-        history.submitClaim(dapp, encodedClaim);
+        bytes memory encodedClaim = abi.encode(dapp, epochHash, fi, li);
+        emit NewClaim(encodedClaim);
+        history.submitClaim(encodedClaim);
     }
 
     function testSubmitClaims(
@@ -115,8 +115,7 @@ contract HistoryTest is Test {
         vm.startPrank(alice);
         vm.assume(fi <= li);
         vm.expectRevert("Ownable: caller is not the owner");
-        bytes memory data = abi.encode(epochHash, fi, li);
-        history.submitClaim(dapp, data);
+        history.submitClaim(abi.encode(dapp, epochHash, fi, li));
     }
 
     function testRevertsOverlap(
@@ -131,9 +130,8 @@ contract HistoryTest is Test {
         submitClaim(dapp, epochHash1, fi1, li1);
         vm.assume(fi2 <= li2);
         vm.assume(fi2 <= li1); // overlaps with previous claim
-        bytes memory data = abi.encode(epochHash2, fi2, li2);
         vm.expectRevert("History: FI <= previous LI");
-        history.submitClaim(dapp, data);
+        history.submitClaim(abi.encode(dapp, epochHash2, fi2, li2));
     }
 
     function testRevertsInputIndices(
@@ -148,14 +146,13 @@ contract HistoryTest is Test {
         submitClaim(dapp, epochHash1, fi1, li1);
         vm.assume(fi2 > li2); // starts after it ends
         vm.assume(fi2 > li1);
-        bytes memory data = abi.encode(epochHash2, fi2, li2);
         vm.expectRevert("History: FI > LI");
-        history.submitClaim(dapp, data);
+        history.submitClaim(abi.encode(dapp, epochHash2, fi2, li2));
     }
 
-    function testRevertsSubmitClaimEncoding(address dapp) public {
+    function testRevertsSubmitClaimEncoding() public {
         vm.expectRevert();
-        history.submitClaim(dapp, "");
+        history.submitClaim("");
     }
 
     function checkEpochHash(
