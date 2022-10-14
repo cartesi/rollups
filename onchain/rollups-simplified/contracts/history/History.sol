@@ -40,7 +40,10 @@ contract History is IHistory, Ownable {
         override
         onlyOwner
     {
-        (address dapp, Claim memory claim) = abi.decode(_encodedClaim, (address, Claim));
+        (address dapp, Claim memory claim) = abi.decode(
+            _encodedClaim,
+            (address, Claim)
+        );
 
         require(claim.firstIndex <= claim.lastIndex, "History: FI > LI");
 
