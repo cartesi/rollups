@@ -252,10 +252,7 @@ contract CartesiDAppTest is TestBase {
         );
 
         // get voucher proof from generated Solidity library
-        proof = abi.decode(
-            LibVoucherProof3.getEncodedProof(),
-            (OutputValidityProof)
-        );
+        proof = LibVoucherProof3.getProof();
 
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
@@ -302,10 +299,7 @@ contract CartesiDAppTest is TestBase {
         }
 
         // get voucher proof from generated Solidity library
-        proof = abi.decode(
-            LibVoucherProof4.getEncodedProof(),
-            (OutputValidityProof)
-        );
+        proof = LibVoucherProof4.getProof();
 
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
@@ -485,10 +479,7 @@ contract CartesiDAppTest is TestBase {
         }
 
         // get voucher proof from generated Solidity library
-        proof = abi.decode(
-            LibVoucherProof5.getEncodedProof(),
-            (OutputValidityProof)
-        );
+        proof = LibVoucherProof5.getProof();
 
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
@@ -565,10 +556,7 @@ contract CartesiDAppTest is TestBase {
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
 
         // get notice proof from generated Solidity library
-        proof = abi.decode(
-            LibNoticeProof0.getEncodedProof(),
-            (OutputValidityProof)
-        );
+        proof = LibNoticeProof0.getProof();
 
         // epoch hash
         bytes32 epochHashForNotice = keccak256(
@@ -608,10 +596,7 @@ contract CartesiDAppTest is TestBase {
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
 
         // get notice proof from generated Solidity library
-        proof = abi.decode(
-            LibNoticeProof1.getEncodedProof(),
-            (OutputValidityProof)
-        );
+        proof = LibNoticeProof1.getProof();
 
         // epoch hash
         bytes32 epochHashForNotice = keccak256(
