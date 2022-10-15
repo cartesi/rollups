@@ -17,11 +17,11 @@ import {TestBase} from "../TestBase.sol";
 import {ICartesiDApp} from "contracts/dapp/ICartesiDApp.sol";
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
-import {Proof as VoucherProofSol3} from "./helper/voucherProof3.sol";
-import {Proof as VoucherProofSol4} from "./helper/voucherProof4.sol";
-import {Proof as VoucherProofSol5} from "./helper/voucherProof5.sol";
-import {Proof as NoticeProofSol0} from "./helper/noticeProof0.sol";
-import {Proof as NoticeProofSol1} from "./helper/noticeProof1.sol";
+import {LibProof as LibVoucherProof3} from "./helper/voucherProof3.sol";
+import {LibProof as LibVoucherProof4} from "./helper/voucherProof4.sol";
+import {LibProof as LibVoucherProof5} from "./helper/voucherProof5.sol";
+import {LibProof as LibNoticeProof0} from "./helper/noticeProof0.sol";
+import {LibProof as LibNoticeProof1} from "./helper/noticeProof1.sol";
 import {OutputValidityProof, LibOutputValidation} from "contracts/library/LibOutputValidation.sol";
 import {SimpleToken} from "./helper/SimpleToken.sol";
 import {SimpleNFT} from "./helper/SimpleNFT.sol";
@@ -36,7 +36,7 @@ contract EtherReceiver {
 contract CartesiDAppTest is TestBase {
     CartesiDApp dapp;
     SimpleToken token;
-    OutputValidityProof voucherProof; // copy proof from contract to storage
+    OutputValidityProof proof;
 
     bool constant log_vouchers = false;
     uint256 constant initialSupply = 1000000;
@@ -103,7 +103,7 @@ contract CartesiDAppTest is TestBase {
             address(token),
             payload,
             "",
-            voucherProof
+            proof
         );
         assertEq(returnedVal, false);
         assertEq(token.balanceOf(address(dapp)), 0);
@@ -120,7 +120,7 @@ contract CartesiDAppTest is TestBase {
         vm.expectEmit(false, false, false, true, address(dapp));
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
-                voucherProof.outputIndex,
+                proof.outputIndex,
                 _inputIndex
             )
         );
@@ -130,7 +130,7 @@ contract CartesiDAppTest is TestBase {
             address(token),
             payload,
             "",
-            voucherProof
+            proof
         );
 
         // check result
@@ -156,12 +156,12 @@ contract CartesiDAppTest is TestBase {
         token.transfer(address(dapp), dappInitBalance);
 
         // 1st execution
-        dapp.executeVoucher(address(token), payload, "", voucherProof);
+        dapp.executeVoucher(address(token), payload, "", proof);
 
         // epect revert for re-execution
         vm.expectRevert("re-execution not allowed");
         // perform call
-        dapp.executeVoucher(address(token), payload, "", voucherProof);
+        dapp.executeVoucher(address(token), payload, "", proof);
 
         // result is the same as only 1 execution
         assertEq(
@@ -188,13 +188,13 @@ contract CartesiDAppTest is TestBase {
             abi.encode(
                 epochHashForVoucher,
                 _inputIndex,
-                voucherProof.epochInputIndex
+                proof.epochInputIndex
             )
         );
         // epect revert
         vm.expectRevert("epochHash incorrect");
         // perform call
-        dapp.executeVoucher(address(token), payload, "", voucherProof);
+        dapp.executeVoucher(address(token), payload, "", proof);
     }
 
     function testRevertsInputIndices(
@@ -206,11 +206,11 @@ contract CartesiDAppTest is TestBase {
         setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
 
         // alter epoch input index
-        voucherProof.epochInputIndex += 1;
+        proof.epochInputIndex += 1;
         // epect revert
         vm.expectRevert("epoch input indices don't match");
         // perform call
-        dapp.executeVoucher(address(token), payload, "", voucherProof);
+        dapp.executeVoucher(address(token), payload, "", proof);
     }
 
     function testRevertsOutputsEpochRootHash(
@@ -222,11 +222,11 @@ contract CartesiDAppTest is TestBase {
         setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
 
         // alter outputHashesRootHash
-        voucherProof.outputHashesRootHash = bytes32(0);
+        proof.outputHashesRootHash = bytes32(0);
         // epect revert
         vm.expectRevert("outputsEpochRootHash incorrect");
         // perform call
-        dapp.executeVoucher(address(token), payload, "", voucherProof);
+        dapp.executeVoucher(address(token), payload, "", proof);
     }
 
     function testRevertsOutputHashesRootHash(
@@ -238,11 +238,11 @@ contract CartesiDAppTest is TestBase {
         setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
 
         // alter outputIndex
-        voucherProof.outputIndex += 1;
+        proof.outputIndex += 1;
         // epect revert
         vm.expectRevert("outputHashesRootHash incorrect");
         // perform call
-        dapp.executeVoucher(address(token), payload, "", voucherProof);
+        dapp.executeVoucher(address(token), payload, "", proof);
     }
 
     function setupForVoucher3(
@@ -260,25 +260,15 @@ contract CartesiDAppTest is TestBase {
             initialSupply
         );
 
-        // copy proof from contract to storage
-        VoucherProofSol3 pSol3 = new VoucherProofSol3();
-        (
-            voucherProof.epochInputIndex,
-            voucherProof.outputIndex,
-            voucherProof.outputHashesRootHash,
-            voucherProof.vouchersEpochRootHash,
-            voucherProof.noticesEpochRootHash,
-            voucherProof.machineStateHash
-        ) = pSol3.proof();
-        voucherProof.keccakInHashesSiblings = pSol3.getArray1();
-        voucherProof.outputHashesInEpochSiblings = pSol3.getArray2();
+        // get voucher proof from generated Solidity library
+        proof = abi.decode(LibVoucherProof3.getEncodedProof(), (OutputValidityProof));
 
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
             abi.encodePacked(
-                voucherProof.vouchersEpochRootHash,
-                voucherProof.noticesEpochRootHash,
-                voucherProof.machineStateHash
+                proof.vouchersEpochRootHash,
+                proof.noticesEpochRootHash,
+                proof.machineStateHash
             )
         );
 
@@ -289,7 +279,7 @@ contract CartesiDAppTest is TestBase {
             abi.encode(
                 epochHashForVoucher,
                 _inputIndex,
-                voucherProof.epochInputIndex
+                proof.epochInputIndex
             )
         );
     }
@@ -321,24 +311,15 @@ contract CartesiDAppTest is TestBase {
             revert("Transaction reverted on purpose to log debug info");
         }
 
-        // copy proof from contract to storage
-        VoucherProofSol4 pSol4 = new VoucherProofSol4();
-        (
-            voucherProof.epochInputIndex,
-            voucherProof.outputIndex,
-            voucherProof.outputHashesRootHash,
-            voucherProof.vouchersEpochRootHash,
-            voucherProof.noticesEpochRootHash,
-            voucherProof.machineStateHash
-        ) = pSol4.proof();
-        voucherProof.keccakInHashesSiblings = pSol4.getArray1();
-        voucherProof.outputHashesInEpochSiblings = pSol4.getArray2();
+        // get voucher proof from generated Solidity library
+        proof = abi.decode(LibVoucherProof4.getEncodedProof(), (OutputValidityProof));
+
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
             abi.encodePacked(
-                voucherProof.vouchersEpochRootHash,
-                voucherProof.noticesEpochRootHash,
-                voucherProof.machineStateHash
+                proof.vouchersEpochRootHash,
+                proof.noticesEpochRootHash,
+                proof.machineStateHash
             )
         );
         // mocking consensus
@@ -348,7 +329,7 @@ contract CartesiDAppTest is TestBase {
             abi.encode(
                 epochHashForVoucher,
                 _inputIndex,
-                voucherProof.epochInputIndex
+                proof.epochInputIndex
             )
         );
 
@@ -359,7 +340,7 @@ contract CartesiDAppTest is TestBase {
             address(deterministicDapp),
             etherPayload,
             "",
-            voucherProof
+            proof
         );
         assertEq(returnedVal, false);
         assertEq(address(deterministicDapp).balance, 0);
@@ -378,7 +359,7 @@ contract CartesiDAppTest is TestBase {
         vm.expectEmit(false, false, false, true, address(deterministicDapp));
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
-                voucherProof.outputIndex,
+                proof.outputIndex,
                 _inputIndex
             )
         );
@@ -388,7 +369,7 @@ contract CartesiDAppTest is TestBase {
             address(deterministicDapp),
             etherPayload,
             "",
-            voucherProof
+            proof
         );
 
         // check result
@@ -405,7 +386,7 @@ contract CartesiDAppTest is TestBase {
             address(deterministicDapp),
             etherPayload,
             "",
-            voucherProof
+            proof
         );
     }
 
@@ -514,24 +495,15 @@ contract CartesiDAppTest is TestBase {
             revert("Transaction reverted on purpose to log debug info");
         }
 
-        // copy proof from contract to storage
-        VoucherProofSol5 pSol5 = new VoucherProofSol5();
-        (
-            voucherProof.epochInputIndex,
-            voucherProof.outputIndex,
-            voucherProof.outputHashesRootHash,
-            voucherProof.vouchersEpochRootHash,
-            voucherProof.noticesEpochRootHash,
-            voucherProof.machineStateHash
-        ) = pSol5.proof();
-        voucherProof.keccakInHashesSiblings = pSol5.getArray1();
-        voucherProof.outputHashesInEpochSiblings = pSol5.getArray2();
+        // get voucher proof from generated Solidity library
+        proof = abi.decode(LibVoucherProof5.getEncodedProof(), (OutputValidityProof));
+
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
             abi.encodePacked(
-                voucherProof.vouchersEpochRootHash,
-                voucherProof.noticesEpochRootHash,
-                voucherProof.machineStateHash
+                proof.vouchersEpochRootHash,
+                proof.noticesEpochRootHash,
+                proof.machineStateHash
             )
         );
         // mocking consensus
@@ -541,7 +513,7 @@ contract CartesiDAppTest is TestBase {
             abi.encode(
                 epochHashForVoucher,
                 _inputIndex,
-                voucherProof.epochInputIndex
+                proof.epochInputIndex
             )
         );
 
@@ -552,7 +524,7 @@ contract CartesiDAppTest is TestBase {
             address(snft),
             NFTPayload,
             "",
-            voucherProof
+            proof
         );
         assertEq(returnedVal, false);
         assertEq(snft.balanceOf(address(deterministicDapp)), 0);
@@ -568,7 +540,7 @@ contract CartesiDAppTest is TestBase {
         vm.expectEmit(false, false, false, true, address(deterministicDapp));
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
-                voucherProof.outputIndex,
+                proof.outputIndex,
                 _inputIndex
             )
         );
@@ -578,7 +550,7 @@ contract CartesiDAppTest is TestBase {
             address(snft),
             NFTPayload,
             "",
-            voucherProof
+            proof
         );
 
         // check result
@@ -593,7 +565,7 @@ contract CartesiDAppTest is TestBase {
             address(snft),
             NFTPayload,
             "",
-            voucherProof
+            proof
         );
     }
 
@@ -608,25 +580,16 @@ contract CartesiDAppTest is TestBase {
         // *** setup for notice0 ***
         vm.assume(_owner != address(0));
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
-        OutputValidityProof memory notice0Proof;
-        NoticeProofSol0 nSol0 = new NoticeProofSol0();
-        // proof
-        (
-            notice0Proof.epochInputIndex,
-            notice0Proof.outputIndex,
-            notice0Proof.outputHashesRootHash,
-            notice0Proof.vouchersEpochRootHash,
-            notice0Proof.noticesEpochRootHash,
-            notice0Proof.machineStateHash
-        ) = nSol0.proof();
-        notice0Proof.keccakInHashesSiblings = nSol0.getArray1();
-        notice0Proof.outputHashesInEpochSiblings = nSol0.getArray2();
+
+        // get notice proof from generated Solidity library
+        proof = abi.decode(LibNoticeProof0.getEncodedProof(), (OutputValidityProof));
+
         // epoch hash
         bytes32 epochHashForNotice = keccak256(
             abi.encodePacked(
-                notice0Proof.vouchersEpochRootHash,
-                notice0Proof.noticesEpochRootHash,
-                notice0Proof.machineStateHash
+                proof.vouchersEpochRootHash,
+                proof.noticesEpochRootHash,
+                proof.machineStateHash
             )
         );
         // mocking consensus
@@ -636,20 +599,20 @@ contract CartesiDAppTest is TestBase {
             abi.encode(
                 epochHashForNotice,
                 _inputIndex,
-                notice0Proof.epochInputIndex
+                proof.epochInputIndex
             )
         );
         // *** finish setup ***
 
         // validate notice0
         bytes memory notice = abi.encodePacked(bytes4(0xdeadbeef));
-        bool returnedVal = dapp.validateNotice(notice, "", notice0Proof);
+        bool returnedVal = dapp.validateNotice(notice, "", proof);
         assertEq(returnedVal, true);
 
         // reverts if notice is incorrect
         bytes memory falseNotice = abi.encodePacked(bytes4(0xdeaddead));
         vm.expectRevert("outputHashesRootHash incorrect");
-        dapp.validateNotice(falseNotice, "", notice0Proof);
+        dapp.validateNotice(falseNotice, "", proof);
     }
 
     function testValidateNotice1(
@@ -661,25 +624,16 @@ contract CartesiDAppTest is TestBase {
         // *** setup for notice1 ***
         vm.assume(_owner != address(0));
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
-        OutputValidityProof memory notice1Proof;
-        NoticeProofSol1 nSol1 = new NoticeProofSol1();
-        // proof
-        (
-            notice1Proof.epochInputIndex,
-            notice1Proof.outputIndex,
-            notice1Proof.outputHashesRootHash,
-            notice1Proof.vouchersEpochRootHash,
-            notice1Proof.noticesEpochRootHash,
-            notice1Proof.machineStateHash
-        ) = nSol1.proof();
-        notice1Proof.keccakInHashesSiblings = nSol1.getArray1();
-        notice1Proof.outputHashesInEpochSiblings = nSol1.getArray2();
+
+        // get notice proof from generated Solidity library
+        proof = abi.decode(LibNoticeProof1.getEncodedProof(), (OutputValidityProof));
+
         // epoch hash
         bytes32 epochHashForNotice = keccak256(
             abi.encodePacked(
-                notice1Proof.vouchersEpochRootHash,
-                notice1Proof.noticesEpochRootHash,
-                notice1Proof.machineStateHash
+                proof.vouchersEpochRootHash,
+                proof.noticesEpochRootHash,
+                proof.machineStateHash
             )
         );
         // mocking consensus
@@ -689,14 +643,14 @@ contract CartesiDAppTest is TestBase {
             abi.encode(
                 epochHashForNotice,
                 _inputIndex,
-                notice1Proof.epochInputIndex
+                proof.epochInputIndex
             )
         );
         // *** finish setup ***
 
         // validate notice1
         bytes memory notice = abi.encodePacked(bytes4(0xbeefdead));
-        bool returnedVal = dapp.validateNotice(notice, "", notice1Proof);
+        bool returnedVal = dapp.validateNotice(notice, "", proof);
         assertEq(returnedVal, true);
     }
 
