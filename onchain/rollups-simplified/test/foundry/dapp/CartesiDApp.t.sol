@@ -126,12 +126,7 @@ contract CartesiDAppTest is TestBase {
         );
 
         // perform call
-        returnedVal = dapp.executeVoucher(
-            address(token),
-            payload,
-            "",
-            proof
-        );
+        returnedVal = dapp.executeVoucher(address(token), payload, "", proof);
 
         // check result
         assertEq(returnedVal, true);
@@ -185,11 +180,7 @@ contract CartesiDAppTest is TestBase {
         vm.mockCall(
             address(_consensus),
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(
-                epochHashForVoucher,
-                _inputIndex,
-                proof.epochInputIndex
-            )
+            abi.encode(epochHashForVoucher, _inputIndex, proof.epochInputIndex)
         );
         // epect revert
         vm.expectRevert("epochHash incorrect");
@@ -261,7 +252,10 @@ contract CartesiDAppTest is TestBase {
         );
 
         // get voucher proof from generated Solidity library
-        proof = abi.decode(LibVoucherProof3.getEncodedProof(), (OutputValidityProof));
+        proof = abi.decode(
+            LibVoucherProof3.getEncodedProof(),
+            (OutputValidityProof)
+        );
 
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
@@ -276,11 +270,7 @@ contract CartesiDAppTest is TestBase {
         vm.mockCall(
             address(_consensus),
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(
-                epochHashForVoucher,
-                _inputIndex,
-                proof.epochInputIndex
-            )
+            abi.encode(epochHashForVoucher, _inputIndex, proof.epochInputIndex)
         );
     }
 
@@ -312,7 +302,10 @@ contract CartesiDAppTest is TestBase {
         }
 
         // get voucher proof from generated Solidity library
-        proof = abi.decode(LibVoucherProof4.getEncodedProof(), (OutputValidityProof));
+        proof = abi.decode(
+            LibVoucherProof4.getEncodedProof(),
+            (OutputValidityProof)
+        );
 
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
@@ -326,11 +319,7 @@ contract CartesiDAppTest is TestBase {
         vm.mockCall(
             address(consensus),
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(
-                epochHashForVoucher,
-                _inputIndex,
-                proof.epochInputIndex
-            )
+            abi.encode(epochHashForVoucher, _inputIndex, proof.epochInputIndex)
         );
 
         // not able to execute voucher because deterministicDapp has 0 balance
@@ -496,7 +485,10 @@ contract CartesiDAppTest is TestBase {
         }
 
         // get voucher proof from generated Solidity library
-        proof = abi.decode(LibVoucherProof5.getEncodedProof(), (OutputValidityProof));
+        proof = abi.decode(
+            LibVoucherProof5.getEncodedProof(),
+            (OutputValidityProof)
+        );
 
         // epoch hash
         bytes32 epochHashForVoucher = keccak256(
@@ -510,11 +502,7 @@ contract CartesiDAppTest is TestBase {
         vm.mockCall(
             address(consensus),
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(
-                epochHashForVoucher,
-                _inputIndex,
-                proof.epochInputIndex
-            )
+            abi.encode(epochHashForVoucher, _inputIndex, proof.epochInputIndex)
         );
 
         // not able to execute voucher because deterministicDapp doesn't have the nft
@@ -561,12 +549,7 @@ contract CartesiDAppTest is TestBase {
 
         // cannot execute the same voucher again
         vm.expectRevert("re-execution not allowed");
-        deterministicDapp.executeVoucher(
-            address(snft),
-            NFTPayload,
-            "",
-            proof
-        );
+        deterministicDapp.executeVoucher(address(snft), NFTPayload, "", proof);
     }
 
     // test notices
@@ -582,7 +565,10 @@ contract CartesiDAppTest is TestBase {
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
 
         // get notice proof from generated Solidity library
-        proof = abi.decode(LibNoticeProof0.getEncodedProof(), (OutputValidityProof));
+        proof = abi.decode(
+            LibNoticeProof0.getEncodedProof(),
+            (OutputValidityProof)
+        );
 
         // epoch hash
         bytes32 epochHashForNotice = keccak256(
@@ -596,11 +582,7 @@ contract CartesiDAppTest is TestBase {
         vm.mockCall(
             address(_consensus),
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(
-                epochHashForNotice,
-                _inputIndex,
-                proof.epochInputIndex
-            )
+            abi.encode(epochHashForNotice, _inputIndex, proof.epochInputIndex)
         );
         // *** finish setup ***
 
@@ -626,7 +608,10 @@ contract CartesiDAppTest is TestBase {
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
 
         // get notice proof from generated Solidity library
-        proof = abi.decode(LibNoticeProof1.getEncodedProof(), (OutputValidityProof));
+        proof = abi.decode(
+            LibNoticeProof1.getEncodedProof(),
+            (OutputValidityProof)
+        );
 
         // epoch hash
         bytes32 epochHashForNotice = keccak256(
@@ -640,11 +625,7 @@ contract CartesiDAppTest is TestBase {
         vm.mockCall(
             address(_consensus),
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(
-                epochHashForNotice,
-                _inputIndex,
-                proof.epochInputIndex
-            )
+            abi.encode(epochHashForNotice, _inputIndex, proof.epochInputIndex)
         );
         // *** finish setup ***
 
