@@ -14,7 +14,6 @@
 pragma solidity ^0.8.13;
 
 import {TestBase} from "../TestBase.sol";
-import {ICartesiDApp} from "contracts/dapp/ICartesiDApp.sol";
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
 import {LibProof as LibVoucherProof3} from "./helper/voucherProof3.sol";
@@ -23,10 +22,12 @@ import {LibProof as LibVoucherProof5} from "./helper/voucherProof5.sol";
 import {LibProof as LibNoticeProof0} from "./helper/noticeProof0.sol";
 import {LibProof as LibNoticeProof1} from "./helper/noticeProof1.sol";
 import {OutputValidityProof, LibOutputValidation} from "contracts/library/LibOutputValidation.sol";
-import {SimpleToken} from "./helper/SimpleToken.sol";
-import {SimpleNFT} from "./helper/SimpleNFT.sol";
+import {SimpleERC20} from "./helper/SimpleERC20.sol";
+import {SimpleERC721} from "./helper/SimpleERC721.sol";
+import {SimpleERC721Receiver} from "./helper/SimpleERC721Receiver.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "forge-std/console.sol";
 
 contract EtherReceiver {
@@ -35,15 +36,24 @@ contract EtherReceiver {
 
 contract CartesiDAppTest is TestBase {
     CartesiDApp dapp;
-    SimpleToken token;
+    IERC20 erc20Token;
+    IERC721 erc721Token;
+    IERC721Receiver erc721Receiver;
     OutputValidityProof proof;
 
-    bool constant log_vouchers = false;
+    bool constant logVouchers = false;
+
     uint256 constant initialSupply = 1000000;
     uint256 constant transferAmount = 7;
-    address constant tokenOwner = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-    address constant recipient = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
-    bytes constant payload =
+    uint256 constant tokenId = uint256(keccak256("tokenId"));
+    address constant dappOwner = address(bytes20(keccak256("dappOwner")));
+    address constant tokenOwner = address(bytes20(keccak256("tokenOwner")));
+    address constant recipient = address(bytes20(keccak256("recipient")));
+    address constant consensus = address(bytes20(keccak256("consensus")));
+    bytes32 constant salt = keccak256("salt");
+    bytes32 constant templateHash = keccak256("templateHash");
+
+    bytes constant erc20TransferPayload =
         abi.encodeWithSelector(
             IERC20.transfer.selector,
             recipient,
@@ -57,6 +67,14 @@ contract CartesiDAppTest is TestBase {
     );
     event NewConsensus(IConsensus newConsensus);
 
+    function testConstructorWithOwnerAsZeroAddress(
+        IConsensus _consensus,
+        bytes32 _templateHash
+    ) public {
+        vm.expectRevert("Ownable: new owner is the zero address");
+        new CartesiDApp(_consensus, address(0), _templateHash);
+    }
+
     function testConstructor(
         IConsensus _consensus,
         address _owner,
@@ -64,11 +82,13 @@ contract CartesiDAppTest is TestBase {
     ) public {
         vm.assume(_owner != address(0));
 
-        // 2 `OwnershipTransferred` events will be emitted during the constructor call
-        // the first event is emitted by Ownable constructor
-        // the second event is emitted by CartesiDApp constructor
+        // An OwnershipTransferred event is always emitted
+        // by the Ownership contract constructor
         vm.expectEmit(true, true, false, false);
         emit OwnershipTransferred(address(0), address(this));
+
+        // A second OwnershipTransferred event is also emitted
+        // by the CartesiDApp contract contructor
         vm.expectEmit(true, true, false, false);
         emit OwnershipTransferred(address(this), _owner);
 
@@ -81,40 +101,35 @@ contract CartesiDAppTest is TestBase {
         assertEq(dapp.getTemplateHash(), _templateHash);
     }
 
-    function testExecuteVoucherAndEvent(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _inputIndex
-    ) public {
-        setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
+    function testExecuteVoucherAndEvent(uint256 _inputIndex) public {
+        setupForVoucher3(_inputIndex);
 
-        if (log_vouchers) {
+        if (logVouchers) {
             console.log("voucher 3:");
-            console.log(address(token));
-            console.logBytes(payload);
-            revert("Transaction reverted on purpose to log debug info");
+            console.log(address(erc20Token));
+            console.logBytes(erc20TransferPayload);
+            revert("Debugging voucher proofs.");
         }
 
         // not able to execute voucher because dapp has 0 balance
-        assertEq(token.balanceOf(address(dapp)), 0);
-        assertEq(token.balanceOf(recipient), 0);
-        bool returnedVal = dapp.executeVoucher(
-            address(token),
-            payload,
+        assertEq(erc20Token.balanceOf(address(dapp)), 0);
+        assertEq(erc20Token.balanceOf(recipient), 0);
+        bool success = dapp.executeVoucher(
+            address(erc20Token),
+            erc20TransferPayload,
             "",
             proof
         );
-        assertEq(returnedVal, false);
-        assertEq(token.balanceOf(address(dapp)), 0);
-        assertEq(token.balanceOf(recipient), 0);
+        assertEq(success, false);
+        assertEq(erc20Token.balanceOf(address(dapp)), 0);
+        assertEq(erc20Token.balanceOf(recipient), 0);
 
         // fund dapp
         uint256 dappInitBalance = 100;
         vm.prank(tokenOwner);
-        token.transfer(address(dapp), dappInitBalance);
-        assertEq(token.balanceOf(address(dapp)), dappInitBalance);
-        assertEq(token.balanceOf(recipient), 0);
+        erc20Token.transfer(address(dapp), dappInitBalance);
+        assertEq(erc20Token.balanceOf(address(dapp)), dappInitBalance);
+        assertEq(erc20Token.balanceOf(recipient), 0);
 
         // expect event
         vm.expectEmit(false, false, false, true, address(dapp));
@@ -126,220 +141,159 @@ contract CartesiDAppTest is TestBase {
         );
 
         // perform call
-        returnedVal = dapp.executeVoucher(address(token), payload, "", proof);
+        success = dapp.executeVoucher(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proof
+        );
 
         // check result
-        assertEq(returnedVal, true);
+        assertEq(success, true);
         assertEq(
-            token.balanceOf(address(dapp)),
+            erc20Token.balanceOf(address(dapp)),
             dappInitBalance - transferAmount
         );
-        assertEq(token.balanceOf(recipient), transferAmount);
+        assertEq(erc20Token.balanceOf(recipient), transferAmount);
     }
 
-    function testRevertsReexecution(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _inputIndex
-    ) public {
-        setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
+    function testRevertsReexecution(uint256 _inputIndex) public {
+        setupForVoucher3(_inputIndex);
 
         // fund dapp
         uint256 dappInitBalance = 100;
         vm.prank(tokenOwner);
-        token.transfer(address(dapp), dappInitBalance);
+        erc20Token.transfer(address(dapp), dappInitBalance);
 
-        // 1st execution
-        dapp.executeVoucher(address(token), payload, "", proof);
+        // 1st execution attempt should succeed
+        bool success = dapp.executeVoucher(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proof
+        );
+        assertEq(success, true);
 
-        // epect revert for re-execution
+        // 2nd execution attempt should fail
         vm.expectRevert("re-execution not allowed");
-        // perform call
-        dapp.executeVoucher(address(token), payload, "", proof);
+        dapp.executeVoucher(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proof
+        );
 
-        // result is the same as only 1 execution
+        // end result should be the same as executing successfully only once
         assertEq(
-            token.balanceOf(address(dapp)),
+            erc20Token.balanceOf(address(dapp)),
             dappInitBalance - transferAmount
         );
-        assertEq(token.balanceOf(recipient), transferAmount);
+        assertEq(erc20Token.balanceOf(recipient), transferAmount);
     }
 
-    function testRevertsEpochHash(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _inputIndex
-    ) public isMockable(address(_consensus)) {
-        setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
+    function testRevertsEpochHash(uint256 _inputIndex) public {
+        setupForVoucher3(_inputIndex);
 
-        // epochHash incorrect
-        bytes32 epochHashForVoucher = bytes32("wrong epoch hash");
-        // mocking consensus
-        vm.mockCall(
-            address(_consensus),
-            abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(epochHashForVoucher, _inputIndex, proof.epochInputIndex)
+        proof.vouchersEpochRootHash = bytes32(uint256(0xdeadbeef));
+
+        vm.expectRevert("incorrect epochHash");
+        dapp.executeVoucher(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proof
         );
-        // epect revert
-        vm.expectRevert("epochHash incorrect");
-        // perform call
-        dapp.executeVoucher(address(token), payload, "", proof);
     }
 
-    function testRevertsInputIndices(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _inputIndex
-    ) public {
-        setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
+    function testRevertsInputIndices(uint256 _inputIndex) public {
+        setupForVoucher3(_inputIndex);
 
-        // alter epoch input index
-        proof.epochInputIndex += 1;
-        // epect revert
+        proof.epochInputIndex = 0xdeadbeef;
+
         vm.expectRevert("epoch input indices don't match");
-        // perform call
-        dapp.executeVoucher(address(token), payload, "", proof);
+        dapp.executeVoucher(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proof
+        );
     }
 
-    function testRevertsOutputsEpochRootHash(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _inputIndex
-    ) public {
-        setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
+    function testRevertsOutputsEpochRootHash(uint256 _inputIndex) public {
+        setupForVoucher3(_inputIndex);
 
-        // alter outputHashesRootHash
-        proof.outputHashesRootHash = bytes32(0);
-        // epect revert
-        vm.expectRevert("outputsEpochRootHash incorrect");
-        // perform call
-        dapp.executeVoucher(address(token), payload, "", proof);
+        proof.outputHashesRootHash = bytes32(uint256(0xdeadbeef));
+
+        vm.expectRevert("incorrect outputsEpochRootHash");
+        dapp.executeVoucher(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proof
+        );
     }
 
-    function testRevertsOutputHashesRootHash(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _inputIndex
-    ) public {
-        setupForVoucher3(_consensus, _owner, _templateHash, _inputIndex);
+    function testRevertsOutputHashesRootHash(uint256 _inputIndex) public {
+        setupForVoucher3(_inputIndex);
 
-        // alter outputIndex
-        proof.outputIndex += 1;
-        // epect revert
-        vm.expectRevert("outputHashesRootHash incorrect");
-        // perform call
-        dapp.executeVoucher(address(token), payload, "", proof);
+        proof.outputIndex = 0xdeadbeef;
+
+        vm.expectRevert("incorrect outputHashesRootHash");
+        dapp.executeVoucher(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proof
+        );
     }
 
-    function setupForVoucher3(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _inputIndex
-    ) internal isMockable(address(_consensus)) {
-        vm.assume(_owner != address(0));
-        dapp = new CartesiDApp(_consensus, _owner, _templateHash);
-
-        // deploy token contract deterministically
-        vm.prank(tokenOwner);
-        token = new SimpleToken{salt: bytes32(bytes20(tokenOwner))}(
-            initialSupply
-        );
-
-        // get voucher proof from generated Solidity library
-        proof = LibVoucherProof3.getProof();
-
-        // epoch hash
-        bytes32 epochHashForVoucher = keccak256(
-            abi.encodePacked(
-                proof.vouchersEpochRootHash,
-                proof.noticesEpochRootHash,
-                proof.machineStateHash
-            )
-        );
-
-        // mocking consensus
-        vm.mockCall(
-            address(_consensus),
-            abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(epochHashForVoucher, _inputIndex, proof.epochInputIndex)
-        );
+    function setupForVoucher3(uint256 _inputIndex) internal {
+        dapp = deployDAppDeterministically();
+        erc20Token = deployERC20Deterministically();
+        registerProof(_inputIndex, LibVoucherProof3.getProof());
     }
 
     // test ether transfer
 
     function testEtherTransfer(uint256 _inputIndex) public {
-        // set random addresses so that the deployment of CartesiDApp can be deterministic
-        IConsensus consensus = IConsensus(
-            0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
-        );
-        address dappOwner = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
-        bytes32 templateHash = 0x08ca29d14db8627e335084ed01fe9da85598dde22ae7820fdfa67fe085a1e5e6;
+        dapp = deployDAppDeterministically();
 
-        // deterministically deploy dapp from dappOwner
-        vm.prank(dappOwner);
-        CartesiDApp deterministicDapp = new CartesiDApp{
-            salt: bytes32(bytes20(dappOwner))
-        }(consensus, dappOwner, templateHash);
-        bytes memory etherPayload = abi.encodeWithSelector(
+        bytes memory withdrawEtherPayload = abi.encodeWithSelector(
             CartesiDApp.withdrawEther.selector,
             recipient,
             transferAmount
         );
-        if (log_vouchers) {
+
+        if (logVouchers) {
             console.log("voucher 4:");
-            console.log(address(deterministicDapp)); // changes when CartesiDApp bytecode changes
-            console.logBytes(etherPayload);
-            revert("Transaction reverted on purpose to log debug info");
+            console.log(address(dapp)); // changes when CartesiDApp bytecode changes
+            console.logBytes(withdrawEtherPayload);
+            revert("Debugging voucher proofs.");
         }
 
-        // get voucher proof from generated Solidity library
-        proof = LibVoucherProof4.getProof();
+        registerProof(_inputIndex, LibVoucherProof4.getProof());
 
-        // epoch hash
-        bytes32 epochHashForVoucher = keccak256(
-            abi.encodePacked(
-                proof.vouchersEpochRootHash,
-                proof.noticesEpochRootHash,
-                proof.machineStateHash
-            )
-        );
-        // mocking consensus
-        vm.mockCall(
-            address(consensus),
-            abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(epochHashForVoucher, _inputIndex, proof.epochInputIndex)
-        );
-
-        // not able to execute voucher because deterministicDapp has 0 balance
-        assertEq(address(deterministicDapp).balance, 0);
+        // not able to execute voucher because dapp has 0 balance
+        assertEq(address(dapp).balance, 0);
         assertEq(address(recipient).balance, 0);
-        bool returnedVal = deterministicDapp.executeVoucher(
-            address(deterministicDapp),
-            etherPayload,
+        bool success = dapp.executeVoucher(
+            address(dapp),
+            withdrawEtherPayload,
             "",
             proof
         );
-        assertEq(returnedVal, false);
-        assertEq(address(deterministicDapp).balance, 0);
+        assertEq(success, false);
+        assertEq(address(dapp).balance, 0);
         assertEq(address(recipient).balance, 0);
 
-        // fund deterministicDapp
+        // fund dapp
         uint256 dappInitBalance = 100;
-        (bool sent, ) = address(deterministicDapp).call{value: dappInitBalance}(
-            ""
-        );
-        require(sent, "fail to fund deterministicDapp");
-        assertEq(address(deterministicDapp).balance, dappInitBalance);
+        vm.deal(address(dapp), dappInitBalance);
+        assertEq(address(dapp).balance, dappInitBalance);
         assertEq(address(recipient).balance, 0);
 
         // expect event
-        vm.expectEmit(false, false, false, true, address(deterministicDapp));
+        vm.expectEmit(false, false, false, true, address(dapp));
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
                 proof.outputIndex,
@@ -348,79 +302,62 @@ contract CartesiDAppTest is TestBase {
         );
 
         // perform call
-        returnedVal = deterministicDapp.executeVoucher(
-            address(deterministicDapp),
-            etherPayload,
+        success = dapp.executeVoucher(
+            address(dapp),
+            withdrawEtherPayload,
             "",
             proof
         );
 
         // check result
-        assertEq(returnedVal, true);
-        assertEq(
-            address(deterministicDapp).balance,
-            dappInitBalance - transferAmount
-        );
+        assertEq(success, true);
+        assertEq(address(dapp).balance, dappInitBalance - transferAmount);
         assertEq(address(recipient).balance, transferAmount);
 
         // cannot execute the same voucher again
         vm.expectRevert("re-execution not allowed");
-        deterministicDapp.executeVoucher(
-            address(deterministicDapp),
-            etherPayload,
-            "",
-            proof
-        );
+        dapp.executeVoucher(address(dapp), withdrawEtherPayload, "", proof);
     }
 
-    function testWithdrawEtherContract(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _value
-    ) public {
-        vm.assume(_owner != address(0));
-        dapp = new CartesiDApp(_consensus, _owner, _templateHash);
-        vm.assume(_owner != address(dapp));
+    function testWithdrawEtherContract(uint256 _value, address _notDApp)
+        public
+    {
+        dapp = deployDAppDeterministically();
         vm.assume(_value <= address(this).balance);
+        vm.assume(_notDApp != address(dapp));
         address receiver = address(new EtherReceiver());
 
         // fund dapp
-        (bool sent, ) = address(dapp).call{value: _value}("");
-        require(sent, "fail to fund dapp");
+        vm.deal(address(dapp), _value);
 
-        // withdrawEther cannot be called by `this`
+        // withdrawEther cannot be called by anyone
         vm.expectRevert("only itself");
+        vm.prank(_notDApp);
         dapp.withdrawEther(receiver, _value);
 
-        // withdrawEther cannot be called by any address not equal to dapp address
-        vm.expectRevert("only itself");
-        vm.prank(_owner);
-        dapp.withdrawEther(receiver, _value);
-
-        // can only be called by dapp itself
+        // withdrawEther can only be called by dapp itself
         uint256 preBalance = receiver.balance;
         vm.prank(address(dapp));
         dapp.withdrawEther(receiver, _value);
         assertEq(receiver.balance, preBalance + _value);
+        assertEq(address(dapp).balance, 0);
     }
 
     function testWithdrawEtherEOA(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _receiverSeed,
-        uint256 _value
+        uint256 _value,
+        address _notDApp,
+        uint256 _receiverSeed
     ) public {
-        vm.assume(_owner != address(0));
-        dapp = new CartesiDApp(_consensus, _owner, _templateHash);
-        vm.assume(_owner != address(dapp));
+        dapp = deployDAppDeterministically();
+        vm.assume(_notDApp != address(dapp));
         vm.assume(_value <= address(this).balance);
+
+        // by deriving receiver from keccak-256, we avoid
+        // collisions with precompiled contract addresses
+        // assume receiver is not a contract
         address receiver = address(
             bytes20(keccak256(abi.encode(_receiverSeed)))
         );
-
-        // assume receiver is not a contract
         uint256 codeSize;
         assembly {
             codeSize := extcodesize(receiver)
@@ -428,95 +365,62 @@ contract CartesiDAppTest is TestBase {
         vm.assume(codeSize == 0);
 
         // fund dapp
-        (bool sent, ) = address(dapp).call{value: _value}("");
-        require(sent, "fail to fund dapp");
+        vm.deal(address(dapp), _value);
 
-        // withdrawEther cannot be called by `this`
+        // withdrawEther cannot be called by anyone
         vm.expectRevert("only itself");
+        vm.prank(_notDApp);
         dapp.withdrawEther(receiver, _value);
 
-        // withdrawEther cannot be called by any address not equal to dapp address
-        vm.expectRevert("only itself");
-        vm.prank(_owner);
-        dapp.withdrawEther(receiver, _value);
-
-        // can only be called by dapp itself
+        // withdrawEther can only be called by dapp itself
         uint256 preBalance = receiver.balance;
         vm.prank(address(dapp));
         dapp.withdrawEther(receiver, _value);
         assertEq(receiver.balance, preBalance + _value);
+        assertEq(address(dapp).balance, 0);
     }
 
     // test NFT transfer
 
     function testWithdrawNFT(uint256 _inputIndex) public {
-        // deterministically deploy dapp from tokenOwner
-        vm.prank(tokenOwner);
-        SimpleNFT snft = new SimpleNFT{salt: bytes32(bytes20(tokenOwner))}();
+        dapp = deployDAppDeterministically();
+        erc721Token = deployERC721Deterministically();
+        erc721Receiver = deployERC721ReceiverDeterministically();
 
-        // set random addresses so that the deployment of CartesiDApp can be deterministic
-        IConsensus consensus = IConsensus(
-            0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
+        bytes memory safeTransferFromPayload = abi.encodeWithSignature(
+            "safeTransferFrom(address,address,uint256)",
+            dapp, // from
+            erc721Receiver, // to
+            tokenId
         );
-        address dappOwner = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
-        bytes32 templateHash = 0x08ca29d14db8627e335084ed01fe9da85598dde22ae7820fdfa67fe085a1e5e6;
-        // deterministically deploy dapp from dappOwner
-        vm.prank(dappOwner);
-        CartesiDApp deterministicDapp = new CartesiDApp{
-            salt: bytes32(bytes20(dappOwner))
-        }(consensus, dappOwner, templateHash);
-        bytes memory NFTPayload = abi.encodeWithSelector(
-            IERC721.transferFrom.selector,
-            deterministicDapp, // from
-            recipient, // to
-            0 // tokenId
-        );
-        if (log_vouchers) {
+
+        if (logVouchers) {
             console.log("voucher 5:");
-            console.log(address(snft));
-            console.logBytes(NFTPayload); // changes when CartesiDApp bytecode changes
-            revert("Transaction reverted on purpose to log debug info");
+            console.log(address(erc721Token));
+            console.logBytes(safeTransferFromPayload); // changes when CartesiDApp bytecode changes
+            revert("Debugging voucher proofs.");
         }
 
-        // get voucher proof from generated Solidity library
-        proof = LibVoucherProof5.getProof();
+        registerProof(_inputIndex, LibVoucherProof5.getProof());
 
-        // epoch hash
-        bytes32 epochHashForVoucher = keccak256(
-            abi.encodePacked(
-                proof.vouchersEpochRootHash,
-                proof.noticesEpochRootHash,
-                proof.machineStateHash
-            )
-        );
-        // mocking consensus
-        vm.mockCall(
-            address(consensus),
-            abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(epochHashForVoucher, _inputIndex, proof.epochInputIndex)
-        );
-
-        // not able to execute voucher because deterministicDapp doesn't have the nft
-        assertEq(snft.balanceOf(address(deterministicDapp)), 0);
-        assertEq(snft.balanceOf(address(recipient)), 0);
-        bool returnedVal = deterministicDapp.executeVoucher(
-            address(snft),
-            NFTPayload,
+        // not able to execute voucher because dapp doesn't have the nft
+        assertEq(erc721Token.ownerOf(tokenId), tokenOwner);
+        bool success = dapp.executeVoucher(
+            address(erc721Token),
+            safeTransferFromPayload,
             "",
             proof
         );
-        assertEq(returnedVal, false);
-        assertEq(snft.balanceOf(address(deterministicDapp)), 0);
-        assertEq(snft.balanceOf(address(recipient)), 0);
+        assertEq(success, false);
+        assertEq(erc721Token.ownerOf(tokenId), tokenOwner);
 
-        // fund deterministicDapp
+        // fund dapp
         vm.prank(tokenOwner);
-        snft.transferFrom(tokenOwner, address(deterministicDapp), 0);
-        assertEq(snft.balanceOf(address(deterministicDapp)), 1);
-        assertEq(snft.balanceOf(address(recipient)), 0);
+        erc721Token.safeTransferFrom(tokenOwner, address(dapp), tokenId);
+        assertEq(erc721Token.ownerOf(tokenId), address(dapp));
 
         // expect event
-        vm.expectEmit(false, false, false, true, address(deterministicDapp));
+        vm.expectEmit(false, false, false, true, address(dapp));
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
                 proof.outputIndex,
@@ -525,102 +429,56 @@ contract CartesiDAppTest is TestBase {
         );
 
         // perform call
-        returnedVal = deterministicDapp.executeVoucher(
-            address(snft),
-            NFTPayload,
+        success = dapp.executeVoucher(
+            address(erc721Token),
+            safeTransferFromPayload,
             "",
             proof
         );
 
         // check result
-        assertEq(returnedVal, true);
-        assertEq(snft.balanceOf(address(deterministicDapp)), 0);
-        assertEq(snft.balanceOf(address(recipient)), 1);
-        assertEq(snft.ownerOf(0), address(recipient));
+        assertEq(success, true);
+        assertEq(erc721Token.ownerOf(tokenId), address(erc721Receiver));
 
         // cannot execute the same voucher again
         vm.expectRevert("re-execution not allowed");
-        deterministicDapp.executeVoucher(address(snft), NFTPayload, "", proof);
+        dapp.executeVoucher(
+            address(erc721Token),
+            safeTransferFromPayload,
+            "",
+            proof
+        );
     }
 
     // test notices
 
-    function testValidateNotice0(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _inputIndex
-    ) public isMockable(address(_consensus)) {
-        // *** setup for notice0 ***
-        vm.assume(_owner != address(0));
-        dapp = new CartesiDApp(_consensus, _owner, _templateHash);
+    function testValidateNotice0(uint256 _inputIndex) public {
+        dapp = deployDAppDeterministically();
+        registerProof(_inputIndex, LibNoticeProof0.getProof());
 
-        // get notice proof from generated Solidity library
-        proof = LibNoticeProof0.getProof();
-
-        // epoch hash
-        bytes32 epochHashForNotice = keccak256(
-            abi.encodePacked(
-                proof.vouchersEpochRootHash,
-                proof.noticesEpochRootHash,
-                proof.machineStateHash
-            )
-        );
-        // mocking consensus
-        vm.mockCall(
-            address(_consensus),
-            abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(epochHashForNotice, _inputIndex, proof.epochInputIndex)
-        );
-        // *** finish setup ***
-
-        // validate notice0
+        // validate notice 0
         bytes memory notice = abi.encodePacked(bytes4(0xdeadbeef));
-        bool returnedVal = dapp.validateNotice(notice, "", proof);
-        assertEq(returnedVal, true);
+        bool ret = dapp.validateNotice(notice, "", proof);
+        assertEq(ret, true);
 
         // reverts if notice is incorrect
         bytes memory falseNotice = abi.encodePacked(bytes4(0xdeaddead));
-        vm.expectRevert("outputHashesRootHash incorrect");
+        vm.expectRevert("incorrect outputHashesRootHash");
         dapp.validateNotice(falseNotice, "", proof);
     }
 
-    function testValidateNotice1(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash,
-        uint256 _inputIndex
-    ) public isMockable(address(_consensus)) {
-        // *** setup for notice1 ***
-        vm.assume(_owner != address(0));
-        dapp = new CartesiDApp(_consensus, _owner, _templateHash);
+    function testValidateNotice1(uint256 _inputIndex) public {
+        dapp = deployDAppDeterministically();
+        registerProof(_inputIndex, LibNoticeProof1.getProof());
 
-        // get notice proof from generated Solidity library
-        proof = LibNoticeProof1.getProof();
-
-        // epoch hash
-        bytes32 epochHashForNotice = keccak256(
-            abi.encodePacked(
-                proof.vouchersEpochRootHash,
-                proof.noticesEpochRootHash,
-                proof.machineStateHash
-            )
-        );
-        // mocking consensus
-        vm.mockCall(
-            address(_consensus),
-            abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(epochHashForNotice, _inputIndex, proof.epochInputIndex)
-        );
-        // *** finish setup ***
-
-        // validate notice1
+        // validate notice 1
         bytes memory notice = abi.encodePacked(bytes4(0xbeefdead));
-        bool returnedVal = dapp.validateNotice(notice, "", proof);
-        assertEq(returnedVal, true);
+        bool ret = dapp.validateNotice(notice, "", proof);
+        assertEq(ret, true);
     }
 
     // test migration
+
     function testMigrateToConsensus(
         IConsensus _consensus,
         address _owner,
@@ -631,6 +489,7 @@ contract CartesiDAppTest is TestBase {
     ) public {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
+        vm.assume(_owner != _newOwner);
         vm.assume(address(_newOwner) != address(0));
         vm.assume(_nonZeroAddress != address(0));
 
@@ -650,11 +509,9 @@ contract CartesiDAppTest is TestBase {
         // if owner changes, then original owner no longer can migrate consensus
         vm.prank(_owner);
         dapp.transferOwnership(_newOwner);
-        if (_newOwner != _owner) {
-            vm.expectRevert("Ownable: caller is not the owner");
-            vm.prank(_owner);
-            dapp.migrateToConsensus(_consensus);
-        }
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(_owner);
+        dapp.migrateToConsensus(_consensus);
 
         // if new owner renounce ownership (give ownership to address 0)
         // no one will be able to migrate consensus
@@ -663,5 +520,60 @@ contract CartesiDAppTest is TestBase {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(_nonZeroAddress);
         dapp.migrateToConsensus(_consensus);
+    }
+
+    // Stores `_proof` in storage variable `proof`
+    // Mock `consensus` so that `getEpochHash` return values
+    // can be used to validate `_proof` and `_inputIndex`.
+    function registerProof(
+        uint256 _inputIndex,
+        OutputValidityProof memory _proof
+    ) internal {
+        // calculate epoch hash from proof
+        bytes32 epochHash = keccak256(
+            abi.encodePacked(
+                _proof.vouchersEpochRootHash,
+                _proof.noticesEpochRootHash,
+                _proof.machineStateHash
+            )
+        );
+
+        // mock the consensus contract to return the right epoch hash
+        vm.mockCall(
+            consensus,
+            abi.encodeWithSelector(IConsensus.getEpochHash.selector),
+            abi.encode(epochHash, _inputIndex, _proof.epochInputIndex)
+        );
+
+        // store proof in storage
+        proof = _proof;
+    }
+
+    function deployDAppDeterministically() internal returns (CartesiDApp) {
+        vm.prank(dappOwner);
+        return
+            new CartesiDApp{salt: salt}(
+                IConsensus(consensus),
+                dappOwner,
+                templateHash
+            );
+    }
+
+    function deployERC20Deterministically() internal returns (IERC20) {
+        vm.prank(tokenOwner);
+        return new SimpleERC20{salt: salt}(tokenOwner, initialSupply);
+    }
+
+    function deployERC721Deterministically() internal returns (IERC721) {
+        vm.prank(tokenOwner);
+        return new SimpleERC721{salt: salt}(tokenOwner, tokenId);
+    }
+
+    function deployERC721ReceiverDeterministically()
+        internal
+        returns (IERC721Receiver)
+    {
+        vm.prank(tokenOwner);
+        return new SimpleERC721Receiver{salt: salt}();
     }
 }

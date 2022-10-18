@@ -65,7 +65,7 @@ library LibOutputValidation {
                     _v.machineStateHash
                 )
             ) == _epochHash,
-            "epochHash incorrect"
+            "incorrect epochHash"
         );
 
         // prove that output metadata memory range is contained in epoch's output memory range
@@ -80,7 +80,7 @@ library LibOutputValidation {
                 _v.outputHashesRootHash,
                 _v.outputHashesInEpochSiblings
             ) == _outputsEpochRootHash,
-            "outputsEpochRootHash incorrect"
+            "incorrect outputsEpochRootHash"
         );
 
         // The hash of the output is converted to bytes (abi.encode) and
@@ -118,7 +118,7 @@ library LibOutputValidation {
                 merkleRootOfHashOfOutput,
                 _v.keccakInHashesSiblings
             ) == _v.outputHashesRootHash,
-            "outputHashesRootHash incorrect"
+            "incorrect outputHashesRootHash"
         );
     }
 

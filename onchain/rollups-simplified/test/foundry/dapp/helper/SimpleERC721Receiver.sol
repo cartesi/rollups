@@ -10,17 +10,18 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title A Simple Token
+/// @title A Simple ERC-721 Receiver Contract
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract SimpleToken is ERC20 {
-    // name: SimpleToken
-    // symbol: SIM
-    constructor(uint256 initialSupply) ERC20("SimpleToken", "SIM") {
-        // on Hardhat network, 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 should be the address of signers[0]
-        // generated from default mnemonic "test test test test test test test test test test test junk"
-        _mint(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266, initialSupply);
+contract SimpleERC721Receiver is IERC721Receiver {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }

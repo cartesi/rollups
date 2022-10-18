@@ -3,7 +3,7 @@ import epochStateV from "./voucherProofs.json";
 import epochStateN from "./noticeProofs.json";
 
 // If json file needs to be updated, instructions below are similar as in the `test/OutputFacet.ts` file
-// 1. set the boolean state variable `log_vouchers` to `true` in `CartesiDApp.t.sol` file to see what the
+// 1. set the boolean state variable `logVouchers` to `true` in `CartesiDApp.t.sol` file to see what the
 //    values of payload and destination should be.
 // 2. run `forge test -vv` and write down the addresses and payloads of each voucher.
 // 3. we need to use the script `gen-proofs.sh` here[1]. It originally has 2 vouchers/notices. Make it into 6.
@@ -14,7 +14,7 @@ import epochStateN from "./noticeProofs.json";
 //    To run: `python -m b64to16 epoch-state.json | jq > test/foundry/dapp/helpers/voucherProofs.json`
 // 5. go to this directory by running `cd test/foundry/dapp/helpers`
 // 6. run `npx ts-node genProof.ts` to generate Solidity version of proofs
-// 7. set the boolean state variable `log_vouchers` back to `false` in `CartesiDApp.t.sol`
+// 7. set the boolean state variable `logVouchers` back to `false` in `CartesiDApp.t.sol`
 //
 // ref links:
 // [1]: https://github.com/cartesi-corp/machine-emulator/tree/feature/gen-proofs/tools/gen-proofs

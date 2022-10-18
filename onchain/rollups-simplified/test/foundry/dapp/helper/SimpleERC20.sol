@@ -10,13 +10,15 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title A Simple NFT
+/// @title A Simple ERC-20 Contract
 pragma solidity 0.8.13;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract SimpleNFT is ERC721 {
-    constructor() ERC721("SimpleNFT", "SNFT") {
-        _safeMint(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266, 0);
+contract SimpleERC20 is ERC20 {
+    constructor(address minter, uint256 initialSupply)
+        ERC20("SimpleERC20", "SIM20")
+    {
+        _mint(minter, initialSupply);
     }
 }
