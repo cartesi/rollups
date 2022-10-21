@@ -15,6 +15,7 @@ pragma solidity 0.8.13;
 
 import {ICartesiDApp} from "./ICartesiDApp.sol";
 import {IConsensus} from "../consensus/IConsensus.sol";
+import {OutputHeaders} from "../common/OutputHeaders.sol";
 import {LibOutputValidation, OutputValidityProof} from "../library/LibOutputValidation.sol";
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 
@@ -57,10 +58,11 @@ contract CartesiDApp is
         // query the current consensus for the epoch hash
         (epochHash, inputIndex) = getEpochHashAndInputIndex(_claimQuery, _v);
 
-        bytes memory encodedVoucher = abi.encode(_destination, _payload);
-
         // reverts if proof isn't valid
-        _v.validateEncodedVoucher(encodedVoucher, epochHash);
+        _v.validateEncodedOutput(
+            abi.encodePacked(OutputHeaders.VOUCHER, _destination, _payload),
+            epochHash
+        );
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _v.outputIndex,
@@ -95,10 +97,11 @@ contract CartesiDApp is
         // query the current consensus for the epoch hash
         (epochHash, ) = getEpochHashAndInputIndex(_claimQuery, _v);
 
-        bytes memory encodedNotice = abi.encode(_notice);
-
         // reverts if proof isn't valid
-        _v.validateEncodedNotice(encodedNotice, epochHash);
+        _v.validateEncodedOutput(
+            abi.encode(OutputHeaders.NOTICE, _notice),
+            epochHash
+        );
 
         return true;
     }
