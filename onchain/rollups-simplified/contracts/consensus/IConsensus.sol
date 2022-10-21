@@ -55,7 +55,7 @@ interface IConsensus {
 
     /// @notice Get the epoch hash for a given DApp from a claim
     /// @param _dapp The DApp
-    /// @param _claimQuery Data for querying the right claim
+    /// @param _claimQuery Data for querying the desired claim
     /// @return epochHash_ The epoch hash contained in the claim
     /// @return inputIndex_ The index of the input in the input box
     /// @return epochInputIndex_ The offset between the input in the input box

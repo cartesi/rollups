@@ -41,13 +41,13 @@ library CanonicalMachine {
     // Maximum epoch notice memory range (128 megabytes)
     Log2Size constant EPOCH_NOTICE_LOG2_SIZE = Log2Size.wrap(37);
 
-    /// @notice convert a Log2Size value into its underlying uint64 value
+    /// @notice Convert a Log2Size value into its underlying uint64 value
     /// @param s the Log2Size value
     function uint64OfSize(Log2Size s) internal pure returns (uint64) {
         return Log2Size.unwrap(s);
     }
 
-    /// @notice returns the position of an intra memory range on a memory range
+    /// @notice Return the position of an intra memory range on a memory range
     //          with contents with the same size
     /// @param _index index of intra memory range
     /// @param _log2Size size of intra memory range
