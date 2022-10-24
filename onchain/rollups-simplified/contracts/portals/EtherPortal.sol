@@ -28,7 +28,7 @@ contract EtherPortal is IEtherPortal {
         return inputBox;
     }
 
-    function depositEther(address _dapp, bytes calldata _data)
+    function depositEther(address _dapp, bytes calldata _L2data)
         external
         payable
         override
@@ -38,12 +38,12 @@ contract EtherPortal is IEtherPortal {
         (bool success, ) = _dapp.call{value: msg.value}("");
         require(success, "EtherPortal: transfer failed");
 
-        bytes memory input = abi.encodePacked(
-            InputHeaders.ETH_DEPOSIT, // Header (1B)
-            msg.sender, //               Ether sender (20B)
-            msg.value, //                Ether amount (32B)
-            _data //                     L2 data (arbitrary size)
+        bytes memory input = InputHeaders.encodeEtherDeposit(
+            msg.sender,
+            msg.value,
+            _L2data
         );
+
         inputBox.addInput(_dapp, input);
     }
 }

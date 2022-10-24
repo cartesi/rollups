@@ -24,13 +24,13 @@ interface IERC20Portal is IPortal {
     /// @param _token The ERC-20 token contract
     /// @param _dapp The address of the DApp
     /// @param _amount The amount of tokens to be transferred
-    /// @param _data Additional data to be interpreted by L2
+    /// @param _L2data Additional data to be interpreted by L2
     /// @dev The caller must allow the portal to withdraw at least
     ///      `_amount` tokens from their account beforehand.
     function depositERC20Tokens(
         IERC20 _token,
         address _dapp,
         uint256 _amount,
-        bytes calldata _data
+        bytes calldata _L2data
     ) external;
 }

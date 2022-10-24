@@ -34,20 +34,18 @@ contract ERC20Portal is IERC20Portal {
         IERC20 _token,
         address _dapp,
         uint256 _amount,
-        bytes calldata _data
+        bytes calldata _L2data
     ) external override {
         bool success = _token.transferFrom(msg.sender, _dapp, _amount);
 
-        bytes1 header = success
-            ? InputHeaders.ERC20_DEPOSIT_TRUE
-            : InputHeaders.ERC20_DEPOSIT_FALSE;
-        bytes memory input = abi.encodePacked(
-            header, //     Header (1B)
-            _token, //     Token contract (20B)
-            msg.sender, // Token sender (20B)
-            _amount, //    Amount of tokens (32B)
-            _data //       L2 data (arbitrary size)
+        bytes memory input = InputHeaders.encodeERC20Deposit(
+            success,
+            _token,
+            msg.sender,
+            _amount,
+            _L2data
         );
+
         inputBox.addInput(_dapp, input);
     }
 }

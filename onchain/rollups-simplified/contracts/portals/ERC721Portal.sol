@@ -39,14 +39,14 @@ contract ERC721Portal is IERC721Portal {
     ) external override {
         _token.safeTransferFrom(msg.sender, _dapp, _tokenId, _L1data);
 
-        bytes memory data = abi.encode(_L1data, _L2data);
-        bytes memory input = abi.encodePacked(
-            InputHeaders.ERC721_DEPOSIT, // Header (1B)
-            _token, //                      Token contract (20B)
-            msg.sender, //                  Token sender (20B)
-            _tokenId, //                    Token identifier (32B)
-            data //                         L1 + L2 data (arbitrary size)
+        bytes memory input = InputHeaders.encodeERC721Deposit(
+            _token,
+            msg.sender,
+            _tokenId,
+            _L1data,
+            _L2data
         );
+
         inputBox.addInput(_dapp, input);
     }
 }
