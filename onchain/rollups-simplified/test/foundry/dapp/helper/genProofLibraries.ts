@@ -24,7 +24,6 @@ let buildSolForVouchers = [
 let buildSolForNotices = [0, 1];
 
 interface OutputValidityProof {
-    epochInputIndex: number;
     outputIndex: number;
     outputHashesRootHash: BytesLike;
     vouchersEpochRootHash: BytesLike;
@@ -50,7 +49,6 @@ function setupVoucherProof(epochInputIndex: number): OutputValidityProof {
         voucherHashesInEpochSiblings.push(element.data);
     });
     let voucherProof: OutputValidityProof = {
-        epochInputIndex: epochInputIndex,
         outputIndex: 0,
         outputHashesRootHash: voucherDataKeccakInHashes.rootHash.data,
         vouchersEpochRootHash: epochStateV.mostRecentVouchersEpochRootHash.data,
@@ -78,7 +76,6 @@ function setupNoticeProof(epochInputIndex: number): OutputValidityProof {
         noticeHashesInEpochSiblingsN.push(element.data);
     });
     let noticeProof: OutputValidityProof = {
-        epochInputIndex: epochInputIndex,
         outputIndex: 0,
         outputHashesRootHash: noticeDataKeccakInHashes.rootHash.data,
         vouchersEpochRootHash: epochStateN.mostRecentVouchersEpochRootHash.data,
@@ -110,8 +107,7 @@ function buildSolCodes(p: OutputValidityProof, libraryName: string): string {
         `        bytes32[] memory outputHashesInEpochSiblings = new bytes32[](${array2.length});`,
         `        for (uint256 i; i < ${array1.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array1[i]); }`,
         `        for (uint256 i; i < ${array2.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array2[i]); }`,
-        `        return OutputValidityProof({`,
-        `            epochInputIndex: ${p.epochInputIndex},`,
+        `        return OutputValidityProofV1({`,
         `            outputIndex: ${p.outputIndex},`,
         `            outputHashesRootHash: ${p.outputHashesRootHash},`,
         `            vouchersEpochRootHash: ${p.vouchersEpochRootHash},`,

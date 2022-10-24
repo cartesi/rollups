@@ -210,20 +210,6 @@ contract CartesiDAppTest is TestBase {
         );
     }
 
-    function testRevertsInputIndices(uint256 _inputIndex) public {
-        setupForVoucher3(_inputIndex);
-
-        proof.epochInputIndex = 0xdeadbeef;
-
-        vm.expectRevert("epoch input indices don't match");
-        dapp.executeVoucherV1(
-            address(erc20Token),
-            erc20TransferPayload,
-            "",
-            proof
-        );
-    }
-
     function testRevertsOutputsEpochRootHash(uint256 _inputIndex) public {
         setupForVoucher3(_inputIndex);
 
@@ -255,7 +241,7 @@ contract CartesiDAppTest is TestBase {
     function setupForVoucher3(uint256 _inputIndex) internal {
         dapp = deployDAppDeterministically();
         erc20Token = deployERC20Deterministically();
-        registerProof(_inputIndex, LibVoucherProof3.getProof());
+        registerProof(_inputIndex, 3, LibVoucherProof3.getProof());
     }
 
     // test ether transfer
@@ -271,7 +257,7 @@ contract CartesiDAppTest is TestBase {
 
         logVoucher(4, address(dapp), withdrawEtherPayload);
 
-        registerProof(_inputIndex, LibVoucherProof4.getProof());
+        registerProof(_inputIndex, 4, LibVoucherProof4.getProof());
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(address(dapp).balance, 0);
@@ -396,7 +382,7 @@ contract CartesiDAppTest is TestBase {
 
         logVoucher(5, address(erc721Token), safeTransferFromPayload);
 
-        registerProof(_inputIndex, LibVoucherProof5.getProof());
+        registerProof(_inputIndex, 5, LibVoucherProof5.getProof());
 
         // not able to execute voucher because dapp doesn't have the nft
         assertEq(erc721Token.ownerOf(tokenId), tokenOwner);
@@ -449,7 +435,7 @@ contract CartesiDAppTest is TestBase {
 
     function testValidateNotice0(uint256 _inputIndex) public {
         dapp = deployDAppDeterministically();
-        registerProof(_inputIndex, LibNoticeProof0.getProof());
+        registerProof(_inputIndex, 0, LibNoticeProof0.getProof());
 
         // validate notice 0
         bytes memory notice = abi.encodePacked(bytes4(0xdeadbeef));
@@ -464,7 +450,7 @@ contract CartesiDAppTest is TestBase {
 
     function testValidateNotice1(uint256 _inputIndex) public {
         dapp = deployDAppDeterministically();
-        registerProof(_inputIndex, LibNoticeProof1.getProof());
+        registerProof(_inputIndex, 1, LibNoticeProof1.getProof());
 
         // validate notice 1
         bytes memory notice = abi.encodePacked(bytes4(0xbeefdead));
@@ -519,9 +505,10 @@ contract CartesiDAppTest is TestBase {
 
     // Stores `_proof` in storage variable `proof`
     // Mock `consensus` so that `getEpochHash` return values
-    // can be used to validate `_proof` and `_inputIndex`.
+    // can be used to validate `_inputIndex`, `_epochInputIndex` and `_proof`.
     function registerProof(
         uint256 _inputIndex,
+        uint256 _epochInputIndex,
         OutputValidityProofV1 memory _proof
     ) internal {
         // calculate epoch hash from proof
@@ -537,7 +524,7 @@ contract CartesiDAppTest is TestBase {
         vm.mockCall(
             consensus,
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(epochHash, _inputIndex, _proof.epochInputIndex)
+            abi.encode(epochHash, _inputIndex, _epochInputIndex)
         );
 
         // store proof in storage

@@ -16,7 +16,6 @@ pragma solidity ^0.8.13;
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 
-/// @param epochInputIndex which input, in the epoch, the output belongs to
 /// @param outputIndex index of output inside the input
 /// @param outputHashesRootHash merkle root of all epoch's output metadata hashes
 /// @param vouchersEpochRootHash merkle root of all epoch's voucher metadata hashes
@@ -25,7 +24,6 @@ import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 /// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range
 /// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range
 struct OutputValidityProofV1 {
-    uint64 epochInputIndex;
     uint64 outputIndex;
     bytes32 outputHashesRootHash;
     bytes32 vouchersEpochRootHash;
@@ -42,6 +40,7 @@ library LibOutputValidationV1 {
     /// @param _v the output validity proof
     /// @param _encodedOutput the encoded output
     /// @param _epochHash the hash of the epoch in which the output was generated
+    /// @param _epochInputIndex index of input in the epoch
     /// @param _outputsEpochRootHash either _v.vouchersEpochRootHash (for vouchers)
     ///                              or _v.noticesEpochRootHash (for notices)
     /// @param _outputEpochLog2Size either EPOCH_VOUCHER_LOG2_SIZE (for vouchers)
@@ -52,6 +51,7 @@ library LibOutputValidationV1 {
         OutputValidityProofV1 calldata _v,
         bytes memory _encodedOutput,
         bytes32 _epochHash,
+        uint64 _epochInputIndex,
         bytes32 _outputsEpochRootHash,
         uint256 _outputEpochLog2Size,
         uint256 _outputHashesLog2Size
@@ -72,7 +72,7 @@ library LibOutputValidationV1 {
         require(
             Merkle.getRootAfterReplacementInDrive(
                 CanonicalMachine.getIntraMemoryRangePosition(
-                    _v.epochInputIndex,
+                    _epochInputIndex,
                     CanonicalMachine.KECCAK_LOG2_SIZE
                 ),
                 CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
@@ -126,15 +126,18 @@ library LibOutputValidationV1 {
     /// @param _v the output validity proof
     /// @param _encodedVoucher the encoded voucher
     /// @param _epochHash the hash of the epoch in which the voucher was generated
+    /// @param _epochInputIndex index of input in the epoch
     function validateEncodedVoucher(
         OutputValidityProofV1 calldata _v,
         bytes memory _encodedVoucher,
-        bytes32 _epochHash
+        bytes32 _epochHash,
+        uint64 _epochInputIndex
     ) internal pure {
         validateEncodedOutput(
             _v,
             _encodedVoucher,
             _epochHash,
+            _epochInputIndex,
             _v.vouchersEpochRootHash,
             CanonicalMachine.EPOCH_VOUCHER_LOG2_SIZE.uint64OfSize(),
             CanonicalMachine.VOUCHER_METADATA_LOG2_SIZE.uint64OfSize()
@@ -145,15 +148,18 @@ library LibOutputValidationV1 {
     /// @param _v the output validity proof
     /// @param _encodedNotice the encoded notice
     /// @param _epochHash the hash of the epoch in which the notice was generated
+    /// @param _epochInputIndex index of input in the epoch
     function validateEncodedNotice(
         OutputValidityProofV1 calldata _v,
         bytes memory _encodedNotice,
-        bytes32 _epochHash
+        bytes32 _epochHash,
+        uint64 _epochInputIndex
     ) internal pure {
         validateEncodedOutput(
             _v,
             _encodedNotice,
             _epochHash,
+            _epochInputIndex,
             _v.noticesEpochRootHash,
             CanonicalMachine.EPOCH_NOTICE_LOG2_SIZE.uint64OfSize(),
             CanonicalMachine.NOTICE_METADATA_LOG2_SIZE.uint64OfSize()

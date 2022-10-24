@@ -15,7 +15,6 @@ library LibNoticeProof1 {
         for (uint256 i; i < 16; ++i) { keccakInHashesSiblings[i] = bytes32(array1[i]); }
         for (uint256 i; i < 32; ++i) { outputHashesInEpochSiblings[i] = bytes32(array2[i]); }
         return OutputValidityProofV1({
-            epochInputIndex: 1,
             outputIndex: 0,
             outputHashesRootHash: 0x7addc75d9a7e327c9dd9733cb325d8c58298e635cef2995c55050fce9ef490e8,
             vouchersEpochRootHash: 0xe74bb7b86ee688f432d3aa0ee94683255a195aa38b9e7dc92a9ca9183711ef83,

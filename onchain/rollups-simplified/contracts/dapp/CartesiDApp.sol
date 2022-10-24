@@ -15,7 +15,6 @@ pragma solidity 0.8.13;
 
 import {ICartesiDApp} from "./ICartesiDApp.sol";
 import {IConsensus} from "../consensus/IConsensus.sol";
-import {OutputHeaders} from "../common/OutputHeaders.sol";
 import {LibOutputValidationV1, OutputValidityProofV1} from "../library/LibOutputValidationV1.sol";
 import {LibOutputValidationV2, OutputValidityProofV2} from "../library/LibOutputValidationV2.sol";
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
@@ -23,6 +22,7 @@ import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract CartesiDApp is
     ICartesiDApp,
@@ -30,6 +30,7 @@ contract CartesiDApp is
     ReentrancyGuard,
     Ownable
 {
+    using SafeCast for uint256;
     using Bitmask for mapping(uint256 => uint256);
     using LibOutputValidationV1 for OutputValidityProofV1;
     using LibOutputValidationV2 for OutputValidityProofV2;
@@ -56,14 +57,22 @@ contract CartesiDApp is
     ) external override nonReentrant returns (bool) {
         bytes32 epochHash;
         uint256 inputIndex;
+        uint256 epochInputIndex;
 
-        // query the current consensus for the epoch hash
-        (epochHash, inputIndex) = getEpochHashAndInputIndex(_claimQuery, _v.epochInputIndex);
+        // query the current consensus for the desired claim
+        (epochHash, inputIndex, epochInputIndex) = consensus.getEpochHash(
+            address(this),
+            _claimQuery
+        );
 
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
 
         // reverts if proof isn't valid
-        _v.validateEncodedVoucher(encodedVoucher, epochHash);
+        _v.validateEncodedVoucher(
+            encodedVoucher,
+            epochHash,
+            epochInputIndex.toUint64()
+        );
 
         uint256 voucherPosition = LibOutputValidationV1.getBitMaskPosition(
             _v.outputIndex,
@@ -94,14 +103,22 @@ contract CartesiDApp is
         OutputValidityProofV1 calldata _v
     ) external view override returns (bool) {
         bytes32 epochHash;
+        uint256 epochInputIndex;
 
-        // query the current consensus for the epoch hash
-        (epochHash, ) = getEpochHashAndInputIndex(_claimQuery, _v.epochInputIndex);
+        // query the current consensus for the desired claim
+        (epochHash, , epochInputIndex) = consensus.getEpochHash(
+            address(this),
+            _claimQuery
+        );
 
         bytes memory encodedNotice = abi.encode(_notice);
 
         // reverts if proof isn't valid
-        _v.validateEncodedNotice(encodedNotice, epochHash);
+        _v.validateEncodedNotice(
+            encodedNotice,
+            epochHash,
+            epochInputIndex.toUint64()
+        );
 
         return true;
     }
@@ -114,14 +131,20 @@ contract CartesiDApp is
     ) external override nonReentrant returns (bool) {
         bytes32 epochHash;
         uint256 inputIndex;
+        uint256 epochInputIndex;
 
-        // query the current consensus for the epoch hash
-        (epochHash, inputIndex) = getEpochHashAndInputIndex(_claimQuery, _v.epochInputIndex);
+        // query the current consensus for the desired claim
+        (epochHash, inputIndex, epochInputIndex) = consensus.getEpochHash(
+            address(this),
+            _claimQuery
+        );
 
         // reverts if proof isn't valid
-        _v.validateEncodedOutput(
-            abi.encodePacked(OutputHeaders.VOUCHER, _destination, _payload),
-            epochHash
+        _v.validateVoucher(
+            _destination,
+            _payload,
+            epochHash,
+            epochInputIndex.toUint64()
         );
 
         uint256 voucherPosition = LibOutputValidationV1.getBitMaskPosition(
@@ -153,15 +176,16 @@ contract CartesiDApp is
         OutputValidityProofV2 calldata _v
     ) external view override returns (bool) {
         bytes32 epochHash;
+        uint256 epochInputIndex;
 
-        // query the current consensus for the epoch hash
-        (epochHash, ) = getEpochHashAndInputIndex(_claimQuery, _v.epochInputIndex);
+        // query the current consensus for the desired claim
+        (epochHash, , epochInputIndex) = consensus.getEpochHash(
+            address(this),
+            _claimQuery
+        );
 
         // reverts if proof isn't valid
-        _v.validateEncodedOutput(
-            abi.encode(OutputHeaders.NOTICE, _notice),
-            epochHash
-        );
+        _v.validateNotice(_notice, epochHash, epochInputIndex.toUint64());
 
         return true;
     }
@@ -181,23 +205,6 @@ contract CartesiDApp is
 
     function getConsensus() external view override returns (IConsensus) {
         return consensus;
-    }
-
-    function getEpochHashAndInputIndex(
-        bytes calldata _claimQuery,
-        uint256 _epochInputIndex
-    ) internal view returns (bytes32 epochHash_, uint256 inputIndex_) {
-        uint256 epochInputIndex;
-
-        (epochHash_, inputIndex_, epochInputIndex) = consensus.getEpochHash(
-            address(this),
-            _claimQuery
-        );
-
-        require(
-            _epochInputIndex == epochInputIndex,
-            "epoch input indices don't match"
-        );
     }
 
     receive() external payable {}
