@@ -14,7 +14,8 @@
 pragma solidity 0.8.13;
 
 import {IConsensus} from "../consensus/IConsensus.sol";
-import {OutputValidityProof} from "../library/LibOutputValidation.sol";
+import {OutputValidityProofV1} from "../library/LibOutputValidationV1.sol";
+import {OutputValidityProofV2} from "../library/LibOutputValidationV2.sol";
 
 interface ICartesiDApp {
     // Events
@@ -37,7 +38,7 @@ interface ICartesiDApp {
 
     // Permissionless functions
 
-    /// @notice Execute a voucher
+    /// @notice Execute a version 1 voucher
     /// @param _destination The contract that will execute the payload
     /// @param _payload The ABI-encoded function call
     /// @param _claimQuery Data for querying the desired claim
@@ -45,23 +46,50 @@ interface ICartesiDApp {
     /// @return Whether the voucher was executed successfully or not
     /// @dev The encoding of _claimQuery might vary depending on the history implementation
     /// @dev Each voucher can only be executed once
-    function executeVoucher(
+    function executeVoucherV1(
         address _destination,
         bytes calldata _payload,
         bytes calldata _claimQuery,
-        OutputValidityProof calldata _v
+        OutputValidityProofV1 calldata _v
     ) external returns (bool);
 
-    /// @notice Validate a notice
+    /// @notice Validate a version 1 notice
     /// @param _notice The notice
     /// @param _claimQuery Data for querying the desired claim
     /// @param _v A validity proof for the notice
     /// @return Whether the notice is valid or not
     /// @dev The encoding of _claimQuery might vary depending on the history implementation
-    function validateNotice(
+    function validateNoticeV1(
         bytes calldata _notice,
         bytes calldata _claimQuery,
-        OutputValidityProof calldata _v
+        OutputValidityProofV1 calldata _v
+    ) external view returns (bool);
+
+    /// @notice Execute a version 2 voucher
+    /// @param _destination The contract that will execute the payload
+    /// @param _payload The ABI-encoded function call
+    /// @param _claimQuery Data for querying the right claim
+    /// @param _v A validity proof for the voucher
+    /// @return Whether the voucher was executed successfully or not
+    /// @dev The encoding of _claimQuery might vary depending on the history implementation
+    /// @dev Each voucher can only be executed once
+    function executeVoucherV2(
+        address _destination,
+        bytes calldata _payload,
+        bytes calldata _claimQuery,
+        OutputValidityProofV2 calldata _v
+    ) external returns (bool);
+
+    /// @notice Validate a version 2 notice
+    /// @param _notice The notice
+    /// @param _claimQuery Data for querying the right claim
+    /// @param _v A validity proof for the notice
+    /// @return Whether the notice is valid or not
+    /// @dev The encoding of _claimQuery might vary depending on the history implementation
+    function validateNoticeV2(
+        bytes calldata _notice,
+        bytes calldata _claimQuery,
+        OutputValidityProofV2 calldata _v
     ) external view returns (bool);
 
     /// @notice Get the DApp's template hash

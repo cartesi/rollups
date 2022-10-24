@@ -16,7 +16,8 @@ pragma solidity 0.8.13;
 import {ICartesiDApp} from "./ICartesiDApp.sol";
 import {IConsensus} from "../consensus/IConsensus.sol";
 import {OutputHeaders} from "../common/OutputHeaders.sol";
-import {LibOutputValidation, OutputValidityProof} from "../library/LibOutputValidation.sol";
+import {LibOutputValidationV1, OutputValidityProofV1} from "../library/LibOutputValidationV1.sol";
+import {LibOutputValidationV2, OutputValidityProofV2} from "../library/LibOutputValidationV2.sol";
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -30,7 +31,8 @@ contract CartesiDApp is
     Ownable
 {
     using Bitmask for mapping(uint256 => uint256);
-    using LibOutputValidation for OutputValidityProof;
+    using LibOutputValidationV1 for OutputValidityProofV1;
+    using LibOutputValidationV2 for OutputValidityProofV2;
 
     bytes32 immutable templateHash;
     mapping(uint256 => uint256) voucherBitmask;
@@ -46,25 +48,24 @@ contract CartesiDApp is
         consensus = _consensus;
     }
 
-    function executeVoucher(
+    function executeVoucherV1(
         address _destination,
         bytes calldata _payload,
         bytes calldata _claimQuery,
-        OutputValidityProof calldata _v
+        OutputValidityProofV1 calldata _v
     ) external override nonReentrant returns (bool) {
         bytes32 epochHash;
         uint256 inputIndex;
 
         // query the current consensus for the epoch hash
-        (epochHash, inputIndex) = getEpochHashAndInputIndex(_claimQuery, _v);
+        (epochHash, inputIndex) = getEpochHashAndInputIndex(_claimQuery, _v.epochInputIndex);
+
+        bytes memory encodedVoucher = abi.encode(_destination, _payload);
 
         // reverts if proof isn't valid
-        _v.validateEncodedOutput(
-            abi.encodePacked(OutputHeaders.VOUCHER, _destination, _payload),
-            epochHash
-        );
+        _v.validateEncodedVoucher(encodedVoucher, epochHash);
 
-        uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
+        uint256 voucherPosition = LibOutputValidationV1.getBitMaskPosition(
             _v.outputIndex,
             inputIndex
         );
@@ -87,15 +88,74 @@ contract CartesiDApp is
         return succ;
     }
 
-    function validateNotice(
+    function validateNoticeV1(
         bytes calldata _notice,
         bytes calldata _claimQuery,
-        OutputValidityProof calldata _v
+        OutputValidityProofV1 calldata _v
     ) external view override returns (bool) {
         bytes32 epochHash;
 
         // query the current consensus for the epoch hash
-        (epochHash, ) = getEpochHashAndInputIndex(_claimQuery, _v);
+        (epochHash, ) = getEpochHashAndInputIndex(_claimQuery, _v.epochInputIndex);
+
+        bytes memory encodedNotice = abi.encode(_notice);
+
+        // reverts if proof isn't valid
+        _v.validateEncodedNotice(encodedNotice, epochHash);
+
+        return true;
+    }
+
+    function executeVoucherV2(
+        address _destination,
+        bytes calldata _payload,
+        bytes calldata _claimQuery,
+        OutputValidityProofV2 calldata _v
+    ) external override nonReentrant returns (bool) {
+        bytes32 epochHash;
+        uint256 inputIndex;
+
+        // query the current consensus for the epoch hash
+        (epochHash, inputIndex) = getEpochHashAndInputIndex(_claimQuery, _v.epochInputIndex);
+
+        // reverts if proof isn't valid
+        _v.validateEncodedOutput(
+            abi.encodePacked(OutputHeaders.VOUCHER, _destination, _payload),
+            epochHash
+        );
+
+        uint256 voucherPosition = LibOutputValidationV1.getBitMaskPosition(
+            _v.outputIndex,
+            inputIndex
+        );
+
+        // check if voucher has been executed
+        require(
+            !voucherBitmask.getBit(voucherPosition),
+            "re-execution not allowed"
+        );
+
+        // execute voucher
+        (bool succ, ) = _destination.call(_payload);
+
+        // if properly executed, mark it as executed and emit event
+        if (succ) {
+            voucherBitmask.setBit(voucherPosition, true);
+            emit VoucherExecuted(voucherPosition);
+        }
+
+        return succ;
+    }
+
+    function validateNoticeV2(
+        bytes calldata _notice,
+        bytes calldata _claimQuery,
+        OutputValidityProofV2 calldata _v
+    ) external view override returns (bool) {
+        bytes32 epochHash;
+
+        // query the current consensus for the epoch hash
+        (epochHash, ) = getEpochHashAndInputIndex(_claimQuery, _v.epochInputIndex);
 
         // reverts if proof isn't valid
         _v.validateEncodedOutput(
@@ -125,7 +185,7 @@ contract CartesiDApp is
 
     function getEpochHashAndInputIndex(
         bytes calldata _claimQuery,
-        OutputValidityProof calldata _v
+        uint256 _epochInputIndex
     ) internal view returns (bytes32 epochHash_, uint256 inputIndex_) {
         uint256 epochInputIndex;
 
@@ -135,7 +195,7 @@ contract CartesiDApp is
         );
 
         require(
-            _v.epochInputIndex == epochInputIndex,
+            _epochInputIndex == epochInputIndex,
             "epoch input indices don't match"
         );
     }
