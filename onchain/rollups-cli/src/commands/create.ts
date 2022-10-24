@@ -13,7 +13,7 @@ import fs from "fs";
 import fse from "fs-extra";
 import { ICartesiDAppFactory } from "@cartesi/rollups";
 import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/ICartesiDAppFactory";
-import { Wallet } from "ethers";
+import { Overrides, utils, Wallet } from "ethers";
 import { Argv } from "yargs";
 import { BlockchainArgs, blockchainBuilder } from "../args";
 import { factory } from "../connect";
@@ -30,6 +30,8 @@ interface Args extends BlockchainArgs {
     feeManagerOwner?: string;
     validators: string;
     outputFile?: string;
+    gasPrice?: number;
+    gasLimit?: number;
 }
 
 export const command = "create";
@@ -119,11 +121,27 @@ export const builder = (yargs: Argv<{}>): Argv<Args> => {
                 "Output file to write application information in JSON format",
             type: "string",
         })
+        .option("gasPrice", {
+            describe: "Gas price to use for deployment, in GWei",
+            type: "number",
+        })
+        .option("gasLimit", {
+            describe: "Gas limit to use for deployment, in GWei",
+            type: "number",
+        })
         .config();
 };
 
 export const handler = safeHandler<Args>(async (args) => {
-    const { deploymentFile, mnemonic, accountIndex, rpc, outputFile } = args;
+    const {
+        deploymentFile,
+        mnemonic,
+        accountIndex,
+        rpc,
+        outputFile,
+        gasPrice,
+        gasLimit,
+    } = args;
 
     // connect to provider, use deployment address based on returned chain id of provider
     console.log(`connecting to ${rpc}`);
@@ -159,10 +177,18 @@ export const handler = safeHandler<Args>(async (args) => {
         validators: validators(args.validators, args.mnemonic!),
     };
 
+    const overrides: Overrides = {};
+    if (gasPrice) {
+        overrides.gasPrice = utils.parseUnits(gasPrice.toString(), "gwei");
+    }
+    if (gasLimit) {
+        overrides.gasLimit = gasLimit;
+    }
+
     // print configuration
     console.log(config);
 
-    const tx = await factoryContract.newApplication(config);
+    const tx = await factoryContract.newApplication(config, overrides);
     console.log(`transaction: ${tx.hash}`);
     console.log("waiting for confirmation...");
     const receipt = await tx.wait(1);
