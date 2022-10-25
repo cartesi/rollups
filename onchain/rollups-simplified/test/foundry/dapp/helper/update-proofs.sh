@@ -50,7 +50,6 @@ trap 'failure ${LINENO} "${BASH_COMMAND}"' ERR
 for ((i = 0; i < ${NUM_OF_KEYWORDS}; i++))
 do
     # Extract a chunk from the log that starts with the keyword
-    echo "Finding values for '${LOG_KEYWORDS[$i]}' in test output..."
     chunk=`grep -A 3 "${LOG_KEYWORDS[$i]}" logs || true`
 
     # If chunk was found, then replace address and payload in script
@@ -63,12 +62,12 @@ do
         payload=`echo "${chunk}" | sed -n '3p' | sed 's/^[ ]*0x//'`
 
         # Replace values in local gen-proof.sh file
-        sed -i -e "/${SCRIPT_KEYWORDS[$i]}/{n;n;s/.*/PAYLOAD=${payload}/}" dup-gen-proofs.sh
-        sed -i -e "/${SCRIPT_KEYWORDS[$i]}/{n;n;n;s/.*/MSG_SENDER=${address}/}" dup-gen-proofs.sh
+        sed -i -e "/${SCRIPT_KEYWORDS[$i]}/{n;n;s/.*/PAYLOAD=${payload}/}" gen-proofs.sh
+        sed -i -e "/${SCRIPT_KEYWORDS[$i]}/{n;n;n;s/.*/MSG_SENDER=${address}/}" gen-proofs.sh
 
         echo "Values for '${LOG_KEYWORDS[$i]}' replaced in script."
     else
-        echo "Values for '${LOG_KEYWORDS[$i]}' not found. Proof must be correct."
+        echo "Values for '${LOG_KEYWORDS[$i]}' not found in test output. Proof must be correct."
     fi
 done
 
@@ -76,7 +75,7 @@ done
 pushd "${GEN_PROOFS_FOLDER}" >/dev/null
 
 # Copy script to gen-proofs folder
-cp "${HELPER_FOLDER}/dup-gen-proofs.sh" gen-proofs.sh
+cp "${HELPER_FOLDER}/gen-proofs.sh" gen-proofs.sh
 
 # Run docker to generate proofs
 echo "Running docker image to generate proofs..."
@@ -96,11 +95,11 @@ python3 -m b64to16 output/epoch-status.json | jq > "${HELPER_FOLDER}/voucherProo
 # Go back to the helper folder
 popd >/dev/null
 
-# generate Solidity version of proofs
+# Generate Solidity libraries with proofs
 echo "Generating Solidity contracts for each proof..."
-npx ts-node genProof.ts
+npx ts-node genProofLibraries.ts
 
-# clean logs
+# Clean logs
 rm -f logs
 
 echo "Done!"

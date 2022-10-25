@@ -47,5 +47,5 @@ Now, everytime you think the proofs might need to be updated, just run the follo
 Feel free to change the path to the `machine-emulator` repository in the command if you haven't cloned it in `~/Cartesi/`.
 
 ```sh
-./updateProofs.sh ~/Cartesi/machine-emulator/tools/gen-proofs
+./update-proofs.sh ~/Cartesi/machine-emulator/tools/gen-proofs
 ```

@@ -13,17 +13,9 @@
 /// @title Cartesi DApp Test
 pragma solidity ^0.8.13;
 
-// To update JSON proofs:
-// `cd` to helper folder and run `./updateProof.sh`
-
 import {TestBase} from "../TestBase.sol";
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
-import {LibProof as LibVoucherProof3} from "./helper/voucherProof3.sol";
-import {LibProof as LibVoucherProof4} from "./helper/voucherProof4.sol";
-import {LibProof as LibVoucherProof5} from "./helper/voucherProof5.sol";
-import {LibProof as LibNoticeProof0} from "./helper/noticeProof0.sol";
-import {LibProof as LibNoticeProof1} from "./helper/noticeProof1.sol";
 import {OutputValidityProof, LibOutputValidation} from "contracts/library/LibOutputValidation.sol";
 import {SimpleERC20} from "./helper/SimpleERC20.sol";
 import {SimpleERC721} from "./helper/SimpleERC721.sol";
@@ -32,6 +24,12 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "forge-std/console.sol";
+
+import {LibNoticeProof0} from "./helper/LibNoticeProof0.sol";
+import {LibNoticeProof1} from "./helper/LibNoticeProof1.sol";
+import {LibVoucherProof3} from "./helper/LibVoucherProof3.sol";
+import {LibVoucherProof4} from "./helper/LibVoucherProof4.sol";
+import {LibVoucherProof5} from "./helper/LibVoucherProof5.sol";
 
 contract EtherReceiver {
     receive() external payable {}
