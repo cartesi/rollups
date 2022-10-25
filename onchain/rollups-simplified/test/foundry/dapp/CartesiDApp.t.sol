@@ -100,9 +100,13 @@ contract CartesiDAppTest is TestBase {
         assertEq(dapp.getTemplateHash(), _templateHash);
     }
 
-    function logVoucher(uint256 number, address destination, bytes memory payload) internal view {
-        console.log("Hint: You might need to update the output validity proofs.");
-        console.log("For more information, see `test/foundry/dapp/helper/README.md`.");
+    function logVoucher(
+        uint256 number,
+        address destination,
+        bytes memory payload
+    ) internal view {
+        console.log("You might need to update the output validity proofs.");
+        console.log("For more info, see `test/foundry/dapp/helper/README.md`.");
         console.log();
         console.log("Destination and payload of voucher %s:", number);
         console.log(destination);
