@@ -1,93 +1,106 @@
-# set `logVouchers` in `CartesiDApp.t.sol` to `true` before running this script
-# mac users, install GNU `sed` by running:
-# brew install gnu-sed; PATH="/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
+#!/usr/bin/env bash
 
-# active voucher array
-vouchers=( "voucher 3" "voucher 4" "voucher 5" )
-# keywords to find and replace in gen-proofs.sh
-keywords=( "fourth" "fifth" "sixth" )
-# get length of array
-length=${#vouchers[@]}
+if [[ $# -ge 1 ]]
+then
+    machine_emulator_repo=$1
+    shift
+else
+    echo "Usage: $0 <path to local clone of machine-emulator repository>" >&2
+    exit 1
+fi
 
-HELPER_FOLDER=`pwd` # home folder
-PATH_TO_REPOS=../../../../../../../
-PATH_TO_GEN_PROOFS=../../../../../../../machine-emulator/tools/gen-proofs
+# Save path to helper folder
+HELPER_FOLDER="${BASH_SOURCE%/*}"
 
+# Save path to gen-proofs folder
+GEN_PROOFS_FOLDER=${machine_emulator_repo}/tools/gen-proofs
+
+# Save path to local gen-proofs.sh file
+# Keywords to find in the log and in the script
+LOG_KEYWORDS=( "voucher 3" "voucher 4" "voucher 5" )
+SCRIPT_KEYWORDS=( "fourth" "fifth" "sixth" )
+
+# Number of keywords
+NUM_OF_KEYWORDS=${#LOG_KEYWORDS[@]}
+
+# Go to the helper folder
+cd "${HELPER_FOLDER}"
+
+# Get absolute path of helper folder
+HELPER_FOLDER=`pwd`
+
+# Run the tests and pipe the output to a file
+echo "Running forge tests..."
 forge test -vv --match-contract CartesiDAppTest > logs
 
-# exit when any command fails (including when no proof updates are needed)
-set -e -euo pipefail
-# echo an error message before exiting
+# Exit when command fails
+set -euo pipefail
+
+# Echo an error message before exiting and clean any logs
 failure() {
   local lineno=$1
   local msg=$2
-  echo "Failed at $lineno: $msg"
-  # clean
-  rm logs
+  echo "Failed at ${lineno}: ${msg}"
 }
-trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 
-i=0
-while [ $i -lt $length ]
+# Install a trap to better debug errors
+trap 'failure ${LINENO} "${BASH_COMMAND}"' ERR
+
+# Search for keyword in logs
+for ((i = 0; i < ${NUM_OF_KEYWORDS}; i++))
 do
-    # search for vouchers in logs
-    # get the line after voucher, which is the value of address
-    address=`grep -A 3 "${vouchers[$i]}" logs | sed -n '2'p`
-    # remove 2 spaces and '0x'
-    address=${address:4}
-    # get the line after address, which is the payload
-    payload=`grep -A 3 "${vouchers[$i]}" logs | sed -n '3'p`
-    # remove 2 spaces and '0x'
-    payload=${payload:4}
+    # Extract a chunk from the log that starts with the keyword
+    echo "Finding values for '${LOG_KEYWORDS[$i]}' in test output..."
+    chunk=`grep -A 3 "${LOG_KEYWORDS[$i]}" logs || true`
 
-    # replace new values
-    sed -i -e "/${keywords[$i]}/{n;n;s/.*/PAYLOAD=$payload/}" dup-gen-proofs.sh
-    sed -i -e "/${keywords[$i]}/{n;n;n;s/.*/MSG_SENDER=$address/}" dup-gen-proofs.sh
+    # If chunk was found, then replace address and payload in script
+    if [[ -n $chunk ]]
+    then
+        # Get the 2nd line in the chunk, which is the address, with spaces and '0x' removed
+        address=`echo "${chunk}" | sed -n '2p' | sed 's/^[ ]*0x//'`
 
-    i=$(( $i + 1 ))
+        # Get the 3rd line in the chunk, which is the payload, with spaces and '0x' removed
+        payload=`echo "${chunk}" | sed -n '3p' | sed 's/^[ ]*0x//'`
+
+        # Replace values in local gen-proof.sh file
+        sed -i -e "/${SCRIPT_KEYWORDS[$i]}/{n;n;s/.*/PAYLOAD=${payload}/}" dup-gen-proofs.sh
+        sed -i -e "/${SCRIPT_KEYWORDS[$i]}/{n;n;n;s/.*/MSG_SENDER=${address}/}" dup-gen-proofs.sh
+
+        echo "Values for '${LOG_KEYWORDS[$i]}' replaced in script."
+    else
+        echo "Values for '${LOG_KEYWORDS[$i]}' not found. Proof must be correct."
+    fi
 done
 
-# check if gen-proofs.sh in repo machine-emulator exists
-GEN_PROOFS=$PATH_TO_GEN_PROOFS/gen-proofs.sh
-if ! [ -f "$GEN_PROOFS" ]; then # if not exists
-    # clone repo to the same root folder as `rollups`
-    pushd $PATH_TO_REPOS
-    git clone https://github.com/cartesi-corp/machine-emulator.git
-    cd machine-emulator
-    git checkout feature/gen-proofs
-    cd tools/gen-proofs
-    # build docker image
-    docker build -t cartesi/server-manager-gen-proofs:devel .
-    # back to the helper folder
-    popd
-fi
+# Go to gen-proofs folder
+pushd "${GEN_PROOFS_FOLDER}" >/dev/null
 
-# replace GEN_PROOFS with updated address and payload
-cp dup-gen-proofs.sh $GEN_PROOFS
+# Copy script to gen-proofs folder
+cp "${HELPER_FOLDER}/dup-gen-proofs.sh" gen-proofs.sh
 
-# run docker to generate proofs
-pushd $PATH_TO_GEN_PROOFS
+# Run docker to generate proofs
+echo "Running docker image to generate proofs..."
 docker run -it --rm \
     --name gen-proofs \
-    -v $PWD/gen-proofs.sh:/opt/gen-proofs/gen-proofs.sh \
-    -v $PWD/output:/opt/gen-proofs/output \
+    -v "${PWD}/gen-proofs.sh:/opt/gen-proofs/gen-proofs.sh" \
+    -v "${PWD}/output:/opt/gen-proofs/output" \
     -w /opt/gen-proofs \
     cartesi/server-manager-gen-proofs:devel \
-    ./gen-proofs.sh
+    ./gen-proofs.sh >/dev/null
 
-# decode from base64 to 16
-# check if decoder exists. If not, install
-pip3 list | grep base64-to-hex-converter
-if [ $? -gt 0 ]; then
-    pip3 install base64-to-hex-converter
-fi
-python3 -m b64to16 output/epoch-status.json > $HELPER_FOLDER/voucherProofs.json
+# Decode strings in JSON from Base64 to hexadecimal
+# Formats the output JSON with jq so that git diffs are smoother
+echo "Processing JSON generated by docker image..."
+python3 -m b64to16 output/epoch-status.json | jq > "${HELPER_FOLDER}/voucherProofs.json"
 
-# back to the helper folder
-popd
+# Go back to the helper folder
+popd >/dev/null
 
 # generate Solidity version of proofs
+echo "Generating Solidity contracts for each proof..."
 npx ts-node genProof.ts
 
-# clean
-rm logs
+# clean logs
+rm -f logs
+
+echo "Done!"

@@ -140,7 +140,7 @@ for (let vIndex of buildSolForVouchers) {
         if (err) throw err;
 
         // success case, the file was saved
-        console.log("voucher proof " + vIndex + " generated!");
+        console.log("Solidity contract with voucher proof " + vIndex + " generated!");
     });
 }
 
@@ -158,6 +158,6 @@ for (let nIndex of buildSolForNotices) {
         if (err) throw err;
 
         // success case, the file was saved
-        console.log("notice proof " + nIndex + " generated!");
+        console.log("Solidity contract with notice proof " + nIndex + " generated!");
     });
 }

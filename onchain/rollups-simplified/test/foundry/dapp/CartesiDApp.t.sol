@@ -102,13 +102,19 @@ contract CartesiDAppTest is TestBase {
         assertEq(dapp.getTemplateHash(), _templateHash);
     }
 
+    function logVoucher(uint256 number, address destination, bytes memory payload) internal view {
+        console.log("Hint: You might need to update the output validity proofs.");
+        console.log("For more information, see `test/foundry/dapp/helper/README.md`.");
+        console.log();
+        console.log("Destination and payload of voucher %s:", number);
+        console.log(destination);
+        console.logBytes(payload);
+    }
+
     function testExecuteVoucherAndEvent(uint256 _inputIndex) public {
         setupForVoucher3(_inputIndex);
 
-        console.log("voucher 3:");
-        console.log(address(erc20Token));
-        console.logBytes(erc20TransferPayload);
-        console.log("To update proofs, cd to helper run updateProof.sh");
+        logVoucher(3, address(erc20Token), erc20TransferPayload);
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(erc20Token.balanceOf(address(dapp)), 0);
@@ -263,10 +269,7 @@ contract CartesiDAppTest is TestBase {
             transferAmount
         );
 
-        console.log("voucher 4:");
-        console.log(address(dapp)); // changes when CartesiDApp bytecode changes
-        console.logBytes(withdrawEtherPayload);
-        console.log("To update proofs, cd to helper run updateProof.sh");
+        logVoucher(4, address(dapp), withdrawEtherPayload);
 
         registerProof(_inputIndex, LibVoucherProof4.getProof());
 
@@ -391,10 +394,7 @@ contract CartesiDAppTest is TestBase {
             tokenId
         );
 
-        console.log("voucher 5:");
-        console.log(address(erc721Token));
-        console.logBytes(safeTransferFromPayload); // changes when CartesiDApp bytecode changes
-        console.log("To update proofs, cd to helper run updateProof.sh");
+        logVoucher(5, address(erc721Token), safeTransferFromPayload);
 
         registerProof(_inputIndex, LibVoucherProof5.getProof());
 
