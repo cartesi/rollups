@@ -80,7 +80,7 @@ impl Config {
             advance_state_increment: 1000 * 10,
             inspect_state: 1000 * 60 * 3,
             inspect_state_increment: 1000 * 10,
-            machine: 1000 * 60,
+            machine: 1000 * 60 * 5,
             store: 1000 * 60 * 3,
             fast: 1000 * 5,
         };
