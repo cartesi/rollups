@@ -15,7 +15,7 @@ pragma solidity ^0.8.13;
 
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
-import {OutputHeaders} from "../common/OutputHeaders.sol";
+import {OutputEncoding} from "../common/OutputEncoding.sol";
 
 // Epoch Hash Computation
 // ======================
@@ -196,8 +196,7 @@ library LibOutputValidationV2 {
         bytes32 _epochHash,
         uint64 _epochInputIndex
     ) internal pure {
-        bytes memory output = abi.encode(
-            OutputHeaders.VOUCHER,
+        bytes memory output = OutputEncoding.encodeVoucher(
             _destination,
             _payload
         );
@@ -215,7 +214,7 @@ library LibOutputValidationV2 {
         bytes32 _epochHash,
         uint64 _epochInputIndex
     ) internal pure {
-        bytes memory output = abi.encode(OutputHeaders.NOTICE, _notice);
+        bytes memory output = OutputEncoding.encodeNotice(_notice);
         validateOutputHash(_v, keccak256(output), _epochHash, _epochInputIndex);
     }
 }
