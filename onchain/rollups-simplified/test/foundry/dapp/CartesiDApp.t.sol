@@ -13,6 +13,9 @@
 /// @title Cartesi DApp Test
 pragma solidity ^0.8.13;
 
+// To update JSON proofs:
+// `cd` to helper folder and run `./updateProof.sh`
+
 import {TestBase} from "../TestBase.sol";
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
@@ -40,8 +43,6 @@ contract CartesiDAppTest is TestBase {
     IERC721 erc721Token;
     IERC721Receiver erc721Receiver;
     OutputValidityProof proof;
-
-    bool constant logVouchers = false;
 
     uint256 constant initialSupply = 1000000;
     uint256 constant transferAmount = 7;
@@ -104,12 +105,10 @@ contract CartesiDAppTest is TestBase {
     function testExecuteVoucherAndEvent(uint256 _inputIndex) public {
         setupForVoucher3(_inputIndex);
 
-        if (logVouchers) {
-            console.log("voucher 3:");
-            console.log(address(erc20Token));
-            console.logBytes(erc20TransferPayload);
-            revert("Debugging voucher proofs.");
-        }
+        console.log("voucher 3:");
+        console.log(address(erc20Token));
+        console.logBytes(erc20TransferPayload);
+        console.log("To update proofs, cd to helper run updateProof.sh");
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(erc20Token.balanceOf(address(dapp)), 0);
@@ -264,12 +263,10 @@ contract CartesiDAppTest is TestBase {
             transferAmount
         );
 
-        if (logVouchers) {
-            console.log("voucher 4:");
-            console.log(address(dapp)); // changes when CartesiDApp bytecode changes
-            console.logBytes(withdrawEtherPayload);
-            revert("Debugging voucher proofs.");
-        }
+        console.log("voucher 4:");
+        console.log(address(dapp)); // changes when CartesiDApp bytecode changes
+        console.logBytes(withdrawEtherPayload);
+        console.log("To update proofs, cd to helper run updateProof.sh");
 
         registerProof(_inputIndex, LibVoucherProof4.getProof());
 
@@ -394,12 +391,10 @@ contract CartesiDAppTest is TestBase {
             tokenId
         );
 
-        if (logVouchers) {
-            console.log("voucher 5:");
-            console.log(address(erc721Token));
-            console.logBytes(safeTransferFromPayload); // changes when CartesiDApp bytecode changes
-            revert("Debugging voucher proofs.");
-        }
+        console.log("voucher 5:");
+        console.log(address(erc721Token));
+        console.logBytes(safeTransferFromPayload); // changes when CartesiDApp bytecode changes
+        console.log("To update proofs, cd to helper run updateProof.sh");
 
         registerProof(_inputIndex, LibVoucherProof5.getProof());
 
