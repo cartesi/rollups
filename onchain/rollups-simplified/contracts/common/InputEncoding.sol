@@ -10,13 +10,13 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Input Headers
+/// @title Input Encoding Library
 pragma solidity ^0.8.13;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-library InputHeaders {
+library InputEncoding {
     /// @notice ETH deposit
     bytes1 constant ETH_DEPOSIT = hex"00";
 

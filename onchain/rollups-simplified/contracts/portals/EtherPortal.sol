@@ -15,7 +15,7 @@ pragma solidity ^0.8.13;
 
 import {IEtherPortal} from "./IEtherPortal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
-import {InputHeaders} from "../common/InputHeaders.sol";
+import {InputEncoding} from "../common/InputEncoding.sol";
 
 contract EtherPortal is IEtherPortal {
     IInputBox immutable inputBox;
@@ -38,7 +38,7 @@ contract EtherPortal is IEtherPortal {
         (bool success, ) = _dapp.call{value: msg.value}("");
         require(success, "EtherPortal: transfer failed");
 
-        bytes memory input = InputHeaders.encodeEtherDeposit(
+        bytes memory input = InputEncoding.encodeEtherDeposit(
             msg.sender,
             msg.value,
             _L2data

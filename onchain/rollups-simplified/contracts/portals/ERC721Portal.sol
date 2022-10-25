@@ -17,7 +17,7 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {IERC721Portal} from "./IERC721Portal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
-import {InputHeaders} from "../common/InputHeaders.sol";
+import {InputEncoding} from "../common/InputEncoding.sol";
 
 contract ERC721Portal is IERC721Portal {
     IInputBox immutable inputBox;
@@ -39,7 +39,7 @@ contract ERC721Portal is IERC721Portal {
     ) external override {
         _token.safeTransferFrom(msg.sender, _dapp, _tokenId, _L1data);
 
-        bytes memory input = InputHeaders.encodeERC721Deposit(
+        bytes memory input = InputEncoding.encodeERC721Deposit(
             _token,
             msg.sender,
             _tokenId,

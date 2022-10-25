@@ -18,7 +18,7 @@ import {EtherPortal} from "contracts/portals/EtherPortal.sol";
 import {IEtherPortal} from "contracts/portals/IEtherPortal.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {InputBox} from "contracts/inputs/InputBox.sol";
-import {InputHeaders} from "contracts/common/InputHeaders.sol";
+import {InputEncoding} from "contracts/common/InputEncoding.sol";
 
 contract BadEtherReceiver {
     receive() external payable {
@@ -72,7 +72,7 @@ contract EtherPortalTest is Test {
     function testEtherDeposit(uint256 value, bytes calldata data) public {
         // Construct the Ether deposit input
         bytes memory input = abi.encodePacked(
-            InputHeaders.ETH_DEPOSIT,
+            InputEncoding.ETH_DEPOSIT,
             alice,
             value,
             data

@@ -20,7 +20,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {InputBox} from "contracts/inputs/InputBox.sol";
-import {InputHeaders} from "contracts/common/InputHeaders.sol";
+import {InputEncoding} from "contracts/common/InputEncoding.sol";
 
 contract NormalToken is ERC20 {
     constructor(uint256 _initialSupply) ERC20("NormalToken", "NORMAL") {
@@ -124,7 +124,7 @@ contract ERC20PortalTest is Test {
 
         // Construct the ERC-20 deposit input
         bytes memory input = abi.encodePacked(
-            InputHeaders.ERC20_DEPOSIT_TRUE,
+            InputEncoding.ERC20_DEPOSIT_TRUE,
             token,
             alice,
             amount,
@@ -165,7 +165,7 @@ contract ERC20PortalTest is Test {
 
         // Construct the ERC-20 deposit input
         bytes memory input = abi.encodePacked(
-            InputHeaders.ERC20_DEPOSIT_FALSE,
+            InputEncoding.ERC20_DEPOSIT_FALSE,
             token,
             alice,
             amount,

@@ -17,7 +17,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IERC20Portal} from "./IERC20Portal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
-import {InputHeaders} from "../common/InputHeaders.sol";
+import {InputEncoding} from "../common/InputEncoding.sol";
 
 contract ERC20Portal is IERC20Portal {
     IInputBox immutable inputBox;
@@ -38,7 +38,7 @@ contract ERC20Portal is IERC20Portal {
     ) external override {
         bool success = _token.transferFrom(msg.sender, _dapp, _amount);
 
-        bytes memory input = InputHeaders.encodeERC20Deposit(
+        bytes memory input = InputEncoding.encodeERC20Deposit(
             success,
             _token,
             msg.sender,

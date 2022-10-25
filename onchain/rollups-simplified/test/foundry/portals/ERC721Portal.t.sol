@@ -21,7 +21,7 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {InputBox} from "contracts/inputs/InputBox.sol";
-import {InputHeaders} from "contracts/common/InputHeaders.sol";
+import {InputEncoding} from "contracts/common/InputEncoding.sol";
 
 contract NormalToken is ERC721 {
     constructor(address tokenOwner, uint256 tokenId)
@@ -130,7 +130,7 @@ contract ERC721PortalTest is Test {
 
         // Construct the ERC-721 deposit input
         bytes memory input = abi.encodePacked(
-            InputHeaders.ERC721_DEPOSIT,
+            InputEncoding.ERC721_DEPOSIT,
             token,
             alice,
             tokenId,
@@ -178,7 +178,7 @@ contract ERC721PortalTest is Test {
 
         // Construct the ERC-721 deposit input
         bytes memory input = abi.encodePacked(
-            InputHeaders.ERC721_DEPOSIT,
+            InputEncoding.ERC721_DEPOSIT,
             token,
             alice,
             tokenId,
@@ -275,7 +275,7 @@ contract ERC721PortalTest is Test {
 
         // Construct the ERC-721 deposit input
         bytes memory input = abi.encodePacked(
-            InputHeaders.ERC721_DEPOSIT,
+            InputEncoding.ERC721_DEPOSIT,
             token,
             alice,
             tokenId,
