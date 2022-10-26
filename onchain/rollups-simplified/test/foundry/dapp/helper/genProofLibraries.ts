@@ -122,6 +122,7 @@ function buildSolCodes(p: OutputValidityProof, libraryName: string): string {
         "        });",
         "    }",
         "}",
+        "",
     ];
     return lines.join("\n");
 }
@@ -144,7 +145,7 @@ for (let vIndex of buildSolForVouchers) {
         if (err) throw err;
 
         // success case, the file was saved
-        console.log(`File ${fileName} generated!`);
+        console.log(`File '${fileName}' was generated.`);
     });
 }
 
@@ -166,6 +167,6 @@ for (let nIndex of buildSolForNotices) {
         if (err) throw err;
 
         // success case, the file was saved
-        console.log(`File ${fileName} generated!`);
+        console.log(`File '${fileName}' was generated.`);
     });
 }

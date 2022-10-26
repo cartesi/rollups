@@ -105,12 +105,10 @@ contract CartesiDAppTest is TestBase {
         address destination,
         bytes memory payload
     ) internal view {
-        console.log("You might need to update the output validity proofs.");
-        console.log("For more info, see `test/foundry/dapp/helper/README.md`.");
-        console.log();
-        console.log("Destination and payload of voucher %s:", number);
+        console.log("Proof for voucher %d might be outdated.", number);
         console.log(destination);
         console.logBytes(payload);
+        console.log("For more info, see `test/foundry/dapp/helper/README.md`.");
     }
 
     function testExecuteVoucherAndEvent(uint256 _inputIndex) public {

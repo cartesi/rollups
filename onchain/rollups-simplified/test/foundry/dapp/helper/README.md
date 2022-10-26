@@ -2,6 +2,7 @@
 
 ## Dependencies
 
+* GNU sed, awk & grep
 * Docker
 * Python 3.8 or newer
 * jq
@@ -34,18 +35,24 @@ docker build -t cartesi/server-manager-gen-proofs:devel .
 pip3 install base64-to-hex-converter
 ```
 
-5. (Mac users) Install GNU sed
-
-```sh
-brew install gnu-sed
-PATH="/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
-```
-
 ## Procedure
 
 Now, everytime you think the proofs might need to be updated, just run the following command.
 Feel free to change the path to the `machine-emulator` repository in the command if you haven't cloned it in `~/Cartesi/`.
 
 ```sh
-./update-proofs.sh ~/Cartesi/machine-emulator/tools/gen-proofs
+./update-proofs.sh ~/Cartesi/machine-emulator
+```
+
+If you're curious as to how the `update-proofs.sh` script works, here's a diagram of the pipeline.
+
+```mermaid
+graph TD
+    forge[forge test] --> testOutput[(Test Output)]
+    testOutput --> awk --> jqFilter[(jq Filter)]
+    vouchers[(vouchers.json)] & jqFilter --> jq --> updatedVouchers[(Updated vouchers.json)]
+    updatedVouchers --> genScript.ts --> script[(gen-proofs.sh)]
+    script --> docker --> epochStatus[(epoch-status.json)]
+    epochStatus --> b64to16[python -m b64to16] --> voucherProofs[(voucherProofs.json)]
+    voucherProofs --> genProofLibraries.ts --> proofLibraries[(Proof Libraries)]
 ```
