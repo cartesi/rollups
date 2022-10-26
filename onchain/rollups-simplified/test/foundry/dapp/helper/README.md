@@ -49,10 +49,15 @@ If you're curious as to how the `update-proofs.sh` script works, here's a diagra
 ```mermaid
 graph TD
     forge[forge test] --> testOutput[(Test Output)]
-    testOutput --> awk --> jqFilter[(jq Filter)]
-    vouchers[(vouchers.json)] & jqFilter --> jq --> updatedVouchers[(Updated vouchers.json)]
+    jqFilterProgram[(jqFilter.awk)] -. as program .-> awk
+    testOutput -- as input --> awk
+    awk --> jqFilter[(jq Filter)]
+    vouchers[(vouchers.json)] -- as input --> jq
+    jqFilter -. as filter .-> jq
+    jq --> updatedVouchers[(Updated vouchers.json)]
     updatedVouchers --> genScript.ts --> script[(gen-proofs.sh)]
     script --> docker --> epochStatus[(epoch-status.json)]
     epochStatus --> b64to16[python -m b64to16] --> voucherProofs[(voucherProofs.json)]
-    voucherProofs --> genProofLibraries.ts --> proofLibraries[(Proof Libraries)]
+    voucherProofs[(voucherProofs.json)] & noticeProofs[(noticeProofs.json)] --> genProofLibraries.ts
+    genProofLibraries.ts --> proofLibraries[(Proof Libraries)]
 ```
