@@ -2,17 +2,17 @@
 
 set -euo pipefail
 
-if [[ $# -ge 1 ]]
-then
-    machine_emulator_repo=$1
-    shift
-else
-    echo "Usage: $0 <path to local clone of machine-emulator repository>" >&2
-    exit 1
-fi
-
 # Go to the helper folder
 cd "${BASH_SOURCE%/*}"
+
+# Get path from machine emulator repository
+if [ -n "${MACHINE_EMULATOR_REPO:-}" ]
+then
+    machine_emulator_repo="${MACHINE_EMULATOR_REPO}"
+else
+    rollups_repo=`git rev-parse --show-toplevel`
+    machine_emulator_repo=${rollups_repo}/../machine-emulator
+fi
 
 # Get absolute path of helper folder
 HELPER_FOLDER=`pwd`

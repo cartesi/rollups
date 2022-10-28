@@ -39,9 +39,12 @@ pip3 install base64-to-hex-converter
 
 Now, everytime you think the proofs might need to be updated, just run the following command.
 Feel free to change the path to the `machine-emulator` repository in the command if you haven't cloned it in `~/Cartesi/`.
+If `MACHINE_EMULATOR_REPO` isn't set, it will assume the `machine-emulator` repository is sitting right next to the `rollups` repository.
+In other words, it will assume they have the same parent directory.
 
 ```sh
-./update-proofs.sh ~/Cartesi/machine-emulator
+MACHINE_EMULATOR_REPO=~/Cartesi/machine-emulator
+./update-proofs.sh
 ```
 
 If you're curious as to how the `update-proofs.sh` script works, here's a diagram of the pipeline.
