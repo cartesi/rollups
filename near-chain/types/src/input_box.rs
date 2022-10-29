@@ -12,40 +12,50 @@ use state_fold_types::{
     Block,
 };
 
-use contracts::input_box::*;
-
 use anyhow::{ensure, Context};
 use async_trait::async_trait;
-use im::Vector;
+use im::{HashMap, Vector};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, Serialize, Deserialize)]
-pub struct DAppInputBoxInitialState {
-    contract_address: Address,
-    dapp_address: Address,
+pub struct InputBoxInitialState {
+    pub contract_address: Address,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Input {
-    pub sender: Address,
+    pub sender: Arc<Address>,
     pub payload: Vec<u8>,
     pub block_added: Arc<Block>,
+    pub dapp: Arc<Address>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DAppInputBox {
-    pub input_box_initial_state: Arc<DAppInputBoxInitialState>,
-    pub inputs: Arc<Vector<Arc<Input>>>,
+    pub inputs: Vector<Arc<Input>>,
 }
 
-// TODO create hashmap from dapp into DAppInputBox
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct InputBox {
+    pub input_box_initial_state: Arc<InputBoxInitialState>,
+    pub dapp_input_boxes: Arc<HashMap<Arc<Address>, Arc<DAppInputBox>>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InputBoxUserData {
+    pub senders: HashSet<Arc<Address>>,
+    pub dapps: HashSet<Arc<Address>>,
+}
 
 #[async_trait]
-impl Foldable for DAppInputBox {
-    type InitialState = Arc<DAppInputBoxInitialState>;
+impl Foldable for InputBox {
+    type InitialState = Arc<InputBoxInitialState>;
     type Error = FoldableError;
-    type UserData = ();
+    type UserData = Mutex<InputBoxUserData>;
 
     async fn sync<M: Middleware + 'static>(
         initial_state: &Self::InitialState,
@@ -58,9 +68,15 @@ impl Foldable for DAppInputBox {
 
         Ok(Self {
             input_box_initial_state,
-            inputs: Arc::new(
-                fetch_inputs(access, env, contract_address, None).await?,
-            ),
+
+            dapp_input_boxes: updated_inputs(
+                None,
+                access,
+                env,
+                contract_address,
+                None,
+            )
+            .await?,
         })
     }
 
@@ -79,37 +95,74 @@ impl Foldable for DAppInputBox {
             &input_box_contract_address,
         ) && (fold_utils::contains_topic(
             &block.logs_bloom,
-            &InputAddedFilter::signature(),
+            &contracts::input_box::InputAddedFilter::signature(),
         ))) {
             return Ok(previous_state.clone());
         }
-
-        let new_inputs = fetch_inputs(
-            access,
-            env,
-            input_box_contract_address,
-            Some(block.clone()),
-        )
-        .await?;
-
-        let mut inputs = (*previous_state.inputs).clone();
-        inputs.append(new_inputs);
 
         Ok(Self {
             input_box_initial_state: previous_state
                 .input_box_initial_state
                 .clone(),
-            inputs: Arc::new(inputs),
+
+            dapp_input_boxes: updated_inputs(
+                Some(&previous_state.dapp_input_boxes),
+                access,
+                env,
+                previous_state.input_box_initial_state.contract_address,
+                None,
+            )
+            .await?,
         })
     }
 }
 
-async fn fetch_inputs<M1: Middleware + 'static, M2: Middleware + 'static>(
+async fn updated_inputs<M1: Middleware + 'static, M2: Middleware + 'static>(
+    previous_input_boxes: Option<&HashMap<Arc<Address>, Arc<DAppInputBox>>>,
     provider: Arc<M1>,
-    env: &StateFoldEnvironment<M2, ()>,
+    env: &StateFoldEnvironment<M2, <InputBox as Foldable>::UserData>,
     contract_address: Address,
     block_opt: Option<Block>, // TODO: Option<Arc<Block>>,
-) -> Result<Vector<Arc<Input>>, FoldableError> {
+) -> Result<Arc<HashMap<Arc<Address>, Arc<DAppInputBox>>>, FoldableError> {
+    let mut input_boxes =
+        previous_input_boxes.cloned().unwrap_or(HashMap::new());
+
+    let new_inputs =
+        fetch_all_new_inputs(provider, env, contract_address, block_opt)
+            .await?;
+
+    for input in new_inputs {
+        let dapp = input.dapp.clone();
+        let input = Arc::new(input);
+
+        input_boxes
+            .entry(dapp)
+            .and_modify(|i| {
+                let mut new_input_box = (**i).clone();
+                new_input_box.inputs.push_back(input.clone());
+                *i = Arc::new(new_input_box);
+            })
+            .or_insert_with(|| {
+                Arc::new(DAppInputBox {
+                    inputs: im::vector![input],
+                })
+            });
+    }
+
+    Ok(Arc::new(input_boxes))
+}
+
+async fn fetch_all_new_inputs<
+    M1: Middleware + 'static,
+    M2: Middleware + 'static,
+>(
+    provider: Arc<M1>,
+    env: &StateFoldEnvironment<M2, <InputBox as Foldable>::UserData>,
+    contract_address: Address,
+    block_opt: Option<Block>, // TODO: Option<Arc<Block>>,
+) -> Result<Vec<Input>, FoldableError>
+{
+    use contracts::input_box::*;
     let contract = InputBox::new(contract_address, Arc::clone(&provider));
 
     // Retrieve `InputAdded` events
@@ -125,10 +178,10 @@ async fn fetch_inputs<M1: Middleware + 'static, M2: Middleware + 'static>(
     let inputs_results = futures::future::join_all(inputs_futures).await;
 
     let inputs = {
-        let inputs: Result<Vec<Arc<Input>>, _> =
+        let inputs: Result<Vec<Input>, _> =
             inputs_results.into_iter().collect();
 
-        inputs?.into()
+        inputs?
     };
 
     Ok(inputs)
@@ -136,11 +189,11 @@ async fn fetch_inputs<M1: Middleware + 'static, M2: Middleware + 'static>(
 
 impl Input {
     async fn build_input<M: Middleware + 'static>(
-        env: &StateFoldEnvironment<M, ()>,
-        event: InputAddedFilter,
+        env: &StateFoldEnvironment<M, <InputBox as Foldable>::UserData>,
+        event: contracts::input_box::InputAddedFilter,
         meta: LogMeta,
         block_opt: &Option<Block>, // TODO: &Option<Arc<Block>>
-    ) -> Result<Arc<Self>, FoldableError> {
+    ) -> Result<Self, FoldableError> {
         let block =
             match block_opt {
                 Some(ref b) => Arc::new(b.clone()), // TODO: remove Arc::new
@@ -152,11 +205,36 @@ impl Input {
 
         meta_consistent_with_block(&meta, &block)?;
 
-        Ok(Arc::new(Self {
-            sender: event.sender,
+        let mut user_data = env
+            .user_data()
+            .lock()
+            .expect("Mutex should never be poisoned");
+
+        // get_or_insert still unstable
+        let sender = match user_data.senders.get(&event.sender) {
+            Some(s) => s.clone(),
+            None => {
+                let s = Arc::new(event.sender);
+                assert!(user_data.senders.insert(s.clone()));
+                s
+            }
+        };
+
+        let dapp = match user_data.dapps.get(&event.dapp) {
+            Some(d) => d.clone(),
+            None => {
+                let d = Arc::new(event.dapp);
+                assert!(user_data.dapps.insert(d.clone()));
+                d
+            }
+        };
+
+        Ok(Self {
+            sender,
             payload: event.input.to_vec(),
+            dapp,
             block_added: block,
-        }))
+        })
     }
 }
 

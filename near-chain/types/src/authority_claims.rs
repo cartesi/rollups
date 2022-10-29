@@ -13,17 +13,14 @@ use state_fold_types::{
     Block,
 };
 
-// use contracts::history::*;
-
 use anyhow::Context;
 use async_trait::async_trait;
 use im::{HashMap, Vector};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-// TODO change name
 #[derive(Clone, Debug, Eq, Hash, PartialEq, Serialize, Deserialize)]
-pub struct ClaimsInitialState {
+pub struct HistoryInitialState {
     history_address: Address,
 }
 
@@ -53,13 +50,13 @@ pub struct DAppHistory {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct History {
-    pub claims_initial_state: Arc<ClaimsInitialState>,
+    pub claims_initial_state: Arc<HistoryInitialState>,
     pub histories: Arc<HashMap<Arc<Address>, Arc<DAppHistory>>>,
 }
 
 #[async_trait]
 impl Foldable for History {
-    type InitialState = Arc<ClaimsInitialState>;
+    type InitialState = Arc<HistoryInitialState>;
     type Error = FoldableError;
     type UserData = ();
 
@@ -72,12 +69,12 @@ impl Foldable for History {
         let claims_initial_state = initial_state.clone();
         let contract_address = claims_initial_state.history_address;
 
-        let mut histories = HashMap::new();
-        fetch_history(access, contract_address, &mut histories).await?;
+        let histories =
+            fetch_history(access, contract_address, &HashMap::new()).await?;
 
         Ok(Self {
             claims_initial_state,
-            histories: Arc::new(histories),
+            histories,
         })
     }
 
@@ -100,12 +97,13 @@ impl Foldable for History {
             return Ok(previous_state.clone());
         }
 
-        let mut new_histories = (*previous_state.histories).clone();
-        fetch_history(access, history_address, &mut new_histories).await?;
+        let new_histories =
+            fetch_history(access, history_address, &previous_state.histories)
+                .await?;
 
         Ok(Self {
             claims_initial_state: previous_state.claims_initial_state.clone(),
-            histories: Arc::new(new_histories),
+            histories: new_histories,
         })
     }
 }
@@ -113,11 +111,12 @@ impl Foldable for History {
 async fn fetch_history<M: Middleware + 'static>(
     provider: Arc<M>,
     contract_address: Address,
-    histories: &mut HashMap<Arc<Address>, Arc<DAppHistory>>,
-) -> Result<(), FoldableError> {
+    previous_histories: &HashMap<Arc<Address>, Arc<DAppHistory>>,
+) -> Result<Arc<HashMap<Arc<Address>, Arc<DAppHistory>>>, FoldableError> {
     use contracts::history::*;
-
     let contract = History::new(contract_address, Arc::clone(&provider));
+
+    let mut histories = previous_histories.clone();
 
     // Retrieve `NewClaim` events
     let claims = contract
@@ -144,5 +143,5 @@ async fn fetch_history<M: Middleware + 'static>(
             });
     }
 
-    Ok(())
+    Ok(Arc::new(histories))
 }
