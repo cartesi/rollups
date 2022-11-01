@@ -4,7 +4,7 @@ When someone tries to execute a voucher or to validate a notice, they need to pr
 
 ## Dependencies
 
-* GNU sed, awk & grep
+* GNU awk
 * Docker
 * Python 3.8 or newer
 * jq
