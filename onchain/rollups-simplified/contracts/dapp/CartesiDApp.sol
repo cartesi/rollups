@@ -22,7 +22,6 @@ import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract CartesiDApp is
     ICartesiDApp,
@@ -30,7 +29,6 @@ contract CartesiDApp is
     ReentrancyGuard,
     Ownable
 {
-    using SafeCast for uint256;
     using Bitmask for mapping(uint256 => uint256);
     using LibOutputValidationV1 for OutputValidityProofV1;
     using LibOutputValidationV2 for OutputValidityProofV2;
@@ -68,10 +66,12 @@ contract CartesiDApp is
         bytes memory encodedVoucher = abi.encode(_destination, _payload);
 
         // reverts if proof isn't valid
+        // we assume `epochInputIndex` fits in a uint64, because
+        // the machine wouldn't be able to store more than 2^64 inputs
         _v.validateEncodedVoucher(
             encodedVoucher,
             epochHash,
-            epochInputIndex.toUint64()
+            uint64(epochInputIndex)
         );
 
         uint256 voucherPosition = LibOutputValidationV1.getBitMaskPosition(
@@ -114,10 +114,12 @@ contract CartesiDApp is
         bytes memory encodedNotice = abi.encode(_notice);
 
         // reverts if proof isn't valid
+        // we assume `epochInputIndex` fits in a uint64, because
+        // the machine wouldn't be able to store more than 2^64 inputs
         _v.validateEncodedNotice(
             encodedNotice,
             epochHash,
-            epochInputIndex.toUint64()
+            uint64(epochInputIndex)
         );
 
         return true;
@@ -140,11 +142,13 @@ contract CartesiDApp is
         );
 
         // reverts if proof isn't valid
+        // we assume `epochInputIndex` fits in a uint64, because
+        // the machine wouldn't be able to store more than 2^64 inputs
         _v.validateVoucher(
             _destination,
             _payload,
             epochHash,
-            epochInputIndex.toUint64()
+            uint64(epochInputIndex)
         );
 
         uint256 voucherPosition = LibOutputValidationV1.getBitMaskPosition(
@@ -185,7 +189,9 @@ contract CartesiDApp is
         );
 
         // reverts if proof isn't valid
-        _v.validateNotice(_notice, epochHash, epochInputIndex.toUint64());
+        // we assume `epochInputIndex` fits in a uint64, because
+        // the machine wouldn't be able to store more than 2^64 inputs
+        _v.validateNotice(_notice, epochHash, uint64(epochInputIndex));
 
         return true;
     }
