@@ -137,7 +137,7 @@
       ]
     },
     "CartesiDAppFactory": {
-      "address": "0xDd08D2aDa2208815238EBE97D41Ff219ea129D39",
+      "address": "0xf3D8ce181a502B54512908a32780eaa9183Ef31a",
       "abi": [
         {
           "inputs": [
@@ -377,7 +377,7 @@
       ]
     },
     "DiamondCutFacet": {
-      "address": "0x063844eCcAA8ED283c8ef62E287ca5966BDbb039",
+      "address": "0x10dc33852b996A4C8A391d6Ed224FD89A3aD1ceE",
       "abi": [
         {
           "anonymous": false,
@@ -464,7 +464,7 @@
       ]
     },
     "DiamondInit": {
-      "address": "0xD37315Dfe5531D05e63CB1681B6ec7B281C084c3",
+      "address": "0xCbEDAB3193dc8027cc403a01cE054695a08E2F34",
       "abi": [
         {
           "anonymous": false,
@@ -568,7 +568,7 @@
       ]
     },
     "DiamondLoupeFacet": {
-      "address": "0x54B9605eb908f771Ba652d6350B2e55Cfda33Bf6",
+      "address": "0x8339b06c37d488d51aB838f6C758D61ddb1F1C6c",
       "abi": [
         {
           "inputs": [
@@ -668,7 +668,7 @@
       ]
     },
     "ERC20PortalFacet": {
-      "address": "0x43FA3cf46367a12C13D42175611A9d3b1A43440E",
+      "address": "0x0328426f3cf581F1Cf5Ba3492a3d1C5AB551de62",
       "abi": [
         {
           "anonymous": false,
@@ -733,7 +733,7 @@
       ]
     },
     "ERC721PortalFacet": {
-      "address": "0x7388C1B5de7954c4B1d12B974C5e9669a84D30Ed",
+      "address": "0xCF8E4cb394805b96290FEcE429E98613aB80b1c3",
       "abi": [
         {
           "anonymous": false,
@@ -853,7 +853,7 @@
       ]
     },
     "EtherPortalFacet": {
-      "address": "0x081bD5316a1B9b71fc82e80d181337370C1E585C",
+      "address": "0x1ab5f2688Faec8Dd89e0E2BF23506dB4A4EE5eCA",
       "abi": [
         {
           "anonymous": false,
@@ -940,7 +940,7 @@
       ]
     },
     "FeeManagerFacet": {
-      "address": "0xf2e009Bd619Eb8435Ec9e98cF629961133f58959",
+      "address": "0x81823BDB8ae08E546AD1eCcDa910Ab32B7253343",
       "abi": [
         {
           "anonymous": false,
@@ -1054,7 +1054,7 @@
       ]
     },
     "InputFacet": {
-      "address": "0xAeE0f38EC17BbA23fAf79D951D319f2b331eB01b",
+      "address": "0xeA8538B194742b992B19e694C13D63120908880e",
       "abi": [
         {
           "anonymous": false,
@@ -1447,7 +1447,7 @@
       ]
     },
     "OutputFacet": {
-      "address": "0x121f0b9b6f2Cc47E4775DD9181D193F6FC94B558",
+      "address": "0xd5E86F0A702aD8124Ed9B02B373837De4fE8553D",
       "abi": [
         {
           "anonymous": false,
@@ -1870,7 +1870,7 @@
       ]
     },
     "OwnershipFacet": {
-      "address": "0x418Fa91dA411Ee64495f4af95F7D725fCD7Ea2f3",
+      "address": "0x19C65463Eb32Ff190062686b4ce150Ea1BD80988",
       "abi": [
         {
           "anonymous": false,
@@ -1920,7 +1920,7 @@
       ]
     },
     "RollupsFacet": {
-      "address": "0xdf3F3aB8357f4c54fBc6574797fAF846a3a7284A",
+      "address": "0x98Bd941FFa18D10328eF1dea76a146AB6FD78Ee4",
       "abi": [
         {
           "anonymous": false,
@@ -2118,7 +2118,7 @@
       ]
     },
     "ValidatorManagerFacet": {
-      "address": "0x4036187D2d3e1753D03644db76bF3453A1f1DeA7",
+      "address": "0x2596c9892cD4c997e6cE22745a2eF8256b0B171f",
       "abi": [
         {
           "anonymous": false,
