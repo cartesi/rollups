@@ -115,25 +115,25 @@
           "epochNumber": "which epoch this input belongs to",
           "input": "input data",
           "inputIndex": "index of the input just added",
-          "sender": "msg.sender",
-          "timestamp": "block.timestamp"
+          "sender": "msg.sender address",
+          "timestamp": "block timestamp"
         }
       }
     },
     "kind": "dev",
     "methods": {
       "addInput(bytes)": {
-        "details": "msg.sender and timestamp are preppended log2 size       has to be calculated offchain taking that into account",
+        "details": "There is a maximum size for the input data that is defined by the DApp",
         "params": {
           "_input": "bytes array of input"
         },
         "returns": {
-          "_0": "merkle root hash of input"
+          "_0": "hash of the input"
         }
       },
       "getCurrentInbox()": {
         "returns": {
-          "_0": "index of current active inbox"
+          "_0": "index of current accumulating inbox"
         }
       },
       "getInput(uint256)": {
@@ -141,7 +141,7 @@
           "_index": "position of the input on inbox"
         },
         "returns": {
-          "_0": "root hash of input"
+          "_0": "hash of the input"
         }
       },
       "getNumberOfInputs()": {
@@ -155,22 +155,22 @@
   "userdoc": {
     "events": {
       "InputAdded(uint256,uint256,address,uint256,bytes)": {
-        "notice": "input added"
+        "notice": "Indicates that an input was added to the accumulating epoch's inbox"
       }
     },
     "kind": "user",
     "methods": {
       "addInput(bytes)": {
-        "notice": "adds input to correct inbox"
+        "notice": "Adds an input to the accumulating epoch's inbox"
       },
       "getCurrentInbox()": {
-        "notice": "returns active current inbox index"
+        "notice": "Returns the internal index of the current accumulating inbox"
       },
       "getInput(uint256)": {
-        "notice": "returns input from correct input inbox"
+        "notice": "Returns the hash of the input at the provided input index, for the current sealed epoch"
       },
       "getNumberOfInputs()": {
-        "notice": "returns number of inputs on correct inbox"
+        "notice": "Returns the number of inputs on the current sealed epoch's inbox"
       }
     },
     "version": 1

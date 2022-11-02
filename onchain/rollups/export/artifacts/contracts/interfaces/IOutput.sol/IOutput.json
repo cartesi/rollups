@@ -233,14 +233,21 @@
   "linkReferences": {},
   "deployedLinkReferences": {},
   "devdoc": {
+    "events": {
+      "VoucherExecuted(uint256)": {
+        "params": {
+          "voucherPosition": "voucher unique identifier considering epoch, input and output indices"
+        }
+      }
+    },
     "kind": "dev",
     "methods": {
       "executeVoucher(address,bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
-        "details": "vouchers can only be executed once",
+        "details": "vouchers can only be successfully executed one time, and only if the provided proof is valid",
         "params": {
-          "_destination": "address that will execute the payload",
-          "_payload": "payload to be executed by destination",
-          "_v": "validity proof for this encoded voucher"
+          "_destination": "address of the target contract that will execute the payload",
+          "_payload": "payload to be executed by the destination contract, containing a method signature and ABI-encoded parameters",
+          "_v": "validity proof for the voucher"
         },
         "returns": {
           "_0": "true if voucher was executed successfully"
@@ -248,8 +255,8 @@
       },
       "validateNotice(bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
         "params": {
-          "_notice": "notice to be verified",
-          "_v": "validity proof for this notice"
+          "_notice": "notice to be validated",
+          "_v": "validity proof for the notice"
         },
         "returns": {
           "_0": "true if notice is valid"
@@ -259,28 +266,33 @@
     "version": 1
   },
   "userdoc": {
+    "events": {
+      "VoucherExecuted(uint256)": {
+        "notice": "Indicates that a voucher was executed"
+      }
+    },
     "kind": "user",
     "methods": {
       "executeVoucher(address,bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
-        "notice": "executes voucher"
+        "notice": "Executes a voucher"
       },
       "getEpochNoticeLog2Size()": {
-        "notice": "get log2 size of epoch notice memory range"
+        "notice": "Get log2 size of epoch notice memory range"
       },
       "getEpochVoucherLog2Size()": {
-        "notice": "get log2 size of epoch voucher memory range"
+        "notice": "Get log2 size of epoch voucher memory range"
       },
       "getNoticeMetadataLog2Size()": {
-        "notice": "get log2 size of notice metadata memory range"
+        "notice": "Get log2 size of notice metadata memory range"
       },
       "getNumberOfFinalizedEpochs()": {
-        "notice": "get number of finalized epochs"
+        "notice": "Get number of finalized epochs"
       },
       "getVoucherMetadataLog2Size()": {
-        "notice": "get log2 size of voucher metadata memory range"
+        "notice": "Get log2 size of voucher metadata memory range"
       },
       "validateNotice(bytes,(uint256,uint256,uint256,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
-        "notice": "validate notice"
+        "notice": "Validates a notice"
       }
     },
     "version": 1
