@@ -34,11 +34,9 @@ library LibClaimsMask {
     /// @notice this function creates a new ClaimsMask variable with the consensus goal mask set,
     ///         according to the number of validators
     /// @param  _numValidators the number of validators
-    function newClaimsMaskWithConsensusGoalSet(uint256 _numValidators)
-        internal
-        pure
-        returns (ClaimsMask)
-    {
+    function newClaimsMaskWithConsensusGoalSet(
+        uint256 _numValidators
+    ) internal pure returns (ClaimsMask) {
         require(_numValidators <= 8, "up to 8 validators");
         uint256 consensusMask = (1 << _numValidators) - 1;
         return ClaimsMask.wrap(consensusMask << 240); // 256 - 8 - 8 = 240
@@ -48,11 +46,10 @@ library LibClaimsMask {
     /// @param  _claimsMask the ClaimsMask value
     /// @param  _validatorIndex index of the validator in the validator array, starting from 0
     ///     this index can be obtained though `getNumberOfClaimsByIndex` function in Validator Manager
-    function getNumClaims(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        internal
-        pure
-        returns (uint256)
-    {
+    function getNumClaims(
+        ClaimsMask _claimsMask,
+        uint256 _validatorIndex
+    ) internal pure returns (uint256) {
         require(_validatorIndex < 8, "index out of range");
         uint256 bitmask = (1 << claimsBitLen) - 1;
         return
@@ -97,33 +94,28 @@ library LibClaimsMask {
 
     /// @notice get consensus goal mask
     /// @param  _claimsMask the ClaimsMask value
-    function clearAgreementMask(ClaimsMask _claimsMask)
-        internal
-        pure
-        returns (ClaimsMask)
-    {
+    function clearAgreementMask(
+        ClaimsMask _claimsMask
+    ) internal pure returns (ClaimsMask) {
         uint256 clearedMask = ClaimsMask.unwrap(_claimsMask) & ((1 << 248) - 1); // 256 - 8 = 248
         return ClaimsMask.wrap(clearedMask);
     }
 
     /// @notice get the entire agreement mask
     /// @param  _claimsMask the ClaimsMask value
-    function getAgreementMask(ClaimsMask _claimsMask)
-        internal
-        pure
-        returns (uint256)
-    {
+    function getAgreementMask(
+        ClaimsMask _claimsMask
+    ) internal pure returns (uint256) {
         return (ClaimsMask.unwrap(_claimsMask) >> 248); // get the first 8 bits
     }
 
     /// @notice check if a validator has already claimed
     /// @param  _claimsMask the ClaimsMask value
     /// @param  _validatorIndex index of the validator in the validator array, starting from 0
-    function alreadyClaimed(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        internal
-        pure
-        returns (bool)
-    {
+    function alreadyClaimed(
+        ClaimsMask _claimsMask,
+        uint256 _validatorIndex
+    ) internal pure returns (bool) {
         // get the first 8 bits. Then & operation on the validator's bit to see if it's set
         return
             (((ClaimsMask.unwrap(_claimsMask) >> 248) >> _validatorIndex) &
@@ -133,11 +125,10 @@ library LibClaimsMask {
     /// @notice set agreement mask for the specified validator
     /// @param  _claimsMask the ClaimsMask value
     /// @param  _validatorIndex index of the validator in the validator array, starting from 0
-    function setAgreementMask(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        internal
-        pure
-        returns (ClaimsMask)
-    {
+    function setAgreementMask(
+        ClaimsMask _claimsMask,
+        uint256 _validatorIndex
+    ) internal pure returns (ClaimsMask) {
         require(_validatorIndex < 8, "index out of range");
         uint256 setMask = (ClaimsMask.unwrap(_claimsMask) |
             (1 << (248 + _validatorIndex))); // 256 - 8 = 248
@@ -146,22 +137,19 @@ library LibClaimsMask {
 
     /// @notice get the entire consensus goal mask
     /// @param  _claimsMask the ClaimsMask value
-    function getConsensusGoalMask(ClaimsMask _claimsMask)
-        internal
-        pure
-        returns (uint256)
-    {
+    function getConsensusGoalMask(
+        ClaimsMask _claimsMask
+    ) internal pure returns (uint256) {
         return ((ClaimsMask.unwrap(_claimsMask) << 8) >> 248); // get the second 8 bits
     }
 
     /// @notice remove validator from the ClaimsMask
     /// @param  _claimsMask the ClaimsMask value
     /// @param  _validatorIndex index of the validator in the validator array, starting from 0
-    function removeValidator(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        internal
-        pure
-        returns (ClaimsMask)
-    {
+    function removeValidator(
+        ClaimsMask _claimsMask,
+        uint256 _validatorIndex
+    ) internal pure returns (ClaimsMask) {
         require(_validatorIndex < 8, "index out of range");
         uint256 claimsMaskValue = ClaimsMask.unwrap(_claimsMask);
         // remove validator from agreement bitmask

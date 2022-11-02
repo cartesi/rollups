@@ -32,12 +32,9 @@ contract FeeManagerFacet is IFeeManager {
 
     /// @notice this function can be called to check the number of claims that's redeemable for the validator
     /// @param  _validator address of the validator
-    function numClaimsRedeemable(address _validator)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function numClaimsRedeemable(
+        address _validator
+    ) public view override returns (uint256) {
         LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
             .diamondStorage();
         return feeManagerDS.numClaimsRedeemable(_validator);
@@ -45,12 +42,9 @@ contract FeeManagerFacet is IFeeManager {
 
     /// @notice this function can be called to check the number of claims that has been redeemed for the validator
     /// @param  _validator address of the validator
-    function getNumClaimsRedeemed(address _validator)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function getNumClaimsRedeemed(
+        address _validator
+    ) public view override returns (uint256) {
         LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
             .diamondStorage();
         return feeManagerDS.getNumClaimsRedeemed(_validator);

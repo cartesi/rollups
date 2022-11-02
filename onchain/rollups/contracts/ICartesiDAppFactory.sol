@@ -46,9 +46,9 @@ interface ICartesiDAppFactory {
     /// @notice Deploy a new application
     /// @param _appConfig application configurations
     /// @return application address
-    function newApplication(AppConfig calldata _appConfig)
-        external
-        returns (CartesiDApp);
+    function newApplication(
+        AppConfig calldata _appConfig
+    ) external returns (CartesiDApp);
 
     /// @notice Event emitted when a new application is deployed
     /// @param application application address

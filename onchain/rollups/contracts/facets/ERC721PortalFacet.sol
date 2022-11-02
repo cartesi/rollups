@@ -64,11 +64,9 @@ contract ERC721PortalFacet is IERC721Portal {
     /// @notice withdraw an ERC721 token from the portal
     /// @param _data data with withdrawal information
     /// @dev can only be called by the Rollups contract
-    function erc721Withdrawal(bytes calldata _data)
-        public
-        override
-        returns (bool)
-    {
+    function erc721Withdrawal(
+        bytes calldata _data
+    ) public override returns (bool) {
         // Delegate calls preserve msg.sender, msg.value and address(this)
         require(msg.sender == address(this), "only itself");
 

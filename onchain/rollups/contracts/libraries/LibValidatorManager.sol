@@ -77,14 +77,7 @@ library LibValidatorManager {
         address payable winner,
         address payable loser,
         bytes32 winningClaim
-    )
-        internal
-        returns (
-            Result,
-            bytes32[2] memory,
-            address payable[2] memory
-        )
-    {
+    ) internal returns (Result, bytes32[2] memory, address payable[2] memory) {
         removeValidator(ds, loser);
 
         if (winningClaim == ds.currentClaim) {
@@ -163,14 +156,7 @@ library LibValidatorManager {
         DiamondStorage storage ds,
         address payable sender,
         bytes32 claim
-    )
-        internal
-        returns (
-            Result,
-            bytes32[2] memory,
-            address payable[2] memory
-        )
-    {
+    ) internal returns (Result, bytes32[2] memory, address payable[2] memory) {
         require(claim != bytes32(0), "empty claim");
         require(isValidator(ds, sender), "sender not allowed");
 
@@ -217,14 +203,7 @@ library LibValidatorManager {
         Result result,
         bytes32[2] memory claims,
         address payable[2] memory validators
-    )
-        internal
-        returns (
-            Result,
-            bytes32[2] memory,
-            address payable[2] memory
-        )
-    {
+    ) internal returns (Result, bytes32[2] memory, address payable[2] memory) {
         emit DisputeEnded(result, claims, validators);
         return (result, claims, validators);
     }
@@ -238,14 +217,7 @@ library LibValidatorManager {
         Result result,
         bytes32[2] memory claims,
         address payable[2] memory validators
-    )
-        internal
-        returns (
-            Result,
-            bytes32[2] memory,
-            address payable[2] memory
-        )
-    {
+    ) internal returns (Result, bytes32[2] memory, address payable[2] memory) {
         emit ClaimReceived(result, claims, validators);
         return (result, claims, validators);
     }
@@ -267,9 +239,10 @@ library LibValidatorManager {
     /// @notice removes a validator
     /// @param ds diamond storage pointer
     /// @param validator address of validator to be removed
-    function removeValidator(DiamondStorage storage ds, address validator)
-        internal
-    {
+    function removeValidator(
+        DiamondStorage storage ds,
+        address validator
+    ) internal {
         LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
             .diamondStorage();
         for (uint256 i; i < ds.validators.length; i++) {
@@ -287,11 +260,9 @@ library LibValidatorManager {
 
     /// @notice check if consensus has been reached
     /// @param ds pointer to diamond storage
-    function isConsensus(DiamondStorage storage ds)
-        internal
-        view
-        returns (bool)
-    {
+    function isConsensus(
+        DiamondStorage storage ds
+    ) internal view returns (bool) {
         ClaimsMask claimsMask = ds.claimsMask;
         return
             claimsMask.getAgreementMask() == claimsMask.getConsensusGoalMask();
@@ -300,11 +271,9 @@ library LibValidatorManager {
     /// @notice get one of the validators that agreed with current claim
     /// @param ds diamond storage pointer
     /// @return validator that agreed with current claim
-    function getClaimerOfCurrentClaim(DiamondStorage storage ds)
-        internal
-        view
-        returns (address payable)
-    {
+    function getClaimerOfCurrentClaim(
+        DiamondStorage storage ds
+    ) internal view returns (address payable) {
         // TODO: we are always getting the first validator
         // on the array that agrees with the current claim to enter a dispute
         // should this be random?
@@ -331,11 +300,10 @@ library LibValidatorManager {
     /// @notice check if the sender is a validator
     /// @param ds pointer to diamond storage
     /// @param sender sender address
-    function isValidator(DiamondStorage storage ds, address sender)
-        internal
-        view
-        returns (bool)
-    {
+    function isValidator(
+        DiamondStorage storage ds,
+        address sender
+    ) internal view returns (bool) {
         require(sender != address(0), "address 0");
 
         for (uint256 i; i < ds.validators.length; i++) {
@@ -349,11 +317,10 @@ library LibValidatorManager {
     /// @param ds pointer to diamond storage
     /// @param sender validator address
     /// @return validator index or revert
-    function getValidatorIndex(DiamondStorage storage ds, address sender)
-        internal
-        view
-        returns (uint256)
-    {
+    function getValidatorIndex(
+        DiamondStorage storage ds,
+        address sender
+    ) internal view returns (uint256) {
         require(sender != address(0), "address 0");
         for (uint256 i; i < ds.validators.length; i++) {
             if (sender == ds.validators[i]) return i;
@@ -382,22 +349,19 @@ library LibValidatorManager {
     /// @param ds pointer to diamond storage
     /// @param index the index in validator set
     /// @return #claims
-    function getNumberOfClaimsByIndex(DiamondStorage storage ds, uint256 index)
-        internal
-        view
-        returns (uint256)
-    {
+    function getNumberOfClaimsByIndex(
+        DiamondStorage storage ds,
+        uint256 index
+    ) internal view returns (uint256) {
         return ds.claimsMask.getNumClaims(index);
     }
 
     /// @notice get the maximum number of validators defined in validator manager
     /// @param ds pointer to diamond storage
     /// @return the maximum number of validators
-    function getMaxNumValidators(DiamondStorage storage ds)
-        internal
-        view
-        returns (uint256)
-    {
+    function getMaxNumValidators(
+        DiamondStorage storage ds
+    ) internal view returns (uint256) {
         return ds.maxNumValidators;
     }
 }

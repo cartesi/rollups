@@ -46,14 +46,10 @@ contract DebugFacet {
         return validatorManagerDS.validators;
     }
 
-    function _onClaim(address payable _sender, bytes32 _claim)
-        public
-        returns (
-            Result,
-            bytes32[2] memory,
-            address payable[2] memory
-        )
-    {
+    function _onClaim(
+        address payable _sender,
+        bytes32 _claim
+    ) public returns (Result, bytes32[2] memory, address payable[2] memory) {
         LibValidatorManager.DiamondStorage
             storage validatorManagerDS = LibValidatorManager.diamondStorage();
         return validatorManagerDS.onClaim(_sender, _claim);
@@ -68,14 +64,7 @@ contract DebugFacet {
         address payable _winner,
         address payable _loser,
         bytes32 _winningClaim
-    )
-        public
-        returns (
-            Result,
-            bytes32[2] memory,
-            address payable[2] memory
-        )
-    {
+    ) public returns (Result, bytes32[2] memory, address payable[2] memory) {
         LibValidatorManager.DiamondStorage
             storage validatorManagerDS = LibValidatorManager.diamondStorage();
         return validatorManagerDS.onDisputeEnd(_winner, _loser, _winningClaim);
@@ -123,11 +112,9 @@ contract DebugFacet {
             .setNumClaims(_validatorIndex, _value);
     }
 
-    function _getNumRedeems(uint256 _validatorIndex)
-        public
-        view
-        returns (uint256)
-    {
+    function _getNumRedeems(
+        uint256 _validatorIndex
+    ) public view returns (uint256) {
         LibFeeManager.DiamondStorage storage feeManagerDS = LibFeeManager
             .diamondStorage();
         return feeManagerDS.numClaimsRedeemed.getNumClaims(_validatorIndex);

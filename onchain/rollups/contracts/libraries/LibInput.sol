@@ -49,11 +49,10 @@ library LibInput {
     /// @return hash of input at index index
     /// @dev currentInputBox being zero means that the inputs for
     ///      the claimed epoch are on input box one
-    function getInput(DiamondStorage storage ds, uint256 index)
-        internal
-        view
-        returns (bytes32)
-    {
+    function getInput(
+        DiamondStorage storage ds,
+        uint256 index
+    ) internal view returns (bytes32) {
         return
             ds.currentInputBox == 0 ? ds.inputBox1[index] : ds.inputBox0[index];
     }
@@ -63,11 +62,9 @@ library LibInput {
     /// @return number of inputs on that input box
     /// @dev currentInputBox being zero means that the inputs for
     ///      the claimed epoch are on input box one
-    function getNumberOfInputs(DiamondStorage storage ds)
-        internal
-        view
-        returns (uint256)
-    {
+    function getNumberOfInputs(
+        DiamondStorage storage ds
+    ) internal view returns (uint256) {
         return
             ds.currentInputBox == 0 ? ds.inputBox1.length : ds.inputBox0.length;
     }
@@ -78,10 +75,10 @@ library LibInput {
     /// @dev offchain code is responsible for making sure
     ///      that input size is power of 2 and multiple of 8 since
     ///      the offchain machine has a 8 byte word
-    function addInput(DiamondStorage storage ds, bytes memory input)
-        internal
-        returns (bytes32)
-    {
+    function addInput(
+        DiamondStorage storage ds,
+        bytes memory input
+    ) internal returns (bytes32) {
         return addInputFromSender(ds, input, msg.sender);
     }
 
@@ -93,10 +90,10 @@ library LibInput {
     /// @dev offchain code is responsible for making sure
     ///      that input size is power of 2 and multiple of 8 since
     ///      the offchain machine has a 8 byte word
-    function addInternalInput(DiamondStorage storage ds, bytes memory input)
-        internal
-        returns (bytes32)
-    {
+    function addInternalInput(
+        DiamondStorage storage ds,
+        bytes memory input
+    ) internal returns (bytes32) {
         return addInputFromSender(ds, input, address(this));
     }
 

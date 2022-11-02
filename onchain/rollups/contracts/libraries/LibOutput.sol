@@ -44,11 +44,9 @@ library LibOutput {
 
     /// @notice get number of finalized epochs
     /// @param ds diamond storage pointer
-    function getNumberOfFinalizedEpochs(DiamondStorage storage ds)
-        internal
-        view
-        returns (uint256)
-    {
+    function getNumberOfFinalizedEpochs(
+        DiamondStorage storage ds
+    ) internal view returns (uint256) {
         return ds.epochHashes.length;
     }
 }

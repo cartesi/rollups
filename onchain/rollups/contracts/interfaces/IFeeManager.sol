@@ -18,17 +18,15 @@ import {IBank} from "../IBank.sol";
 interface IFeeManager {
     /// @notice this function can be called to check the number of claims that's redeemable for the validator
     /// @param  _validator address of the validator
-    function numClaimsRedeemable(address _validator)
-        external
-        view
-        returns (uint256);
+    function numClaimsRedeemable(
+        address _validator
+    ) external view returns (uint256);
 
     /// @notice this function can be called to check the number of claims that has been redeemed for the validator
     /// @param  _validator address of the validator
-    function getNumClaimsRedeemed(address _validator)
-        external
-        view
-        returns (uint256);
+    function getNumClaimsRedeemed(
+        address _validator
+    ) external view returns (uint256);
 
     /// @notice contract owner can set/reset the value of fee per claim
     /// @param  _value the new value of fee per claim

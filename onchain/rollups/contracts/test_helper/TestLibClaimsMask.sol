@@ -20,19 +20,16 @@ contract TestLibClaimsMask {
         return LibClaimsMask.newClaimsMask(_value);
     }
 
-    function newClaimsMaskWithConsensusGoalSet(uint256 _numValidators)
-        public
-        pure
-        returns (ClaimsMask)
-    {
+    function newClaimsMaskWithConsensusGoalSet(
+        uint256 _numValidators
+    ) public pure returns (ClaimsMask) {
         return LibClaimsMask.newClaimsMaskWithConsensusGoalSet(_numValidators);
     }
 
-    function getNumClaims(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        public
-        pure
-        returns (uint256)
-    {
+    function getNumClaims(
+        ClaimsMask _claimsMask,
+        uint256 _validatorIndex
+    ) public pure returns (uint256) {
         return LibClaimsMask.getNumClaims(_claimsMask, _validatorIndex);
     }
 
@@ -57,51 +54,42 @@ contract TestLibClaimsMask {
         return LibClaimsMask.setNumClaims(_claimsMask, _validatorIndex, _value);
     }
 
-    function clearAgreementMask(ClaimsMask _claimsMask)
-        public
-        pure
-        returns (ClaimsMask)
-    {
+    function clearAgreementMask(
+        ClaimsMask _claimsMask
+    ) public pure returns (ClaimsMask) {
         return LibClaimsMask.clearAgreementMask(_claimsMask);
     }
 
-    function getAgreementMask(ClaimsMask _claimsMask)
-        public
-        pure
-        returns (uint256)
-    {
+    function getAgreementMask(
+        ClaimsMask _claimsMask
+    ) public pure returns (uint256) {
         return LibClaimsMask.getAgreementMask(_claimsMask);
     }
 
-    function alreadyClaimed(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        public
-        pure
-        returns (bool)
-    {
+    function alreadyClaimed(
+        ClaimsMask _claimsMask,
+        uint256 _validatorIndex
+    ) public pure returns (bool) {
         return LibClaimsMask.alreadyClaimed(_claimsMask, _validatorIndex);
     }
 
-    function setAgreementMask(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        public
-        pure
-        returns (ClaimsMask)
-    {
+    function setAgreementMask(
+        ClaimsMask _claimsMask,
+        uint256 _validatorIndex
+    ) public pure returns (ClaimsMask) {
         return LibClaimsMask.setAgreementMask(_claimsMask, _validatorIndex);
     }
 
-    function getConsensusGoalMask(ClaimsMask _claimsMask)
-        public
-        pure
-        returns (uint256)
-    {
+    function getConsensusGoalMask(
+        ClaimsMask _claimsMask
+    ) public pure returns (uint256) {
         return LibClaimsMask.getConsensusGoalMask(_claimsMask);
     }
 
-    function removeValidator(ClaimsMask _claimsMask, uint256 _validatorIndex)
-        public
-        pure
-        returns (ClaimsMask)
-    {
+    function removeValidator(
+        ClaimsMask _claimsMask,
+        uint256 _validatorIndex
+    ) public pure returns (ClaimsMask) {
         return LibClaimsMask.removeValidator(_claimsMask, _validatorIndex);
     }
 }

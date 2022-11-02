@@ -50,11 +50,9 @@ contract ValidatorManagerFacet is IValidatorManager {
     /// @notice get number of claims the sender has made
     /// @param _sender validator address
     /// @return #claims
-    function getNumberOfClaimsByAddress(address payable _sender)
-        public
-        view
-        returns (uint256)
-    {
+    function getNumberOfClaimsByAddress(
+        address payable _sender
+    ) public view returns (uint256) {
         LibValidatorManager.DiamondStorage
             storage validatorManagerDS = LibValidatorManager.diamondStorage();
         return validatorManagerDS.getNumberOfClaimsByAddress(_sender);
@@ -72,11 +70,9 @@ contract ValidatorManagerFacet is IValidatorManager {
     /// @notice get number of claims by the index in the validator set
     /// @param _index the index in validator set
     /// @return #claims
-    function getNumberOfClaimsByIndex(uint256 _index)
-        public
-        view
-        returns (uint256)
-    {
+    function getNumberOfClaimsByIndex(
+        uint256 _index
+    ) public view returns (uint256) {
         LibValidatorManager.DiamondStorage
             storage validatorManagerDS = LibValidatorManager.diamondStorage();
         return validatorManagerDS.getNumberOfClaimsByIndex(_index);

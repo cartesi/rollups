@@ -287,9 +287,10 @@ library LibDiamond {
         return (_selectorCount, _selectorSlot);
     }
 
-    function initializeDiamondCut(address _init, bytes memory _calldata)
-        internal
-    {
+    function initializeDiamondCut(
+        address _init,
+        bytes memory _calldata
+    ) internal {
         if (_init == address(0)) {
             require(
                 _calldata.length == 0,

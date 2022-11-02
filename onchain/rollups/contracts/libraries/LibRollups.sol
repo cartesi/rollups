@@ -172,11 +172,9 @@ library LibRollups {
     /// @dev if phase is input accumulation, then the epoch number is length
     ///      of finalized epochs array, else there are two non finalized epochs,
     ///      one awaiting consensus/dispute and another accumulating input
-    function getCurrentEpoch(DiamondStorage storage ds)
-        internal
-        view
-        returns (uint256)
-    {
+    function getCurrentEpoch(
+        DiamondStorage storage ds
+    ) internal view returns (uint256) {
         LibOutput.DiamondStorage storage outputDS = LibOutput.diamondStorage();
 
         uint256 finalizedEpochs = outputDS.getNumberOfFinalizedEpochs();

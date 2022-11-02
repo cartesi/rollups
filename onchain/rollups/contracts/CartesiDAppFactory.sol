@@ -42,10 +42,9 @@ contract CartesiDAppFactory is ICartesiDAppFactory {
         }
     }
 
-    function newApplication(AppConfig calldata _appConfig)
-        public
-        returns (CartesiDApp)
-    {
+    function newApplication(
+        AppConfig calldata _appConfig
+    ) public returns (CartesiDApp) {
         CartesiDApp application = new CartesiDApp(
             address(this),
             address(diamondCutFacet)

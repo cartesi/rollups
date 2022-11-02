@@ -70,14 +70,7 @@ library LibValidatorManager1 {
         address payable winner,
         address payable loser,
         bytes32 winningClaim
-    )
-        internal
-        returns (
-            Result,
-            bytes32[2] memory,
-            address payable[2] memory
-        )
-    {
+    ) internal returns (Result, bytes32[2] memory, address payable[2] memory) {
         // remove validator also removes validator from both bitmask
         removeFromValidatorSetAndBothBitmasks(ds, loser);
 
@@ -154,14 +147,7 @@ library LibValidatorManager1 {
         DiamondStorage storage ds,
         address payable sender,
         bytes32 claim
-    )
-        internal
-        returns (
-            Result,
-            bytes32[2] memory,
-            address payable[2] memory
-        )
-    {
+    ) internal returns (Result, bytes32[2] memory, address payable[2] memory) {
         require(claim != bytes32(0), "empty claim");
         require(isValidator(ds, sender), "sender not allowed");
 
@@ -203,14 +189,7 @@ library LibValidatorManager1 {
         Result result,
         bytes32[2] memory claims,
         address payable[2] memory validators
-    )
-        internal
-        returns (
-            Result,
-            bytes32[2] memory,
-            address payable[2] memory
-        )
-    {
+    ) internal returns (Result, bytes32[2] memory, address payable[2] memory) {
         emit DisputeEnded(result, claims, validators);
         return (result, claims, validators);
     }
@@ -224,14 +203,7 @@ library LibValidatorManager1 {
         Result result,
         bytes32[2] memory claims,
         address payable[2] memory validators
-    )
-        internal
-        returns (
-            Result,
-            bytes32[2] memory,
-            address payable[2] memory
-        )
-    {
+    ) internal returns (Result, bytes32[2] memory, address payable[2] memory) {
         emit ClaimReceived(result, claims, validators);
         return (result, claims, validators);
     }
@@ -239,11 +211,9 @@ library LibValidatorManager1 {
     /// @notice get one of the validators that agreed with current claim
     /// @param ds diamond storage pointer
     /// @return validator that agreed with current claim
-    function getClaimerOfCurrentClaim(DiamondStorage storage ds)
-        internal
-        view
-        returns (address payable)
-    {
+    function getClaimerOfCurrentClaim(
+        DiamondStorage storage ds
+    ) internal view returns (address payable) {
         // TODO: we are always getting the first validator
         // on the array that agrees with the current claim to enter a dispute
         // should this be random?
@@ -258,11 +228,9 @@ library LibValidatorManager1 {
     /// @notice updates the consensus goal mask
     /// @param ds diamond storage pointer
     /// @return new consensus goal mask
-    function updateConsensusGoalMask(DiamondStorage storage ds)
-        internal
-        view
-        returns (uint32)
-    {
+    function updateConsensusGoalMask(
+        DiamondStorage storage ds
+    ) internal view returns (uint32) {
         // consensus goal is a number where
         // all bits related to validators are turned on
         uint256 consensusMask = (1 << ds.validators.length) - 1;
@@ -309,11 +277,10 @@ library LibValidatorManager1 {
         }
     }
 
-    function isValidator(DiamondStorage storage ds, address sender)
-        internal
-        view
-        returns (bool)
-    {
+    function isValidator(
+        DiamondStorage storage ds,
+        address sender
+    ) internal view returns (bool) {
         for (uint256 i; i < ds.validators.length; i++) {
             if (sender == ds.validators[i]) return true;
         }
@@ -321,11 +288,10 @@ library LibValidatorManager1 {
         return false;
     }
 
-    function isConsensus(uint256 claimAgreementMask, uint256 consensusGoalMask)
-        internal
-        pure
-        returns (bool)
-    {
+    function isConsensus(
+        uint256 claimAgreementMask,
+        uint256 consensusGoalMask
+    ) internal pure returns (bool) {
         return claimAgreementMask == consensusGoalMask;
     }
 }

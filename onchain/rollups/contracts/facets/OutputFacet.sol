@@ -244,11 +244,10 @@ contract OutputFacet is IOutput {
     //          with  contents with the same size
     /// @param _index index of intra memory range
     /// @param _log2Size of intra memory range
-    function getIntraDrivePosition(uint256 _index, uint256 _log2Size)
-        public
-        pure
-        returns (uint256)
-    {
+    function getIntraDrivePosition(
+        uint256 _index,
+        uint256 _log2Size
+    ) public pure returns (uint256) {
         return (_index << _log2Size);
     }
 

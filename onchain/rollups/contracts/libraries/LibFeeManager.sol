@@ -56,11 +56,10 @@ library LibFeeManager {
     /// @notice this function can be called to check the number of claims that's redeemable for the validator
     /// @param  ds pointer to FeeManager's diamond storage
     /// @param  _validator address of the validator
-    function numClaimsRedeemable(DiamondStorage storage ds, address _validator)
-        internal
-        view
-        returns (uint256)
-    {
+    function numClaimsRedeemable(
+        DiamondStorage storage ds,
+        address _validator
+    ) internal view returns (uint256) {
         require(_validator != address(0), "address should not be 0");
 
         LibValidatorManager.DiamondStorage
@@ -80,11 +79,10 @@ library LibFeeManager {
     /// @notice this function can be called to check the number of claims that has been redeemed for the validator
     /// @param  ds pointer to FeeManager's diamond storage
     /// @param  _validator address of the validator
-    function getNumClaimsRedeemed(DiamondStorage storage ds, address _validator)
-        internal
-        view
-        returns (uint256)
-    {
+    function getNumClaimsRedeemed(
+        DiamondStorage storage ds,
+        address _validator
+    ) internal view returns (uint256) {
         require(_validator != address(0), "address should not be 0");
 
         LibValidatorManager.DiamondStorage
@@ -98,9 +96,10 @@ library LibFeeManager {
     /// @notice contract owner can reset the value of fee per claim
     /// @param  ds pointer to FeeManager's diamond storage
     /// @param  _value the new value of fee per claim
-    function resetFeePerClaim(DiamondStorage storage ds, uint256 _value)
-        internal
-    {
+    function resetFeePerClaim(
+        DiamondStorage storage ds,
+        uint256 _value
+    ) internal {
         // before resetting the feePerClaim, pay fees for all validators as per current rates
         LibValidatorManager.DiamondStorage
             storage validatorManagerDS = LibValidatorManager.diamondStorage();
@@ -157,9 +156,10 @@ library LibFeeManager {
     /// @notice removes a validator
     /// @param ds diamond storage pointer
     /// @param index index of validator to be removed
-    function removeValidator(DiamondStorage storage ds, uint256 index)
-        internal
-    {
+    function removeValidator(
+        DiamondStorage storage ds,
+        uint256 index
+    ) internal {
         ds.numClaimsRedeemed = ds.numClaimsRedeemed.setNumClaims(index, 0);
     }
 

@@ -105,9 +105,9 @@ contract DiamondInit {
 
     /// @notice initialize the Validator Manager facet
     /// @param _validators initial validator set
-    function initValidatorManager(address payable[] memory _validators)
-        private
-    {
+    function initValidatorManager(
+        address payable[] memory _validators
+    ) private {
         LibValidatorManager.DiamondStorage
             storage validatorManagerDS = LibValidatorManager.diamondStorage();
 
