@@ -18,6 +18,7 @@ import {Authority} from "contracts/consensus/authority/Authority.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {IHistory} from "contracts/history/IHistory.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 contract HistoryReverts is IHistory {
     function submitClaim(bytes calldata) external pure override {
@@ -59,6 +60,7 @@ contract AuthorityTest is TestBase {
         IHistory _history
     ) public {
         vm.assume(_owner != address(0));
+        vm.assume(_owner != address(this));
 
         // two `OwnershipTransferred` events will be emitted during the constructor call
         // the first event is emitted by Ownable constructor
@@ -76,6 +78,24 @@ contract AuthorityTest is TestBase {
         // check values set by constructor
         assertEq(authority.owner(), _owner);
         assertEq(address(authority.getHistory()), address(_history));
+    }
+
+    function testAuthorityConstructorOwner(
+        IInputBox _inputBox,
+        IHistory _history
+    ) public {
+        vm.recordLogs();
+        authority = new Authority(address(this), _inputBox, _history);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        uint256 eventsFound;
+        for (uint256 i; i < entries.length; ++i) {
+            if (entries[i].topics[0] == keccak256("OwnershipTransferred(address,address)")) {
+                assertEq(entries[i].topics[1], bytes32(uint256(uint160(address(0))))); //    from
+                assertEq(entries[i].topics[2], bytes32(uint256(uint160(address(this))))); // to
+                eventsFound++;
+            }
+        }
+        assertEq(eventsFound, 1);
     }
 
     function testRevertsOwnerAddressZero(IInputBox _inputBox, IHistory _history)

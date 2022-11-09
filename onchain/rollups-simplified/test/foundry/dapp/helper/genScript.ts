@@ -1,15 +1,15 @@
-import vouchers from "./vouchers.json";
+import inputs from "./inputs.json";
 
-interface Voucher {
-    destination : string,
+interface Input {
+    sender : string,
     payload : string,
 };
 
-function buildScript(vs : Voucher[]): string {
-    const inputLines = [];
-    for (let v of vs) {
-        inputLines.push(`add_input ${v.destination} ${v.payload}`)
-    }
+function buildScript(inputArray : Input[]): string {
+    const inputLines : string[] = [];
+    inputArray.forEach((input, ) => {
+        inputLines.push(`add_input ${input.sender} ${input.payload}`)
+    });
     const lines: string[] = [
         '#!/bin/bash',
         '# Copyright 2022 Cartesi Pte. Ltd.',
@@ -136,7 +136,7 @@ function buildScript(vs : Voucher[]): string {
         '',
         '# Start server-manager in background',
         '/opt/cartesi/bin/server-manager --manager-address=127.0.0.1:5001 &',
-        'sleep 1',
+        'sleep 5',
         '',
         '# Start session',
         'start_session',
@@ -158,7 +158,7 @@ function buildScript(vs : Voucher[]): string {
 }
 
 const fs = require("fs");
-const code = buildScript(vouchers);
+const code = buildScript(inputs);
 const fileName = "gen-proofs.sh"
 fs.writeFile(fileName, code, (err: any) => {
     if (err) throw err;

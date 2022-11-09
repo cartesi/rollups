@@ -106,16 +106,16 @@ forge_output=`forge test -vv --match-contract CartesiDAppTest || true`
 trap 'failure ${LINENO} "${BASH_COMMAND}"' ERR
 
 echo
-echo2 $GREEN "2. Processing forge output and updating vouchers JSON..."
+echo2 $GREEN "2. Processing forge output and updating inputs JSON..."
 
 # Process the forge output with awk and generate a jq filter
 jq_filter=`echo "${forge_output}" | awk -f jqFilter.awk`
 
-# Run the jq filter on vouchers.json
-jq_output=`jq "${jq_filter}" vouchers.json`
+# Run the jq filter on inputs.json
+jq_output=`jq "${jq_filter}" inputs.json`
 
-# Update vouchers.json
-echo "${jq_output}" > vouchers.json
+# Update inputs.json
+echo "${jq_output}" > inputs.json
 
 echo
 echo2 $GREEN "3. Generating script to be run on docker image..."
@@ -148,7 +148,7 @@ echo2 $GREEN "5. Processing epoch status and updating voucher proofs..."
 
 # Decode strings in epoch status from Base64 to hexadecimal
 # Format the output with jq so that git diffs are smoother
-python3 -m b64to16 output/epoch-status.json | jq > "${helper_folder}/voucherProofs.json"
+python3 -m b64to16 output/epoch-status.json | jq > "${helper_folder}/epochStatus.json"
 
 # Go back to the helper folder
 popd > /dev/null

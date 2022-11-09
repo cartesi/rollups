@@ -112,12 +112,12 @@ library LibOutputValidationV2 {
 
     /// @notice Make sure the output proof is valid, otherwise revert
     /// @param _v the output validity proof (D, E, F, G, H, I)
-    /// @param _outputHash the output hash (A)
+    /// @param _output the output (when abi-encoded and hashed, becomes A)
     /// @param _epochHash the hash of the epoch in which the output was generated (J)
     /// @param _epochInputIndex index of input in the epoch (G)
     function validateOutputHash(
         OutputValidityProofV2 calldata _v,
-        bytes32 _outputHash,
+        bytes memory _output,
         bytes32 _epochHash,
         uint64 _epochInputIndex
     ) internal pure {
@@ -162,7 +162,7 @@ library LibOutputValidationV2 {
         // is contained in it. We can't simply use hashOfOutput because the
         // log2size of the leaf is three (8 bytes) not  five (32 bytes)
         bytes32 merkleRootOfHashOfOutput = Merkle.getMerkleRootFromBytes(
-            abi.encodePacked(_outputHash),
+            abi.encodePacked(keccak256(abi.encode(_output))),
             CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize()
         );
 
@@ -200,7 +200,7 @@ library LibOutputValidationV2 {
             _destination,
             _payload
         );
-        validateOutputHash(_v, keccak256(output), _epochHash, _epochInputIndex);
+        validateOutputHash(_v, output, _epochHash, _epochInputIndex);
     }
 
     /// @notice Make sure the output proof is valid, otherwise revert
@@ -215,6 +215,6 @@ library LibOutputValidationV2 {
         uint64 _epochInputIndex
     ) internal pure {
         bytes memory output = OutputEncoding.encodeNotice(_notice);
-        validateOutputHash(_v, keccak256(output), _epochHash, _epochInputIndex);
+        validateOutputHash(_v, output, _epochHash, _epochInputIndex);
     }
 }

@@ -1,29 +1,7 @@
 import { BytesLike } from "@ethersproject/bytes";
-import epochStateV from "./voucherProofs.json";
-import epochStateN from "./noticeProofs.json";
+import epochStatus from "./epochStatus.json";
 
-// If no need to generate sol codes for some scenarios, comment them out
-
-// Scenarios of vouchers:
-// 0: simple_function()
-// 1: simple_function(bytes32)
-// 2: nonExistent()
-// 3: SimpleToken.transfer(address,uint256)
-// 4: ether transfer
-// 5: NFT transfer
-let buildSolForVouchers = [
-    //0,
-    //1,
-    //2,
-    3, 4, 5,
-];
-
-// Scenarios of notices:
-// 0: "0xdeadbeef"
-// 1: "0xbeefdead"
-let buildSolForNotices = [0, 1];
-
-interface OutputValidityProof {
+interface OutputValidityProofV1 {
     outputIndex: number;
     outputHashesRootHash: BytesLike;
     vouchersEpochRootHash: BytesLike;
@@ -33,12 +11,12 @@ interface OutputValidityProof {
     outputHashesInEpochSiblings: BytesLike[];
 }
 
-function setupVoucherProof(epochInputIndex: number): OutputValidityProof {
+function setupVoucherProof(epochInputIndex: number): OutputValidityProofV1 {
     let voucherDataKeccakInHashes =
-        epochStateV.processedInputs[epochInputIndex].acceptedData.vouchers[0]
+        epochStatus.processedInputs[epochInputIndex].acceptedData.vouchers[0]
             .keccakInVoucherHashes;
     let voucherHashesInEpoch =
-        epochStateV.processedInputs[epochInputIndex].voucherHashesInEpoch
+        epochStatus.processedInputs[epochInputIndex].voucherHashesInEpoch
             .siblingHashes;
     var siblingKeccakInHashesV: BytesLike[] = [];
     var voucherHashesInEpochSiblings: BytesLike[] = [];
@@ -48,24 +26,24 @@ function setupVoucherProof(epochInputIndex: number): OutputValidityProof {
     voucherHashesInEpoch.forEach((element: any) => {
         voucherHashesInEpochSiblings.push(element.data);
     });
-    let voucherProof: OutputValidityProof = {
+    let voucherProof: OutputValidityProofV1 = {
         outputIndex: 0,
         outputHashesRootHash: voucherDataKeccakInHashes.rootHash.data,
-        vouchersEpochRootHash: epochStateV.mostRecentVouchersEpochRootHash.data,
-        noticesEpochRootHash: epochStateV.mostRecentNoticesEpochRootHash.data,
-        machineStateHash: epochStateV.mostRecentMachineHash.data,
+        vouchersEpochRootHash: epochStatus.mostRecentVouchersEpochRootHash.data,
+        noticesEpochRootHash: epochStatus.mostRecentNoticesEpochRootHash.data,
+        machineStateHash: epochStatus.mostRecentMachineHash.data,
         keccakInHashesSiblings: siblingKeccakInHashesV.reverse(),
         outputHashesInEpochSiblings: voucherHashesInEpochSiblings.reverse(),
     };
     return voucherProof;
 }
 
-function setupNoticeProof(epochInputIndex: number): OutputValidityProof {
+function setupNoticeProof(epochInputIndex: number): OutputValidityProofV1 {
     let noticeDataKeccakInHashes =
-        epochStateN.processedInputs[epochInputIndex].acceptedData.notices[0]
+        epochStatus.processedInputs[epochInputIndex].acceptedData.notices[0]
             .keccakInNoticeHashes;
     let noticeHashesInEpoch =
-        epochStateN.processedInputs[epochInputIndex].noticeHashesInEpoch
+        epochStatus.processedInputs[epochInputIndex].noticeHashesInEpoch
             .siblingHashes;
     var siblingKeccakInHashesN: BytesLike[] = [];
     var noticeHashesInEpochSiblingsN: BytesLike[] = [];
@@ -75,21 +53,23 @@ function setupNoticeProof(epochInputIndex: number): OutputValidityProof {
     noticeHashesInEpoch.forEach((element) => {
         noticeHashesInEpochSiblingsN.push(element.data);
     });
-    let noticeProof: OutputValidityProof = {
+    let noticeProof: OutputValidityProofV1 = {
         outputIndex: 0,
         outputHashesRootHash: noticeDataKeccakInHashes.rootHash.data,
-        vouchersEpochRootHash: epochStateN.mostRecentVouchersEpochRootHash.data,
-        noticesEpochRootHash: epochStateN.mostRecentNoticesEpochRootHash.data,
-        machineStateHash: epochStateN.mostRecentMachineHash.data,
+        vouchersEpochRootHash: epochStatus.mostRecentVouchersEpochRootHash.data,
+        noticesEpochRootHash: epochStatus.mostRecentNoticesEpochRootHash.data,
+        machineStateHash: epochStatus.mostRecentMachineHash.data,
         keccakInHashesSiblings: siblingKeccakInHashesN.reverse(), // from top-down to bottom-up
         outputHashesInEpochSiblings: noticeHashesInEpochSiblingsN.reverse(),
     };
     return noticeProof;
 }
 
-function buildSolCodes(p: OutputValidityProof, libraryName: string): string {
-    const array1 = p.keccakInHashesSiblings;
-    const array2 = p.outputHashesInEpochSiblings;
+function buildSolCodes(voucherProof: OutputValidityProofV1, noticeProof: OutputValidityProofV1, libraryName: string): string {
+    const array1 = noticeProof.keccakInHashesSiblings;
+    const array2 = noticeProof.outputHashesInEpochSiblings;
+    const array3 = voucherProof.keccakInHashesSiblings;
+    const array4 = voucherProof.outputHashesInEpochSiblings;
     const lines: string[] = [
         "// SPDX-License-Identifier: UNLICENSED",
         "",
@@ -98,9 +78,10 @@ function buildSolCodes(p: OutputValidityProof, libraryName: string): string {
         "// THIS FILE WAS AUTOMATICALLY GENERATED BY `genProofLibraries.ts`.",
         "",
         'import {OutputValidityProofV1} from "contracts/library/LibOutputValidationV1.sol";',
+        'import {OutputValidityProofV2} from "contracts/library/LibOutputValidationV2.sol";',
         "",
         `library ${libraryName} {`,
-        "    function getProof() internal pure returns (OutputValidityProofV1 memory) {",
+        "    function getNoticeProofV1() internal pure returns (OutputValidityProofV1 memory) {",
         `        uint256[${array1.length}] memory array1 = [${array1}];`,
         `        uint256[${array2.length}] memory array2 = [${array2}];`,
         `        bytes32[] memory keccakInHashesSiblings = new bytes32[](${array1.length});`,
@@ -108,11 +89,60 @@ function buildSolCodes(p: OutputValidityProof, libraryName: string): string {
         `        for (uint256 i; i < ${array1.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array1[i]); }`,
         `        for (uint256 i; i < ${array2.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array2[i]); }`,
         `        return OutputValidityProofV1({`,
-        `            outputIndex: ${p.outputIndex},`,
-        `            outputHashesRootHash: ${p.outputHashesRootHash},`,
-        `            vouchersEpochRootHash: ${p.vouchersEpochRootHash},`,
-        `            noticesEpochRootHash: ${p.noticesEpochRootHash},`,
-        `            machineStateHash: ${p.machineStateHash},`,
+        `            outputIndex: ${noticeProof.outputIndex},`,
+        `            outputHashesRootHash: ${noticeProof.outputHashesRootHash},`,
+        `            vouchersEpochRootHash: ${noticeProof.vouchersEpochRootHash},`,
+        `            noticesEpochRootHash: ${noticeProof.noticesEpochRootHash},`,
+        `            machineStateHash: ${noticeProof.machineStateHash},`,
+        "            keccakInHashesSiblings: keccakInHashesSiblings,",
+        "            outputHashesInEpochSiblings: outputHashesInEpochSiblings",
+        "        });",
+        "    }",
+        "    function getNoticeProofV2() internal pure returns (OutputValidityProofV2 memory) {",
+        `        uint256[${array1.length}] memory array1 = [${array1}];`,
+        `        uint256[${array2.length}] memory array2 = [${array2}];`,
+        `        bytes32[] memory keccakInHashesSiblings = new bytes32[](${array1.length});`,
+        `        bytes32[] memory outputHashesInEpochSiblings = new bytes32[](${array2.length});`,
+        `        for (uint256 i; i < ${array1.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array1[i]); }`,
+        `        for (uint256 i; i < ${array2.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array2[i]); }`,
+        `        return OutputValidityProofV2({`,
+        `            outputIndex: ${noticeProof.outputIndex},`,
+        `            outputHashesRootHash: ${noticeProof.outputHashesRootHash},`,
+        `            outputsEpochRootHash: ${noticeProof.noticesEpochRootHash},`,
+        `            machineStateHash: ${noticeProof.machineStateHash},`,
+        "            keccakInHashesSiblings: keccakInHashesSiblings,",
+        "            outputHashesInEpochSiblings: outputHashesInEpochSiblings",
+        "        });",
+        "    }",
+        "    function getVoucherProofV1() internal pure returns (OutputValidityProofV1 memory) {",
+        `        uint256[${array3.length}] memory array3 = [${array3}];`,
+        `        uint256[${array4.length}] memory array4 = [${array4}];`,
+        `        bytes32[] memory keccakInHashesSiblings = new bytes32[](${array3.length});`,
+        `        bytes32[] memory outputHashesInEpochSiblings = new bytes32[](${array4.length});`,
+        `        for (uint256 i; i < ${array3.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array3[i]); }`,
+        `        for (uint256 i; i < ${array4.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array4[i]); }`,
+        `        return OutputValidityProofV1({`,
+        `            outputIndex: ${voucherProof.outputIndex},`,
+        `            outputHashesRootHash: ${voucherProof.outputHashesRootHash},`,
+        `            vouchersEpochRootHash: ${voucherProof.vouchersEpochRootHash},`,
+        `            noticesEpochRootHash: ${voucherProof.noticesEpochRootHash},`,
+        `            machineStateHash: ${voucherProof.machineStateHash},`,
+        "            keccakInHashesSiblings: keccakInHashesSiblings,",
+        "            outputHashesInEpochSiblings: outputHashesInEpochSiblings",
+        "        });",
+        "    }",
+        "    function getVoucherProofV2() internal pure returns (OutputValidityProofV2 memory) {",
+        `        uint256[${array3.length}] memory array3 = [${array3}];`,
+        `        uint256[${array4.length}] memory array4 = [${array4}];`,
+        `        bytes32[] memory keccakInHashesSiblings = new bytes32[](${array3.length});`,
+        `        bytes32[] memory outputHashesInEpochSiblings = new bytes32[](${array4.length});`,
+        `        for (uint256 i; i < ${array3.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array3[i]); }`,
+        `        for (uint256 i; i < ${array4.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array4[i]); }`,
+        `        return OutputValidityProofV2({`,
+        `            outputIndex: ${voucherProof.outputIndex},`,
+        `            outputHashesRootHash: ${voucherProof.outputHashesRootHash},`,
+        `            outputsEpochRootHash: ${voucherProof.noticesEpochRootHash},`,
+        `            machineStateHash: ${voucherProof.machineStateHash},`,
         "            keccakInHashesSiblings: keccakInHashesSiblings,",
         "            outputHashesInEpochSiblings: outputHashesInEpochSiblings",
         "        });",
@@ -123,46 +153,16 @@ function buildSolCodes(p: OutputValidityProof, libraryName: string): string {
     return lines.join("\n");
 }
 
-// generate sol codes for vouchers
-for (let vIndex of buildSolForVouchers) {
-    const fs = require("fs");
+const fs = require("fs");
 
-    let p = setupVoucherProof(vIndex);
-
-    let libraryName = `LibVoucherProof${vIndex}`;
-
-    let solidityCode = buildSolCodes(p, libraryName);
-
+epochStatus.processedInputs.forEach((value, index) => {
+    let libraryName = `LibOutputProof${index}`;
+    let noticeProof = setupNoticeProof(index);
+    let voucherProof = setupVoucherProof(index);
+    let solidityCode = buildSolCodes(voucherProof, noticeProof, libraryName);
     let fileName = `${libraryName}.sol`;
-
-    // write to file
     fs.writeFile(fileName, solidityCode, (err: any) => {
-        // throws an error, you could also catch it here
         if (err) throw err;
-
-        // success case, the file was saved
         console.log(`File '${fileName}' was generated.`);
     });
-}
-
-// generate sol codes for notices
-for (let nIndex of buildSolForNotices) {
-    const fs = require("fs");
-
-    let p = setupNoticeProof(nIndex);
-
-    let libraryName = `LibNoticeProof${nIndex}`;
-
-    let solidityCode = buildSolCodes(p, libraryName);
-
-    let fileName = `${libraryName}.sol`;
-
-    // write to file
-    fs.writeFile(fileName, solidityCode, (err: any) => {
-        // throws an error, you could also catch it here
-        if (err) throw err;
-
-        // success case, the file was saved
-        console.log(`File '${fileName}' was generated.`);
-    });
-}
+});
