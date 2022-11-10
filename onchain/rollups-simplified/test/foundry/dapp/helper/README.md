@@ -77,10 +77,10 @@ graph TD
     awk --> jqFilter[(jq Filter)]
     inputs[(inputs.json)] -- as input --> jq
     jqFilter -. as filter .-> jq
-    jq --> updatedInputs[("inputs.json\n(updated)")]
+    jq --> updatedInputs[("inputs.json (updated)")]
     updatedInputs --> genScript.ts --> script[(gen-proofs.sh)]
     script --> docker --> epochStatus[(epoch-status.json)]
-    epochStatus --> b64to16[python -m b64to16] --> formatedEpochStatus[("epoch-status.json\n(formatted)")]
+    epochStatus --> b64to16[python -m b64to16] --> formatedEpochStatus[("epoch-status.json (formatted)")]
     formatedEpochStatus --> genProofLibraries.ts
     genProofLibraries.ts --> proofLibraries[(Proof Libraries)]
 ```
