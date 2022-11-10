@@ -75,12 +75,12 @@ graph TD
     jqFilterProgram[(jqFilter.awk)] -. as program .-> awk
     testOutput -- as input --> awk
     awk --> jqFilter[(jq Filter)]
-    vouchers[(vouchers.json)] -- as input --> jq
+    inputs[(inputs.json)] -- as input --> jq
     jqFilter -. as filter .-> jq
-    jq --> updatedVouchers[(Updated vouchers.json)]
-    updatedVouchers --> genScript.ts --> script[(gen-proofs.sh)]
+    jq --> updatedInputs[("inputs.json\n(updated)")]
+    updatedInputs --> genScript.ts --> script[(gen-proofs.sh)]
     script --> docker --> epochStatus[(epoch-status.json)]
-    epochStatus --> b64to16[python -m b64to16] --> voucherProofs[(voucherProofs.json)]
-    voucherProofs[(voucherProofs.json)] & noticeProofs[(noticeProofs.json)] --> genProofLibraries.ts
+    epochStatus --> b64to16[python -m b64to16] --> formatedEpochStatus[("epoch-status.json\n(formatted)")]
+    formatedEpochStatus --> genProofLibraries.ts
     genProofLibraries.ts --> proofLibraries[(Proof Libraries)]
 ```
