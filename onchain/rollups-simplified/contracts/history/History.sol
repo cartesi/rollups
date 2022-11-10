@@ -27,6 +27,13 @@ contract History is IHistory, Ownable {
     // mapping from dapp address => array of claims
     mapping(address => Claim[]) claims;
 
+    // Events
+
+    /// @notice A new claim was submitted
+    /// @param dapp  The address of the dapp for which the claim was submitted.
+    /// @param claim Claim for a specific dapp
+    event NewClaimToHistory(address indexed dapp, Claim claim);
+
     constructor(address _owner) {
         // constructor in Ownable already called `transferOwnership(msg.sender)`, so
         // we only need to call `transferOwnership(_owner)` if _owner != msg.sender
@@ -58,7 +65,7 @@ contract History is IHistory, Ownable {
 
         dappClaims.push(claim);
 
-        emit NewClaim(_encodedClaim);
+        emit NewClaimToHistory(dapp, claim);
     }
 
     function getEpochHash(address _dapp, bytes calldata _claimQuery)

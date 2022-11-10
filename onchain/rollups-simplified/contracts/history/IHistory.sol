@@ -14,14 +14,6 @@
 pragma solidity ^0.8.13;
 
 interface IHistory {
-    // Events
-
-    /// @notice A new claim was submitted
-    /// @param claimData The claim data that was submitted (must match the _claimData
-    ///                  parameter to the submitClaim function).
-    /// @dev The encoding of claim might vary depending on the history implementation
-    event NewClaim(bytes claimData);
-
     // Permissioned functions
 
     /// @notice Submit a claim
