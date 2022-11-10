@@ -35,6 +35,7 @@ import {LibOutputProof3} from "./helper/LibOutputProof3.sol";
 import {LibOutputProof4} from "./helper/LibOutputProof4.sol";
 import {LibOutputProof5} from "./helper/LibOutputProof5.sol";
 import {LibOutputProof6} from "./helper/LibOutputProof6.sol";
+import {LibOutputProof7} from "./helper/LibOutputProof7.sol";
 
 import "forge-std/console.sol";
 
@@ -486,14 +487,73 @@ contract CartesiDAppTest is TestBase {
 
     // test V1 notice proofs generated with our current setup (WIP)
 
+    function testNoticeValidationV2(uint256 _inputIndex) public {
+        dapp = deployDAppDeterministically();
+        registerProofV2(_inputIndex, 6, LibOutputProof6.getNoticeProofV2());
+
+        bytes memory notice = abi.encodePacked(bytes4(0xfafafafa));
+        bytes memory output = abi.encodePacked(OutputEncoding.NOTICE, notice);
+        logOutputV2(6, output);
+        bool ret = dapp.validateNoticeV2(notice, "", proofV2);
+        assertEq(ret, true);
+    }
+
     function testVoucherExecutionV2(uint256 _inputIndex) public {
         dapp = deployDAppDeterministically();
-        registerProofV1(_inputIndex, 6, LibOutputProof6.getNoticeProofV1());
+        erc20Token = deployERC20Deterministically();
+        registerProofV2(_inputIndex, 7, LibOutputProof7.getNoticeProofV2());
 
-        bytes memory notice = abi.encodePacked(bytes4(0xbeefdead));
-        logOutputV2(6, notice);
-        bool ret = dapp.validateNoticeV1(notice, "", proofV1);
-        assertEq(ret, true);
+        bytes memory output = abi.encodePacked(
+            OutputEncoding.VOUCHER,
+            address(erc20Token),
+            erc20TransferPayload
+        );
+        logOutputV2(7, output);
+
+        // not able to execute voucher because dapp has 0 balance
+        assertEq(erc20Token.balanceOf(address(dapp)), 0);
+        assertEq(erc20Token.balanceOf(recipient), 0);
+        bool success = dapp.executeVoucherV2(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proofV2
+        );
+        assertEq(success, false);
+        assertEq(erc20Token.balanceOf(address(dapp)), 0);
+        assertEq(erc20Token.balanceOf(recipient), 0);
+
+        // fund dapp
+        uint256 dappInitBalance = 100;
+        vm.prank(tokenOwner);
+        erc20Token.transfer(address(dapp), dappInitBalance);
+        assertEq(erc20Token.balanceOf(address(dapp)), dappInitBalance);
+        assertEq(erc20Token.balanceOf(recipient), 0);
+
+        // expect event
+        vm.expectEmit(false, false, false, true, address(dapp));
+        emit VoucherExecuted(
+            LibOutputValidationV1.getBitMaskPosition(
+                proofV2.outputIndex,
+                _inputIndex
+            )
+        );
+
+        // perform call
+        success = dapp.executeVoucherV2(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proofV2
+        );
+
+        // check result
+        assertEq(success, true);
+        assertEq(
+            erc20Token.balanceOf(address(dapp)),
+            dappInitBalance - transferAmount
+        );
+        assertEq(erc20Token.balanceOf(recipient), transferAmount);
     }
 
     // test migration
