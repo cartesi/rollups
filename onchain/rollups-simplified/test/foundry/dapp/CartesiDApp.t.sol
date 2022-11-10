@@ -121,17 +121,11 @@ contract CartesiDAppTest is TestBase {
         console.log("For more info, see `test/foundry/dapp/helper/README.md`.");
     }
 
-    function logNoticeV1(
-        uint256 number,
-        bytes memory payload
-    ) internal view {
+    function logNoticeV1(uint256 number, bytes memory payload) internal view {
         logVoucherV1(number, noticeSender, payload);
     }
 
-    function logOutputV2(
-        uint256 number,
-        bytes memory output
-    ) internal view {
+    function logOutputV2(uint256 number, bytes memory output) internal view {
         // We use the notice tree to construct the V2 proof
         logNoticeV1(number, output);
     }

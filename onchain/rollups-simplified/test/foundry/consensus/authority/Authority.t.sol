@@ -89,9 +89,18 @@ contract AuthorityTest is TestBase {
         Vm.Log[] memory entries = vm.getRecordedLogs();
         uint256 eventsFound;
         for (uint256 i; i < entries.length; ++i) {
-            if (entries[i].topics[0] == keccak256("OwnershipTransferred(address,address)")) {
-                assertEq(entries[i].topics[1], bytes32(uint256(uint160(address(0))))); //    from
-                assertEq(entries[i].topics[2], bytes32(uint256(uint160(address(this))))); // to
+            if (
+                entries[i].topics[0] ==
+                keccak256("OwnershipTransferred(address,address)")
+            ) {
+                assertEq(
+                    entries[i].topics[1], // from
+                    bytes32(uint256(uint160(address(0))))
+                );
+                assertEq(
+                    entries[i].topics[2], // to
+                    bytes32(uint256(uint160(address(this))))
+                );
                 eventsFound++;
             }
         }
