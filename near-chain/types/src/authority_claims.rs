@@ -91,7 +91,7 @@ impl Foldable for History {
         if !(fold_utils::contains_address(&block.logs_bloom, &history_address)
             && (fold_utils::contains_topic(
                 &block.logs_bloom,
-                &contracts::history::NewClaimFilter::signature(),
+                &contracts::history::NewClaimToHistoryFilter::signature(),
             )))
         {
             return Ok(previous_state.clone());
@@ -120,7 +120,7 @@ async fn fetch_history<M: Middleware + 'static>(
 
     // Retrieve `NewClaim` events
     let claims = contract
-        .new_claim_filter()
+        .new_claim_to_history_filter()
         .query()
         .await
         .context("Error querying for new claim events")?;
