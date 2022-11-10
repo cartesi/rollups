@@ -149,7 +149,7 @@ echo
 
 # Decode strings in epoch status from Base64 to hexadecimal
 # Format the output with jq so that git diffs are smoother
-python3 -m b64to16 output/epoch-status.json | jq > "${helper_folder}/epochStatus.json"
+python3 -m b64to16 output/epoch-status.json | jq > "${helper_folder}/epoch-status.json"
 
 # Go back to the helper folder
 popd > /dev/null

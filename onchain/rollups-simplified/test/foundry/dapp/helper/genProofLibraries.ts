@@ -1,5 +1,5 @@
 import { BytesLike } from "@ethersproject/bytes";
-import epochStatus from "./epochStatus.json";
+import epochStatus from "./epoch-status.json";
 
 interface OutputValidityProofV1 {
     outputIndex: number;
