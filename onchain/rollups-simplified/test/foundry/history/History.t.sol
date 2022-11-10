@@ -19,7 +19,7 @@ import {History} from "contracts/history/History.sol";
 contract HistoryTest is Test {
     History history;
 
-    event NewClaim(bytes data);
+    event NewClaimToHistory(address indexed dapp, History.Claim claim);
     event OwnershipTransferred(
         address indexed previousOwner,
         address indexed newOwner
@@ -87,8 +87,9 @@ contract HistoryTest is Test {
     ) internal {
         vm.assume(fi <= li);
         vm.expectEmit(false, false, false, true, address(history));
-        bytes memory encodedClaim = abi.encode(dapp, epochHash, fi, li);
-        emit NewClaim(encodedClaim);
+        History.Claim memory claim = History.Claim(epochHash, fi, li);
+        emit NewClaimToHistory(dapp, claim);
+        bytes memory encodedClaim = abi.encode(dapp, claim);
         history.submitClaim(encodedClaim);
     }
 

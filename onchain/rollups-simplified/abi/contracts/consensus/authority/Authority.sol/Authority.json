@@ -86,7 +86,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_claimProof",
+        "name": "_claimQuery",
         "type": "bytes"
       }
     ],
@@ -173,13 +173,8 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_dapp",
-        "type": "address"
-      },
-      {
         "internalType": "bytes",
-        "name": "_claim",
+        "name": "_claimData",
         "type": "bytes"
       }
     ],

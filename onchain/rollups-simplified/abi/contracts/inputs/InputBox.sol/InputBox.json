@@ -54,14 +54,19 @@
         "internalType": "address",
         "name": "_dapp",
         "type": "address"
-      }
-    ],
-    "name": "getNumberOfInputs",
-    "outputs": [
+      },
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "_index",
         "type": "uint256"
+      }
+    ],
+    "name": "getInputHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -71,21 +76,16 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "_dapp",
         "type": "address"
-      },
+      }
+    ],
+    "name": "getNumberOfInputs",
+    "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "name": "inputBoxes",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",

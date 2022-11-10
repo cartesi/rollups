@@ -39,7 +39,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_claimData",
+        "name": "_claimQuery",
         "type": "bytes"
       },
       {
@@ -149,7 +149,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_claimData",
+        "name": "_claimQuery",
         "type": "bytes"
       },
       {

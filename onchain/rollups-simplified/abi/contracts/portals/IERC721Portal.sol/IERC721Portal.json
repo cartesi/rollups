@@ -18,13 +18,31 @@
       },
       {
         "internalType": "bytes",
-        "name": "_data",
+        "name": "_L1data",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_L2data",
         "type": "bytes"
       }
     ],
     "name": "depositERC721Token",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getInputBox",
+    "outputs": [
+      {
+        "internalType": "contract IInputBox",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

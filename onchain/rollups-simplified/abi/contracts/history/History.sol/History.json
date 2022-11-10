@@ -14,19 +14,36 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "dapp",
         "type": "address"
       },
       {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "epochHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint128",
+            "name": "firstIndex",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "lastIndex",
+            "type": "uint128"
+          }
+        ],
         "indexed": false,
-        "internalType": "bytes",
+        "internalType": "struct History.Claim",
         "name": "claim",
-        "type": "bytes"
+        "type": "tuple"
       }
     ],
-    "name": "NewClaim",
+    "name": "NewClaimToHistory",
     "type": "event"
   },
   {
@@ -57,7 +74,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_claimProof",
+        "name": "_claimQuery",
         "type": "bytes"
       }
     ],
@@ -117,11 +134,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "_dapp",
-        "type": "address"
-      },
       {
         "internalType": "bytes",
         "name": "_encodedClaim",

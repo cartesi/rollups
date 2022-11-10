@@ -1,24 +1,5 @@
 [
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "dapp",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "claim",
-        "type": "bytes"
-      }
-    ],
-    "name": "NewClaim",
-    "type": "event"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -27,7 +8,7 @@
       },
       {
         "internalType": "bytes",
-        "name": "_claimProof",
+        "name": "_claimQuery",
         "type": "bytes"
       }
     ],
@@ -68,13 +49,8 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_dapp",
-        "type": "address"
-      },
-      {
         "internalType": "bytes",
-        "name": "_claim",
+        "name": "_claimData",
         "type": "bytes"
       }
     ],

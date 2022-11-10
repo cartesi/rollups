@@ -29,7 +29,12 @@
       },
       {
         "internalType": "bytes",
-        "name": "_data",
+        "name": "_L1data",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_L2data",
         "type": "bytes"
       }
     ],
@@ -40,7 +45,7 @@
   },
   {
     "inputs": [],
-    "name": "inputBox",
+    "name": "getInputBox",
     "outputs": [
       {
         "internalType": "contract IInputBox",

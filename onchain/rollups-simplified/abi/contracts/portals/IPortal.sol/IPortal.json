@@ -1,0 +1,15 @@
+[
+  {
+    "inputs": [],
+    "name": "getInputBox",
+    "outputs": [
+      {
+        "internalType": "contract IInputBox",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
