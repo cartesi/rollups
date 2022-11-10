@@ -21,7 +21,8 @@ use state_fold_types::{
 use tracing::warn;
 use tx_manager::{
     config::TxManagerConfig, database::FileSystemDatabase,
-    gas_oracle::ETHGasStationOracle, Priority, TimeConfiguration,
+    gas_oracle::DefaultGasOracle,
+    manager::Configuration as ManagerConfiguration, Priority,
     TransactionManager,
 };
 
@@ -102,14 +103,12 @@ pub async fn create_tx_sender(
             Arc::new(SignerMiddleware::new(provider, config.wallet.clone()))
         };
 
-        let database = FileSystemDatabase::new(config.database_path.to_owned());
-
         let tx_manager = match TransactionManager::new(
             provider.clone(),
-            None::<ETHGasStationOracle>,
-            database,
-            config.chain_id.into(),
-            TimeConfiguration::default(),
+            DefaultGasOracle::new(),
+            FileSystemDatabase::new(config.database_path.to_owned()),
+            config.into(),
+            ManagerConfiguration::default(),
         )
         .await
         {
@@ -118,15 +117,12 @@ pub async fn create_tx_sender(
             Err(tx_manager::Error::NonceTooLow { .. }) => {
                 warn!("Nonce too low! Clearing tx database");
 
-                let database =
-                    FileSystemDatabase::new(config.database_path.to_owned());
-
-                TransactionManager::new_ignore_pending(
+                TransactionManager::force_new(
                     provider,
-                    None::<ETHGasStationOracle>,
-                    database,
-                    config.chain_id.into(),
-                    TimeConfiguration::default(),
+                    DefaultGasOracle::new(),
+                    FileSystemDatabase::new(config.database_path.to_owned()),
+                    config.into(),
+                    ManagerConfiguration::default(),
                 )
                 .await?
             }

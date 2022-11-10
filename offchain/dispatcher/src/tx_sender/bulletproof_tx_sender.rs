@@ -6,7 +6,7 @@ use contracts::{
 
 use tx_manager::{
     database::FileSystemDatabase as TxDatabase,
-    gas_oracle::ETHGasStationOracle as GasOracle,
+    gas_oracle::DefaultGasOracle as GasOracle,
     time::DefaultTime,
     transaction::{Priority, Transaction, Value},
     TransactionManager,
