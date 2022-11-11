@@ -10,7 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Output Validation Library V2
+/// @title Output Validation Library
 pragma solidity ^0.8.13;
 
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
@@ -98,7 +98,7 @@ import {OutputEncoding} from "../common/OutputEncoding.sol";
 /// @param machineStateHash hash of the machine state claimed this epoch (J)
 /// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range (E)
 /// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range (H)
-struct OutputValidityProofV2 {
+struct OutputValidityProof {
     uint64 outputIndex;
     bytes32 outputHashesRootHash;
     bytes32 outputsEpochRootHash;
@@ -107,7 +107,7 @@ struct OutputValidityProofV2 {
     bytes32[] outputHashesInEpochSiblings;
 }
 
-library LibOutputValidationV2 {
+library LibOutputValidation {
     using CanonicalMachine for CanonicalMachine.Log2Size;
 
     /// @notice Make sure the output proof is valid, otherwise revert
@@ -116,7 +116,7 @@ library LibOutputValidationV2 {
     /// @param _epochHash the hash of the epoch in which the output was generated (J)
     /// @param _epochInputIndex index of input in the epoch (G)
     function validateOutputHash(
-        OutputValidityProofV2 calldata _v,
+        OutputValidityProof calldata _v,
         bytes memory _output,
         bytes32 _epochHash,
         uint64 _epochInputIndex
@@ -190,7 +190,7 @@ library LibOutputValidationV2 {
     /// @param _epochHash the hash of the epoch in which the output was generated (J)
     /// @param _epochInputIndex index of input in the epoch (G)
     function validateVoucher(
-        OutputValidityProofV2 calldata _v,
+        OutputValidityProof calldata _v,
         address _destination,
         bytes calldata _payload,
         bytes32 _epochHash,
@@ -209,7 +209,7 @@ library LibOutputValidationV2 {
     /// @param _epochHash the hash of the epoch in which the output was generated (J)
     /// @param _epochInputIndex index of input in the epoch (G)
     function validateNotice(
-        OutputValidityProofV2 calldata _v,
+        OutputValidityProof calldata _v,
         bytes calldata _notice,
         bytes32 _epochHash,
         uint64 _epochInputIndex

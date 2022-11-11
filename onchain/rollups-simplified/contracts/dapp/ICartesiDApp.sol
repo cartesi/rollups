@@ -14,7 +14,7 @@
 pragma solidity 0.8.13;
 
 import {IConsensus} from "../consensus/IConsensus.sol";
-import {OutputValidityProofV2} from "../library/LibOutputValidationV2.sol";
+import {OutputValidityProof} from "../library/LibOutputValidation.sol";
 
 interface ICartesiDApp {
     // Events
@@ -45,11 +45,11 @@ interface ICartesiDApp {
     /// @return Whether the voucher was executed successfully or not
     /// @dev The encoding of _claimQuery might vary depending on the history implementation
     /// @dev Each voucher can only be executed once
-    function executeVoucherV2(
+    function executeVoucher(
         address _destination,
         bytes calldata _payload,
         bytes calldata _claimQuery,
-        OutputValidityProofV2 calldata _v
+        OutputValidityProof calldata _v
     ) external returns (bool);
 
     /// @notice Validate a version 2 notice
@@ -58,10 +58,10 @@ interface ICartesiDApp {
     /// @param _v A validity proof for the notice
     /// @return Whether the notice is valid or not
     /// @dev The encoding of _claimQuery might vary depending on the history implementation
-    function validateNoticeV2(
+    function validateNotice(
         bytes calldata _notice,
         bytes calldata _claimQuery,
-        OutputValidityProofV2 calldata _v
+        OutputValidityProof calldata _v
     ) external view returns (bool);
 
     /// @notice Get the DApp's template hash

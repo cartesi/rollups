@@ -15,7 +15,7 @@ pragma solidity 0.8.13;
 
 import {ICartesiDApp} from "./ICartesiDApp.sol";
 import {IConsensus} from "../consensus/IConsensus.sol";
-import {LibOutputValidationV2, OutputValidityProofV2} from "../library/LibOutputValidationV2.sol";
+import {LibOutputValidation, OutputValidityProof} from "../library/LibOutputValidation.sol";
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -29,7 +29,7 @@ contract CartesiDApp is
     Ownable
 {
     using Bitmask for mapping(uint256 => uint256);
-    using LibOutputValidationV2 for OutputValidityProofV2;
+    using LibOutputValidation for OutputValidityProof;
 
     bytes32 immutable templateHash;
     mapping(uint256 => uint256) voucherBitmask;
@@ -45,11 +45,11 @@ contract CartesiDApp is
         consensus = _consensus;
     }
 
-    function executeVoucherV2(
+    function executeVoucher(
         address _destination,
         bytes calldata _payload,
         bytes calldata _claimQuery,
-        OutputValidityProofV2 calldata _v
+        OutputValidityProof calldata _v
     ) external override nonReentrant returns (bool) {
         bytes32 epochHash;
         uint256 inputIndex;
@@ -71,7 +71,7 @@ contract CartesiDApp is
             uint64(epochInputIndex)
         );
 
-        uint256 voucherPosition = LibOutputValidationV2.getBitMaskPosition(
+        uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _v.outputIndex,
             inputIndex
         );
@@ -94,10 +94,10 @@ contract CartesiDApp is
         return succ;
     }
 
-    function validateNoticeV2(
+    function validateNotice(
         bytes calldata _notice,
         bytes calldata _claimQuery,
-        OutputValidityProofV2 calldata _v
+        OutputValidityProof calldata _v
     ) external view override returns (bool) {
         bytes32 epochHash;
         uint256 epochInputIndex;
