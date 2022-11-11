@@ -144,7 +144,7 @@ function buildScript(inputArray : Input[]): string {
         '# Add inputs',
         ...inputLines,
         '',
-        '# Apple Silicon needs more sleep time',
+        '# Non Apple Silicon can use less sleep time',
         'sleep 15',
         '',
         '# Finish epoch',
