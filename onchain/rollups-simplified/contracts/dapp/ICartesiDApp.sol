@@ -14,7 +14,6 @@
 pragma solidity 0.8.13;
 
 import {IConsensus} from "../consensus/IConsensus.sol";
-import {OutputValidityProofV1} from "../library/LibOutputValidationV1.sol";
 import {OutputValidityProofV2} from "../library/LibOutputValidationV2.sol";
 
 interface ICartesiDApp {
@@ -37,33 +36,6 @@ interface ICartesiDApp {
     function migrateToConsensus(IConsensus _newConsensus) external;
 
     // Permissionless functions
-
-    /// @notice Execute a version 1 voucher
-    /// @param _destination The contract that will execute the payload
-    /// @param _payload The ABI-encoded function call
-    /// @param _claimQuery Data for querying the desired claim
-    /// @param _v A validity proof for the voucher
-    /// @return Whether the voucher was executed successfully or not
-    /// @dev The encoding of _claimQuery might vary depending on the history implementation
-    /// @dev Each voucher can only be executed once
-    function executeVoucherV1(
-        address _destination,
-        bytes calldata _payload,
-        bytes calldata _claimQuery,
-        OutputValidityProofV1 calldata _v
-    ) external returns (bool);
-
-    /// @notice Validate a version 1 notice
-    /// @param _notice The notice
-    /// @param _claimQuery Data for querying the desired claim
-    /// @param _v A validity proof for the notice
-    /// @return Whether the notice is valid or not
-    /// @dev The encoding of _claimQuery might vary depending on the history implementation
-    function validateNoticeV1(
-        bytes calldata _notice,
-        bytes calldata _claimQuery,
-        OutputValidityProofV1 calldata _v
-    ) external view returns (bool);
 
     /// @notice Execute a version 2 voucher
     /// @param _destination The contract that will execute the payload

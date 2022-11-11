@@ -17,8 +17,7 @@ import {TestBase} from "../TestBase.sol";
 
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
-import {OutputValidityProofV1, LibOutputValidationV1} from "contracts/library/LibOutputValidationV1.sol";
-import {OutputValidityProofV2} from "contracts/library/LibOutputValidationV2.sol";
+import {OutputValidityProofV2, LibOutputValidationV2} from "contracts/library/LibOutputValidationV2.sol";
 import {OutputEncoding} from "contracts/common/OutputEncoding.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -48,7 +47,6 @@ contract CartesiDAppTest is TestBase {
     IERC20 erc20Token;
     IERC721 erc721Token;
     IERC721Receiver erc721Receiver;
-    OutputValidityProofV1 proofV1;
     OutputValidityProofV2 proofV2;
 
     uint256 constant initialSupply = 1000000;
@@ -110,39 +108,37 @@ contract CartesiDAppTest is TestBase {
         assertEq(dapp.getTemplateHash(), _templateHash);
     }
 
-    function logVoucherV1(
+    function logInput(
         uint256 number,
-        address destination,
+        address sender,
         bytes memory payload
     ) internal view {
         console.log("Proof for output %d might be outdated.", number);
-        console.log(destination);
+        console.log(sender);
         console.logBytes(payload);
         console.log("For more info, see `test/foundry/dapp/helper/README.md`.");
     }
 
-    function logNoticeV1(uint256 number, bytes memory payload) internal view {
-        logVoucherV1(number, noticeSender, payload);
-    }
-
     function logOutputV2(uint256 number, bytes memory output) internal view {
-        // We use the notice tree to construct the V2 proof
-        logNoticeV1(number, output);
+        logInput(number, noticeSender, output);
     }
 
     function testExecuteVoucherAndEvent(uint256 _inputIndex) public {
         setupForVoucher3(_inputIndex);
 
-        logVoucherV1(3, address(erc20Token), erc20TransferPayload);
+        logOutputV2(
+            3,
+            encodeVoucher(address(erc20Token), erc20TransferPayload)
+        );
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(erc20Token.balanceOf(address(dapp)), 0);
         assertEq(erc20Token.balanceOf(recipient), 0);
-        bool success = dapp.executeVoucherV1(
+        bool success = dapp.executeVoucherV2(
             address(erc20Token),
             erc20TransferPayload,
             "",
-            proofV1
+            proofV2
         );
         assertEq(success, false);
         assertEq(erc20Token.balanceOf(address(dapp)), 0);
@@ -158,18 +154,18 @@ contract CartesiDAppTest is TestBase {
         // expect event
         vm.expectEmit(false, false, false, true, address(dapp));
         emit VoucherExecuted(
-            LibOutputValidationV1.getBitMaskPosition(
-                proofV1.outputIndex,
+            LibOutputValidationV2.getBitMaskPosition(
+                proofV2.outputIndex,
                 _inputIndex
             )
         );
 
         // perform call
-        success = dapp.executeVoucherV1(
+        success = dapp.executeVoucherV2(
             address(erc20Token),
             erc20TransferPayload,
             "",
-            proofV1
+            proofV2
         );
 
         // check result
@@ -190,21 +186,21 @@ contract CartesiDAppTest is TestBase {
         erc20Token.transfer(address(dapp), dappInitBalance);
 
         // 1st execution attempt should succeed
-        bool success = dapp.executeVoucherV1(
+        bool success = dapp.executeVoucherV2(
             address(erc20Token),
             erc20TransferPayload,
             "",
-            proofV1
+            proofV2
         );
         assertEq(success, true);
 
         // 2nd execution attempt should fail
         vm.expectRevert("re-execution not allowed");
-        dapp.executeVoucherV1(
+        dapp.executeVoucherV2(
             address(erc20Token),
             erc20TransferPayload,
             "",
-            proofV1
+            proofV2
         );
 
         // end result should be the same as executing successfully only once
@@ -218,49 +214,49 @@ contract CartesiDAppTest is TestBase {
     function testRevertsEpochHash(uint256 _inputIndex) public {
         setupForVoucher3(_inputIndex);
 
-        proofV1.vouchersEpochRootHash = bytes32(uint256(0xdeadbeef));
+        proofV2.outputsEpochRootHash = bytes32(uint256(0xdeadbeef));
 
         vm.expectRevert("incorrect epochHash");
-        dapp.executeVoucherV1(
+        dapp.executeVoucherV2(
             address(erc20Token),
             erc20TransferPayload,
             "",
-            proofV1
+            proofV2
         );
     }
 
     function testRevertsOutputsEpochRootHash(uint256 _inputIndex) public {
         setupForVoucher3(_inputIndex);
 
-        proofV1.outputHashesRootHash = bytes32(uint256(0xdeadbeef));
+        proofV2.outputHashesRootHash = bytes32(uint256(0xdeadbeef));
 
         vm.expectRevert("incorrect outputsEpochRootHash");
-        dapp.executeVoucherV1(
+        dapp.executeVoucherV2(
             address(erc20Token),
             erc20TransferPayload,
             "",
-            proofV1
+            proofV2
         );
     }
 
     function testRevertsOutputHashesRootHash(uint256 _inputIndex) public {
         setupForVoucher3(_inputIndex);
 
-        proofV1.outputIndex = 0xdeadbeef;
+        proofV2.outputIndex = 0xdeadbeef;
 
         vm.expectRevert("incorrect outputHashesRootHash");
-        dapp.executeVoucherV1(
+        dapp.executeVoucherV2(
             address(erc20Token),
             erc20TransferPayload,
             "",
-            proofV1
+            proofV2
         );
     }
 
     function setupForVoucher3(uint256 _inputIndex) internal {
         dapp = deployDAppDeterministically();
         erc20Token = deployERC20Deterministically();
-        registerProofV1(_inputIndex, 3, LibOutputProof3.getVoucherProofV1());
+        registerProofV2(_inputIndex, 3, LibOutputProof3.getOutputProofV2());
     }
 
     // test ether transfer
@@ -274,18 +270,18 @@ contract CartesiDAppTest is TestBase {
             transferAmount
         );
 
-        logVoucherV1(4, address(dapp), withdrawEtherPayload);
+        logOutputV2(4, encodeVoucher(address(dapp), withdrawEtherPayload));
 
-        registerProofV1(_inputIndex, 4, LibOutputProof4.getVoucherProofV1());
+        registerProofV2(_inputIndex, 4, LibOutputProof4.getOutputProofV2());
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(address(dapp).balance, 0);
         assertEq(address(recipient).balance, 0);
-        bool success = dapp.executeVoucherV1(
+        bool success = dapp.executeVoucherV2(
             address(dapp),
             withdrawEtherPayload,
             "",
-            proofV1
+            proofV2
         );
         assertEq(success, false);
         assertEq(address(dapp).balance, 0);
@@ -300,18 +296,18 @@ contract CartesiDAppTest is TestBase {
         // expect event
         vm.expectEmit(false, false, false, true, address(dapp));
         emit VoucherExecuted(
-            LibOutputValidationV1.getBitMaskPosition(
-                proofV1.outputIndex,
+            LibOutputValidationV2.getBitMaskPosition(
+                proofV2.outputIndex,
                 _inputIndex
             )
         );
 
         // perform call
-        success = dapp.executeVoucherV1(
+        success = dapp.executeVoucherV2(
             address(dapp),
             withdrawEtherPayload,
             "",
-            proofV1
+            proofV2
         );
 
         // check result
@@ -321,7 +317,7 @@ contract CartesiDAppTest is TestBase {
 
         // cannot execute the same voucher again
         vm.expectRevert("re-execution not allowed");
-        dapp.executeVoucherV1(address(dapp), withdrawEtherPayload, "", proofV1);
+        dapp.executeVoucherV2(address(dapp), withdrawEtherPayload, "", proofV2);
     }
 
     function testWithdrawEtherContract(uint256 _value, address _notDApp)
@@ -399,17 +395,20 @@ contract CartesiDAppTest is TestBase {
             tokenId
         );
 
-        logVoucherV1(5, address(erc721Token), safeTransferFromPayload);
+        logOutputV2(
+            5,
+            encodeVoucher(address(erc721Token), safeTransferFromPayload)
+        );
 
-        registerProofV1(_inputIndex, 5, LibOutputProof5.getVoucherProofV1());
+        registerProofV2(_inputIndex, 5, LibOutputProof5.getOutputProofV2());
 
         // not able to execute voucher because dapp doesn't have the nft
         assertEq(erc721Token.ownerOf(tokenId), tokenOwner);
-        bool success = dapp.executeVoucherV1(
+        bool success = dapp.executeVoucherV2(
             address(erc721Token),
             safeTransferFromPayload,
             "",
-            proofV1
+            proofV2
         );
         assertEq(success, false);
         assertEq(erc721Token.ownerOf(tokenId), tokenOwner);
@@ -422,18 +421,18 @@ contract CartesiDAppTest is TestBase {
         // expect event
         vm.expectEmit(false, false, false, true, address(dapp));
         emit VoucherExecuted(
-            LibOutputValidationV1.getBitMaskPosition(
-                proofV1.outputIndex,
+            LibOutputValidationV2.getBitMaskPosition(
+                proofV2.outputIndex,
                 _inputIndex
             )
         );
 
         // perform call
-        success = dapp.executeVoucherV1(
+        success = dapp.executeVoucherV2(
             address(erc721Token),
             safeTransferFromPayload,
             "",
-            proofV1
+            proofV2
         );
 
         // check result
@@ -442,67 +441,40 @@ contract CartesiDAppTest is TestBase {
 
         // cannot execute the same voucher again
         vm.expectRevert("re-execution not allowed");
-        dapp.executeVoucherV1(
+        dapp.executeVoucherV2(
             address(erc721Token),
             safeTransferFromPayload,
             "",
-            proofV1
+            proofV2
         );
     }
 
-    // test V1 notices
+    // test notices
 
-    function testValidateNotice0(uint256 _inputIndex) public {
+    function testNoticeValidationV2(uint256 _inputIndex) public {
         dapp = deployDAppDeterministically();
-        registerProofV1(_inputIndex, 0, LibOutputProof0.getNoticeProofV1());
+        registerProofV2(_inputIndex, 6, LibOutputProof6.getOutputProofV2());
 
-        // validate notice 0
-        bytes memory notice = abi.encodePacked(bytes4(0xdeadbeef));
-        logNoticeV1(0, notice);
-        bool ret = dapp.validateNoticeV1(notice, "", proofV1);
+        bytes memory notice = abi.encodePacked(bytes4(0xfafafafa));
+        logOutputV2(6, encodeNotice(notice));
+        bool ret = dapp.validateNoticeV2(notice, "", proofV2);
         assertEq(ret, true);
 
         // reverts if notice is incorrect
         bytes memory falseNotice = abi.encodePacked(bytes4(0xdeaddead));
         vm.expectRevert("incorrect outputHashesRootHash");
-        dapp.validateNoticeV1(falseNotice, "", proofV1);
-    }
-
-    function testValidateNotice1(uint256 _inputIndex) public {
-        dapp = deployDAppDeterministically();
-        registerProofV1(_inputIndex, 1, LibOutputProof1.getNoticeProofV1());
-
-        // validate notice 1
-        bytes memory notice = abi.encodePacked(bytes4(0xbeefdead));
-        logNoticeV1(1, notice);
-        bool ret = dapp.validateNoticeV1(notice, "", proofV1);
-        assertEq(ret, true);
-    }
-
-    // test V1 notice proofs generated with our current setup (WIP)
-
-    function testNoticeValidationV2(uint256 _inputIndex) public {
-        dapp = deployDAppDeterministically();
-        registerProofV2(_inputIndex, 6, LibOutputProof6.getNoticeProofV2());
-
-        bytes memory notice = abi.encodePacked(bytes4(0xfafafafa));
-        bytes memory output = abi.encodePacked(OutputEncoding.NOTICE, notice);
-        logOutputV2(6, output);
-        bool ret = dapp.validateNoticeV2(notice, "", proofV2);
-        assertEq(ret, true);
+        dapp.validateNoticeV2(falseNotice, "", proofV2);
     }
 
     function testVoucherExecutionV2(uint256 _inputIndex) public {
         dapp = deployDAppDeterministically();
         erc20Token = deployERC20Deterministically();
-        registerProofV2(_inputIndex, 7, LibOutputProof7.getNoticeProofV2());
+        registerProofV2(_inputIndex, 7, LibOutputProof7.getOutputProofV2());
 
-        bytes memory output = abi.encodePacked(
-            OutputEncoding.VOUCHER,
-            address(erc20Token),
-            erc20TransferPayload
+        logOutputV2(
+            7,
+            encodeVoucher(address(erc20Token), erc20TransferPayload)
         );
-        logOutputV2(7, output);
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(erc20Token.balanceOf(address(dapp)), 0);
@@ -527,7 +499,7 @@ contract CartesiDAppTest is TestBase {
         // expect event
         vm.expectEmit(false, false, false, true, address(dapp));
         emit VoucherExecuted(
-            LibOutputValidationV1.getBitMaskPosition(
+            LibOutputValidationV2.getBitMaskPosition(
                 proofV2.outputIndex,
                 _inputIndex
             )
@@ -595,34 +567,6 @@ contract CartesiDAppTest is TestBase {
         dapp.migrateToConsensus(_consensus);
     }
 
-    // Stores `_proof` in storage variable `proofV1`
-    // Mock `consensus` so that `getEpochHash` return values
-    // can be used to validate `_inputIndex`, `_epochInputIndex` and `_proof`.
-    function registerProofV1(
-        uint256 _inputIndex,
-        uint256 _epochInputIndex,
-        OutputValidityProofV1 memory _proof
-    ) internal {
-        // calculate epoch hash from proof
-        bytes32 epochHash = keccak256(
-            abi.encodePacked(
-                _proof.vouchersEpochRootHash,
-                _proof.noticesEpochRootHash,
-                _proof.machineStateHash
-            )
-        );
-
-        // mock the consensus contract to return the right epoch hash
-        vm.mockCall(
-            consensus,
-            abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(epochHash, _inputIndex, _epochInputIndex)
-        );
-
-        // store proof in storage
-        proofV1 = _proof;
-    }
-
     // Stores `_proof` in storage variable `proofV2`
     // Mock `consensus` so that `getEpochHash` return values
     // can be used to validate `_inputIndex`, `_epochInputIndex` and `_proof`.
@@ -676,5 +620,23 @@ contract CartesiDAppTest is TestBase {
     {
         vm.prank(tokenOwner);
         return new SimpleERC721Receiver{salt: salt}();
+    }
+
+    // output encoding
+
+    function encodeNotice(bytes memory payload)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodePacked(OutputEncoding.NOTICE, payload);
+    }
+
+    function encodeVoucher(address destination, bytes memory payload)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodePacked(OutputEncoding.VOUCHER, destination, payload);
     }
 }
