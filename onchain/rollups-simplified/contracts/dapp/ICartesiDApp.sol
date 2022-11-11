@@ -37,7 +37,7 @@ interface ICartesiDApp {
 
     // Permissionless functions
 
-    /// @notice Execute a version 2 voucher
+    /// @notice Execute a voucher
     /// @param _destination The contract that will execute the payload
     /// @param _payload The ABI-encoded function call
     /// @param _claimQuery Data for querying the right claim
@@ -52,7 +52,7 @@ interface ICartesiDApp {
         OutputValidityProof calldata _v
     ) external returns (bool);
 
-    /// @notice Validate a version 2 notice
+    /// @notice Validate a notice
     /// @param _notice The notice
     /// @param _claimQuery Data for querying the right claim
     /// @param _v A validity proof for the notice
