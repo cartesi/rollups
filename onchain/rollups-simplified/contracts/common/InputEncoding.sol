@@ -18,16 +18,16 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 library InputEncoding {
     /// @notice ETH deposit
-    bytes1 constant ETH_DEPOSIT = hex"00";
+    bytes1 constant ETH_DEPOSIT = bytes1(0x00);
 
     /// @notice ERC-20 token deposit where `transferFrom` returns `true`
-    bytes1 constant ERC20_DEPOSIT_TRUE = hex"01";
+    bytes1 constant ERC20_DEPOSIT_TRUE = bytes1(0x01);
 
     /// @notice ERC-20 token deposit where `transferFrom` returns `false`
-    bytes1 constant ERC20_DEPOSIT_FALSE = hex"02";
+    bytes1 constant ERC20_DEPOSIT_FALSE = bytes1(0x02);
 
     /// @notice ERC-721 token deposit
-    bytes1 constant ERC721_DEPOSIT = hex"03";
+    bytes1 constant ERC721_DEPOSIT = bytes1(0x03);
 
     /// @notice Encode Ether deposit
     /// @param sender The Ether sender

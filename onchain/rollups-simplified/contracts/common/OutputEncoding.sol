@@ -16,11 +16,11 @@ pragma solidity ^0.8.13;
 library OutputEncoding {
     /// @notice An arbitrary blob of data
     /// @dev It can be verified by anyone and any number of times
-    bytes1 constant NOTICE = hex"00";
+    bytes1 constant NOTICE = bytes1(0x00);
 
     /// @notice An arbitrary L1 function call
     /// @dev It can be executed by anyone and at most once
-    bytes1 constant VOUCHER = hex"01";
+    bytes1 constant VOUCHER = bytes1(0x01);
 
     /// @notice Encode notice
     /// @param notice The notice
