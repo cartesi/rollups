@@ -115,7 +115,7 @@ library LibOutputValidation {
     /// @param _output the output (when abi-encoded and hashed, becomes A)
     /// @param _epochHash the hash of the epoch in which the output was generated (J)
     /// @param _epochInputIndex index of input in the epoch (G)
-    function validateOutputHash(
+    function validateOutput(
         OutputValidityProof calldata _v,
         bytes memory _output,
         bytes32 _epochHash,
@@ -200,7 +200,7 @@ library LibOutputValidation {
             _destination,
             _payload
         );
-        validateOutputHash(_v, output, _epochHash, _epochInputIndex);
+        validateOutput(_v, output, _epochHash, _epochInputIndex);
     }
 
     /// @notice Make sure the output proof is valid, otherwise revert
@@ -215,7 +215,7 @@ library LibOutputValidation {
         uint64 _epochInputIndex
     ) internal pure {
         bytes memory output = OutputEncoding.encodeNotice(_notice);
-        validateOutputHash(_v, output, _epochHash, _epochInputIndex);
+        validateOutput(_v, output, _epochHash, _epochInputIndex);
     }
 
     /// @notice Get the position of a voucher on the bit mask
