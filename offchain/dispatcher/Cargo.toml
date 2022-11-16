@@ -24,6 +24,7 @@ types = { path = "../types" }
 anyhow = "1"
 im = { version = "15", features = ["serde"] }
 rustc-hex = "2.1.0"
+serde_json = "1"
 snafu = "0.7"
 structopt = "0.3"
 

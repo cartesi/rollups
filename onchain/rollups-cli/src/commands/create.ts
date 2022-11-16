@@ -115,7 +115,8 @@ export const builder = (yargs: Argv<{}>): Argv<Args> => {
             default: "0",
         })
         .option("outputFile", {
-            describe: "Output file to write application address",
+            describe:
+                "Output file to write application information in JSON format",
             type: "string",
         })
         .config();
@@ -176,7 +177,19 @@ export const handler = safeHandler<Args>(async (args) => {
         console.log(`application: ${application}`);
         if (outputFile) {
             console.log(`writing application address to ${outputFile}`);
-            fse.outputFileSync(outputFile, application);
+            fse.outputFileSync(
+                outputFile,
+                JSON.stringify(
+                    {
+                        address: application,
+                        blockHash: receipt.blockHash,
+                        blockNumber: receipt.blockNumber,
+                        transactionHash: receipt.transactionHash,
+                    },
+                    null,
+                    4
+                )
+            );
         }
     }
 });

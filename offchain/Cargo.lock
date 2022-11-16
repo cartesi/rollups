@@ -1367,6 +1367,7 @@ dependencies = [
  "im",
  "prost 0.11.2",
  "rustc-hex",
+ "serde_json",
  "snafu 0.7.3",
  "state-client-lib",
  "state-fold",

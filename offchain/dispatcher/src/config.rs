@@ -7,6 +7,8 @@ use crate::http_health::config::{HealthCheckConfig, HealthCheckEnvCLIConfig};
 use state_fold_types::ethers::types::{Address, U256};
 
 use snafu::{ResultExt, Snafu};
+use std::fs::File;
+use std::io::BufReader;
 use std::str::FromStr;
 use structopt::StructOpt;
 
@@ -86,7 +88,13 @@ pub enum Error {
     DappAddressParseError { source: rustc_hex::FromHexError },
 
     #[snafu(display("Dapp address read file error"))]
-    DappAddressReadFileError { source: std::io::Error },
+    DappJsonReadFileError { source: std::io::Error },
+
+    #[snafu(display("Dapp json parse error"))]
+    DappJsonParseError { source: serde_json::Error },
+
+    #[snafu(display("Dapp json wrong type error"))]
+    DappJsonWrongTypeError {},
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -123,8 +131,21 @@ impl DispatcherConfig {
                     .ok_or(snafu::NoneError)
                     .context(MissingDappAddressSnafu)?;
 
-                let contents = std::fs::read_to_string(path.clone())
-                    .context(DappAddressReadFileSnafu)?;
+                let file =
+                    File::open(path.clone()).context(DappJsonReadFileSnafu)?;
+                let reader = BufReader::new(file);
+                let json: serde_json::Value = serde_json::from_reader(reader)
+                    .context(DappJsonParseSnafu)?;
+
+                let contents = match &json["address"] {
+                    serde_json::Value::String(ref s) => s.clone(),
+
+                    serde_json::Value::Null => {
+                        return MissingDappAddressSnafu.fail()
+                    }
+
+                    _ => return DappJsonWrongTypeSnafu.fail(),
+                };
 
                 Address::from_str(&contents.trim().to_string())
                     .context(DappAddressParseSnafu)?

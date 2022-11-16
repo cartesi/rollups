@@ -19,11 +19,12 @@ use serde::Deserialize;
 
 use state_fold_types::ethabi::ethereum_types::{Address, U256};
 
-use std::fs;
+use std::fs::File;
+use std::io::BufReader;
 use std::str::FromStr;
 use tracing::{error, warn};
 
-use anyhow::Context;
+use anyhow::{bail, Context};
 use structopt::StructOpt;
 
 /// Application configuration generated from
@@ -171,8 +172,21 @@ impl IndexerConfig {
                 .dapp_contract_address_file
                 .context("Must specify either dapp_contract_address or dapp_contract_address_file")?;
 
-            let contents = fs::read_to_string(path.clone())
+            let file = File::open(path.clone())
                 .context(format!("Could not read file at path {}", path))?;
+            let reader = BufReader::new(file);
+            let json: serde_json::Value = serde_json::from_reader(reader)
+                .context("Could not parse Dapp json file")?;
+
+            let contents = match &json["address"] {
+                serde_json::Value::String(ref s) => s.clone(),
+
+                serde_json::Value::Null => {
+                    bail!("Missing dapp address field in json")
+                }
+
+                _ => bail!("Dapp address field in json is of wrong type"),
+            };
 
             Address::from_str(contents.trim()).context(format!(
                 "DApp contract address string ill-formed: {}",
