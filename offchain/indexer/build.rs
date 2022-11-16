@@ -20,7 +20,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &[
                 "../../grpc-interfaces/versioning.proto",
                 "../../grpc-interfaces/server-manager.proto",
-                "../../grpc-interfaces/stateserver.proto",
             ],
             &["../../grpc-interfaces"],
         )?;
