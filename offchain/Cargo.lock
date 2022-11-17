@@ -707,7 +707,7 @@ dependencies = [
  "rand 0.7.3",
  "serde",
  "serde_json",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -1377,7 +1377,7 @@ dependencies = [
  "pq-sys",
  "r2d2",
  "serde_json",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -1594,7 +1594,7 @@ dependencies = [
  "sha2 0.10.6",
  "sha3",
  "thiserror",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -2548,7 +2548,7 @@ dependencies = [
  "tracing-subscriber",
  "types",
  "urlencoding",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -2668,7 +2668,7 @@ dependencies = [
  "smartstring",
  "static_assertions",
  "url",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -4227,6 +4227,7 @@ dependencies = [
  "tonic-build 0.8.2",
  "tracing",
  "tracing-subscriber",
+ "uuid 1.2.2",
 ]
 
 [[package]]
@@ -5405,6 +5406,15 @@ dependencies = [
  "getrandom 0.2.8",
  "serde",
  "sha1 0.6.1",
+]
+
+[[package]]
+name = "uuid"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "422ee0de9031b5b948b97a8fc04e3aa35230001a722ddd27943e0be31564ce4c"
+dependencies = [
+ "getrandom 0.2.8",
 ]
 
 [[package]]

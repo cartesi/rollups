@@ -12,7 +12,8 @@
 
 use backoff::{future::retry, Error, ExponentialBackoff};
 use snafu::{ResultExt, Snafu};
-use tonic::transport::Channel;
+use tonic::{transport::Channel, Request};
+use uuid::Uuid;
 
 use rollups_events::rollups_inputs::InputMetadata;
 
@@ -39,6 +40,47 @@ mod cartesi_machine {
 }
 mod cartesi_server_manager {
     tonic::include_proto!("cartesi_server_manager");
+}
+
+/// Call the grpc method passing an unique request-id and with retry
+macro_rules! grpc_call {
+    ($self: ident, $method: ident, $request: expr) => {
+        retry($self.backoff.clone(), || async {
+            let request_id = Uuid::new_v4().to_string();
+            let request = $request;
+
+            tracing::trace!(
+                request_id,
+                method = stringify!($method),
+                ?request,
+                "calling grpc"
+            );
+
+            let mut grpc_request = Request::new(request);
+            grpc_request
+                .metadata_mut()
+                .insert("request-id", request_id.parse().unwrap());
+
+            let response = $self
+                .client
+                .clone()
+                .$method(grpc_request)
+                .await
+                .context(MethodCallSnafu {
+                    method: stringify!($method),
+                })?
+                .into_inner();
+
+            tracing::trace!(
+                request_id,
+                method = stringify!($method),
+                ?response,
+                "got grpc response",
+            );
+            Ok(response)
+        })
+        .await
+    };
 }
 
 #[derive(Debug, Snafu)]
@@ -92,49 +134,19 @@ impl ServerManagerFacade {
         tracing::trace!("starting server-manager session");
 
         // If session exists, delete it before creating new one
-        let response = retry(self.backoff.clone(), || async {
-            tracing::trace!("calling grpc get_status");
-
-            let response = self
-                .client
-                .clone()
-                .get_status(Void {})
-                .await
-                .context(MethodCallSnafu {
-                    method: "get_status",
-                })?
-                .into_inner();
-
-            tracing::trace!(?response, "got grpc response");
-            Ok(response)
-        })
-        .await?;
-
-        let session_exists =
-            response.session_id.contains(&self.config.session_id);
-        if session_exists {
-            retry(self.backoff.clone(), || async {
-                let request = EndSessionRequest {
+        let response = grpc_call!(self, get_status, Void {})?;
+        if response.session_id.contains(&self.config.session_id) {
+            tracing::info!("deleting previous server-manager session");
+            grpc_call!(
+                self,
+                end_session,
+                EndSessionRequest {
                     session_id: self.config.session_id.clone(),
-                };
-
-                tracing::trace!(?request, "calling grpc end_session",);
-
-                let response =
-                    self.client.clone().end_session(request).await.context(
-                        MethodCallSnafu {
-                            method: "end_session",
-                        },
-                    )?;
-
-                tracing::trace!(?response, "got grpc response");
-
-                Ok(())
-            })
-            .await?;
+                }
+            )?;
         }
 
-        retry(self.backoff.clone(), || async {
+        grpc_call!(self, start_session, {
             let machine_directory = "/opt/cartesi/share/dapp-bin".to_owned();
 
             let runtime = Some(MachineRuntimeConfig {
@@ -166,33 +178,15 @@ impl ServerManagerFacade {
                 inspect_state_increment: 1 << 22,
             });
 
-            let new_session_request = StartSessionRequest {
+            StartSessionRequest {
                 session_id: self.config.session_id.clone(),
                 machine_directory,
                 runtime,
                 active_epoch_index,
                 server_cycles,
                 server_deadline,
-            };
-
-            tracing::trace!(
-                request = ?new_session_request,
-                "calling grpc start_session"
-            );
-
-            let response = self
-                .client
-                .clone()
-                .start_session(new_session_request)
-                .await
-                .context(MethodCallSnafu {
-                    method: "start_session",
-                })?;
-
-            tracing::trace!(?response, "got grpc response");
-            Ok(())
-        })
-        .await?;
+            }
+        })?;
 
         Ok(())
     }
@@ -204,8 +198,7 @@ impl ServerManagerFacade {
         input_payload: Vec<u8>,
     ) -> Result<()> {
         tracing::trace!("sending advance-state input to server-manager");
-
-        retry(self.backoff.clone(), || async {
+        grpc_call!(self, advance_state, {
             let metadata = MMInputMetadata {
                 msg_sender: Some(Address {
                     data: input_metadata.msg_sender.into(),
@@ -215,29 +208,14 @@ impl ServerManagerFacade {
                 epoch_index: input_metadata.epoch_index,
                 input_index: input_metadata.input_index,
             };
-            let request = AdvanceStateRequest {
+            AdvanceStateRequest {
                 session_id: self.config.session_id.to_owned(),
                 active_epoch_index: input_metadata.epoch_index,
                 current_input_index: input_metadata.input_index,
                 input_metadata: Some(metadata),
                 input_payload: input_payload.clone(),
-            };
-
-            tracing::trace!(?request, "calling grpc advance_state",);
-
-            let response =
-                self.client.clone().advance_state(request).await.context(
-                    MethodCallSnafu {
-                        method: "advance_state",
-                    },
-                )?;
-
-            tracing::trace!(?response, "got grpc response");
-
-            Ok(())
-        })
-        .await?;
-
+            }
+        })?;
         Ok(())
     }
 
@@ -251,30 +229,12 @@ impl ServerManagerFacade {
         tracing::trace!(epoch_index, "waiting for pending inputs");
 
         for _ in 0..self.config.pending_inputs_max_retries {
-            let response = retry(self.backoff.clone(), || async {
-                let request = GetEpochStatusRequest {
+            let response = grpc_call!(self, get_epoch_status, {
+                GetEpochStatusRequest {
                     session_id: self.config.session_id.to_owned(),
                     epoch_index,
-                };
-
-                tracing::trace!(?request, "calling grpc get_epoch_status",);
-
-                let response = self
-                    .client
-                    .clone()
-                    .get_epoch_status(request)
-                    .await
-                    .context(MethodCallSnafu {
-                        method: "get_epoch_status",
-                    })?
-                    .into_inner();
-
-                tracing::trace!(?response, "got grpc response");
-
-                Ok(response)
-            })
-            .await?;
-
+                }
+            })?;
             if response.pending_input_count > 0 {
                 let duration = std::time::Duration::from_millis(
                     self.config.pending_inputs_sleep_duration,
@@ -310,29 +270,14 @@ impl ServerManagerFacade {
         let processed_input_count =
             self.wait_for_pending_inputs(active_epoch_index).await?;
 
-        retry(self.backoff.clone(), || async {
-            let request = FinishEpochRequest {
+        grpc_call!(self, finish_epoch, {
+            FinishEpochRequest {
                 session_id: self.config.session_id.to_owned(),
                 active_epoch_index,
                 processed_input_count,
                 storage_directory: "".to_owned(),
-            };
-
-            tracing::trace!(?request, "calling grpc finish_epoch");
-
-            let response =
-                self.client.clone().finish_epoch(request).await.context(
-                    MethodCallSnafu {
-                        method: "finish_epoch",
-                    },
-                )?;
-
-            tracing::trace!(?response, "got grpc response");
-
-            Ok(())
-        })
-        .await?;
-
+            }
+        })?;
         Ok(())
     }
 
@@ -343,29 +288,12 @@ impl ServerManagerFacade {
     ) -> Result<[u8; 32]> {
         tracing::trace!(epoch_index, "getting epoch claim");
 
-        let response = retry(self.backoff.clone(), || async {
-            let request = GetEpochStatusRequest {
+        let response = grpc_call!(self, get_epoch_status, {
+            GetEpochStatusRequest {
                 session_id: self.config.session_id.to_owned(),
                 epoch_index,
-            };
-
-            tracing::trace!(?request, "calling grpc get_epoch_status");
-
-            let response = self
-                .client
-                .clone()
-                .get_epoch_status(request)
-                .await
-                .context(MethodCallSnafu {
-                    method: "get_epoch_status",
-                })?
-                .into_inner();
-
-            tracing::trace!(?response, "got grpc response");
-
-            Ok(response)
-        })
-        .await?;
+            }
+        })?;
 
         let vouchers_metadata_hash = response
             .most_recent_vouchers_epoch_root_hash
