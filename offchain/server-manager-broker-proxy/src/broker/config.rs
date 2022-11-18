@@ -11,7 +11,10 @@
 // specific language governing permissions and limitations under the License.
 
 use clap::Parser;
+use serde_json::Value;
 use snafu::{ResultExt, Snafu};
+use std::fs::File;
+use std::io::BufReader;
 
 #[derive(Debug)]
 pub struct BrokerConfig {
@@ -32,10 +35,15 @@ impl BrokerConfig {
                     .dapp_contract_address_file
                     .ok_or(snafu::NoneError)
                     .context(MissingDappAddressSnafu)?;
-                std::fs::read_to_string(path)
-                    .context(DappAddressReadFileSnafu)?
-                    .trim()
-                    .to_string()
+                let file = File::open(path).context(DappJsonReadFileSnafu)?;
+                let reader = BufReader::new(file);
+                let mut json: Value = serde_json::from_reader(reader)
+                    .context(DappJsonParseSnafu)?;
+                match json["address"].take() {
+                    Value::String(s) => s,
+                    Value::Null => return MissingDappAddressSnafu.fail(),
+                    _ => return DappJsonWrongTypeSnafu.fail(),
+                }
             }
         };
 
@@ -59,14 +67,20 @@ pub enum BrokerConfigError {
     #[snafu(display("Configuration missing dapp address"))]
     MissingDappAddress {},
 
+    #[snafu(display("Dapp json read file error"))]
+    DappJsonReadFileError { source: std::io::Error },
+
+    #[snafu(display("Dapp json parse error"))]
+    DappJsonParseError { source: serde_json::Error },
+
+    #[snafu(display("Dapp json wrong type error"))]
+    DappJsonWrongTypeError {},
+
     #[snafu(display("Dapp address string parse error"))]
     DappAddressParseError { source: hex::FromHexError },
 
     #[snafu(display("Dapp address with wrong size"))]
     DappAddressSizeError {},
-
-    #[snafu(display("Dapp address read file error"))]
-    DappAddressReadFileError { source: std::io::Error },
 }
 
 #[derive(Parser, Debug)]

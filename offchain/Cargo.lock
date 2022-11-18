@@ -4218,6 +4218,7 @@ dependencies = [
  "prost 0.11.2",
  "rollups-events",
  "serde",
+ "serde_json",
  "sha3",
  "snafu 0.7.3",
  "test-log",
