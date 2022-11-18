@@ -14,14 +14,6 @@
 pragma solidity ^0.8.13;
 
 library OutputEncoding {
-    /// @notice An arbitrary blob of data
-    /// @dev It can be verified by anyone and any number of times
-    bytes1 constant NOTICE = bytes1(0x00);
-
-    /// @notice An arbitrary L1 function call
-    /// @dev It can be executed by anyone and at most once
-    bytes1 constant VOUCHER = bytes1(0x01);
-
     /// @notice Encode notice
     /// @param notice The notice
     /// @return The encoded output
@@ -30,11 +22,7 @@ library OutputEncoding {
         pure
         returns (bytes memory)
     {
-        return
-            abi.encodePacked(
-                NOTICE, // 1B
-                notice //  arbitrary size
-            );
+        return abi.encode(notice);
     }
 
     /// @notice Encode voucher
@@ -46,11 +34,6 @@ library OutputEncoding {
         pure
         returns (bytes memory)
     {
-        return
-            abi.encodePacked(
-                VOUCHER, //     1B
-                destination, // 20B
-                payload //      arbitrary size
-            );
+        return abi.encode(destination, payload);
     }
 }

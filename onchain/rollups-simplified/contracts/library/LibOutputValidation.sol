@@ -17,91 +17,18 @@ import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {Merkle} from "@cartesi/util/contracts/Merkle.sol";
 import {OutputEncoding} from "../common/OutputEncoding.sol";
 
-// Epoch Hash Computation
-// ======================
-//
-// Every output is hashed into a 256-bit word (A), which is then
-// divided into four 64-bit words. From these words, a Merkle tree
-// is constructed from the bottom up (B).
-//
-// An input can emit multiple outputs (D). These are ordered and their
-// Merkle root hashes (C) are used to construct another Merkle tree (E).
-//
-// An epoch can receive multiple inputs (G). These are ordered and their
-// Merkle root hashes (F) are used to construct yet another Mekle tree (H).
-//
-// Finally, this Merkle root hash (I) is combined with the machine state
-// hash (J) to obtain the epoch hash (K).
-//
-//                     ┌──────────────┐
-//           ┌─────────┤Epoch Hash (K)├────────┐
-//           │         └──────────────┘        │
-//           │                                 │
-//           │                                 │
-//           │                      ┌──────────▼───────────┐
-//           │                      │Machine State Hash (J)│
-//           │                      └──────────────────────┘
-//     ┌─────▼─────┐
-//     │Merkle Root│ ───> Epoch's output hashes root hash (I)
-//     └───────────┘
-//           x
-//          xxx         │
-//         xxxxx        │
-//        xxxxxxx       │
-//       xxxxxxxxx      ├──> Epoch's outputs Merkle tree (H)
-//      xxxxxxxxxxx     │
-//     xxxxxxxxxxxxx    │
-//    xxxxxxxxxxxxxxx   │
-//   xxxxxxxxxxxxxxxxx
-// ┌────────┬─┬────────┐
-// │   ...  │┼│  ...   │ ───> For each input in the epoch (G)
-// └────────┴┼┴────────┘
-//           │
-//           │
-//     ┌─────▼─────┐
-//     │Merkle Root│ ───> Input's output hashes Merkle root hash (F)
-//     └───────────┘
-//           x
-//          xxx         │
-//         xxxxx        │
-//        xxxxxxx       │
-//       xxxxxxxxx      ├──> Input's outputs Merkle tree (E)
-//      xxxxxxxxxxx     │
-//     xxxxxxxxxxxxx    │
-//    xxxxxxxxxxxxxxx   │
-//   xxxxxxxxxxxxxxxxx
-// ┌────────┬─┬────────┐
-// │   ...  │┼│  ...   │ ───> For each output from the input (D)
-// └────────┴┼┴────────┘
-//           │
-//           │
-//     ┌─────▼─────┐
-//     │Merkle Root│ ───> Output hash Merkle root hash (C)
-//     └───────────┘
-//           x
-//          x x         │
-//         x   x        │
-//        x     x       │
-//       x       x      ├──> Output hash Merkle tree (B)
-//      x         x     │
-//     x x       x x    │
-//    x   x     x   x   │
-//   x     x   x     x
-// ┌────┬────┬────┬────┐
-// │    │    │    │    │ ───> Output hash (A)
-// └────┴────┴────┴────┘
-//
-
-/// @param outputIndex index of output emitted by the input (D)
-/// @param outputHashesRootHash Merkle root of hashes of outputs emitted by the input (F)
-/// @param outputsEpochRootHash Merkle root of hashes of outputs emitted by all the inputs in the epoch (I)
-/// @param machineStateHash hash of the machine state claimed this epoch (J)
-/// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range (E)
-/// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range (H)
+/// @param outputIndex index of output emitted by the input
+/// @param outputHashesRootHash Merkle root of hashes of outputs emitted by the input
+/// @param vouchersEpochRootHash merkle root of all epoch's voucher metadata hashes
+/// @param noticesEpochRootHash merkle root of all epoch's notice metadata hashes
+/// @param machineStateHash hash of the machine state claimed this epoch
+/// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range
+/// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range
 struct OutputValidityProof {
     uint64 outputIndex;
     bytes32 outputHashesRootHash;
-    bytes32 outputsEpochRootHash;
+    bytes32 vouchersEpochRootHash;
+    bytes32 noticesEpochRootHash;
     bytes32 machineStateHash;
     bytes32[] keccakInHashesSiblings;
     bytes32[] outputHashesInEpochSiblings;
@@ -111,20 +38,33 @@ library LibOutputValidation {
     using CanonicalMachine for CanonicalMachine.Log2Size;
 
     /// @notice Make sure the output proof is valid, otherwise revert
-    /// @param _v the output validity proof (D, E, F, G, H, I)
-    /// @param _output the output (when abi-encoded and hashed, becomes A)
-    /// @param _epochHash the hash of the epoch in which the output was generated (J)
-    /// @param _epochInputIndex index of input in the epoch (G)
-    function validateOutput(
+    /// @param _v the output validity proof
+    /// @param _encodedOutput the encoded output
+    /// @param _epochHash the hash of the epoch in which the output was generated
+    /// @param _epochInputIndex index of input in the epoch
+    /// @param _outputsEpochRootHash either _v.vouchersEpochRootHash (for vouchers)
+    ///                              or _v.noticesEpochRootHash (for notices)
+    /// @param _outputEpochLog2Size either EPOCH_VOUCHER_LOG2_SIZE (for vouchers)
+    ///                             or EPOCH_NOTICE_LOG2_SIZE (for notices)
+    /// @param _outputHashesLog2Size either VOUCHER_METADATA_LOG2_SIZE (for vouchers)
+    ///                              or NOTICE_METADATA_LOG2_SIZE (for notices)
+    function validateEncodedOutput(
         OutputValidityProof calldata _v,
-        bytes memory _output,
+        bytes memory _encodedOutput,
         bytes32 _epochHash,
-        uint64 _epochInputIndex
+        uint64 _epochInputIndex,
+        bytes32 _outputsEpochRootHash,
+        uint256 _outputEpochLog2Size,
+        uint256 _outputHashesLog2Size
     ) internal pure {
         // prove that outputs hash is represented in a finalized epoch
         require(
             keccak256(
-                abi.encodePacked(_v.outputsEpochRootHash, _v.machineStateHash)
+                abi.encodePacked(
+                    _v.vouchersEpochRootHash,
+                    _v.noticesEpochRootHash,
+                    _v.machineStateHash
+                )
             ) == _epochHash,
             "incorrect epochHash"
         );
@@ -137,10 +77,10 @@ library LibOutputValidation {
                     CanonicalMachine.KECCAK_LOG2_SIZE
                 ),
                 CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
-                CanonicalMachine.EPOCH_OUTPUT_LOG2_SIZE.uint64OfSize(),
+                _outputEpochLog2Size,
                 _v.outputHashesRootHash,
                 _v.outputHashesInEpochSiblings
-            ) == _v.outputsEpochRootHash,
+            ) == _outputsEpochRootHash,
             "incorrect outputsEpochRootHash"
         );
 
@@ -162,7 +102,7 @@ library LibOutputValidation {
         // is contained in it. We can't simply use hashOfOutput because the
         // log2size of the leaf is three (8 bytes) not  five (32 bytes)
         bytes32 merkleRootOfHashOfOutput = Merkle.getMerkleRootFromBytes(
-            abi.encodePacked(keccak256(abi.encode(_output))),
+            abi.encodePacked(keccak256(_encodedOutput)),
             CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize()
         );
 
@@ -175,7 +115,7 @@ library LibOutputValidation {
                     CanonicalMachine.KECCAK_LOG2_SIZE
                 ),
                 CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
-                CanonicalMachine.OUTPUT_METADATA_LOG2_SIZE.uint64OfSize(),
+                _outputHashesLog2Size,
                 merkleRootOfHashOfOutput,
                 _v.keccakInHashesSiblings
             ) == _v.outputHashesRootHash,
@@ -187,8 +127,8 @@ library LibOutputValidation {
     /// @param _v the output validity proof
     /// @param _destination The contract that will execute the payload
     /// @param _payload The ABI-encoded function call
-    /// @param _epochHash the hash of the epoch in which the output was generated (J)
-    /// @param _epochInputIndex index of input in the epoch (G)
+    /// @param _epochHash the hash of the epoch in which the output was generated
+    /// @param _epochInputIndex index of input in the epoch
     function validateVoucher(
         OutputValidityProof calldata _v,
         address _destination,
@@ -196,26 +136,42 @@ library LibOutputValidation {
         bytes32 _epochHash,
         uint64 _epochInputIndex
     ) internal pure {
-        bytes memory output = OutputEncoding.encodeVoucher(
+        bytes memory encodedVoucher = OutputEncoding.encodeVoucher(
             _destination,
             _payload
         );
-        validateOutput(_v, output, _epochHash, _epochInputIndex);
+        validateEncodedOutput(
+            _v,
+            encodedVoucher,
+            _epochHash,
+            _epochInputIndex,
+            _v.vouchersEpochRootHash,
+            CanonicalMachine.EPOCH_VOUCHER_LOG2_SIZE.uint64OfSize(),
+            CanonicalMachine.VOUCHER_METADATA_LOG2_SIZE.uint64OfSize()
+        );
     }
 
     /// @notice Make sure the output proof is valid, otherwise revert
     /// @param _v the output validity proof
     /// @param _notice The notice
-    /// @param _epochHash the hash of the epoch in which the output was generated (J)
-    /// @param _epochInputIndex index of input in the epoch (G)
+    /// @param _epochHash the hash of the epoch in which the output was generated
+    /// @param _epochInputIndex index of input in the epoch
     function validateNotice(
         OutputValidityProof calldata _v,
         bytes calldata _notice,
         bytes32 _epochHash,
         uint64 _epochInputIndex
     ) internal pure {
-        bytes memory output = OutputEncoding.encodeNotice(_notice);
-        validateOutput(_v, output, _epochHash, _epochInputIndex);
+        bytes memory encodedNotice = OutputEncoding.encodeNotice(_notice);
+        validateEncodedOutput(
+            _v,
+            encodedNotice,
+            _epochHash,
+            _epochInputIndex,
+            _v.noticesEpochRootHash,
+            CanonicalMachine.EPOCH_NOTICE_LOG2_SIZE.uint64OfSize(),
+            CanonicalMachine.NOTICE_METADATA_LOG2_SIZE.uint64OfSize()
+        );
     }
 
     /// @notice Get the position of a voucher on the bit mask

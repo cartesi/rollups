@@ -82,6 +82,9 @@ echo
 npx ts-node genScript.ts
 echo
 
+# Give execute permission to script
+chmod +x gen-proofs.sh
+
 echo2 $GREEN "4. Running docker image to generate epoch status..."
 echo
 

@@ -122,18 +122,26 @@ contract CartesiDAppTest is TestBase {
         console.log("For more info, see `test/foundry/dapp/helper/README.md`.");
     }
 
-    function logOutput(uint256 number, bytes memory output) internal view {
-        logInput(number, noticeSender, output);
+    function logVoucher(
+        uint256 number,
+        address destination,
+        bytes memory payload
+    ) internal view {
+        logInput(number, destination, payload);
+    }
+
+    function logNotice(uint256 number, bytes memory notice) internal view {
+        logInput(number, noticeSender, notice);
     }
 
     // test notices
 
     function testNoticeValidation(uint256 _inputIndex) public {
         dapp = deployDAppDeterministically();
-        registerProof(_inputIndex, 0, LibOutputProof0.getOutputProof());
+        registerProof(_inputIndex, 0, LibOutputProof0.getNoticeProof());
 
         bytes memory notice = abi.encodePacked(bytes4(0xfafafafa));
-        logOutput(0, encodeNotice(notice));
+        logNotice(0, notice);
         bool ret = dapp.validateNotice(notice, "", proof);
         assertEq(ret, true);
 
@@ -148,7 +156,7 @@ contract CartesiDAppTest is TestBase {
     function testExecuteVoucherAndEvent(uint256 _inputIndex) public {
         setupERC20TransferVoucher(_inputIndex);
 
-        logOutput(1, encodeVoucher(address(erc20Token), erc20TransferPayload));
+        logVoucher(1, address(erc20Token), erc20TransferPayload);
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(erc20Token.balanceOf(address(dapp)), 0);
@@ -233,7 +241,7 @@ contract CartesiDAppTest is TestBase {
     function testRevertsEpochHash(uint256 _inputIndex) public {
         setupERC20TransferVoucher(_inputIndex);
 
-        proof.outputsEpochRootHash = bytes32(uint256(0xdeadbeef));
+        proof.vouchersEpochRootHash = bytes32(uint256(0xdeadbeef));
 
         vm.expectRevert("incorrect epochHash");
         dapp.executeVoucher(
@@ -275,7 +283,7 @@ contract CartesiDAppTest is TestBase {
     function setupERC20TransferVoucher(uint256 _inputIndex) internal {
         dapp = deployDAppDeterministically();
         erc20Token = deployERC20Deterministically();
-        registerProof(_inputIndex, 1, LibOutputProof1.getOutputProof());
+        registerProof(_inputIndex, 1, LibOutputProof1.getVoucherProof());
     }
 
     // test ether transfer
@@ -289,9 +297,9 @@ contract CartesiDAppTest is TestBase {
             transferAmount
         );
 
-        logOutput(2, encodeVoucher(address(dapp), withdrawEtherPayload));
+        logVoucher(2, address(dapp), withdrawEtherPayload);
 
-        registerProof(_inputIndex, 2, LibOutputProof2.getOutputProof());
+        registerProof(_inputIndex, 2, LibOutputProof2.getVoucherProof());
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(address(dapp).balance, 0);
@@ -414,12 +422,9 @@ contract CartesiDAppTest is TestBase {
             tokenId
         );
 
-        logOutput(
-            3,
-            encodeVoucher(address(erc721Token), safeTransferFromPayload)
-        );
+        logVoucher(3, address(erc721Token), safeTransferFromPayload);
 
-        registerProof(_inputIndex, 3, LibOutputProof3.getOutputProof());
+        registerProof(_inputIndex, 3, LibOutputProof3.getVoucherProof());
 
         // not able to execute voucher because dapp doesn't have the nft
         assertEq(erc721Token.ownerOf(tokenId), tokenOwner);
@@ -524,7 +529,8 @@ contract CartesiDAppTest is TestBase {
         // calculate epoch hash from proof
         bytes32 epochHash = keccak256(
             abi.encodePacked(
-                _proof.outputsEpochRootHash,
+                _proof.vouchersEpochRootHash,
+                _proof.noticesEpochRootHash,
                 _proof.machineStateHash
             )
         );
@@ -566,23 +572,5 @@ contract CartesiDAppTest is TestBase {
     {
         vm.prank(tokenOwner);
         return new SimpleERC721Receiver{salt: salt}();
-    }
-
-    // output encoding
-
-    function encodeNotice(bytes memory payload)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        return abi.encodePacked(OutputEncoding.NOTICE, payload);
-    }
-
-    function encodeVoucher(address destination, bytes memory payload)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        return abi.encodePacked(OutputEncoding.VOUCHER, destination, payload);
     }
 }
