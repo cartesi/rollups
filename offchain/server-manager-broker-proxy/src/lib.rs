@@ -20,6 +20,7 @@ use server_manager::ServerManagerFacade;
 
 mod broker;
 pub mod config;
+mod grpc;
 mod http_health;
 mod server_manager;
 

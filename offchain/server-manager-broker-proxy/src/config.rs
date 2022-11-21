@@ -16,7 +16,9 @@ use std::time::Duration;
 
 use crate::broker::config::{BrokerCLIConfig, BrokerConfig, BrokerConfigError};
 use crate::http_health::config::HealthCheckConfig;
-use crate::server_manager::config::ServerManagerConfig;
+use crate::server_manager::config::{
+    ServerManagerCLIConfig, ServerManagerConfig,
+};
 
 #[derive(Debug)]
 pub struct Config {
@@ -37,10 +39,12 @@ impl Config {
         let broker_config =
             BrokerConfig::parse_from_cli(cli_config.broker_cli_config)
                 .context(BrokerConfigSnafu)?;
+        let server_manager_config =
+            ServerManagerConfig::parse_from_cli(cli_config.sm_cli_config);
         let backoff_max_elapsed_duration =
             Duration::from_millis(cli_config.backoff_max_elapsed_duration);
         let proxy_config = ProxyConfig {
-            server_manager_config: cli_config.server_manager_config,
+            server_manager_config,
             broker_config,
             backoff_max_elapsed_duration,
         };
@@ -60,7 +64,7 @@ pub enum ConfigError {
 #[derive(Parser, Debug)]
 struct CLIConfig {
     #[command(flatten)]
-    server_manager_config: ServerManagerConfig,
+    sm_cli_config: ServerManagerCLIConfig,
 
     #[command(flatten)]
     broker_cli_config: BrokerCLIConfig,

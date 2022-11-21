@@ -17,14 +17,12 @@ use uuid::Uuid;
 
 use rollups_events::rollups_inputs::InputMetadata;
 
-use cartesi_machine::{
-    ConcurrencyConfig, DhdRuntimeConfig, MachineRuntimeConfig, Void,
-};
-use cartesi_server_manager::server_manager_client::ServerManagerClient;
-use cartesi_server_manager::{
-    Address, AdvanceStateRequest, CyclesConfig, DeadlineConfig,
-    EndSessionRequest, FinishEpochRequest, GetEpochStatusRequest,
-    InputMetadata as MMInputMetadata, StartSessionRequest,
+use crate::grpc::cartesi_machine::Void;
+use crate::grpc::cartesi_server_manager::server_manager_client::ServerManagerClient;
+use crate::grpc::cartesi_server_manager::{
+    Address, AdvanceStateRequest, EndSessionRequest, FinishEpochRequest,
+    GetEpochStatusRequest, InputMetadata as MMInputMetadata,
+    StartSessionRequest,
 };
 
 use claim::compute_claim_hash;
@@ -32,15 +30,6 @@ use config::ServerManagerConfig;
 
 mod claim;
 pub mod config;
-mod versioning {
-    tonic::include_proto!("versioning");
-}
-mod cartesi_machine {
-    tonic::include_proto!("cartesi_machine");
-}
-mod cartesi_server_manager {
-    tonic::include_proto!("cartesi_server_manager");
-}
 
 /// Call the grpc method passing an unique request-id and with retry
 macro_rules! grpc_call {
@@ -148,43 +137,14 @@ impl ServerManagerFacade {
 
         grpc_call!(self, start_session, {
             let machine_directory = "/opt/cartesi/share/dapp-bin".to_owned();
-
-            let runtime = Some(MachineRuntimeConfig {
-                dhd: Some(DhdRuntimeConfig {
-                    source_address: "".to_owned(),
-                }),
-                concurrency: Some(ConcurrencyConfig {
-                    update_merkle_tree: 0,
-                }),
-            });
-
             let active_epoch_index = 0;
-
-            let server_deadline = Some(DeadlineConfig {
-                checkin: 1000 * 5,
-                advance_state: 1000 * 60 * 3,
-                advance_state_increment: 1000 * 10,
-                inspect_state: 1000 * 60 * 3,
-                inspect_state_increment: 1000 * 10,
-                machine: 1000 * 60 * 5,
-                store: 1000 * 60 * 3,
-                fast: 1000 * 5,
-            });
-
-            let server_cycles = Some(CyclesConfig {
-                max_advance_state: u64::MAX >> 2,
-                advance_state_increment: 1 << 22,
-                max_inspect_state: u64::MAX >> 2,
-                inspect_state_increment: 1 << 22,
-            });
-
             StartSessionRequest {
                 session_id: self.config.session_id.clone(),
                 machine_directory,
-                runtime,
+                runtime: Some(self.config.runtime_config.clone()),
                 active_epoch_index,
-                server_cycles,
-                server_deadline,
+                server_cycles: Some(self.config.cycles_config.clone()),
+                server_deadline: Some(self.config.deadline_config.clone()),
             }
         })?;
 

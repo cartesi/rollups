@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the rollups-events crate that works as an abstraction to producing and consuming events.
 - Added the server-manager-broker-proxy service to consume events from the broker and manage the server-manager.
 - Added request id to server-manager calls
+- Added server-manager session config as CLI arguments
 
 ### Changed
 
