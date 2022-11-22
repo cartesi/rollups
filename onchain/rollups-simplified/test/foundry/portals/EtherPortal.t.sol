@@ -51,7 +51,7 @@ contract EtherPortalTest is Test {
     address alice;
     address dapp;
 
-    event InputAdded(address indexed dapp, address sender, bytes input);
+    event InputAdded(address indexed dapp, uint256 indexed inputIndex, address sender, bytes input);
     event WatchedFallback(
         address sender,
         uint256 value,
@@ -88,7 +88,7 @@ contract EtherPortalTest is Test {
 
         // Expect InputAdded to be emitted with the right arguments
         vm.expectEmit(true, false, false, true, address(inputBox));
-        emit InputAdded(dapp, address(etherPortal), input);
+        emit InputAdded(dapp, 0, address(etherPortal), input);
 
         // Deposit Ether in the DApp via the portal
         etherPortal.depositEther{value: value}(dapp, data);

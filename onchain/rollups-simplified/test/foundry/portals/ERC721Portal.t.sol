@@ -93,7 +93,7 @@ contract ERC721PortalTest is Test {
     address alice;
     address dapp;
 
-    event InputAdded(address indexed dapp, address sender, bytes input);
+    event InputAdded(address indexed dapp, uint256 indexed inputIndex, address sender, bytes input);
     event Transfer(
         address indexed from,
         address indexed to,
@@ -152,7 +152,7 @@ contract ERC721PortalTest is Test {
 
         // Expect InputAdded to be emitted with the right arguments
         vm.expectEmit(true, false, false, true, address(inputBox));
-        emit InputAdded(dapp, address(erc721Portal), input);
+        emit InputAdded(dapp, 0, address(erc721Portal), input);
 
         // Transfer ERC-721 tokens to the DApp via the portal
         erc721Portal.depositERC721Token(token, dapp, tokenId, L1data, L2data);
@@ -200,7 +200,7 @@ contract ERC721PortalTest is Test {
 
         // Expect InputAdded to be emitted with the right arguments
         vm.expectEmit(true, false, false, true, address(inputBox));
-        emit InputAdded(dapp, address(erc721Portal), input);
+        emit InputAdded(dapp, 0, address(erc721Portal), input);
 
         // Transfer ERC-721 tokens to the DApp via the portal
         erc721Portal.depositERC721Token(token, dapp, tokenId, L1data, L2data);
@@ -307,7 +307,7 @@ contract ERC721PortalTest is Test {
 
         // Expect InputAdded to be emitted with the right arguments
         vm.expectEmit(true, false, false, true, address(inputBox));
-        emit InputAdded(dapp, address(erc721Portal), input);
+        emit InputAdded(dapp, 0, address(erc721Portal), input);
 
         // Deposit token in DApp's account
         erc721Portal.depositERC721Token(token, dapp, tokenId, L1data, L2data);

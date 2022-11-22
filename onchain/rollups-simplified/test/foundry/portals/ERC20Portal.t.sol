@@ -99,7 +99,7 @@ contract ERC20PortalTest is Test {
     address alice;
     address dapp;
 
-    event InputAdded(address indexed dapp, address sender, bytes input);
+    event InputAdded(address indexed dapp, uint256 indexed inputIndex, address sender, bytes input);
     event WatchedTransfer(
         address from,
         address to,
@@ -145,7 +145,7 @@ contract ERC20PortalTest is Test {
 
         // Expect InputAdded to be emitted with the right arguments
         vm.expectEmit(true, false, false, true, address(inputBox));
-        emit InputAdded(dapp, address(erc20Portal), input);
+        emit InputAdded(dapp, 0, address(erc20Portal), input);
 
         // Transfer ERC-20 tokens to the DApp via the portal
         erc20Portal.depositERC20Tokens(token, dapp, amount, data);
@@ -182,7 +182,7 @@ contract ERC20PortalTest is Test {
 
         // Expect InputAdded to be emitted with the right arguments
         vm.expectEmit(true, false, false, true, address(inputBox));
-        emit InputAdded(dapp, address(erc20Portal), input);
+        emit InputAdded(dapp, 0, address(erc20Portal), input);
 
         // Transfer ERC-20 tokens to the DApp via the portal
         erc20Portal.depositERC20Tokens(token, dapp, amount, data);
