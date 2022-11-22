@@ -25,20 +25,21 @@ contract InputBox is IInputBox {
         returns (bytes32)
     {
         bytes32[] storage inputBox = inputBoxes[_dapp];
+        uint256 inputIndex = inputBox.length;
 
         bytes32 inputHash = LibInput.computeInputHash(
             msg.sender,
             block.number,
             block.timestamp,
             _input,
-            inputBox.length
+            inputIndex
         );
 
         // add input to correct inbox
         inputBox.push(inputHash);
 
         // block.number and timestamp can be retrieved by the event metadata itself
-        emit InputAdded(_dapp, msg.sender, _input);
+        emit InputAdded(_dapp, inputIndex, msg.sender, _input);
 
         return inputHash;
     }

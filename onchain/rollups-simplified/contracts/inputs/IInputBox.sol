@@ -16,9 +16,10 @@ pragma solidity ^0.8.13;
 interface IInputBox {
     /// @notice Emitted when an input is added to a DApp's input box
     /// @param dapp The address of the DApp
+    /// @param inputIndex The index of the input
     /// @param sender The address that sent the input
     /// @param input The contents of the input
-    event InputAdded(address indexed dapp, address sender, bytes input);
+    event InputAdded(address indexed dapp, uint256 indexed inputIndex, address sender, bytes input);
 
     /// @notice Add an input to a DApp's input box
     /// @param _dapp The address of the DApp
