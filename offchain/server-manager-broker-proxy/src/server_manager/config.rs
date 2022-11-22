@@ -12,9 +12,7 @@
 
 use clap::Parser;
 
-use crate::grpc::cartesi_machine::{
-    ConcurrencyConfig, DhdRuntimeConfig, MachineRuntimeConfig,
-};
+use crate::grpc::cartesi_machine::{ConcurrencyConfig, MachineRuntimeConfig};
 use crate::grpc::cartesi_server_manager::{CyclesConfig, DeadlineConfig};
 
 #[derive(Debug)]
@@ -31,9 +29,6 @@ pub struct ServerManagerConfig {
 impl ServerManagerConfig {
     pub fn parse_from_cli(cli_config: ServerManagerCLIConfig) -> Self {
         let runtime_config = MachineRuntimeConfig {
-            dhd: Some(DhdRuntimeConfig {
-                source_address: "".to_owned(),
-            }),
             concurrency: Some(ConcurrencyConfig {
                 update_merkle_tree: cli_config
                     .sm_concurrency_update_merkle_tree,
