@@ -127,6 +127,7 @@ contract AuthorityTest is TestBase {
         authority = new Authority(_owner, _inputBox, _history);
 
         // mocking history
+        vm.assume(address(_history) != address(authority));
         vm.mockCall(
             address(_history),
             abi.encodeWithSelector(
@@ -157,6 +158,7 @@ contract AuthorityTest is TestBase {
         authority = new Authority(_owner, _inputBox, _history);
 
         // mocking history
+        vm.assume(address(_history) != address(authority));
         vm.mockCall(
             address(_history),
             abi.encodeWithSelector(IHistory.submitClaim.selector),
@@ -217,6 +219,7 @@ contract AuthorityTest is TestBase {
         authority = new Authority(_owner, _inputBox, _history);
 
         // mocking history
+        vm.assume(address(_history) != address(authority));
         vm.mockCall(
             address(_history),
             abi.encodeWithSelector(
