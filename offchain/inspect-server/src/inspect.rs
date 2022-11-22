@@ -12,6 +12,8 @@
 
 use snafu::Snafu;
 use tokio::sync::{mpsc, oneshot};
+use tonic::Request;
+use uuid::Uuid;
 
 use crate::config::Config;
 use crate::grpc::server_manager::{
@@ -99,14 +101,26 @@ async fn handle_inspect(
                 );
             }
             Ok(mut client) => {
-                log::debug!("inspect request received {:?}", request.payload);
+                let request_id = Uuid::new_v4().to_string();
                 let grpc_request = InspectStateRequest {
                     session_id: session_id.clone(),
                     query_payload: request.payload,
                 };
-                let response = client
-                    .inspect_state(grpc_request)
-                    .await
+
+                log::debug!(
+                    "calling grpc inspect_state request={:?} request_id={}",
+                    grpc_request,
+                    request_id
+                );
+                let mut grpc_request = Request::new(grpc_request);
+                grpc_request
+                    .metadata_mut()
+                    .insert("request-id", request_id.parse().unwrap());
+                let grpc_response = client.inspect_state(grpc_request).await;
+
+                log::debug!("got grpc response from inspect_state response={:?} request_id={}", grpc_response, request_id);
+
+                let response = grpc_response
                     .map(|result| result.into_inner())
                     .map_err(|e| InspectError::InspectFailed {
                         message: e.message().to_string(),

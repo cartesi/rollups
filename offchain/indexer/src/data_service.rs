@@ -37,6 +37,7 @@ use types::{
     rollups_initial_state::RollupsInitialState,
     sealed_epoch::EpochWithClaims,
 };
+use uuid::Uuid;
 
 use state_client_lib::{GrpcStateFoldClient, StateServer};
 
@@ -98,16 +99,29 @@ async fn get_epoch_status(
     session_id: &str,
     epoch_index: u64,
 ) -> Result<GetEpochStatusResponse, crate::error::Error> {
+    let request_id = Uuid::new_v4().to_string();
     let request = GetEpochStatusRequest {
         session_id: session_id.to_string(),
         epoch_index,
     };
 
-    Ok(client
-        .get_epoch_status(tonic::Request::new(request.clone()))
-        .await
-        .context(crate::error::TonicStatusError)?
-        .into_inner())
+    tracing::trace!(request_id, ?request, "calling grpc get_epoch_status");
+
+    let mut grpc_request = tonic::Request::new(request);
+    grpc_request
+        .metadata_mut()
+        .insert("request-id", request_id.parse().unwrap());
+    let response = client.get_epoch_status(grpc_request).await;
+
+    tracing::trace!(
+        request_id,
+        ?response,
+        "got grpc response from get_epoch_status"
+    );
+
+    response
+        .map(|v| v.into_inner())
+        .context(crate::error::TonicStatusError)
 }
 
 /// Get session status from server manager
@@ -115,15 +129,28 @@ async fn get_session_status(
     client: &mut ServerManagerClient<tonic::transport::Channel>,
     session_id: &str,
 ) -> Result<GetSessionStatusResponse, crate::error::Error> {
+    let request_id = Uuid::new_v4().to_string();
     let request = GetSessionStatusRequest {
         session_id: session_id.to_string(),
     };
 
-    Ok(client
-        .get_session_status(tonic::Request::new(request.clone()))
-        .await
-        .context(crate::error::TonicStatusError)?
-        .into_inner())
+    tracing::trace!(request_id, ?request, "calling grpc get_session_status");
+
+    let mut grpc_request = tonic::Request::new(request);
+    grpc_request
+        .metadata_mut()
+        .insert("request-id", request_id.parse().unwrap());
+    let response = client.get_session_status(grpc_request).await;
+
+    tracing::trace!(
+        request_id,
+        ?response,
+        "got grpc response from get_session_status"
+    );
+
+    response
+        .map(|v| v.into_inner())
+        .context(crate::error::TonicStatusError)
 }
 
 async fn process_epoch_status_response(

@@ -50,15 +50,7 @@ macro_rules! grpc_call {
                 .metadata_mut()
                 .insert("request-id", request_id.parse().unwrap());
 
-            let response = $self
-                .client
-                .clone()
-                .$method(grpc_request)
-                .await
-                .context(MethodCallSnafu {
-                    method: stringify!($method),
-                })?
-                .into_inner();
+            let response = $self.client.clone().$method(grpc_request).await;
 
             tracing::trace!(
                 request_id,
@@ -66,7 +58,14 @@ macro_rules! grpc_call {
                 ?response,
                 "got grpc response",
             );
-            Ok(response)
+
+            response
+                .map(|v| v.into_inner())
+                .context(MethodCallSnafu {
+                    method: stringify!($method),
+                    request_id,
+                })
+                .map_err(Error::transient)
         })
         .await
     };
@@ -77,9 +76,14 @@ pub enum ServerManagerError {
     #[snafu(display("failed to connect to server-manager"))]
     ConnectionError { source: tonic::transport::Error },
 
-    #[snafu(display("{} call failed", method))]
+    #[snafu(display(
+        "failed to call {} with request-id {}",
+        method,
+        request_id
+    ))]
     MethodCallError {
         method: String,
+        request_id: String,
         source: tonic::Status,
     },
 
