@@ -1,9 +1,10 @@
 [package]
 name = "types"
+license = "Apache-2.0"
 version = "0.8.0"
 edition = "2021"
 authors = [
-  "Felipe Argento <felipe.argento@cartesi.io>",
+  "Felipe Argento <felipe@cartesi.io>",
   "Gabriel Coutinho <gabriel.coutinho@cartesi.io>",
   "Roman Hodulák <roman.hodulak@cartesi.io>",
 ]
@@ -11,9 +12,14 @@ authors = [
 [dependencies]
 state-fold = { version = "0.6", registry = "cartesi" }
 state-fold-types = { version = "0.6", registry = "cartesi", features = ["ethers"] }
+contracts = { path = "../contracts" }
+
+async-trait = "0.1"
+futures = "0.3"
 
 anyhow = "1"
-async-trait = "0.1"
-contracts = { path = "../contracts" }
 im = { version = "15", features = ["serde"] }
 serde = { version = "1", features = ["rc"] }
+
+[dev-dependencies]
+serde_json = "1"

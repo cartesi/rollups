@@ -4,59 +4,24 @@ use std::fs::File;
 macro_rules! path {
     ($contract_file: expr, $contract_name: expr) => {
         match $contract_name {
-            "ERC20" => "../../onchain/rollups/abi/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json".to_owned(),
-            _ => format!("../../onchain/rollups/abi/contracts/{}.sol/{}.json", $contract_file, $contract_name),
+            "ERC20" => "../../onchain/rollups-simplified/abi/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json".to_owned(),
+            _ => format!("../../onchain/rollups-simplified/abi/contracts/{}.sol/{}.json", $contract_file, $contract_name),
         }
     };
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contracts = vec![
-        (
-            "DiamondInit",
-            "upgrade_initializers/DiamondInit",
-            "diamond_init.rs",
-        ),
-        (
-            "DiamondCutFacet",
-            "facets/DiamondCutFacet",
-            "diamond_cut_facet.rs",
-        ),
-        (
-            "DiamondLoupeFacet",
-            "facets/DiamondLoupeFacet",
-            "diamond_loupe_facet.rs",
-        ),
-        (
-            "ERC20PortalFacet",
-            "facets/ERC20PortalFacet",
-            "erc20_portal_facet.rs",
-        ),
-        (
-            "ERC721PortalFacet",
-            "facets/ERC721PortalFacet",
-            "erc721_portal_facet.rs",
-        ),
-        (
-            "EtherPortalFacet",
-            "facets/EtherPortalFacet",
-            "ether_portal_facet.rs",
-        ),
-        (
-            "FeeManagerFacet",
-            "facets/FeeManagerFacet",
-            "fee_manager_facet.rs",
-        ),
-        ("InputFacet", "facets/InputFacet", "input_facet.rs"),
-        ("OutputFacet", "facets/OutputFacet", "output_facet.rs"),
-        ("RollupsFacet", "facets/RollupsFacet", "rollups_facet.rs"),
-        (
-            "ValidatorManagerFacet",
-            "facets/ValidatorManagerFacet",
-            "validator_manager_facet.rs",
-        ),
-        ("Bank", "Bank", "bank_contract.rs"),
-        ("ERC20", "ERC20", "erc20_contract.rs"),
+        ("InputBox", "inputs/InputBox", "input_box.rs"),
+        ("Authority", "consensus/authority/Authority", "authority.rs"),
+        ("History", "history/History", "history.rs"),
+        // ("CartesiDApp", "dapp/CartesiDApp", "cartesi_dapp.rs"),
+        // (
+        //     "CartesiDAppFactory",
+        //     "dapp/CartesiDAppFactory",
+        //     "dapp_factory.rs",
+        // ),
+        // ("ERC20", "ERC20", "erc20_contract.rs"),
     ];
 
     for (contract_name, file, bindings_file_name) in contracts {

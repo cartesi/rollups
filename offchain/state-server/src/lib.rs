@@ -9,15 +9,16 @@ use state_server_lib::{
 };
 
 use anyhow::Result;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::sync::oneshot;
+use types::UserData;
 use url::Url;
 
 const MAX_RETRIES: u32 = 10;
 const INITIAL_BACKOFF: u64 = 1000;
 
 #[tracing::instrument(level = "trace")]
-pub async fn run_server<F: Foldable<UserData = ()> + 'static>(
+pub async fn run_server<F: Foldable<UserData = Mutex<UserData>> + 'static>(
     config: config::StateServerConfig,
 ) -> Result<()>
 where
@@ -68,7 +69,7 @@ fn create_env(
     config: &config::StateServerConfig,
     provider: Arc<ServerProvider>,
     block_archive: Arc<block_history::BlockArchive<ServerProvider>>,
-) -> Result<Arc<StateFoldEnvironment<ServerProvider, ()>>> {
+) -> Result<Arc<StateFoldEnvironment<ServerProvider, Mutex<UserData>>>> {
     let env = StateFoldEnvironment::new(
         provider,
         Some(block_archive),
@@ -77,7 +78,7 @@ fn create_env(
         config.state_fold.query_limit_error_codes.clone(),
         config.state_fold.concurrent_events_fetch,
         10000,
-        (),
+        Mutex::new(UserData::default()),
     );
 
     Ok(Arc::new(env))

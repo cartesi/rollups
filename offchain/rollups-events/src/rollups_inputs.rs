@@ -54,6 +54,9 @@ pub struct RollupsInput {
     /// Epoch index
     pub epoch_index: u64,
 
+    /// Number of sent inputs for all epochs
+    pub inputs_sent_count: u64,
+
     /// Data that depends on the kind of event
     pub data: RollupsData,
 }

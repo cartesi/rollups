@@ -1,7 +1,9 @@
 use crate::{
     config::DispatcherConfig,
-    machine::rollups_broker::BrokerFacade,
-    rollups_dispatcher::RollupsDispatcher,
+    drivers::Context,
+    machine::{
+        rollups_broker::BrokerFacade, BrokerReceive, BrokerSend, BrokerStatus,
+    },
     tx_sender::{BulletproofTxSender, TxSender},
 };
 
@@ -26,10 +28,7 @@ use tx_manager::{
     TransactionManager,
 };
 
-use types::{
-    fee_manager::FeeIncentiveStrategy, rollups::RollupsState,
-    rollups_initial_state::RollupsInitialState,
-};
+use types::foldables::authority::{RollupsInitialState, RollupsState};
 
 use anyhow::{anyhow, Result};
 use std::sync::Arc;
@@ -84,7 +83,7 @@ pub async fn create_block_subscription(
 
 pub async fn create_tx_sender(
     config: &TxManagerConfig,
-    dapp_contract_address: Address,
+    consensus_address: Address,
     priority: Priority,
 ) -> Result<impl TxSender> {
     let tx_manager = {
@@ -138,25 +137,28 @@ pub async fn create_tx_sender(
         config.default_confirmations,
         priority,
         config.wallet.address(),
-        dapp_contract_address,
+        consensus_address,
     ))
 }
 
-pub async fn create_dispatcher(
+pub async fn create_broker(
     config: &DispatcherConfig,
-    sender: Address,
-) -> Result<RollupsDispatcher<BrokerFacade>> {
-    let broker = BrokerFacade::new(config.broker_config.clone()).await?;
+) -> Result<impl BrokerStatus + BrokerSend + BrokerReceive> {
+    Ok(BrokerFacade::new(config.broker_config.clone()).await?)
+}
 
-    let fee_incentive_strategy = FeeIncentiveStrategy {
-        minimum_required_fee: config.minimum_required_fee,
-        num_buffer_epochs: config.num_buffer_epochs,
-        num_claims_trigger_redeem: config.num_claims_trigger_redeem,
-    };
+pub async fn create_context(
+    config: &DispatcherConfig,
+    block_server: &impl BlockServer,
+    broker: &impl BrokerStatus,
+) -> Result<Context> {
+    let genesis_timestamp: u64 = block_server
+        .query_block(config.dapp_deployment.deploy_block_hash)
+        .await?
+        .timestamp
+        .as_u64();
+    let epoch_length = config.epoch_duration;
+    let context = Context::new(genesis_timestamp, epoch_length, broker).await?;
 
-    Ok(RollupsDispatcher::new(
-        broker,
-        fee_incentive_strategy,
-        sender,
-    ))
+    Ok(context)
 }

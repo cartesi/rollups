@@ -1,5 +1,7 @@
 use anyhow::Result;
 
+// NOTE: doesn't support History upgradability.
+// NOTE: doesn't support changing epoch_duration in the middle of things.
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();

@@ -1,43 +1,48 @@
 pub mod config;
 pub mod rollups_broker;
 
-use state_fold_types::ethabi::ethereum_types::{H256, U256};
-use types::input::Input;
+use types::foldables::input_box::Input;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use im::Vector;
-use std::sync::Arc;
 
 #[derive(Debug)]
-pub struct EpochStatus {
-    pub epoch_number: U256,
-    pub processed_input_count: usize,
-    pub pending_input_count: usize,
-    pub is_active: bool,
+pub struct RollupStatus {
+    pub inputs_sent_count: u64,
+    pub last_event_is_finish_epoch: bool,
 }
 
-// TODO: what happens with skipped inputs?
+impl Default for RollupStatus {
+    fn default() -> Self {
+        RollupStatus {
+            inputs_sent_count: 0,
+            last_event_is_finish_epoch: false,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct RollupClaim {
+    pub hash: [u8; 32],
+    pub number: u64,
+}
+
 #[async_trait]
-pub trait MachineInterface: std::fmt::Debug {
-    async fn get_current_epoch_status(&self) -> Result<EpochStatus>;
+pub trait BrokerStatus: std::fmt::Debug {
+    async fn status(&self) -> Result<RollupStatus>;
+}
 
-    async fn enqueue_inputs(
+#[async_trait]
+pub trait BrokerSend: std::fmt::Debug {
+    async fn enqueue_input(
         &self,
-        epoch_number: U256,
-        first_input_index: U256,
-        inputs: Vector<Arc<Input>>,
+        input_index: u64,
+        input: &Input,
     ) -> Result<()>;
+    async fn finish_epoch(&self, inputs_sent_count: u64) -> Result<()>;
+}
 
-    /// Can only be called if all inputs of `epoch_number` have been processed.
-    /// That is, `pending_input_count` is zero, and `processed_input_count`
-    /// equals the totality of the epoch's input.
-    async fn finish_epoch(
-        &self,
-        epoch_number: U256,
-        input_count: U256,
-    ) -> Result<()>;
-
-    /// Should only be called after `finish_epoch`.
-    async fn get_epoch_claim(&self, epoch_number: U256) -> Result<H256>;
+#[async_trait]
+pub trait BrokerReceive: std::fmt::Debug {
+    async fn next_claim(&self) -> Result<Option<RollupClaim>>;
 }

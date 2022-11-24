@@ -13,24 +13,6 @@ authors = [
 name = "rollups_state_server"
 path = "src/rollups_state_server.rs"
 
-[[bin]]
-name = "input_state_server"
-path = "src/input_state_server.rs"
-
-[[bin]]
-name = "output_state_server"
-path = "src/output_state_server.rs"
-
-[[bin]]
-name = "fee_manager_state_server"
-path = "src/fee_manager_state_server.rs"
-
-[[bin]]
-name = "validator_manager_state_server"
-path = "src/validator_manager_state_server.rs"
-
-
-
 [dependencies]
 block-history = { version = "0.6", registry = "cartesi" }
 state-fold = { version = "0.6", registry = "cartesi" }
