@@ -84,7 +84,7 @@ ENTRYPOINT ["rollups_dispatcher"]
 FROM debian:bullseye-slim AS server_manager_broker_proxy
 RUN <<EOF
 apt-get update
-DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
+DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates curl
 rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=server_manager_broker_proxy_build /usr/src/app/offchain/target/release/server-manager-broker-proxy /usr/local/bin
