@@ -4211,6 +4211,7 @@ name = "server-manager-broker-proxy"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "axum",
  "backoff",
  "clap 4.0.26",
@@ -4222,7 +4223,9 @@ dependencies = [
  "serde_json",
  "sha3",
  "snafu 0.7.3",
+ "tempfile",
  "test-log",
+ "testcontainers",
  "tokio",
  "tonic 0.8.2",
  "tonic-build 0.8.2",

@@ -42,7 +42,7 @@ impl BrokerStream for RollupsInputsStream {
 }
 
 /// Cartesi Rollups event
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct RollupsInput {
     /// Id of the parent of the event
     /// This field must be supplied by the producer of the event.
@@ -59,7 +59,7 @@ pub struct RollupsInput {
 }
 
 /// Rollups data enumeration
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum RollupsData {
     /// Input that advances the Cartesi Rollups epoch
     AdvanceStateInput {
@@ -75,7 +75,7 @@ pub enum RollupsData {
     FinishEpoch {},
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct InputMetadata {
     /// Address of the message sender
     #[serde(with = "base64_array")]

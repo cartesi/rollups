@@ -12,17 +12,23 @@
 
 use anyhow::{Context, Result};
 use backoff::ExponentialBackoffBuilder;
-use rollups_events::rollups_inputs::RollupsData;
 
-use broker::{BrokerFacade, INITIAL_ID};
+use broker::BrokerFacade;
 use config::{Config, ProxyConfig};
+use runner::Runner;
 use server_manager::ServerManagerFacade;
+use snapshot::{
+    config::SnapshotConfig, disabled::SnapshotDisabled,
+    fs_manager::FSSnapshotManager,
+};
 
 mod broker;
 pub mod config;
 mod grpc;
 mod http_health;
+mod runner;
 mod server_manager;
+mod snapshot;
 
 #[tracing::instrument(level = "trace", skip_all)]
 pub async fn run(config: Config) -> Result<()> {
@@ -53,89 +59,29 @@ async fn start_proxy(config: ProxyConfig) -> Result<()> {
         .with_max_elapsed_time(Some(config.backoff_max_elapsed_duration))
         .build();
 
-    let mut server_manager =
+    let server_manager =
         ServerManagerFacade::new(config.server_manager_config, backoff.clone())
             .await
             .context("failed to connect to the server-manager")?;
     tracing::trace!("connected to the server-manager");
 
-    let mut broker = BrokerFacade::new(config.broker_config, backoff)
+    let broker = BrokerFacade::new(config.broker_config, backoff)
         .await
         .context("failed to connect to the broker")?;
     tracing::trace!("connected the broker");
 
-    server_manager
-        .start_session()
-        .await
-        .context("failed to start server-manager session")?;
-    tracing::trace!("started server-manager session");
-
-    tracing::info!("starting main loop");
-    let mut last_id = INITIAL_ID.to_owned();
-    loop {
-        let event = broker
-            .consume_input(&last_id)
-            .await
-            .context("failed to consume input from broker")?;
-        tracing::info!(?event, "consumed input event");
-
-        tracing::trace!("checking whether parent id match");
-        if event.payload.parent_id != last_id {
-            return Err(anyhow::Error::msg(
-                "broker is inconsistent state; parent id doesn't match",
-            ));
+    match config.snapshot_config {
+        SnapshotConfig::FileSystem(fs_manager_config) => {
+            let snapshot_manager = FSSnapshotManager::new(fs_manager_config);
+            Runner::start(server_manager, broker, snapshot_manager)
+                .await
+                .context("error in the proxy main loop")
         }
-
-        match event.payload.data {
-            RollupsData::AdvanceStateInput {
-                input_metadata,
-                input_payload,
-                ..
-            } => {
-                server_manager
-                    .advance_state(input_metadata, input_payload)
-                    .await
-                    .context(
-                        "failed to send advance-state input to server-manager",
-                    )?;
-                tracing::info!("sent advance-state input to server-manager");
-            }
-            RollupsData::FinishEpoch { .. } => {
-                server_manager
-                    .finish_epoch(event.payload.epoch_index)
-                    .await
-                    .context("failed to finish epoch in server-manager")?;
-                tracing::info!("finished epoch in server-manager");
-
-                let claim_produced = broker
-                    .was_claim_produced(event.payload.epoch_index)
-                    .await
-                    .context("failed to get whether claim was produced")?;
-                tracing::trace!(
-                    claim_produced,
-                    "got whether claim was produced"
-                );
-
-                if !claim_produced {
-                    let claim = server_manager
-                        .get_epoch_claim(event.payload.epoch_index)
-                        .await
-                        .context(
-                            "failed to get epoch claim from server-manager",
-                        )?;
-                    tracing::trace!(
-                        claim = hex::encode(claim),
-                        "got epoch claim"
-                    );
-
-                    broker
-                        .produce_rollups_claim(event.payload.epoch_index, claim)
-                        .await
-                        .context("failed to produce claim in broker")?;
-                    tracing::info!("produced epoch claim");
-                }
-            }
+        SnapshotConfig::Disabled => {
+            let snapshot_manager = SnapshotDisabled {};
+            Runner::start(server_manager, broker, snapshot_manager)
+                .await
+                .context("error in the proxy main loop")
         }
-        last_id = event.id;
     }
 }

@@ -61,7 +61,7 @@ async fn flushall(conn: &mut impl ConnectionLike) {
         .expect("failed to flushall");
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct MockPayload {
     data: String,
 }

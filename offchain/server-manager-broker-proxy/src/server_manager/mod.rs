@@ -12,6 +12,7 @@
 
 use backoff::{future::retry, Error, ExponentialBackoff};
 use snafu::{ResultExt, Snafu};
+use std::path::Path;
 use tonic::{transport::Channel, Request};
 use uuid::Uuid;
 
@@ -133,8 +134,16 @@ impl ServerManagerFacade {
     }
 
     #[tracing::instrument(level = "trace", skip_all)]
-    pub async fn start_session(&mut self) -> Result<()> {
-        tracing::trace!("starting server-manager session");
+    pub async fn start_session(
+        &mut self,
+        machine_directory: &Path,
+        active_epoch_index: u64,
+    ) -> Result<()> {
+        tracing::trace!(
+            ?machine_directory,
+            active_epoch_index,
+            "starting server-manager session"
+        );
 
         // If session exists, delete it before creating new one
         let response = grpc_call!(self, get_status, Void {})?;
@@ -170,11 +179,9 @@ impl ServerManagerFacade {
         }
 
         grpc_call!(self, start_session, {
-            let machine_directory = "/opt/cartesi/share/dapp-bin".to_owned();
-            let active_epoch_index = 0;
             StartSessionRequest {
                 session_id: self.config.session_id.clone(),
-                machine_directory,
+                machine_directory: machine_directory.to_string_lossy().into(),
                 runtime: Some(self.config.runtime_config.clone()),
                 active_epoch_index,
                 server_cycles: Some(self.config.cycles_config.clone()),
@@ -257,6 +264,7 @@ impl ServerManagerFacade {
     pub async fn finish_epoch(
         &mut self,
         active_epoch_index: u64,
+        storage_directory: &Path,
     ) -> Result<()> {
         tracing::info!(active_epoch_index, "sending finish epoch");
 
@@ -269,9 +277,12 @@ impl ServerManagerFacade {
                 session_id: self.config.session_id.to_owned(),
                 active_epoch_index,
                 processed_input_count,
-                storage_directory: "".to_owned(),
+                storage_directory: storage_directory
+                    .to_string_lossy()
+                    .to_string(),
             }
         })?;
+
         Ok(())
     }
 

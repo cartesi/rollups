@@ -211,18 +211,20 @@ impl fmt::Debug for Broker {
 
 /// Trait that defines the type of a stream
 pub trait BrokerStream {
-    type Payload: Serialize + DeserializeOwned;
+    type Payload: Serialize + DeserializeOwned + Clone + Eq + PartialEq;
     fn key(&self) -> &str;
 }
 
 /// Event that goes through the broker
-#[derive(Debug)]
-pub struct Event<P: Serialize + DeserializeOwned> {
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct Event<P: Serialize + DeserializeOwned + Clone + Eq + PartialEq> {
     pub id: String,
     pub payload: P,
 }
 
-impl<P: Serialize + DeserializeOwned> TryFrom<StreamId> for Event<P> {
+impl<P: Serialize + DeserializeOwned + Clone + Eq + PartialEq> TryFrom<StreamId>
+    for Event<P>
+{
     type Error = BrokerError;
 
     #[tracing::instrument(level = "trace", skip_all)]

@@ -19,6 +19,9 @@ use crate::http_health::config::HealthCheckConfig;
 use crate::server_manager::config::{
     ServerManagerCLIConfig, ServerManagerConfig,
 };
+use crate::snapshot::config::{
+    SnapshotCLIConfig, SnapshotConfig, SnapshotConfigError,
+};
 
 #[derive(Debug)]
 pub struct Config {
@@ -30,6 +33,7 @@ pub struct Config {
 pub struct ProxyConfig {
     pub server_manager_config: ServerManagerConfig,
     pub broker_config: BrokerConfig,
+    pub snapshot_config: SnapshotConfig,
     pub backoff_max_elapsed_duration: Duration,
 }
 
@@ -41,11 +45,15 @@ impl Config {
                 .context(BrokerConfigSnafu)?;
         let server_manager_config =
             ServerManagerConfig::parse_from_cli(cli_config.sm_cli_config);
+        let snapshot_config =
+            SnapshotConfig::parse_from_cli(cli_config.snapshot_cli_config)
+                .context(SnapshotConfigSnafu)?;
         let backoff_max_elapsed_duration =
             Duration::from_millis(cli_config.backoff_max_elapsed_duration);
         let proxy_config = ProxyConfig {
             server_manager_config,
             broker_config,
+            snapshot_config,
             backoff_max_elapsed_duration,
         };
         Ok(Self {
@@ -59,6 +67,9 @@ impl Config {
 pub enum ConfigError {
     #[snafu(display("error in broker configuration"))]
     BrokerConfigError { source: BrokerConfigError },
+
+    #[snafu(display("error in snapshot configuration"))]
+    SnapshotConfigError { source: SnapshotConfigError },
 }
 
 #[derive(Parser, Debug)]
@@ -68,6 +79,9 @@ struct CLIConfig {
 
     #[command(flatten)]
     broker_cli_config: BrokerCLIConfig,
+
+    #[command(flatten)]
+    snapshot_cli_config: SnapshotCLIConfig,
 
     #[command(flatten)]
     health_check_config: HealthCheckConfig,

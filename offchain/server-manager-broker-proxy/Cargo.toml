@@ -12,6 +12,7 @@ path = "src/main.rs"
 rollups-events = { path = "../rollups-events" }
 
 anyhow = "1.0"
+async-trait = "0.1"
 axum = "0.5"
 backoff = { version = "0.4", features = ["tokio"] }
 clap = { version = "4.0", features = ["derive", "env"] }
@@ -32,4 +33,6 @@ tonic-build = "0.8"
 
 [dev-dependencies]
 env_logger = "0.9"
+tempfile = "3.3"
+testcontainers = "0.14"
 test-log = { version = "0.2", features = ["trace"] }

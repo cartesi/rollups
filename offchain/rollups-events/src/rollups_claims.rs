@@ -42,7 +42,7 @@ impl BrokerStream for RollupsClaimsStream {
 }
 
 /// Event generated when the Cartesi Rollups epoch finishes
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct RollupsClaim {
     /// Epoch index
     pub epoch_index: u64,
