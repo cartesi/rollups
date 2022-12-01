@@ -51,7 +51,12 @@ contract EtherPortalTest is Test {
     address alice;
     address dapp;
 
-    event InputAdded(address indexed dapp, uint256 indexed inputIndex, address sender, bytes input);
+    event InputAdded(
+        address indexed dapp,
+        uint256 indexed inputIndex,
+        address sender,
+        bytes input
+    );
     event WatchedFallback(
         address sender,
         uint256 value,

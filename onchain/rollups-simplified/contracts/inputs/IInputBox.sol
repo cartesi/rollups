@@ -19,7 +19,12 @@ interface IInputBox {
     /// @param inputIndex The index of the input
     /// @param sender The address that sent the input
     /// @param input The contents of the input
-    event InputAdded(address indexed dapp, uint256 indexed inputIndex, address sender, bytes input);
+    event InputAdded(
+        address indexed dapp,
+        uint256 indexed inputIndex,
+        address sender,
+        bytes input
+    );
 
     /// @notice Add an input to a DApp's input box
     /// @param _dapp The address of the DApp

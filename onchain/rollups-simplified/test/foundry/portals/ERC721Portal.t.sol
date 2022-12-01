@@ -93,7 +93,12 @@ contract ERC721PortalTest is Test {
     address alice;
     address dapp;
 
-    event InputAdded(address indexed dapp, uint256 indexed inputIndex, address sender, bytes input);
+    event InputAdded(
+        address indexed dapp,
+        uint256 indexed inputIndex,
+        address sender,
+        bytes input
+    );
     event Transfer(
         address indexed from,
         address indexed to,

@@ -24,7 +24,12 @@ contract InputBoxTest is Test {
 
     InputBox inputBox;
 
-    event InputAdded(address indexed dapp, uint256 indexed inputIndex, address sender, bytes input);
+    event InputAdded(
+        address indexed dapp,
+        uint256 indexed inputIndex,
+        address sender,
+        bytes input
+    );
 
     function setUp() public {
         inputBox = new InputBox();

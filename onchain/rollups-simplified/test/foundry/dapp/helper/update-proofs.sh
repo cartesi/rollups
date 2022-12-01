@@ -57,6 +57,15 @@ fi
 echo2 $CYAN "Updating proofs..."
 echo
 
+echo2 $GREEN "0. Running yarn and prettier..."
+echo
+
+yarn
+echo
+
+yarn prettier --write
+echo
+
 echo2 $GREEN "1. Running forge tests..."
 echo
 
