@@ -57,6 +57,12 @@ const config: HardhatUserConfig = {
         polygon_mumbai: infuraNetwork("polygon-mumbai", 80001),
         arbitrum_goerli: infuraNetwork("arbitrum-goerli", 421613),
         optimism_goerli: infuraNetwork("optimism-goerli", 420),
+        gnosis_chiado: {
+            url: "https://rpc.chiadochain.net",
+            chainId: 10200,
+            gasPrice: 1000000000,
+            accounts: mnemonic ? { mnemonic } : undefined,
+        },
     },
     solidity: {
         version: "0.8.13",
@@ -114,6 +120,10 @@ const config: HardhatUserConfig = {
             optimism_goerli: [
                 ppath("@cartesi/util", "/deployments/optimism_goerli"),
                 ppath("@cartesi/token", "/deployments/optimism_goerli"),
+            ],
+            gnosis_chiado: [
+                ppath("@cartesi/util", "/deployments/gnosis_chiado"),
+                ppath("@cartesi/token", "/deployments/gnosis_chiado"),
             ],
         },
     },

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.1] 2022-12-02
 
+### Added
+
+- Support of gnosis chiado testnet
+
 ### Changed
 
 - Fixed epoch finalization when running rollups in host mode
@@ -124,6 +128,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Specific ERC-20 Portal
 - Deprecated mock contracts
 
+[0.8.1]: https://github.com/cartesi/rollups/releases/tag/v0.8.1
+[0.8.0]: https://github.com/cartesi/rollups/releases/tag/v0.8.0
 [0.7.0]: https://github.com/cartesi/rollups/releases/tag/v0.7.0
 [0.6.1]: https://github.com/cartesi/rollups/releases/tag/v0.6.1
 [0.6.0]: https://github.com/cartesi/rollups/releases/tag/v0.6.0

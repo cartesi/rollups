@@ -26,6 +26,7 @@ import goerli from "@cartesi/rollups/export/abi/goerli.json";
 import polygon_mumbai from "@cartesi/rollups/export/abi/polygon_mumbai.json";
 import arbitrum_goerli from "@cartesi/rollups/export/abi/arbitrum_goerli.json";
 import optimism_goerli from "@cartesi/rollups/export/abi/optimism_goerli.json";
+import gnosis_chiado from "@cartesi/rollups/export/abi/gnosis_chiado.json";
 
 type DeploymentContract = {
     address: string;
@@ -43,6 +44,7 @@ const deployments: Record<number, Deployment> = {
     80001: polygon_mumbai,
     421613: arbitrum_goerli,
     420: optimism_goerli,
+    10200: gnosis_chiado,
 };
 
 interface RollupsContracts {

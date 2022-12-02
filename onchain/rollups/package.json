@@ -1,6 +1,6 @@
 {
     "name": "@cartesi/rollups",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "scripts": {
         "build": "run-s compile export",
         "clean:ignored": "rimraf artifacts cache coverage deployments/localhost dist generated-src src/types/*",
@@ -16,6 +16,7 @@
         "deploy:polygon_mumbai": "hardhat deploy --network polygon_mumbai --export export/abi/polygon_mumbai.json",
         "deploy:arbitrum_goerli": "hardhat deploy --network arbitrum_goerli --export export/abi/arbitrum_goerli.json",
         "deploy:optimism_goerli": "hardhat deploy --network optimism_goerli --export export/abi/optimism_goerli.json",
+        "deploy:gnosis_chiado": "hardhat deploy --network gnosis_chiado --export export/abi/gnosis_chiado.json",
         "export": "hardhat export-artifacts export/artifacts --hide-sources --including-empty-bytecode --including-no-public-functions",
         "info": "npm-scripts-info",
         "prepack": "run-s build tsc:prod copy-dts",
@@ -28,7 +29,7 @@
         "tsc:prod": "tsc -p tsconfig.prod.json"
     },
     "dependencies": {
-        "@cartesi/token": "^1.7.1",
+        "@cartesi/token": "^1.8.0",
         "@cartesi/util": "^5.0.1",
         "@openzeppelin/contracts": "^4.7.1"
     },
