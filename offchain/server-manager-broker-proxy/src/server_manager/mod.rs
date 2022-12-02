@@ -25,7 +25,7 @@ use crate::grpc::cartesi_server_manager::{
     StartSessionRequest,
 };
 
-use claim::compute_claim_hash;
+use claim::{compute_claim_hash, CLAIM_HASH_SIZE};
 use config::ServerManagerConfig;
 
 mod claim;
@@ -259,21 +259,61 @@ impl ServerManagerFacade {
             }
         })?;
 
-        let vouchers_metadata_hash = response
+        let vouchers_metadata_hash = match response
             .most_recent_vouchers_epoch_root_hash
-            .expect("server-manager should return most_recent_vouchers_epoch_root_hash")
-            .data;
-        let notices_metadata_hash = response
+        {
+            Some(hash) => {
+                if hash.data.len() != CLAIM_HASH_SIZE {
+                    tracing::warn!(
+                        ?hash,
+                        "server-manager returned invalid most_recent_vouchers_epoch_root_hash size"
+                    );
+                }
+                hash.data
+            }
+            None => {
+                tracing::warn!("server-manager should return most_recent_vouchers_epoch_root_hash");
+                vec![0; CLAIM_HASH_SIZE]
+            }
+        };
+
+        let notices_metadata_hash = match response
             .most_recent_notices_epoch_root_hash
-            .expect("server-manager should return most_recent_notices_epoch_root_hash")
-            .data;
-        let machine_state_hash = response
-            .most_recent_machine_hash
-            .expect("server-manager should return most_recent_machine_hash")
-            .data;
-        assert_eq!(vouchers_metadata_hash.len(), 32);
-        assert_eq!(notices_metadata_hash.len(), 32);
-        assert_eq!(machine_state_hash.len(), 32);
+        {
+            Some(hash) => {
+                if hash.data.len() != CLAIM_HASH_SIZE {
+                    tracing::warn!(
+                        ?hash,
+                        "server-manager returned invalid most_recent_notices_epoch_root_hash size"
+                    );
+                }
+                hash.data
+            }
+            None => {
+                tracing::warn!("server-manager should return most_recent_notices_epoch_root_hash");
+                vec![0; CLAIM_HASH_SIZE]
+            }
+        };
+
+        let machine_state_hash = match response.most_recent_machine_hash {
+            Some(hash) => {
+                if hash.data.len() != CLAIM_HASH_SIZE {
+                    tracing::warn!(
+                        ?hash,
+                        "server-manager returned invalid most_recent_machine_hash size"
+                    );
+                }
+                hash.data
+            }
+            None => {
+                // The host-server-manager doesn't generate this hash.
+                // Hence, the code shouldn't generate a warning.
+                tracing::trace!(
+                    "server-manager did not return most_recent_machine_hash"
+                );
+                vec![0; CLAIM_HASH_SIZE]
+            }
+        };
 
         let hash = compute_claim_hash(
             &vouchers_metadata_hash,

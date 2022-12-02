@@ -12,11 +12,13 @@
 
 use sha3::{Digest, Keccak256};
 
+pub const CLAIM_HASH_SIZE: usize = 32;
+
 pub fn compute_claim_hash(
     machine_state_hash: &[u8],
     vouchers_metadata_hash: &[u8],
     notices_metadata_hash: &[u8],
-) -> [u8; 32] {
+) -> [u8; CLAIM_HASH_SIZE] {
     let mut hasher = Keccak256::new();
     hasher.update(machine_state_hash);
     hasher.update(vouchers_metadata_hash);
