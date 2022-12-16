@@ -49,11 +49,10 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             err: format!("Fail to initialize indexer config: {}", e),
         })?;
 
-    info!("Indexer configuration dapp_contract_address={} state_server_endpoint={} initial_epoch={}\n\
+    info!("Indexer configuration dapp_contract_address={} state_server_endpoint={}\n\
         interval={} server manager endpoint={} session_id={} postgres db host/port {}:{}",
-        &indexer_config.dapp_contract_address,
+        &indexer_config.dapp_deployment.dapp_address,
         &indexer_config.state_server_endpoint,
-        &indexer_config.initial_epoch,
         &indexer_config.interval,
         &indexer_config.mm_endpoint,
         &indexer_config.session_id,

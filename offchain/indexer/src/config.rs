@@ -17,15 +17,16 @@
 /// and environment variables take precedence over same parameter from file configuration
 use serde::Deserialize;
 
-use state_fold_types::ethabi::ethereum_types::{Address, U256};
-
-use std::fs::File;
-use std::io::BufReader;
-use std::str::FromStr;
+use std::{fs::File, io::BufReader, path::PathBuf};
 use tracing::{error, warn};
 
-use anyhow::{bail, Context};
+use anyhow::Context;
 use structopt::StructOpt;
+
+use types::deployment_files::{
+    dapp_deployment::DappDeployment,
+    rollups_deployment::{RollupsDeployment, RollupsDeploymentJson},
+};
 
 /// Application configuration generated from
 /// command line arguments
@@ -53,8 +54,6 @@ pub struct IndexerEnvCLIConfig {
     pub state_server_endpoint: Option<String>,
     #[structopt(long)]
     pub interval: Option<u64>,
-    #[structopt(long)]
-    pub initial_epoch: Option<u64>,
     #[structopt(long, env)]
     pub confirmations: Option<usize>,
     #[structopt(long)]
@@ -85,6 +84,24 @@ pub struct IndexerEnvCLIConfig {
     pub http_health_hostname: Option<String>,
     #[structopt(long = "--http-health-port", env = "HTTP_HEALTH_PORT")]
     pub http_health_port: Option<u16>,
+
+    /// Path to file with deployment json of dapp
+    #[structopt(
+        short,
+        long,
+        default_value = "./dapp_deployment.json",
+        parse(from_os_str)
+    )]
+    pub rd_dapp_deployment_file: PathBuf,
+
+    /// Path to file with deployment json of rollups
+    #[structopt(
+        short,
+        long,
+        default_value = "./rollups_deployment.json",
+        parse(from_os_str)
+    )]
+    pub rd_rollups_deployment_file: PathBuf,
 }
 
 /// Indexer configuration deserialized from file
@@ -94,7 +111,6 @@ pub struct IndexerFileConfig {
     pub dapp_contract_address: Option<String>,
     pub state_server_endpoint: Option<String>,
     pub interval: Option<u64>,
-    pub initial_epoch: Option<u64>,
     pub confirmations: Option<usize>,
     pub mm_endpoint: Option<String>,
     pub session_id: Option<String>,
@@ -131,15 +147,16 @@ pub struct PostgresConfig {
 /// derived from various input configuration options
 #[derive(Clone, Debug)]
 pub struct IndexerConfig {
-    pub dapp_contract_address: Address,
     pub state_server_endpoint: String,
-    pub initial_epoch: U256,
     pub confirmations: usize,
     pub interval: u64,
     pub mm_endpoint: String,
     pub session_id: String,
     pub database: PostgresConfig,
     pub health_endpoint: (String, u16),
+
+    pub dapp_deployment: DappDeployment,
+    pub rollups_deployment: RollupsDeployment,
 }
 
 const DEFAULT_CONFIRMATIONS: usize = 0;
@@ -159,52 +176,10 @@ impl IndexerConfig {
             c.indexer_config
         };
 
-        let dapp_contract_address: Address = if let Some(a) = env_cli_config
-            .dapp_contract_address
-            .or(file_config.dapp_contract_address)
-        {
-            Address::from_str(&a).context(format!(
-                "DApp contract address string ill-formed: {}",
-                a
-            ))?
-        } else {
-            let path = env_cli_config
-                .dapp_contract_address_file
-                .context("Must specify either dapp_contract_address or dapp_contract_address_file")?;
-
-            let file = File::open(path.clone())
-                .context(format!("Could not read file at path {}", path))?;
-            let reader = BufReader::new(file);
-            let json: serde_json::Value = serde_json::from_reader(reader)
-                .context("Could not parse Dapp json file")?;
-
-            let contents = match &json["address"] {
-                serde_json::Value::String(ref s) => s.clone(),
-
-                serde_json::Value::Null => {
-                    bail!("Missing dapp address field in json")
-                }
-
-                _ => bail!("Dapp address field in json is of wrong type"),
-            };
-
-            Address::from_str(contents.trim()).context(format!(
-                "DApp contract address string ill-formed: {}",
-                contents
-            ))?
-        };
-
         let state_server_endpoint: String = env_cli_config
             .state_server_endpoint
             .or(file_config.state_server_endpoint)
             .context("Must specify state server endpoint")?;
-
-        let initial_epoch: U256 = U256::from(
-            env_cli_config
-                .initial_epoch
-                .or(file_config.initial_epoch)
-                .context("Must specify initial epoch")?,
-        );
 
         let confirmations = env_cli_config
             .confirmations
@@ -307,10 +282,26 @@ impl IndexerConfig {
             .or(file_config.http_health_port)
             .unwrap_or(80);
 
+        let dapp_deployment: DappDeployment = {
+            let path = env_cli_config.rd_dapp_deployment_file;
+            let file = File::open(path).context("Dapp json read file error")?;
+            let reader = BufReader::new(file);
+            serde_json::from_reader(reader).context("Dapp json parse error")?
+        };
+
+        let rollups_deployment: RollupsDeployment = {
+            let path = env_cli_config.rd_rollups_deployment_file;
+            let file =
+                File::open(path).context("Rollups json read file error")?;
+            let reader = BufReader::new(file);
+            let deployment: RollupsDeploymentJson =
+                serde_json::from_reader(reader)
+                    .context("Rollups json parse error")?;
+            deployment.into()
+        };
+
         Ok(IndexerConfig {
-            dapp_contract_address,
             state_server_endpoint,
-            initial_epoch,
             confirmations,
             interval,
             mm_endpoint,
@@ -324,6 +315,9 @@ impl IndexerConfig {
                 postgres_migration_folder,
             },
             health_endpoint: (http_health_hostname, http_health_port),
+
+            dapp_deployment,
+            rollups_deployment,
         })
     }
 }

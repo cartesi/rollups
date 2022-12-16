@@ -13,9 +13,13 @@ use async_mutex::Mutex;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use rstest::*;
 use serial_test::serial;
-use state_fold_types::ethabi::ethereum_types::{Address, U256};
+use state_fold_types::ethabi::ethereum_types::{Address, H256};
 use std::future::Future;
 use std::sync::Arc;
+
+use types::deployment_files::{
+    dapp_deployment::DappDeployment, rollups_deployment::RollupsDeployment,
+};
 
 mod common;
 use common::{
@@ -24,7 +28,7 @@ use common::{
     POSTGRES_HOSTNAME, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER,
 };
 
-use crate::common::test_data::get_test_block_state_01;
+use crate::common::input_test_data::get_test_block_state_01;
 use indexer::data_service::testing::{
     test_process_epoch_status_response, test_process_state_response,
 };
@@ -87,8 +91,15 @@ async fn context_migrated_db() -> Context {
             session_id: "test_session_1".to_string(),
             mm_endpoint: String::new(),
             state_server_endpoint: "".to_string(),
-            dapp_contract_address: Address::default(),
-            initial_epoch: U256::from(0),
+            dapp_deployment: DappDeployment {
+                dapp_address: Address::default(),
+                deploy_block_hash: H256::zero(),
+            },
+            rollups_deployment: RollupsDeployment {
+                history_address: Address::default(),
+                authority_address: Address::default(),
+                input_box_address: Address::default(),
+            },
             confirmations: 0,
             interval: 10,
             database: PostgresConfig {
@@ -477,7 +488,12 @@ async fn test_input_processing(
         tokio::sync::mpsc::channel::<rollups_data::database::Message>(128);
     println!("Processing inputs...");
     tokio::spawn(async move {
-        test_process_state_response(state_response, &message_tx).await
+        test_process_state_response(
+            state_response,
+            &Address::default(),
+            &message_tx,
+        )
+        .await
     })
     .await
     .unwrap()
@@ -552,7 +568,12 @@ async fn test_input_retrieval_and_insertion(
         tokio::sync::mpsc::channel::<rollups_data::database::Message>(128);
     tokio::spawn(async move {
         println!("Processing inputs...");
-        test_process_state_response(state_response, &message_tx).await
+        test_process_state_response(
+            state_response,
+            &Address::default(),
+            &message_tx,
+        )
+        .await
     })
     .await
     .unwrap()

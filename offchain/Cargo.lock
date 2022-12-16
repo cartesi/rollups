@@ -628,7 +628,7 @@ checksum = "0ecd5d6f79de6456d0062492090c14a2d47fe4ad46a1fe3ffe3c533294a55079"
 dependencies = [
  "async-stream",
  "snafu 0.7.3",
- "state-fold-types 0.6.0",
+ "state-fold-types",
  "structopt",
  "tokio",
  "tokio-stream",
@@ -1147,10 +1147,10 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
 name = "contracts"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "serde_json",
- "state-fold-types 0.5.0",
+ "state-fold-types",
 ]
 
 [[package]]
@@ -1530,7 +1530,7 @@ dependencies = [
  "snafu 0.7.3",
  "state-client-lib",
  "state-fold",
- "state-fold-types 0.6.0",
+ "state-fold-types",
  "structopt",
  "tokio",
  "tokio-stream",
@@ -2596,6 +2596,7 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "hex",
+ "im",
  "prost 0.11.2",
  "rollups-data",
  "rstest",
@@ -2604,7 +2605,7 @@ dependencies = [
  "serial_test 0.5.1",
  "snafu 0.6.10",
  "state-client-lib",
- "state-fold-types 0.6.0",
+ "state-fold-types",
  "structopt",
  "tokio",
  "toml",
@@ -4617,7 +4618,7 @@ dependencies = [
  "serde",
  "serde_json",
  "snafu 0.7.3",
- "state-fold-types 0.6.0",
+ "state-fold-types",
  "state-server-common",
  "structopt",
  "tokio",
@@ -4636,26 +4637,9 @@ dependencies = [
  "block-history",
  "futures 0.3.25",
  "snafu 0.7.3",
- "state-fold-types 0.6.0",
+ "state-fold-types",
  "structopt",
  "tokio",
-]
-
-[[package]]
-name = "state-fold-types"
-version = "0.5.0"
-source = "registry+https://github.com/cartesi/crates-index"
-checksum = "3205dab4860f59a73e57ce6a2885c6f68a80e39395d8f4d3a62d66621b53d3da"
-dependencies = [
- "anyhow",
- "ethabi",
- "ethers",
- "proc-macro2",
- "quote",
- "serde",
- "serde_json",
- "snafu 0.7.3",
- "toml",
 ]
 
 [[package]]
@@ -4684,7 +4668,7 @@ dependencies = [
  "serde",
  "snafu 0.7.3",
  "state-fold",
- "state-fold-types 0.6.0",
+ "state-fold-types",
  "state-server-lib",
  "structopt",
  "tokio",
@@ -4705,7 +4689,7 @@ dependencies = [
  "serde",
  "serde_json",
  "snafu 0.7.3",
- "state-fold-types 0.6.0",
+ "state-fold-types",
  "tonic 0.8.2",
  "tonic-build 0.8.2",
 ]
@@ -4722,7 +4706,7 @@ dependencies = [
  "serde_json",
  "snafu 0.7.3",
  "state-fold",
- "state-fold-types 0.6.0",
+ "state-fold-types",
  "state-server-common",
  "structopt",
  "tokio",
@@ -5451,7 +5435,7 @@ dependencies = [
  "serde",
  "serde_json",
  "state-fold",
- "state-fold-types 0.6.0",
+ "state-fold-types",
 ]
 
 [[package]]

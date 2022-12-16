@@ -17,9 +17,6 @@ use indexer::grpc::{
         Notice, ProcessedInput, Report,
     },
 };
-use state_fold_types::{Block, BlockState};
-use std::sync::Arc;
-use types::rollups::RollupsState;
 
 #[allow(dead_code)]
 pub async fn get_test_epoch_status_01(
@@ -246,18 +243,5 @@ pub async fn get_test_epoch_status_01(
             status: CompletionStatus::Accepted as i32,
         },
         ],
-    }
-}
-
-#[allow(dead_code)]
-pub async fn get_test_block_state_01() -> BlockState<RollupsState> {
-    let block_string = String::from("{\"hash\":\"0x22de1fd918dac19eae7490ca690966b8722932c643b8c034ede81d434a5f90c1\",\"number\":\"0x26\",\"parent_hash\":\"0x62ac084852e39bebdec042062b3b011e27d972f24221f4f142f807ab37659628\",\"timestamp\":\"0x62a885ef\",\"logs_bloom\":\"0x00000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000001000000000000000000020000000000000000000800000000000000000000000044000004000000000000000000000000000000001000000800000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000\"}");
-    let block: Block = serde_json::from_str(&block_string).unwrap();
-    let rollups_state_string = String::from("{\"constants\":{\"input_duration\":\"0x15180\",\"challenge_period\":\"0x93a80\",\"contract_creation_timestamp\":\"0x62a8854c\"},\"rollups_initial_state\":{\"dapp_contract_address\":\"0xa37ae2b259d35af4abdde122ec90b204323ed304\",\"initial_epoch\":\"0x0\"},\"finalized_epochs\":{\"finalized_epochs\":[],\"rollups_initial_state\":{\"dapp_contract_address\":\"0xa37ae2b259d35af4abdde122ec90b204323ed304\",\"initial_epoch\":\"0x0\"}},\"current_epoch\":{\"inputs\":{\"inputs\":[{\"sender\":\"0xa37ae2b259d35af4abdde122ec90b204323ed304\",\"block_number\":\"0x21\",\"timestamp\":\"0x62a8854c\",\"payload\":[]},{\"sender\":\"0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266\",\"block_number\":\"0x22\",\"timestamp\":\"0x62a8855c\",\"payload\":[67,82,69,65,84,69,32,84,65,66,76,69,32,80,101,114,115,111,110,115,32,40,110,97,109,101,32,116,101,120,116,44,32,97,103,101,32,105,110,116,41]},{\"sender\":\"0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266\",\"block_number\":\"0x23\",\"timestamp\":\"0x62a88568\",\"payload\":[73,78,83,69,82,84,32,73,78,84,79,32,80,101,114,115,111,110,115,32,86,65,76,85,69,83,32,40,39,80,101,116,101,114,39,44,32,51,50,41]},{\"sender\":\"0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266\",\"block_number\":\"0x24\",\"timestamp\":\"0x62a88572\",\"payload\":[83,69,76,69,67,84,32,42,32,70,82,79,77,32,80,101,114,115,111,110,115]},{\"sender\":\"0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266\",\"block_number\":\"0x25\",\"timestamp\":\"0x62a885d3\",\"payload\":[73,78,83,69,82,84,32,73,78,84,79,32,80,101,114,115,111,110,115,32,86,65,76,85,69,83,32,40,39,77,97,106,97,39,44,32,51,52,41]},{\"sender\":\"0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266\",\"block_number\":\"0x26\",\"timestamp\":\"0x62a885ef\",\"payload\":[73,78,83,69,82,84,32,73,78,84,79,32,80,101,114,115,111,110,115,32,86,65,76,85,69,83,32,40,39,86,105,115,110,106,97,39,44,32,51,53,41]}],\"epoch_initial_state\":{\"dapp_contract_address\":\"0xa37ae2b259d35af4abdde122ec90b204323ed304\",\"epoch_number\":\"0x0\"}},\"epoch_initial_state\":{\"dapp_contract_address\":\"0xa37ae2b259d35af4abdde122ec90b204323ed304\",\"epoch_number\":\"0x0\"}},\"current_phase\":{\"InputAccumulation\":{}},\"output_state\":{\"dapp_contract_address\":\"0xa37ae2b259d35af4abdde122ec90b204323ed304\",\"vouchers\":{}},\"validator_manager_state\":{\"num_claims\":[null,null,null,null,null,null,null,null],\"claiming\":[],\"validators_removed\":[],\"num_finalized_epochs\":\"0x0\",\"dapp_contract_address\":\"0xa37ae2b259d35af4abdde122ec90b204323ed304\"},\"fee_manager_state\":{\"dapp_contract_address\":\"0xa37ae2b259d35af4abdde122ec90b204323ed304\",\"bank_address\":\"0xe6e340d132b5f46d1e472debcd681b2abc16e57e\",\"fee_per_claim\":\"0x8ac7230489e80000\",\"num_redeemed\":[null,null,null,null,null,null,null,null],\"bank_balance\":\"0x0\",\"uncommitted_balance\":0}}");
-    let rollups_state: RollupsState =
-        serde_json::from_str(&rollups_state_string).unwrap();
-    BlockState::<RollupsState> {
-        block: Arc::new(block),
-        state: Arc::new(rollups_state),
     }
 }

@@ -39,6 +39,7 @@ actix-web = "4.0.1"
 rstest = "0.12.0"
 serial_test = "0.5.1"
 diesel_migrations = { version = "1.4", features = ["postgres"]}
+im = "15"
 
 [build-dependencies]
 tonic-build = "0.8"

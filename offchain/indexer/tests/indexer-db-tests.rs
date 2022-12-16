@@ -396,10 +396,11 @@ async fn test_input_insertion(
             input_index: 1,
             sender: "0x00f8a2f43c8376ccb0871305060d7b27b0554aff".to_string(),
             block_number: 111,
-            timestamp: chrono::NaiveDateTime::from_timestamp(
+            timestamp: chrono::NaiveDateTime::from_timestamp_opt(
                 chrono::offset::Utc::now().timestamp(),
                 0,
-            ),
+            )
+            .expect("valid timestamp"),
             payload: vec![0x00, 0x11, 0x22, 0x33, 0x44, 0x66, 0x77],
             tx_hash: None,
         },
@@ -409,10 +410,11 @@ async fn test_input_insertion(
             input_index: 4,
             sender: "0xaaf8a2f43c8376ccb0871305060d7b27b0554aff".to_string(),
             block_number: 114,
-            timestamp: chrono::NaiveDateTime::from_timestamp(
+            timestamp: chrono::NaiveDateTime::from_timestamp_opt(
                 chrono::offset::Utc::now().timestamp(),
                 0,
-            ),
+            )
+            .expect("valid timestamp"),
             payload: vec![0x00, 0x11, 0x22, 0x33, 0x44, 0x66, 0x77],
             tx_hash: None,
         },
@@ -422,10 +424,11 @@ async fn test_input_insertion(
             input_index: 3,
             sender: "0x00f8a2f43c8376ccb0871305060d7b27b0554acc".to_string(),
             block_number: 117,
-            timestamp: chrono::NaiveDateTime::from_timestamp(
+            timestamp: chrono::NaiveDateTime::from_timestamp_opt(
                 chrono::offset::Utc::now().timestamp(),
                 0,
-            ),
+            )
+            .expect("valid timestamp"),
             payload: vec![
                 0x00, 0x11, 0x22, 0x33, 0x44, 0x66, 0x77, 0x11, 0x22, 0x33,
                 0x44,
@@ -438,10 +441,11 @@ async fn test_input_insertion(
             input_index: 2,
             sender: "0x11f8a2f43c8376ccb0871305060d7b27b0554acc".to_string(),
             block_number: 143,
-            timestamp: chrono::NaiveDateTime::from_timestamp(
+            timestamp: chrono::NaiveDateTime::from_timestamp_opt(
                 chrono::offset::Utc::now().timestamp(),
                 0,
-            ),
+            )
+            .expect("valid timestamp"),
             payload: vec![
                 0x00, 0x11, 0x22, 0x33, 0x44, 0x66, 0x77, 0x11, 0x22, 0x33,
                 0x44, 0x11, 0x22,

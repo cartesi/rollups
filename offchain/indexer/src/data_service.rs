@@ -14,7 +14,7 @@
 /// Data service polls other Cartesi services
 /// with specified interval and collects related data about dapp
 use crate::config::{IndexerConfig, PostgresConfig};
-use crate::db_service::{get_current_db_epoch_async, EpochIndexType};
+use crate::db_service::EpochIndexType;
 use crate::error::new_indexer_tokio_err;
 use crate::http::HealthStatus;
 use async_mutex::Mutex;
@@ -22,20 +22,14 @@ use rollups_data::database::{
     DbInput, DbNotice, DbProof, DbReport, DbVoucher, Message,
 };
 use snafu::ResultExt;
-use state_fold_types::{
-    ethabi::ethereum_types::{Address, U256},
-    BlockState, QueryBlock,
-};
+use state_fold_types::{ethabi::ethereum_types::Address, QueryBlock};
 use std::ops::Add;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, trace};
-use types::{
-    accumulating_epoch::AccumulatingEpoch,
-    input::Input,
-    rollups::{PhaseState, RollupsState},
-    rollups_initial_state::RollupsInitialState,
-    sealed_epoch::EpochWithClaims,
+use types::foldables::{
+    authority::rollups::{RollupsInitialState, RollupsState},
+    input_box::Input,
 };
 use uuid::Uuid;
 
@@ -386,28 +380,30 @@ async fn poll_epoch_status(
 }
 
 async fn process_state_response(
-    block_state: BlockState<RollupsState>,
+    rollups_state: Arc<RollupsState>,
+    dapp_address: &Address,
     message_tx: &mpsc::Sender<Message>,
 ) -> Result<(), crate::error::Error> {
     async fn send_input(
         index: usize,
-        epoch_index: i32,
         input: &Input,
         message_tx: &mpsc::Sender<Message>,
     ) {
         if let Err(e) = message_tx
             .send(Message::Input(DbInput {
                 id: 0,
-                epoch_index,
+                epoch_index: 0,
                 input_index: index as i32,
-                block_number: input.block_number.as_u64() as i64,
-                sender: "0x".to_string() + hex::encode(input.sender).as_str(),
+                block_number: input.block_added.number.as_u64() as i64,
+                sender: "0x".to_string()
+                    + hex::encode(input.sender.as_ref()).as_str(),
                 tx_hash: None,
-                payload: (*input.payload).clone(),
-                timestamp: chrono::NaiveDateTime::from_timestamp(
-                    input.timestamp.low_u64() as i64,
+                payload: input.payload.clone(),
+                timestamp: chrono::NaiveDateTime::from_timestamp_opt(
+                    input.block_added.timestamp.low_u64() as i64,
                     0,
-                ),
+                )
+                .expect("expect valid timestamp in input's block_added"),
             }))
             .await
         {
@@ -418,105 +414,22 @@ async fn process_state_response(
         }
     }
 
-    // Process first inputs from finalized epochs
-    for finalized_epoch in &block_state.state.finalized_epochs.finalized_epochs
+    // Process inputs
+    if let Some(dapp_input_box) =
+        rollups_state.input_box.dapp_input_boxes.get(dapp_address)
     {
-        for (index, input) in finalized_epoch.inputs.inputs.iter().enumerate() {
-            debug!("Poll state: processing finalized input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
-                    &input.sender, finalized_epoch.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
-            send_input(
-                index,
-                finalized_epoch.epoch_number.as_u32() as i32,
-                input,
-                message_tx,
-            )
-            .await;
-        }
-    }
-
-    async fn process_accumulating_epoch(
-        message_tx: &mpsc::Sender<Message>,
-        accumulating_epoch: &Arc<AccumulatingEpoch>,
-    ) {
-        for (index, input) in
-            accumulating_epoch.inputs.inputs.iter().enumerate()
-        {
-            debug!("Poll state: processing accumulating epoch input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
-                    &input.sender, accumulating_epoch.epoch_initial_state.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
-            send_input(
-                index,
-                accumulating_epoch.epoch_initial_state.epoch_number.as_u32()
-                    as i32,
-                input,
-                message_tx,
-            )
-            .await;
-        }
-    }
-
-    async fn process_epoch_with_claims(
-        message_tx: &mpsc::Sender<Message>,
-        claimed_epoch: &Arc<EpochWithClaims>,
-    ) {
-        for (index, input) in claimed_epoch.inputs.inputs.iter().enumerate() {
-            debug!("Poll state: processing claimed epoch input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
-                    &input.sender, claimed_epoch.epoch_initial_state.epoch_number.as_u32(), &input.block_number, &input.timestamp, &input.payload );
-            send_input(
-                index,
-                claimed_epoch.epoch_initial_state.epoch_number.as_u32() as i32,
-                input,
-                message_tx,
-            )
-            .await;
-        }
-    }
-
-    // Check for current phase state, process inputs accordingly
-    debug!(
-        "Poll state: polling state server, current rollups phase is {:?}",
-        block_state.state.current_phase
-    );
-    match &*block_state.state.current_phase {
-        PhaseState::EpochSealedAwaitingFirstClaim { sealed_epoch } => {
+        for (index, input) in dapp_input_box.inputs.iter().enumerate() {
             debug!(
-                "Poll state: processing sealed epoch {} while awaiting first claim",
-                sealed_epoch.epoch_initial_state.epoch_number
+                "Poll state: processing input with sender: {} epoch {} block_number: {} timestamp: {} payload {:?}",
+                &input.sender,
+                0,
+                &input.block_added.number,
+                &input.block_added.timestamp,
+                &input.payload
             );
-            process_accumulating_epoch(message_tx, sealed_epoch).await;
-        }
-        PhaseState::InputAccumulation {} => {}
-        PhaseState::AwaitingConsensusNoConflict { claimed_epoch }
-        | PhaseState::ConsensusTimeout { claimed_epoch }
-        | PhaseState::AwaitingDispute { claimed_epoch } => {
-            debug!(
-                "Poll state: processing claimed epoch {}",
-                claimed_epoch.epoch_initial_state.epoch_number
-            );
-            process_epoch_with_claims(message_tx, claimed_epoch).await;
-        }
-        PhaseState::AwaitingConsensusAfterConflict {
-            claimed_epoch,
-            challenge_period_base_ts,
-        } => {
-            debug!(
-                "Poll state: processing claimed epoch {}, challenge period base ts {}",
-                claimed_epoch.epoch_initial_state.epoch_number, challenge_period_base_ts
-            );
-            process_epoch_with_claims(message_tx, claimed_epoch).await;
+            send_input(index, input, message_tx).await;
         }
     }
-
-    // Process current epoch
-    debug!(
-        "Poll state: processing current epoch {}",
-        block_state
-            .state
-            .current_epoch
-            .epoch_initial_state
-            .epoch_number
-    );
-    process_accumulating_epoch(message_tx, &block_state.state.current_epoch)
-        .await;
 
     Ok(())
 }
@@ -526,13 +439,14 @@ async fn process_state_response(
 async fn poll_state(
     message_tx: &mpsc::Sender<Message>,
     client: &RollupsStateServer,
-    dapp_contract_address: Address,
-    initial_epoch: i32,
+    dapp_address: &Address,
+    history_address: &Address,
+    input_box_address: &Address,
     depth: usize,
 ) -> Result<(), crate::error::Error> {
     let initial_state = RollupsInitialState {
-        dapp_contract_address: Arc::new(dapp_contract_address),
-        initial_epoch: U256::from(initial_epoch),
+        history_address: *history_address,
+        input_box_address: *input_box_address,
     };
 
     debug!(
@@ -551,7 +465,7 @@ async fn poll_state(
         state
     );
 
-    process_state_response(state, message_tx).await
+    process_state_response(state.state, dapp_address, message_tx).await
 }
 
 /// Polling task type
@@ -597,13 +511,7 @@ async fn polling_loop(
         db_config.postgres_port,
         &db_config.postgres_db
     ));
-    let mut db_pool = rollups_data::database::create_db_pool_with_retry(
-        &db_config.postgres_hostname,
-        db_config.postgres_port,
-        &db_config.postgres_user,
-        &db_config.postgres_password,
-        &db_config.postgres_db,
-    );
+
     health_status.lock().await.postgres = Ok(());
 
     // Polling tasks loop
@@ -706,67 +614,6 @@ async fn polling_loop(
                     }
                     TaskType::GetState => {
                         {
-                            // Try to get connection to database, recreate db pool if failed
-                            let conn = match db_pool.get() {
-                                Ok(conn) => {
-                                    health_status.lock().await.postgres =
-                                        Ok(());
-                                    Some(conn)
-                                }
-                                Err(e) => {
-                                    let err_message = format!("Failed to get connection from db pool, postgres://{}@{}:{}/{}, error: {}",
-                                                              &db_config.postgres_user,
-                                                              &db_config.postgres_hostname,
-                                                              config.database.postgres_port,
-                                                              &db_config.postgres_db,
-                                                              e);
-                                    error!("{}", &err_message);
-                                    health_status.lock().await.postgres =
-                                        Err(err_message);
-                                    tokio::time::sleep(
-                                        tokio::time::Duration::from_secs(1),
-                                    )
-                                    .await;
-                                    // Recreate connection pool
-                                    match rollups_data::database::create_db_pool_with_retry_async(
-                                        &db_config.postgres_hostname,
-                                        db_config.postgres_port,
-                                        &db_config.postgres_user,
-                                        &db_config.postgres_password,
-                                        &db_config.postgres_db,
-                                    ).await {
-                                        Ok(pool) => {
-                                            db_pool = pool;
-                                            health_status.lock().await.postgres = Ok(());
-                                            db_pool.get().ok()
-                                        },
-                                        Err(_e) => {
-                                            let err_message = format!("Failed to recreate db pool, postgres://{}@{}:{}/{}",
-                                                                      &db_config.postgres_user,
-                                                                      &db_config.postgres_hostname,
-                                                                      config.database.postgres_port,
-                                                                      &db_config.postgres_db);
-                                            error!("{}", &err_message);
-                                            health_status.lock().await.postgres = Err(err_message);
-                                            None
-                                        }
-                                    }
-                                }
-                            };
-                            let conn = if let Some(c) = conn {
-                                health_status.lock().await.postgres = Ok(());
-                                c
-                            } else {
-                                let err_message = format!("Unable to connect to postgres://{}@{}:{}/{} to get current epoch and poll status",
-                                                          &db_config.postgres_user,
-                                                          &db_config.postgres_hostname,
-                                                          config.database.postgres_port,
-                                                          &db_config.postgres_db);
-                                error!("{}", &err_message);
-                                health_status.lock().await.postgres =
-                                    Err(err_message);
-                                continue;
-                            };
                             let config = config.clone();
                             let message_tx = message_tx.clone();
                             tokio::spawn(async move {
@@ -800,28 +647,15 @@ async fn polling_loop(
                                             return; // return from spanned background task
                                         }
                                     };
-                                let db_epoch_index =
-                                    match get_current_db_epoch_async(
-                                        EpochIndexType::Input,
-                                        conn,
-                                    )
-                                    .await
-                                    {
-                                        Ok(value) => value,
-                                        Err(e) => {
-                                            health_status
-                                                .lock()
-                                                .await
-                                                .postgres = Err(e.to_string());
-                                            return;
-                                        }
-                                    };
 
                                 if let Err(e) = poll_state(
                                     &message_tx,
                                     &mut state_server_client,
-                                    config.dapp_contract_address,
-                                    db_epoch_index,
+                                    &config.dapp_deployment.dapp_address,
+                                    &config.rollups_deployment.history_address,
+                                    &config
+                                        .rollups_deployment
+                                        .input_box_address,
                                     config.confirmations,
                                 )
                                 .await
@@ -909,7 +743,9 @@ async fn sync_state(
     message_tx: mpsc::Sender<rollups_data::database::Message>,
     mut client: RollupsStateServer,
     postgres_config: &PostgresConfig,
-    dapp_contract_address: Address,
+    dapp_address: &Address,
+    history_address: &Address,
+    input_box_address: &Address,
     confirmations: usize,
 ) -> Result<(), crate::error::Error> {
     let conn = rollups_data::database::connect_to_database_with_retry_async(
@@ -940,8 +776,9 @@ async fn sync_state(
     if let Err(e) = poll_state(
         &message_tx,
         &mut client,
-        dapp_contract_address,
-        db_epoch_index as i32,
+        dapp_address,
+        history_address,
+        input_box_address,
         confirmations,
     )
     .await
@@ -1035,7 +872,9 @@ async fn sync_data(
                 message_tx.clone(),
                 client,
                 &config.database,
-                config.dapp_contract_address,
+                &config.dapp_deployment.dapp_address,
+                &config.rollups_deployment.history_address,
+                &config.rollups_deployment.input_box_address,
                 config.confirmations,
             )
             .await
@@ -1104,9 +943,10 @@ pub mod testing {
     }
 
     pub async fn test_process_state_response(
-        block_state: BlockState<RollupsState>,
+        rollups_state: Arc<RollupsState>,
+        dapp_address: &Address,
         message_tx: &mpsc::Sender<Message>,
     ) -> Result<(), crate::error::Error> {
-        process_state_response(block_state, message_tx).await
+        process_state_response(rollups_state, dapp_address, message_tx).await
     }
 }
