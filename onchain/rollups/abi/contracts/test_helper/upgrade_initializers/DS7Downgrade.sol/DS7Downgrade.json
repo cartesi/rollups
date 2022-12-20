@@ -1,9 +1,0 @@
-[
-  {
-    "inputs": [],
-    "name": "downgrade",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-]
