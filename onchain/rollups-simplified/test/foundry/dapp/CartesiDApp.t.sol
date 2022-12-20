@@ -13,7 +13,7 @@
 /// @title Cartesi DApp Test
 pragma solidity ^0.8.13;
 
-import {TestBase} from "../TestBase.sol";
+import {TestBase} from "../util/TestBase.sol";
 
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
@@ -24,9 +24,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-import {SimpleERC20} from "./helper/SimpleERC20.sol";
-import {SimpleERC721} from "./helper/SimpleERC721.sol";
-import {SimpleERC721Receiver} from "./helper/SimpleERC721Receiver.sol";
+import {SimpleERC20} from "../util/SimpleERC20.sol";
+import {SimpleERC721} from "../util/SimpleERC721.sol";
+import {SimpleERC721Receiver} from "../util/SimpleERC721Receiver.sol";
 
 import {LibOutputProof0} from "./helper/LibOutputProof0.sol";
 import {LibOutputProof1} from "./helper/LibOutputProof1.sol";

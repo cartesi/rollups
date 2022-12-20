@@ -13,12 +13,27 @@
 /// @title Authority Test
 pragma solidity ^0.8.13;
 
-import {TestBase} from "../../TestBase.sol";
+import {TestBase} from "../../util/TestBase.sol";
 import {Authority} from "contracts/consensus/authority/Authority.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {IHistory} from "contracts/history/IHistory.sol";
 import {Vm} from "forge-std/Vm.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {SimpleERC20} from "../../util/SimpleERC20.sol";
+
+contract UntransferableToken is ERC20 {
+    constructor(address minter, uint256 _initialSupply)
+        ERC20("UntransferableToken", "UTFAB")
+    {
+        _mint(minter, _initialSupply);
+    }
+
+    function transfer(address, uint256) public pure override returns (bool) {
+        return false;
+    }
+}
 
 contract HistoryReverts is IHistory {
     function submitClaim(bytes calldata) external pure override {
@@ -267,5 +282,99 @@ contract AuthorityTest is TestBase {
 
         vm.expectRevert();
         authority.getEpochHash(_dapp, _claimProof);
+    }
+
+    function testWithdrawERC20TokensNotOwner(
+        address _owner,
+        IInputBox _inputBox,
+        IHistory _history,
+        address _notOwner,
+        IERC20 _token,
+        address _recipient,
+        uint256 _amount
+    ) public {
+        vm.assume(_owner != address(0));
+        vm.assume(_owner != _notOwner);
+
+        authority = new Authority(_owner, _inputBox, _history);
+
+        vm.prank(_notOwner);
+        vm.expectRevert("Ownable: caller is not the owner");
+        authority.withdrawERC20Tokens(_token, _recipient, _amount);
+    }
+
+    function testWithdrawERC20Tokens(
+        address _owner,
+        IInputBox _inputBox,
+        IHistory _history,
+        address _recipient,
+        uint256 _amount,
+        uint256 _balance
+    ) public {
+        vm.assume(_owner != address(0));
+        vm.assume(_recipient != address(0));
+        vm.assume(_amount <= _balance);
+        vm.assume(_balance < type(uint256).max);
+
+        authority = new Authority(_owner, _inputBox, _history);
+
+        vm.assume(_recipient != address(authority));
+
+        // mint `_balance` ERC-20 tokens for authority contract
+        IERC20 token = new SimpleERC20(address(authority), _balance);
+
+        // try to transfer more than balance
+        vm.prank(_owner);
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        authority.withdrawERC20Tokens(token, _recipient, _balance + 1);
+
+        // since transfer fails, all balances stay the same
+        assertEq(token.balanceOf(address(authority)), _balance);
+        assertEq(token.balanceOf(_recipient), 0);
+
+        // it would succeed if the transfer amount is within balance
+        vm.prank(_owner);
+        authority.withdrawERC20Tokens(token, _recipient, _amount);
+
+        // now check balance after a successful withdraw
+        assertEq(token.balanceOf(address(authority)), _balance - _amount);
+        assertEq(token.balanceOf(_recipient), _amount);
+    }
+
+    function testWithdrawERC20TokensFailed(
+        address _owner,
+        IInputBox _inputBox,
+        IHistory _history,
+        address _recipient,
+        uint256 _amount,
+        uint256 _balance
+    ) public {
+        vm.assume(_owner != address(0));
+        vm.assume(_recipient != address(0));
+        vm.assume(_amount <= _balance);
+        vm.assume(_balance < type(uint256).max);
+
+        authority = new Authority(_owner, _inputBox, _history);
+
+        vm.assume(_recipient != address(authority));
+
+        // mint `_balance` ERC-20 tokens for authority contract
+        IERC20 tokenFailed = new UntransferableToken(
+            address(authority),
+            _balance
+        );
+
+        // before failed withdraw
+        assertEq(tokenFailed.balanceOf(address(authority)), _balance);
+        assertEq(tokenFailed.balanceOf(_recipient), 0);
+
+        // withdrawal fails because `transfer` returns `false`
+        vm.prank(_owner);
+        vm.expectRevert("Authority: withdrawal failed");
+        authority.withdrawERC20Tokens(tokenFailed, _recipient, _amount);
+
+        // after failed withdraw. All balances stay the same
+        assertEq(tokenFailed.balanceOf(address(authority)), _balance);
+        assertEq(tokenFailed.balanceOf(_recipient), 0);
     }
 }

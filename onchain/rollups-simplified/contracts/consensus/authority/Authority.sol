@@ -18,6 +18,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IConsensus} from "../IConsensus.sol";
 import {IInputBox} from "../../inputs/IInputBox.sol";
 import {IHistory} from "../../history/IHistory.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Authority is IConsensus, Ownable {
     IHistory history;
@@ -73,5 +74,16 @@ contract Authority is IConsensus, Ownable {
         )
     {
         return history.getEpochHash(_dapp, _claimQuery);
+    }
+
+    function withdrawERC20Tokens(
+        IERC20 _token,
+        address _recipient,
+        uint256 _amount
+    ) external override onlyOwner {
+        require(
+            _token.transfer(_recipient, _amount),
+            "Authority: withdrawal failed"
+        );
     }
 }

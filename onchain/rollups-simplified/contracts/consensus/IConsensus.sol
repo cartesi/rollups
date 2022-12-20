@@ -15,6 +15,7 @@ pragma solidity ^0.8.13;
 
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {IHistory} from "../history/IHistory.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IConsensus {
     // Events
@@ -69,4 +70,14 @@ interface IConsensus {
             uint256 inputIndex_,
             uint256 epochInputIndex_
         );
+
+    /// @notice Transfer ERC-20 tokens from consensus contract to a recipient
+    /// @param _token The ERC-20 token
+    /// @param _recipient The recipient address
+    /// @param _amount The transfer amount
+    function withdrawERC20Tokens(
+        IERC20 _token,
+        address _recipient,
+        uint256 _amount
+    ) external;
 }
