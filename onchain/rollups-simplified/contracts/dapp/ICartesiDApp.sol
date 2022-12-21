@@ -52,6 +52,15 @@ interface ICartesiDApp {
         OutputValidityProof calldata _v
     ) external returns (bool);
 
+    /// @notice Check whether a voucher has been executed
+    /// @param _inputIndex The index of the input
+    /// @param _outputIndex The index of output emitted by the input
+    /// @return Whether the voucher has been executed before
+    function wasVoucherExecuted(uint256 _inputIndex, uint256 _outputIndex)
+        external
+        view
+        returns (bool);
+
     /// @notice Validate a notice
     /// @param _notice The notice
     /// @param _claimQuery Data for querying the right claim

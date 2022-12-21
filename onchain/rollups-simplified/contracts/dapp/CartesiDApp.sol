@@ -78,7 +78,7 @@ contract CartesiDApp is
 
         // check if voucher has been executed
         require(
-            !voucherBitmask.getBit(voucherPosition),
+            !_wasVoucherExecuted(voucherPosition),
             "re-execution not allowed"
         );
 
@@ -92,6 +92,27 @@ contract CartesiDApp is
         }
 
         return succ;
+    }
+
+    function wasVoucherExecuted(uint256 _inputIndex, uint256 _outputIndex)
+        external
+        view
+        override
+        returns (bool)
+    {
+        uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
+            _outputIndex,
+            _inputIndex
+        );
+        return _wasVoucherExecuted(voucherPosition);
+    }
+
+    function _wasVoucherExecuted(uint256 _voucherPosition)
+        internal
+        view
+        returns (bool)
+    {
+        return voucherBitmask.getBit(_voucherPosition);
     }
 
     function validateNotice(

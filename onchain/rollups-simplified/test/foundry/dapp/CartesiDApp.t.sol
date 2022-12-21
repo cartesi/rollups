@@ -238,6 +238,54 @@ contract CartesiDAppTest is TestBase {
         assertEq(erc20Token.balanceOf(recipient), transferAmount);
     }
 
+    // `_inputIndex` and `_outputIndex` are always less than 2**128
+    function testWasVoucherExecutedForAny(
+        uint128 _inputIndex,
+        uint128 _outputIndex
+    ) public {
+        setupERC20TransferVoucher(_inputIndex);
+
+        bool executed = dapp.wasVoucherExecuted(_inputIndex, _outputIndex);
+        assertEq(executed, false);
+    }
+
+    function testWasVoucherExecuted(uint128 _inputIndex) public {
+        setupERC20TransferVoucher(_inputIndex);
+
+        // before executing voucher
+        bool executed = dapp.wasVoucherExecuted(_inputIndex, proof.outputIndex);
+        assertEq(executed, false);
+
+        // execute voucher - failed
+        bool success = dapp.executeVoucher(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proof
+        );
+        assertEq(success, false);
+
+        // `wasVoucherExecuted` should still return false
+        executed = dapp.wasVoucherExecuted(_inputIndex, proof.outputIndex);
+        assertEq(executed, false);
+
+        // execute voucher - succeeded
+        uint256 dappInitBalance = 100;
+        vm.prank(tokenOwner);
+        erc20Token.transfer(address(dapp), dappInitBalance);
+        success = dapp.executeVoucher(
+            address(erc20Token),
+            erc20TransferPayload,
+            "",
+            proof
+        );
+        assertEq(success, true);
+
+        // after executing voucher, `wasVoucherExecuted` should return true
+        executed = dapp.wasVoucherExecuted(_inputIndex, proof.outputIndex);
+        assertEq(executed, true);
+    }
+
     function testRevertsEpochHash(uint256 _inputIndex) public {
         setupERC20TransferVoucher(_inputIndex);
 
