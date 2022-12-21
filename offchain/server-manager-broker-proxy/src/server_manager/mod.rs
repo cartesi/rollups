@@ -21,8 +21,8 @@ use crate::grpc::cartesi_machine::Void;
 use crate::grpc::cartesi_server_manager::server_manager_client::ServerManagerClient;
 use crate::grpc::cartesi_server_manager::{
     Address, AdvanceStateRequest, EndSessionRequest, FinishEpochRequest,
-    GetEpochStatusRequest, InputMetadata as MMInputMetadata,
-    StartSessionRequest,
+    GetEpochStatusRequest, GetSessionStatusRequest,
+    InputMetadata as MMInputMetadata, StartSessionRequest,
 };
 
 use claim::{compute_claim_hash, CLAIM_HASH_SIZE};
@@ -59,13 +59,23 @@ macro_rules! grpc_call {
                 "got grpc response",
             );
 
-            response
-                .map(|v| v.into_inner())
-                .context(MethodCallSnafu {
-                    method: stringify!($method),
+            response.map(|v| v.into_inner()).map_err(|status| {
+                let err_type = match status.code() {
+                    tonic::Code::InvalidArgument => Error::Permanent,
+                    tonic::Code::NotFound => Error::Permanent,
+                    tonic::Code::AlreadyExists => Error::Permanent,
+                    tonic::Code::FailedPrecondition => Error::Permanent,
+                    tonic::Code::OutOfRange => Error::Permanent,
+                    tonic::Code::Unimplemented => Error::Permanent,
+                    tonic::Code::DataLoss => Error::Permanent,
+                    _ => Error::transient,
+                };
+                err_type(ServerManagerError::MethodCallError {
+                    source: status,
+                    method: stringify!($method).to_owned(),
                     request_id,
                 })
-                .map_err(Error::transient)
+            })
         })
         .await
     };
@@ -129,7 +139,27 @@ impl ServerManagerFacade {
         // If session exists, delete it before creating new one
         let response = grpc_call!(self, get_status, Void {})?;
         if response.session_id.contains(&self.config.session_id) {
-            tracing::info!("deleting previous server-manager session");
+            tracing::warn!("deleting previous server-manager session");
+            let session_status = grpc_call!(
+                self,
+                get_session_status,
+                GetSessionStatusRequest {
+                    session_id: self.config.session_id.clone(),
+                }
+            )?;
+            let active_epoch_index = session_status.active_epoch_index;
+            let processed_input_count =
+                self.wait_for_pending_inputs(active_epoch_index).await?;
+            grpc_call!(
+                self,
+                finish_epoch,
+                FinishEpochRequest {
+                    session_id: self.config.session_id.clone(),
+                    active_epoch_index,
+                    processed_input_count,
+                    storage_directory: "".to_string(),
+                }
+            )?;
             grpc_call!(
                 self,
                 end_session,
