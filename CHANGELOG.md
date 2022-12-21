@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Fixed proxy start up after restart
+- Changed sm\_pending\_inputs\_max\_retries default to 600
 
 ## [0.8.1] 2022-12-02
 

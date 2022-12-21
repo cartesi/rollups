@@ -87,7 +87,7 @@ pub struct ServerManagerCLIConfig {
     pub sm_pending_inputs_sleep_duration: u64,
 
     /// Max number of retries while polling server-manager for pending inputs
-    #[arg(long, env, default_value_t = 60)]
+    #[arg(long, env, default_value_t = 600)]
     pub sm_pending_inputs_max_retries: u64,
 
     /// Defines the number of threads to use while calculating the merkle tree
