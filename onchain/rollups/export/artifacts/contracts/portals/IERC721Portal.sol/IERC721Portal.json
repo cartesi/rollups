@@ -21,13 +21,31 @@
         },
         {
           "internalType": "bytes",
-          "name": "_data",
+          "name": "_L1data",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_L2data",
           "type": "bytes"
         }
       ],
       "name": "depositERC721Token",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getInputBox",
+      "outputs": [
+        {
+          "internalType": "contract IInputBox",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     }
   ],
@@ -38,13 +56,19 @@
   "devdoc": {
     "kind": "dev",
     "methods": {
-      "depositERC721Token(address,address,uint256,bytes)": {
+      "depositERC721Token(address,address,uint256,bytes,bytes)": {
         "details": "The caller must allow the portal to withdraw the token      from their account beforehand.",
         "params": {
+          "_L1data": "Additional data to be interpreted by L1                (forwarded to the ERC-721 token contract)",
+          "_L2data": "Additional data to be interpreted by L2",
           "_dapp": "The address of the DApp",
-          "_data": "Additional data to be interpreted by L2",
           "_token": "The ERC-721 token contract",
           "_tokenId": "The identifier of the NFT being transferred"
+        }
+      },
+      "getInputBox()": {
+        "returns": {
+          "_0": "the input box"
         }
       }
     },
@@ -53,8 +77,11 @@
   "userdoc": {
     "kind": "user",
     "methods": {
-      "depositERC721Token(address,address,uint256,bytes)": {
+      "depositERC721Token(address,address,uint256,bytes,bytes)": {
         "notice": "Transfer an ERC-721 token to a DApp and add an input to         the DApp's input box to signal such operation."
+      },
+      "getInputBox()": {
+        "notice": "Get the input box used by this portal"
       }
     },
     "version": 1
@@ -62,7 +89,8 @@
   "evm": {
     "gasEstimates": null,
     "methodIdentifiers": {
-      "depositERC721Token(address,address,uint256,bytes)": "411b0d5e"
+      "depositERC721Token(address,address,uint256,bytes,bytes)": "28911e83",
+      "getInputBox()": "00aace9a"
     }
   }
 }

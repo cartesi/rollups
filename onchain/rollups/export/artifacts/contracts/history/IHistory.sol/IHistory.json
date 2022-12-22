@@ -3,25 +3,6 @@
   "sourceName": "contracts/history/IHistory.sol",
   "abi": [
     {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "dapp",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "bytes",
-          "name": "claim",
-          "type": "bytes"
-        }
-      ],
-      "name": "NewClaim",
-      "type": "event"
-    },
-    {
       "inputs": [
         {
           "internalType": "address",
@@ -30,7 +11,7 @@
         },
         {
           "internalType": "bytes",
-          "name": "_claimProof",
+          "name": "_claimQuery",
           "type": "bytes"
         }
       ],
@@ -71,13 +52,8 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "_dapp",
-          "type": "address"
-        },
-        {
           "internalType": "bytes",
-          "name": "_claim",
+          "name": "_claimData",
           "type": "bytes"
         }
       ],
@@ -92,19 +68,10 @@
   "linkReferences": {},
   "deployedLinkReferences": {},
   "devdoc": {
-    "events": {
-      "NewClaim(address,bytes)": {
-        "details": "The encoding of claim might vary depending on the history implementation",
-        "params": {
-          "claim": "The claim that was submitted",
-          "dapp": "The DApp that the claim is about"
-        }
-      }
-    },
     "kind": "dev",
     "methods": {
       "getEpochHash(address,bytes)": {
-        "details": "The encoding of _claimProof might vary depending on the history implementation"
+        "details": "The encoding of _claimQuery might vary depending on the history implementation"
       },
       "migrateToConsensus(address)": {
         "details": "Should have access control",
@@ -112,28 +79,22 @@
           "_consensus": "The new consensus"
         }
       },
-      "submitClaim(address,bytes)": {
-        "details": "The encoding of _claim might vary depending on the history implementationShould have access control",
+      "submitClaim(bytes)": {
+        "details": "The encoding of _claimData might vary depending on the history implementationShould have access control",
         "params": {
-          "_claim": "The claim to be submitted",
-          "_dapp": "The DApp that the claim is about"
+          "_claimData": "Data for submitting a claim"
         }
       }
     },
     "version": 1
   },
   "userdoc": {
-    "events": {
-      "NewClaim(address,bytes)": {
-        "notice": "A new claim was submitted"
-      }
-    },
     "kind": "user",
     "methods": {
       "migrateToConsensus(address)": {
         "notice": "Migrate to a new consensus"
       },
-      "submitClaim(address,bytes)": {
+      "submitClaim(bytes)": {
         "notice": "Submit a claim"
       }
     },
@@ -144,7 +105,7 @@
     "methodIdentifiers": {
       "getEpochHash(address,bytes)": "3598e90b",
       "migrateToConsensus(address)": "fc411683",
-      "submitClaim(address,bytes)": "f36762ce"
+      "submitClaim(bytes)": "ddfdfbb0"
     }
   }
 }

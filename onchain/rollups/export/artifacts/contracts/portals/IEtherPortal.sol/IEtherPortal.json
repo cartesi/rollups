@@ -11,13 +11,26 @@
         },
         {
           "internalType": "bytes",
-          "name": "_data",
+          "name": "_L2data",
           "type": "bytes"
         }
       ],
       "name": "depositEther",
       "outputs": [],
       "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getInputBox",
+      "outputs": [
+        {
+          "internalType": "contract IInputBox",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     }
   ],
@@ -31,8 +44,13 @@
       "depositEther(address,bytes)": {
         "details": "All the value sent through this function is forwarded to the DApp",
         "params": {
-          "_dapp": "The address of the DApp",
-          "_data": "Additional data to be interpreted by L2"
+          "_L2data": "Additional data to be interpreted by L2",
+          "_dapp": "The address of the DApp"
+        }
+      },
+      "getInputBox()": {
+        "returns": {
+          "_0": "the input box"
         }
       }
     },
@@ -43,6 +61,9 @@
     "methods": {
       "depositEther(address,bytes)": {
         "notice": "Transfer Ether to a DApp and add an input to         the DApp's input box to signal such operation."
+      },
+      "getInputBox()": {
+        "notice": "Get the input box used by this portal"
       }
     },
     "version": 1
@@ -50,7 +71,8 @@
   "evm": {
     "gasEstimates": null,
     "methodIdentifiers": {
-      "depositEther(address,bytes)": "938c054f"
+      "depositEther(address,bytes)": "938c054f",
+      "getInputBox()": "00aace9a"
     }
   }
 }

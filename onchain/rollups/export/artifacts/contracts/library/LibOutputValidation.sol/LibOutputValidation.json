@@ -2,8 +2,8 @@
   "contractName": "LibOutputValidation",
   "sourceName": "contracts/library/LibOutputValidation.sol",
   "abi": [],
-  "bytecode": "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122003f4006477a4633a920d81fd2bb7549012ff256d8847f70aaff9fb77f23b8eec64736f6c634300080d0033",
-  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122003f4006477a4633a920d81fd2bb7549012ff256d8847f70aaff9fb77f23b8eec64736f6c634300080d0033",
+  "bytecode": "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122028ffd83f68398cabf72cce83b2062ad0c316cc4bf0900c3e372aa7cf76fd0de564736f6c634300080d0033",
+  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122028ffd83f68398cabf72cce83b2062ad0c316cc4bf0900c3e372aa7cf76fd0de564736f6c634300080d0033",
   "linkReferences": {},
   "deployedLinkReferences": {},
   "devdoc": {
@@ -24,10 +24,10 @@
         "totalCost": "17303"
       },
       "internal": {
-        "enforceProofValidity(bytes memory,bytes32,bytes32,uint256,uint256,struct OutputValidityProof calldata)": "infinite",
         "getBitMaskPosition(uint256,uint256)": "infinite",
-        "isValidNoticeProof(bytes memory,bytes32,struct OutputValidityProof calldata)": "infinite",
-        "isValidVoucherProof(bytes memory,bytes32,struct OutputValidityProof calldata)": "infinite"
+        "validateEncodedOutput(struct OutputValidityProof calldata,bytes memory,bytes32,uint64,bytes32,uint256,uint256)": "infinite",
+        "validateNotice(struct OutputValidityProof calldata,bytes calldata,bytes32,uint64)": "infinite",
+        "validateVoucher(struct OutputValidityProof calldata,address,bytes calldata,bytes32,uint64)": "infinite"
       }
     },
     "methodIdentifiers": {}

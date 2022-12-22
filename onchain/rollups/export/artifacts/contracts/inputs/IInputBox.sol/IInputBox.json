@@ -12,6 +12,12 @@
           "type": "address"
         },
         {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "inputIndex",
+          "type": "uint256"
+        },
+        {
           "indexed": false,
           "internalType": "address",
           "name": "sender",
@@ -57,6 +63,30 @@
           "internalType": "address",
           "name": "_dapp",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getInputHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
         }
       ],
       "name": "getNumberOfInputs",
@@ -77,10 +107,11 @@
   "deployedLinkReferences": {},
   "devdoc": {
     "events": {
-      "InputAdded(address,address,bytes)": {
+      "InputAdded(address,uint256,address,bytes)": {
         "params": {
           "dapp": "The address of the DApp",
           "input": "The contents of the input",
+          "inputIndex": "The index of the input",
           "sender": "The address that sent the input"
         }
       }
@@ -96,6 +127,15 @@
           "_0": "The hash of the input plus some extra metadata"
         }
       },
+      "getInputHash(address,uint256)": {
+        "params": {
+          "_dapp": "The address of the DApp",
+          "_index": "The index of the input in the DApp's input box"
+        },
+        "returns": {
+          "_0": "The hash of the input at the provided index in the DApp's input box"
+        }
+      },
       "getNumberOfInputs(address)": {
         "params": {
           "_dapp": "The address of the DApp"
@@ -109,7 +149,7 @@
   },
   "userdoc": {
     "events": {
-      "InputAdded(address,address,bytes)": {
+      "InputAdded(address,uint256,address,bytes)": {
         "notice": "Emitted when an input is added to a DApp's input box"
       }
     },
@@ -117,6 +157,9 @@
     "methods": {
       "addInput(address,bytes)": {
         "notice": "Add an input to a DApp's input box"
+      },
+      "getInputHash(address,uint256)": {
+        "notice": "Get the hash of an input in a DApp's input box"
       },
       "getNumberOfInputs(address)": {
         "notice": "Get the number of inputs in a DApp's input box"
@@ -128,6 +171,7 @@
     "gasEstimates": null,
     "methodIdentifiers": {
       "addInput(address,bytes)": "1789cd63",
+      "getInputHash(address,uint256)": "677087c9",
       "getNumberOfInputs(address)": "61a93c87"
     }
   }

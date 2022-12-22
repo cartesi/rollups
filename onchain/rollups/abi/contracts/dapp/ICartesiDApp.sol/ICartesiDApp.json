@@ -46,11 +46,6 @@
         "components": [
           {
             "internalType": "uint64",
-            "name": "epochInputIndex",
-            "type": "uint64"
-          },
-          {
-            "internalType": "uint64",
             "name": "outputIndex",
             "type": "uint64"
           },
@@ -154,11 +149,6 @@
       },
       {
         "components": [
-          {
-            "internalType": "uint64",
-            "name": "epochInputIndex",
-            "type": "uint64"
-          },
           {
             "internalType": "uint64",
             "name": "outputIndex",

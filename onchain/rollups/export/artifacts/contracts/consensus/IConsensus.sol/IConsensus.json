@@ -49,7 +49,7 @@
         },
         {
           "internalType": "bytes",
-          "name": "_claimProof",
+          "name": "_claimQuery",
           "type": "bytes"
         }
       ],
@@ -116,13 +116,8 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "_dapp",
-          "type": "address"
-        },
-        {
           "internalType": "bytes",
-          "name": "_claim",
+          "name": "_claimData",
           "type": "bytes"
         }
       ],
@@ -154,7 +149,7 @@
     "kind": "dev",
     "methods": {
       "getEpochHash(address,bytes)": {
-        "details": "The encoding of _claimProof might vary depending on the history implementation"
+        "details": "The encoding of _claimQuery might vary depending on the history implementation"
       },
       "getHistory()": {
         "returns": {
@@ -162,6 +157,7 @@
         }
       },
       "migrateHistoryToConsensus(address)": {
+        "details": "Should have access control",
         "params": {
           "_consensus": "The new consensus"
         }
@@ -172,11 +168,10 @@
           "_history": "The new history"
         }
       },
-      "submitClaim(address,bytes)": {
-        "details": "The encoding of _claim might vary depending on the history implementationShould have access control",
+      "submitClaim(bytes)": {
+        "details": "The encoding of _claimData might vary depending on the history implementationShould have access control",
         "params": {
-          "_claim": "The claim to be submitted to history",
-          "_dapp": "The DApp that the claim is about"
+          "_claimData": "Data for submitting a claim"
         }
       }
     },
@@ -202,7 +197,7 @@
       "setHistory(address)": {
         "notice": "Point the consensus to a new history"
       },
-      "submitClaim(address,bytes)": {
+      "submitClaim(bytes)": {
         "notice": "Submit a claim to history"
       }
     },
@@ -215,7 +210,7 @@
       "getHistory()": "aa15efc8",
       "migrateHistoryToConsensus(address)": "9368a3d3",
       "setHistory(address)": "159c5ea1",
-      "submitClaim(address,bytes)": "f36762ce"
+      "submitClaim(bytes)": "ddfdfbb0"
     }
   }
 }

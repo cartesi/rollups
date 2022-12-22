@@ -1,0 +1,49 @@
+{
+  "contractName": "IPortal",
+  "sourceName": "contracts/portals/IPortal.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getInputBox",
+      "outputs": [
+        {
+          "internalType": "contract IInputBox",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getInputBox()": {
+        "returns": {
+          "_0": "the input box"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "getInputBox()": {
+        "notice": "Get the input box used by this portal"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "getInputBox()": "00aace9a"
+    }
+  }
+}
