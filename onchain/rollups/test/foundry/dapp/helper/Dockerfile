@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-FROM cartesi/server-manager:latest
+FROM cartesi/server-manager:0.5.0
 WORKDIR /opt/gen-proofs
 
 # Install system dependencies
@@ -27,9 +27,9 @@ RUN export ARCH=$(uname -m | sed 's/aarch64/arm64/') && \
 
 # Download rootfs, linux and rom
 ENV IMAGES_PATH /opt/cartesi/share/images
-RUN wget -O ${IMAGES_PATH}/rootfs.ext2 https://github.com/cartesi/image-rootfs/releases/download/v0.12.0/rootfs.ext2 && \
-    wget -O ${IMAGES_PATH}/linux.bin https://github.com/cartesi/image-kernel/releases/download/v0.12.0/linux-5.5.19-ctsi-5.bin && \
-    wget -O ${IMAGES_PATH}/rom.bin https://github.com/cartesi/machine-emulator-rom/releases/download/v0.11.0/rom.bin
+RUN wget -O ${IMAGES_PATH}/rootfs.ext2 https://github.com/cartesi/image-rootfs/releases/download/v0.15.0/rootfs-v0.15.0.ext2 && \
+    wget -O ${IMAGES_PATH}/linux.bin https://github.com/cartesi/image-kernel/releases/download/v0.14.0/linux-5.15.63-ctsi-1.bin && \
+    wget -O ${IMAGES_PATH}/rom.bin https://github.com/cartesi/machine-emulator-rom/releases/download/v0.13.0/rom-v0.13.0.bin
 
 # Download grpc-interfaces repo
 RUN git clone https://github.com/cartesi/grpc-interfaces
@@ -37,9 +37,9 @@ RUN git clone https://github.com/cartesi/grpc-interfaces
 # Generate machine with echo and store it
 ENV MACHINE_DIR=/tmp/gen-proofs-machine
 RUN cartesi-machine \
-        --ram-length=128Mi \
-        --rollup \
-        --store=$MACHINE_DIR \
-        -- "ioctl-echo-loop --vouchers=1 --notices=1 --reports=1 --verbose=1"
+    --ram-length=128Mi \
+    --rollup \
+    --store=$MACHINE_DIR \
+    -- "ioctl-echo-loop --vouchers=1 --notices=1 --reports=1 --verbose=1"
 
 CMD ["/bin/bash"]
