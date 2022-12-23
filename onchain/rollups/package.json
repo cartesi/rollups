@@ -28,7 +28,6 @@
     },
     "dependencies": {
         "@cartesi/logger": "^0.7.4",
-        "@cartesi/token": "^1.3.0",
         "@cartesi/util": "^5.0.1",
         "@openzeppelin/contracts": "^4.5.0"
     },

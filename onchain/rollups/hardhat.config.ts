@@ -91,29 +91,15 @@ const config: HardhatUserConfig = {
                 artifacts: ppath("@cartesi/util", "/export/artifacts"),
                 deploy: ppath("@cartesi/util", "/dist/deploy"),
             },
-            {
-                artifacts: ppath("@cartesi/token", "/export/artifacts"),
-                deploy: ppath("@cartesi/token", "/dist/deploy"),
-            },
         ],
         deployments: {
             localhost: ["deployments/localhost"],
-            mainnet: [
-                ppath("@cartesi/util", "/deployments/mainnet"),
-                ppath("@cartesi/token", "/deployments/mainnet"),
-            ],
-            goerli: [
-                ppath("@cartesi/util", "/deployments/goerli"),
-                ppath("@cartesi/token", "/deployments/goerli"),
-            ],
+            mainnet: [ppath("@cartesi/util", "/deployments/mainnet")],
+            goerli: [ppath("@cartesi/util", "/deployments/goerli")],
             polygon_mumbai: [
-                ppath("@cartesi/util", "/deployments/matic_testnet"),
-                ppath("@cartesi/token", "/deployments/matic_testnet"),
+                ppath("@cartesi/util", "/deployments/polygon_mumbai"),
             ],
-            bsc_testnet: [
-                ppath("@cartesi/util", "/deployments/bsc_testnet"),
-                ppath("@cartesi/token", "/deployments/bsc_testnet"),
-            ],
+            bsc_testnet: [ppath("@cartesi/util", "/deployments/bsc_testnet")],
         },
     },
     namedAccounts: {
