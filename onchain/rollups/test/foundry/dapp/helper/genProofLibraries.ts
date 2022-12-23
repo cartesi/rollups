@@ -1,4 +1,5 @@
 import { BytesLike } from "@ethersproject/bytes";
+import fs from "fs";
 import epochStatus from "./epoch-status.json";
 
 interface OutputValidityProof {
@@ -65,7 +66,11 @@ function setupNoticeProof(epochInputIndex: number): OutputValidityProof {
     return noticeProof;
 }
 
-function buildSolCodes(noticeProof: OutputValidityProof, voucherProof: OutputValidityProof, libraryName: string): string {
+function buildSolCodes(
+    noticeProof: OutputValidityProof,
+    voucherProof: OutputValidityProof,
+    libraryName: string
+): string {
     const array1 = noticeProof.keccakInHashesSiblings;
     const array2 = noticeProof.outputHashesInEpochSiblings;
     const array3 = voucherProof.keccakInHashesSiblings;
@@ -120,14 +125,12 @@ function buildSolCodes(noticeProof: OutputValidityProof, voucherProof: OutputVal
     return lines.join("\n");
 }
 
-const fs = require("fs");
-
-epochStatus.processedInputs.forEach((value, index) => {
+epochStatus.processedInputs.forEach((_value: any, index: number) => {
     let libraryName = `LibOutputProof${index}`;
     let noticeProof = setupNoticeProof(index);
     let voucherProof = setupVoucherProof(index);
     let solidityCode = buildSolCodes(noticeProof, voucherProof, libraryName);
-    let fileName = `${libraryName}.sol`;
+    let fileName = `${__dirname}/${libraryName}.sol`;
     fs.writeFile(fileName, solidityCode, (err: any) => {
         if (err) throw err;
         console.log(`File '${fileName}' was generated.`);

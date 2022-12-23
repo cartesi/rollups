@@ -2,7 +2,7 @@
     "compilerOptions": {
         "declaration": true,
         "composite": true,
-        "target": "es2018",
+        "target": "es2020",
         "module": "commonjs",
         "allowJs": true,
         "strict": true,
@@ -10,5 +10,6 @@
         "esModuleInterop": true,
         "outDir": "dist"
     },
+    "include": ["**/*.ts", "test/**/*.json"],
     "exclude": ["dist", "node_modules"]
 }

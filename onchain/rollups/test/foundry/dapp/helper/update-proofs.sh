@@ -88,7 +88,7 @@ echo2 $GREEN "3. Generating script to be run on docker image..."
 echo
 
 # Generate script with inputs
-npx ts-node genScript.ts
+pushd ../../../../../ && npx ts-node rollups/test/foundry/dapp/helper/genScript.ts && popd
 echo
 
 # Give execute permission to script
@@ -118,7 +118,7 @@ echo2 $GREEN "6. Generating Solidity libraries for each output..."
 echo
 
 # Generate Solidity libraries with proofs
-npx ts-node genProofLibraries.ts
+pushd ../../../../../ && npx ts-node rollups/test/foundry/dapp/helper/genProofLibraries.ts && popd
 echo
 
 echo2 $CYAN "Proofs were updated!"
