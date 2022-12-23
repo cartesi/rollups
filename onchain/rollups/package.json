@@ -27,7 +27,6 @@
         "tsc:prod": "tsc -p tsconfig.prod.json"
     },
     "dependencies": {
-        "@cartesi/logger": "^0.7.4",
         "@cartesi/util": "^5.0.1",
         "@openzeppelin/contracts": "^4.5.0"
     },
