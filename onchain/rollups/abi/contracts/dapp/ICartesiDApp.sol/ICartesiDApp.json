@@ -200,5 +200,29 @@
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_inputIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_outputIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "wasVoucherExecuted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   }
 ]

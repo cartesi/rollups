@@ -125,6 +125,29 @@
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "_token",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdrawERC20Tokens",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
   ],
   "bytecode": "0x",
@@ -173,6 +196,13 @@
         "params": {
           "_claimData": "Data for submitting a claim"
         }
+      },
+      "withdrawERC20Tokens(address,address,uint256)": {
+        "params": {
+          "_amount": "The transfer amount",
+          "_recipient": "The recipient address",
+          "_token": "The ERC-20 token"
+        }
       }
     },
     "version": 1
@@ -199,6 +229,9 @@
       },
       "submitClaim(bytes)": {
         "notice": "Submit a claim to history"
+      },
+      "withdrawERC20Tokens(address,address,uint256)": {
+        "notice": "Transfer ERC-20 tokens from consensus contract to a recipient"
       }
     },
     "version": 1
@@ -210,7 +243,8 @@
       "getHistory()": "aa15efc8",
       "migrateHistoryToConsensus(address)": "9368a3d3",
       "setHistory(address)": "159c5ea1",
-      "submitClaim(bytes)": "ddfdfbb0"
+      "submitClaim(bytes)": "ddfdfbb0",
+      "withdrawERC20Tokens(address,address,uint256)": "bcdd1e13"
     }
   }
 }

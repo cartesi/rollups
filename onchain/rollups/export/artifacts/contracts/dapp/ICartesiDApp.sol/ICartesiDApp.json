@@ -203,6 +203,30 @@
       ],
       "stateMutability": "view",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_inputIndex",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_outputIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "wasVoucherExecuted",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     }
   ],
   "bytecode": "0x",
@@ -262,6 +286,15 @@
         "returns": {
           "_0": "Whether the notice is valid or not"
         }
+      },
+      "wasVoucherExecuted(uint256,uint256)": {
+        "params": {
+          "_inputIndex": "The index of the input",
+          "_outputIndex": "The index of output emitted by the input"
+        },
+        "returns": {
+          "_0": "Whether the voucher has been executed before"
+        }
       }
     },
     "version": 1
@@ -291,6 +324,9 @@
       },
       "validateNotice(bytes,bytes,(uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": {
         "notice": "Validate a notice"
+      },
+      "wasVoucherExecuted(uint256,uint256)": {
+        "notice": "Check whether a voucher has been executed"
       }
     },
     "version": 1
@@ -302,7 +338,8 @@
       "getConsensus()": "179e740b",
       "getTemplateHash()": "61b12c66",
       "migrateToConsensus(address)": "fc411683",
-      "validateNotice(bytes,bytes,(uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "15c29df1"
+      "validateNotice(bytes,bytes,(uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]))": "15c29df1",
+      "wasVoucherExecuted(uint256,uint256)": "9d9b1145"
     }
   }
 }
