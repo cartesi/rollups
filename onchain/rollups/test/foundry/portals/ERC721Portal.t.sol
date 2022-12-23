@@ -234,7 +234,7 @@ contract ERC721PortalTest is Test {
         vm.startPrank(alice);
 
         // Transfer ERC-721 tokens to the DApp via the portal
-        vm.expectRevert("ERC721: transfer caller is not owner nor approved");
+        vm.expectRevert("ERC721: caller is not token owner or approved");
         erc721Portal.depositERC721Token(token, dapp, tokenId, L1data, L2data);
 
         // Check the DApp's input box
