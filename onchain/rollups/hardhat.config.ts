@@ -16,7 +16,6 @@ import { HttpNetworkUserConfig } from "hardhat/types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-deploy";
 import "hardhat-abi-exporter";

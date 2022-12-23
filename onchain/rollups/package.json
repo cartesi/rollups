@@ -20,9 +20,7 @@
         "prepack": "run-s build tsc:prod copy-dts",
         "prettier": "prettier --check .",
         "start": "hardhat node",
-        "test": "run-s build test:protoc test:hardhat",
-        "test:hardhat": "hardhat test",
-        "test:protoc": "proto-loader-gen-types --grpcLib @grpc/grpc-js --outDir generated-src/proto ../../grpc-interfaces/stateserver.proto",
+        "test": "forge test -vvv",
         "tsc": "tsc",
         "tsc:prod": "tsc -p tsconfig.prod.json"
     },
@@ -31,11 +29,11 @@
         "@openzeppelin/contracts": "^4.5.0"
     },
     "devDependencies": {
-        "@grpc/grpc-js": "^1.6.7",
-        "@grpc/proto-loader": "^0.7.4",
+        "@ethersproject/abi": "^5.7.0",
+        "@ethersproject/bytes": "^5.7.0",
+        "@ethersproject/providers": "^5.7.2",
         "@nomiclabs/hardhat-ethers": "^2.0.6",
         "@nomiclabs/hardhat-etherscan": "^3.0.3",
-        "@nomiclabs/hardhat-waffle": "^2.0.3",
         "@typechain/ethers-v5": "^10.0.0",
         "@typechain/hardhat": "^6.0.0",
         "@types/chai": "^4.3.1",
