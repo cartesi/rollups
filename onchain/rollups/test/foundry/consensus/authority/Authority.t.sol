@@ -24,9 +24,10 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SimpleERC20} from "../../util/SimpleERC20.sol";
 
 contract UntransferableToken is ERC20 {
-    constructor(address minter, uint256 _initialSupply)
-        ERC20("UntransferableToken", "UTFAB")
-    {
+    constructor(
+        address minter,
+        uint256 _initialSupply
+    ) ERC20("UntransferableToken", "UTFAB") {
         _mint(minter, _initialSupply);
     }
 
@@ -44,16 +45,10 @@ contract HistoryReverts is IHistory {
         revert();
     }
 
-    function getEpochHash(address, bytes calldata)
-        external
-        pure
-        override
-        returns (
-            bytes32,
-            uint256,
-            uint256
-        )
-    {
+    function getEpochHash(
+        address,
+        bytes calldata
+    ) external pure override returns (bytes32, uint256, uint256) {
         revert();
     }
 }
@@ -122,9 +117,10 @@ contract AuthorityTest is TestBase {
         assertEq(eventsFound, 1);
     }
 
-    function testRevertsOwnerAddressZero(IInputBox _inputBox, IHistory _history)
-        public
-    {
+    function testRevertsOwnerAddressZero(
+        IInputBox _inputBox,
+        IHistory _history
+    ) public {
         vm.expectRevert("Ownable: new owner is the zero address");
         new Authority(address(0), _inputBox, _history);
     }

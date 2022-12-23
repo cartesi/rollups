@@ -24,9 +24,10 @@ import {InputBox} from "contracts/inputs/InputBox.sol";
 import {InputEncoding} from "contracts/common/InputEncoding.sol";
 
 contract NormalToken is ERC721 {
-    constructor(address tokenOwner, uint256 tokenId)
-        ERC721("NormalToken", "NORMAL")
-    {
+    constructor(
+        address tokenOwner,
+        uint256 tokenId
+    ) ERC721("NormalToken", "NORMAL") {
         _safeMint(tokenOwner, tokenId);
     }
 }

@@ -395,9 +395,10 @@ contract CartesiDAppTest is TestBase {
         dapp.executeVoucher(address(dapp), withdrawEtherPayload, "", proof);
     }
 
-    function testWithdrawEtherContract(uint256 _value, address _notDApp)
-        public
-    {
+    function testWithdrawEtherContract(
+        uint256 _value,
+        address _notDApp
+    ) public {
         dapp = deployDAppDeterministically();
         vm.assume(_value <= address(this).balance);
         vm.assume(_notDApp != address(dapp));

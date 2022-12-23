@@ -56,18 +56,18 @@ contract WatcherToken is ERC20 {
         uint256 numberOfInputs
     );
 
-    constructor(IInputBox _inputBox, uint256 _initialSupply)
-        ERC20("WatcherToken", "WTCHR")
-    {
+    constructor(
+        IInputBox _inputBox,
+        uint256 _initialSupply
+    ) ERC20("WatcherToken", "WTCHR") {
         inputBox = _inputBox;
         _mint(msg.sender, _initialSupply);
     }
 
-    function transfer(address _to, uint256 _amount)
-        public
-        override
-        returns (bool)
-    {
+    function transfer(
+        address _to,
+        uint256 _amount
+    ) public override returns (bool) {
         emit WatchedTransfer(
             msg.sender,
             _to,
@@ -223,9 +223,10 @@ contract ERC20PortalTest is Test {
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
     }
 
-    function testRevertsInsufficientBalance(uint256 amount, bytes calldata data)
-        public
-    {
+    function testRevertsInsufficientBalance(
+        uint256 amount,
+        bytes calldata data
+    ) public {
         // Check if `amount + 1` won't overflow
         vm.assume(amount < type(uint256).max);
 

@@ -17,11 +17,9 @@ library OutputEncoding {
     /// @notice Encode notice
     /// @param notice The notice
     /// @return The encoded output
-    function encodeNotice(bytes calldata notice)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function encodeNotice(
+        bytes calldata notice
+    ) internal pure returns (bytes memory) {
         return abi.encode(notice);
     }
 
@@ -29,11 +27,10 @@ library OutputEncoding {
     /// @param destination The contract that will execute the payload
     /// @param payload The ABI-encoded function call
     /// @return The encoded output
-    function encodeVoucher(address destination, bytes calldata payload)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function encodeVoucher(
+        address destination,
+        bytes calldata payload
+    ) internal pure returns (bytes memory) {
         return abi.encode(destination, payload);
     }
 }

@@ -62,7 +62,10 @@ interface IConsensus {
     /// @return epochInputIndex_ The offset between the input in the input box
     //                           and the first input of the epoch in the input box
     /// @dev The encoding of _claimQuery might vary depending on the history implementation
-    function getEpochHash(address _dapp, bytes calldata _claimQuery)
+    function getEpochHash(
+        address _dapp,
+        bytes calldata _claimQuery
+    )
         external
         view
         returns (

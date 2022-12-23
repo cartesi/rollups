@@ -23,11 +23,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract Authority is IConsensus, Ownable {
     IHistory history;
 
-    constructor(
-        address _owner,
-        IInputBox _inputBox,
-        IHistory _history
-    ) {
+    constructor(address _owner, IInputBox _inputBox, IHistory _history) {
         // constructor in Ownable already called `transferOwnership(msg.sender)`, so
         // we only need to call `transferOwnership(_owner)` if _owner != msg.sender
         if (msg.sender != _owner) {
@@ -38,19 +34,15 @@ contract Authority is IConsensus, Ownable {
     }
 
     /// @dev Will fail if history has migrated to another consensus
-    function submitClaim(bytes calldata _claimData)
-        external
-        override
-        onlyOwner
-    {
+    function submitClaim(
+        bytes calldata _claimData
+    ) external override onlyOwner {
         history.submitClaim(_claimData);
     }
 
-    function migrateHistoryToConsensus(address _consensus)
-        external
-        override
-        onlyOwner
-    {
+    function migrateHistoryToConsensus(
+        address _consensus
+    ) external override onlyOwner {
         history.migrateToConsensus(_consensus);
     }
 
@@ -63,16 +55,10 @@ contract Authority is IConsensus, Ownable {
         return history;
     }
 
-    function getEpochHash(address _dapp, bytes calldata _claimQuery)
-        external
-        view
-        override
-        returns (
-            bytes32,
-            uint256,
-            uint256
-        )
-    {
+    function getEpochHash(
+        address _dapp,
+        bytes calldata _claimQuery
+    ) external view override returns (bytes32, uint256, uint256) {
         return history.getEpochHash(_dapp, _claimQuery);
     }
 

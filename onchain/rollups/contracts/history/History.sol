@@ -42,11 +42,9 @@ contract History is IHistory, Ownable {
         }
     }
 
-    function submitClaim(bytes calldata _encodedClaim)
-        external
-        override
-        onlyOwner
-    {
+    function submitClaim(
+        bytes calldata _encodedClaim
+    ) external override onlyOwner {
         (address dapp, Claim memory claim) = abi.decode(
             _encodedClaim,
             (address, Claim)
@@ -68,16 +66,10 @@ contract History is IHistory, Ownable {
         emit NewClaimToHistory(dapp, claim);
     }
 
-    function getEpochHash(address _dapp, bytes calldata _claimQuery)
-        external
-        view
-        override
-        returns (
-            bytes32,
-            uint256,
-            uint256
-        )
-    {
+    function getEpochHash(
+        address _dapp,
+        bytes calldata _claimQuery
+    ) external view override returns (bytes32, uint256, uint256) {
         (uint256 claimIndex, uint256 inputIndex) = abi.decode(
             _claimQuery,
             (uint256, uint256)
@@ -102,11 +94,9 @@ contract History is IHistory, Ownable {
     }
 
     // emits an `OwnershipTransfered` event (see `Ownable`)
-    function migrateToConsensus(address _consensus)
-        external
-        override
-        onlyOwner
-    {
+    function migrateToConsensus(
+        address _consensus
+    ) external override onlyOwner {
         transferOwnership(_consensus);
     }
 }

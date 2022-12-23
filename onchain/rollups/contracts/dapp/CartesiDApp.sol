@@ -35,11 +35,7 @@ contract CartesiDApp is
     mapping(uint256 => uint256) voucherBitmask;
     IConsensus consensus;
 
-    constructor(
-        IConsensus _consensus,
-        address _owner,
-        bytes32 _templateHash
-    ) {
+    constructor(IConsensus _consensus, address _owner, bytes32 _templateHash) {
         transferOwnership(_owner);
         templateHash = _templateHash;
         consensus = _consensus;
@@ -94,12 +90,10 @@ contract CartesiDApp is
         return succ;
     }
 
-    function wasVoucherExecuted(uint256 _inputIndex, uint256 _outputIndex)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function wasVoucherExecuted(
+        uint256 _inputIndex,
+        uint256 _outputIndex
+    ) external view override returns (bool) {
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _outputIndex,
             _inputIndex
@@ -107,11 +101,9 @@ contract CartesiDApp is
         return _wasVoucherExecuted(voucherPosition);
     }
 
-    function _wasVoucherExecuted(uint256 _voucherPosition)
-        internal
-        view
-        returns (bool)
-    {
+    function _wasVoucherExecuted(
+        uint256 _voucherPosition
+    ) internal view returns (bool) {
         return voucherBitmask.getBit(_voucherPosition);
     }
 
@@ -137,11 +129,9 @@ contract CartesiDApp is
         return true;
     }
 
-    function migrateToConsensus(IConsensus _newConsensus)
-        external
-        override
-        onlyOwner
-    {
+    function migrateToConsensus(
+        IConsensus _newConsensus
+    ) external override onlyOwner {
         consensus = _newConsensus;
         emit NewConsensus(_newConsensus);
     }

@@ -28,11 +28,10 @@ contract EtherPortal is IEtherPortal {
         return inputBox;
     }
 
-    function depositEther(address _dapp, bytes calldata _L2data)
-        external
-        payable
-        override
-    {
+    function depositEther(
+        address _dapp,
+        bytes calldata _L2data
+    ) external payable override {
         // We used to call `transfer()` but it's not considered safe,
         // as it assumes gas costs are immutable (they are not).
         (bool success, ) = _dapp.call{value: msg.value}("");

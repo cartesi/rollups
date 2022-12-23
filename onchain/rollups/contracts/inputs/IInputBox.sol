@@ -30,9 +30,10 @@ interface IInputBox {
     /// @param _dapp The address of the DApp
     /// @param _input The contents of the input
     /// @return The hash of the input plus some extra metadata
-    function addInput(address _dapp, bytes calldata _input)
-        external
-        returns (bytes32);
+    function addInput(
+        address _dapp,
+        bytes calldata _input
+    ) external returns (bytes32);
 
     /// @notice Get the number of inputs in a DApp's input box
     /// @param _dapp The address of the DApp
@@ -43,8 +44,8 @@ interface IInputBox {
     /// @param _dapp The address of the DApp
     /// @param _index The index of the input in the DApp's input box
     /// @return The hash of the input at the provided index in the DApp's input box
-    function getInputHash(address _dapp, uint256 _index)
-        external
-        view
-        returns (bytes32);
+    function getInputHash(
+        address _dapp,
+        uint256 _index
+    ) external view returns (bytes32);
 }

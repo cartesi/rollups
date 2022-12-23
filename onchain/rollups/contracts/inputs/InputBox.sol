@@ -19,11 +19,10 @@ import {LibInput} from "../library/LibInput.sol";
 contract InputBox is IInputBox {
     mapping(address => bytes32[]) inputBoxes;
 
-    function addInput(address _dapp, bytes calldata _input)
-        external
-        override
-        returns (bytes32)
-    {
+    function addInput(
+        address _dapp,
+        bytes calldata _input
+    ) external override returns (bytes32) {
         bytes32[] storage inputBox = inputBoxes[_dapp];
         uint256 inputIndex = inputBox.length;
 
@@ -44,21 +43,16 @@ contract InputBox is IInputBox {
         return inputHash;
     }
 
-    function getNumberOfInputs(address _dapp)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function getNumberOfInputs(
+        address _dapp
+    ) external view override returns (uint256) {
         return inputBoxes[_dapp].length;
     }
 
-    function getInputHash(address _dapp, uint256 _index)
-        external
-        view
-        override
-        returns (bytes32)
-    {
+    function getInputHash(
+        address _dapp,
+        uint256 _index
+    ) external view override returns (bytes32) {
         return inputBoxes[_dapp][_index];
     }
 }

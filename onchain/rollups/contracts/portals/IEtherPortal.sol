@@ -23,7 +23,8 @@ interface IEtherPortal is IPortal {
     /// @param _dapp The address of the DApp
     /// @param _L2data Additional data to be interpreted by L2
     /// @dev All the value sent through this function is forwarded to the DApp
-    function depositEther(address _dapp, bytes calldata _L2data)
-        external
-        payable;
+    function depositEther(
+        address _dapp,
+        bytes calldata _L2data
+    ) external payable;
 }

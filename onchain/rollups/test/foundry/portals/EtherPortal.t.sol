@@ -107,9 +107,10 @@ contract EtherPortalTest is Test {
         assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
-    function testRevertsFailedTransfer(uint256 value, bytes calldata data)
-        public
-    {
+    function testRevertsFailedTransfer(
+        uint256 value,
+        bytes calldata data
+    ) public {
         // Create a contract that reverts when it receives Ether
         BadEtherReceiver badEtherReceiver = new BadEtherReceiver();
 
