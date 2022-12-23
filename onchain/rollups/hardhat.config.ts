@@ -53,8 +53,6 @@ const config: HardhatUserConfig = {
             accounts: mnemonic ? { mnemonic } : undefined,
         },
         mainnet: infuraNetwork("mainnet", 1, 6283185),
-        rinkeby: infuraNetwork("rinkeby", 4, 6283185),
-        kovan: infuraNetwork("kovan", 42, 6283185),
         goerli: infuraNetwork("goerli", 5, 6283185),
         polygon_mumbai: infuraNetwork("polygon-mumbai", 80001),
         bsc_testnet: {
@@ -103,18 +101,6 @@ const config: HardhatUserConfig = {
             mainnet: [
                 ppath("@cartesi/util", "/deployments/mainnet"),
                 ppath("@cartesi/token", "/deployments/mainnet"),
-            ],
-            ropsten: [
-                ppath("@cartesi/util", "/deployments/ropsten"),
-                ppath("@cartesi/token", "/deployments/ropsten"),
-            ],
-            rinkeby: [
-                ppath("@cartesi/util", "/deployments/rinkeby"),
-                ppath("@cartesi/token", "/deployments/rinkeby"),
-            ],
-            kovan: [
-                ppath("@cartesi/util", "/deployments/kovan"),
-                ppath("@cartesi/token", "/deployments/kovan"),
             ],
             goerli: [
                 ppath("@cartesi/util", "/deployments/goerli"),
