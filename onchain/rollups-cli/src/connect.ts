@@ -17,11 +17,11 @@ import {
     Authority__factory,
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
-} from "@cartesi/rollups-simplified";
-// import goerli from "@cartesi/rollups-simplified/export/abi/goerli.json";
-// import polygon_mumbai from "@cartesi/rollups-simplified/export/abi/polygon_mumbai.json";
-// import arbitrum_goerli from "@cartesi/rollups-simplified/export/abi/arbitrum_goerli.json";
-// import optimism_goerli from "@cartesi/rollups-simplified/export/abi/optimism_goerli.json";
+} from "@cartesi/rollups";
+// import goerli from "@cartesi/rollups/export/abi/goerli.json";
+// import polygon_mumbai from "@cartesi/rollups/export/abi/polygon_mumbai.json";
+// import arbitrum_goerli from "@cartesi/rollups/export/abi/arbitrum_goerli.json";
+// import optimism_goerli from "@cartesi/rollups/export/abi/optimism_goerli.json";
 
 type DeploymentContract = {
     address: string;

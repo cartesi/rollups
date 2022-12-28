@@ -4,8 +4,8 @@ use std::fs::File;
 macro_rules! path {
     ($contract_file: expr, $contract_name: expr) => {
         match $contract_name {
-            "ERC20" => "../../onchain/rollups-simplified/abi/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json".to_owned(),
-            _ => format!("../../onchain/rollups-simplified/abi/contracts/{}.sol/{}.json", $contract_file, $contract_name),
+            "ERC20" => "../../onchain/rollups/abi/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json".to_owned(),
+            _ => format!("../../onchain/rollups/abi/contracts/{}.sol/{}.json", $contract_file, $contract_name),
         }
     };
 }

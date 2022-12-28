@@ -11,13 +11,12 @@
 
 import fs from "fs";
 import fse from "fs-extra";
-import { Wallet } from "ethers";
 import { Argv } from "yargs";
 import { BlockchainArgs, blockchainBuilder } from "../args";
 import { authority, factory } from "../connect";
 import { safeHandler } from "../util";
 
-import { ApplicationCreatedEvent } from "@cartesi/rollups-simplified/dist/src/types/contracts/dapp/ICartesiDAppFactory";
+import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/dapp/ICartesiDAppFactory";
 
 interface Args extends BlockchainArgs {
     dappOwner?: string;
