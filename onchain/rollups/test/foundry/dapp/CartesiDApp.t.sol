@@ -138,7 +138,7 @@ contract CartesiDAppTest is TestBase {
 
     function testNoticeValidation(uint256 _inputIndex) public {
         dapp = deployDAppDeterministically();
-        registerProof(_inputIndex, 0, LibOutputProof0.getNoticeProof());
+        registerProof(_inputIndex, LibOutputProof0.getNoticeProof());
 
         bytes memory notice = abi.encodePacked(bytes4(0xfafafafa));
         logNotice(0, notice);
@@ -331,7 +331,7 @@ contract CartesiDAppTest is TestBase {
     function setupERC20TransferVoucher(uint256 _inputIndex) internal {
         dapp = deployDAppDeterministically();
         erc20Token = deployERC20Deterministically();
-        registerProof(_inputIndex, 1, LibOutputProof1.getVoucherProof());
+        registerProof(_inputIndex, LibOutputProof1.getVoucherProof());
     }
 
     // test ether transfer
@@ -347,7 +347,7 @@ contract CartesiDAppTest is TestBase {
 
         logVoucher(2, address(dapp), withdrawEtherPayload);
 
-        registerProof(_inputIndex, 2, LibOutputProof2.getVoucherProof());
+        registerProof(_inputIndex, LibOutputProof2.getVoucherProof());
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(address(dapp).balance, 0);
@@ -473,7 +473,7 @@ contract CartesiDAppTest is TestBase {
 
         logVoucher(3, address(erc721Token), safeTransferFromPayload);
 
-        registerProof(_inputIndex, 3, LibOutputProof3.getVoucherProof());
+        registerProof(_inputIndex, LibOutputProof3.getVoucherProof());
 
         // not able to execute voucher because dapp doesn't have the nft
         assertEq(erc721Token.ownerOf(tokenId), tokenOwner);
@@ -572,7 +572,6 @@ contract CartesiDAppTest is TestBase {
     // can be used to validate `_inputIndex`, `_epochInputIndex` and `_proof`.
     function registerProof(
         uint256 _inputIndex,
-        uint256 _epochInputIndex,
         OutputValidityProof memory _proof
     ) internal {
         // calculate epoch hash from proof
@@ -588,7 +587,7 @@ contract CartesiDAppTest is TestBase {
         vm.mockCall(
             consensus,
             abi.encodeWithSelector(IConsensus.getEpochHash.selector),
-            abi.encode(epochHash, _inputIndex, _epochInputIndex)
+            abi.encode(epochHash, _inputIndex)
         );
 
         // store proof in storage

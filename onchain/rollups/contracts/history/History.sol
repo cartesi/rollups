@@ -68,29 +68,18 @@ contract History is IHistory, Ownable {
 
     function getEpochHash(
         address _dapp,
-        bytes calldata _claimQuery
-    ) external view override returns (bytes32, uint256, uint256) {
-        (uint256 claimIndex, uint256 inputIndex) = abi.decode(
-            _claimQuery,
-            (uint256, uint256)
-        );
+        uint256 _epochInputIndex,
+        bytes calldata _proofContext
+    ) external view override returns (bytes32, uint256) {
+        uint256 claimIndex = abi.decode(_proofContext, (uint256));
 
         Claim memory claim = claims[_dapp][claimIndex];
 
-        require(
-            claim.firstIndex <= inputIndex && inputIndex <= claim.lastIndex,
-            "History: bad input index"
-        );
+        uint256 inputIndex = claim.firstIndex + _epochInputIndex;
 
-        uint256 epochInputIndex;
+        require(inputIndex <= claim.lastIndex, "History: bad input index");
 
-        unchecked {
-            // This should not underflow because we've checked that
-            // `claim.firstIndex <= inputIndex` in the `require` above
-            epochInputIndex = inputIndex - claim.firstIndex;
-        }
-
-        return (claim.epochHash, inputIndex, epochInputIndex);
+        return (claim.epochHash, inputIndex);
     }
 
     // emits an `OwnershipTransfered` event (see `Ownable`)

@@ -47,8 +47,9 @@ contract HistoryReverts is IHistory {
 
     function getEpochHash(
         address,
+        uint256,
         bytes calldata
-    ) external pure override returns (bytes32, uint256, uint256) {
+    ) external pure override returns (bytes32, uint256) {
         revert();
     }
 }
@@ -219,10 +220,10 @@ contract AuthorityTest is TestBase {
         IInputBox _inputBox,
         IHistory _history,
         address _dapp,
-        bytes calldata _claimProof,
+        uint256 _epochInputIndex,
+        bytes calldata _proofContext,
         bytes32 _r0,
-        uint256 _r1,
-        uint256 _r2
+        uint256 _r1
     ) public isMockable(address(_history)) {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
@@ -236,21 +237,22 @@ contract AuthorityTest is TestBase {
             abi.encodeWithSelector(
                 IHistory.getEpochHash.selector,
                 _dapp,
-                _claimProof
+                _epochInputIndex,
+                _proofContext
             ),
-            abi.encode(_r0, _r1, _r2)
+            abi.encode(_r0, _r1)
         );
 
         // perform call
-        (bytes32 r0, uint256 r1, uint256 r2) = authority.getEpochHash(
+        (bytes32 r0, uint256 r1) = authority.getEpochHash(
             _dapp,
-            _claimProof
+            _epochInputIndex,
+            _proofContext
         );
 
         // check result
         assertEq(_r0, r0);
         assertEq(_r1, r1);
-        assertEq(_r2, r2);
     }
 
     // test behaviors when history reverts
@@ -260,7 +262,8 @@ contract AuthorityTest is TestBase {
         address _dapp,
         bytes calldata _claim,
         address _consensus,
-        bytes calldata _claimProof
+        uint256 _epochInputIndex,
+        bytes calldata _proofContext
     ) public {
         vm.assume(_owner != address(0));
 
@@ -277,7 +280,7 @@ contract AuthorityTest is TestBase {
         authority.migrateHistoryToConsensus(_consensus);
 
         vm.expectRevert();
-        authority.getEpochHash(_dapp, _claimProof);
+        authority.getEpochHash(_dapp, _epochInputIndex, _proofContext);
     }
 
     function testWithdrawERC20TokensNotOwner(

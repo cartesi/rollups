@@ -44,27 +44,25 @@ contract CartesiDApp is
     function executeVoucher(
         address _destination,
         bytes calldata _payload,
-        bytes calldata _claimQuery,
+        bytes calldata _proofContext,
         OutputValidityProof calldata _v
     ) external override nonReentrant returns (bool) {
         bytes32 epochHash;
         uint256 inputIndex;
-        uint256 epochInputIndex;
 
         // query the current consensus for the desired claim
-        (epochHash, inputIndex, epochInputIndex) = consensus.getEpochHash(
+        (epochHash, inputIndex) = consensus.getEpochHash(
             address(this),
-            _claimQuery
+            _v.epochInputIndex,
+            _proofContext
         );
 
         // reverts if proof isn't valid
-        // we assume `epochInputIndex` fits in a uint64, because
-        // the machine wouldn't be able to store more than 2^64 inputs
         _v.validateVoucher(
             _destination,
             _payload,
             epochHash,
-            uint64(epochInputIndex)
+            _v.epochInputIndex
         );
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
@@ -109,22 +107,20 @@ contract CartesiDApp is
 
     function validateNotice(
         bytes calldata _notice,
-        bytes calldata _claimQuery,
+        bytes calldata _proofContext,
         OutputValidityProof calldata _v
     ) external view override returns (bool) {
         bytes32 epochHash;
-        uint256 epochInputIndex;
 
         // query the current consensus for the desired claim
-        (epochHash, , epochInputIndex) = consensus.getEpochHash(
+        (epochHash, ) = consensus.getEpochHash(
             address(this),
-            _claimQuery
+            _v.epochInputIndex,
+            _proofContext
         );
 
         // reverts if proof isn't valid
-        // we assume `epochInputIndex` fits in a uint64, because
-        // the machine wouldn't be able to store more than 2^64 inputs
-        _v.validateNotice(_notice, epochHash, uint64(epochInputIndex));
+        _v.validateNotice(_notice, epochHash, _v.epochInputIndex);
 
         return true;
     }

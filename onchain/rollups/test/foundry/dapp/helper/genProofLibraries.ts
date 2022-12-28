@@ -3,6 +3,7 @@ import fs from "fs";
 import epochStatus from "./epoch-status.json";
 
 interface OutputValidityProof {
+    epochInputIndex: number;
     outputIndex: number;
     outputHashesRootHash: BytesLike;
     vouchersEpochRootHash: BytesLike;
@@ -28,6 +29,7 @@ function setupVoucherProof(epochInputIndex: number): OutputValidityProof {
         voucherHashesInEpochSiblings.push(element.data);
     });
     let voucherProof: OutputValidityProof = {
+        epochInputIndex: epochInputIndex,
         outputIndex: 0,
         outputHashesRootHash: voucherDataKeccakInHashes.rootHash.data,
         vouchersEpochRootHash: epochStatus.mostRecentVouchersEpochRootHash.data,
@@ -55,6 +57,7 @@ function setupNoticeProof(epochInputIndex: number): OutputValidityProof {
         noticeHashesInEpochSiblingsN.push(element.data);
     });
     let noticeProof: OutputValidityProof = {
+        epochInputIndex: epochInputIndex,
         outputIndex: 0,
         outputHashesRootHash: noticeDataKeccakInHashes.rootHash.data,
         vouchersEpochRootHash: epochStatus.mostRecentVouchersEpochRootHash.data,
@@ -93,6 +96,7 @@ function buildSolCodes(
         `        for (uint256 i; i < ${array1.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array1[i]); }`,
         `        for (uint256 i; i < ${array2.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array2[i]); }`,
         `        return OutputValidityProof({`,
+        `            epochInputIndex: ${noticeProof.epochInputIndex},`,
         `            outputIndex: ${noticeProof.outputIndex},`,
         `            outputHashesRootHash: ${noticeProof.outputHashesRootHash},`,
         `            vouchersEpochRootHash: ${noticeProof.vouchersEpochRootHash},`,
@@ -110,6 +114,7 @@ function buildSolCodes(
         `        for (uint256 i; i < ${array3.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array3[i]); }`,
         `        for (uint256 i; i < ${array4.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array4[i]); }`,
         `        return OutputValidityProof({`,
+        `            epochInputIndex: ${voucherProof.epochInputIndex},`,
         `            outputIndex: ${voucherProof.outputIndex},`,
         `            outputHashesRootHash: ${voucherProof.outputHashesRootHash},`,
         `            vouchersEpochRootHash: ${voucherProof.vouchersEpochRootHash},`,

@@ -57,9 +57,10 @@ contract Authority is IConsensus, Ownable {
 
     function getEpochHash(
         address _dapp,
-        bytes calldata _claimQuery
-    ) external view override returns (bytes32, uint256, uint256) {
-        return history.getEpochHash(_dapp, _claimQuery);
+        uint256 _epochInputIndex,
+        bytes calldata _proofContext
+    ) external view override returns (bytes32, uint256) {
+        return history.getEpochHash(_dapp, _epochInputIndex, _proofContext);
     }
 
     function withdrawERC20Tokens(
