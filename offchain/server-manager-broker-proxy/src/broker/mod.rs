@@ -248,17 +248,25 @@ mod tests {
             let mut ids = vec![];
             for data in datum {
                 let last_event = self.get_latest_input_event().await;
-                let (parent_id, epoch_index) = match last_event {
-                    Some(event) => match event.payload.data {
-                        RollupsData::AdvanceStateInput { .. } => {
-                            (event.id, event.payload.epoch_index)
+                let (parent_id, epoch_index, inputs_sent_count) =
+                    match last_event {
+                        Some(event) => {
+                            let epoch_index = match event.payload.data {
+                                RollupsData::AdvanceStateInput { .. } => {
+                                    event.payload.epoch_index
+                                }
+                                RollupsData::FinishEpoch {} => {
+                                    event.payload.epoch_index + 1
+                                }
+                            };
+                            (
+                                event.id,
+                                epoch_index,
+                                event.payload.inputs_sent_count + 1,
+                            )
                         }
-                        RollupsData::FinishEpoch {} => {
-                            (event.id, event.payload.epoch_index + 1)
-                        }
-                    },
-                    None => (INITIAL_ID.to_owned(), 0),
-                };
+                        None => (INITIAL_ID.to_owned(), 0, 0),
+                    };
                 let id = self
                     .broker
                     .produce(
@@ -266,6 +274,7 @@ mod tests {
                         RollupsInput {
                             parent_id,
                             epoch_index,
+                            inputs_sent_count,
                             data,
                         },
                     )
@@ -398,6 +407,7 @@ mod tests {
                 payload: RollupsInput {
                     parent_id: INITIAL_ID.to_owned(),
                     epoch_index: 0,
+                    inputs_sent_count: 0,
                     data: inputs_data[0].clone(),
                 },
             }
@@ -409,6 +419,7 @@ mod tests {
                 payload: RollupsInput {
                     parent_id: ids[0].clone(),
                     epoch_index: 0,
+                    inputs_sent_count: 1,
                     data: inputs_data[1].clone(),
                 },
             }
@@ -420,6 +431,7 @@ mod tests {
                 payload: RollupsInput {
                     parent_id: ids[1].clone(),
                     epoch_index: 1,
+                    inputs_sent_count: 2,
                     data: inputs_data[2].clone(),
                 },
             }
