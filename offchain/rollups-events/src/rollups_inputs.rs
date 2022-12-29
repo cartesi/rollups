@@ -78,7 +78,7 @@ pub enum RollupsData {
     FinishEpoch {},
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct InputMetadata {
     /// Address of the message sender
     #[serde(with = "base64_array")]

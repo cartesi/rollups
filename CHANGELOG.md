@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Authority consensus model implementation (single validator)
 - Simple claim storage implementation (one claim per DApp)
 - Library that defines several constants related to the canonical off-chain machine
+- Added integration tests for proxy
 
 ### Changed
 

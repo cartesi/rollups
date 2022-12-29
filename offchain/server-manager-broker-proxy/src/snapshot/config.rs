@@ -14,13 +14,13 @@ use clap::Parser;
 use snafu::{ensure, Snafu};
 use std::path::PathBuf;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FSManagerConfig {
     pub snapshot_dir: PathBuf,
     pub snapshot_latest: PathBuf,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SnapshotConfig {
     FileSystem(FSManagerConfig),
     Disabled,

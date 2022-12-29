@@ -16,7 +16,7 @@ use snafu::{ResultExt, Snafu};
 use std::fs::File;
 use std::io::BufReader;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BrokerConfig {
     pub redis_endpoint: String,
     pub chain_id: u64,

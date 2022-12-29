@@ -9,6 +9,7 @@ name = "server-manager-broker-proxy"
 path = "src/main.rs"
 
 [dependencies]
+grpc-interfaces = { path = "../grpc-interfaces" }
 rollups-events = { path = "../rollups-events" }
 
 anyhow = "1.0"
@@ -28,11 +29,11 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1.2", features = ["v4"] }
 
-[build-dependencies]
-tonic-build = "0.8"
-
 [dev-dependencies]
+test-fixtures = { path = "../test-fixtures" }
+
 env_logger = "0.9"
+rand = "0.8"
 tempfile = "3.3"
 testcontainers = "0.14"
 test-log = { version = "0.2", features = ["trace"] }

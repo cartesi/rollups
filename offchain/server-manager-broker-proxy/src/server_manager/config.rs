@@ -12,10 +12,12 @@
 
 use clap::Parser;
 
-use crate::grpc::cartesi_machine::{ConcurrencyConfig, MachineRuntimeConfig};
-use crate::grpc::cartesi_server_manager::{CyclesConfig, DeadlineConfig};
+use grpc_interfaces::cartesi_machine::{
+    ConcurrencyConfig, MachineRuntimeConfig,
+};
+use grpc_interfaces::cartesi_server_manager::{CyclesConfig, DeadlineConfig};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ServerManagerConfig {
     pub server_manager_endpoint: String,
     pub session_id: String,

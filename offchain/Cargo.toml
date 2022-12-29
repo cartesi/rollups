@@ -1,16 +1,15 @@
 [workspace]
 members = [
   "contracts",
-  "state-server",
-  "types",
-
-  "dispatcher",
-
-  "server-manager-broker-proxy",
-  "rollups-events",
-
   "data",
+  "dispatcher",
+  "grpc-interfaces",
   "indexer",
   "inspect-server",
-  "reader"
+  "reader",
+  "rollups-events",
+  "server-manager-broker-proxy",
+  "state-server",
+  "test-fixtures",
+  "types",
 ]

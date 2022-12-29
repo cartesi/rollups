@@ -28,8 +28,9 @@ pub async fn start_health_check(config: HealthCheckConfig) -> Result<()> {
         .context("could not parse host address")?;
     let addr = SocketAddr::new(ip, config.health_check_port);
     let app = Router::new().route("/healthz", get(|| async { "" }));
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .context("failed to start health-check server")
+    let server = axum::Server::bind(&addr).serve(app.into_make_service());
+
+    tracing::trace!(address = ?server.local_addr(), "http healthcheck address bound");
+
+    server.await.context("failed to start health-check server")
 }

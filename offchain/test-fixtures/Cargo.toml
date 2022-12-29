@@ -1,0 +1,18 @@
+[package]
+name = "test-fixtures"
+version = "0.9.0"
+edition = "2021"
+
+[dependencies]
+grpc-interfaces = { path = "../grpc-interfaces" }
+rollups-events = { path = "../rollups-events" }
+
+anyhow = "1.0"
+backoff = { version = "0.4", features = ["tokio"] }
+prost = "0.11"
+tempfile = "3.3"
+testcontainers = "0.14"
+tokio = "1.21"
+tonic = "0.8"
+tracing = "0.1"
+users = "0.11"

@@ -10,16 +10,11 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use clap::Parser;
+pub mod broker;
+pub mod docker_cli;
+pub mod machine_snapshots;
+pub mod server_manager;
 
-#[derive(Debug, Clone, Parser)]
-#[command(name = "health-check")]
-pub struct HealthCheckConfig {
-    /// Host address of health check
-    #[arg(long, env, default_value = "0.0.0.0")]
-    pub health_check_address: String,
-
-    /// Port of health check
-    #[arg(long, env, default_value = "8080")]
-    pub health_check_port: u16,
-}
+pub use broker::BrokerFixture;
+pub use machine_snapshots::MachineSnapshotsFixture;
+pub use server_manager::ServerManagerFixture;

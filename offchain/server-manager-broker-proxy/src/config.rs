@@ -14,22 +14,21 @@ use clap::Parser;
 use snafu::{ResultExt, Snafu};
 use std::time::Duration;
 
-use crate::broker::config::{BrokerCLIConfig, BrokerConfig, BrokerConfigError};
-use crate::http_health::config::HealthCheckConfig;
-use crate::server_manager::config::{
-    ServerManagerCLIConfig, ServerManagerConfig,
-};
-use crate::snapshot::config::{
-    SnapshotCLIConfig, SnapshotConfig, SnapshotConfigError,
-};
+pub use crate::broker::config::BrokerConfig;
+use crate::broker::config::{BrokerCLIConfig, BrokerConfigError};
+pub use crate::http_health::config::HealthCheckConfig;
+use crate::server_manager::config::ServerManagerCLIConfig;
+pub use crate::server_manager::config::ServerManagerConfig;
+pub use crate::snapshot::config::{FSManagerConfig, SnapshotConfig};
+use crate::snapshot::config::{SnapshotCLIConfig, SnapshotConfigError};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     pub proxy_config: ProxyConfig,
     pub health_check_config: HealthCheckConfig,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ProxyConfig {
     pub server_manager_config: ServerManagerConfig,
     pub broker_config: BrokerConfig,

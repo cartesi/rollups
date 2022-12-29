@@ -18,9 +18,9 @@ use uuid::Uuid;
 
 use rollups_events::rollups_inputs::InputMetadata;
 
-use crate::grpc::cartesi_machine::Void;
-use crate::grpc::cartesi_server_manager::server_manager_client::ServerManagerClient;
-use crate::grpc::cartesi_server_manager::{
+use grpc_interfaces::cartesi_machine::Void;
+use grpc_interfaces::cartesi_server_manager::server_manager_client::ServerManagerClient;
+use grpc_interfaces::cartesi_server_manager::{
     Address, AdvanceStateRequest, EndSessionRequest, FinishEpochRequest,
     GetEpochStatusRequest, GetSessionStatusRequest,
     InputMetadata as MMInputMetadata, StartSessionRequest,

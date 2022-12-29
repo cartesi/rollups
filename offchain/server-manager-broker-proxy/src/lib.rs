@@ -24,7 +24,6 @@ use snapshot::{
 
 mod broker;
 pub mod config;
-mod grpc;
 mod http_health;
 mod runner;
 mod server_manager;

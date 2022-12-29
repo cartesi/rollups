@@ -2286,6 +2286,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "grpc-interfaces"
+version = "0.9.0"
+dependencies = [
+ "prost 0.11.2",
+ "tonic 0.8.2",
+ "tonic-build 0.8.2",
+]
+
+[[package]]
 name = "h2"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4359,19 +4368,21 @@ dependencies = [
  "backoff",
  "clap 4.0.26",
  "env_logger",
+ "grpc-interfaces",
  "hex",
  "prost 0.11.2",
+ "rand 0.8.5",
  "rollups-events",
  "serde",
  "serde_json",
  "sha3",
  "snafu 0.7.3",
  "tempfile",
+ "test-fixtures",
  "test-log",
  "testcontainers",
  "tokio",
  "tonic 0.8.2",
- "tonic-build 0.8.2",
  "tracing",
  "tracing-subscriber",
  "uuid 1.2.2",
@@ -4897,6 +4908,23 @@ checksum = "633c1a546cee861a1a6d0dc69ebeca693bf4296661ba7852b9d21d159e0506df"
 dependencies = [
  "libc",
  "winapi",
+]
+
+[[package]]
+name = "test-fixtures"
+version = "0.9.0"
+dependencies = [
+ "anyhow",
+ "backoff",
+ "grpc-interfaces",
+ "prost 0.11.2",
+ "rollups-events",
+ "tempfile",
+ "testcontainers",
+ "tokio",
+ "tonic 0.8.2",
+ "tracing",
+ "users",
 ]
 
 [[package]]
@@ -5522,6 +5550,16 @@ name = "urlencoding"
 version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8db7427f936968176eaa7cdf81b7f98b980b18495ec28f1b5791ac3bfe3eea9"
+
+[[package]]
+name = "users"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24cc0f6d6f267b73e5a2cadf007ba8f9bc39c6a6f9666f8cf25ea809a153b032"
+dependencies = [
+ "libc",
+ "log",
+]
 
 [[package]]
 name = "utf-8"
