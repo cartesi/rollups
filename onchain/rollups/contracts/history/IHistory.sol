@@ -35,11 +35,11 @@ interface IHistory {
     //                           and the first input of the epoch in the input box
     /// @param _proofContext Data for querying the desired claim
     /// @return epochHash_ The epoch hash contained in the claim
-    /// @return inputIndex_ The index of the input in the input box
+    /// @return inboxInputIndex_ The index of the input in the input box
     /// @dev The encoding of _proofContext might vary depending on the history implementation
     function getEpochHash(
         address _dapp,
         uint256 _epochInputIndex,
         bytes calldata _proofContext
-    ) external view returns (bytes32 epochHash_, uint256 inputIndex_);
+    ) external view returns (bytes32 epochHash_, uint256 inboxInputIndex_);
 }

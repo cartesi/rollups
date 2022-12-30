@@ -23,7 +23,7 @@ library LibInput {
         uint256 blockNumber,
         uint256 blockTimestamp,
         bytes calldata input,
-        uint256 inputIndex
+        uint256 inboxInputIndex
     ) internal pure returns (bytes32) {
         // Currently sending an input larger than driveSize surpasses the block gas limit
         // But we keep the following check in case this changes in the future
@@ -39,7 +39,7 @@ library LibInput {
                 blockNumber,
                 blockTimestamp,
                 0, //TODO decide how to deal with epoch index
-                inputIndex // input index
+                inboxInputIndex // input index in the input box
             )
         );
 

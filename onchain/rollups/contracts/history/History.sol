@@ -75,11 +75,11 @@ contract History is IHistory, Ownable {
 
         Claim memory claim = claims[_dapp][claimIndex];
 
-        uint256 inputIndex = claim.firstIndex + _epochInputIndex;
+        uint256 inboxInputIndex = claim.firstIndex + _epochInputIndex;
 
-        require(inputIndex <= claim.lastIndex, "History: bad input index");
+        require(inboxInputIndex <= claim.lastIndex, "History: bad input index");
 
-        return (claim.epochHash, inputIndex);
+        return (claim.epochHash, inboxInputIndex);
     }
 
     // emits an `OwnershipTransfered` event (see `Ownable`)

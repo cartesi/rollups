@@ -48,10 +48,10 @@ contract CartesiDApp is
         OutputValidityProof calldata _v
     ) external override nonReentrant returns (bool) {
         bytes32 epochHash;
-        uint256 inputIndex;
+        uint256 inboxInputIndex;
 
         // query the current consensus for the desired claim
-        (epochHash, inputIndex) = consensus.getEpochHash(
+        (epochHash, inboxInputIndex) = consensus.getEpochHash(
             address(this),
             _v.epochInputIndex,
             _proofContext
@@ -67,7 +67,7 @@ contract CartesiDApp is
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _v.outputIndex,
-            inputIndex
+            inboxInputIndex
         );
 
         // check if voucher has been executed
@@ -89,12 +89,12 @@ contract CartesiDApp is
     }
 
     function wasVoucherExecuted(
-        uint256 _inputIndex,
+        uint256 _inboxInputIndex,
         uint256 _outputIndex
     ) external view override returns (bool) {
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _outputIndex,
-            _inputIndex
+            _inboxInputIndex
         );
         return _wasVoucherExecuted(voucherPosition);
     }

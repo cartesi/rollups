@@ -159,7 +159,7 @@ contract HistoryTest is Test {
     function checkEpochHash(
         address dapp,
         uint256 claimIndex,
-        uint256 inputIndex,
+        uint256 inboxInputIndex,
         bytes32 epochHash,
         uint256 epochInputIndex
     ) internal {
@@ -172,7 +172,7 @@ contract HistoryTest is Test {
         );
 
         assertEq(retEpochHash, epochHash);
-        assertEq(retInputIndex, inputIndex);
+        assertEq(retInputIndex, inboxInputIndex);
     }
 
     function testGetEpochHash(
@@ -201,12 +201,12 @@ contract HistoryTest is Test {
         bytes32 epochHash,
         uint128 fi,
         uint128 li,
-        uint256 inputIndex
+        uint256 inboxInputIndex
     ) public {
-        vm.assume(inputIndex > li);
+        vm.assume(inboxInputIndex > li);
         submitClaim(dapp, epochHash, fi, li);
         uint256 claimIndex = 0;
-        uint256 epochInputIndex = inputIndex - fi;
+        uint256 epochInputIndex = inboxInputIndex - fi;
         vm.expectRevert("History: bad input index");
         history.getEpochHash(dapp, epochInputIndex, abi.encode(claimIndex));
     }

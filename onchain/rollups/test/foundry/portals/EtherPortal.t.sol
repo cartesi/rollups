@@ -53,7 +53,7 @@ contract EtherPortalTest is Test {
 
     event InputAdded(
         address indexed dapp,
-        uint256 indexed inputIndex,
+        uint256 indexed inboxInputIndex,
         address sender,
         bytes input
     );
