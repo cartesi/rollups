@@ -45,11 +45,10 @@ contract HistoryReverts is IHistory {
         revert();
     }
 
-    function getEpochHash(
+    function getClaim(
         address,
-        uint256,
         bytes calldata
-    ) external pure override returns (bytes32, uint256) {
+    ) external pure override returns (bytes32, uint256, uint256) {
         revert();
     }
 }
@@ -215,15 +214,15 @@ contract AuthorityTest is TestBase {
         assertEq(address(authority.getHistory()), address(_newHistory));
     }
 
-    function testGetEpochHash(
+    function testGetClaim(
         address _owner,
         IInputBox _inputBox,
         IHistory _history,
         address _dapp,
-        uint256 _epochInputIndex,
         bytes calldata _proofContext,
         bytes32 _r0,
-        uint256 _r1
+        uint256 _r1,
+        uint256 _r2
     ) public isMockable(address(_history)) {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
@@ -235,24 +234,23 @@ contract AuthorityTest is TestBase {
         vm.mockCall(
             address(_history),
             abi.encodeWithSelector(
-                IHistory.getEpochHash.selector,
+                IHistory.getClaim.selector,
                 _dapp,
-                _epochInputIndex,
                 _proofContext
             ),
-            abi.encode(_r0, _r1)
+            abi.encode(_r0, _r1, _r2)
         );
 
         // perform call
-        (bytes32 r0, uint256 r1) = authority.getEpochHash(
+        (bytes32 r0, uint256 r1, uint256 r2) = authority.getClaim(
             _dapp,
-            _epochInputIndex,
             _proofContext
         );
 
         // check result
         assertEq(_r0, r0);
         assertEq(_r1, r1);
+        assertEq(_r2, r2);
     }
 
     // test behaviors when history reverts
@@ -262,7 +260,6 @@ contract AuthorityTest is TestBase {
         address _dapp,
         bytes calldata _claim,
         address _consensus,
-        uint256 _epochInputIndex,
         bytes calldata _proofContext
     ) public {
         vm.assume(_owner != address(0));
@@ -280,7 +277,7 @@ contract AuthorityTest is TestBase {
         authority.migrateHistoryToConsensus(_consensus);
 
         vm.expectRevert();
-        authority.getEpochHash(_dapp, _epochInputIndex, _proofContext);
+        authority.getClaim(_dapp, _proofContext);
     }
 
     function testWithdrawERC20TokensNotOwner(

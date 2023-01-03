@@ -48,22 +48,22 @@ contract CartesiDApp is
         OutputValidityProof calldata _v
     ) external override nonReentrant returns (bool) {
         bytes32 epochHash;
+        uint256 firstInputIndex;
+        uint256 lastInputIndex;
         uint256 inboxInputIndex;
 
         // query the current consensus for the desired claim
-        (epochHash, inboxInputIndex) = consensus.getEpochHash(
-            address(this),
-            _v.epochInputIndex,
-            _proofContext
+        (epochHash, firstInputIndex, lastInputIndex) = getClaim(_proofContext);
+
+        // validate the epoch input index and calculate the inbox input index
+        // based on the input index range provided by the consensus
+        inboxInputIndex = _v.validateInputIndexRange(
+            firstInputIndex,
+            lastInputIndex
         );
 
         // reverts if proof isn't valid
-        _v.validateVoucher(
-            _destination,
-            _payload,
-            epochHash,
-            _v.epochInputIndex
-        );
+        _v.validateVoucher(_destination, _payload, epochHash);
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _v.outputIndex,
@@ -111,18 +111,26 @@ contract CartesiDApp is
         OutputValidityProof calldata _v
     ) external view override returns (bool) {
         bytes32 epochHash;
+        uint256 firstInputIndex;
+        uint256 lastInputIndex;
 
         // query the current consensus for the desired claim
-        (epochHash, ) = consensus.getEpochHash(
-            address(this),
-            _v.epochInputIndex,
-            _proofContext
-        );
+        (epochHash, firstInputIndex, lastInputIndex) = getClaim(_proofContext);
+
+        // validate the epoch input index based on the input index range
+        // provided by the consensus
+        _v.validateInputIndexRange(firstInputIndex, lastInputIndex);
 
         // reverts if proof isn't valid
-        _v.validateNotice(_notice, epochHash, _v.epochInputIndex);
+        _v.validateNotice(_notice, epochHash);
 
         return true;
+    }
+
+    function getClaim(
+        bytes calldata _proofContext
+    ) internal view returns (bytes32, uint256, uint256) {
+        return consensus.getClaim(address(this), _proofContext);
     }
 
     function migrateToConsensus(

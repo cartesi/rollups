@@ -43,7 +43,6 @@ library LibOutputValidation {
     /// @param _v the output validity proof
     /// @param _encodedOutput the encoded output
     /// @param _epochHash the hash of the epoch in which the output was generated
-    /// @param _epochInputIndex index of input in the epoch
     /// @param _outputsEpochRootHash either _v.vouchersEpochRootHash (for vouchers)
     ///                              or _v.noticesEpochRootHash (for notices)
     /// @param _outputEpochLog2Size either EPOCH_VOUCHER_LOG2_SIZE (for vouchers)
@@ -54,7 +53,6 @@ library LibOutputValidation {
         OutputValidityProof calldata _v,
         bytes memory _encodedOutput,
         bytes32 _epochHash,
-        uint64 _epochInputIndex,
         bytes32 _outputsEpochRootHash,
         uint256 _outputEpochLog2Size,
         uint256 _outputHashesLog2Size
@@ -75,7 +73,7 @@ library LibOutputValidation {
         require(
             MerkleV2.getRootAfterReplacementInDrive(
                 CanonicalMachine.getIntraMemoryRangePosition(
-                    _epochInputIndex,
+                    _v.epochInputIndex,
                     CanonicalMachine.KECCAK_LOG2_SIZE
                 ),
                 CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
@@ -130,13 +128,11 @@ library LibOutputValidation {
     /// @param _destination The contract that will execute the payload
     /// @param _payload The ABI-encoded function call
     /// @param _epochHash the hash of the epoch in which the output was generated
-    /// @param _epochInputIndex index of input in the epoch
     function validateVoucher(
         OutputValidityProof calldata _v,
         address _destination,
         bytes calldata _payload,
-        bytes32 _epochHash,
-        uint64 _epochInputIndex
+        bytes32 _epochHash
     ) internal pure {
         bytes memory encodedVoucher = OutputEncoding.encodeVoucher(
             _destination,
@@ -146,7 +142,6 @@ library LibOutputValidation {
             _v,
             encodedVoucher,
             _epochHash,
-            _epochInputIndex,
             _v.vouchersEpochRootHash,
             CanonicalMachine.EPOCH_VOUCHER_LOG2_SIZE.uint64OfSize(),
             CanonicalMachine.VOUCHER_METADATA_LOG2_SIZE.uint64OfSize()
@@ -157,19 +152,16 @@ library LibOutputValidation {
     /// @param _v the output validity proof
     /// @param _notice The notice
     /// @param _epochHash the hash of the epoch in which the output was generated
-    /// @param _epochInputIndex index of input in the epoch
     function validateNotice(
         OutputValidityProof calldata _v,
         bytes calldata _notice,
-        bytes32 _epochHash,
-        uint64 _epochInputIndex
+        bytes32 _epochHash
     ) internal pure {
         bytes memory encodedNotice = OutputEncoding.encodeNotice(_notice);
         validateEncodedOutput(
             _v,
             encodedNotice,
             _epochHash,
-            _epochInputIndex,
             _v.noticesEpochRootHash,
             CanonicalMachine.EPOCH_NOTICE_LOG2_SIZE.uint64OfSize(),
             CanonicalMachine.NOTICE_METADATA_LOG2_SIZE.uint64OfSize()
@@ -188,5 +180,26 @@ library LibOutputValidation {
         // this shouldn't overflow because it is impossible to have > 2**128 vouchers
         // and because we are assuming there will be < 2 ** 128 inputs on the input box
         return (((_voucher << 128) | _input));
+    }
+
+    /// @notice Validate input index range and get the inbox input index
+    /// @param _v the output validity proof
+    /// @param _firstInputIndex the index of the first input of the epoch in the input box
+    /// @param _lastInputIndex the index of the last input of the epoch in the input box
+    /// @return the index of the input in the DApp's input box
+    /// @dev reverts if epoch input index is not compatible with the provided input index range
+    function validateInputIndexRange(
+        OutputValidityProof calldata _v,
+        uint256 _firstInputIndex,
+        uint256 _lastInputIndex
+    ) internal pure returns (uint256) {
+        uint256 inboxInputIndex = _firstInputIndex + _v.epochInputIndex;
+
+        require(
+            inboxInputIndex <= _lastInputIndex,
+            "inbox input index out of bounds"
+        );
+
+        return inboxInputIndex;
     }
 }

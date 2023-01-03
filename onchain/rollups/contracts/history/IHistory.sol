@@ -29,17 +29,22 @@ interface IHistory {
 
     // Permissionless functions
 
-    /// @notice Get the epoch hash for a given DApp from a claim
+    /// @notice Get a claim
     /// @param _dapp The DApp
-    /// @param epochInputIndex_ The offset between the input in the input box
-    //                           and the first input of the epoch in the input box
-    /// @param _proofContext Data for querying the desired claim
-    /// @return epochHash_ The epoch hash contained in the claim
-    /// @return inboxInputIndex_ The index of the input in the input box
+    /// @param _proofContext Data for retrieving the desired claim
+    /// @return epochHash_ The epoch hash of the claim
+    /// @return firstInputIndex_ The index of the first input of the epoch in the input box
+    /// @return lastInputIndex_ The index of the last input of the epoch in the input box
     /// @dev The encoding of _proofContext might vary depending on the history implementation
-    function getEpochHash(
+    function getClaim(
         address _dapp,
-        uint256 _epochInputIndex,
         bytes calldata _proofContext
-    ) external view returns (bytes32 epochHash_, uint256 inboxInputIndex_);
+    )
+        external
+        view
+        returns (
+            bytes32 epochHash_,
+            uint256 firstInputIndex_,
+            uint256 lastInputIndex_
+        );
 }

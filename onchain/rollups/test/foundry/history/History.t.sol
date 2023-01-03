@@ -156,26 +156,25 @@ contract HistoryTest is Test {
         history.submitClaim("");
     }
 
-    function checkEpochHash(
+    function checkClaim(
         address dapp,
         uint256 claimIndex,
-        uint256 inboxInputIndex,
         bytes32 epochHash,
-        uint256 epochInputIndex
+        uint256 firstInputIndex,
+        uint256 lastInputIndex
     ) internal {
-        bytes memory data = abi.encode(claimIndex);
-
-        (bytes32 retEpochHash, uint256 retInputIndex) = history.getEpochHash(
-            dapp,
-            epochInputIndex,
-            data
-        );
+        (
+            bytes32 retEpochHash,
+            uint256 retFirstInputIndex,
+            uint256 retLastInputIndex
+        ) = history.getClaim(dapp, abi.encode(claimIndex));
 
         assertEq(retEpochHash, epochHash);
-        assertEq(retInputIndex, inboxInputIndex);
+        assertEq(retFirstInputIndex, firstInputIndex);
+        assertEq(retLastInputIndex, lastInputIndex);
     }
 
-    function testGetEpochHash(
+    function testGetClaim(
         address dapp,
         bytes32[2] calldata epochHash,
         uint128[2] calldata fi,
@@ -183,32 +182,13 @@ contract HistoryTest is Test {
     ) public {
         testSubmitClaims(dapp, epochHash, fi, li);
         for (uint256 i; i < epochHash.length; ++i) {
-            checkEpochHash(dapp, i, fi[i], epochHash[i], 0);
-            checkEpochHash(dapp, i, li[i], epochHash[i], li[i] - fi[i]);
+            checkClaim(dapp, i, epochHash[i], fi[i], li[i]);
         }
     }
 
-    function testRevertsGetEpochHashEncoding(
-        address dapp,
-        uint256 epochInputIndex
-    ) public {
+    function testRevertsGetClaimEncoding(address dapp) public {
         vm.expectRevert();
-        history.getEpochHash(dapp, epochInputIndex, "");
-    }
-
-    function testRevertsBadInputIndex(
-        address dapp,
-        bytes32 epochHash,
-        uint128 fi,
-        uint128 li,
-        uint256 inboxInputIndex
-    ) public {
-        vm.assume(inboxInputIndex > li);
-        submitClaim(dapp, epochHash, fi, li);
-        uint256 claimIndex = 0;
-        uint256 epochInputIndex = inboxInputIndex - fi;
-        vm.expectRevert("History: bad input index");
-        history.getEpochHash(dapp, epochInputIndex, abi.encode(claimIndex));
+        history.getClaim(dapp, "");
     }
 
     function testRevertsBadClaimIndex(
@@ -224,6 +204,6 @@ contract HistoryTest is Test {
         }
 
         vm.expectRevert(stdError.indexOOBError);
-        history.getEpochHash(dapp, 0, abi.encode(claimIndex));
+        history.getClaim(dapp, abi.encode(claimIndex));
     }
 }

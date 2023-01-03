@@ -56,17 +56,22 @@ interface IConsensus {
 
     /// @notice Get the epoch hash for a given DApp from a claim
     /// @param _dapp The DApp
-    /// @param _epochInputIndex The offset between the input in the input box
-    //                           and the first input of the epoch in the input box
-    /// @param _proofContext Data for querying the desired claim
+    /// @param _proofContext Data for retrieving the desired claim
     /// @return epochHash_ The epoch hash contained in the claim
-    /// @return inboxInputIndex_ The index of the input in the input box
+    /// @return firstInputIndex_ The index of the first input in the input box for which the epoch hash is valid
+    /// @return lastInputIndex_ The index of the last input in the input box for which the epoch hash is valid
     /// @dev The encoding of _proofContext might vary depending on the history implementation
-    function getEpochHash(
+    function getClaim(
         address _dapp,
-        uint256 _epochInputIndex,
         bytes calldata _proofContext
-    ) external view returns (bytes32 epochHash_, uint256 inboxInputIndex_);
+    )
+        external
+        view
+        returns (
+            bytes32 epochHash_,
+            uint256 firstInputIndex_,
+            uint256 lastInputIndex_
+        );
 
     /// @notice Transfer ERC-20 tokens from consensus contract to a recipient
     /// @param _token The ERC-20 token
