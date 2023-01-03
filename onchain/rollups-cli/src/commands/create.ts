@@ -12,11 +12,13 @@
 import fs from "fs";
 import fse from "fs-extra";
 import { Argv } from "yargs";
+import { Overrides } from "@ethersproject/contracts";
+import { parseUnits } from "@ethersproject/units";
+import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/dapp/ICartesiDAppFactory";
+
 import { BlockchainArgs, blockchainBuilder } from "../args";
 import { authority, factory } from "../connect";
 import { safeHandler } from "../util";
-
-import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/dapp/ICartesiDAppFactory";
 
 interface Args extends BlockchainArgs {
     dappOwner?: string;
@@ -24,6 +26,8 @@ interface Args extends BlockchainArgs {
     templateHash?: string;
     templateHashFile?: string;
     outputFile?: string;
+    gasPrice?: number;
+    gasLimit?: number;
 }
 
 export const command = "create";
@@ -64,11 +68,27 @@ export const builder = (yargs: Argv<{}>): Argv<Args> => {
                 "Output file to write application information in JSON format",
             type: "string",
         })
+        .option("gasPrice", {
+            describe: "Gas price to use for deployment, in GWei",
+            type: "number",
+        })
+        .option("gasLimit", {
+            describe: "Gas limit to use for deployment",
+            type: "number",
+        })
         .config();
 };
 
 export const handler = safeHandler<Args>(async (args) => {
-    const { deploymentFile, mnemonic, accountIndex, rpc, outputFile } = args;
+    const {
+        deploymentFile,
+        mnemonic,
+        accountIndex,
+        rpc,
+        outputFile,
+        gasPrice,
+        gasLimit,
+    } = args;
 
     // connect to provider, use deployment address based on returned chain id of provider
     console.log(`connecting to ${rpc}`);
@@ -100,10 +120,19 @@ export const handler = safeHandler<Args>(async (args) => {
     const templateHash =
         args.templateHash || readTemplateHash(args.templateHashFile!);
 
+    const overrides: Overrides = {};
+    if (gasPrice) {
+        overrides.gasPrice = parseUnits(gasPrice.toString(), "gwei");
+    }
+    if (gasLimit) {
+        overrides.gasLimit = gasLimit;
+    }
+
     const tx = await factoryContract.newApplication(
         args.consensusAddress || authorityContract.address,
         args.dappOwner || address,
-        templateHash
+        templateHash,
+        overrides
     );
     console.log(`transaction: ${tx.hash}`);
     console.log("waiting for confirmation...");

@@ -16,7 +16,9 @@
         "prettier": "prettier --check ."
     },
     "dependencies": {
-        "ethers": "^5.6.9",
+        "@cartesi/rollups": "*",
+        "@ethersproject/contracts": "^5.7.0",
+        "@ethersproject/units": "^5.7.0",
         "fs-extra": "^11.1.0",
         "yargs": "^17.4.0"
     },
