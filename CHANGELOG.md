@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added support to Cartesi Machine snapshots
 
+## [0.8.2] 2023-01-04
+
 ### Changed
 
 - Fixed proxy start up after restart
-- Changed sm\_pending\_inputs\_max\_retries default to 600
+- Changed `sm_pending_inputs_max_retries` default to 600 (retries while polling server-manager for pending inputs)
 
 ## [0.8.1] 2022-12-02
 
@@ -137,6 +139,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Specific ERC-20 Portal
 - Deprecated mock contracts
 
+[0.8.2]: https://github.com/cartesi/rollups/releases/tag/v0.8.2
 [0.8.1]: https://github.com/cartesi/rollups/releases/tag/v0.8.1
 [0.8.0]: https://github.com/cartesi/rollups/releases/tag/v0.8.0
 [0.7.0]: https://github.com/cartesi/rollups/releases/tag/v0.7.0

@@ -1147,7 +1147,7 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
 name = "contracts"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "serde_json",
  "state-fold-types",
@@ -1514,7 +1514,7 @@ dependencies = [
 
 [[package]]
 name = "dispatcher"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2586,7 +2586,7 @@ checksum = "ce23b50ad8242c51a442f3ff322d56b02f08852c77e4c0b4d3fd684abc89c683"
 
 [[package]]
 name = "indexer"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -2643,7 +2643,7 @@ dependencies = [
 
 [[package]]
 name = "inspect-server"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "actix-cors",
  "actix-web",
@@ -3745,7 +3745,7 @@ dependencies = [
 
 [[package]]
 name = "reader"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "actix-cors",
  "actix-web",
@@ -3979,7 +3979,7 @@ dependencies = [
 
 [[package]]
 name = "rollups-data"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "backoff",
  "base64 0.13.1",
@@ -4349,7 +4349,7 @@ dependencies = [
 
 [[package]]
 name = "server-manager-broker-proxy"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4661,7 +4661,7 @@ dependencies = [
 
 [[package]]
 name = "state-server"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "block-history",
@@ -5425,7 +5425,7 @@ checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
 
 [[package]]
 name = "types"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "async-trait",
