@@ -7,7 +7,7 @@ use types::foldables::input_box::{DAppInputBox, Input, InputBox};
 
 use anyhow::Result;
 
-use tracing::{info, instrument, trace};
+use tracing::{debug, instrument, trace};
 
 #[derive(Debug)]
 pub struct MachineDriver {
@@ -30,7 +30,7 @@ impl MachineDriver {
         let dapp_input_box =
             match input_box.dapp_input_boxes.get(&self.dapp_address) {
                 None => {
-                    info!("No inputs for dapp {}", self.dapp_address);
+                    debug!("No inputs for dapp {}", self.dapp_address);
                     return Ok(());
                 }
 
