@@ -195,6 +195,8 @@ impl ServerManagerFacade {
     #[tracing::instrument(level = "trace", skip_all)]
     pub async fn advance_state(
         &mut self,
+        active_epoch_index: u64,
+        current_input_index: u64,
         input_metadata: InputMetadata,
         input_payload: Vec<u8>,
     ) -> Result<()> {
@@ -211,8 +213,8 @@ impl ServerManagerFacade {
             };
             AdvanceStateRequest {
                 session_id: self.config.session_id.to_owned(),
-                active_epoch_index: input_metadata.epoch_index,
-                current_input_index: input_metadata.input_index,
+                active_epoch_index,
+                current_input_index,
                 input_metadata: Some(metadata),
                 input_payload: input_payload.clone(),
             }

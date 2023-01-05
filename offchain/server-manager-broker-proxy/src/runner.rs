@@ -97,7 +97,12 @@ impl<Snap: SnapshotManager + std::fmt::Debug + 'static> Runner<Snap> {
                     ..
                 } => {
                     runner
-                        .handle_advance(input_metadata, input_payload)
+                        .handle_advance(
+                            event.payload.epoch_index,
+                            event.payload.inputs_sent_count - 1,
+                            input_metadata,
+                            input_payload,
+                        )
                         .await?;
                 }
                 RollupsData::FinishEpoch { .. } => {
@@ -163,13 +168,20 @@ impl<Snap: SnapshotManager + std::fmt::Debug + 'static> Runner<Snap> {
     #[tracing::instrument(level = "trace", skip_all)]
     async fn handle_advance(
         &mut self,
+        active_epoch_index: u64,
+        current_input_index: u64,
         input_metadata: InputMetadata,
         input_payload: Vec<u8>,
     ) -> Result<(), Snap::Error> {
         tracing::trace!("handling advance state");
 
         self.server_manager
-            .advance_state(input_metadata, input_payload)
+            .advance_state(
+                active_epoch_index,
+                current_input_index,
+                input_metadata,
+                input_payload,
+            )
             .await
             .context(AdvanceSnafu)?;
         tracing::trace!("advance state sent to server-manager");
