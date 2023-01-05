@@ -16,6 +16,15 @@ pragma solidity 0.8.13;
 import {IConsensus} from "../consensus/IConsensus.sol";
 import {OutputValidityProof} from "../library/LibOutputValidation.sol";
 
+/// @notice Data for validating outputs
+/// @param validity A validity proof for the output
+/// @param context Data for querying the right claim from consensus
+/// @dev The encoding of context might vary depending on the history implementation
+struct Proof {
+    OutputValidityProof validity;
+    bytes context;
+}
+
 interface ICartesiDApp {
     // Events
 
@@ -40,16 +49,13 @@ interface ICartesiDApp {
     /// @notice Execute a voucher
     /// @param _destination The contract that will execute the payload
     /// @param _payload The ABI-encoded function call
-    /// @param _proofContext Data for querying the right claim
-    /// @param _v A validity proof for the voucher
+    /// @param _proof Data for validating outputs
     /// @return Whether the voucher was executed successfully or not
-    /// @dev The encoding of _proofContext might vary depending on the history implementation
     /// @dev Each voucher can only be executed once
     function executeVoucher(
         address _destination,
         bytes calldata _payload,
-        bytes calldata _proofContext,
-        OutputValidityProof calldata _v
+        Proof calldata _proof
     ) external returns (bool);
 
     /// @notice Check whether a voucher has been executed
@@ -63,14 +69,11 @@ interface ICartesiDApp {
 
     /// @notice Validate a notice
     /// @param _notice The notice
-    /// @param _proofContext Data for querying the right claim
-    /// @param _v A validity proof for the notice
+    /// @param _proof Data for validating outputs
     /// @return Whether the notice is valid or not
-    /// @dev The encoding of _proofContext might vary depending on the history implementation
     function validateNotice(
         bytes calldata _notice,
-        bytes calldata _proofContext,
-        OutputValidityProof calldata _v
+        Proof calldata _proof
     ) external view returns (bool);
 
     /// @notice Get the DApp's template hash
