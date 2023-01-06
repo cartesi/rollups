@@ -34,21 +34,16 @@ mod snapshot;
 pub async fn run(config: Config) -> Result<()> {
     tracing::info!(?config, "starting proxy");
 
-    let health_handle = tokio::spawn(async move {
-        http_health::start_health_check(config.health_check_config).await
-    });
-
-    let proxy_handle =
-        tokio::spawn(async move { start_proxy(config.proxy_config).await });
+    let health_handle =
+        http_health::start_health_check(config.health_check_config);
+    let proxy_handle = start_proxy(config.proxy_config);
 
     tokio::select! {
         ret = health_handle => {
-            ret.context("health-check spawn error")?
-                .context("health-check stopped")
+            ret.context("health-check stopped")
         }
         ret = proxy_handle => {
-            ret.context("proxy spawn error")?
-                .context("proxy stopped")
+            ret.context("proxy stopped")
         }
     }
 }
