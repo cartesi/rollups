@@ -154,7 +154,7 @@ impl BrokerStatus for BrokerFacade {
 
 macro_rules! input_sanity_check {
     ($event:expr, $input_index:expr) => {
-        assert_eq!($event.inputs_sent_count, $input_index);
+        assert_eq!($event.inputs_sent_count, $input_index + 1);
         assert!(matches!(
             $event.data,
             RollupsData::AdvanceStateInput {
@@ -319,7 +319,7 @@ fn build_next_input(
         block_number: input.block_added.number.as_u64(),
         timestamp: input.block_added.timestamp.as_u64(),
         epoch_index: 0,
-        input_index: status.status.inputs_sent_count + 1,
+        input_index: status.status.inputs_sent_count,
     };
 
     let data = RollupsData::AdvanceStateInput {
