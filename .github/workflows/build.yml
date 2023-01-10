@@ -216,3 +216,11 @@ jobs:
       target: cli
       image-name: rollups-cli
     secrets: inherit
+
+  deployments:
+    needs: build_docker
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: deployments
+      image-name: deployments
+    secrets: inherit

@@ -38,3 +38,7 @@ target "hardhat" {
 target "cli" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-cli:${TAG}"]
 }
+
+target "deployments" {
+  tags = ["${DOCKER_ORGANIZATION}/rollups-deployments:${TAG}"]
+}

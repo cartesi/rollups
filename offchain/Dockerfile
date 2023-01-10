@@ -70,6 +70,7 @@ rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=indexer_build /usr/src/app/offchain/target/release/rollups_indexer /usr/local/bin
 COPY --from=indexer_build /usr/src/app/offchain/data/migrations/ /usr/local/bin/migrations/
+COPY onchain/rollups/export/abi /usr/local/share/cartesi/deployments/
 ENTRYPOINT ["rollups_indexer"]
 
 FROM debian:bullseye-slim AS dispatcher
@@ -79,6 +80,7 @@ DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-c
 rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=dispatcher_build /usr/src/app/offchain/target/release/rollups_dispatcher /usr/local/bin
+COPY onchain/rollups/export/abi /usr/local/share/cartesi/deployments/
 ENTRYPOINT ["rollups_dispatcher"]
 
 FROM debian:bullseye-slim AS server_manager_broker_proxy
@@ -103,3 +105,8 @@ rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=reader_build /usr/src/app/offchain/target/release/reader /usr/local/bin
 ENTRYPOINT ["reader"]
+
+FROM scratch AS deployments
+
+WORKDIR /usr/local/share/cartesi/deployments
+COPY onchain/rollups/export/abi .

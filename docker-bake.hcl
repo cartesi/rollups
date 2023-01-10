@@ -65,3 +65,15 @@ target "cli" {
   context  = "./onchain"
   target   = "cli"
 }
+
+target "deployments" {
+  inherits   = ["docker-metadata-action"]
+  dockerfile = "offchain/Dockerfile"
+  target     = "deployments"
+  context    = "."
+  platforms = [
+    "linux/amd64",
+    "linux/arm64",
+    "linux/riscv64"
+  ]
+}
