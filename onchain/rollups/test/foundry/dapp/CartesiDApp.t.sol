@@ -339,6 +339,36 @@ contract CartesiDAppTest is TestBase {
         dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
     }
 
+    function testRevertsInputIndexOOB(uint256 _inboxInputIndex) public {
+        setupERC20TransferVoucher(_inboxInputIndex, 0);
+
+        // If the epoch input index were 0, then there would be no way for the
+        // inbox input index to be out of bounds because every claim is non-empty,
+        // as it must contain at least one input
+        assert(proof.validity.epochInputIndex > 0);
+
+        // This assumption aims to avoid an integer overflow in the CartesiDApp
+        vm.assume(
+            _inboxInputIndex <=
+                type(uint256).max - proof.validity.epochInputIndex
+        );
+
+        // Calculate epoch hash from proof
+        bytes32 epochHash = calculateEpochHash(proof.validity);
+
+        // Mock consensus again to return a claim that spans only 1 input,
+        // but we are registering a proof whose epoch input index is 1...
+        // so the proof would succeed but the input would be out of bounds
+        vm.mockCall(
+            consensus,
+            abi.encodeWithSelector(IConsensus.getClaim.selector),
+            abi.encode(epochHash, _inboxInputIndex, _inboxInputIndex)
+        );
+
+        vm.expectRevert("inbox input index out of bounds");
+        dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
+    }
+
     function setupERC20TransferVoucher(
         uint256 _inboxInputIndex,
         uint256 _numInputsAfter
@@ -607,13 +637,7 @@ contract CartesiDAppTest is TestBase {
         vm.assume(_numInputsAfter <= type(uint256).max - _inboxInputIndex);
 
         // calculate epoch hash from proof
-        bytes32 epochHash = keccak256(
-            abi.encodePacked(
-                _validity.vouchersEpochRootHash,
-                _validity.noticesEpochRootHash,
-                _validity.machineStateHash
-            )
-        );
+        bytes32 epochHash = calculateEpochHash(_validity);
 
         // calculate input index range based on proof and fuzzy variables
         uint256 firstInputIndex = _inboxInputIndex - _validity.epochInputIndex;
@@ -656,5 +680,18 @@ contract CartesiDAppTest is TestBase {
     {
         vm.prank(tokenOwner);
         return new SimpleERC721Receiver{salt: salt}();
+    }
+
+    function calculateEpochHash(
+        OutputValidityProof memory _validity
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    _validity.vouchersEpochRootHash,
+                    _validity.noticesEpochRootHash,
+                    _validity.machineStateHash
+                )
+            );
     }
 }
