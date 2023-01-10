@@ -130,9 +130,6 @@ const config: HardhatUserConfig = {
         deployer: {
             default: 0,
         },
-        beneficiary: {
-            default: 1,
-        },
     },
     gasReporter: {
         enabled: process.env.REPORT_GAS ? true : false,
