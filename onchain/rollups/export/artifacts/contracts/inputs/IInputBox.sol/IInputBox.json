@@ -14,7 +14,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "inputIndex",
+          "name": "inboxInputIndex",
           "type": "uint256"
         },
         {
@@ -110,8 +110,8 @@
       "InputAdded(address,uint256,address,bytes)": {
         "params": {
           "dapp": "The address of the DApp",
+          "inboxInputIndex": "The index of the input in the input box",
           "input": "The contents of the input",
-          "inputIndex": "The index of the input",
           "sender": "The address that sent the input"
         }
       }

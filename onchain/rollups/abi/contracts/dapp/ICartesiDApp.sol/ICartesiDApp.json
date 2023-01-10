@@ -38,50 +38,62 @@
         "type": "bytes"
       },
       {
-        "internalType": "bytes",
-        "name": "_claimQuery",
-        "type": "bytes"
-      },
-      {
         "components": [
           {
-            "internalType": "uint64",
-            "name": "outputIndex",
-            "type": "uint64"
+            "components": [
+              {
+                "internalType": "uint64",
+                "name": "epochInputIndex",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "outputIndex",
+                "type": "uint64"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "outputHashesRootHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "vouchersEpochRootHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "noticesEpochRootHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "machineStateHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "keccakInHashesSiblings",
+                "type": "bytes32[]"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "outputHashesInEpochSiblings",
+                "type": "bytes32[]"
+              }
+            ],
+            "internalType": "struct OutputValidityProof",
+            "name": "validity",
+            "type": "tuple"
           },
           {
-            "internalType": "bytes32",
-            "name": "outputHashesRootHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "vouchersEpochRootHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "noticesEpochRootHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "machineStateHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32[]",
-            "name": "keccakInHashesSiblings",
-            "type": "bytes32[]"
-          },
-          {
-            "internalType": "bytes32[]",
-            "name": "outputHashesInEpochSiblings",
-            "type": "bytes32[]"
+            "internalType": "bytes",
+            "name": "context",
+            "type": "bytes"
           }
         ],
-        "internalType": "struct OutputValidityProof",
-        "name": "_v",
+        "internalType": "struct Proof",
+        "name": "_proof",
         "type": "tuple"
       }
     ],
@@ -143,50 +155,62 @@
         "type": "bytes"
       },
       {
-        "internalType": "bytes",
-        "name": "_claimQuery",
-        "type": "bytes"
-      },
-      {
         "components": [
           {
-            "internalType": "uint64",
-            "name": "outputIndex",
-            "type": "uint64"
+            "components": [
+              {
+                "internalType": "uint64",
+                "name": "epochInputIndex",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "outputIndex",
+                "type": "uint64"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "outputHashesRootHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "vouchersEpochRootHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "noticesEpochRootHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "machineStateHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "keccakInHashesSiblings",
+                "type": "bytes32[]"
+              },
+              {
+                "internalType": "bytes32[]",
+                "name": "outputHashesInEpochSiblings",
+                "type": "bytes32[]"
+              }
+            ],
+            "internalType": "struct OutputValidityProof",
+            "name": "validity",
+            "type": "tuple"
           },
           {
-            "internalType": "bytes32",
-            "name": "outputHashesRootHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "vouchersEpochRootHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "noticesEpochRootHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "machineStateHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32[]",
-            "name": "keccakInHashesSiblings",
-            "type": "bytes32[]"
-          },
-          {
-            "internalType": "bytes32[]",
-            "name": "outputHashesInEpochSiblings",
-            "type": "bytes32[]"
+            "internalType": "bytes",
+            "name": "context",
+            "type": "bytes"
           }
         ],
-        "internalType": "struct OutputValidityProof",
-        "name": "_v",
+        "internalType": "struct Proof",
+        "name": "_proof",
         "type": "tuple"
       }
     ],
@@ -205,7 +229,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_inputIndex",
+        "name": "_inboxInputIndex",
         "type": "uint256"
       },
       {

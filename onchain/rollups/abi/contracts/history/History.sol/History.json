@@ -74,11 +74,11 @@
       },
       {
         "internalType": "bytes",
-        "name": "_claimQuery",
+        "name": "_proofContext",
         "type": "bytes"
       }
     ],
-    "name": "getEpochHash",
+    "name": "getClaim",
     "outputs": [
       {
         "internalType": "bytes32",

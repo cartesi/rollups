@@ -46,11 +46,11 @@
       },
       {
         "internalType": "bytes",
-        "name": "_claimQuery",
+        "name": "_proofContext",
         "type": "bytes"
       }
     ],
-    "name": "getEpochHash",
+    "name": "getClaim",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -59,12 +59,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "inputIndex_",
+        "name": "firstInputIndex_",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "epochInputIndex_",
+        "name": "lastInputIndex_",
         "type": "uint256"
       }
     ],

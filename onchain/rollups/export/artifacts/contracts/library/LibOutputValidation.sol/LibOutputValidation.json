@@ -2,8 +2,8 @@
   "contractName": "LibOutputValidation",
   "sourceName": "contracts/library/LibOutputValidation.sol",
   "abi": [],
-  "bytecode": "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220a987661669de1721a0544f0d736bb0d1db330bf54e7d8cf4c058e42ee47b5d0064736f6c634300080d0033",
-  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220a987661669de1721a0544f0d736bb0d1db330bf54e7d8cf4c058e42ee47b5d0064736f6c634300080d0033",
+  "bytecode": "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220b53ca6f9ec42d4f96f036f88cb33bd152be3cfb79fadc2dd93ea0d4441a5eaa164736f6c634300080d0033",
+  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220b53ca6f9ec42d4f96f036f88cb33bd152be3cfb79fadc2dd93ea0d4441a5eaa164736f6c634300080d0033",
   "linkReferences": {},
   "deployedLinkReferences": {},
   "devdoc": {
@@ -25,9 +25,10 @@
       },
       "internal": {
         "getBitMaskPosition(uint256,uint256)": "infinite",
-        "validateEncodedOutput(struct OutputValidityProof calldata,bytes memory,bytes32,uint64,bytes32,uint256,uint256)": "infinite",
-        "validateNotice(struct OutputValidityProof calldata,bytes calldata,bytes32,uint64)": "infinite",
-        "validateVoucher(struct OutputValidityProof calldata,address,bytes calldata,bytes32,uint64)": "infinite"
+        "validateEncodedOutput(struct OutputValidityProof calldata,bytes memory,bytes32,bytes32,uint256,uint256)": "infinite",
+        "validateInputIndexRange(struct OutputValidityProof calldata,uint256,uint256)": "infinite",
+        "validateNotice(struct OutputValidityProof calldata,bytes calldata,bytes32)": "infinite",
+        "validateVoucher(struct OutputValidityProof calldata,address,bytes calldata,bytes32)": "infinite"
       }
     },
     "methodIdentifiers": {}

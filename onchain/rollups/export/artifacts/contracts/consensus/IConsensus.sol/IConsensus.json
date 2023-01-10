@@ -49,11 +49,11 @@
         },
         {
           "internalType": "bytes",
-          "name": "_claimQuery",
+          "name": "_proofContext",
           "type": "bytes"
         }
       ],
-      "name": "getEpochHash",
+      "name": "getClaim",
       "outputs": [
         {
           "internalType": "bytes32",
@@ -62,12 +62,12 @@
         },
         {
           "internalType": "uint256",
-          "name": "inputIndex_",
+          "name": "firstInputIndex_",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "epochInputIndex_",
+          "name": "lastInputIndex_",
           "type": "uint256"
         }
       ],
@@ -171,8 +171,17 @@
     },
     "kind": "dev",
     "methods": {
-      "getEpochHash(address,bytes)": {
-        "details": "The encoding of _claimQuery might vary depending on the history implementation"
+      "getClaim(address,bytes)": {
+        "details": "The encoding of _proofContext might vary depending on the history implementation",
+        "params": {
+          "_dapp": "The DApp",
+          "_proofContext": "Data for retrieving the desired claim"
+        },
+        "returns": {
+          "epochHash_": "The epoch hash contained in the claim",
+          "firstInputIndex_": "The index of the first input in the input box for which the epoch hash is valid",
+          "lastInputIndex_": "The index of the last input in the input box for which the epoch hash is valid"
+        }
       },
       "getHistory()": {
         "returns": {
@@ -218,6 +227,9 @@
     },
     "kind": "user",
     "methods": {
+      "getClaim(address,bytes)": {
+        "notice": "Get the epoch hash for a given DApp from a claim"
+      },
       "getHistory()": {
         "notice": "Get the current history"
       },
@@ -239,7 +251,7 @@
   "evm": {
     "gasEstimates": null,
     "methodIdentifiers": {
-      "getEpochHash(address,bytes)": "3598e90b",
+      "getClaim(address,bytes)": "d79a8240",
       "getHistory()": "aa15efc8",
       "migrateHistoryToConsensus(address)": "9368a3d3",
       "setHistory(address)": "159c5ea1",
