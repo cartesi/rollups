@@ -25,7 +25,7 @@
         "tsc:prod": "tsc -p tsconfig.prod.json"
     },
     "dependencies": {
-        "@cartesi/util": "^5.0.1",
+        "@cartesi/util": "^5.0.2",
         "@openzeppelin/contracts": "^4.5.0"
     },
     "devDependencies": {
