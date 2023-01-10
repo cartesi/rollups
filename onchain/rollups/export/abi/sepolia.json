@@ -1,0 +1,2101 @@
+{
+  "name": "sepolia",
+  "chainId": "11155111",
+  "contracts": {
+    "Bitmask": {
+      "address": "0x3F62ccC0e41287ea4d28dce6582a215B75bB43fd",
+      "abi": []
+    },
+    "BitsManipulation": {
+      "address": "0x91E780568A1FEdd5d01E1c1E4cAed68E3a849345",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "int32",
+              "name": "number",
+              "type": "int32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "wordSize",
+              "type": "uint32"
+            }
+          ],
+          "name": "int32SignExtension",
+          "outputs": [
+            {
+              "internalType": "int32",
+              "name": "",
+              "type": "int32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint32",
+              "name": "num",
+              "type": "uint32"
+            }
+          ],
+          "name": "uint32SwapEndian",
+          "outputs": [
+            {
+              "internalType": "uint32",
+              "name": "",
+              "type": "uint32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint64",
+              "name": "number",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "wordSize",
+              "type": "uint64"
+            }
+          ],
+          "name": "uint64SignExtension",
+          "outputs": [
+            {
+              "internalType": "uint64",
+              "name": "",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint64",
+              "name": "num",
+              "type": "uint64"
+            }
+          ],
+          "name": "uint64SwapEndian",
+          "outputs": [
+            {
+              "internalType": "uint64",
+              "name": "",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ]
+    },
+    "BitsManipulationLibrary": {
+      "address": "0x302311FF8A135c0FC8703Cb4769EAa1604A4A515",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "int32",
+              "name": "number",
+              "type": "int32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "wordSize",
+              "type": "uint32"
+            }
+          ],
+          "name": "int32SignExtension",
+          "outputs": [
+            {
+              "internalType": "int32",
+              "name": "",
+              "type": "int32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint32",
+              "name": "num",
+              "type": "uint32"
+            }
+          ],
+          "name": "uint32SwapEndian",
+          "outputs": [
+            {
+              "internalType": "uint32",
+              "name": "",
+              "type": "uint32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint64",
+              "name": "number",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "wordSize",
+              "type": "uint64"
+            }
+          ],
+          "name": "uint64SignExtension",
+          "outputs": [
+            {
+              "internalType": "uint64",
+              "name": "",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint64",
+              "name": "num",
+              "type": "uint64"
+            }
+          ],
+          "name": "uint64SwapEndian",
+          "outputs": [
+            {
+              "internalType": "uint64",
+              "name": "",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ]
+    },
+    "CartesiMathV2": {
+      "address": "0x7db3A9BdA16D1C295b23B94a61808EFf82288269",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "clz",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "ctz",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "getLog2Floor",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "getLog2TableTimes1M",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "isPowerOf2",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_num",
+              "type": "uint256"
+            }
+          ],
+          "name": "log2ApproxTimes1M",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ]
+    },
+    "Merkle": {
+      "address": "0x7CD2b2F951BAc762BF7affd73689A3e1198596AB",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32[]",
+              "name": "hashes",
+              "type": "bytes32[]"
+            }
+          ],
+          "name": "calculateRootFromPowerOfTwo",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "number",
+              "type": "uint256"
+            }
+          ],
+          "name": "getLog2Floor",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint8",
+              "name": "_log2Size",
+              "type": "uint8"
+            }
+          ],
+          "name": "getPristineHash",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint64",
+              "name": "_position",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes8",
+              "name": "_value",
+              "type": "bytes8"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "proof",
+              "type": "bytes32[]"
+            }
+          ],
+          "name": "getRoot",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint64",
+              "name": "_position",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint8",
+              "name": "_logOfSize",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_drive",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "siblings",
+              "type": "bytes32[]"
+            }
+          ],
+          "name": "getRootWithDrive",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "number",
+              "type": "uint256"
+            }
+          ],
+          "name": "isPowerOf2",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ]
+    },
+    "MerkleV2": {
+      "address": "0x353439934aCC3C435A2627954835241ab9FacBF8",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32[]",
+              "name": "hashes",
+              "type": "bytes32[]"
+            }
+          ],
+          "name": "calculateRootFromPowerOfTwo",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_index",
+              "type": "uint256"
+            }
+          ],
+          "name": "getEmptyTreeHashAtIndex",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes",
+              "name": "_data",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_wordIndex",
+              "type": "uint256"
+            }
+          ],
+          "name": "getHashOfWordAtIndex",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes",
+              "name": "_data",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_log2Size",
+              "type": "uint256"
+            }
+          ],
+          "name": "getMerkleRootFromBytes",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_position",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_logSizeOfReplacement",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_logSizeOfFullDrive",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_replacement",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "siblings",
+              "type": "bytes32[]"
+            }
+          ],
+          "name": "getRootAfterReplacementInDrive",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ]
+    },
+    "UnrolledCordic": {
+      "address": "0x9F7EBA84FfED559c7C63Bdf4DB6a1C6eB763ffb3",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "val",
+              "type": "uint256"
+            }
+          ],
+          "name": "log2Times1e18",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ]
+    },
+    "WorkerAuthManagerImpl": {
+      "address": "0x50bEFaEfD3AAaFac11Fd936A8dfEB1050eC5Cf00",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerManager",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "dapp",
+              "type": "address"
+            }
+          ],
+          "name": "Authorization",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "dapp",
+              "type": "address"
+            }
+          ],
+          "name": "Deauthorization",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dappAddress",
+              "type": "address"
+            }
+          ],
+          "name": "authorize",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dappAddress",
+              "type": "address"
+            }
+          ],
+          "name": "deauthorize",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "getOwner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dappAddress",
+              "type": "address"
+            }
+          ],
+          "name": "isAuthorized",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ]
+    },
+    "WorkerManagerAuthManagerImpl": {
+      "address": "0x89f1f1bc37Ef872ff0073bee7eE6d6B0D94Fd166",
+      "abi": [
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "dapp",
+              "type": "address"
+            }
+          ],
+          "name": "Authorization",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "dapp",
+              "type": "address"
+            }
+          ],
+          "name": "Deauthorization",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "JobAccepted",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "JobOffer",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "JobRejected",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "Retired",
+          "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "acceptJob",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dappAddress",
+              "type": "address"
+            }
+          ],
+          "name": "authorize",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "cancelHire",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dappAddress",
+              "type": "address"
+            }
+          ],
+          "name": "deauthorize",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "getOwner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "getUser",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address payable",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "hire",
+          "outputs": [],
+          "stateMutability": "payable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address payable",
+              "name": "_workerAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dappAddress",
+              "type": "address"
+            }
+          ],
+          "name": "hireAndAuthorize",
+          "outputs": [],
+          "stateMutability": "payable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dappAddress",
+              "type": "address"
+            }
+          ],
+          "name": "isAuthorized",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "isAvailable",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "isOwned",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "isPending",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "isRetired",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "rejectJob",
+          "outputs": [],
+          "stateMutability": "payable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address payable",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "retire",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+    },
+    "WorkerManagerImpl": {
+      "address": "0xdeCac9ff6b588642887414e85dfdDE740A797F56",
+      "abi": [
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "JobAccepted",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "JobOffer",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "JobRejected",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "worker",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "Retired",
+          "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "acceptJob",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "cancelHire",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "getOwner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "getUser",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address payable",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "hire",
+          "outputs": [],
+          "stateMutability": "payable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "isAvailable",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "isOwned",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "isPending",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "isRetired",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "rejectJob",
+          "outputs": [],
+          "stateMutability": "payable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address payable",
+              "name": "_workerAddress",
+              "type": "address"
+            }
+          ],
+          "name": "retire",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+    },
+    "InputBox": {
+      "address": "0xDA5fbE19afC6e8cf32aAb6Df0A1154EF507Ee238",
+      "abi": [
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "dapp",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "inboxInputIndex",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes",
+              "name": "input",
+              "type": "bytes"
+            }
+          ],
+          "name": "InputAdded",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_input",
+              "type": "bytes"
+            }
+          ],
+          "name": "addInput",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_index",
+              "type": "uint256"
+            }
+          ],
+          "name": "getInputHash",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            }
+          ],
+          "name": "getNumberOfInputs",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ]
+    },
+    "EtherPortal": {
+      "address": "0xf0c46F5De39A8423410E5Ee770AE4be2D2D74A9c",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "_inputBox",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_L2data",
+              "type": "bytes"
+            }
+          ],
+          "name": "depositEther",
+          "outputs": [],
+          "stateMutability": "payable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "getInputBox",
+          "outputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ]
+    },
+    "ERC20Portal": {
+      "address": "0xd35ffb73F41aE52063ff8d032ceb57d31Ab0EEf6",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "_inputBox",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract IERC20",
+              "name": "_token",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_L2data",
+              "type": "bytes"
+            }
+          ],
+          "name": "depositERC20Tokens",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "getInputBox",
+          "outputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ]
+    },
+    "ERC721Portal": {
+      "address": "0xe49c1cb93D110df0BE29515F34dDd5Afe3AAADCA",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "_inputBox",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract IERC721",
+              "name": "_token",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_tokenId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_L1data",
+              "type": "bytes"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_L2data",
+              "type": "bytes"
+            }
+          ],
+          "name": "depositERC721Token",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "getInputBox",
+          "outputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ]
+    },
+    "CartesiDAppFactory": {
+      "address": "0x8Ad8150C89a6a07B2447115AbbCD93167763E599",
+      "abi": [
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "contract IConsensus",
+              "name": "consensus",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "dappOwner",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "templateHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "contract CartesiDApp",
+              "name": "application",
+              "type": "address"
+            }
+          ],
+          "name": "ApplicationCreated",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract IConsensus",
+              "name": "_consensus",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dappOwner",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_templateHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "newApplication",
+          "outputs": [
+            {
+              "internalType": "contract CartesiDApp",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+    },
+    "History": {
+      "address": "0xB82891259423911774FA11a4Be7F1bac0DCf095D",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_owner",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "dapp",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "bytes32",
+                  "name": "epochHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint128",
+                  "name": "firstIndex",
+                  "type": "uint128"
+                },
+                {
+                  "internalType": "uint128",
+                  "name": "lastIndex",
+                  "type": "uint128"
+                }
+              ],
+              "indexed": false,
+              "internalType": "struct History.Claim",
+              "name": "claim",
+              "type": "tuple"
+            }
+          ],
+          "name": "NewClaimToHistory",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferred",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_proofContext",
+              "type": "bytes"
+            }
+          ],
+          "name": "getClaim",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_consensus",
+              "type": "address"
+            }
+          ],
+          "name": "migrateToConsensus",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "owner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "renounceOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes",
+              "name": "_encodedClaim",
+              "type": "bytes"
+            }
+          ],
+          "name": "submitClaim",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "transferOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+    },
+    "Authority": {
+      "address": "0x664AF8a1734f0726D47407F980d68f434e00cc49",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_owner",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IInputBox",
+              "name": "_inputBox",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IHistory",
+              "name": "_history",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "contract IInputBox",
+              "name": "inputBox",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "contract IHistory",
+              "name": "history",
+              "type": "address"
+            }
+          ],
+          "name": "ConsensusCreated",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "contract IHistory",
+              "name": "history",
+              "type": "address"
+            }
+          ],
+          "name": "NewHistory",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferred",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_proofContext",
+              "type": "bytes"
+            }
+          ],
+          "name": "getClaim",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "getHistory",
+          "outputs": [
+            {
+              "internalType": "contract IHistory",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_consensus",
+              "type": "address"
+            }
+          ],
+          "name": "migrateHistoryToConsensus",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "owner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "renounceOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract IHistory",
+              "name": "_history",
+              "type": "address"
+            }
+          ],
+          "name": "setHistory",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes",
+              "name": "_claimData",
+              "type": "bytes"
+            }
+          ],
+          "name": "submitClaim",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "transferOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract IERC20",
+              "name": "_token",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "withdrawERC20Tokens",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+    }
+  }
+}
