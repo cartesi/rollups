@@ -15,12 +15,15 @@ import { DeployFunction, DeployOptions } from "hardhat-deploy/types";
 import { History__factory } from "../src/types";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-    const { deployments, ethers, getNamedAccounts } = hre;
+    const { deployments, ethers, getNamedAccounts, network } = hre;
     const { deployer } = await getNamedAccounts();
     const [deployerSigner] = await ethers.getSigners();
 
+    // IoTeX does not support the deterministic deployment through the contract used by hardhat-deploy
+    const deterministicDeployment = network.name !== "iotex_testnet";
+
     const opts: DeployOptions = {
-        deterministicDeployment: true,
+        deterministicDeployment,
         from: deployer,
         log: true,
     };
