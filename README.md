@@ -26,24 +26,22 @@ Several articles were written about the code presented here:
 Designed to mediate the relationship between the off-chain components with other smart contracts and externally owned accounts. It is composed by several modules, each with clear responsibilities and well-defined interfaces. The modules are the following:
 
 ```mermaid
-graph LR
-    subgraph "CartesiDApp (Diamond)"
-        direction TB
-        ERC20PortalFacet
-        ERC721PortalFacet
-        EtherPortalFacet
-        FeeManagerFacet
-        OutputFacet
-        InputFacet
-        RollupsFacet
-        ValidatorManagerFacet
-    end
-    Bank -- transfer, transferFrom --> CTSI["CTSI Token"]
-    ERC20PortalFacet -- transferFrom --> ERC20["Any ERC-20 Token"]
-    ERC721PortalFacet -- safeTransferFrom --> ERC721["Any ERC-721 Token (NFT)"]
-    EtherPortalFacet -- Ether transfer --> Anyone
-    FeeManagerFacet -- transferTokens --> Bank
-    OutputFacet -- "Any message call" --> AnyoneButBank["Anyone (#ne;Bank)"]
+graph TD
+    InputBox[Input Box]
+    CartesiDApp[Cartesi DApp] -- getClaim --> Consensus
+    CartesiDApp -- "Any message call" ---> Anyone
+    CartesiDApp -- withdrawEther --> CartesiDApp
+    CartesiDAppFactory[Cartesi DApp Factory] -. creates .-> CartesiDApp
+    Consensus -- submitClaim, getClaim, migrateToConsensus --> History
+    Consensus -- transfer --> ERC20
+    CPS[Consensus Payment System] -- owner, getConsensus --> CartesiDApp
+    CPS -- transfer, transferFrom --> CTSI
+    ERC20Portal[ERC-20 Portal] -- transferFrom --> ERC20[Any ERC-20 token]
+    ERC20Portal -- addInput ---> InputBox
+    ERC721Portal[ERC-721 Portal] -- safeTransferFrom --> ERC721[Any ERC-721 token]
+    ERC721Portal -- addInput ---> InputBox
+    EtherPortal[Ether Portal] -- "Ether transfer" --> Anyone
+    EtherPortal -- addInput ---> InputBox
     click ERC20 href "https://eips.ethereum.org/EIPS/eip-20"
     click ERC721 href "https://eips.ethereum.org/EIPS/eip-721"
     click CTSI href "https://cartesi.io/en/ctsi-token"
