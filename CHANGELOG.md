@@ -10,6 +10,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added support to Cartesi Machine snapshots
+- [Script](onchain/rollups/test/foundry/dapp/helper/README.md) for updating proofs used in unit tests
+- Authority consensus model implementation (single validator)
+- Simple claim storage implementation (one claim per DApp)
+
+### Changed
+
+- Simplified the on-chain architecture (not backwards-compatible)
+- Adopted [Foundry](https://book.getfoundry.sh/) for contract testing (Hardhat is still being used for deployment)
+- `CartesiDApp` does not implement [EIP-2535](https://eips.ethereum.org/EIPS/eip-2535) anymore
+- Made each Portal a contract of their own
+- Made inputs added by Portals more compact by using the [packed ABI encoding](https://docs.soliditylang.org/en/latest/abi-spec.html#non-standard-packed-mode) instead of the standard one
+- Made ERC-20 deposits more generic by allowing L1 transfers to fail, and adding a boolean field signaling whether it was successful or not
+- Made ERC-721 deposits more generic by adding an arbitrary data field to be interpreted by L2
+- Validators are now paid by working time (new Consensus Payment System), and not by number of claims (old Fee Manager Facet)
+- Moved the input boxes of every DApp into a single, permissionless contract
+- Input boxes are now append-only -- they are not cleared every new epoch (old Input Facet)
+- Modularized the consensus layer (a DApp can now seamlessly change its consensus model)
+- Modularized the claim storage layer (a consensus can seamlessly change how it stores claims)
+
+### Removed
+
+- Quorum consensus model implementation (up to 8 validators)
+- Bank contract
 
 ## [0.8.2] 2023-01-04
 
