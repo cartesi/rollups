@@ -41,3 +41,7 @@ tokio-stream = "0.1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 url = "2"
+
+[dev-dependencies]
+im = { version = "15", features = ["serde"] }
+

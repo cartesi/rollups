@@ -1522,6 +1522,7 @@ dependencies = [
  "backoff",
  "contracts",
  "futures 0.3.25",
+ "im",
  "prost 0.11.2",
  "rollups-events",
  "rustc-hex",
