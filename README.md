@@ -58,7 +58,7 @@ Since there is no access control to execute a voucher, the caller must also prov
 
 ## Cartesi DApp Factory
 
-The Cartesi DApp Factory allows anyone to deploy Cartesi DApp contracts with a simple function call, costing less than 4% more gas than deploying the DApp contract directly. It also provides greater convenience to the deployer, and security to users and validators, as they know the bytecode could not have been altered maliciously.
+The Cartesi DApp Factory allows anyone to deploy Cartesi DApp contracts with a simple function call, costing only 3.5% more gas than deploying the DApp contract directly. It also provides greater convenience to the deployer, and security to users and validators, as they know the bytecode could not have been altered maliciously.
 
 ## Portals
 
@@ -81,18 +81,19 @@ Notices are informational statements that can be proved on L1 by other smart con
 
 ## Consensus
 
-This module is responsible for providing valid claims to DApps after reaching some form of consensus. Since there are plenty of consensus models to choose from, the interface aims to be as generic as possible to accomodate any. The way how claims are encoded and stored is abstracted entirely by the consensus, and is left to the History contract.
+This module is responsible for providing valid claims to DApps after reaching some form of consensus. The module's interface aims to be as generic as possible to accomodate any consensus model, since there are plenty to choose from. The way how claims are encoded and stored is abstracted entirely by the consensus, and is left to the History contract.
 The only type of consensus that is currently implemented by Cartesi is called Authority. It is owned by a single address, who has complete power over the consensus. It is arguably the simplest consensus to implement, although quite vulnerable.
 
 ## History
 
 The sole purpose of this module is to store claims and to allow them to be retrieved later. Just as with the consensus interface, we leave much of the details open for each implementation to define.
-Our only implementation of history stores claims in a very simple manner. Each claim is composed of an epoch hash and a range of input indices. Each DApp has its own append-only list of claims, where ranges don't overlap and input indices can only grow. As a result, one cannot overwrite past claims or claim in a non-linear order.
+Our only implementation of history stores claims in a very simple manner: each claim is composed of an epoch hash and a range of input indices. Each DApp has its own append-only list of claims, where ranges don't overlap and input indices can only grow. As a result, one cannot overwrite past claims or claim in a non-linear order.
 
 ## Consensus Payment System
 
 This module is responsible for managing the funding of DApps and payment of consensuses, and uses CTSI as currency. In order for a DApp to participate in the system, its owner must first register it. Once registered, a DApp will have its own internal account where anyone will be able to deposit their tokens. Meanwhile, consensuses don't need any form of registration in order to partake in the system: each will already have their own internal account where DApps can deposit their payments. Beware that a DApp's owner can withdraw tokens from their DApp's funds account at any time.
 Consensuses can also withdraw tokens from their accounts. In fact, anyone can do this operation on their behalf, which is great for modularity, as we don't force consensuses to have an entry point for withdrawing their payment. DApps pay their consensuses a fixed amount of tokens every second. This amount, called "salary", is set by the DApp's owner upon registration, and can be later updated. The system is able to calculate the exact amount of tokens that a DApp owes its consensus by keeping a "clock" that tells the last time both parties were "even" in terms of payment. If, at some point, the DApp does not have enough funds to pay its consensus for the whole duration of their work, then the consensus will only be paid partially, limited by the DApp's funds. And, in these cases, the DApp's clock will be advanced proportionally.
+
 As for migrations, the system handles it in the following way. Since it cannot know when exactly a migration happened, it can't be always fair in terms of payment to both the old and the new consensuses. As not to be unfair to the old consensus, the DApp pays them for the entire duration between its clock and the time of payment. To implement this policy, the system has to store the last known consensus of each DApp. The accounting state of a DApp advances through so-called "updates", which can be triggered by anyone. It involves transferring the owed payment (or a fraction of it) from the DApp's funds account into the consensus' payment account, advancing the DApp's clock by the paid time period, and updating the DApp's consensus.
 
 ## Dispute Resolution
