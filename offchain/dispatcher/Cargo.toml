@@ -44,4 +44,5 @@ url = "2"
 
 [dev-dependencies]
 im = { version = "15", features = ["serde"] }
+rand = "0.8"
 
