@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Input boxes are now append-only -- they are not cleared every new epoch (old Input Facet)
 - Modularized the consensus layer (a DApp can now seamlessly change its consensus model)
 - Modularized the claim storage layer (a consensus can now seamlessly change how it stores claims)
+- Renamed `inputIndex` field from `OutputValidityProof` struct as `epochInputIndex`
+- Voucher bitmask position is now determined by the input index (in the input box) and output index
+- Validators need now to specify the range of inputs of each claim they submit on-chain
 
 ### Removed
 
@@ -36,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quorum consensus model implementation (up to 8 validators)
 - Bank contract
 - DApp configuration parameters related to the off-chain machine specs (now defined as constants)
+- Removed `epochIndex` field from `OutputValidityProof` struct
 
 ## [0.8.2] 2023-01-04
 
