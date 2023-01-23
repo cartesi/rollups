@@ -92,3 +92,43 @@ impl MachineDriver {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use state_fold_types::ethereum_types::H160;
+    use types::foldables::input_box::Input;
+
+    use crate::drivers::{mock, Context};
+
+    use super::MachineDriver;
+
+    #[tokio::test]
+    async fn test_process_input() {
+        let dapp_address = H160::random();
+        let machine_driver = MachineDriver::new(dapp_address);
+
+        let broker = mock::Broker::new(vec![], vec![]);
+        let context = Context::new(0, 5, &broker).await.unwrap();
+        let input = Input {
+            sender: todo!(),
+            payload: todo!(),
+            block_added: todo!(),
+            dapp: todo!(),
+        };
+
+        let result =
+            machine_driver.process_input(&mut context, &input, &broker);
+        assert!(false)
+    }
+}
+/*
+pub struct Context {
+    inputs_sent_count: u64,
+    last_event_is_finish_epoch: bool,
+    last_timestamp: u64,
+
+    // constants
+    genesis_timestamp: u64,
+    epoch_length: u64,
+}
+*/

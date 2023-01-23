@@ -5,3 +5,6 @@ pub mod machine;
 pub use blockchain::BlockchainDriver;
 pub use context::Context;
 pub use machine::MachineDriver;
+
+#[cfg(test)]
+mod mock;

@@ -55,11 +55,11 @@ mod tests {
     use std::sync::Arc;
     use types::foldables::claims::{Claim, DAppClaims, History};
 
-    use crate::machine::RollupClaim;
+    use crate::{drivers::mock, machine::RollupClaim};
 
     use super::BlockchainDriver;
 
-    /* ========================================================================================= */
+    // --------------------------------------------------------------------------------------------
 
     #[test]
     fn test_new() {
@@ -68,7 +68,7 @@ mod tests {
         assert_eq!(blockchain_driver.dapp_address, dapp_address);
     }
 
-    /* ========================================================================================= */
+    // --------------------------------------------------------------------------------------------
 
     fn random_claim() -> Claim {
         let mut rng = rand::thread_rng();
@@ -113,7 +113,7 @@ mod tests {
         }
     }
 
-    /* ========================================================================================= */
+    // --------------------------------------------------------------------------------------------
 
     #[test]
     fn test_claims_sent_some_0() {
@@ -160,68 +160,12 @@ mod tests {
         assert_eq!(n, 0);
     }
 
-    /* ========================================================================================= */
-
-    mod mock {
-        use anyhow::Result;
-        use async_trait::async_trait;
-        use std::{collections::VecDeque, ops::DerefMut, sync::Mutex};
-
-        use crate::machine::{BrokerReceive, RollupClaim};
-
-        #[derive(Debug)]
-        pub struct Broker {
-            pub next_claims: Mutex<VecDeque<RollupClaim>>,
-        }
-
-        impl Broker {
-            pub fn new(next_claims: Vec<RollupClaim>) -> Self {
-                Self {
-                    next_claims: Mutex::new(next_claims.into()),
-                }
-            }
-        }
-
-        #[async_trait]
-        impl BrokerReceive for Broker {
-            async fn next_claim(&self) -> Result<Option<RollupClaim>> {
-                let mut mutex_guard = self.next_claims.lock().unwrap();
-                Ok(mutex_guard.deref_mut().pop_front())
-            }
-        }
-
-        #[derive(Debug)]
-        pub struct TxSender {
-            pub sent_claims: Mutex<Vec<[u8; 32]>>,
-        }
-
-        impl TxSender {
-            pub fn new() -> Self {
-                Self {
-                    sent_claims: Mutex::new(vec![]),
-                }
-            }
-
-            pub fn count(&self) -> usize {
-                self.sent_claims.lock().unwrap().len()
-            }
-        }
-
-        #[async_trait]
-        impl crate::tx_sender::TxSender for TxSender {
-            async fn send_claim_tx(self, claim: &[u8; 32]) -> Result<Self> {
-                let mut mutex_guard = self.sent_claims.lock().unwrap();
-                mutex_guard.deref_mut().push(*claim);
-                drop(mutex_guard);
-                Ok(self)
-            }
-        }
-    }
-
-    /* ========================================================================================= */
+    // --------------------------------------------------------------------------------------------
 
     async fn test_react(next_claims: Vec<u64>, n: usize) {
         let dapp_address = H160::random();
+        let blockchain_driver = BlockchainDriver::new(dapp_address);
+
         let history = new_history();
         let history = update_history(&history, dapp_address, 5);
         let history = update_history(&history, H160::random(), 2);
@@ -236,9 +180,8 @@ mod tests {
                 RollupClaim { hash, number: *n }
             })
             .collect();
-        let broker = mock::Broker::new(next_claims);
+        let broker = mock::Broker::new(vec![], next_claims);
         let tx_sender = mock::TxSender::new();
-        let blockchain_driver = BlockchainDriver::new(dapp_address);
 
         let result =
             blockchain_driver.react(&history, &broker, tx_sender).await;
