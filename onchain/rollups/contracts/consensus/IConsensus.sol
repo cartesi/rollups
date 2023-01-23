@@ -13,54 +13,14 @@
 /// @title Consensus interface
 pragma solidity ^0.8.13;
 
-import {IInputBox} from "../inputs/IInputBox.sol";
-import {IHistory} from "../history/IHistory.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 interface IConsensus {
-    // Events
-
-    /// @notice A consensus was created
-    /// @param owner The address that owns the consensus
-    /// @param inputBox The input box used by the consensus
-    /// @param history The history that the consensus writes to
-    event ConsensusCreated(address owner, IInputBox inputBox, IHistory history);
-
-    /// @notice A new history is used
-    /// @param history The new history
-    event NewHistory(IHistory history);
-
-    // Permissioned functions
-
-    /// @notice Submit a claim to history
-    /// @param _claimData Data for submitting a claim
-    /// @dev The encoding of _claimData might vary depending on the history implementation
-    /// @dev Should have access control
-    function submitClaim(bytes calldata _claimData) external;
-
-    /// @notice Point the consensus to a new history
-    /// @param _history The new history
-    /// @dev Should have access control
-    function setHistory(IHistory _history) external;
-
-    /// @notice Migrate the current history to a new consensus
-    /// @param _consensus The new consensus
-    /// @dev Should have access control
-    function migrateHistoryToConsensus(address _consensus) external;
-
-    // Permissionless functions
-
-    /// @notice Get the current history
-    /// @return The current history
-    function getHistory() external view returns (IHistory);
-
-    /// @notice Get the epoch hash for a given DApp from a claim
+    /// @notice Get a claim
     /// @param _dapp The DApp
     /// @param _proofContext Data for retrieving the desired claim
     /// @return epochHash_ The epoch hash contained in the claim
     /// @return firstInputIndex_ The index of the first input in the input box for which the epoch hash is valid
     /// @return lastInputIndex_ The index of the last input in the input box for which the epoch hash is valid
-    /// @dev The encoding of _proofContext might vary depending on the history implementation
+    /// @dev The encoding of _proofContext might vary depending on the implementation
     function getClaim(
         address _dapp,
         bytes calldata _proofContext
@@ -72,14 +32,4 @@ interface IConsensus {
             uint256 firstInputIndex_,
             uint256 lastInputIndex_
         );
-
-    /// @notice Transfer ERC-20 tokens from consensus contract to a recipient
-    /// @param _token The ERC-20 token
-    /// @param _recipient The recipient address
-    /// @param _amount The transfer amount
-    function withdrawERC20Tokens(
-        IERC20 _token,
-        address _recipient,
-        uint256 _amount
-    ) external;
 }
