@@ -171,11 +171,11 @@ mod tests {
 
         #[derive(Debug)]
         pub struct Broker {
-            pub next_claims: Mutex<VecDeque<Option<RollupClaim>>>,
+            pub next_claims: Mutex<VecDeque<RollupClaim>>,
         }
 
         impl Broker {
-            pub fn new(next_claims: Vec<Option<RollupClaim>>) -> Self {
+            pub fn new(next_claims: Vec<RollupClaim>) -> Self {
                 Self {
                     next_claims: Mutex::new(next_claims.into()),
                 }
@@ -186,7 +186,7 @@ mod tests {
         impl BrokerReceive for Broker {
             async fn next_claim(&self) -> Result<Option<RollupClaim>> {
                 let mut mutex_guard = self.next_claims.lock().unwrap();
-                Ok(mutex_guard.deref_mut().pop_front().unwrap_or_default())
+                Ok(mutex_guard.deref_mut().pop_front())
             }
         }
 
@@ -218,34 +218,25 @@ mod tests {
         }
     }
 
-    fn new_rollup_claim(number: u64) -> RollupClaim {
-        let mut rng = rand::thread_rng();
-        let hash = (0..32).map(|_| rng.gen()).collect::<Vec<u8>>();
-        assert_eq!(hash.len(), 32);
-        let hash: [u8; 32] = hash.try_into().unwrap();
-        RollupClaim { hash, number }
-    }
-
-    fn new_history_for_react_tests(
-        dapp_address1: Address,
-        dapp_address2: Address,
-    ) -> History {
-        let history = new_history();
-        let history = update_history(&history, dapp_address1, 5);
-        let history = update_history(&history, dapp_address2, 2);
-        history
-    }
-
     /* ========================================================================================= */
 
-    #[tokio::test]
-    async fn test_react_no_claim() {
+    async fn test_react(next_claims: Vec<u64>, n: usize) {
         let dapp_address = H160::random();
-        let other_dapp_address = H160::random();
-        let history =
-            new_history_for_react_tests(dapp_address, other_dapp_address);
+        let history = new_history();
+        let history = update_history(&history, dapp_address, 5);
+        let history = update_history(&history, H160::random(), 2);
 
-        let broker = mock::Broker::new(vec![None]);
+        let next_claims = next_claims
+            .iter()
+            .map(|n| {
+                let mut rng = rand::thread_rng();
+                let hash = (0..32).map(|_| rng.gen()).collect::<Vec<u8>>();
+                assert_eq!(hash.len(), 32);
+                let hash: [u8; 32] = hash.try_into().unwrap();
+                RollupClaim { hash, number: *n }
+            })
+            .collect();
+        let broker = mock::Broker::new(next_claims);
         let tx_sender = mock::TxSender::new();
         let blockchain_driver = BlockchainDriver::new(dapp_address);
 
@@ -253,93 +244,35 @@ mod tests {
             blockchain_driver.react(&history, &broker, tx_sender).await;
         assert!(result.is_ok());
         let tx_sender = result.unwrap();
-        assert_eq!(tx_sender.count(), 0);
+        assert_eq!(tx_sender.count(), n);
+    }
+
+    #[tokio::test]
+    async fn test_react_no_claim() {
+        test_react(vec![], 0).await;
     }
 
     // broker has 1 (new) claim -- sent 1 claim
     #[tokio::test]
     async fn test_react_1_new_claim_sent_1_claim() {
-        let dapp_address = H160::random();
-        let other_dapp_address = H160::random();
-        let history =
-            new_history_for_react_tests(dapp_address, other_dapp_address);
-
-        let broker = mock::Broker::new(vec![Some(new_rollup_claim(6))]);
-        let tx_sender = mock::TxSender::new();
-        let blockchain_driver = BlockchainDriver::new(dapp_address);
-
-        let tx_sender =
-            blockchain_driver.react(&history, &broker, tx_sender).await;
-        assert!(tx_sender.is_ok());
-        assert_eq!(tx_sender.unwrap().count(), 1);
+        test_react(vec![6], 1).await;
     }
 
     // broker has 1 (old) claim -- sent 0 claims
     #[tokio::test]
     async fn test_react_1_old_claim_sent_0_claims() {
-        let dapp_address = H160::random();
-        let other_dapp_address = H160::random();
-        let history =
-            new_history_for_react_tests(dapp_address, other_dapp_address);
-
-        let broker = mock::Broker::new(vec![Some(new_rollup_claim(5))]);
-        let tx_sender = mock::TxSender::new();
-        let blockchain_driver = BlockchainDriver::new(dapp_address);
-
-        let tx_sender =
-            blockchain_driver.react(&history, &broker, tx_sender).await;
-        assert!(tx_sender.is_ok());
-        assert_eq!(tx_sender.unwrap().count(), 0);
+        test_react(vec![5], 0).await;
     }
 
     // broker has 2 claims (1 old, 1 new) -- sent 1 claim
     #[tokio::test]
     async fn test_react_2_claims_sent_1_claim() {
-        let dapp_address = H160::random();
-        let other_dapp_address = H160::random();
-        let history =
-            new_history_for_react_tests(dapp_address, other_dapp_address);
-
-        let broker = mock::Broker::new(vec![
-            Some(new_rollup_claim(5)),
-            Some(new_rollup_claim(6)),
-        ]);
-        let tx_sender = mock::TxSender::new();
-        let blockchain_driver = BlockchainDriver::new(dapp_address);
-
-        let tx_sender =
-            blockchain_driver.react(&history, &broker, tx_sender).await;
-        assert!(tx_sender.is_ok());
-        assert_eq!(tx_sender.unwrap().count(), 1);
+        test_react(vec![5, 6], 1).await;
     }
 
     // broker has interleaved old and new claims -- sent 5 new claims
     #[tokio::test]
     async fn test_react_interleaved_old_new_claims_sent_5_claims() {
-        let dapp_address = H160::random();
-        let other_dapp_address = H160::random();
-        let history =
-            new_history_for_react_tests(dapp_address, other_dapp_address);
-
-        let broker = mock::Broker::new(vec![
-            Some(new_rollup_claim(1)),
-            Some(new_rollup_claim(5)),
-            Some(new_rollup_claim(6)),
-            Some(new_rollup_claim(2)),
-            Some(new_rollup_claim(3)),
-            Some(new_rollup_claim(7)),
-            Some(new_rollup_claim(8)),
-            Some(new_rollup_claim(4)),
-            Some(new_rollup_claim(5)), // duplicate
-            Some(new_rollup_claim(9)),
-            Some(new_rollup_claim(10)),
-        ]);
-        let tx_sender = mock::TxSender::new();
-        let blockchain_driver = BlockchainDriver::new(dapp_address);
-
-        let tx_sender =
-            blockchain_driver.react(&history, &broker, tx_sender).await;
-        assert!(tx_sender.is_ok());
-        assert_eq!(tx_sender.unwrap().count(), 5);
+        test_react(vec![1, 5, 6, 2, 3, 7, 8, 4, 5, 9, 10], 5).await;
     }
 }
