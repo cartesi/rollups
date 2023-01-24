@@ -12,8 +12,8 @@
 
 use backoff::ExponentialBackoff;
 use diesel::pg::{Pg, PgConnection};
-use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+use diesel::{insert_into, prelude::*};
 use snafu::ResultExt;
 use std::sync::Arc;
 
@@ -150,6 +150,86 @@ impl Repository {
             .load::<Proof>(&mut conn)
             .map(|mut proofs| proofs.pop())
             .context(DatabaseSnafu)
+    }
+}
+
+/// Basic queries to insert rollups' outputs
+impl Repository {
+    pub fn insert_input(&self, input: Input) -> Result<(), Error> {
+        use schema::inputs;
+        let mut conn = self.conn()?;
+        insert_into(inputs::table)
+            .values(&input)
+            .on_conflict_do_nothing()
+            .execute(&mut conn)
+            .context(DatabaseSnafu)?;
+        tracing::trace!("Input {} was written to the db", input.index);
+        Ok(())
+    }
+
+    pub fn insert_notice(&self, notice: Notice) -> Result<(), Error> {
+        use schema::notices;
+        let mut conn = self.conn()?;
+        insert_into(notices::table)
+            .values(&notice)
+            .on_conflict_do_nothing()
+            .execute(&mut conn)
+            .context(DatabaseSnafu)?;
+        tracing::trace!(
+            "Notice {} from Input {} was written to the db",
+            notice.index,
+            notice.input_index
+        );
+        Ok(())
+    }
+
+    pub fn insert_voucher(&self, voucher: Voucher) -> Result<(), Error> {
+        use schema::vouchers;
+        let mut conn = self.conn()?;
+        insert_into(vouchers::table)
+            .values(&voucher)
+            .on_conflict_do_nothing()
+            .execute(&mut conn)
+            .context(DatabaseSnafu)?;
+        tracing::trace!(
+            "Voucher {} from Input {} was written to the db",
+            voucher.index,
+            voucher.input_index
+        );
+        Ok(())
+    }
+
+    pub fn insert_report(&self, report: Report) -> Result<(), Error> {
+        use schema::reports;
+        let mut conn = self.conn()?;
+        insert_into(reports::table)
+            .values(&report)
+            .on_conflict_do_nothing()
+            .execute(&mut conn)
+            .context(DatabaseSnafu)?;
+        tracing::trace!(
+            "Report {} from Input {} was written to the db",
+            report.index,
+            report.input_index
+        );
+        Ok(())
+    }
+
+    pub fn insert_proof(&self, proof: Proof) -> Result<(), Error> {
+        use schema::proofs;
+        let mut conn = self.conn()?;
+        insert_into(proofs::table)
+            .values(&proof)
+            .on_conflict_do_nothing()
+            .execute(&mut conn)
+            .context(DatabaseSnafu)?;
+        tracing::trace!(
+            "Proof for {:?} {} of Input {} was written to the db",
+            proof.output_enum,
+            proof.output_index,
+            proof.input_index
+        );
+        Ok(())
     }
 }
 
