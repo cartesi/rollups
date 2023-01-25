@@ -43,7 +43,6 @@ impl Context {
         if self.should_finish_epoch(event_timestamp) {
             self.finish_epoch(event_timestamp, broker).await?;
         }
-
         Ok(())
     }
 
@@ -54,31 +53,24 @@ impl Context {
     ) -> Result<()> {
         broker.enqueue_input(self.inputs_sent_count, input).await?;
         self.increment_input();
-
         Ok(())
     }
 }
 
 impl Context {
+    fn calculate_epoch_for(&self, timestamp: u64) -> u64 {
+        assert!(timestamp >= self.genesis_timestamp);
+        (timestamp - self.genesis_timestamp) / self.epoch_length
+    }
+
     // This logic works because we call this function with `event_timestamp` being equal to the
     // timestamp of each individual input, rather than just the latest from the blockchain.
     fn should_finish_epoch(&self, event_timestamp: u64) -> bool {
-        assert!(event_timestamp >= self.genesis_timestamp);
-
         if self.last_event_is_finish_epoch {
             return false;
         }
-
-        let current_epoch = {
-            let current_since = self.last_timestamp - self.genesis_timestamp;
-            current_since / self.epoch_length
-        };
-
-        let event_epoch = {
-            let current_since = event_timestamp - self.genesis_timestamp;
-            current_since / self.epoch_length
-        };
-
+        let current_epoch = self.calculate_epoch_for(self.last_timestamp);
+        let event_epoch = self.calculate_epoch_for(event_timestamp);
         event_epoch > current_epoch
     }
 
@@ -89,7 +81,6 @@ impl Context {
     ) -> Result<()> {
         broker.finish_epoch(self.inputs_sent_count).await?;
         self.increment_epoch(event_timestamp);
-
         Ok(())
     }
 

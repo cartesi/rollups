@@ -1,6 +1,10 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use std::{collections::VecDeque, ops::DerefMut, sync::Mutex};
+use std::{
+    collections::VecDeque,
+    ops::{Deref, DerefMut},
+    sync::Mutex,
+};
 use types::foldables::input_box::Input;
 
 use crate::machine::{
@@ -11,10 +15,17 @@ use crate::machine::{
 // Broker
 // ------------------------------------------------------------------------------------------------
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SendInteraction {
+    EnqueuedInput(u64),
+    FinishedEpoch(u64),
+}
+
 #[derive(Debug)]
 pub struct Broker {
     pub rollup_statuses: Mutex<VecDeque<RollupStatus>>,
     pub next_claims: Mutex<VecDeque<RollupClaim>>,
+    pub send_interactions: Mutex<Vec<SendInteraction>>,
 }
 
 impl Broker {
@@ -25,7 +36,18 @@ impl Broker {
         Self {
             rollup_statuses: Mutex::new(rollup_statuses.into()),
             next_claims: Mutex::new(next_claims.into()),
+            send_interactions: Mutex::new(Vec::new()),
         }
+    }
+
+    pub fn send_interactions_len(&self) -> usize {
+        let mutex_guard = self.send_interactions.lock().unwrap();
+        mutex_guard.deref().len()
+    }
+
+    pub fn get_send_interaction(&self, i: usize) -> SendInteraction {
+        let mutex_guard = self.send_interactions.lock().unwrap();
+        mutex_guard.deref().get(i).unwrap().clone()
     }
 }
 
@@ -47,17 +69,19 @@ impl BrokerReceive for Broker {
 
 #[async_trait]
 impl BrokerSend for Broker {
-    async fn enqueue_input(
-        &self,
-        input_index: u64,
-        input: &Input,
-    ) -> Result<()> {
-        // TODO
+    async fn enqueue_input(&self, input_index: u64, _: &Input) -> Result<()> {
+        let mut mutex_guard = self.send_interactions.lock().unwrap();
+        mutex_guard
+            .deref_mut()
+            .push(SendInteraction::EnqueuedInput(input_index));
         Ok(())
     }
 
     async fn finish_epoch(&self, inputs_sent_count: u64) -> Result<()> {
-        // TODO
+        let mut mutex_guard = self.send_interactions.lock().unwrap();
+        mutex_guard
+            .deref_mut()
+            .push(SendInteraction::FinishedEpoch(inputs_sent_count));
         Ok(())
     }
 }
