@@ -1,4 +1,4 @@
-// Copyright 2022 Cartesi Pte. Ltd.
+// Copyright 2023 Cartesi Pte. Ltd.
 
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -10,15 +10,26 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Portal interface
+/// @title DApp Address Relay
 pragma solidity ^0.8.13;
 
+import {IDAppAddressRelay} from "./IDAppAddressRelay.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
+import {InputEncoding} from "../common/InputEncoding.sol";
 
-interface IPortal {
-    // Permissionless functions
+contract DAppAddressRelay is IDAppAddressRelay {
+    IInputBox immutable inputBox;
 
-    /// @notice Get the input box used by this portal
-    /// @return the input box
-    function getInputBox() external view returns (IInputBox);
+    constructor(IInputBox _inputBox) {
+        inputBox = _inputBox;
+    }
+
+    function getInputBox() external view override returns (IInputBox) {
+        return inputBox;
+    }
+
+    function relayDAppAddress(address _dapp) external override {
+        bytes memory input = InputEncoding.encodeDAppAddressRelay(_dapp);
+        inputBox.addInput(_dapp, input);
+    }
 }

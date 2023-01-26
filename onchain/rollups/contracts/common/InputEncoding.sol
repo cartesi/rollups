@@ -29,6 +29,9 @@ library InputEncoding {
     /// @notice ERC-721 token deposit
     bytes1 constant ERC721_DEPOSIT = bytes1(0x03);
 
+    /// @notice DApp address
+    bytes1 constant DAPP_ADDRESS_RELAY = bytes1(0x10);
+
     /// @notice Encode Ether deposit
     /// @param sender The Ether sender
     /// @param value The amount of Ether being sent in Wei
@@ -96,6 +99,16 @@ library InputEncoding {
                 sender, //         20B
                 tokenId, //        32B
                 L1L2data //        arbitrary size
+            );
+    }
+
+    function encodeDAppAddressRelay(
+        address dapp
+    ) internal pure returns (bytes memory) {
+        return
+            abi.encodePacked(
+                DAPP_ADDRESS_RELAY, // 1B
+                dapp //                20B
             );
     }
 }

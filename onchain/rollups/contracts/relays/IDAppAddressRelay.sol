@@ -10,15 +10,15 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Portal interface
+/// @title DApp Address Relay interface
 pragma solidity ^0.8.13;
 
-import {IInputBox} from "../inputs/IInputBox.sol";
+import {IRelay} from "./IRelay.sol";
 
-interface IPortal {
+interface IDAppAddressRelay is IRelay {
     // Permissionless functions
 
-    /// @notice Get the input box used by this portal
-    /// @return the input box
-    function getInputBox() external view returns (IInputBox);
+    /// @notice Add an input to a DApp's input box with its address
+    /// @param _dapp the DApp's address
+    function relayDAppAddress(address _dapp) external;
 }

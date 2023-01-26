@@ -10,15 +10,15 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Portal interface
+/// @title Relay interface
 pragma solidity ^0.8.13;
 
 import {IInputBox} from "../inputs/IInputBox.sol";
 
-interface IPortal {
+interface IRelay {
     // Permissionless functions
 
-    /// @notice Get the input box used by this portal
+    /// @notice Get the input box used by this relay
     /// @return the input box
     function getInputBox() external view returns (IInputBox);
 }
