@@ -94,12 +94,13 @@ impl MachineDriver {
 
 #[cfg(test)]
 mod tests {
+    use im::{hashmap, Vector};
     use state_fold_types::{
-        ethereum_types::{Bloom, H160, H256},
+        ethereum_types::{Address, Bloom, H160, H256},
         Block,
     };
     use std::sync::Arc;
-    use types::foldables::input_box::{DAppInputBox, Input};
+    use types::foldables::input_box::{DAppInputBox, Input, InputBox};
 
     use crate::{
         drivers::{
@@ -113,17 +114,21 @@ mod tests {
 
     // --------------------------------------------------------------------------------------------
 
-    fn new_input(block_timestamp: u32) -> Input {
+    fn new_block(timestamp: u32) -> Block {
+        Block {
+            hash: H256::random(),
+            number: 0.into(),
+            parent_hash: H256::random(),
+            timestamp: timestamp.into(),
+            logs_bloom: Bloom::default(),
+        }
+    }
+
+    fn new_input(timestamp: u32) -> Input {
         Input {
             sender: Arc::new(H160::random()),
             payload: vec![],
-            block_added: Arc::new(Block {
-                hash: H256::random(),
-                number: 0.into(),
-                parent_hash: H256::random(),
-                timestamp: block_timestamp.into(),
-                logs_bloom: Bloom::default(),
-            }),
+            block_added: Arc::new(new_block(timestamp)),
             dapp: Arc::new(H160::random()),
         }
     }
@@ -244,7 +249,7 @@ mod tests {
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
         let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
         let machine_driver = MachineDriver::new(H160::random());
-        let input_box = DAppInputBox {
+        let dapp_input_box = DAppInputBox {
             inputs: input_timestamps
                 .iter()
                 .map(|timestamp| Arc::new(new_input(*timestamp)))
@@ -252,7 +257,7 @@ mod tests {
                 .into(),
         };
         let result = machine_driver
-            .process_inputs(&mut context, &input_box, &broker)
+            .process_inputs(&mut context, &dapp_input_box, &broker)
             .await;
         assert!(result.is_ok());
 
@@ -301,5 +306,130 @@ mod tests {
         let send_interactions = vec![];
         test_process_inputs(rollup_status, input_timestamps, send_interactions)
             .await;
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // react
+    // --------------------------------------------------------------------------------------------
+
+    fn new_input_box() -> InputBox {
+        InputBox {
+            input_box_address: Arc::new(H160::random()),
+            dapp_input_boxes: Arc::new(hashmap! {}),
+        }
+    }
+
+    fn update_input_box(
+        input_box: InputBox,
+        dapp_address: Address,
+        timestamps: Vec<u32>,
+    ) -> InputBox {
+        let inputs = timestamps
+            .iter()
+            .map(|timestamp| Arc::new(new_input(*timestamp)))
+            .collect::<Vec<_>>();
+        let inputs = Vector::from(inputs);
+        let dapp_input_boxes = input_box
+            .dapp_input_boxes
+            .update(Arc::new(dapp_address), Arc::new(DAppInputBox { inputs }));
+        InputBox {
+            input_box_address: input_box.input_box_address,
+            dapp_input_boxes: Arc::new(dapp_input_boxes),
+        }
+    }
+
+    async fn test_react(
+        block: Block,
+        rollup_status: RollupStatus,
+        input_timestamps: Vec<u32>,
+        expected: Vec<SendInteraction>,
+    ) {
+        let broker = mock::Broker::new(vec![rollup_status], Vec::new());
+        let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
+
+        let dapp_address = H160::random();
+        let machine_driver = MachineDriver::new(dapp_address);
+
+        let input_box = new_input_box();
+        let input_box =
+            update_input_box(input_box, dapp_address, input_timestamps);
+
+        let result = machine_driver
+            .react(&mut context, &block, &input_box, &broker)
+            .await;
+        assert!(result.is_ok());
+
+        assert_eq!(broker.send_interactions_len(), expected.len());
+        for (i, expected) in expected.iter().enumerate() {
+            assert_eq!(broker.get_send_interaction(i), *expected);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_react_without_finish_epoch() {
+        let block = new_block(3);
+        let rollup_status = RollupStatus {
+            inputs_sent_count: 0,
+            last_event_is_finish_epoch: false,
+        };
+        let input_timestamps = vec![1, 2];
+        let send_interactions = vec![
+            SendInteraction::EnqueuedInput(0),
+            SendInteraction::EnqueuedInput(1),
+        ];
+        test_react(block, rollup_status, input_timestamps, send_interactions)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn test_react_with_finish_epoch() {
+        let block = new_block(5);
+        let rollup_status = RollupStatus {
+            inputs_sent_count: 0,
+            last_event_is_finish_epoch: false,
+        };
+        let input_timestamps = vec![1, 2];
+        let send_interactions = vec![
+            SendInteraction::EnqueuedInput(0),
+            SendInteraction::EnqueuedInput(1),
+            SendInteraction::FinishedEpoch(2),
+        ];
+        test_react(block, rollup_status, input_timestamps, send_interactions)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn test_react_with_internal_finish_epoch() {
+        let block = new_block(5);
+        let rollup_status = RollupStatus {
+            inputs_sent_count: 0,
+            last_event_is_finish_epoch: false,
+        };
+        let input_timestamps = vec![4, 5];
+        let send_interactions = vec![
+            SendInteraction::EnqueuedInput(0),
+            SendInteraction::FinishedEpoch(1),
+            SendInteraction::EnqueuedInput(1),
+        ];
+        test_react(block, rollup_status, input_timestamps, send_interactions)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn test_react_without_inputs() {
+        let rollup_status = RollupStatus {
+            inputs_sent_count: 0,
+            last_event_is_finish_epoch: false,
+        };
+        let broker = mock::Broker::new(vec![rollup_status], Vec::new());
+        let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
+        let block = new_block(5);
+        let input_box = new_input_box();
+        let machine_driver = MachineDriver::new(H160::random());
+        let result = machine_driver
+            .react(&mut context, &block, &input_box, &broker)
+            .await;
+        assert!(result.is_ok());
+        assert_eq!(broker.send_interactions_len(), 0);
     }
 }
