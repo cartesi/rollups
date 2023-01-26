@@ -102,6 +102,9 @@ library InputEncoding {
             );
     }
 
+    /// @notice Encode DApp address relay
+    /// @param dapp The DApp address
+    /// @return The encoded input
     function encodeDAppAddressRelay(
         address dapp
     ) internal pure returns (bytes memory) {
