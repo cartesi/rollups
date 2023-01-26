@@ -42,6 +42,7 @@ graph TD
     ERC721Portal -- addInput ---> InputBox
     EtherPortal[Ether Portal] -- "Ether transfer" --> Anyone
     EtherPortal -- addInput ---> InputBox
+    DAppAddressRelay -- addInput --> InputBox
     click ERC20 href "https://eips.ethereum.org/EIPS/eip-20"
     click ERC721 href "https://eips.ethereum.org/EIPS/eip-721"
     click CTSI href "https://cartesi.io/en/ctsi-token"
