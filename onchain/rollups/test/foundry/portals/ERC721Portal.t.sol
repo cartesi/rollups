@@ -136,7 +136,6 @@ contract ERC721PortalTest is Test {
 
         // Construct the ERC-721 deposit input
         bytes memory input = abi.encodePacked(
-            InputEncoding.ERC721_DEPOSIT,
             token,
             alice,
             tokenId,
@@ -184,7 +183,6 @@ contract ERC721PortalTest is Test {
 
         // Construct the ERC-721 deposit input
         bytes memory input = abi.encodePacked(
-            InputEncoding.ERC721_DEPOSIT,
             token,
             alice,
             tokenId,
@@ -281,7 +279,6 @@ contract ERC721PortalTest is Test {
 
         // Construct the ERC-721 deposit input
         bytes memory input = abi.encodePacked(
-            InputEncoding.ERC721_DEPOSIT,
             token,
             alice,
             tokenId,

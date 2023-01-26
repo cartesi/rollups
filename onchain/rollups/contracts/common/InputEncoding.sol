@@ -17,21 +17,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 library InputEncoding {
-    /// @notice ETH deposit
-    bytes1 constant ETH_DEPOSIT = bytes1(0x00);
-
-    /// @notice ERC-20 token deposit where `transferFrom` returns `true`
-    bytes1 constant ERC20_DEPOSIT_TRUE = bytes1(0x01);
-
-    /// @notice ERC-20 token deposit where `transferFrom` returns `false`
-    bytes1 constant ERC20_DEPOSIT_FALSE = bytes1(0x02);
-
-    /// @notice ERC-721 token deposit
-    bytes1 constant ERC721_DEPOSIT = bytes1(0x03);
-
-    /// @notice DApp address
-    bytes1 constant DAPP_ADDRESS_RELAY = bytes1(0x10);
-
     /// @notice Encode Ether deposit
     /// @param sender The Ether sender
     /// @param value The amount of Ether being sent in Wei
@@ -44,10 +29,9 @@ library InputEncoding {
     ) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
-                ETH_DEPOSIT, // 1B
-                sender, //      20B
-                value, //       32B
-                L2data //       arbitrary size
+                sender, //     20B
+                value, //      32B
+                L2data //      arbitrary size
             );
     }
 
@@ -65,14 +49,13 @@ library InputEncoding {
         uint256 amount,
         bytes calldata L2data
     ) internal pure returns (bytes memory) {
-        bytes1 header = ret ? ERC20_DEPOSIT_TRUE : ERC20_DEPOSIT_FALSE;
         return
             abi.encodePacked(
-                header, // 1B
-                token, //  20B
-                sender, // 20B
-                amount, // 32B
-                L2data //  arbitrary size
+                ret, //        1B
+                token, //      20B
+                sender, //     20B
+                amount, //     32B
+                L2data //      arbitrary size
             );
     }
 
@@ -94,11 +77,10 @@ library InputEncoding {
         bytes memory L1L2data = abi.encode(L1data, L2data);
         return
             abi.encodePacked(
-                ERC721_DEPOSIT, // 1B
-                token, //          20B
-                sender, //         20B
-                tokenId, //        32B
-                L1L2data //        arbitrary size
+                token, //      20B
+                sender, //     20B
+                tokenId, //    32B
+                L1L2data //    arbitrary size
             );
     }
 
@@ -110,8 +92,7 @@ library InputEncoding {
     ) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
-                DAPP_ADDRESS_RELAY, // 1B
-                dapp //                20B
+                dapp //        20B
             );
     }
 }

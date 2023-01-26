@@ -128,13 +128,7 @@ contract ERC20PortalTest is Test {
         token = new NormalToken(amount);
 
         // Construct the ERC-20 deposit input
-        bytes memory input = abi.encodePacked(
-            InputEncoding.ERC20_DEPOSIT_TRUE,
-            token,
-            alice,
-            amount,
-            data
-        );
+        bytes memory input = abi.encodePacked(true, token, alice, amount, data);
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
         token.transfer(alice, amount);
@@ -170,7 +164,7 @@ contract ERC20PortalTest is Test {
 
         // Construct the ERC-20 deposit input
         bytes memory input = abi.encodePacked(
-            InputEncoding.ERC20_DEPOSIT_FALSE,
+            false,
             token,
             alice,
             amount,

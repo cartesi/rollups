@@ -45,10 +45,7 @@ contract DAppAddressRelayTest is Test {
         assertEq(inputBox.getNumberOfInputs(_dapp), 0);
 
         // Construct the DApp address relay input
-        bytes memory input = abi.encodePacked(
-            InputEncoding.DAPP_ADDRESS_RELAY,
-            _dapp
-        );
+        bytes memory input = abi.encodePacked(_dapp);
 
         // Expect InputAdded to be emitted with the right arguments
         vm.expectEmit(true, true, false, true, address(inputBox));
