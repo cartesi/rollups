@@ -1,0 +1,71 @@
+{
+  "contractName": "IDAppAddressRelay",
+  "sourceName": "contracts/relays/IDAppAddressRelay.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getInputBox",
+      "outputs": [
+        {
+          "internalType": "contract IInputBox",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
+        }
+      ],
+      "name": "relayDAppAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getInputBox()": {
+        "returns": {
+          "_0": "the input box"
+        }
+      },
+      "relayDAppAddress(address)": {
+        "params": {
+          "_dapp": "the DApp's address"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "getInputBox()": {
+        "notice": "Get the input box used by this relay"
+      },
+      "relayDAppAddress(address)": {
+        "notice": "Add an input to a DApp's input box with its address"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "getInputBox()": "00aace9a",
+      "relayDAppAddress(address)": "3016f49e"
+    }
+  }
+}
