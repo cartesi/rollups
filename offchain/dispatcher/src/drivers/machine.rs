@@ -192,7 +192,7 @@ mod tests {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: true,
         };
-        let input_timestamps = vec![5]; // TOASK: is this correct?
+        let input_timestamps = vec![5];
         let send_interactions = vec![SendInteraction::EnqueuedInput(0)];
         test_process_input(rollup_status, input_timestamps, send_interactions)
             .await;

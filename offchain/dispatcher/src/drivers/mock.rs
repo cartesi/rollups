@@ -26,6 +26,7 @@ pub struct Broker {
     pub rollup_statuses: Mutex<VecDeque<RollupStatus>>,
     pub next_claims: Mutex<VecDeque<RollupClaim>>,
     pub send_interactions: Mutex<Vec<SendInteraction>>,
+    pub finish_epoch_error: bool,
 }
 
 impl Broker {
@@ -37,6 +38,16 @@ impl Broker {
             rollup_statuses: Mutex::new(rollup_statuses.into()),
             next_claims: Mutex::new(next_claims.into()),
             send_interactions: Mutex::new(Vec::new()),
+            finish_epoch_error: false,
+        }
+    }
+
+    pub fn with_finish_epoch_error() -> Self {
+        Self {
+            rollup_statuses: Mutex::new(VecDeque::new()),
+            next_claims: Mutex::new(VecDeque::new()),
+            send_interactions: Mutex::new(Vec::new()),
+            finish_epoch_error: true,
         }
     }
 
@@ -78,11 +89,15 @@ impl BrokerSend for Broker {
     }
 
     async fn finish_epoch(&self, inputs_sent_count: u64) -> Result<()> {
-        let mut mutex_guard = self.send_interactions.lock().unwrap();
-        mutex_guard
-            .deref_mut()
-            .push(SendInteraction::FinishedEpoch(inputs_sent_count));
-        Ok(())
+        if self.finish_epoch_error {
+            Err(anyhow::anyhow!("finish_epoch error"))
+        } else {
+            let mut mutex_guard = self.send_interactions.lock().unwrap();
+            mutex_guard
+                .deref_mut()
+                .push(SendInteraction::FinishedEpoch(inputs_sent_count));
+            Ok(())
+        }
     }
 }
 
