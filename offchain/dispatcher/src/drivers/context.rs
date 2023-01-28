@@ -245,47 +245,149 @@ mod private_tests {
 
 #[cfg(test)]
 mod public_tests {
-    /*
-    pub async fn new(
-        genesis_timestamp: u64,
-        epoch_length: u64,
-        broker: &impl BrokerStatus,
-    ) -> Result<Self> {
-        let status = broker.status().await?;
+    use crate::{
+        drivers::mock::{self, Broker, SendInteraction},
+        machine::RollupStatus,
+    };
 
-        Ok(Self {
-            inputs_sent_count: status.inputs_sent_count,
-            last_event_is_finish_epoch: status.last_event_is_finish_epoch,
-            last_timestamp: genesis_timestamp,
-            genesis_timestamp,
-            epoch_length,
-        })
+    use super::Context;
+
+    // --------------------------------------------------------------------------------------------
+    // new
+    // --------------------------------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn test_new_ok() {
+        let genesis_timestamp = 42;
+        let epoch_length = 24;
+        let inputs_sent_count = 150;
+        let last_event_is_finish_epoch = true;
+        let rollup_status = RollupStatus {
+            inputs_sent_count,
+            last_event_is_finish_epoch,
+        };
+        let broker = Broker::new(vec![rollup_status], vec![]);
+        let result =
+            Context::new(genesis_timestamp, epoch_length, &broker).await;
+        assert!(result.is_ok());
+        let context = result.unwrap();
+        assert_eq!(context.genesis_timestamp, genesis_timestamp);
+        assert_eq!(context.inputs_sent_count, inputs_sent_count);
+        assert_eq!(
+            context.last_event_is_finish_epoch,
+            last_event_is_finish_epoch
+        );
     }
 
-    pub fn inputs_sent_count(&self) -> u64 {
-        self.inputs_sent_count
+    #[tokio::test]
+    async fn test_new_broker_error() {
+        let broker = Broker::with_status_error();
+        let result = Context::new(1337, 7331, &broker).await;
+        assert!(result.is_err());
     }
 
-    pub async fn finish_epoch_if_needed(
-        &mut self,
-        event_timestamp: u64,
-        broker: &impl BrokerSend,
-    ) -> Result<()> {
-        if self.should_finish_epoch(event_timestamp) {
-            self.finish_epoch(event_timestamp, broker).await?;
-        }
-        Ok(())
+    // --------------------------------------------------------------------------------------------
+    // inputs_sent_count
+    // --------------------------------------------------------------------------------------------
+
+    #[test]
+    fn test_inputs_sent_count() {
+        let inputs_sent_count = 42;
+        let context = Context {
+            inputs_sent_count,
+            last_event_is_finish_epoch: false, // ignored
+            last_timestamp: 0,                 // ignored
+            genesis_timestamp: 0,              // ignored
+            epoch_length: 0,                   // ignored
+        };
+        assert_eq!(context.inputs_sent_count(), inputs_sent_count);
     }
 
-    pub async fn enqueue_input(
-        &mut self,
-        input: &Input,
-        broker: &impl BrokerSend,
-    ) -> Result<()> {
-        broker.enqueue_input(self.inputs_sent_count, input).await?;
-        self.inputs_sent_count += 1;
-        self.last_event_is_finish_epoch = false;
-        Ok(())
+    // --------------------------------------------------------------------------------------------
+    // finish_epoch_if_needed
+    // --------------------------------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn test_finish_epoch_if_needed_true() {
+        let mut context = Context {
+            inputs_sent_count: 0,
+            last_event_is_finish_epoch: false,
+            last_timestamp: 2,
+            genesis_timestamp: 0,
+            epoch_length: 4,
+        };
+        let broker = mock::Broker::new(vec![], vec![]);
+        let result = context.finish_epoch_if_needed(4, &broker).await;
+        assert!(result.is_ok());
+        broker
+            .assert_send_interactions(vec![SendInteraction::FinishedEpoch(0)]);
     }
-    */
+
+    #[tokio::test]
+    async fn test_finish_epoch_if_needed_false() {
+        let mut context = Context {
+            inputs_sent_count: 0,
+            last_event_is_finish_epoch: false,
+            last_timestamp: 2,
+            genesis_timestamp: 0,
+            epoch_length: 2,
+        };
+        let broker = mock::Broker::new(vec![], vec![]);
+        let result = context.finish_epoch_if_needed(3, &broker).await;
+        assert!(result.is_ok());
+        broker.assert_send_interactions(vec![]);
+    }
+
+    #[tokio::test]
+    async fn test_finish_epoch_if_needed_broker_error() {
+        let mut context = Context {
+            inputs_sent_count: 0,
+            last_event_is_finish_epoch: false,
+            last_timestamp: 2,
+            genesis_timestamp: 0,
+            epoch_length: 4,
+        };
+        let broker = mock::Broker::with_finish_epoch_error();
+        let result = context.finish_epoch_if_needed(4, &broker).await;
+        assert!(result.is_err());
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // enqueue_input
+    // --------------------------------------------------------------------------------------------
+    //
+    #[tokio::test]
+    async fn test_enqueue_input_ok() {
+        let inputs_sent_count = 42;
+        let mut context = Context {
+            inputs_sent_count,
+            last_event_is_finish_epoch: true,
+            last_timestamp: 0,    // ignored
+            genesis_timestamp: 0, // ignored
+            epoch_length: 0,      // ignored
+        };
+        let input = mock::new_input(2);
+        let broker = mock::Broker::new(vec![], vec![]);
+        let result = context.enqueue_input(&input, &broker).await;
+        assert!(result.is_ok());
+        assert_eq!(context.inputs_sent_count, inputs_sent_count + 1);
+        assert!(!context.last_event_is_finish_epoch);
+        broker.assert_send_interactions(vec![SendInteraction::EnqueuedInput(
+            inputs_sent_count,
+        )]);
+    }
+
+    #[tokio::test]
+    async fn test_enqueue_input_broker_error() {
+        let mut context = Context {
+            inputs_sent_count: 42,
+            last_event_is_finish_epoch: true,
+            last_timestamp: 0,    // ignored
+            genesis_timestamp: 0, // ignored
+            epoch_length: 0,      // ignored
+        };
+        let broker = mock::Broker::with_enqueue_input_error();
+        let result = context.enqueue_input(&mock::new_input(2), &broker).await;
+        assert!(result.is_err());
+    }
 }

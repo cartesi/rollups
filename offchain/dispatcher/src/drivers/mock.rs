@@ -1,15 +1,42 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use state_fold_types::{
+    ethereum_types::{Bloom, H160, H256},
+    Block,
+};
 use std::{
     collections::VecDeque,
     ops::{Deref, DerefMut},
-    sync::Mutex,
+    sync::{Arc, Mutex},
 };
 use types::foldables::input_box::Input;
 
 use crate::machine::{
     BrokerReceive, BrokerSend, BrokerStatus, RollupClaim, RollupStatus,
 };
+
+// ------------------------------------------------------------------------------------------------
+// auxiliary functions
+// ------------------------------------------------------------------------------------------------
+
+pub fn new_block(timestamp: u32) -> Block {
+    Block {
+        hash: H256::random(),
+        number: 0.into(),
+        parent_hash: H256::random(),
+        timestamp: timestamp.into(),
+        logs_bloom: Bloom::default(),
+    }
+}
+
+pub fn new_input(timestamp: u32) -> Input {
+    Input {
+        sender: Arc::new(H160::random()),
+        payload: vec![],
+        block_added: Arc::new(new_block(timestamp)),
+        dapp: Arc::new(H160::random()),
+    }
+}
 
 // ------------------------------------------------------------------------------------------------
 // Broker
@@ -26,47 +53,78 @@ pub struct Broker {
     pub rollup_statuses: Mutex<VecDeque<RollupStatus>>,
     pub next_claims: Mutex<VecDeque<RollupClaim>>,
     pub send_interactions: Mutex<Vec<SendInteraction>>,
-    pub finish_epoch_error: bool,
+    status_error: bool,
+    enqueue_input_error: bool,
+    finish_epoch_error: bool,
 }
 
 impl Broker {
-    pub fn new(
-        rollup_statuses: Vec<RollupStatus>,
-        next_claims: Vec<RollupClaim>,
-    ) -> Self {
-        Self {
-            rollup_statuses: Mutex::new(rollup_statuses.into()),
-            next_claims: Mutex::new(next_claims.into()),
-            send_interactions: Mutex::new(Vec::new()),
-            finish_epoch_error: false,
-        }
-    }
-
-    pub fn with_finish_epoch_error() -> Self {
+    fn default() -> Self {
         Self {
             rollup_statuses: Mutex::new(VecDeque::new()),
             next_claims: Mutex::new(VecDeque::new()),
             send_interactions: Mutex::new(Vec::new()),
-            finish_epoch_error: true,
+            status_error: false,
+            enqueue_input_error: false,
+            finish_epoch_error: false,
         }
     }
 
-    pub fn send_interactions_len(&self) -> usize {
+    pub fn new(
+        rollup_statuses: Vec<RollupStatus>,
+        next_claims: Vec<RollupClaim>,
+    ) -> Self {
+        let mut broker = Self::default();
+        broker.rollup_statuses = Mutex::new(rollup_statuses.into());
+        broker.next_claims = Mutex::new(next_claims.into());
+        broker
+    }
+
+    pub fn with_status_error() -> Self {
+        let mut broker = Self::default();
+        broker.status_error = true;
+        broker
+    }
+
+    pub fn with_enqueue_input_error() -> Self {
+        let mut broker = Self::default();
+        broker.enqueue_input_error = true;
+        broker
+    }
+
+    pub fn with_finish_epoch_error() -> Self {
+        let mut broker = Self::default();
+        broker.finish_epoch_error = true;
+        broker
+    }
+
+    fn send_interactions_len(&self) -> usize {
         let mutex_guard = self.send_interactions.lock().unwrap();
         mutex_guard.deref().len()
     }
 
-    pub fn get_send_interaction(&self, i: usize) -> SendInteraction {
+    fn get_send_interaction(&self, i: usize) -> SendInteraction {
         let mutex_guard = self.send_interactions.lock().unwrap();
         mutex_guard.deref().get(i).unwrap().clone()
+    }
+
+    pub fn assert_send_interactions(&self, expected: Vec<SendInteraction>) {
+        assert_eq!(self.send_interactions_len(), expected.len());
+        for (i, expected) in expected.iter().enumerate() {
+            assert_eq!(self.get_send_interaction(i), *expected);
+        }
     }
 }
 
 #[async_trait]
 impl BrokerStatus for Broker {
     async fn status(&self) -> Result<RollupStatus> {
-        let mut mutex_guard = self.rollup_statuses.lock().unwrap();
-        Ok(mutex_guard.deref_mut().pop_front().unwrap())
+        if self.status_error {
+            Err(anyhow::anyhow!("status error"))
+        } else {
+            let mut mutex_guard = self.rollup_statuses.lock().unwrap();
+            Ok(mutex_guard.deref_mut().pop_front().unwrap())
+        }
     }
 }
 
@@ -81,11 +139,15 @@ impl BrokerReceive for Broker {
 #[async_trait]
 impl BrokerSend for Broker {
     async fn enqueue_input(&self, input_index: u64, _: &Input) -> Result<()> {
-        let mut mutex_guard = self.send_interactions.lock().unwrap();
-        mutex_guard
-            .deref_mut()
-            .push(SendInteraction::EnqueuedInput(input_index));
-        Ok(())
+        if self.enqueue_input_error {
+            Err(anyhow::anyhow!("enqueue_input error"))
+        } else {
+            let mut mutex_guard = self.send_interactions.lock().unwrap();
+            mutex_guard
+                .deref_mut()
+                .push(SendInteraction::EnqueuedInput(input_index));
+            Ok(())
+        }
     }
 
     async fn finish_epoch(&self, inputs_sent_count: u64) -> Result<()> {

@@ -96,11 +96,11 @@ impl MachineDriver {
 mod tests {
     use im::{hashmap, Vector};
     use state_fold_types::{
-        ethereum_types::{Address, Bloom, H160, H256},
+        ethereum_types::{Address, H160},
         Block,
     };
     use std::sync::Arc;
-    use types::foldables::input_box::{DAppInputBox, Input, InputBox};
+    use types::foldables::input_box::{DAppInputBox, InputBox};
 
     use crate::{
         drivers::{
@@ -111,27 +111,6 @@ mod tests {
     };
 
     use super::MachineDriver;
-
-    // --------------------------------------------------------------------------------------------
-
-    fn new_block(timestamp: u32) -> Block {
-        Block {
-            hash: H256::random(),
-            number: 0.into(),
-            parent_hash: H256::random(),
-            timestamp: timestamp.into(),
-            logs_bloom: Bloom::default(),
-        }
-    }
-
-    fn new_input(timestamp: u32) -> Input {
-        Input {
-            sender: Arc::new(H160::random()),
-            payload: vec![],
-            block_added: Arc::new(new_block(timestamp)),
-            dapp: Arc::new(H160::random()),
-        }
-    }
 
     // --------------------------------------------------------------------------------------------
     // process_input
@@ -146,17 +125,14 @@ mod tests {
         let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
         let machine_driver = MachineDriver::new(H160::random());
         for block_timestamp in input_timestamps {
-            let input = new_input(block_timestamp);
+            let input = mock::new_input(block_timestamp);
             let result = machine_driver
                 .process_input(&mut context, &input, &broker)
                 .await;
             assert!(result.is_ok());
         }
 
-        assert_eq!(broker.send_interactions_len(), expected.len());
-        for (i, expected) in expected.iter().enumerate() {
-            assert_eq!(broker.get_send_interaction(i), *expected);
-        }
+        broker.assert_send_interactions(expected);
     }
 
     #[tokio::test]
@@ -252,7 +228,7 @@ mod tests {
         let dapp_input_box = DAppInputBox {
             inputs: input_timestamps
                 .iter()
-                .map(|timestamp| Arc::new(new_input(*timestamp)))
+                .map(|timestamp| Arc::new(mock::new_input(*timestamp)))
                 .collect::<Vec<_>>()
                 .into(),
         };
@@ -261,10 +237,7 @@ mod tests {
             .await;
         assert!(result.is_ok());
 
-        assert_eq!(broker.send_interactions_len(), expected.len());
-        for (i, expected) in expected.iter().enumerate() {
-            assert_eq!(broker.get_send_interaction(i), *expected);
-        }
+        broker.assert_send_interactions(expected);
     }
 
     #[tokio::test]
@@ -326,7 +299,7 @@ mod tests {
     ) -> InputBox {
         let inputs = timestamps
             .iter()
-            .map(|timestamp| Arc::new(new_input(*timestamp)))
+            .map(|timestamp| Arc::new(mock::new_input(*timestamp)))
             .collect::<Vec<_>>();
         let inputs = Vector::from(inputs);
         let dapp_input_boxes = input_box
@@ -359,15 +332,12 @@ mod tests {
             .await;
         assert!(result.is_ok());
 
-        assert_eq!(broker.send_interactions_len(), expected.len());
-        for (i, expected) in expected.iter().enumerate() {
-            assert_eq!(broker.get_send_interaction(i), *expected);
-        }
+        broker.assert_send_interactions(expected);
     }
 
     #[tokio::test]
     async fn test_react_without_finish_epoch() {
-        let block = new_block(3);
+        let block = mock::new_block(3);
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -383,7 +353,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_react_with_finish_epoch() {
-        let block = new_block(5);
+        let block = mock::new_block(5);
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -400,7 +370,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_react_with_internal_finish_epoch() {
-        let block = new_block(5);
+        let block = mock::new_block(5);
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -423,13 +393,13 @@ mod tests {
         };
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
         let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
-        let block = new_block(5);
+        let block = mock::new_block(5);
         let input_box = new_input_box();
         let machine_driver = MachineDriver::new(H160::random());
         let result = machine_driver
             .react(&mut context, &block, &input_box, &broker)
             .await;
         assert!(result.is_ok());
-        assert_eq!(broker.send_interactions_len(), 0);
+        broker.assert_send_interactions(vec![]);
     }
 }
