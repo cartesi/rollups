@@ -11,54 +11,62 @@
 // specific language governing permissions and limitations under the License.
 
 use backoff::ExponentialBackoff;
-use redis::aio::{ConnectionLike, ConnectionManager};
+use redis::aio::ConnectionManager;
 use redis::streams::StreamRangeReply;
 use redis::{AsyncCommands, Client};
 use serde::{Deserialize, Serialize};
-use testcontainers::*;
+use testcontainers::{
+    clients::Cli, core::WaitFor, images::generic::GenericImage, Container,
+};
 
-use rollups_events::broker::{Broker, BrokerError, BrokerStream, INITIAL_ID};
+use rollups_events::{
+    Broker, BrokerConfig, BrokerError, BrokerStream, INITIAL_ID,
+};
 
 const STREAM_KEY: &'static str = "test-stream";
 const CONSUME_TIMEOUT: usize = 10;
 
 struct TestState<'d> {
-    _node: Container<'d, images::redis::Redis>,
-    redis_address: String,
+    _node: Container<'d, GenericImage>,
+    redis_endpoint: String,
     conn: ConnectionManager,
     backoff: ExponentialBackoff,
 }
 
-async fn setup(docker: &clients::Cli) -> TestState {
-    let node = docker.run(images::redis::Redis::default());
-    let port = node.get_host_port_ipv4(6379);
-    let redis_address = format!("redis://127.0.0.1:{}", port);
-    let backoff = ExponentialBackoff::default();
+impl TestState<'_> {
+    async fn setup(docker: &Cli) -> TestState {
+        let image = GenericImage::new("redis", "6.2").with_wait_for(
+            WaitFor::message_on_stdout("Ready to accept connections"),
+        );
+        let node = docker.run(image);
+        let port = node.get_host_port_ipv4(6379);
+        let redis_endpoint = format!("redis://127.0.0.1:{}", port);
+        let backoff = ExponentialBackoff::default();
 
-    let client =
-        Client::open(redis_address.clone()).expect("failed to create client");
-    let mut conn = ConnectionManager::new(client)
-        .await
-        .expect("failed to create connection");
-    flushall(&mut conn).await;
+        let client = Client::open(redis_endpoint.as_str())
+            .expect("failed to create client");
+        let conn = ConnectionManager::new(client)
+            .await
+            .expect("failed to create connection");
 
-    TestState {
-        _node: node,
-        redis_address,
-        conn,
-        backoff,
+        TestState {
+            _node: node,
+            redis_endpoint,
+            conn,
+            backoff,
+        }
     }
-}
 
-async fn teardown(mut state: TestState<'_>) {
-    flushall(&mut state.conn).await;
-}
-
-async fn flushall(conn: &mut impl ConnectionLike) {
-    redis::cmd("FLUSHALL")
-        .query_async::<_, ()>(conn)
-        .await
-        .expect("failed to flushall");
+    async fn create_broker(&self) -> Broker {
+        let config = BrokerConfig {
+            redis_endpoint: self.redis_endpoint.clone(),
+            backoff: self.backoff.clone(),
+            consume_timeout: CONSUME_TIMEOUT,
+        };
+        Broker::new(config)
+            .await
+            .expect("failed to initialize broker")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -77,17 +85,10 @@ impl BrokerStream for MockStream {
 }
 
 #[test_log::test(tokio::test)]
-#[serial_test::serial]
 async fn test_it_produces_events() {
-    let docker = clients::Cli::default();
-    let mut state = setup(&docker).await;
-    let mut broker = Broker::new(
-        &state.redis_address,
-        state.backoff.clone(),
-        CONSUME_TIMEOUT,
-    )
-    .await
-    .expect("failed to initialize broker");
+    let docker = Cli::default();
+    let mut state = TestState::setup(&docker).await;
+    let mut broker = state.create_broker().await;
     // Produce events using the Broker struct
     const N: usize = 3;
     let mut ids = vec![];
@@ -113,34 +114,24 @@ async fn test_it_produces_events() {
         assert_eq!(reply.ids[i].id, ids[i]);
         assert_eq!(reply.ids[i].get::<String>("payload").unwrap(), expected);
     }
-    teardown(state).await;
 }
 
 #[test_log::test(tokio::test)]
-#[serial_test::serial]
 async fn test_it_peeks_in_stream_with_no_events() {
-    let docker = clients::Cli::default();
-    let state = setup(&docker).await;
-    let mut broker = Broker::new(
-        &state.redis_address,
-        state.backoff.clone(),
-        CONSUME_TIMEOUT,
-    )
-    .await
-    .expect("failed to initialize broker");
+    let docker = Cli::default();
+    let state = TestState::setup(&docker).await;
+    let mut broker = state.create_broker().await;
     let event = broker
         .peek_latest(&MockStream {})
         .await
         .expect("failed to peek");
     assert!(matches!(event, None));
-    teardown(state).await;
 }
 
 #[test_log::test(tokio::test)]
-#[serial_test::serial]
 async fn test_it_peeks_in_stream_with_multiple_events() {
-    let docker = clients::Cli::default();
-    let mut state = setup(&docker).await;
+    let docker = Cli::default();
+    let mut state = TestState::setup(&docker).await;
     // Produce multiple events directly in Redis
     const N: usize = 3;
     for i in 0..N {
@@ -153,13 +144,7 @@ async fn test_it_peeks_in_stream_with_multiple_events() {
             .expect("failed to add events");
     }
     // Peek the event using the Broker struct
-    let mut broker = Broker::new(
-        &state.redis_address,
-        state.backoff.clone(),
-        CONSUME_TIMEOUT,
-    )
-    .await
-    .expect("failed to initialize broker");
+    let mut broker = state.create_broker().await;
     let event = broker
         .peek_latest(&MockStream {})
         .await
@@ -170,14 +155,12 @@ async fn test_it_peeks_in_stream_with_multiple_events() {
     } else {
         panic!("expected some event");
     }
-    teardown(state).await;
 }
 
 #[test_log::test(tokio::test)]
-#[serial_test::serial]
 async fn test_it_fails_to_peek_event_in_invalid_format() {
-    let docker = clients::Cli::default();
-    let mut state = setup(&docker).await;
+    let docker = Cli::default();
+    let mut state = TestState::setup(&docker).await;
     // Produce event directly in Redis
     let _: String = state
         .conn
@@ -185,26 +168,18 @@ async fn test_it_fails_to_peek_event_in_invalid_format() {
         .await
         .expect("failed to add events");
     // Peek the event using the Broker struct
-    let mut broker = Broker::new(
-        &state.redis_address,
-        state.backoff.clone(),
-        CONSUME_TIMEOUT,
-    )
-    .await
-    .expect("failed to initialize broker");
+    let mut broker = state.create_broker().await;
     let err = broker
         .peek_latest(&MockStream {})
         .await
         .expect_err("failed to get error");
     assert!(matches!(err, BrokerError::InvalidEvent));
-    teardown(state).await;
 }
 
 #[test_log::test(tokio::test)]
-#[serial_test::serial]
 async fn test_it_fails_to_peek_event_with_invalid_data_encoding() {
-    let docker = clients::Cli::default();
-    let mut state = setup(&docker).await;
+    let docker = Cli::default();
+    let mut state = TestState::setup(&docker).await;
     // Produce event directly in Redis
     let _: String = state
         .conn
@@ -212,26 +187,18 @@ async fn test_it_fails_to_peek_event_with_invalid_data_encoding() {
         .await
         .expect("failed to add events");
     // Peek the event using the Broker struct
-    let mut broker = Broker::new(
-        &state.redis_address,
-        state.backoff.clone(),
-        CONSUME_TIMEOUT,
-    )
-    .await
-    .expect("failed to initialize broker");
+    let mut broker = state.create_broker().await;
     let err = broker
         .peek_latest(&MockStream {})
         .await
         .expect_err("failed to get error");
     assert!(matches!(err, BrokerError::InvalidPayload { .. }));
-    teardown(state).await;
 }
 
 #[test_log::test(tokio::test)]
-#[serial_test::serial]
 async fn test_it_consumes_events() {
-    let docker = clients::Cli::default();
-    let mut state = setup(&docker).await;
+    let docker = Cli::default();
+    let mut state = TestState::setup(&docker).await;
     // Produce multiple events directly in Redis
     const N: usize = 3;
     for i in 0..N {
@@ -244,13 +211,7 @@ async fn test_it_consumes_events() {
             .expect("failed to add events");
     }
     // Consume events using the Broker struct
-    let mut broker = Broker::new(
-        &state.redis_address,
-        state.backoff.clone(),
-        CONSUME_TIMEOUT,
-    )
-    .await
-    .expect("failed to initialize broker");
+    let mut broker = state.create_broker().await;
     let mut last_id = INITIAL_ID.to_owned();
     for i in 0..N {
         let event = broker
@@ -261,15 +222,12 @@ async fn test_it_consumes_events() {
         assert_eq!(event.payload.data, i.to_string());
         last_id = event.id;
     }
-
-    teardown(state).await;
 }
 
 #[test_log::test(tokio::test)]
-#[serial_test::serial]
 async fn test_it_blocks_until_event_is_produced() {
-    let docker = clients::Cli::default();
-    let state = setup(&docker).await;
+    let docker = Cli::default();
+    let state = TestState::setup(&docker).await;
     // Spawn another thread that sends the event after a few ms
     let handler = {
         let mut conn = state.conn.clone();
@@ -283,28 +241,20 @@ async fn test_it_blocks_until_event_is_produced() {
         })
     };
     // In the main thread, wait for the expected event
-    let mut broker = Broker::new(
-        &state.redis_address,
-        state.backoff.clone(),
-        CONSUME_TIMEOUT,
-    )
-    .await
-    .expect("failed to initialize broker");
+    let mut broker = state.create_broker().await;
     let event = broker
         .consume_block(&MockStream {}, "0")
         .await
         .expect("failed to consume event");
     assert_eq!(event.id, "1-0");
     assert_eq!(event.payload.data, "0");
-    teardown(state).await;
     handler.await.expect("failed to wait handler");
 }
 
 #[test_log::test(tokio::test)]
-#[serial_test::serial]
 async fn test_it_consumes_events_without_blocking() {
-    let docker = clients::Cli::default();
-    let mut state = setup(&docker).await;
+    let docker = Cli::default();
+    let mut state = TestState::setup(&docker).await;
     // Produce multiple events directly in Redis
     const N: usize = 3;
     for i in 0..N {
@@ -317,13 +267,7 @@ async fn test_it_consumes_events_without_blocking() {
             .expect("failed to add events");
     }
     // Consume events using the Broker struct
-    let mut broker = Broker::new(
-        &state.redis_address,
-        state.backoff.clone(),
-        CONSUME_TIMEOUT,
-    )
-    .await
-    .expect("failed to initialize broker");
+    let mut broker = state.create_broker().await;
     let mut last_id = INITIAL_ID.to_owned();
     for i in 0..N {
         let event = broker
@@ -335,45 +279,28 @@ async fn test_it_consumes_events_without_blocking() {
         assert_eq!(event.payload.data, i.to_string());
         last_id = event.id;
     }
-    teardown(state).await;
 }
 
 #[test_log::test(tokio::test)]
-#[serial_test::serial]
 async fn test_it_does_not_block_when_consuming_empty_stream() {
-    let docker = clients::Cli::default();
-    let state = setup(&docker).await;
-    let mut broker = Broker::new(
-        &state.redis_address,
-        state.backoff.clone(),
-        CONSUME_TIMEOUT,
-    )
-    .await
-    .expect("failed to initialize broker");
+    let docker = Cli::default();
+    let state = TestState::setup(&docker).await;
+    let mut broker = state.create_broker().await;
     let event = broker
         .consume_nonblock(&MockStream {}, INITIAL_ID)
         .await
         .expect("failed to peek");
     assert!(matches!(event, None));
-    teardown(state).await;
 }
 
 #[test_log::test(tokio::test)]
-#[serial_test::serial]
 async fn test_it_times_out_when_no_event_is_produced() {
-    let docker = clients::Cli::default();
-    let state = setup(&docker).await;
-    let mut broker = Broker::new(
-        &state.redis_address,
-        state.backoff.clone(),
-        CONSUME_TIMEOUT,
-    )
-    .await
-    .expect("failed to initialize broker");
+    let docker = Cli::default();
+    let state = TestState::setup(&docker).await;
+    let mut broker = state.create_broker().await;
     let err = broker
         .consume_block(&MockStream {}, "0")
         .await
         .expect_err("consume event worked but it should have failed");
     assert!(matches!(err, BrokerError::ConsumeTimeout));
-    teardown(state).await;
 }

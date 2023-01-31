@@ -1,4 +1,4 @@
-// Copyright 2022 Cartesi Pte. Ltd.
+// Copyright 2023 Cartesi Pte. Ltd.
 //
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -10,10 +10,25 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-pub mod broker;
-pub mod rollups_claims;
-pub mod rollups_inputs;
-mod serializer_util;
+mod broker;
+mod common;
+mod rollups_claims;
+mod rollups_inputs;
+mod rollups_outputs;
+mod rollups_stream;
 
-pub const ADDRESS_SIZE: usize = 20;
-pub const HASH_SIZE: usize = 32;
+pub use broker::{
+    indexer, Broker, BrokerCLIConfig, BrokerConfig, BrokerError, BrokerStream,
+    Event, INITIAL_ID,
+};
+pub use common::{Address, Hash, Payload, ADDRESS_SIZE, HASH_SIZE};
+pub use rollups_claims::{RollupsClaim, RollupsClaimsStream};
+pub use rollups_inputs::{
+    InputMetadata, RollupsData, RollupsInput, RollupsInputsStream,
+};
+pub use rollups_outputs::{
+    RollupsNotice, RollupsOutput, RollupsOutputEnum,
+    RollupsOutputValidityProof, RollupsOutputsStream, RollupsProof,
+    RollupsReport, RollupsVoucher,
+};
+pub use rollups_stream::{DAppMetadata, DAppMetadataCLIConfig};

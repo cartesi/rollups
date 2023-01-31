@@ -1,4 +1,4 @@
-// Copyright 2022 Cartesi Pte. Ltd.
+// Copyright 2023 Cartesi Pte. Ltd.
 //
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -12,34 +12,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::broker::BrokerStream;
-use crate::serializer_util::base64_array;
-use crate::HASH_SIZE;
+use crate::{rollups_stream::decl_broker_stream, Hash};
 
-#[derive(Debug)]
-pub struct RollupsClaimsStream {
-    key: String,
-}
-
-impl RollupsClaimsStream {
-    pub fn new(chain_id: u64, dapp_id: &[u8; 20]) -> Self {
-        Self {
-            key: format!(
-                "chain-{}:dapp-{}:rollups-claims",
-                chain_id,
-                hex::encode(dapp_id)
-            ),
-        }
-    }
-}
-
-impl BrokerStream for RollupsClaimsStream {
-    type Payload = RollupsClaim;
-
-    fn key(&self) -> &str {
-        &self.key
-    }
-}
+decl_broker_stream!(RollupsClaimsStream, RollupsClaim, "rollups-claims");
 
 /// Event generated when the Cartesi Rollups epoch finishes
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -48,6 +23,5 @@ pub struct RollupsClaim {
     pub epoch_index: u64,
 
     /// Hash of the Epoch
-    #[serde(with = "base64_array")]
-    pub claim: [u8; HASH_SIZE],
+    pub claim: Hash,
 }

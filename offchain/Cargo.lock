@@ -4030,13 +4030,13 @@ name = "rollups-events"
 version = "0.1.0"
 dependencies = [
  "backoff",
- "base64 0.13.1",
+ "base64 0.21.0",
+ "clap 4.1.6",
  "env_logger",
  "hex",
  "redis",
  "serde",
  "serde_json",
- "serial_test",
  "snafu 0.7.4",
  "test-log",
  "testcontainers",

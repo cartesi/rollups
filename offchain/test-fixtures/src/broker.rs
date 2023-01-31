@@ -11,19 +11,18 @@
 // specific language governing permissions and limitations under the License.
 
 use backoff::ExponentialBackoff;
-use rollups_events::broker::{Broker, Event, INITIAL_ID};
-use rollups_events::rollups_claims::{RollupsClaim, RollupsClaimsStream};
-use rollups_events::rollups_inputs::{
-    RollupsData, RollupsInput, RollupsInputsStream,
+use rollups_events::{
+    Address, Broker, BrokerConfig, DAppMetadata, Event, Hash, RollupsClaim,
+    RollupsClaimsStream, RollupsData, RollupsInput, RollupsInputsStream,
+    ADDRESS_SIZE, INITIAL_ID,
 };
-use rollups_events::HASH_SIZE;
 use testcontainers::{
     clients::Cli, core::WaitFor, images::generic::GenericImage, Container,
 };
 use tokio::sync::Mutex;
 
 const CHAIN_ID: u64 = 0;
-const DAPP_CONTRACT_ADDRESS: [u8; 20] = [0xfa; 20];
+const DAPP_ID: Address = Address::new([0xfa; ADDRESS_SIZE]);
 const CONSUME_TIMEOUT: usize = 10_000; // ms
 
 pub struct BrokerFixture<'d> {
@@ -33,7 +32,7 @@ pub struct BrokerFixture<'d> {
     claims_stream: RollupsClaimsStream,
     redis_endpoint: String,
     chain_id: u64,
-    dapp_contract_address: [u8; 20],
+    dapp_id: Address,
 }
 
 impl BrokerFixture<'_> {
@@ -49,19 +48,26 @@ impl BrokerFixture<'_> {
         let port = node.get_host_port_ipv4(6379);
         let redis_endpoint = format!("redis://127.0.0.1:{}", port);
         let chain_id = CHAIN_ID;
-        let dapp_contract_address = DAPP_CONTRACT_ADDRESS.to_owned();
+        let dapp_id = DAPP_ID;
         let backoff = ExponentialBackoff::default();
-        let inputs_stream =
-            RollupsInputsStream::new(chain_id, &dapp_contract_address);
-        let claims_stream =
-            RollupsClaimsStream::new(chain_id, &dapp_contract_address);
+        let metadata = DAppMetadata {
+            chain_id,
+            dapp_id: dapp_id.clone(),
+        };
+        let inputs_stream = RollupsInputsStream::new(&metadata);
+        let claims_stream = RollupsClaimsStream::new(&metadata);
+        let config = BrokerConfig {
+            redis_endpoint: redis_endpoint.clone(),
+            consume_timeout: CONSUME_TIMEOUT,
+            backoff,
+        };
 
         tracing::trace!(
             redis_endpoint,
             "connecting to redis with rollups_events crate"
         );
         let client = Mutex::new(
-            Broker::new(&redis_endpoint, backoff.clone(), CONSUME_TIMEOUT)
+            Broker::new(config)
                 .await
                 .expect("failed to connect to broker"),
         );
@@ -72,7 +78,7 @@ impl BrokerFixture<'_> {
             claims_stream,
             redis_endpoint,
             chain_id,
-            dapp_contract_address,
+            dapp_id,
         }
     }
 
@@ -84,8 +90,8 @@ impl BrokerFixture<'_> {
         self.chain_id
     }
 
-    pub fn dapp_contract_address(&self) -> &[u8; 20] {
-        &self.dapp_contract_address
+    pub fn dapp_id(&self) -> &Address {
+        &self.dapp_id
     }
 
     /// Obtain the latest event from the rollups inputs stream
@@ -159,7 +165,7 @@ impl BrokerFixture<'_> {
 
     /// Produce the claim given the hash
     #[tracing::instrument(level = "trace", skip_all)]
-    pub async fn produce_claim(&self, claim: [u8; HASH_SIZE]) {
+    pub async fn produce_claim(&self, claim: Hash) {
         tracing::trace!(?claim, "producing rollups-claim event");
         let last_claim = self
             .client

@@ -1,4 +1,4 @@
-// Copyright 2022 Cartesi Pte. Ltd.
+// Copyright 2023 Cartesi Pte. Ltd.
 //
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -10,7 +10,8 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use backoff::{future::retry, ExponentialBackoff};
+use backoff::{future::retry, ExponentialBackoff, ExponentialBackoffBuilder};
+use clap::Parser;
 use redis::aio::ConnectionManager;
 use redis::streams::{
     StreamId, StreamRangeReply, StreamReadOptions, StreamReadReply,
@@ -19,6 +20,9 @@ use redis::{AsyncCommands, Client, RedisError};
 use serde::{de::DeserializeOwned, Serialize};
 use snafu::{ResultExt, Snafu};
 use std::fmt;
+use std::time::Duration;
+
+pub mod indexer;
 
 pub const INITIAL_ID: &'static str = "0";
 
@@ -34,16 +38,12 @@ impl Broker {
     /// Create a new client
     /// The broker_address should be in the format redis://host:port/db.
     #[tracing::instrument(level = "trace", skip_all)]
-    pub async fn new(
-        broker_address: &str,
-        backoff: ExponentialBackoff,
-        consume_timeout: usize,
-    ) -> Result<Self, BrokerError> {
-        tracing::trace!(broker_address, "connecting to broker");
+    pub async fn new(config: BrokerConfig) -> Result<Self, BrokerError> {
+        tracing::trace!(?config, "connecting to broker");
 
-        let connection = retry(backoff.clone(), || async {
+        let connection = retry(config.backoff.clone(), || async {
             tracing::trace!("creating Redis Client");
-            let client = Client::open(broker_address)?;
+            let client = Client::open(config.redis_endpoint.as_str())?;
 
             tracing::trace!("creating Redis ConnectionManager");
             let connection = ConnectionManager::new(client).await?;
@@ -56,8 +56,8 @@ impl Broker {
         tracing::trace!("returning successful connection");
         Ok(Self {
             connection,
-            backoff,
-            consume_timeout,
+            backoff: config.backoff,
+            consume_timeout: config.consume_timeout,
         })
     }
 
@@ -262,4 +262,43 @@ pub enum BrokerError {
 
     #[snafu(display("error parsing event payload"))]
     InvalidPayload { source: serde_json::Error },
+}
+
+#[derive(Debug, Parser)]
+#[command(name = "broker")]
+pub struct BrokerCLIConfig {
+    /// Redis address
+    #[arg(long, env, default_value = "redis://127.0.0.1:6379")]
+    redis_endpoint: String,
+
+    /// Timeout when consuming input events (in millis)
+    #[arg(long, env, default_value = "5000")]
+    broker_consume_timeout: usize,
+
+    /// The max elapsed time for backoff in ms
+    #[arg(long, env, default_value = "120000")]
+    broker_backoff_max_elapsed_duration: u64,
+}
+
+#[derive(Debug, Clone)]
+pub struct BrokerConfig {
+    pub redis_endpoint: String,
+    pub consume_timeout: usize,
+    pub backoff: ExponentialBackoff,
+}
+
+impl From<BrokerCLIConfig> for BrokerConfig {
+    fn from(cli_config: BrokerCLIConfig) -> BrokerConfig {
+        let max_elapsed_time = Duration::from_millis(
+            cli_config.broker_backoff_max_elapsed_duration,
+        );
+        let backoff = ExponentialBackoffBuilder::new()
+            .with_max_elapsed_time(Some(max_elapsed_time))
+            .build();
+        BrokerConfig {
+            redis_endpoint: cli_config.redis_endpoint,
+            consume_timeout: cli_config.broker_consume_timeout,
+            backoff,
+        }
+    }
 }

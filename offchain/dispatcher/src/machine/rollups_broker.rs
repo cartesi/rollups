@@ -17,11 +17,9 @@ use snafu::{ResultExt, Snafu};
 use tokio::sync::{self, Mutex};
 
 use rollups_events::{
-    broker::{Broker, BrokerError, INITIAL_ID},
-    rollups_claims::{RollupsClaim, RollupsClaimsStream},
-    rollups_inputs::{
-        InputMetadata, RollupsData, RollupsInput, RollupsInputsStream,
-    },
+    Broker, BrokerError, Event, InputMetadata, RollupsClaim,
+    RollupsClaimsStream, RollupsData, RollupsInput, RollupsInputsStream,
+    INITIAL_ID,
 };
 use types::foldables::input_box::Input;
 
@@ -69,27 +67,27 @@ impl BrokerFacade {
         let backoff = ExponentialBackoffBuilder::new()
             .with_max_elapsed_time(Some(config.backoff_max_elapsed_duration))
             .build();
+        let broker_config = rollups_events::BrokerConfig {
+            redis_endpoint: config.redis_endpoint,
+            backoff,
+            consume_timeout: config.claims_consume_timeout,
+        };
         let broker = Mutex::new(
-            Broker::new(
-                &config.redis_endpoint,
-                backoff,
-                config.claims_consume_timeout,
-            )
-            .await
-            .context(BrokerConnectionSnafu)?,
+            Broker::new(broker_config)
+                .await
+                .context(BrokerConnectionSnafu)?,
         );
 
         tracing::trace!("connected to the broker successfully");
 
-        let inputs_stream = RollupsInputsStream::new(
-            config.chain_id,
-            &config.dapp_contract_address,
-        );
+        let dapp_metadata = rollups_events::DAppMetadata {
+            chain_id: config.chain_id,
+            dapp_id: config.dapp_contract_address.into(),
+        };
 
-        let claims_stream = RollupsClaimsStream::new(
-            config.chain_id,
-            &config.dapp_contract_address,
-        );
+        let inputs_stream = RollupsInputsStream::new(&dapp_metadata);
+
+        let claims_stream = RollupsClaimsStream::new(&dapp_metadata);
 
         Ok(Self {
             broker,
@@ -112,7 +110,7 @@ impl BrokerFacade {
     async fn peek(
         &self,
         broker: &mut sync::MutexGuard<'_, Broker>,
-    ) -> Result<Option<rollups_events::broker::Event<RollupsInput>>> {
+    ) -> Result<Option<Event<RollupsInput>>> {
         tracing::trace!("peeking last produced event");
         let response = broker
             .peek_latest(&self.inputs_stream)
@@ -124,10 +122,7 @@ impl BrokerFacade {
     }
 
     #[tracing::instrument(level = "trace", skip_all)]
-    async fn claim(
-        &self,
-        id: &String,
-    ) -> Result<Option<rollups_events::broker::Event<RollupsClaim>>> {
+    async fn claim(&self, id: &String) -> Result<Option<Event<RollupsClaim>>> {
         let mut broker = self.broker.lock().await;
         let event = broker
             .consume_nonblock(&self.claims_stream, id)
@@ -270,8 +265,8 @@ impl From<RollupsInput> for RollupStatus {
     }
 }
 
-impl From<rollups_events::broker::Event<RollupsInput>> for BrokerStreamStatus {
-    fn from(event: rollups_events::broker::Event<RollupsInput>) -> Self {
+impl From<Event<RollupsInput>> for BrokerStreamStatus {
+    fn from(event: Event<RollupsInput>) -> Self {
         let id = event.id;
         let payload = event.payload;
         let epoch_index = payload.epoch_index;
@@ -292,12 +287,8 @@ impl From<rollups_events::broker::Event<RollupsInput>> for BrokerStreamStatus {
     }
 }
 
-impl From<Option<rollups_events::broker::Event<RollupsInput>>>
-    for BrokerStreamStatus
-{
-    fn from(
-        event: Option<rollups_events::broker::Event<RollupsInput>>,
-    ) -> Self {
+impl From<Option<Event<RollupsInput>>> for BrokerStreamStatus {
+    fn from(event: Option<Event<RollupsInput>>) -> Self {
         match event {
             Some(e) => e.into(),
 
@@ -315,7 +306,7 @@ fn build_next_input(
     status: &BrokerStreamStatus,
 ) -> RollupsInput {
     let input_metadata = InputMetadata {
-        msg_sender: input.sender.to_fixed_bytes(),
+        msg_sender: input.sender.to_fixed_bytes().into(),
         block_number: input.block_added.number.as_u64(),
         timestamp: input.block_added.timestamp.as_u64(),
         epoch_index: 0,
@@ -324,7 +315,7 @@ fn build_next_input(
 
     let data = RollupsData::AdvanceStateInput {
         input_metadata,
-        input_payload: input.payload.clone(),
+        input_payload: input.payload.clone().into(),
     };
 
     RollupsInput {
@@ -344,10 +335,10 @@ fn build_next_finish_epoch(status: &BrokerStreamStatus) -> RollupsInput {
     }
 }
 
-impl From<rollups_events::broker::Event<RollupsClaim>> for super::RollupClaim {
-    fn from(event: rollups_events::broker::Event<RollupsClaim>) -> Self {
+impl From<Event<RollupsClaim>> for super::RollupClaim {
+    fn from(event: Event<RollupsClaim>) -> Self {
         super::RollupClaim {
-            hash: event.payload.claim,
+            hash: event.payload.claim.into_inner(),
             number: event.payload.epoch_index,
         }
     }

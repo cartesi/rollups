@@ -18,6 +18,7 @@ use grpc_interfaces::cartesi_server_manager::{
     server_manager_client::ServerManagerClient, GetEpochStatusRequest,
     GetEpochStatusResponse, GetSessionStatusRequest,
 };
+use rollups_events::Payload;
 use std::path::Path;
 use std::time::Duration;
 use testcontainers::{
@@ -166,7 +167,7 @@ impl ServerManagerFixture<'_> {
     pub async fn assert_epoch_status_payloads(
         &self,
         epoch_index: u64,
-        expected_payloads: &[Vec<u8>],
+        expected_payloads: &[Payload],
     ) {
         tracing::trace!(
             epoch_index,
@@ -190,7 +191,7 @@ impl ServerManagerFixture<'_> {
                     assert_eq!(accepted_data.notices.len(), 1);
                     assert_eq!(
                         &accepted_data.notices[0].payload,
-                        expected_payload
+                        expected_payload.inner()
                     );
                 }
                 ProcessedInputOneOf::ExceptionData(_) => {

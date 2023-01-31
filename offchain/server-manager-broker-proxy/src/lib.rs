@@ -54,12 +54,12 @@ async fn start_proxy(config: ProxyConfig) -> Result<()> {
         .build();
 
     let server_manager =
-        ServerManagerFacade::new(config.server_manager_config, backoff.clone())
+        ServerManagerFacade::new(config.server_manager_config, backoff)
             .await
             .context("failed to connect to the server-manager")?;
     tracing::trace!("connected to the server-manager");
 
-    let broker = BrokerFacade::new(config.broker_config, backoff)
+    let broker = BrokerFacade::new(config.broker_config, config.dapp_metadata)
         .await
         .context("failed to connect to the broker")?;
     tracing::trace!("connected the broker");

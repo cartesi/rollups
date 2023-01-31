@@ -14,13 +14,14 @@ use clap::Parser;
 use snafu::{ResultExt, Snafu};
 use std::time::Duration;
 
-pub use crate::broker::config::BrokerConfig;
-use crate::broker::config::{BrokerCLIConfig, BrokerConfigError};
 pub use crate::http_health::config::HealthCheckConfig;
 use crate::server_manager::config::ServerManagerCLIConfig;
 pub use crate::server_manager::config::ServerManagerConfig;
 pub use crate::snapshot::config::{FSManagerConfig, SnapshotConfig};
 use crate::snapshot::config::{SnapshotCLIConfig, SnapshotConfigError};
+pub use rollups_events::{
+    BrokerCLIConfig, BrokerConfig, DAppMetadata, DAppMetadataCLIConfig,
+};
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -32,6 +33,7 @@ pub struct Config {
 pub struct ProxyConfig {
     pub server_manager_config: ServerManagerConfig,
     pub broker_config: BrokerConfig,
+    pub dapp_metadata: DAppMetadata,
     pub snapshot_config: SnapshotConfig,
     pub backoff_max_elapsed_duration: Duration,
 }
@@ -39,9 +41,8 @@ pub struct ProxyConfig {
 impl Config {
     pub fn parse() -> Result<Self, ConfigError> {
         let cli_config = CLIConfig::parse();
-        let broker_config =
-            BrokerConfig::parse_from_cli(cli_config.broker_cli_config)
-                .context(BrokerConfigSnafu)?;
+        let broker_config = cli_config.broker_cli_config.into();
+        let dapp_metadata = cli_config.dapp_metadata_cli_config.into();
         let server_manager_config =
             ServerManagerConfig::parse_from_cli(cli_config.sm_cli_config);
         let snapshot_config =
@@ -52,6 +53,7 @@ impl Config {
         let proxy_config = ProxyConfig {
             server_manager_config,
             broker_config,
+            dapp_metadata,
             snapshot_config,
             backoff_max_elapsed_duration,
         };
@@ -64,9 +66,6 @@ impl Config {
 
 #[derive(Debug, Snafu)]
 pub enum ConfigError {
-    #[snafu(display("error in broker configuration"))]
-    BrokerConfigError { source: BrokerConfigError },
-
     #[snafu(display("error in snapshot configuration"))]
     SnapshotConfigError { source: SnapshotConfigError },
 }
@@ -78,6 +77,9 @@ struct CLIConfig {
 
     #[command(flatten)]
     broker_cli_config: BrokerCLIConfig,
+
+    #[command(flatten)]
+    dapp_metadata_cli_config: DAppMetadataCLIConfig,
 
     #[command(flatten)]
     snapshot_cli_config: SnapshotCLIConfig,

@@ -16,7 +16,7 @@ use std::path::Path;
 use tonic::{transport::Channel, Request};
 use uuid::Uuid;
 
-use rollups_events::rollups_inputs::InputMetadata;
+use rollups_events::{Hash, InputMetadata, HASH_SIZE};
 
 use grpc_interfaces::cartesi_machine::Void;
 use grpc_interfaces::cartesi_server_manager::server_manager_client::ServerManagerClient;
@@ -26,7 +26,7 @@ use grpc_interfaces::cartesi_server_manager::{
     InputMetadata as MMInputMetadata, StartSessionRequest,
 };
 
-use claim::{compute_claim_hash, CLAIM_HASH_SIZE};
+use claim::compute_claim_hash;
 use config::ServerManagerConfig;
 
 mod claim;
@@ -204,7 +204,7 @@ impl ServerManagerFacade {
         grpc_call!(self, advance_state, {
             let metadata = MMInputMetadata {
                 msg_sender: Some(Address {
-                    data: input_metadata.msg_sender.into(),
+                    data: input_metadata.msg_sender.inner().clone().into(),
                 }),
                 block_number: input_metadata.block_number,
                 timestamp: input_metadata.timestamp,
@@ -289,10 +289,7 @@ impl ServerManagerFacade {
     }
 
     #[tracing::instrument(level = "trace", skip_all)]
-    pub async fn get_epoch_claim(
-        &mut self,
-        epoch_index: u64,
-    ) -> Result<[u8; 32]> {
+    pub async fn get_epoch_claim(&mut self, epoch_index: u64) -> Result<Hash> {
         tracing::trace!(epoch_index, "getting epoch claim");
 
         let response = grpc_call!(self, get_epoch_status, {
@@ -306,7 +303,7 @@ impl ServerManagerFacade {
             .most_recent_vouchers_epoch_root_hash
         {
             Some(hash) => {
-                if hash.data.len() != CLAIM_HASH_SIZE {
+                if hash.data.len() != HASH_SIZE {
                     tracing::warn!(
                         ?hash,
                         "server-manager returned invalid most_recent_vouchers_epoch_root_hash size"
@@ -316,7 +313,7 @@ impl ServerManagerFacade {
             }
             None => {
                 tracing::warn!("server-manager should return most_recent_vouchers_epoch_root_hash");
-                vec![0; CLAIM_HASH_SIZE]
+                vec![0; HASH_SIZE]
             }
         };
 
@@ -324,7 +321,7 @@ impl ServerManagerFacade {
             .most_recent_notices_epoch_root_hash
         {
             Some(hash) => {
-                if hash.data.len() != CLAIM_HASH_SIZE {
+                if hash.data.len() != HASH_SIZE {
                     tracing::warn!(
                         ?hash,
                         "server-manager returned invalid most_recent_notices_epoch_root_hash size"
@@ -334,13 +331,13 @@ impl ServerManagerFacade {
             }
             None => {
                 tracing::warn!("server-manager should return most_recent_notices_epoch_root_hash");
-                vec![0; CLAIM_HASH_SIZE]
+                vec![0; HASH_SIZE]
             }
         };
 
         let machine_state_hash = match response.most_recent_machine_hash {
             Some(hash) => {
-                if hash.data.len() != CLAIM_HASH_SIZE {
+                if hash.data.len() != HASH_SIZE {
                     tracing::warn!(
                         ?hash,
                         "server-manager returned invalid most_recent_machine_hash size"
@@ -354,17 +351,17 @@ impl ServerManagerFacade {
                 tracing::trace!(
                     "server-manager did not return most_recent_machine_hash"
                 );
-                vec![0; CLAIM_HASH_SIZE]
+                vec![0; HASH_SIZE]
             }
         };
 
-        let hash = compute_claim_hash(
+        let claim = compute_claim_hash(
             &vouchers_metadata_hash,
             &notices_metadata_hash,
             &machine_state_hash,
         );
-        tracing::trace!(claim = hex::encode(hash), "computed claim hash");
+        tracing::trace!(?claim, "computed claim hash");
 
-        Ok(hash)
+        Ok(claim)
     }
 }

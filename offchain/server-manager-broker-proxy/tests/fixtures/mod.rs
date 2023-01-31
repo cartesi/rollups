@@ -14,9 +14,10 @@ use grpc_interfaces::cartesi_machine::{
     ConcurrencyConfig, MachineRuntimeConfig,
 };
 use grpc_interfaces::cartesi_server_manager::{CyclesConfig, DeadlineConfig};
+use rollups_events::Address;
 use server_manager_broker_proxy::config::{
-    BrokerConfig, Config, FSManagerConfig, HealthCheckConfig, ProxyConfig,
-    ServerManagerConfig, SnapshotConfig,
+    BrokerConfig, Config, DAppMetadata, FSManagerConfig, HealthCheckConfig,
+    ProxyConfig, ServerManagerConfig, SnapshotConfig,
 };
 use std::cell::RefCell;
 use std::path::Path;
@@ -34,7 +35,7 @@ impl ProxyFixture {
         session_id: String,
         redis_endpoint: String,
         chain_id: u64,
-        dapp_contract_address: [u8; 20],
+        dapp_id: Address,
         snapshot_dir: &Path,
     ) -> Self {
         let runtime_config = MachineRuntimeConfig {
@@ -71,11 +72,12 @@ impl ProxyFixture {
             cycles_config,
         };
 
+        let dapp_metadata = DAppMetadata { chain_id, dapp_id };
+
         let broker_config = BrokerConfig {
             redis_endpoint,
-            chain_id,
-            dapp_contract_address,
             consume_timeout: 100,
+            backoff: Default::default(),
         };
 
         let snapshot_config = SnapshotConfig::FileSystem(FSManagerConfig {
@@ -88,6 +90,7 @@ impl ProxyFixture {
         let proxy_config = ProxyConfig {
             server_manager_config,
             broker_config,
+            dapp_metadata,
             snapshot_config,
             backoff_max_elapsed_duration,
         };

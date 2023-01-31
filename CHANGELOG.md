@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Library that defines several constants related to the canonical off-chain machine
 - Added integration tests for proxy
 - DApp Address Relay contract (allows the off-chain machine to know the DApp's address)
+- Added outputs to rollups events
 
 ### Changed
 

@@ -10,17 +10,12 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use backoff::ExponentialBackoff;
-use rollups_events::broker::{Broker, BrokerError, Event, INITIAL_ID};
-use rollups_events::rollups_claims::{RollupsClaim, RollupsClaimsStream};
-use rollups_events::rollups_inputs::{
-    RollupsData, RollupsInput, RollupsInputsStream,
+use rollups_events::{
+    Broker, BrokerConfig, BrokerError, DAppMetadata, Event, Hash, RollupsClaim,
+    RollupsClaimsStream, RollupsData, RollupsInput, RollupsInputsStream,
+    INITIAL_ID,
 };
 use snafu::{ResultExt, Snafu};
-
-use config::BrokerConfig;
-
-pub mod config;
 
 #[derive(Debug, Snafu)]
 pub enum BrokerFacadeError {
@@ -52,27 +47,12 @@ impl BrokerFacade {
     #[tracing::instrument(level = "trace", skip_all)]
     pub async fn new(
         config: BrokerConfig,
-        backoff: ExponentialBackoff,
+        dapp_metadata: DAppMetadata,
     ) -> Result<Self> {
         tracing::trace!(?config, "connecting to broker");
-
-        let client = Broker::new(
-            &config.redis_endpoint,
-            backoff,
-            config.consume_timeout,
-        )
-        .await
-        .context(BrokerInternalSnafu)?;
-
-        let inputs_stream = RollupsInputsStream::new(
-            config.chain_id,
-            &config.dapp_contract_address,
-        );
-        let claims_stream = RollupsClaimsStream::new(
-            config.chain_id,
-            &config.dapp_contract_address,
-        );
-
+        let inputs_stream = RollupsInputsStream::new(&dapp_metadata);
+        let claims_stream = RollupsClaimsStream::new(&dapp_metadata);
+        let client = Broker::new(config).await.context(BrokerInternalSnafu)?;
         Ok(Self {
             client,
             inputs_stream,
@@ -174,13 +154,9 @@ impl BrokerFacade {
     pub async fn produce_rollups_claim(
         &mut self,
         epoch_index: u64,
-        claim: [u8; 32],
+        claim: Hash,
     ) -> Result<()> {
-        tracing::trace!(
-            epoch_index,
-            claim = hex::encode(claim),
-            "producing rollups claim"
-        );
+        tracing::trace!(epoch_index, ?claim, "producing rollups claim");
 
         let rollups_claim = RollupsClaim { epoch_index, claim };
         self.client
@@ -195,7 +171,8 @@ impl BrokerFacade {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rollups_events::{rollups_inputs::InputMetadata, HASH_SIZE};
+    use backoff::ExponentialBackoff;
+    use rollups_events::{DAppMetadata, InputMetadata, Payload, HASH_SIZE};
     use test_fixtures::BrokerFixture;
     use testcontainers::clients::Cli;
 
@@ -208,15 +185,16 @@ mod tests {
         async fn setup(docker: &Cli) -> TestState<'_> {
             let broker = BrokerFixture::setup(docker).await;
             let backoff = ExponentialBackoff::default();
+            let dapp_metadata = DAppMetadata {
+                chain_id: broker.chain_id(),
+                dapp_id: broker.dapp_id().to_owned(),
+            };
             let config = BrokerConfig {
                 redis_endpoint: broker.redis_endpoint().to_owned(),
-                chain_id: broker.chain_id(),
-                dapp_contract_address: broker
-                    .dapp_contract_address()
-                    .to_owned(),
                 consume_timeout: 10,
+                backoff,
             };
-            let facade = BrokerFacade::new(config, backoff)
+            let facade = BrokerFacade::new(config, dapp_metadata)
                 .await
                 .expect("failed to create broker facade");
             TestState { broker, facade }
@@ -278,24 +256,20 @@ mod tests {
         let inputs = vec![
             RollupsData::AdvanceStateInput {
                 input_metadata: InputMetadata {
-                    block_number: 0,
                     epoch_index: 0,
                     input_index: 0,
-                    msg_sender: [0xfa; 20],
-                    timestamp: 0,
+                    ..Default::default()
                 },
-                input_payload: vec![0, 0],
+                input_payload: Payload::new(vec![0, 0]),
             },
             RollupsData::FinishEpoch {},
             RollupsData::AdvanceStateInput {
                 input_metadata: InputMetadata {
-                    block_number: 0,
                     epoch_index: 1,
                     input_index: 1,
-                    msg_sender: [0xfa; 20],
-                    timestamp: 0,
+                    ..Default::default()
                 },
-                input_payload: vec![1, 1],
+                input_payload: Payload::new(vec![1, 1]),
             },
         ];
         let mut ids = Vec::new();
@@ -344,8 +318,11 @@ mod tests {
     async fn test_it_checks_claim_was_produced() {
         let docker = Cli::default();
         let mut state = TestState::setup(&docker).await;
-        let claims =
-            vec![[0xa0; HASH_SIZE], [0xa1; HASH_SIZE], [0xa2; HASH_SIZE]];
+        let claims = vec![
+            Hash::new([0xa0; HASH_SIZE]),
+            Hash::new([0xa1; HASH_SIZE]),
+            Hash::new([0xa2; HASH_SIZE]),
+        ];
         for claim in claims {
             state.broker.produce_claim(claim).await;
         }
@@ -358,8 +335,11 @@ mod tests {
     async fn test_it_checks_claim_was_not_produced() {
         let docker = Cli::default();
         let mut state = TestState::setup(&docker).await;
-        let claims =
-            vec![[0xa0; HASH_SIZE], [0xa1; HASH_SIZE], [0xa2; HASH_SIZE]];
+        let claims = vec![
+            Hash::new([0xa0; HASH_SIZE]),
+            Hash::new([0xa1; HASH_SIZE]),
+            Hash::new([0xa2; HASH_SIZE]),
+        ];
         for claim in claims {
             state.broker.produce_claim(claim).await;
         }
@@ -373,12 +353,12 @@ mod tests {
         let mut state = TestState::setup(&docker).await;
         state
             .facade
-            .produce_rollups_claim(0, [0xa0; HASH_SIZE])
+            .produce_rollups_claim(0, Hash::new([0xa0; HASH_SIZE]))
             .await
             .unwrap();
         state
             .facade
-            .produce_rollups_claim(1, [0xa1; HASH_SIZE])
+            .produce_rollups_claim(1, Hash::new([0xa1; HASH_SIZE]))
             .await
             .unwrap();
         assert_eq!(
@@ -386,11 +366,11 @@ mod tests {
             vec![
                 RollupsClaim {
                     epoch_index: 0,
-                    claim: [0xa0; HASH_SIZE],
+                    claim: Hash::new([0xa0; HASH_SIZE]),
                 },
                 RollupsClaim {
                     epoch_index: 1,
-                    claim: [0xa1; HASH_SIZE],
+                    claim: Hash::new([0xa1; HASH_SIZE]),
                 },
             ]
         );

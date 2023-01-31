@@ -12,11 +12,10 @@
 
 use fixtures::ProxyFixture;
 use rand::Rng;
-use rollups_events::broker::INITIAL_ID;
-use rollups_events::rollups_inputs::{
-    InputMetadata, RollupsData, RollupsInput,
+use rollups_events::{
+    Hash, InputMetadata, Payload, RollupsData, RollupsInput, HASH_SIZE,
+    INITIAL_ID,
 };
-use rollups_events::HASH_SIZE;
 use test_fixtures::{
     BrokerFixture, MachineSnapshotsFixture, ServerManagerFixture,
 };
@@ -42,7 +41,7 @@ impl TestState<'_> {
             server_manager.session_id().to_owned(),
             broker.redis_endpoint().to_owned(),
             broker.chain_id(),
-            broker.dapp_contract_address().to_owned(),
+            broker.dapp_id().to_owned(),
             snapshots.path(),
         )
         .await;
@@ -55,9 +54,10 @@ impl TestState<'_> {
     }
 }
 
-fn generate_payload() -> Vec<u8> {
+fn generate_payload() -> Payload {
     let len = rand::thread_rng().gen_range(100..200);
-    (0..len).map(|_| rand::thread_rng().gen()).collect()
+    let data: Vec<u8> = (0..len).map(|_| rand::thread_rng().gen()).collect();
+    Payload::new(data)
 }
 
 #[test_log::test(tokio::test)]
@@ -84,7 +84,7 @@ async fn test_proxy_sends_inputs_to_server_manager() {
                 input_index: i as u64,
                 ..Default::default()
             },
-            input_payload: payload.clone(),
+            input_payload: payload.clone().into(),
         };
         state.broker.produce_input_event(data).await;
     }
@@ -109,7 +109,7 @@ async fn test_proxy_fails_when_inputs_has_wrong_epoch() {
             input_index: 0,
             ..Default::default()
         },
-        input_payload: vec![],
+        input_payload: Default::default(),
     };
     let input = RollupsInput {
         parent_id: INITIAL_ID.to_owned(),
@@ -136,7 +136,7 @@ async fn test_proxy_fails_when_inputs_has_wrong_parent_id() {
             input_index: 0,
             ..Default::default()
         },
-        input_payload: vec![],
+        input_payload: Default::default(),
     };
     let input = RollupsInput {
         parent_id: "invalid".to_owned(),
@@ -186,7 +186,7 @@ async fn finish_epoch_and_wait_for_next_input(state: &TestState<'_>) {
                 input_index: 0,
                 ..Default::default()
             },
-            input_payload: vec![],
+            input_payload: Default::default(),
         },
         RollupsData::FinishEpoch {},
         RollupsData::AdvanceStateInput {
@@ -224,7 +224,7 @@ async fn test_proxy_does_not_generate_duplicate_claim() {
     let state = TestState::setup(&docker).await;
 
     tracing::info!("producing claim");
-    let claim = [0xfa; HASH_SIZE];
+    let claim = Hash::new([0xfa; HASH_SIZE]);
     state.broker.produce_claim(claim.clone()).await;
 
     finish_epoch_and_wait_for_next_input(&state).await;

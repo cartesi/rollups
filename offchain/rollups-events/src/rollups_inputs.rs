@@ -1,4 +1,4 @@
-// Copyright 2022 Cartesi Pte. Ltd.
+// Copyright 2023 Cartesi Pte. Ltd.
 //
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -12,34 +12,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::broker::BrokerStream;
-use crate::serializer_util::{base64_array, base64_vec};
-use crate::ADDRESS_SIZE;
+use crate::{rollups_stream::decl_broker_stream, Address, Payload};
 
-#[derive(Debug)]
-pub struct RollupsInputsStream {
-    key: String,
-}
-
-impl RollupsInputsStream {
-    pub fn new(chain_id: u64, dapp_id: &[u8; 20]) -> Self {
-        Self {
-            key: format!(
-                "chain-{}:dapp-{}:rollups-inputs",
-                chain_id,
-                hex::encode(dapp_id)
-            ),
-        }
-    }
-}
-
-impl BrokerStream for RollupsInputsStream {
-    type Payload = RollupsInput;
-
-    fn key(&self) -> &str {
-        &self.key
-    }
-}
+decl_broker_stream!(RollupsInputsStream, RollupsInput, "rollups-inputs");
 
 /// Cartesi Rollups event
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -70,8 +45,7 @@ pub enum RollupsData {
         input_metadata: InputMetadata,
 
         /// Payload of the input
-        #[serde(with = "base64_vec")]
-        input_payload: Vec<u8>,
+        input_payload: Payload,
     },
 
     /// End of an Cartesi Rollups epoch
@@ -81,8 +55,7 @@ pub enum RollupsData {
 #[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct InputMetadata {
     /// Address of the message sender
-    #[serde(with = "base64_array")]
-    pub msg_sender: [u8; ADDRESS_SIZE],
+    pub msg_sender: Address,
 
     /// Block number when the input was posted
     pub block_number: u64,

@@ -10,10 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use rollups_events::broker::Event;
-use rollups_events::rollups_inputs::{
-    InputMetadata, RollupsData, RollupsInput,
-};
+use rollups_events::{Event, InputMetadata, RollupsData, RollupsInput};
 use snafu::{ResultExt, Snafu};
 
 use crate::broker::{BrokerFacade, BrokerFacadeError};
@@ -101,7 +98,7 @@ impl<Snap: SnapshotManager + std::fmt::Debug + 'static> Runner<Snap> {
                             event.payload.epoch_index,
                             event.payload.inputs_sent_count - 1,
                             input_metadata,
-                            input_payload,
+                            input_payload.into_inner(),
                         )
                         .await?;
                 }
@@ -232,7 +229,7 @@ impl<Snap: SnapshotManager + std::fmt::Debug + 'static> Runner<Snap> {
                 .get_epoch_claim(epoch_index)
                 .await
                 .context(GetEpochClaimSnafu)?;
-            tracing::trace!(claim = hex::encode(claim), "got epoch claim");
+            tracing::trace!(?claim, "got epoch claim");
 
             self.broker
                 .produce_rollups_claim(epoch_index, claim)
