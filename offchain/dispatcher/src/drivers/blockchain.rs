@@ -49,11 +49,8 @@ fn claims_sent(history: &History, dapp_address: &Address) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use im::{hashmap, Vector};
     use rand::Rng;
-    use state_fold_types::ethereum_types::{Address, H160, H256};
-    use std::sync::Arc;
-    use types::foldables::claims::{Claim, DAppClaims, History};
+    use state_fold_types::ethereum_types::H160;
 
     use crate::{drivers::mock, machine::RollupClaim};
 
@@ -74,56 +71,11 @@ mod tests {
     // claims_sent
     // --------------------------------------------------------------------------------------------
 
-    fn random_claim() -> Claim {
-        let mut rng = rand::thread_rng();
-        let start_input_index = rng.gen();
-        Claim {
-            epoch_hash: H256::random(),
-            start_input_index,
-            end_input_index: start_input_index + 5,
-            claim_timestamp: rng.gen(),
-        }
-    }
-
-    fn random_claims(n: usize) -> Vec<Claim> {
-        let mut claims = Vec::new();
-        claims.resize_with(n, || random_claim());
-        claims
-    }
-
-    fn new_history() -> History {
-        History {
-            history_address: Arc::new(H160::random()),
-            dapp_claims: Arc::new(hashmap! {}),
-        }
-    }
-
-    fn update_history(
-        history: &History,
-        dapp_address: Address,
-        n: usize,
-    ) -> History {
-        let claims = random_claims(n)
-            .iter()
-            .map(|x| Arc::new(x.clone()))
-            .collect::<Vec<_>>();
-        let claims = Vector::from(claims);
-        let dapp_claims = history
-            .dapp_claims
-            .update(Arc::new(dapp_address), Arc::new(DAppClaims { claims }));
-        History {
-            history_address: history.history_address.clone(),
-            dapp_claims: Arc::new(dapp_claims),
-        }
-    }
-
-    // --------------------------------------------------------------------------------------------
-
     #[test]
     fn test_claims_sent_some_0() {
         let dapp_address = H160::random();
-        let history = new_history();
-        let history = update_history(&history, dapp_address, 0);
+        let history = mock::new_history();
+        let history = mock::update_history(&history, dapp_address, 0);
         let n = super::claims_sent(&history, &dapp_address);
         assert_eq!(n, 0);
     }
@@ -132,9 +84,9 @@ mod tests {
     fn test_claims_sent_some_1() {
         let dapp_address1 = H160::random();
         let dapp_address2 = H160::random();
-        let history = new_history();
-        let history = update_history(&history, dapp_address1, 0);
-        let history = update_history(&history, dapp_address2, 1);
+        let history = mock::new_history();
+        let history = mock::update_history(&history, dapp_address1, 0);
+        let history = mock::update_history(&history, dapp_address2, 1);
         let n = super::claims_sent(&history, &dapp_address1);
         assert_eq!(n, 0);
         let n = super::claims_sent(&history, &dapp_address2);
@@ -145,9 +97,9 @@ mod tests {
     fn test_claims_sent_some_n() {
         let dapp_address1 = H160::random();
         let dapp_address2 = H160::random();
-        let history = new_history();
-        let history = update_history(&history, dapp_address1, 5);
-        let history = update_history(&history, dapp_address2, 2);
+        let history = mock::new_history();
+        let history = mock::update_history(&history, dapp_address1, 5);
+        let history = mock::update_history(&history, dapp_address2, 2);
         let n = super::claims_sent(&history, &dapp_address1);
         assert_eq!(n, 5);
         let n = super::claims_sent(&history, &dapp_address2);
@@ -158,8 +110,8 @@ mod tests {
     fn test_claims_sent_none() {
         let dapp_address1 = H160::random();
         let dapp_address2 = H160::random();
-        let history = new_history();
-        let history = update_history(&history, dapp_address1, 1);
+        let history = mock::new_history();
+        let history = mock::update_history(&history, dapp_address1, 1);
         let n = super::claims_sent(&history, &dapp_address2);
         assert_eq!(n, 0);
     }
@@ -172,9 +124,9 @@ mod tests {
         let dapp_address = H160::random();
         let blockchain_driver = BlockchainDriver::new(dapp_address);
 
-        let history = new_history();
-        let history = update_history(&history, dapp_address, 5);
-        let history = update_history(&history, H160::random(), 2);
+        let history = mock::new_history();
+        let history = mock::update_history(&history, dapp_address, 5);
+        let history = mock::update_history(&history, H160::random(), 2);
 
         let next_claims = next_claims
             .iter()

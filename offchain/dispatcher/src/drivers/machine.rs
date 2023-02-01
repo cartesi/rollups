@@ -94,13 +94,8 @@ impl MachineDriver {
 
 #[cfg(test)]
 mod tests {
-    use im::{hashmap, Vector};
-    use state_fold_types::{
-        ethereum_types::{Address, H160},
-        Block,
-    };
+    use state_fold_types::{ethereum_types::H160, Block};
     use std::sync::Arc;
-    use types::foldables::input_box::{DAppInputBox, InputBox};
 
     use crate::{
         drivers::{
@@ -225,7 +220,7 @@ mod tests {
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
         let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
         let machine_driver = MachineDriver::new(H160::random());
-        let dapp_input_box = DAppInputBox {
+        let dapp_input_box = types::foldables::input_box::DAppInputBox {
             inputs: input_timestamps
                 .iter()
                 .map(|timestamp| Arc::new(mock::new_input(*timestamp)))
@@ -285,32 +280,6 @@ mod tests {
     // react
     // --------------------------------------------------------------------------------------------
 
-    fn new_input_box() -> InputBox {
-        InputBox {
-            input_box_address: Arc::new(H160::random()),
-            dapp_input_boxes: Arc::new(hashmap! {}),
-        }
-    }
-
-    fn update_input_box(
-        input_box: InputBox,
-        dapp_address: Address,
-        timestamps: Vec<u32>,
-    ) -> InputBox {
-        let inputs = timestamps
-            .iter()
-            .map(|timestamp| Arc::new(mock::new_input(*timestamp)))
-            .collect::<Vec<_>>();
-        let inputs = Vector::from(inputs);
-        let dapp_input_boxes = input_box
-            .dapp_input_boxes
-            .update(Arc::new(dapp_address), Arc::new(DAppInputBox { inputs }));
-        InputBox {
-            input_box_address: input_box.input_box_address,
-            dapp_input_boxes: Arc::new(dapp_input_boxes),
-        }
-    }
-
     async fn test_react(
         block: Block,
         rollup_status: RollupStatus,
@@ -323,9 +292,9 @@ mod tests {
         let dapp_address = H160::random();
         let machine_driver = MachineDriver::new(dapp_address);
 
-        let input_box = new_input_box();
+        let input_box = mock::new_input_box();
         let input_box =
-            update_input_box(input_box, dapp_address, input_timestamps);
+            mock::update_input_box(input_box, dapp_address, input_timestamps);
 
         let result = machine_driver
             .react(&mut context, &block, &input_box, &broker)
@@ -394,7 +363,7 @@ mod tests {
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
         let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
         let block = mock::new_block(5);
-        let input_box = new_input_box();
+        let input_box = mock::new_input_box();
         let machine_driver = MachineDriver::new(H160::random());
         let result = machine_driver
             .react(&mut context, &block, &input_box, &broker)

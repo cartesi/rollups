@@ -1,7 +1,9 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use im::{hashmap, Vector};
+use rand::Rng;
 use state_fold_types::{
-    ethereum_types::{Bloom, H160, H256},
+    ethereum_types::{Address, Bloom, H160, H256},
     Block,
 };
 use std::{
@@ -9,7 +11,10 @@ use std::{
     ops::{Deref, DerefMut},
     sync::{Arc, Mutex},
 };
-use types::foldables::input_box::Input;
+use types::foldables::{
+    claims::{Claim, DAppClaims, History},
+    input_box::{DAppInputBox, Input, InputBox},
+};
 
 use crate::machine::{
     BrokerReceive, BrokerSend, BrokerStatus, RollupClaim, RollupStatus,
@@ -18,6 +23,47 @@ use crate::machine::{
 // ------------------------------------------------------------------------------------------------
 // auxiliary functions
 // ------------------------------------------------------------------------------------------------
+
+fn new_claims(n: usize) -> Vec<Claim> {
+    let mut claims = Vec::new();
+    claims.resize_with(n, || {
+        let mut rng = rand::thread_rng();
+        let start_input_index = rng.gen();
+        Claim {
+            epoch_hash: H256::random(),
+            start_input_index,
+            end_input_index: start_input_index + 5,
+            claim_timestamp: rng.gen(),
+        }
+    });
+    claims
+}
+
+pub fn new_history() -> History {
+    History {
+        history_address: Arc::new(H160::random()),
+        dapp_claims: Arc::new(hashmap! {}),
+    }
+}
+
+pub fn update_history(
+    history: &History,
+    dapp_address: Address,
+    n: usize,
+) -> History {
+    let claims = new_claims(n)
+        .iter()
+        .map(|x| Arc::new(x.clone()))
+        .collect::<Vec<_>>();
+    let claims = Vector::from(claims);
+    let dapp_claims = history
+        .dapp_claims
+        .update(Arc::new(dapp_address), Arc::new(DAppClaims { claims }));
+    History {
+        history_address: history.history_address.clone(),
+        dapp_claims: Arc::new(dapp_claims),
+    }
+}
 
 pub fn new_block(timestamp: u32) -> Block {
     Block {
@@ -35,6 +81,32 @@ pub fn new_input(timestamp: u32) -> Input {
         payload: vec![],
         block_added: Arc::new(new_block(timestamp)),
         dapp: Arc::new(H160::random()),
+    }
+}
+
+pub fn new_input_box() -> InputBox {
+    InputBox {
+        input_box_address: Arc::new(H160::random()),
+        dapp_input_boxes: Arc::new(hashmap! {}),
+    }
+}
+
+pub fn update_input_box(
+    input_box: InputBox,
+    dapp_address: Address,
+    timestamps: Vec<u32>,
+) -> InputBox {
+    let inputs = timestamps
+        .iter()
+        .map(|timestamp| Arc::new(new_input(*timestamp)))
+        .collect::<Vec<_>>();
+    let inputs = Vector::from(inputs);
+    let dapp_input_boxes = input_box
+        .dapp_input_boxes
+        .update(Arc::new(dapp_address), Arc::new(DAppInputBox { inputs }));
+    InputBox {
+        input_box_address: input_box.input_box_address,
+        dapp_input_boxes: Arc::new(dapp_input_boxes),
     }
 }
 
