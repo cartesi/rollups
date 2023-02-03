@@ -31,9 +31,6 @@ COPY . /usr/src/app
 FROM builder as state_server_build
 RUN cargo build --release --bin rollups_state_server
 
-FROM builder as indexer_build
-RUN cargo build --release --bin rollups_indexer
-
 FROM builder as dispatcher_build
 RUN cargo build --release --bin rollups_dispatcher
 
@@ -60,18 +57,6 @@ EOF
 COPY --from=grpc_health_probe /go/bin/grpc-health-probe /usr/local/bin
 COPY --from=state_server_build /usr/src/app/offchain/target/release/rollups_state_server /usr/local/bin
 ENTRYPOINT ["rollups_state_server"]
-
-FROM rust:1.67.0-bullseye AS indexer
-RUN <<EOF
-apt-get update
-DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
-cargo install diesel_cli --no-default-features --features "postgres"
-rm -rf /var/lib/apt/lists/*
-EOF
-COPY --from=indexer_build /usr/src/app/offchain/target/release/rollups_indexer /usr/local/bin
-COPY --from=indexer_build /usr/src/app/offchain/data/migrations/ /usr/local/bin/migrations/
-COPY onchain/rollups/export/abi /usr/local/share/cartesi/deployments/
-ENTRYPOINT ["rollups_indexer"]
 
 FROM debian:bullseye-slim AS dispatcher
 RUN <<EOF

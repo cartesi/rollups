@@ -14,18 +14,6 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     services:
-      postgres_indexer:
-        image: postgres:13
-        env:
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: test_indexer
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5434:5432
       postgres_reader:
         image: postgres:13
         env:
@@ -172,14 +160,6 @@ jobs:
     with:
       target: state-server
       image-name: rollups-state-server
-    secrets: inherit
-
-  indexer:
-    needs: build_docker
-    uses: ./.github/workflows/docker.yml
-    with:
-      target: indexer
-      image-name: rollups-indexer
     secrets: inherit
 
   reader:

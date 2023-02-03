@@ -4,7 +4,6 @@ members = [
   "data",
   "dispatcher",
   "grpc-interfaces",
-  "indexer",
   "inspect-server",
   "reader",
   "rollups-events",

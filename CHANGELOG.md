@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DApp configuration parameters related to the off-chain machine specs (now defined as constants)
 - Removed `epochIndex` field from `OutputValidityProof` struct
 - Removed headers from inputs added by trusted permissionless contracts like portals and relayers
+- Remove polling-based indexer
 
 ## [0.8.2] 2023-01-04
 
