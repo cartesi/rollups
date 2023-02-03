@@ -324,15 +324,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-mutex"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "479db852db25d9dbf6204e6cb6253698f175c15726470f78af0d918e99d6156e"
-dependencies = [
- "event-listener",
-]
-
-[[package]]
 name = "async-recursion"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -381,7 +372,7 @@ version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6d7b9decdf35d8908a7e3ef02f64c5e9b1695e230154c0e8de3969142d9b94c"
 dependencies = [
- "futures 0.3.26",
+ "futures",
  "pharos",
  "rustc_version",
 ]
@@ -1470,37 +1461,29 @@ dependencies = [
 
 [[package]]
 name = "diesel"
-version = "1.4.8"
+version = "2.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b28135ecf6b7d446b43e27e225622a038cc4e2930a1022f51cdb97ada19b8e4d"
+checksum = "4391a22b19c916e50bec4d6140f29bdda3e3bb187223fe6e3ea0b6e4d1021c04"
 dependencies = [
  "bitflags",
  "byteorder",
  "chrono",
  "diesel_derives",
+ "itoa",
  "pq-sys",
  "r2d2",
 ]
 
 [[package]]
 name = "diesel_derives"
-version = "1.4.1"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45f5098f628d02a7a0f68ddba586fb61e80edec3bdc1be3b921f4ceec60858d3"
+checksum = "143b758c91dbc3fe1fdcb0dba5bd13276c6a66422f2ef5795b58488248a310aa"
 dependencies = [
+ "proc-macro-error",
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "diesel_migrations"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf3cde8413353dc7f5d72fa8ce0b99a560a359d2c5ef1e5817ca731cd9008f4c"
-dependencies = [
- "migrations_internals",
- "migrations_macros",
 ]
 
 [[package]]
@@ -1568,7 +1551,7 @@ dependencies = [
  "axum 0.5.17",
  "backoff",
  "contracts",
- "futures 0.3.26",
+ "futures",
  "im",
  "prost 0.11.6",
  "rand 0.8.5",
@@ -2012,12 +1995,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "event-listener"
-version = "2.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
-
-[[package]]
 name = "eyre"
 version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2150,12 +2127,6 @@ name = "funty"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c"
-
-[[package]]
-name = "futures"
-version = "0.1.31"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a471a38ef8ed83cd6e40aa59c1ffe17db6855c18e3604d9c4ed8c08ebc28678"
 
 [[package]]
 name = "futures"
@@ -2340,6 +2311,23 @@ checksum = "d1abd4ce5247dfc04a03ccde70f87a048458c9356c7e41d21ad8c407b3dde6f2"
 dependencies = [
  "combine 3.8.1",
  "thiserror",
+]
+
+[[package]]
+name = "graphql-server"
+version = "0.9.0"
+dependencies = [
+ "actix-cors",
+ "actix-web",
+ "clap 4.1.6",
+ "hex",
+ "juniper",
+ "rollups-data",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -2709,14 +2697,14 @@ dependencies = [
  "actix-web",
  "anyhow",
  "env_logger",
- "futures 0.3.26",
+ "futures",
  "hex",
  "log",
  "prost 0.10.4",
  "regex",
  "reqwest",
  "serde",
- "serial_test 0.7.0",
+ "serial_test",
  "snafu 0.6.10",
  "structopt",
  "tokio",
@@ -2809,7 +2797,7 @@ dependencies = [
  "bson",
  "chrono",
  "fnv",
- "futures 0.3.26",
+ "futures",
  "futures-enum",
  "graphql-parser",
  "indexmap",
@@ -3006,27 +2994,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5de893c32cde5f383baa4c04c5d6dbdd735cfd4a794b0debdb2bb1b421da5ff4"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "migrations_internals"
-version = "1.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b4fc84e4af020b837029e017966f86a1c2d5e83e64b589963d5047525995860"
-dependencies = [
- "diesel",
-]
-
-[[package]]
-name = "migrations_macros"
-version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9753f12909fd8d923f75ae5c3258cae1ed3c8ec052e1b38c93c21a6d157f789c"
-dependencies = [
- "migrations_internals",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -3366,7 +3333,7 @@ version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9567389417feee6ce15dd6527a8a1ecac205ef62c2932bcf3d9f6fc5b78b414"
 dependencies = [
- "futures 0.3.26",
+ "futures",
  "rustc_version",
 ]
 
@@ -3835,31 +3802,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "reader"
-version = "0.9.0"
-dependencies = [
- "actix-cors",
- "actix-web",
- "async-mutex",
- "diesel",
- "diesel_migrations",
- "futures 0.1.31",
- "hex",
- "hyper",
- "juniper",
- "rollups-data",
- "rstest",
- "serde",
- "serde_json",
- "serial_test 0.5.1",
- "snafu 0.6.10",
- "structopt",
- "tokio",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "redis"
 version = "0.21.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3869,7 +3811,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "combine 4.6.6",
- "futures 0.3.26",
+ "futures",
  "futures-util",
  "itoa",
  "percent-encoding",
@@ -4073,16 +4015,13 @@ name = "rollups-data"
 version = "0.9.0"
 dependencies = [
  "backoff",
- "base64 0.13.1",
+ "base64 0.21.0",
  "chrono",
+ "clap 4.1.6",
  "diesel",
- "hex",
- "juniper",
  "serde",
- "snafu 0.6.10",
- "tokio",
+ "snafu 0.7.4",
  "tracing",
- "tracing-subscriber",
  "urlencoding",
 ]
 
@@ -4097,26 +4036,13 @@ dependencies = [
  "redis",
  "serde",
  "serde_json",
- "serial_test 0.7.0",
+ "serial_test",
  "snafu 0.7.4",
  "test-log",
  "testcontainers",
  "tokio",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "rstest"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d912f35156a3f99a66ee3e11ac2e0b3f34ac85a07e05263d05a7e2c8810d616f"
-dependencies = [
- "cfg-if",
- "proc-macro2",
- "quote",
- "rustc_version",
- "syn",
 ]
 
 [[package]]
@@ -4406,17 +4332,6 @@ dependencies = [
 
 [[package]]
 name = "serial_test"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0bccbcf40c8938196944a3da0e133e031a33f4d6b72db3bda3cc556e361905d"
-dependencies = [
- "lazy_static",
- "parking_lot 0.11.2",
- "serial_test_derive 0.5.1",
-]
-
-[[package]]
-name = "serial_test"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d19dbfb999a147cedbfe82f042eb9555f5b0fa4ef95ee4570b74349103d9c9f4"
@@ -4424,18 +4339,7 @@ dependencies = [
  "lazy_static",
  "log",
  "parking_lot 0.12.1",
- "serial_test_derive 0.7.0",
-]
-
-[[package]]
-name = "serial_test_derive"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2acd6defeddb41eb60bb468f8825d0cfd0c2a76bc03bfd235b6a1dc4f6a1ad5"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
+ "serial_test_derive",
 ]
 
 [[package]]
@@ -4743,7 +4647,7 @@ dependencies = [
  "async-recursion",
  "async-trait",
  "block-history",
- "futures 0.3.26",
+ "futures",
  "snafu 0.7.4",
  "state-fold-types",
  "structopt",
@@ -4809,7 +4713,7 @@ source = "registry+https://github.com/cartesi/crates-index"
 checksum = "efa8dc35274a9fde4a9272ac20a94c4e08b44d4f02a1ac6038058ab2adec69d2"
 dependencies = [
  "block-history",
- "futures 0.3.26",
+ "futures",
  "serde",
  "serde_json",
  "snafu 0.7.4",
@@ -5040,7 +4944,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e2b1567ca8a2b819ea7b28c92be35d9f76fb9edb214321dcc86eb96023d1f87"
 dependencies = [
  "bollard-stubs",
- "futures 0.3.26",
+ "futures",
  "hex",
  "hmac",
  "log",
@@ -5573,7 +5477,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "contracts",
- "futures 0.3.26",
+ "futures",
  "im",
  "serde",
  "serde_json",
@@ -5840,7 +5744,7 @@ version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be0ecb0db480561e9a7642b5d3e4187c128914e58aa84330b9493e3eb68c5e7f"
 dependencies = [
- "futures 0.3.26",
+ "futures",
  "js-sys",
  "parking_lot 0.11.2",
  "pin-utils",
@@ -6017,7 +5921,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7999f5f4217fe3818726b66257a4475f71e74ffd190776ad053fa159e50737f5"
 dependencies = [
  "async_io_stream",
- "futures 0.3.26",
+ "futures",
  "js-sys",
  "log",
  "pharos",

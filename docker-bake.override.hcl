@@ -23,8 +23,8 @@ target "server-manager-broker-proxy" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-server-manager-broker-proxy:${TAG}"]
 }
 
-target "reader" {
-  tags = ["${DOCKER_ORGANIZATION}/query-server:${TAG}"]
+target "graphql-server" {
+  tags = ["${DOCKER_ORGANIZATION}/rollups-graphql-server:${TAG}"]
 }
 
 target "hardhat" {

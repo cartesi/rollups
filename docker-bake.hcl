@@ -2,7 +2,7 @@
 target "docker-metadata-action" {}
 
 group "default" {
-  targets = ["state-server", "dispatcher", "inspect-server", "reader", "server-manager-broker-proxy", "hardhat", "cli"]
+  targets = ["state-server", "dispatcher", "inspect-server", "graphql-server", "server-manager-broker-proxy", "hardhat", "cli"]
 }
 
 target "deps" {
@@ -33,10 +33,10 @@ target "inspect-server" {
   context    = "."
 }
 
-target "reader" {
+target "graphql-server" {
   inherits   = ["docker-metadata-action"]
   dockerfile = "offchain/Dockerfile"
-  target     = "reader"
+  target     = "graphql_server"
   context    = "."
 }
 

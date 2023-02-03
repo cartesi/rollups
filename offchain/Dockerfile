@@ -40,8 +40,8 @@ RUN cargo build --release --bin inspect-server
 FROM builder as server_manager_broker_proxy_build
 RUN PATH="$PATH:$HOME/.local/bin" cargo build --release --bin server-manager-broker-proxy
 
-FROM builder as reader_build
-RUN cargo build --release --bin reader
+FROM builder as graphql_server_build
+RUN cargo build --release --bin graphql-server
 
 # grpc readiness probe
 FROM golang:1.19.0-bullseye as grpc_health_probe
@@ -81,15 +81,15 @@ FROM debian:bullseye-slim AS inspect_server
 COPY --from=inspect_server_build /usr/src/app/offchain/target/release/inspect-server /usr/local/bin
 ENTRYPOINT ["inspect-server"]
 
-FROM rust:1.67.0-bullseye AS reader
+FROM rust:1.67.0-bullseye AS graphql_server
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
 cargo install diesel_cli --no-default-features --features "postgres"
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=reader_build /usr/src/app/offchain/target/release/reader /usr/local/bin
-ENTRYPOINT ["reader"]
+COPY --from=graphql_server_build /usr/src/app/offchain/target/release/graphql-server /usr/local/bin
+ENTRYPOINT ["graphql-server"]
 
 FROM scratch AS deployments
 

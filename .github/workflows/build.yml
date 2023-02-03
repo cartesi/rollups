@@ -13,19 +13,6 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-22.04
-    services:
-      postgres_reader:
-        image: postgres:13
-        env:
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: test_reader
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5435:5432
     env:
       CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
     defaults:
@@ -53,8 +40,6 @@ jobs:
       - run: cargo check --workspace
       - run: cargo test --no-run
       - run: cargo test
-        env:
-          ROLLUPS_READER_BINARY_PATH: ../target/debug/reader
 
   test_onchain:
     runs-on: ubuntu-22.04
@@ -162,12 +147,12 @@ jobs:
       image-name: rollups-state-server
     secrets: inherit
 
-  reader:
+  graphql_server:
     needs: build_docker
     uses: ./.github/workflows/docker.yml
     with:
-      target: reader
-      image-name: query-server
+      target: graphql-server
+      image-name: rollups-graphql-server
     secrets: inherit
 
   inspect_server:

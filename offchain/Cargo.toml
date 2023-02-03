@@ -5,7 +5,7 @@ members = [
   "dispatcher",
   "grpc-interfaces",
   "inspect-server",
-  "reader",
+  "graphql-server",
   "rollups-events",
   "server-manager-broker-proxy",
   "state-server",
