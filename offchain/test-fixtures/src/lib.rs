@@ -11,10 +11,12 @@
 // specific language governing permissions and limitations under the License.
 
 pub mod broker;
+pub mod data;
 pub mod docker_cli;
 pub mod machine_snapshots;
 pub mod server_manager;
 
 pub use broker::BrokerFixture;
+pub use data::DataFixture;
 pub use machine_snapshots::MachineSnapshotsFixture;
 pub use server_manager::ServerManagerFixture;

@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 grpc-interfaces = { path = "../grpc-interfaces" }
 rollups-events = { path = "../rollups-events" }
+rollups-data = { path = "../data" }
 
 anyhow = "1.0"
 backoff = { version = "0.4", features = ["tokio"] }

@@ -4954,6 +4954,7 @@ dependencies = [
  "backoff",
  "grpc-interfaces",
  "prost 0.11.6",
+ "rollups-data",
  "rollups-events",
  "tempfile",
  "testcontainers",
