@@ -12,7 +12,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{rollups_stream::decl_broker_stream, Address, Payload};
+use crate::{rollups_stream::decl_broker_stream, Address, Hash, Payload};
 
 decl_broker_stream!(RollupsInputsStream, RollupsInput, "rollups-inputs");
 
@@ -46,6 +46,9 @@ pub enum RollupsData {
 
         /// Payload of the input
         input_payload: Payload,
+
+        /// Transaction hash
+        tx_hash: Hash,
     },
 
     /// End of an Cartesi Rollups epoch

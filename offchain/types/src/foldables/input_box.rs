@@ -6,8 +6,10 @@ use state_fold::{
 };
 use state_fold_types::{
     ethers::{
-        contract::LogMeta, prelude::EthEvent, providers::Middleware,
-        types::Address,
+        contract::LogMeta,
+        prelude::EthEvent,
+        providers::Middleware,
+        types::{Address, TxHash},
     },
     Block,
 };
@@ -29,6 +31,7 @@ pub struct Input {
     pub payload: Vec<u8>,
     pub block_added: Arc<Block>,
     pub dapp: Arc<Address>,
+    pub tx_hash: Arc<TxHash>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -204,6 +207,7 @@ impl Input {
             payload: event.input.to_vec(),
             dapp,
             block_added: block,
+            tx_hash: Arc::new(meta.transaction_hash),
         })
     }
 }
