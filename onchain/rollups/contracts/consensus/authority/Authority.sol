@@ -15,12 +15,12 @@ pragma solidity ^0.8.13;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {IConsensus} from "../IConsensus.sol";
+import {AbstractConsensus} from "../AbstractConsensus.sol";
 import {IInputBox} from "../../inputs/IInputBox.sol";
 import {IHistory} from "../../history/IHistory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Authority is IConsensus, Ownable {
+contract Authority is AbstractConsensus, Ownable {
     IHistory history;
 
     /// @notice A consensus was created

@@ -14,6 +14,11 @@
 pragma solidity ^0.8.13;
 
 interface IConsensus {
+    /// @notice An application has joined the consensus' validation set
+    /// @param application The application
+    /// @dev MUST be triggered on a successful call to `join()`
+    event ApplicationJoined(address application);
+
     /// @notice Get a claim
     /// @param _dapp The DApp
     /// @param _proofContext Data for retrieving the desired claim
@@ -32,4 +37,9 @@ interface IConsensus {
             uint256 firstInputIndex_,
             uint256 lastInputIndex_
         );
+
+    /// @notice Join the consensus' validation set
+    /// @dev This function should be called by a DApp when it migrates to this consensus
+    /// @dev MUST fire the `ApplicationJoined` event with the message sender as argument
+    function join() external;
 }
