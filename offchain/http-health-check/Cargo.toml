@@ -1,0 +1,11 @@
+[package]
+name = "http-health-check"
+license = "Apache-2.0"
+version = "0.9.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+axum = "0.5"
+clap = { version = "4.0", features = ["derive", "env"] }
+tracing = "0.1"

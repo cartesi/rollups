@@ -10,16 +10,25 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-pub mod config;
-
 use anyhow::{Context, Result};
 use axum::{routing::get, Router};
+use clap::Parser;
 use std::net::SocketAddr;
 
-use config::HealthCheckConfig;
+#[derive(Debug, Clone, Parser)]
+#[command(name = "http-health-check")]
+pub struct HealthCheckConfig {
+    /// Host address of health check
+    #[arg(long, env, default_value = "0.0.0.0")]
+    pub health_check_address: String,
+
+    /// Port of health check
+    #[arg(long, env, default_value = "8080")]
+    pub health_check_port: u16,
+}
 
 #[tracing::instrument(level = "trace", skip_all)]
-pub async fn start_health_check(config: HealthCheckConfig) -> Result<()> {
+pub async fn start(config: HealthCheckConfig) -> Result<()> {
     tracing::trace!(?config, "starting health-check server");
 
     let ip = config

@@ -14,11 +14,11 @@ use clap::Parser;
 use snafu::{ResultExt, Snafu};
 use std::time::Duration;
 
-pub use crate::http_health::config::HealthCheckConfig;
 use crate::server_manager::config::ServerManagerCLIConfig;
 pub use crate::server_manager::config::ServerManagerConfig;
 pub use crate::snapshot::config::{FSManagerConfig, SnapshotConfig};
 use crate::snapshot::config::{SnapshotCLIConfig, SnapshotConfigError};
+pub use http_health_check::HealthCheckConfig;
 pub use rollups_events::{
     BrokerCLIConfig, BrokerConfig, DAppMetadata, DAppMetadataCLIConfig,
 };

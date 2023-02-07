@@ -2493,6 +2493,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-health-check"
+version = "0.9.0"
+dependencies = [
+ "anyhow",
+ "axum 0.5.17",
+ "clap 4.1.4",
+ "tracing",
+]
+
+[[package]]
 name = "http-range-header"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4398,12 +4408,12 @@ version = "0.9.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "axum 0.5.17",
  "backoff",
  "clap 4.1.6",
  "env_logger",
  "grpc-interfaces",
  "hex",
+ "http-health-check",
  "prost 0.11.6",
  "rand 0.8.5",
  "rollups-events",

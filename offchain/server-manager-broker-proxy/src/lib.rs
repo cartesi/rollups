@@ -24,7 +24,6 @@ use snapshot::{
 
 mod broker;
 pub mod config;
-mod http_health;
 mod runner;
 mod server_manager;
 mod snapshot;
@@ -33,8 +32,7 @@ mod snapshot;
 pub async fn run(config: Config) -> Result<()> {
     tracing::info!(?config, "starting proxy");
 
-    let health_handle =
-        http_health::start_health_check(config.health_check_config);
+    let health_handle = http_health_check::start(config.health_check_config);
     let proxy_handle = start_proxy(config.proxy_config);
 
     tokio::select! {
