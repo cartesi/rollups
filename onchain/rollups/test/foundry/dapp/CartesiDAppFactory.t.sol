@@ -13,13 +13,13 @@
 /// @title Cartesi DApp Factory Test
 pragma solidity ^0.8.13;
 
-import {Test} from "forge-std/Test.sol";
+import {TestBase} from "../util/TestBase.sol";
 import {CartesiDAppFactory} from "contracts/dapp/CartesiDAppFactory.sol";
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
 import {Vm} from "forge-std/Vm.sol";
 
-contract CartesiDAppFactoryTest is Test {
+contract CartesiDAppFactoryTest is TestBase {
     CartesiDAppFactory factory;
 
     function setUp() public {
@@ -40,6 +40,8 @@ contract CartesiDAppFactoryTest is Test {
     ) public {
         vm.assume(_dappOwner != address(0));
 
+        mockConsensusJoin(_consensus);
+
         CartesiDApp newDapp = factory.newApplication(
             _consensus,
             _dappOwner,
@@ -57,6 +59,8 @@ contract CartesiDAppFactoryTest is Test {
         bytes32 _templateHash
     ) public {
         vm.assume(_dappOwner != address(0));
+
+        mockConsensusJoin(_consensus);
 
         // Start the recorder
         vm.recordLogs();
@@ -99,5 +103,15 @@ contract CartesiDAppFactoryTest is Test {
         assertEq(_dappOwner, decodedDappOwner);
         assertEq(_templateHash, decodedTemplateHash);
         assertEq(address(newDapp), decodedApplication);
+    }
+
+    function mockConsensusJoin(
+        IConsensus _consensus
+    ) internal isMockable(address(_consensus)) {
+        vm.mockCall(
+            address(_consensus),
+            abi.encodeWithSelector(IConsensus.join.selector),
+            ""
+        );
     }
 }

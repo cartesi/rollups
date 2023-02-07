@@ -82,6 +82,8 @@ contract CartesiDAppTest is TestBase {
         IConsensus _consensus,
         bytes32 _templateHash
     ) public {
+        mockConsensusJoin(_consensus);
+
         vm.expectRevert("Ownable: new owner is the zero address");
         new CartesiDApp(_consensus, address(0), _templateHash);
     }
@@ -92,6 +94,8 @@ contract CartesiDAppTest is TestBase {
         bytes32 _templateHash
     ) public {
         vm.assume(_owner != address(0));
+
+        mockConsensusJoin(_consensus);
 
         // An OwnershipTransferred event is always emitted
         // by the Ownership contract constructor
@@ -595,6 +599,9 @@ contract CartesiDAppTest is TestBase {
         vm.assume(address(_newOwner) != address(0));
         vm.assume(_nonZeroAddress != address(0));
 
+        mockConsensusJoin(_consensus);
+        mockConsensusJoin(_newConsensus);
+
         dapp = new CartesiDApp(_consensus, _owner, _templateHash);
 
         // migrate fail if not called from owner
@@ -655,6 +662,8 @@ contract CartesiDAppTest is TestBase {
     }
 
     function deployDAppDeterministically() internal returns (CartesiDApp) {
+        mockConsensusJoin(IConsensus(consensus));
+
         vm.prank(dappOwner);
         return
             new CartesiDApp{salt: salt}(
@@ -693,5 +702,15 @@ contract CartesiDAppTest is TestBase {
                     _validity.machineStateHash
                 )
             );
+    }
+
+    function mockConsensusJoin(
+        IConsensus _consensus
+    ) internal isMockable(address(_consensus)) {
+        vm.mockCall(
+            address(_consensus),
+            abi.encodeWithSelector(IConsensus.join.selector),
+            ""
+        );
     }
 }

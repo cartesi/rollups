@@ -39,6 +39,8 @@ contract CartesiDApp is
         transferOwnership(_owner);
         templateHash = _templateHash;
         consensus = _consensus;
+
+        _consensus.join();
     }
 
     function executeVoucher(
@@ -138,6 +140,9 @@ contract CartesiDApp is
         IConsensus _newConsensus
     ) external override onlyOwner {
         consensus = _newConsensus;
+
+        _newConsensus.join();
+
         emit NewConsensus(_newConsensus);
     }
 
