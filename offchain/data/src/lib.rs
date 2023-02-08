@@ -12,6 +12,7 @@
 
 mod config;
 mod error;
+mod migrations;
 mod pagination;
 mod repository;
 mod schema;
@@ -19,6 +20,7 @@ mod types;
 
 pub use config::{RepositoryCLIConfig, RepositoryConfig};
 pub use error::Error;
+pub use migrations::{run_migrations, MigrationError};
 pub use pagination::{Connection, Edge, PageInfo};
 pub use repository::Repository;
 pub use types::{
