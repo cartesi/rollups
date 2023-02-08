@@ -63,6 +63,7 @@ contract AuthorityTest is TestBase {
     );
     event ConsensusCreated(address owner, IInputBox inputBox, IHistory history);
     event NewHistory(IHistory history);
+    event ApplicationJoined(address application);
 
     function testConstructor(
         address _owner,
@@ -372,5 +373,22 @@ contract AuthorityTest is TestBase {
         // after failed withdraw. All balances stay the same
         assertEq(tokenFailed.balanceOf(address(authority)), _balance);
         assertEq(tokenFailed.balanceOf(_recipient), 0);
+    }
+
+    function testJoin(
+        address _owner,
+        IInputBox _inputBox,
+        IHistory _history,
+        address _dapp
+    ) public {
+        vm.assume(_owner != address(0));
+
+        authority = new Authority(_owner, _inputBox, _history);
+
+        vm.expectEmit(false, false, false, true);
+        emit ApplicationJoined(_dapp);
+
+        vm.prank(_dapp);
+        authority.join();
     }
 }
