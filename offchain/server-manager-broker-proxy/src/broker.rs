@@ -172,7 +172,10 @@ impl BrokerFacade {
 mod tests {
     use super::*;
     use backoff::ExponentialBackoff;
-    use rollups_events::{DAppMetadata, InputMetadata, Payload, HASH_SIZE};
+    use rollups_events::{
+        DAppMetadata, InputMetadata, Payload, RollupsAdvanceStateInput,
+        HASH_SIZE,
+    };
     use test_fixtures::BrokerFixture;
     use testcontainers::clients::Cli;
 
@@ -254,25 +257,25 @@ mod tests {
         let docker = Cli::default();
         let mut state = TestState::setup(&docker).await;
         let inputs = vec![
-            RollupsData::AdvanceStateInput {
-                input_metadata: InputMetadata {
+            RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+                metadata: InputMetadata {
                     epoch_index: 0,
                     input_index: 0,
                     ..Default::default()
                 },
-                input_payload: Payload::new(vec![0, 0]),
+                payload: Payload::new(vec![0, 0]),
                 tx_hash: Hash::default(),
-            },
+            }),
             RollupsData::FinishEpoch {},
-            RollupsData::AdvanceStateInput {
-                input_metadata: InputMetadata {
+            RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+                metadata: InputMetadata {
                     epoch_index: 1,
                     input_index: 1,
                     ..Default::default()
                 },
-                input_payload: Payload::new(vec![1, 1]),
+                payload: Payload::new(vec![1, 1]),
                 tx_hash: Hash::default(),
-            },
+            }),
         ];
         let mut ids = Vec::new();
         for input in inputs.iter() {

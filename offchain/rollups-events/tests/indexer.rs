@@ -14,8 +14,8 @@ use backoff::ExponentialBackoff;
 use rollups_events::indexer::{IndexerEvent, IndexerState};
 use rollups_events::{
     Address, Broker, BrokerConfig, BrokerError, BrokerStream, DAppMetadata,
-    Event, Hash, RollupsData, RollupsInput, RollupsInputsStream, RollupsOutput,
-    RollupsOutputsStream,
+    Event, Hash, RollupsAdvanceStateInput, RollupsData, RollupsInput,
+    RollupsInputsStream, RollupsOutput, RollupsOutputsStream,
 };
 use testcontainers::{
     clients::Cli, core::WaitFor, images::generic::GenericImage, Container,
@@ -184,11 +184,11 @@ fn generate_inputs() -> Vec<RollupsInput> {
             parent_id: "".to_owned(),
             epoch_index: 0,
             inputs_sent_count: 1,
-            data: RollupsData::AdvanceStateInput {
-                input_metadata: Default::default(),
-                input_payload: Default::default(),
+            data: RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+                metadata: Default::default(),
+                payload: Default::default(),
                 tx_hash: Hash::default(),
-            },
+            }),
         },
         RollupsInput {
             parent_id: "".to_owned(),

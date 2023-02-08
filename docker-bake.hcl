@@ -2,7 +2,16 @@
 target "docker-metadata-action" {}
 
 group "default" {
-  targets = ["state-server", "dispatcher", "inspect-server", "graphql-server", "server-manager-broker-proxy", "hardhat", "cli"]
+  targets = [
+    "cli",
+    "dispatcher",
+    "graphql-server",
+    "hardhat",
+    "inspect-server",
+    "indexer",
+    "server-manager-broker-proxy",
+    "state-server"
+  ]
 }
 
 target "deps" {
@@ -23,6 +32,13 @@ target "dispatcher" {
   inherits   = ["docker-metadata-action"]
   dockerfile = "offchain/Dockerfile"
   target     = "dispatcher"
+  context    = "."
+}
+
+target "indexer" {
+  inherits   = ["docker-metadata-action"]
+  dockerfile = "offchain/Dockerfile"
+  target     = "indexer"
   context    = "."
 }
 

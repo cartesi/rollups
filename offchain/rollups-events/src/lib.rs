@@ -24,7 +24,8 @@ pub use broker::{
 pub use common::{Address, Hash, Payload, ADDRESS_SIZE, HASH_SIZE};
 pub use rollups_claims::{RollupsClaim, RollupsClaimsStream};
 pub use rollups_inputs::{
-    InputMetadata, RollupsData, RollupsInput, RollupsInputsStream,
+    InputMetadata, RollupsAdvanceStateInput, RollupsData, RollupsInput,
+    RollupsInputsStream,
 };
 pub use rollups_outputs::{
     RollupsNotice, RollupsOutput, RollupsOutputEnum,

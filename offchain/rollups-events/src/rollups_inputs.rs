@@ -40,19 +40,23 @@ pub struct RollupsInput {
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum RollupsData {
     /// Input that advances the Cartesi Rollups epoch
-    AdvanceStateInput {
-        /// Information sent via the input metadata memory range
-        input_metadata: InputMetadata,
-
-        /// Payload of the input
-        input_payload: Payload,
-
-        /// Transaction hash
-        tx_hash: Hash,
-    },
+    AdvanceStateInput(RollupsAdvanceStateInput),
 
     /// End of an Cartesi Rollups epoch
     FinishEpoch {},
+}
+
+/// Input that advances the Cartesi Rollups epoch
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct RollupsAdvanceStateInput {
+    /// Information sent via the input metadata memory range
+    pub metadata: InputMetadata,
+
+    /// Payload of the input
+    pub payload: Payload,
+
+    /// Transaction hash
+    pub tx_hash: Hash,
 }
 
 #[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

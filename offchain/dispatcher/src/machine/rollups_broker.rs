@@ -17,9 +17,9 @@ use snafu::{ResultExt, Snafu};
 use tokio::sync::{self, Mutex};
 
 use rollups_events::{
-    Broker, BrokerError, Event, InputMetadata, RollupsClaim,
-    RollupsClaimsStream, RollupsData, RollupsInput, RollupsInputsStream,
-    INITIAL_ID,
+    Broker, BrokerError, Event, InputMetadata, RollupsAdvanceStateInput,
+    RollupsClaim, RollupsClaimsStream, RollupsData, RollupsInput,
+    RollupsInputsStream, INITIAL_ID,
 };
 use types::foldables::input_box::Input;
 
@@ -152,23 +152,23 @@ macro_rules! input_sanity_check {
         assert_eq!($event.inputs_sent_count, $input_index + 1);
         assert!(matches!(
             $event.data,
-            RollupsData::AdvanceStateInput {
-                input_metadata: InputMetadata {
+            RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+                metadata: InputMetadata {
                     epoch_index,
                     ..
                 },
                 ..
-            } if epoch_index == 0
+            }) if epoch_index == 0
         ));
         assert!(matches!(
             $event.data,
-            RollupsData::AdvanceStateInput {
-                input_metadata: InputMetadata {
+            RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+                metadata: InputMetadata {
                     input_index,
                     ..
                 },
                 ..
-            } if input_index == $input_index
+            }) if input_index == $input_index
         ));
     };
 }
@@ -305,7 +305,7 @@ fn build_next_input(
     input: &Input,
     status: &BrokerStreamStatus,
 ) -> RollupsInput {
-    let input_metadata = InputMetadata {
+    let metadata = InputMetadata {
         msg_sender: input.sender.to_fixed_bytes().into(),
         block_number: input.block_added.number.as_u64(),
         timestamp: input.block_added.timestamp.as_u64(),
@@ -313,11 +313,11 @@ fn build_next_input(
         input_index: status.status.inputs_sent_count,
     };
 
-    let data = RollupsData::AdvanceStateInput {
-        input_metadata,
-        input_payload: input.payload.clone().into(),
+    let data = RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+        metadata,
+        payload: input.payload.clone().into(),
         tx_hash: (*input.tx_hash).0.into(),
-    };
+    });
 
     RollupsInput {
         parent_id: status.id.clone(),

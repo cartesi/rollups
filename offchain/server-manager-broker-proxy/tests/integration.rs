@@ -13,8 +13,8 @@
 use fixtures::ProxyFixture;
 use rand::Rng;
 use rollups_events::{
-    Hash, InputMetadata, Payload, RollupsData, RollupsInput, HASH_SIZE,
-    INITIAL_ID,
+    Hash, InputMetadata, Payload, RollupsAdvanceStateInput, RollupsData,
+    RollupsInput, HASH_SIZE, INITIAL_ID,
 };
 use test_fixtures::{
     BrokerFixture, MachineSnapshotsFixture, ServerManagerFixture,
@@ -78,15 +78,15 @@ async fn test_proxy_sends_inputs_to_server_manager() {
     tracing::info!("producing {} inputs", N);
     let payloads: Vec<_> = (0..N).map(|_| generate_payload()).collect();
     for (i, payload) in payloads.iter().enumerate() {
-        let data = RollupsData::AdvanceStateInput {
-            input_metadata: InputMetadata {
+        let data = RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+            metadata: InputMetadata {
                 epoch_index: 0,
                 input_index: i as u64,
                 ..Default::default()
             },
-            input_payload: payload.clone().into(),
+            payload: payload.clone().into(),
             tx_hash: Hash::default(),
-        };
+        });
         state.broker.produce_input_event(data).await;
     }
 
@@ -104,15 +104,15 @@ async fn test_proxy_fails_when_inputs_has_wrong_epoch() {
     let state = TestState::setup(&docker).await;
 
     tracing::info!("producing input with wrong epoch index");
-    let data = RollupsData::AdvanceStateInput {
-        input_metadata: InputMetadata {
+    let data = RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+        metadata: InputMetadata {
             epoch_index: 0,
             input_index: 0,
             ..Default::default()
         },
-        input_payload: Default::default(),
+        payload: Default::default(),
         tx_hash: Hash::default(),
-    };
+    });
     let input = RollupsInput {
         parent_id: INITIAL_ID.to_owned(),
         epoch_index: 1,
@@ -132,15 +132,15 @@ async fn test_proxy_fails_when_inputs_has_wrong_parent_id() {
     let state = TestState::setup(&docker).await;
 
     tracing::info!("producing input with wrong parent id");
-    let data = RollupsData::AdvanceStateInput {
-        input_metadata: InputMetadata {
+    let data = RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+        metadata: InputMetadata {
             epoch_index: 0,
             input_index: 0,
             ..Default::default()
         },
-        input_payload: Default::default(),
+        payload: Default::default(),
         tx_hash: Hash::default(),
-    };
+    });
     let input = RollupsInput {
         parent_id: "invalid".to_owned(),
         epoch_index: 0,
@@ -183,25 +183,25 @@ async fn finish_epoch_and_wait_for_next_input(state: &TestState<'_>) {
     tracing::info!("producing input, finish, and another input");
     let payload = generate_payload();
     let inputs = vec![
-        RollupsData::AdvanceStateInput {
-            input_metadata: InputMetadata {
+        RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+            metadata: InputMetadata {
                 epoch_index: 0,
                 input_index: 0,
                 ..Default::default()
             },
-            input_payload: Default::default(),
+            payload: Default::default(),
             tx_hash: Hash::default(),
-        },
+        }),
         RollupsData::FinishEpoch {},
-        RollupsData::AdvanceStateInput {
-            input_metadata: InputMetadata {
+        RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+            metadata: InputMetadata {
                 epoch_index: 1,
                 input_index: 0,
                 ..Default::default()
             },
-            input_payload: payload.clone(),
+            payload: payload.clone(),
             tx_hash: Hash::default(),
-        },
+        }),
     ];
     for input in inputs {
         state.broker.produce_input_event(input).await;
@@ -262,15 +262,15 @@ async fn test_proxy_restore_session_after_restart() {
     state.proxy.restart().await;
 
     tracing::info!("producing another input and checking");
-    let input = RollupsData::AdvanceStateInput {
-        input_metadata: InputMetadata {
+    let input = RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+        metadata: InputMetadata {
             epoch_index: 1,
             input_index: 1,
             ..Default::default()
         },
-        input_payload: generate_payload(),
+        payload: generate_payload(),
         tx_hash: Hash::default(),
-    };
+    });
     state.broker.produce_input_event(input).await;
     state.server_manager.assert_epoch_status(1, 2).await;
 }

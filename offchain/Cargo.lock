@@ -2688,6 +2688,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce23b50ad8242c51a442f3ff322d56b02f08852c77e4c0b4d3fd684abc89c683"
 
 [[package]]
+name = "indexer"
+version = "0.9.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "clap 4.1.4",
+ "http-health-check",
+ "rollups-data",
+ "rollups-events",
+ "snafu 0.7.4",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "indexmap"
 version = "1.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added integration tests for proxy
 - DApp Address Relay contract (allows the off-chain machine to know the DApp's address)
 - Added outputs to rollups events
+- Added new indexer that consumes broker events
 
 ### Changed
 

@@ -88,17 +88,13 @@ impl<Snap: SnapshotManager + std::fmt::Debug + 'static> Runner<Snap> {
             tracing::info!(?event, "consumed input event");
 
             match event.payload.data {
-                RollupsData::AdvanceStateInput {
-                    input_metadata,
-                    input_payload,
-                    ..
-                } => {
+                RollupsData::AdvanceStateInput(input) => {
                     runner
                         .handle_advance(
                             event.payload.epoch_index,
                             event.payload.inputs_sent_count - 1,
-                            input_metadata,
-                            input_payload.into_inner(),
+                            input.metadata,
+                            input.payload.into_inner(),
                         )
                         .await?;
                 }
