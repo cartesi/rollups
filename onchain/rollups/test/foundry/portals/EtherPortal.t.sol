@@ -92,7 +92,7 @@ contract EtherPortalTest is Test {
         uint256 portalsBalanceBefore = address(etherPortal).balance;
 
         // Expect InputAdded to be emitted with the right arguments
-        vm.expectEmit(true, false, false, true, address(inputBox));
+        vm.expectEmit(true, true, false, true, address(inputBox));
         emit InputAdded(dapp, 0, address(etherPortal), input);
 
         // Deposit Ether in the DApp via the portal

@@ -59,8 +59,8 @@ contract InputBoxTest is Test {
             vm.roll(i);
             vm.warp(i + year2022); // year 2022
 
-            // topic 1 is indexed; topic 2 and 3 aren't; check event data
-            vm.expectEmit(true, false, false, true, address(inputBox));
+            // topics 1 and 2 are indexed; topic 3 isn't; check event data
+            vm.expectEmit(true, true, false, true, address(inputBox));
 
             // The event we expect
             emit InputAdded(_dapp, i, address(this), _inputs[i]);

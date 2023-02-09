@@ -149,7 +149,7 @@ contract ERC20PortalTest is Test {
         uint256 portalsBalanceBefore = token.balanceOf(address(erc20Portal));
 
         // Expect InputAdded to be emitted with the right arguments
-        vm.expectEmit(true, false, false, true, address(inputBox));
+        vm.expectEmit(true, true, false, true, address(inputBox));
         emit InputAdded(dapp, 0, address(erc20Portal), input);
 
         // Transfer ERC-20 tokens to the DApp via the portal
@@ -186,7 +186,7 @@ contract ERC20PortalTest is Test {
         uint256 portalsBalanceBefore = token.balanceOf(address(erc20Portal));
 
         // Expect InputAdded to be emitted with the right arguments
-        vm.expectEmit(true, false, false, true, address(inputBox));
+        vm.expectEmit(true, true, false, true, address(inputBox));
         emit InputAdded(dapp, 0, address(erc20Portal), input);
 
         // Transfer ERC-20 tokens to the DApp via the portal

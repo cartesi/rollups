@@ -51,7 +51,7 @@ contract DAppAddressRelayTest is Test {
         );
 
         // Expect InputAdded to be emitted with the right arguments
-        vm.expectEmit(true, false, false, true, address(inputBox));
+        vm.expectEmit(true, true, false, true, address(inputBox));
         emit InputAdded(_dapp, 0, address(relay), input);
 
         // Relay the DApp's address
