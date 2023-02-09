@@ -18,7 +18,7 @@ mod repository;
 mod schema;
 mod types;
 
-pub use config::{RepositoryCLIConfig, RepositoryConfig};
+pub use config::{Redacted, RepositoryCLIConfig, RepositoryConfig};
 pub use error::Error;
 pub use migrations::{run_migrations, MigrationError};
 pub use pagination::{Connection, Edge, PageInfo};

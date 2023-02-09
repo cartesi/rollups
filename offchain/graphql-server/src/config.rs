@@ -20,7 +20,7 @@ pub struct GraphQLConfig {
     pub repository_config: RepositoryConfig,
 }
 
-#[derive(Debug, Parser)]
+#[derive(Parser)]
 pub struct GraphQLCLIConfig {
     #[arg(long, env, default_value = "127.0.0.1")]
     pub graphql_host: String,

@@ -47,7 +47,8 @@ impl Indexer {
     #[tracing::instrument(level = "trace", skip_all)]
     pub async fn start(config: IndexerConfig) -> Result<(), IndexerError> {
         tracing::info!("running database migrations");
-        rollups_data::run_migrations(&config.repository_config.endpoint)
+        let endpoint = config.repository_config.endpoint();
+        rollups_data::run_migrations(&endpoint.into_inner())
             .context(MigrationsSnafu)?;
 
         tracing::info!("runned migrations; connecting to DB");

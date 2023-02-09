@@ -8,6 +8,7 @@ members = [
   "http-health-check",
   "indexer",
   "inspect-server",
+  "redacted",
   "rollups-events",
   "server-manager-broker-proxy",
   "state-server",

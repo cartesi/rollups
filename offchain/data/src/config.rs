@@ -12,16 +12,34 @@
 
 use backoff::{ExponentialBackoff, ExponentialBackoffBuilder};
 use clap::Parser;
+pub use redacted::Redacted;
 use std::time::Duration;
 
 #[derive(Debug)]
 pub struct RepositoryConfig {
-    pub endpoint: String,
+    pub user: String,
+    pub password: Redacted<String>,
+    pub hostname: String,
+    pub port: u16,
+    pub db: String,
     pub connection_pool_size: u32,
     pub backoff: ExponentialBackoff,
 }
 
-#[derive(Debug, Parser)]
+impl RepositoryConfig {
+    pub fn endpoint(&self) -> Redacted<String> {
+        Redacted::new(format!(
+            "postgres://{}:{}@{}:{}/{}",
+            urlencoding::encode(&self.user),
+            urlencoding::encode(&self.password.inner()),
+            urlencoding::encode(&self.hostname),
+            self.port,
+            urlencoding::encode(&self.db)
+        ))
+    }
+}
+
+#[derive(Parser)]
 pub struct RepositoryCLIConfig {
     #[arg(long, env, default_value = "postgres")]
     postgres_user: String,
@@ -66,14 +84,6 @@ impl From<RepositoryCLIConfig> for RepositoryConfig {
                 .postgres_password
                 .expect("Database Postgres password was not provided")
         };
-        let endpoint = format!(
-            "postgres://{}:{}@{}:{}/{}",
-            urlencoding::encode(&cli_config.postgres_user),
-            urlencoding::encode(&password),
-            urlencoding::encode(&cli_config.postgres_hostname),
-            cli_config.postgres_port,
-            urlencoding::encode(&cli_config.postgres_db)
-        );
         let connection_pool_size = cli_config.postgres_connection_pool_size;
         let backoff_max_elapsed_duration = Duration::from_millis(
             cli_config.postgres_backoff_max_elapsed_duration,
@@ -82,7 +92,11 @@ impl From<RepositoryCLIConfig> for RepositoryConfig {
             .with_max_elapsed_time(Some(backoff_max_elapsed_duration))
             .build();
         RepositoryConfig {
-            endpoint,
+            user: cli_config.postgres_user,
+            password: Redacted::new(password),
+            hostname: cli_config.postgres_hostname,
+            port: cli_config.postgres_port,
+            db: cli_config.postgres_db,
             connection_pool_size,
             backoff,
         }

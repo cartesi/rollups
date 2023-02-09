@@ -31,7 +31,7 @@ pub struct Config {
     pub health_check_config: HealthCheckConfig,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 pub struct CLIConfig {
     #[command(flatten)]
     repository_config: RepositoryCLIConfig,

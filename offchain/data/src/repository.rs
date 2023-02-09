@@ -39,13 +39,12 @@ impl Repository {
     /// Create database connection pool, wait until database server is available with backoff strategy
     pub fn new(config: RepositoryConfig) -> Result<Self, Error> {
         let db_pool = backoff::retry(config.backoff.clone(), || {
-            tracing::info!(
-                config.endpoint,
-                "trying to create db pool for database"
-            );
+            tracing::info!(?config, "trying to create db pool for database");
             Pool::builder()
                 .max_size(POOL_CONNECTION_SIZE)
-                .build(ConnectionManager::<PgConnection>::new(&config.endpoint))
+                .build(ConnectionManager::<PgConnection>::new(
+                    config.endpoint().into_inner(),
+                ))
                 .map_err(backoff::Error::transient)
         })
         .context(DatabaseConnectionSnafu)?;
