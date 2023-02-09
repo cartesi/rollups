@@ -81,6 +81,7 @@ pub fn new_input(timestamp: u32) -> Input {
         payload: vec![],
         block_added: Arc::new(new_block(timestamp)),
         dapp: Arc::new(H160::random()),
+        tx_hash: Arc::new(H256::default()),
     }
 }
 

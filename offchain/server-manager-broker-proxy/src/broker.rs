@@ -261,6 +261,7 @@ mod tests {
                     ..Default::default()
                 },
                 input_payload: Payload::new(vec![0, 0]),
+                tx_hash: Hash::default(),
             },
             RollupsData::FinishEpoch {},
             RollupsData::AdvanceStateInput {
@@ -270,6 +271,7 @@ mod tests {
                     ..Default::default()
                 },
                 input_payload: Payload::new(vec![1, 1]),
+                tx_hash: Hash::default(),
             },
         ];
         let mut ids = Vec::new();

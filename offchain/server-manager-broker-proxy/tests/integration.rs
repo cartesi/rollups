@@ -85,6 +85,7 @@ async fn test_proxy_sends_inputs_to_server_manager() {
                 ..Default::default()
             },
             input_payload: payload.clone().into(),
+            tx_hash: Hash::default(),
         };
         state.broker.produce_input_event(data).await;
     }
@@ -110,6 +111,7 @@ async fn test_proxy_fails_when_inputs_has_wrong_epoch() {
             ..Default::default()
         },
         input_payload: Default::default(),
+        tx_hash: Hash::default(),
     };
     let input = RollupsInput {
         parent_id: INITIAL_ID.to_owned(),
@@ -137,6 +139,7 @@ async fn test_proxy_fails_when_inputs_has_wrong_parent_id() {
             ..Default::default()
         },
         input_payload: Default::default(),
+        tx_hash: Hash::default(),
     };
     let input = RollupsInput {
         parent_id: "invalid".to_owned(),
@@ -187,6 +190,7 @@ async fn finish_epoch_and_wait_for_next_input(state: &TestState<'_>) {
                 ..Default::default()
             },
             input_payload: Default::default(),
+            tx_hash: Hash::default(),
         },
         RollupsData::FinishEpoch {},
         RollupsData::AdvanceStateInput {
@@ -196,6 +200,7 @@ async fn finish_epoch_and_wait_for_next_input(state: &TestState<'_>) {
                 ..Default::default()
             },
             input_payload: payload.clone(),
+            tx_hash: Hash::default(),
         },
     ];
     for input in inputs {
@@ -264,6 +269,7 @@ async fn test_proxy_restore_session_after_restart() {
             ..Default::default()
         },
         input_payload: generate_payload(),
+        tx_hash: Hash::default(),
     };
     state.broker.produce_input_event(input).await;
     state.server_manager.assert_epoch_status(1, 2).await;

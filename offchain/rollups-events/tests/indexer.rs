@@ -14,7 +14,7 @@ use backoff::ExponentialBackoff;
 use rollups_events::indexer::{IndexerEvent, IndexerState};
 use rollups_events::{
     Address, Broker, BrokerConfig, BrokerError, BrokerStream, DAppMetadata,
-    Event, RollupsData, RollupsInput, RollupsInputsStream, RollupsOutput,
+    Event, Hash, RollupsData, RollupsInput, RollupsInputsStream, RollupsOutput,
     RollupsOutputsStream,
 };
 use testcontainers::{
@@ -187,6 +187,7 @@ fn generate_inputs() -> Vec<RollupsInput> {
             data: RollupsData::AdvanceStateInput {
                 input_metadata: Default::default(),
                 input_payload: Default::default(),
+                tx_hash: Hash::default(),
             },
         },
         RollupsInput {
