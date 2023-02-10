@@ -31,8 +31,8 @@ pub struct DispatcherEnvCLIConfig {
 
     /// Path to file with deployment json of dapp
     #[structopt(
-        short,
         long,
+        env,
         default_value = "./dapp_deployment.json",
         parse(from_os_str)
     )]
@@ -40,15 +40,15 @@ pub struct DispatcherEnvCLIConfig {
 
     /// Path to file with deployment json of rollups
     #[structopt(
-        short,
         long,
+        env,
         default_value = "./rollups_deployment.json",
         parse(from_os_str)
     )]
     pub rd_rollups_deployment_file: PathBuf,
 
     /// Duration of rollups epoch in seconds, for which dispatcher will make claims.
-    #[structopt(short, long, env, default_value = "604800")]
+    #[structopt(long, env, default_value = "604800")]
     pub rd_epoch_duration: u64,
 }
 
