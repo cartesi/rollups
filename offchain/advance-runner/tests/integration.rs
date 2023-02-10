@@ -10,7 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use fixtures::ProxyFixture;
+use fixtures::AdvanceRunnerFixture;
 use rand::Rng;
 use rollups_events::{
     Hash, InputMetadata, Payload, RollupsAdvanceStateInput, RollupsData,
@@ -27,7 +27,7 @@ struct TestState<'d> {
     snapshots: MachineSnapshotsFixture,
     broker: BrokerFixture<'d>,
     server_manager: ServerManagerFixture<'d>,
-    proxy: ProxyFixture,
+    advance_runner: AdvanceRunnerFixture,
 }
 
 impl TestState<'_> {
@@ -36,7 +36,7 @@ impl TestState<'_> {
         let broker = BrokerFixture::setup(docker).await;
         let server_manager =
             ServerManagerFixture::setup(docker, snapshots.path()).await;
-        let proxy = ProxyFixture::setup(
+        let advance_runner = AdvanceRunnerFixture::setup(
             server_manager.endpoint().to_owned(),
             server_manager.session_id().to_owned(),
             broker.redis_endpoint().to_owned(),
@@ -49,7 +49,7 @@ impl TestState<'_> {
             snapshots,
             broker,
             server_manager,
-            proxy,
+            advance_runner,
         }
     }
 }
@@ -61,16 +61,16 @@ fn generate_payload() -> Payload {
 }
 
 #[test_log::test(tokio::test)]
-async fn test_proxy_starts_server_manager_session() {
+async fn test_advance_runner_starts_server_manager_session() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
 
-    tracing::info!("checking whether proxy created session");
+    tracing::info!("checking whether advance_runner created session");
     state.server_manager.assert_session_ready().await;
 }
 
 #[test_log::test(tokio::test)]
-async fn test_proxy_sends_inputs_to_server_manager() {
+async fn test_advance_runner_sends_inputs_to_server_manager() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
 
@@ -99,7 +99,7 @@ async fn test_proxy_sends_inputs_to_server_manager() {
 }
 
 #[test_log::test(tokio::test)]
-async fn test_proxy_fails_when_inputs_has_wrong_epoch() {
+async fn test_advance_runner_fails_when_inputs_has_wrong_epoch() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
 
@@ -121,13 +121,13 @@ async fn test_proxy_fails_when_inputs_has_wrong_epoch() {
     };
     state.broker.produce_raw_input_event(input).await;
 
-    tracing::info!("waiting for the proxy to exit with error");
-    let err = state.proxy.wait_err().await;
+    tracing::info!("waiting for the advance_runner to exit with error");
+    let err = state.advance_runner.wait_err().await;
     assert!(format!("{:?}", err).contains("incorrect active epoch index"));
 }
 
 #[test_log::test(tokio::test)]
-async fn test_proxy_fails_when_inputs_has_wrong_parent_id() {
+async fn test_advance_runner_fails_when_inputs_has_wrong_parent_id() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
 
@@ -149,13 +149,13 @@ async fn test_proxy_fails_when_inputs_has_wrong_parent_id() {
     };
     state.broker.produce_raw_input_event(input).await;
 
-    tracing::info!("waiting for the proxy to exit with error");
-    let err = state.proxy.wait_err().await;
+    tracing::info!("waiting for the advance_runner to exit with error");
+    let err = state.advance_runner.wait_err().await;
     assert!(format!("{:?}", err).contains("parent id doesn't match"));
 }
 
 #[test_log::test(tokio::test)]
-async fn test_proxy_generates_claim_after_finishing_epoch() {
+async fn test_advance_runner_generates_claim_after_finishing_epoch() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
 
@@ -170,14 +170,14 @@ async fn test_proxy_generates_claim_after_finishing_epoch() {
     state.server_manager.assert_session_ready().await;
     let claims = state.broker.consume_n_claims(N).await;
     // We don't verify the claim hash because it is not the resposability of the
-    // proxy and because it changes every time we update the Cartesi Machine.
+    // advance_runner and because it changes every time we update the Cartesi Machine.
     assert_eq!(claims.len(), N);
 }
 
 /// Send an input, an finish epoch, and another input.
 /// After the second input is processed by the server-manager we know
-/// for sure that the proxy finished processing the finish epoch.
-/// We can't simply wait for the epoch to be finished because the proxy
+/// for sure that the advance_runner finished processing the finish epoch.
+/// We can't simply wait for the epoch to be finished because the advance_runner
 /// still does tasks after that.
 async fn finish_epoch_and_wait_for_next_input(state: &TestState<'_>) {
     tracing::info!("producing input, finish, and another input");
@@ -217,14 +217,14 @@ async fn finish_epoch_and_wait_for_next_input(state: &TestState<'_>) {
 }
 
 #[test_log::test(tokio::test)]
-async fn test_proxy_sends_inputs_after_finishing_epoch() {
+async fn test_advance_runner_sends_inputs_after_finishing_epoch() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
     finish_epoch_and_wait_for_next_input(&state).await;
 }
 
 #[test_log::test(tokio::test)]
-async fn test_proxy_does_not_generate_duplicate_claim() {
+async fn test_advance_runner_does_not_generate_duplicate_claim() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
 
@@ -241,7 +241,7 @@ async fn test_proxy_does_not_generate_duplicate_claim() {
 }
 
 #[test_log::test(tokio::test)]
-async fn test_proxy_stores_snapshot_after_finishing_epoch() {
+async fn test_advance_runner_stores_snapshot_after_finishing_epoch() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
 
@@ -252,14 +252,14 @@ async fn test_proxy_stores_snapshot_after_finishing_epoch() {
 }
 
 #[test_log::test(tokio::test)]
-async fn test_proxy_restore_session_after_restart() {
+async fn test_advance_runner_restore_session_after_restart() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
 
     finish_epoch_and_wait_for_next_input(&state).await;
 
-    tracing::info!("restarting proxy");
-    state.proxy.restart().await;
+    tracing::info!("restarting advance_runner");
+    state.advance_runner.restart().await;
 
     tracing::info!("producing another input and checking");
     let input = RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {

@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "advance-runner",
   "contracts",
   "data",
   "dispatcher",
@@ -10,7 +11,6 @@ members = [
   "inspect-server",
   "redacted",
   "rollups-events",
-  "server-manager-broker-proxy",
   "state-server",
   "test-fixtures",
   "types",

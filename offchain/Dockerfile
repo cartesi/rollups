@@ -40,8 +40,8 @@ RUN cargo build --release --bin indexer
 FROM builder as inspect_server_build
 RUN cargo build --release --bin inspect-server
 
-FROM builder as server_manager_broker_proxy_build
-RUN PATH="$PATH:$HOME/.local/bin" cargo build --release --bin server-manager-broker-proxy
+FROM builder as advance_runner_build
+RUN PATH="$PATH:$HOME/.local/bin" cargo build --release --bin advance-runner
 
 FROM builder as graphql_server_build
 RUN cargo build --release --bin graphql-server
@@ -80,14 +80,14 @@ COPY --from=dispatcher_build /usr/src/app/offchain/target/release/rollups_dispat
 COPY onchain/rollups/export/abi /usr/local/share/cartesi/deployments/
 ENTRYPOINT ["rollups_dispatcher"]
 
-FROM debian:bullseye-slim AS server_manager_broker_proxy
+FROM debian:bullseye-slim AS advance_runner
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates curl
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=server_manager_broker_proxy_build /usr/src/app/offchain/target/release/server-manager-broker-proxy /usr/local/bin
-ENTRYPOINT ["server-manager-broker-proxy"]
+COPY --from=advance_runner_build /usr/src/app/offchain/target/release/advance-runner /usr/local/bin
+ENTRYPOINT ["advance-runner"]
 
 FROM debian:bullseye-slim AS inspect_server
 COPY --from=inspect_server_build /usr/src/app/offchain/target/release/inspect-server /usr/local/bin

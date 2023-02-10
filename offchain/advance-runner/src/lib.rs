@@ -14,7 +14,7 @@ use anyhow::{Context, Result};
 use backoff::ExponentialBackoffBuilder;
 
 use broker::BrokerFacade;
-use config::{Config, ProxyConfig};
+use config::{AdvanceRunnerConfig, Config};
 use runner::Runner;
 use server_manager::ServerManagerFacade;
 use snapshot::{
@@ -30,23 +30,24 @@ mod snapshot;
 
 #[tracing::instrument(level = "trace", skip_all)]
 pub async fn run(config: Config) -> Result<()> {
-    tracing::info!(?config, "starting proxy");
+    tracing::info!(?config, "starting advance runner");
 
     let health_handle = http_health_check::start(config.health_check_config);
-    let proxy_handle = start_proxy(config.proxy_config);
+    let advance_runner_handle =
+        start_advance_runner(config.advance_runner_config);
 
     tokio::select! {
         ret = health_handle => {
             ret.context("health-check stopped")
         }
-        ret = proxy_handle => {
-            ret.context("proxy stopped")
+        ret = advance_runner_handle => {
+            ret.context("advance runner stopped")
         }
     }
 }
 
 #[tracing::instrument(level = "trace", skip_all)]
-async fn start_proxy(config: ProxyConfig) -> Result<()> {
+async fn start_advance_runner(config: AdvanceRunnerConfig) -> Result<()> {
     let backoff = ExponentialBackoffBuilder::new()
         .with_max_elapsed_time(Some(config.backoff_max_elapsed_duration))
         .build();
@@ -67,13 +68,13 @@ async fn start_proxy(config: ProxyConfig) -> Result<()> {
             let snapshot_manager = FSSnapshotManager::new(fs_manager_config);
             Runner::start(server_manager, broker, snapshot_manager)
                 .await
-                .context("error in the proxy main loop")
+                .context("error in the advance runner main loop")
         }
         SnapshotConfig::Disabled => {
             let snapshot_manager = SnapshotDisabled {};
             Runner::start(server_manager, broker, snapshot_manager)
                 .await
-                .context("error in the proxy main loop")
+                .context("error in the advance runner main loop")
         }
     }
 }

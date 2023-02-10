@@ -10,26 +10,26 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+use advance_runner::config::{
+    AdvanceRunnerConfig, BrokerConfig, Config, DAppMetadata, FSManagerConfig,
+    HealthCheckConfig, ServerManagerConfig, SnapshotConfig,
+};
 use grpc_interfaces::cartesi_machine::{
     ConcurrencyConfig, MachineRuntimeConfig,
 };
 use grpc_interfaces::cartesi_server_manager::{CyclesConfig, DeadlineConfig};
 use rollups_events::Address;
-use server_manager_broker_proxy::config::{
-    BrokerConfig, Config, DAppMetadata, FSManagerConfig, HealthCheckConfig,
-    ProxyConfig, ServerManagerConfig, SnapshotConfig,
-};
 use std::cell::RefCell;
 use std::path::Path;
 use std::time::Duration;
 use tokio::task::JoinHandle;
 
-pub struct ProxyFixture {
+pub struct AdvanceRunnerFixture {
     config: Config,
     handler: RefCell<Option<JoinHandle<anyhow::Result<()>>>>,
 }
 
-impl ProxyFixture {
+impl AdvanceRunnerFixture {
     pub async fn setup(
         server_manager_endpoint: String,
         session_id: String,
@@ -87,7 +87,7 @@ impl ProxyFixture {
 
         let backoff_max_elapsed_duration = Duration::from_millis(1);
 
-        let proxy_config = ProxyConfig {
+        let advance_runner_config = AdvanceRunnerConfig {
             server_manager_config,
             broker_config,
             dapp_metadata,
@@ -101,47 +101,51 @@ impl ProxyFixture {
         };
 
         let config = Config {
-            proxy_config,
+            advance_runner_config,
             health_check_config,
         };
 
-        let handler = RefCell::new(Some(start_proxy(config.clone())));
+        let handler = RefCell::new(Some(start_advance_runner(config.clone())));
         Self { config, handler }
     }
 
-    /// Wait until the proxy exists with an error
+    /// Wait until the advance runner exists with an error
     #[tracing::instrument(level = "trace", skip_all)]
     pub async fn wait_err(&self) -> anyhow::Error {
-        tracing::trace!("waiting for proxy error");
+        tracing::trace!("waiting for advance runner error");
         let handler = self.handler.replace(None);
         handler
             .expect("handler not found")
             .await
             .expect("failed to wait for handler")
-            .expect_err("proxy should exit with an error")
+            .expect_err("advance runner should exit with an error")
     }
 
-    /// Abort the current proxy proxy, wait it to finish and start another one
+    /// Abort the current advance runner, wait it to finish and start another one
     #[tracing::instrument(level = "trace", skip_all)]
     pub async fn restart(&self) {
-        tracing::trace!("restartin proxy");
+        tracing::trace!("restartin advance runner");
         let handler = self.handler.replace(None).expect("handler not found");
         handler.abort();
-        handler.await.expect_err("proxy finished before abort");
-        let new_handler = start_proxy(self.config.clone());
+        handler
+            .await
+            .expect_err("advance runner finished before abort");
+        let new_handler = start_advance_runner(self.config.clone());
         self.handler.replace(Some(new_handler));
     }
 }
 
-fn start_proxy(config: Config) -> JoinHandle<Result<(), anyhow::Error>> {
+fn start_advance_runner(
+    config: Config,
+) -> JoinHandle<Result<(), anyhow::Error>> {
     tokio::spawn(async move {
-        let output = server_manager_broker_proxy::run(config).await;
-        tracing::error!(?output, "proxy exited");
+        let output = advance_runner::run(config).await;
+        tracing::error!(?output, "advance_runner exited");
         output
     })
 }
 
-impl Drop for ProxyFixture {
+impl Drop for AdvanceRunnerFixture {
     fn drop(&mut self) {
         if let Some(handler) = self.handler.borrow().as_ref() {
             handler.abort();

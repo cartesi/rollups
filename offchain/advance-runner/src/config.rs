@@ -25,12 +25,12 @@ pub use rollups_events::{
 
 #[derive(Debug, Clone)]
 pub struct Config {
-    pub proxy_config: ProxyConfig,
+    pub advance_runner_config: AdvanceRunnerConfig,
     pub health_check_config: HealthCheckConfig,
 }
 
 #[derive(Debug, Clone)]
-pub struct ProxyConfig {
+pub struct AdvanceRunnerConfig {
     pub server_manager_config: ServerManagerConfig,
     pub broker_config: BrokerConfig,
     pub dapp_metadata: DAppMetadata,
@@ -50,7 +50,7 @@ impl Config {
                 .context(SnapshotConfigSnafu)?;
         let backoff_max_elapsed_duration =
             Duration::from_millis(cli_config.backoff_max_elapsed_duration);
-        let proxy_config = ProxyConfig {
+        let advance_runner_config = AdvanceRunnerConfig {
             server_manager_config,
             broker_config,
             dapp_metadata,
@@ -58,7 +58,7 @@ impl Config {
             backoff_max_elapsed_duration,
         };
         Ok(Self {
-            proxy_config,
+            advance_runner_config,
             health_check_config: cli_config.health_check_config,
         })
     }

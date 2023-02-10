@@ -3,13 +3,13 @@ target "docker-metadata-action" {}
 
 group "default" {
   targets = [
+    "advance-runner",
     "cli",
     "dispatcher",
     "graphql-server",
     "hardhat",
     "inspect-server",
     "indexer",
-    "server-manager-broker-proxy",
     "state-server"
   ]
 }
@@ -56,10 +56,10 @@ target "graphql-server" {
   context    = "."
 }
 
-target "server-manager-broker-proxy" {
+target "advance-runner" {
   inherits   = ["docker-metadata-action"]
   dockerfile = "offchain/Dockerfile"
-  target     = "server_manager_broker_proxy"
+  target     = "advance_runner"
   context    = "."
 }
 

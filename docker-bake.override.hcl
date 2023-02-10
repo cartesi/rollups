@@ -23,8 +23,8 @@ target "inspect-server" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-inspect-server:${TAG}"]
 }
 
-target "server-manager-broker-proxy" {
-  tags = ["${DOCKER_ORGANIZATION}/rollups-server-manager-broker-proxy:${TAG}"]
+target "advance-runner" {
+  tags = ["${DOCKER_ORGANIZATION}/rollups-advance-runner:${TAG}"]
 }
 
 target "graphql-server" {

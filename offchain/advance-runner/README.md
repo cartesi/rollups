@@ -1,8 +1,7 @@
-# Server-Manager Broker Proxy
+# Advance Runner
 
-This service is a proxy between the server-manager and the rollups broker.
-It consumes rollups input events from the broker and use them to advance the server-manager state.
-When the epoch finishes, the proxy gets the claim from the server-manager and produces the rollups claim events.
+This service consumes rollups input events from the broker and use them to advance the server-manager state.
+When the epoch finishes, the advance-runner gets the claim from the server-manager and produces the rollups claim event.
 
 ## Getting Started
 

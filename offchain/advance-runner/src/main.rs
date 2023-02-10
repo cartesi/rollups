@@ -13,7 +13,7 @@
 use anyhow::{Context, Result};
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
-use server_manager_broker_proxy::config::Config;
+use advance_runner::config::Config;
 
 #[tokio::main]
 async fn main() {
@@ -30,9 +30,9 @@ async fn run() -> Result<()> {
 
     let config = Config::parse().context("config error")?;
 
-    server_manager_broker_proxy::run(config)
+    advance_runner::run(config)
         .await
-        .context("proxy error")?;
+        .context("advance runner error")?;
 
     Ok(())
 }
