@@ -16,9 +16,11 @@ use testcontainers::{clients::Cli, images::postgres::Postgres, Container};
 pub const POSTGRES_DB: &'static str = "postgres";
 pub const POSTGRES_USER: &'static str = "postgres";
 pub const POSTGRES_PASSWORD: &'static str = "pw";
+pub const POSTGRES_HOST: &'static str = "localhost";
 
 pub struct DataFixture<'d> {
     _node: Container<'d, Postgres>,
+    port: u16,
     endpoint: String,
 }
 
@@ -40,15 +42,24 @@ impl DataFixture<'_> {
         let node = docker.run(image);
         let port = node.get_host_port_ipv4(5432);
         let pg_endpoint = format!(
-            "postgres://{}:{}@localhost:{}/{}",
-            POSTGRES_USER, POSTGRES_PASSWORD, port, POSTGRES_DB
+            "postgres://{}:{}@{}:{}/{}",
+            POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, port, POSTGRES_DB
         );
 
         let _migration = run_migrations(&pg_endpoint).unwrap();
 
         DataFixture {
             _node: node,
+            port,
             endpoint: pg_endpoint,
         }
+    }
+
+    pub fn port(&self) -> u16 {
+        self.port
+    }
+
+    pub fn endpoint(&self) -> &str {
+        &self.endpoint
     }
 }
