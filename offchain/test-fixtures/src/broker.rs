@@ -14,7 +14,7 @@ use backoff::ExponentialBackoff;
 use rollups_events::{
     Address, Broker, BrokerConfig, DAppMetadata, Event, Hash, RollupsClaim,
     RollupsClaimsStream, RollupsData, RollupsInput, RollupsInputsStream,
-    ADDRESS_SIZE, INITIAL_ID,
+    RollupsOutput, RollupsOutputsStream, ADDRESS_SIZE, INITIAL_ID,
 };
 use testcontainers::{
     clients::Cli, core::WaitFor, images::generic::GenericImage, Container,
@@ -30,6 +30,7 @@ pub struct BrokerFixture<'d> {
     client: Mutex<Broker>,
     inputs_stream: RollupsInputsStream,
     claims_stream: RollupsClaimsStream,
+    outputs_stream: RollupsOutputsStream,
     redis_endpoint: String,
     chain_id: u64,
     dapp_address: Address,
@@ -56,6 +57,7 @@ impl BrokerFixture<'_> {
         };
         let inputs_stream = RollupsInputsStream::new(&metadata);
         let claims_stream = RollupsClaimsStream::new(&metadata);
+        let outputs_stream = RollupsOutputsStream::new(&metadata);
         let config = BrokerConfig {
             redis_endpoint: redis_endpoint.clone(),
             consume_timeout: CONSUME_TIMEOUT,
@@ -76,6 +78,7 @@ impl BrokerFixture<'_> {
             client,
             inputs_stream,
             claims_stream,
+            outputs_stream,
             redis_endpoint,
             chain_id,
             dapp_address,
@@ -92,6 +95,13 @@ impl BrokerFixture<'_> {
 
     pub fn dapp_address(&self) -> &Address {
         &self.dapp_address
+    }
+
+    pub fn dapp_metadata(&self) -> DAppMetadata {
+        DAppMetadata {
+            chain_id: self.chain_id,
+            dapp_address: self.dapp_address.clone(),
+        }
     }
 
     /// Obtain the latest event from the rollups inputs stream
@@ -226,5 +236,17 @@ impl BrokerFixture<'_> {
             last_id = event.id
         }
         claims
+    }
+
+    /// Produce an output event
+    #[tracing::instrument(level = "trace", skip_all)]
+    pub async fn produce_output(&self, output: RollupsOutput) {
+        tracing::trace!(?output, "producing rollups-outputs event");
+        self.client
+            .lock()
+            .await
+            .produce(&self.outputs_stream, output)
+            .await
+            .expect("failed to produce output");
     }
 }

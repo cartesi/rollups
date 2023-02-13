@@ -60,9 +60,9 @@ impl RepositoryFixture<'_> {
         let repository = self.repository.clone();
         tokio::task::spawn_blocking(move || {
             backoff::retry(backoff, || {
-                f(&repository).map_err(|e| match e {
-                    rollups_data::Error::ItemNotFound { .. } => {
-                        tracing::info!("input not found");
+                f(&repository).map_err(|e| match &e {
+                    rollups_data::Error::ItemNotFound { item_type } => {
+                        tracing::info!("{} not found", item_type);
                         backoff::Error::transient(e)
                     }
                     _ => backoff::Error::permanent(e),

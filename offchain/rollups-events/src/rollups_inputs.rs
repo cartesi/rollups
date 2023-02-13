@@ -47,7 +47,7 @@ pub enum RollupsData {
 }
 
 /// Input that advances the Cartesi Rollups epoch
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct RollupsAdvanceStateInput {
     /// Information sent via the input metadata memory range
     pub metadata: InputMetadata,

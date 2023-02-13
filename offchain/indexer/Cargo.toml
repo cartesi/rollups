@@ -7,6 +7,7 @@ edition = "2021"
 [[bin]]
 name = "indexer"
 path = "src/main.rs"
+test = false
 
 [dependencies]
 http-health-check = { path = "../http-health-check" }
@@ -19,3 +20,12 @@ snafu = "0.7"
 tokio = { version = "1.21", features = ["macros", "time", "rt-multi-thread"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+test-fixtures = { path = "../test-fixtures" }
+
+backoff = "0.4"
+env_logger = "0.9"
+rand = "0.8"
+testcontainers = "0.14"
+test-log = { version = "0.2", features = ["trace"] }

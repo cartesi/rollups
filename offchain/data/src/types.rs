@@ -57,7 +57,7 @@ pub struct Report {
     pub payload: Vec<u8>,
 }
 
-#[derive(Debug, PartialEq, Eq, FromSqlRow, AsExpression)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, FromSqlRow, AsExpression)]
 #[diesel(sql_type = SQLOutputEnum)]
 pub enum OutputEnum {
     Voucher,

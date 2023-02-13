@@ -2726,12 +2726,18 @@ checksum = "ce23b50ad8242c51a442f3ff322d56b02f08852c77e4c0b4d3fd684abc89c683"
 name = "indexer"
 version = "0.9.0"
 dependencies = [
+ "backoff",
  "chrono",
  "clap 4.1.6",
+ "env_logger",
  "http-health-check",
+ "rand 0.8.5",
  "rollups-data",
  "rollups-events",
  "snafu 0.7.4",
+ "test-fixtures",
+ "test-log",
+ "testcontainers",
  "tokio",
  "tracing",
  "tracing-subscriber",
