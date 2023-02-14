@@ -22,17 +22,19 @@ library OutputEncoding {
     function encodeNotice(
         bytes calldata notice
     ) internal pure returns (bytes memory) {
-        return abi.encode(notice);
+        return abi.encodePacked(notice);
     }
 
     /// @notice Encode a voucher.
     /// @param destination The address that will receive the payload through a message call
+    /// @param value The amount of Wei to be passed along the call
     /// @param payload The payload, which—in the case of Solidity contracts—encodes a function call
     /// @return The encoded output
     function encodeVoucher(
         address destination,
+        uint256 value,
         bytes calldata payload
     ) internal pure returns (bytes memory) {
-        return abi.encode(destination, payload);
+        return abi.encodePacked(destination, value, payload);
     }
 }

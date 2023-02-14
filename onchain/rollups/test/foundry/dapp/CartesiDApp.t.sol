@@ -128,11 +128,22 @@ contract CartesiDAppTest is TestBase {
         address destination,
         bytes memory payload
     ) internal view {
-        logInput(number, destination, payload);
+        logVoucher(number, destination, 0, payload);
+    }
+
+    function logVoucher(
+        uint256 number,
+        address destination,
+        uint256 value,
+        bytes memory payload
+    ) internal view {
+        bytes memory output = abi.encodePacked(destination, value, payload);
+        logInput(number, noticeSender, output);
     }
 
     function logNotice(uint256 number, bytes memory notice) internal view {
-        logInput(number, noticeSender, notice);
+        bytes memory output = abi.encodePacked(notice);
+        logInput(number, noticeSender, output);
     }
 
     // test notices

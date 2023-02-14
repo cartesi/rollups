@@ -54,7 +54,8 @@ function setupNoticeProof(positionIndex: number): OutputValidityProof {
         inputIndex: Number(v.inputIndex),
         outputIndex: Number(v.outputIndex),
         outputHashesRootHash: v.outputHashesRootHash.data,
-        vouchersEpochRootHash: v.vouchersEpochRootHash.data,
+        // vouchersEpochRootHash: v.vouchersEpochRootHash.data,
+        vouchersEpochRootHash: v.noticesEpochRootHash.data,
         noticesEpochRootHash: v.noticesEpochRootHash.data,
         machineStateHash: v.machineStateHash.data,
         keccakInHashesSiblings: keccakInHashesSiblings,
@@ -143,7 +144,8 @@ for (let i = 0; i < pairs; i++) {
     let libraryName = `LibOutputProof${i}`;
     let solidityCode = buildSolCodes(
         noticeProofs[i],
-        voucherProofs[i],
+        // voucherProofs[i],
+        noticeProofs[i],
         libraryName
     );
     let fileName = `${__dirname}/${libraryName}.sol`;

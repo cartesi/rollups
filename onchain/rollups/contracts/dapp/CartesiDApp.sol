@@ -102,9 +102,10 @@ contract CartesiDApp is
 
     function executeVoucher(
         address _destination,
+        uint256 _value,
         bytes calldata _payload,
         Proof calldata _proof
-    ) external override nonReentrant returns (bool) {
+    ) public override nonReentrant returns (bool) {
         bytes32 epochHash;
         uint256 firstInputIndex;
         uint256 lastInputIndex;
@@ -121,7 +122,12 @@ contract CartesiDApp is
         );
 
         // reverts if proof isn't valid
-        _proof.validity.validateVoucher(_destination, _payload, epochHash);
+        _proof.validity.validateVoucher(
+            _destination,
+            _value,
+            _payload,
+            epochHash
+        );
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _proof.validity.outputIndex,
@@ -135,7 +141,7 @@ contract CartesiDApp is
         );
 
         // execute voucher
-        (bool succ, ) = _destination.call(_payload);
+        (bool succ, ) = _destination.call{value: _value}(_payload);
 
         // if properly executed, mark it as executed and emit event
         if (succ) {
@@ -144,6 +150,14 @@ contract CartesiDApp is
         }
 
         return succ;
+    }
+
+    function executeVoucher(
+        address _destination,
+        bytes calldata _payload,
+        Proof calldata _proof
+    ) external override returns (bool) {
+        return executeVoucher(_destination, 0, _payload, _proof);
     }
 
     function wasVoucherExecuted(

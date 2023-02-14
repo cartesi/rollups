@@ -41,7 +41,7 @@ library LibOutputValidation {
 
     /// @notice Make sure the output proof is valid, otherwise revert.
     /// @param v The output validity proof
-    /// @param encodedOutput The encoded output
+    /// @param output The output
     /// @param epochHash The hash of the epoch in which the output was generated
     /// @param outputsEpochRootHash Either `v.vouchersEpochRootHash` (for vouchers)
     ///                             or `v.noticesEpochRootHash` (for notices)
@@ -49,9 +49,9 @@ library LibOutputValidation {
     ///                            or `EPOCH_NOTICE_LOG2_SIZE` (for notices)
     /// @param outputHashesLog2Size Either `VOUCHER_METADATA_LOG2_SIZE` (for vouchers)
     ///                             or `NOTICE_METADATA_LOG2_SIZE` (for notices)
-    function validateEncodedOutput(
+    function validateOutput(
         OutputValidityProof calldata v,
-        bytes memory encodedOutput,
+        bytes memory output,
         bytes32 epochHash,
         bytes32 outputsEpochRootHash,
         uint256 outputEpochLog2Size,
@@ -102,7 +102,7 @@ library LibOutputValidation {
         // is contained in it. We can't simply use hashOfOutput because the
         // log2size of the leaf is three (8 bytes) not  five (32 bytes)
         bytes32 merkleRootOfHashOfOutput = MerkleV2.getMerkleRootFromBytes(
-            abi.encodePacked(keccak256(encodedOutput)),
+            abi.encodePacked(keccak256(abi.encode(output))),
             CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize()
         );
 
@@ -126,21 +126,24 @@ library LibOutputValidation {
     /// @notice Make sure the output proof is valid, otherwise revert.
     /// @param v The output validity proof
     /// @param destination The address that will receive the payload through a message call
+    /// @param value The amount of Wei to be passed along the call
     /// @param payload The payload, which—in the case of Solidity contracts—encodes a function call
     /// @param epochHash The hash of the epoch in which the output was generated
     function validateVoucher(
         OutputValidityProof calldata v,
         address destination,
+        uint256 value,
         bytes calldata payload,
         bytes32 epochHash
     ) internal pure {
-        bytes memory encodedVoucher = OutputEncoding.encodeVoucher(
+        bytes memory output = OutputEncoding.encodeVoucher(
             destination,
+            value,
             payload
         );
-        validateEncodedOutput(
+        validateOutput(
             v,
-            encodedVoucher,
+            output,
             epochHash,
             v.vouchersEpochRootHash,
             CanonicalMachine.EPOCH_VOUCHER_LOG2_SIZE.uint64OfSize(),
@@ -157,10 +160,10 @@ library LibOutputValidation {
         bytes calldata notice,
         bytes32 epochHash
     ) internal pure {
-        bytes memory encodedNotice = OutputEncoding.encodeNotice(notice);
-        validateEncodedOutput(
+        bytes memory output = OutputEncoding.encodeNotice(notice);
+        validateOutput(
             v,
-            encodedNotice,
+            output,
             epochHash,
             v.noticesEpochRootHash,
             CanonicalMachine.EPOCH_NOTICE_LOG2_SIZE.uint64OfSize(),
