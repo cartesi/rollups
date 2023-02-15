@@ -14,12 +14,7 @@ This repository contains the on-chain and off-chain pieces that are used to depl
 
 ## Documentation
 
-Several articles were written about the code presented here:
-
-- [Cartesi Rollups - Scalable Smart Contracts Built with mainstream software stacks](https://medium.com/cartesi/scalable-smart-contracts-on-ethereum-built-with-mainstream-software-stacks-8ad6f8f17997)
-- [Rollups On-Chain - Tackling Social Scalability](https://medium.com/cartesi/rollups-on-chain-d749744a9cb3)
-- [State Fold](https://medium.com/cartesi/state-fold-cfe5f4d79639)
-- [Transaction Manager](https://medium.com/cartesi/cartesi-rollups-rollout-transaction-manager-4a49af15d6b9)
+Check the [official Cartesi Rollups documentation website](https://docs.cartesi.io/cartesi-rollups/overview/).
 
 ## On-chain Rollups
 
