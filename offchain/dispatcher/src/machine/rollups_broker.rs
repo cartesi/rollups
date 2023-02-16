@@ -125,7 +125,7 @@ impl BrokerFacade {
     async fn claim(&self, id: &String) -> Result<Option<Event<RollupsClaim>>> {
         let mut broker = self.broker.lock().await;
         let event = broker
-            .consume_nonblock(&self.claims_stream, id)
+            .consume_nonblocking(&self.claims_stream, id)
             .await
             .context(ConsumeClaimSnafu)?;
 

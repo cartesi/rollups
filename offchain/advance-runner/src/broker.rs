@@ -81,7 +81,7 @@ impl BrokerFacade {
         loop {
             let event = self
                 .client
-                .consume_nonblock(&self.inputs_stream, &last_id)
+                .consume_nonblocking(&self.inputs_stream, &last_id)
                 .await
                 .context(ConsumeSnafu)?
                 .ok_or(BrokerFacadeError::FindFinishEpochInputError {
@@ -113,7 +113,7 @@ impl BrokerFacade {
         loop {
             let result = self
                 .client
-                .consume_block(&self.inputs_stream, &last_id)
+                .consume_blocking(&self.inputs_stream, &last_id)
                 .await;
             if matches!(result, Err(BrokerError::ConsumeTimeout)) {
                 tracing::trace!("consume timed out, retrying");

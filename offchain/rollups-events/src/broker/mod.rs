@@ -126,7 +126,7 @@ impl Broker {
     /// This function blocks until a new event is available.
     /// To consume the first event in the stream, last_consumed_id should be INITIAL_ID.
     #[tracing::instrument(level = "trace", skip_all)]
-    pub async fn consume_block<S: BrokerStream>(
+    pub async fn consume_blocking<S: BrokerStream>(
         &mut self,
         stream: &S,
         last_consumed_id: &str,
@@ -165,7 +165,7 @@ impl Broker {
     /// This function returns None if there are no more remaining events.
     /// To consume the first event in the stream, last_consumed_id should be INITIAL_ID.
     #[tracing::instrument(level = "trace", skip_all)]
-    pub async fn consume_nonblock<S: BrokerStream>(
+    pub async fn consume_nonblocking<S: BrokerStream>(
         &mut self,
         stream: &S,
         last_consumed_id: &str,
