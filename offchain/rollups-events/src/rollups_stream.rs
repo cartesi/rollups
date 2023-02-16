@@ -19,7 +19,7 @@ use std::{fs::File, io::BufReader};
 #[derive(Debug, Clone)]
 pub struct DAppMetadata {
     pub chain_id: u64,
-    pub dapp_id: Address,
+    pub dapp_address: Address,
 }
 
 /// CLI configuration used to generate the DApp metadata
@@ -66,13 +66,13 @@ impl From<DAppMetadataCLIConfig> for DAppMetadata {
 
         DAppMetadata {
             chain_id: cli_config.chain_id,
-            dapp_id: dapp_contract_address.into(),
+            dapp_address: dapp_contract_address.into(),
         }
     }
 }
 
 /// Declares a struct that implements the BrokerStream interface
-/// The generated key has the format `chain-<chain_id>:dapp-<dapp_id>:<key>`
+/// The generated key has the format `chain-<chain_id>:dapp-<dapp_address>:<key>`
 macro_rules! decl_broker_stream {
     ($stream: ident, $payload: ty, $key: literal) => {
         #[derive(Debug)]
@@ -94,7 +94,7 @@ macro_rules! decl_broker_stream {
                     key: format!(
                         "chain-{}:dapp-{}:{}",
                         metadata.chain_id,
-                        hex::encode(metadata.dapp_id.inner()),
+                        hex::encode(metadata.dapp_address.inner()),
                         $key
                     ),
                 }
@@ -120,7 +120,7 @@ mod tests {
     fn it_generates_the_key() {
         let metadata = DAppMetadata {
             chain_id: 123,
-            dapp_id: Address::new([0xfa; ADDRESS_SIZE]),
+            dapp_address: Address::new([0xfa; ADDRESS_SIZE]),
         };
         let stream = MockStream::new(&metadata);
         assert_eq!(stream.key, "chain-123:dapp-fafafafafafafafafafafafafafafafafafafafa:rollups-mock");

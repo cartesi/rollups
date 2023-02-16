@@ -23,7 +23,7 @@ use testcontainers::{
 
 pub const CONSUME_TIMEOUT: usize = 10;
 pub const CHAIN_ID: u64 = 99;
-pub const DAPP_ID: Address = Address::new([0xfa; 20]);
+pub const DAPP_ADDRESS: Address = Address::new([0xfa; 20]);
 
 pub struct TestState<'d> {
     _node: Container<'d, GenericImage>,
@@ -166,7 +166,7 @@ async fn it_consumes_inputs_before_outputs() {
 fn dapp_metadata() -> DAppMetadata {
     DAppMetadata {
         chain_id: CHAIN_ID,
-        dapp_id: DAPP_ID.to_owned(),
+        dapp_address: DAPP_ADDRESS.to_owned(),
     }
 }
 

@@ -22,7 +22,7 @@ use testcontainers::{
 use tokio::sync::Mutex;
 
 const CHAIN_ID: u64 = 0;
-const DAPP_ID: Address = Address::new([0xfa; ADDRESS_SIZE]);
+const DAPP_ADDRESS: Address = Address::new([0xfa; ADDRESS_SIZE]);
 const CONSUME_TIMEOUT: usize = 10_000; // ms
 
 pub struct BrokerFixture<'d> {
@@ -32,7 +32,7 @@ pub struct BrokerFixture<'d> {
     claims_stream: RollupsClaimsStream,
     redis_endpoint: String,
     chain_id: u64,
-    dapp_id: Address,
+    dapp_address: Address,
 }
 
 impl BrokerFixture<'_> {
@@ -48,11 +48,11 @@ impl BrokerFixture<'_> {
         let port = node.get_host_port_ipv4(6379);
         let redis_endpoint = format!("redis://127.0.0.1:{}", port);
         let chain_id = CHAIN_ID;
-        let dapp_id = DAPP_ID;
+        let dapp_address = DAPP_ADDRESS;
         let backoff = ExponentialBackoff::default();
         let metadata = DAppMetadata {
             chain_id,
-            dapp_id: dapp_id.clone(),
+            dapp_address: dapp_address.clone(),
         };
         let inputs_stream = RollupsInputsStream::new(&metadata);
         let claims_stream = RollupsClaimsStream::new(&metadata);
@@ -78,7 +78,7 @@ impl BrokerFixture<'_> {
             claims_stream,
             redis_endpoint,
             chain_id,
-            dapp_id,
+            dapp_address,
         }
     }
 
@@ -90,8 +90,8 @@ impl BrokerFixture<'_> {
         self.chain_id
     }
 
-    pub fn dapp_id(&self) -> &Address {
-        &self.dapp_id
+    pub fn dapp_address(&self) -> &Address {
+        &self.dapp_address
     }
 
     /// Obtain the latest event from the rollups inputs stream

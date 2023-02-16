@@ -41,7 +41,7 @@ impl TestState<'_> {
             server_manager.session_id().to_owned(),
             broker.redis_endpoint().to_owned(),
             broker.chain_id(),
-            broker.dapp_id().to_owned(),
+            broker.dapp_address().to_owned(),
             snapshots.path(),
         )
         .await;

@@ -35,7 +35,7 @@ impl AdvanceRunnerFixture {
         session_id: String,
         redis_endpoint: String,
         chain_id: u64,
-        dapp_id: Address,
+        dapp_address: Address,
         snapshot_dir: &Path,
     ) -> Self {
         let runtime_config = MachineRuntimeConfig {
@@ -72,7 +72,10 @@ impl AdvanceRunnerFixture {
             cycles_config,
         };
 
-        let dapp_metadata = DAppMetadata { chain_id, dapp_id };
+        let dapp_metadata = DAppMetadata {
+            chain_id,
+            dapp_address,
+        };
 
         let broker_config = BrokerConfig {
             redis_endpoint,

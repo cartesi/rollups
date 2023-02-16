@@ -190,7 +190,7 @@ mod tests {
             let backoff = ExponentialBackoff::default();
             let dapp_metadata = DAppMetadata {
                 chain_id: broker.chain_id(),
-                dapp_id: broker.dapp_id().to_owned(),
+                dapp_address: broker.dapp_address().to_owned(),
             };
             let config = BrokerConfig {
                 redis_endpoint: broker.redis_endpoint().to_owned(),

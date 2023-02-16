@@ -82,7 +82,7 @@ impl BrokerFacade {
 
         let dapp_metadata = rollups_events::DAppMetadata {
             chain_id: config.chain_id,
-            dapp_id: config.dapp_contract_address.into(),
+            dapp_address: config.dapp_contract_address.into(),
         };
 
         let inputs_stream = RollupsInputsStream::new(&dapp_metadata);
