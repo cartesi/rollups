@@ -687,9 +687,9 @@ dependencies = [
 
 [[package]]
 name = "block-history"
-version = "0.6.0"
+version = "0.6.2"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "17eb508b551bd2be06688e52624d257808e083a82929bf159c2e79a556acc19e"
+checksum = "76a7d2165158068af8f51a949fe8561dc247890bc3f2e7a5e8e2f8d721d1e664"
 dependencies = [
  "async-stream",
  "snafu 0.7.4",
@@ -4780,9 +4780,9 @@ dependencies = [
 
 [[package]]
 name = "state-client-lib"
-version = "0.6.0"
+version = "0.6.2"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "40137e32eca283a1997d210fdb00fa39b945fd40a9035963904181b430121a92"
+checksum = "0e53e71d3ea66b56f3d1884e5eb2661aab3b65fc669dfc73858160f9a060137a"
 dependencies = [
  "async-trait",
  "serde",
@@ -4798,9 +4798,9 @@ dependencies = [
 
 [[package]]
 name = "state-fold"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "c85edf8574dd72d74c5a5fc2a212ca0caec840d10daee6cd993fb339cca97357"
+checksum = "f7535545ccf51f139aef0bac96e7db7de579bd70c248de6022ec9a4230718a08"
 dependencies = [
  "async-recursion",
  "async-trait",
@@ -4814,9 +4814,9 @@ dependencies = [
 
 [[package]]
 name = "state-fold-types"
-version = "0.6.0"
+version = "0.6.2"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "6a1f38f8f8854b504ccaa49adf2deebc86ee763a6f79bb42220eed02c55a2c76"
+checksum = "36b6d302f85ea7f8c5f696975af2b5a6ff5ae79e04285411e9021a4a381303f7"
 dependencies = [
  "anyhow",
  "ethabi",
@@ -4850,9 +4850,9 @@ dependencies = [
 
 [[package]]
 name = "state-server-common"
-version = "0.6.0"
+version = "0.6.2"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "2ba6db745b4e88d22c08ddb198b87886691884463badb0eabcd5f443f59f4cd7"
+checksum = "34c749d06c2dccd7808fdf59c9f20660fe441d4b64115087823df0473fc9ec8d"
 dependencies = [
  "anyhow",
  "prost 0.11.6",
@@ -4866,9 +4866,9 @@ dependencies = [
 
 [[package]]
 name = "state-server-lib"
-version = "0.6.0"
+version = "0.6.2"
 source = "registry+https://github.com/cartesi/crates-index"
-checksum = "10d3148ba3679a2a239523fcfcf9962cb17cd63d632956f84e33aa39f353e1de"
+checksum = "efa8dc35274a9fde4a9272ac20a94c4e08b44d4f02a1ac6038058ab2adec69d2"
 dependencies = [
  "block-history",
  "futures 0.3.26",
