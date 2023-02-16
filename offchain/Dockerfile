@@ -1,6 +1,6 @@
 # syntax=docker.io/docker/dockerfile:1.4
 # deps install
-FROM rust:1.63.0-bullseye AS chef
+FROM rust:1.67.0-bullseye AS chef
 
 ENV CARGO_REGISTRIES_CARTESI_INDEX=https://github.com/cartesi/crates-index
 RUN rustup component add rustfmt
@@ -61,7 +61,7 @@ COPY --from=grpc_health_probe /go/bin/grpc-health-probe /usr/local/bin
 COPY --from=state_server_build /usr/src/app/offchain/target/release/rollups_state_server /usr/local/bin
 ENTRYPOINT ["rollups_state_server"]
 
-FROM rust:1.63.0-bullseye AS indexer
+FROM rust:1.67.0-bullseye AS indexer
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
@@ -96,7 +96,7 @@ FROM debian:bullseye-slim AS inspect_server
 COPY --from=inspect_server_build /usr/src/app/offchain/target/release/inspect-server /usr/local/bin
 ENTRYPOINT ["inspect-server"]
 
-FROM rust:1.63.0-bullseye AS reader
+FROM rust:1.67.0-bullseye AS reader
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
