@@ -20,8 +20,12 @@ pub const POSTGRES_HOST: &'static str = "localhost";
 
 pub struct DataFixture<'d> {
     _node: Container<'d, Postgres>,
-    port: u16,
-    endpoint: String,
+    pub user: String,
+    pub password: String,
+    pub hostname: String,
+    pub port: u16,
+    pub db: String,
+    pub endpoint: String,
 }
 
 impl DataFixture<'_> {
@@ -50,7 +54,11 @@ impl DataFixture<'_> {
 
         DataFixture {
             _node: node,
-            port,
+            user: POSTGRES_USER.to_string(),
+            password: POSTGRES_PASSWORD.to_string(),
+            hostname: POSTGRES_HOST.to_string(),
+            port: port,
+            db: POSTGRES_DB.to_string(),
             endpoint: pg_endpoint,
         }
     }

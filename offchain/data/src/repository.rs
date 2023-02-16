@@ -28,7 +28,7 @@ use super::types::{
 
 pub const POOL_CONNECTION_SIZE: u32 = 3;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Repository {
     // Connection is not thread safe to share between threads, we use connection pool
     db_pool: Arc<Pool<ConnectionManager<PgConnection>>>,

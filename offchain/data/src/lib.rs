@@ -21,7 +21,7 @@ mod types;
 pub use config::{Redacted, RepositoryCLIConfig, RepositoryConfig};
 pub use error::Error;
 pub use migrations::{run_migrations, MigrationError};
-pub use pagination::{Connection, Edge, PageInfo};
+pub use pagination::{Connection, Cursor, Edge, PageInfo};
 pub use repository::Repository;
 pub use types::{
     Input, InputQueryFilter, Notice, NoticeQueryFilter, OutputEnum, Proof,

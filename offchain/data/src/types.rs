@@ -13,7 +13,7 @@
 use diesel::deserialize::{self, FromSql, FromSqlRow};
 use diesel::pg::{Pg, PgValue};
 use diesel::serialize::{self, IsNull, Output, ToSql};
-use diesel::{AsExpression, Insertable, Queryable};
+use diesel::{AsExpression, Insertable, Queryable, QueryableByName};
 use std::io::Write;
 
 use super::schema::{
@@ -21,7 +21,7 @@ use super::schema::{
     vouchers,
 };
 
-#[derive(Debug, Insertable, Queryable)]
+#[derive(Clone, Debug, Insertable, PartialEq, Queryable, QueryableByName)]
 #[diesel(table_name = inputs)]
 pub struct Input {
     pub index: i32,
@@ -32,7 +32,7 @@ pub struct Input {
     pub payload: Vec<u8>,
 }
 
-#[derive(Debug, Insertable, Queryable)]
+#[derive(Clone, Debug, Insertable, PartialEq, Queryable, QueryableByName)]
 #[diesel(table_name = notices)]
 pub struct Notice {
     pub input_index: i32,
@@ -40,7 +40,7 @@ pub struct Notice {
     pub payload: Vec<u8>,
 }
 
-#[derive(Debug, Insertable, Queryable)]
+#[derive(Clone, Debug, Insertable, PartialEq, Queryable, QueryableByName)]
 #[diesel(table_name = vouchers)]
 pub struct Voucher {
     pub input_index: i32,
@@ -49,7 +49,7 @@ pub struct Voucher {
     pub payload: Vec<u8>,
 }
 
-#[derive(Debug, Insertable, Queryable)]
+#[derive(Clone, Debug, Insertable, PartialEq, Queryable, QueryableByName)]
 #[diesel(table_name = reports)]
 pub struct Report {
     pub input_index: i32,
@@ -88,7 +88,7 @@ impl diesel::query_builder::QueryId for SQLOutputEnum {
     type QueryId = SQLOutputEnum;
 }
 
-#[derive(Debug, Insertable, Queryable)]
+#[derive(Clone, Debug, Insertable, PartialEq, Queryable, QueryableByName)]
 #[diesel(table_name = proofs)]
 pub struct Proof {
     pub input_index: i32,

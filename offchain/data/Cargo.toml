@@ -23,3 +23,4 @@ env_logger = "0.9"
 testcontainers = "0.14"
 test-log = { version = "0.2", features = ["trace"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+test-fixtures = { path = "../test-fixtures" }
