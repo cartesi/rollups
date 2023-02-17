@@ -489,7 +489,11 @@ dependencies = [
  "pin-project-lite",
  "rustversion",
  "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "serde_urlencoded",
  "sync_wrapper",
+ "tokio",
  "tower",
  "tower-http",
  "tower-layer",
@@ -2526,9 +2530,10 @@ dependencies = [
 name = "http-health-check"
 version = "0.9.0"
 dependencies = [
- "anyhow",
- "axum 0.5.17",
+ "axum 0.6.6",
  "clap 4.1.6",
+ "hyper",
+ "snafu 0.7.4",
  "tracing",
 ]
 
@@ -4391,6 +4396,15 @@ dependencies = [
  "indexmap",
  "itoa",
  "ryu",
+ "serde",
+]
+
+[[package]]
+name = "serde_path_to_error"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26b04f22b563c91331a10074bda3dd5492e3cc39d56bd557e91c0af42b6c7341"
+dependencies = [
  "serde",
 ]
 

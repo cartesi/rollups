@@ -10,10 +10,19 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use anyhow::{Context, Result};
 use axum::{routing::get, Router};
 use clap::Parser;
+use snafu::{ResultExt, Snafu};
 use std::net::SocketAddr;
+
+#[derive(Debug, Snafu)]
+pub enum HealthCheckError {
+    #[snafu(display("could not parse host address"))]
+    ParseAddressError { source: std::net::AddrParseError },
+
+    #[snafu(display("http health-check server error"))]
+    HttpServerError { source: hyper::Error },
+}
 
 #[derive(Debug, Clone, Parser)]
 #[command(name = "http-health-check")]
@@ -28,18 +37,18 @@ pub struct HealthCheckConfig {
 }
 
 #[tracing::instrument(level = "trace", skip_all)]
-pub async fn start(config: HealthCheckConfig) -> Result<()> {
+pub async fn start(config: HealthCheckConfig) -> Result<(), HealthCheckError> {
     tracing::trace!(?config, "starting health-check server");
 
     let ip = config
         .health_check_address
         .parse()
-        .context("could not parse host address")?;
+        .context(ParseAddressSnafu)?;
     let addr = SocketAddr::new(ip, config.health_check_port);
     let app = Router::new().route("/healthz", get(|| async { "" }));
     let server = axum::Server::bind(&addr).serve(app.into_make_service());
 
     tracing::trace!(address = ?server.local_addr(), "http healthcheck address bound");
 
-    server.await.context("failed to start health-check server")
+    server.await.context(HttpServerSnafu)
 }
