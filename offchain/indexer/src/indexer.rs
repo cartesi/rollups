@@ -15,27 +15,13 @@ use rollups_events::indexer::{IndexerEvent, IndexerState};
 use rollups_events::{
     Broker, BrokerError, RollupsData, RollupsInput, RollupsOutput,
 };
-use snafu::{ResultExt, Snafu};
+use snafu::ResultExt;
 
 use crate::conversions::*;
+use crate::error::{
+    BrokerSnafu, IndexerError, JoinSnafu, MigrationsSnafu, RepositorySnafu,
+};
 use crate::IndexerConfig;
-
-#[derive(Debug, Snafu)]
-pub enum IndexerError {
-    #[snafu(display("broker error"))]
-    BrokerError { source: rollups_events::BrokerError },
-
-    #[snafu(display("migrations error"))]
-    MigrationsError {
-        source: rollups_data::MigrationError,
-    },
-
-    #[snafu(display("repository error"))]
-    RepositoryError { source: rollups_data::Error },
-
-    #[snafu(display("join error"))]
-    JoinError { source: tokio::task::JoinError },
-}
 
 pub struct Indexer {
     repository: Repository,

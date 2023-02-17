@@ -10,16 +10,18 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use anyhow::{Context, Result};
+use snafu::ResultExt;
 
 pub use config::{CLIConfig, Config, IndexerConfig};
+pub use error::IndexerError;
 
 mod config;
 mod conversions;
+mod error;
 mod indexer;
 
 #[tracing::instrument(level = "trace", skip_all)]
-pub async fn run(config: Config) -> Result<()> {
+pub async fn run(config: Config) -> Result<(), IndexerError> {
     tracing::info!(?config, "starting indexer");
 
     let health_handle = http_health_check::start(config.health_check_config);
@@ -27,10 +29,10 @@ pub async fn run(config: Config) -> Result<()> {
 
     tokio::select! {
         ret = health_handle => {
-            ret.context("health-check stopped")
+            ret.context(error::HealthCheckSnafu)
         }
         ret = indexer_handle => {
-            ret.context("indexer stopped")
+            ret
         }
     }
 }
