@@ -18,6 +18,12 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 library InputEncoding {
+    /// @notice ERC-1155 token deposit
+    bytes1 constant ERC1155_SINGLE_DEPOSIT = bytes1(0x04);
+
+    /// @notice ERC-1155 batch token deposit
+    bytes1 constant ERC1155_BATCH_DEPOSIT = bytes1(0x05);
+
     /// @notice Encode Ether deposit
     /// @param sender The Ether sender
     /// @param value The amount of Ether being sent in Wei
@@ -97,16 +103,16 @@ library InputEncoding {
             );
     }
 
-    /// @notice Encode a ERC-1155 batch token deposit
+    /// @notice Encode an ERC-1155 single token deposit
     /// @param token The ERC-1155 token contract
     /// @param sender The address of the DApp
-    /// @param tokenId The identifiers of the tokens being transferred
-    /// @param value Transfer amounts per token type (order and length must match _ids array)
-    /// @param L1data Additional data with no specified format, MUST be sent unaltered in call to the `ERC1155TokenReceiver` hook(s) on `_to`
+    /// @param tokenId The identifier of the token being transferred
+    /// @param value Transfer amounts per token type
+    /// @param L1data Additional data to be interpreted by L1
     /// @param L2data Additional data to be interpreted by L2
     /// @return The encoded input
     /// @dev L1data should be forwarded to the ERC-1155 token contract
-    function encodeERC1155Deposit(
+    function encodeSingleERC1155Deposit(
         IERC1155 token,
         address sender,
         uint256 tokenId,
@@ -117,24 +123,25 @@ library InputEncoding {
         bytes memory L1L2data = abi.encode(L1data, L2data);
         return
             abi.encodePacked(
-                token, //          20B
-                sender, //         20B
-                tokenId, //        32B
-                value, //          32B
-                L1L2data //        arbitrary size
+                ERC1155_SINGLE_DEPOSIT, //  1B
+                token, //                   20B
+                sender, //                  20B
+                tokenId, //                 32B
+                value, //                   32B
+                L1L2data //                 arbitrary size
             );
     }
 
-    /// @notice Encode a ERC-1155 batch token deposit
-    /// @param token The ERC-1155 token contract
+    /// @notice Encode an ERC-1155 batch token deposit
+    /// @param token The ERC-1155 token contract, it has to implement the 'onERC1155Received' function
     /// @param sender The address of the DApp
     /// @param tokenIds The identifiers of the tokens being transferred
-    /// @param values Transfer amounts per token type (order and length must match _ids array)
-    /// @param L1data Additional data with no specified format, MUST be sent unaltered in call to the `ERC1155TokenReceiver` hook(s) on `_to`
+    /// @param values Transfer amounts per token type (order and length must match tokenIds array)
+    /// @param L1data Additional data to be interpreted by L1
     /// @param L2data Additional data to be interpreted by L2
     /// @return The encoded input
     /// @dev L1data should be forwarded to the ERC-1155 token contract
-    function encodeBatchERC1155Token(
+    function encodeBatchERC1155Deposit(
         IERC1155 token,
         address sender,
         uint256[] calldata tokenIds,
@@ -142,14 +149,13 @@ library InputEncoding {
         bytes calldata L1data,
         bytes calldata L2data
     ) internal pure returns (bytes memory) {
-        bytes memory L1L2data = abi.encode(L1data, L2data);
+        bytes memory data = abi.encode(tokenIds, values, L1data, L2data);
         return
             abi.encodePacked(
-                token, //          20B
-                sender, //         20B
-                tokenIds, //       arbitrary size
-                values, //        arbitrary size
-                L1L2data //        arbitrary size
+                ERC1155_BATCH_DEPOSIT, //   1B
+                token, //                   20B
+                sender, //                  20B
+                data //                     arbitrary size
             );
     }
 }

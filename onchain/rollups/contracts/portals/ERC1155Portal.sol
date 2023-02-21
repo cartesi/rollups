@@ -14,7 +14,6 @@
 pragma solidity ^0.8.13;
 
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-
 import {IERC1155Portal} from "./IERC1155Portal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
@@ -30,7 +29,7 @@ contract ERC1155Portal is IERC1155Portal {
         return inputBox;
     }
 
-    function depositERC1155Token(
+    function depositSingleERC1155Token(
         IERC1155 _token,
         address _dapp,
         uint256 _tokenId,
@@ -40,7 +39,7 @@ contract ERC1155Portal is IERC1155Portal {
     ) external override {
         _token.safeTransferFrom(msg.sender, _dapp, _tokenId, _value, _L1data);
 
-        bytes memory input = InputEncoding.encodeERC1155Deposit(
+        bytes memory input = InputEncoding.encodeSingleERC1155Deposit(
             _token,
             msg.sender,
             _tokenId,
@@ -68,7 +67,7 @@ contract ERC1155Portal is IERC1155Portal {
             _L1data
         );
 
-        bytes memory input = InputEncoding.encodeBatchERC1155Token(
+        bytes memory input = InputEncoding.encodeBatchERC1155Deposit(
             _token,
             msg.sender,
             _tokenIds,
