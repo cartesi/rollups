@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Voucher bitmask position is now determined by the input index (in the input box) and output index
 - Validators need now to specify the range of inputs of each claim they submit on-chain
 - Refactor GraphQL API for simplified architecture
+- Bumped grpc-interfaces to 0.11.0
 
 ### Removed
 
