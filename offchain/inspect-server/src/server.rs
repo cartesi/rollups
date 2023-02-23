@@ -75,28 +75,18 @@ pub struct HttpInspectResponse {
     pub status: String,
     pub exception_payload: Option<String>,
     pub reports: Vec<HttpReport>,
-    pub metadata: HttpInspectMetadata,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct HttpInspectMetadata {
-    pub active_epoch_index: u64,
-    pub current_input_index: u64,
+    pub processed_input_count: u64,
 }
 
 impl From<InspectStateResponse> for HttpInspectResponse {
     fn from(response: InspectStateResponse) -> HttpInspectResponse {
         let reports =
             response.reports.into_iter().map(HttpReport::from).collect();
-        let metadata = HttpInspectMetadata {
-            active_epoch_index: response.active_epoch_index,
-            current_input_index: response.current_input_index,
-        };
         HttpInspectResponse {
             status: convert_status(response.status),
             exception_payload: response.exception_data.map(hex_encode),
             reports,
-            metadata,
+            processed_input_count: response.processed_input_count,
         }
     }
 }

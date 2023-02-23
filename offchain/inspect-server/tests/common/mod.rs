@@ -22,10 +22,11 @@ use tonic::{transport::Server, Request, Response, Status};
 use inspect_server::grpc::cartesi_machine::Void;
 use inspect_server::grpc::server_manager::{
     server_manager_server::{ServerManager, ServerManagerServer},
-    AdvanceStateRequest, EndSessionRequest, FinishEpochRequest,
-    GetEpochStatusRequest, GetEpochStatusResponse, GetSessionStatusRequest,
-    GetSessionStatusResponse, GetStatusResponse, InspectStateRequest,
-    InspectStateResponse, StartSessionRequest, StartSessionResponse,
+    AdvanceStateRequest, DeleteEpochRequest, EndSessionRequest,
+    FinishEpochRequest, FinishEpochResponse, GetEpochStatusRequest,
+    GetEpochStatusResponse, GetSessionStatusRequest, GetSessionStatusResponse,
+    GetStatusResponse, InspectStateRequest, InspectStateResponse,
+    StartSessionRequest, StartSessionResponse,
 };
 pub use inspect_server::grpc::server_manager::{CompletionStatus, Report};
 use inspect_server::grpc::versioning::GetVersionResponse;
@@ -36,7 +37,7 @@ pub const SERVER_MANAGER_ADDRESS: &'static str = "127.0.0.1:50001";
 pub const INSPECT_SERVER_ADDRESS: &'static str = "127.0.0.1:50002";
 pub const SESSION_ID: &'static str = "default session";
 pub const ACTIVE_EPOCH_INDEX: u64 = 123;
-pub const CURRENT_INPUT_INDEX: u64 = 456;
+pub const PROCESSED_INPUT_COUNT: u64 = 456;
 pub const QUEUE_SIZE: usize = 3;
 
 pub struct TestState {
@@ -183,7 +184,7 @@ impl<T: MockInspect> ServerManager for MockServerManager<T> {
         let response = InspectStateResponse {
             session_id: SESSION_ID.to_string(),
             active_epoch_index: ACTIVE_EPOCH_INDEX,
-            current_input_index: CURRENT_INPUT_INDEX,
+            processed_input_count: PROCESSED_INPUT_COUNT,
             exception_data: mock_response.exception,
             status: mock_response.completion_status as i32,
             reports: mock_response.reports,
@@ -222,7 +223,7 @@ impl<T: MockInspect> ServerManager for MockServerManager<T> {
     async fn finish_epoch(
         &self,
         _: Request<FinishEpochRequest>,
-    ) -> Result<Response<Void>, Status> {
+    ) -> Result<Response<FinishEpochResponse>, Status> {
         unimplemented!()
     }
 
@@ -244,6 +245,13 @@ impl<T: MockInspect> ServerManager for MockServerManager<T> {
         &self,
         _: Request<GetEpochStatusRequest>,
     ) -> Result<Response<GetEpochStatusResponse>, Status> {
+        unimplemented!()
+    }
+
+    async fn delete_epoch(
+        &self,
+        _: Request<DeleteEpochRequest>,
+    ) -> Result<Response<Void>, Status> {
         unimplemented!()
     }
 }

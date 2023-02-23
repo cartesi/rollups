@@ -39,8 +39,7 @@ async fn test_response(sent: MockInspectResponse, expected_status: &str) {
     for (received, sent) in response.reports.iter().zip(sent.reports) {
         assert_eq!(received.payload, hex_to_bin(&sent.payload));
     }
-    assert_eq!(response.metadata.active_epoch_index, ACTIVE_EPOCH_INDEX);
-    assert_eq!(response.metadata.current_input_index, CURRENT_INPUT_INDEX);
+    assert_eq!(response.processed_input_count, PROCESSED_INPUT_COUNT);
     state.teardown().await;
 }
 
