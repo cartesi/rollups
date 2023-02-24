@@ -135,12 +135,7 @@ impl BrokerFixture<'_> {
             None => 0,
         };
         let previous_inputs_sent_count = match last_event.as_ref() {
-            Some(event) => match event.payload.data {
-                RollupsData::AdvanceStateInput { .. } => {
-                    event.payload.inputs_sent_count
-                }
-                RollupsData::FinishEpoch {} => 0,
-            },
+            Some(event) => event.payload.inputs_sent_count,
             None => 0,
         };
         let inputs_sent_count = match data {

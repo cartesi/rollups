@@ -43,6 +43,9 @@ pub enum RunnerError<SnapError: snafu::Error + 'static> {
     #[snafu(display("failed to produce claim in broker"))]
     ProduceClaimError { source: BrokerFacadeError },
 
+    #[snafu(display("failed to produce outputs in broker"))]
+    ProduceOutputsError { source: BrokerFacadeError },
+
     #[snafu(display("failed to get storage directory"))]
     GetStorageDirectoryError { source: SnapError },
 
@@ -92,14 +95,19 @@ impl<Snap: SnapshotManager + std::fmt::Debug + 'static> Runner<Snap> {
                     runner
                         .handle_advance(
                             event.payload.epoch_index,
-                            event.payload.inputs_sent_count - 1,
+                            event.payload.inputs_sent_count,
                             input.metadata,
                             input.payload.into_inner(),
                         )
                         .await?;
                 }
-                RollupsData::FinishEpoch { .. } => {
-                    runner.handle_finish(event.payload.epoch_index).await?;
+                RollupsData::FinishEpoch {} => {
+                    runner
+                        .handle_finish(
+                            event.payload.epoch_index,
+                            event.payload.inputs_sent_count,
+                        )
+                        .await?;
                 }
             }
 
@@ -127,7 +135,11 @@ impl<Snap: SnapshotManager + std::fmt::Debug + 'static> Runner<Snap> {
         tracing::trace!(event_id, "found finish epoch input event");
 
         self.server_manager
-            .start_session(&snapshot.path, snapshot.epoch)
+            .start_session(
+                &snapshot.path,
+                snapshot.epoch,
+                snapshot.processed_input_count,
+            )
             .await
             .context(CreateSessionSnafu)?;
 
@@ -161,23 +173,31 @@ impl<Snap: SnapshotManager + std::fmt::Debug + 'static> Runner<Snap> {
     #[tracing::instrument(level = "trace", skip_all)]
     async fn handle_advance(
         &mut self,
-        active_epoch_index: u64,
-        current_input_index: u64,
+        epoch_index: u64,
+        inputs_sent_count: u64,
         input_metadata: InputMetadata,
         input_payload: Vec<u8>,
     ) -> Result<(), Snap::Error> {
         tracing::trace!("handling advance state");
 
-        self.server_manager
+        let input_index = inputs_sent_count - 1;
+        let outputs = self
+            .server_manager
             .advance_state(
-                active_epoch_index,
-                current_input_index,
+                epoch_index,
+                input_index,
                 input_metadata,
                 input_payload,
             )
             .await
             .context(AdvanceSnafu)?;
         tracing::trace!("advance state sent to server-manager");
+
+        self.broker
+            .produce_outputs(outputs)
+            .await
+            .context(ProduceOutputsSnafu)?;
+        tracing::trace!("produced outputs in broker");
 
         Ok(())
     }
@@ -186,53 +206,42 @@ impl<Snap: SnapshotManager + std::fmt::Debug + 'static> Runner<Snap> {
     async fn handle_finish(
         &mut self,
         epoch_index: u64,
+        inputs_sent_count: u64,
     ) -> Result<(), Snap::Error> {
         tracing::trace!("handling finish");
 
         // We add one to the epoch index because the snapshot is for the one after we are closing
         let snapshot = self
             .snapshot_manager
-            .get_storage_directory(epoch_index + 1)
+            .get_storage_directory(epoch_index + 1, inputs_sent_count)
             .await
             .context(GetStorageDirectorySnafu)?;
         tracing::trace!(?snapshot, "got storage directory");
 
-        self.server_manager
+        let (claim, proofs) = self
+            .server_manager
             .finish_epoch(epoch_index, &snapshot.path)
             .await
             .context(FinishEpochSnafu)?;
         tracing::trace!("finished epoch in server-manager");
+
+        self.broker
+            .produce_outputs(proofs)
+            .await
+            .context(ProduceOutputsSnafu)?;
+        tracing::trace!("produced outputs in broker");
+
+        self.broker
+            .produce_rollups_claim(epoch_index, claim)
+            .await
+            .context(ProduceClaimSnafu)?;
+        tracing::info!("produced epoch claim");
 
         self.snapshot_manager
             .set_latest(snapshot)
             .await
             .context(SetLatestSnapshotSnafu)?;
         tracing::trace!("set latest snapshot");
-
-        let claim_produced = self
-            .broker
-            .was_claim_produced(epoch_index)
-            .await
-            .context(PeekClaimSnafu)?;
-        tracing::trace!(
-            claim_produced,
-            "got whether claim was already produced"
-        );
-
-        if !claim_produced {
-            let claim = self
-                .server_manager
-                .get_epoch_claim(epoch_index)
-                .await
-                .context(GetEpochClaimSnafu)?;
-            tracing::trace!(?claim, "got epoch claim");
-
-            self.broker
-                .produce_rollups_claim(epoch_index, claim)
-                .await
-                .context(ProduceClaimSnafu)?;
-            tracing::info!("produced epoch claim");
-        }
 
         Ok(())
     }

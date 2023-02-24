@@ -17,10 +17,11 @@ pub mod disabled;
 pub mod fs_manager;
 
 /// Cartesi Machine snapshot description
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Snapshot {
     pub path: PathBuf,
     pub epoch: u64,
+    pub processed_input_count: u64,
 }
 
 #[async_trait::async_trait]
@@ -34,6 +35,7 @@ pub trait SnapshotManager {
     async fn get_storage_directory(
         &self,
         epoch: u64,
+        processed_input_count: u64,
     ) -> Result<Snapshot, Self::Error>;
 
     /// Set the most recent snapshot

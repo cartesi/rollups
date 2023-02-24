@@ -10,7 +10,9 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-FROM cartesi/server-manager:0.5.0
+FROM cartesi/server-manager:0.7.0
+
+USER root
 
 # Install system dependencies
 RUN apt update && \
@@ -18,15 +20,14 @@ RUN apt update && \
 
 # Download rootfs, linux and rom
 ENV IMAGES_PATH /opt/cartesi/share/images
-RUN wget -O ${IMAGES_PATH}/rootfs.ext2 https://github.com/cartesi/image-rootfs/releases/download/v0.15.0/rootfs-v0.15.0.ext2 && \
-    wget -O ${IMAGES_PATH}/linux.bin https://github.com/cartesi/image-kernel/releases/download/v0.14.0/linux-5.15.63-ctsi-1.bin && \
-    wget -O ${IMAGES_PATH}/rom.bin https://github.com/cartesi/machine-emulator-rom/releases/download/v0.13.0/rom-v0.13.0.bin
+RUN wget -O ${IMAGES_PATH}/rootfs.ext2 https://github.com/cartesi/image-rootfs/releases/download/v0.17.0/rootfs-v0.17.0.ext2 && \
+    wget -O ${IMAGES_PATH}/linux.bin https://github.com/cartesi/image-kernel/releases/download/v0.16.0/linux-5.15.63-ctsi-2.bin && \
+    wget -O ${IMAGES_PATH}/rom.bin https://github.com/cartesi/machine-emulator-rom/releases/download/v0.16.0/rom-v0.16.0.bin
 
 # Generate machine with echo and store it
 ENV SNAPSHOT_DIR=/opt/cartesi/share/dapp-bin
-RUN mkdir -p $SNAPSHOT_DIR
 RUN cartesi-machine \
     --ram-length=128Mi \
     --rollup \
-    --store=$SNAPSHOT_DIR/0 \
+    --store=$SNAPSHOT_DIR \
     -- "ioctl-echo-loop --vouchers=1 --notices=1 --reports=1 --verbose=1"

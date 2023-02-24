@@ -59,7 +59,7 @@ pub enum SnapshotConfigError {
 #[derive(Parser, Debug)]
 #[command(name = "snapshot")]
 pub struct SnapshotCLIConfig {
-    /// If set, disable snapshots
+    /// If set to false, disable snapshots
     #[arg(long, env, default_value_t = true)]
     snapshot_enabled: bool,
 

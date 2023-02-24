@@ -10,12 +10,14 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-FROM cartesi/server-manager:0.5.0
+FROM cartesi/server-manager:0.7.0
 
 ARG user
 ARG group
 ARG uid
 ARG gid
+
+USER root
 
 RUN if ! getent group ${gid}; then \
         groupadd -g ${gid} ${group}; \

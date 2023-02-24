@@ -15,8 +15,8 @@ use anyhow::{anyhow, Context};
 use backoff::{future::retry, ExponentialBackoff, ExponentialBackoffBuilder};
 use grpc_interfaces::cartesi_server_manager::{
     processed_input::ProcessedInputOneOf,
-    server_manager_client::ServerManagerClient, GetEpochStatusRequest,
-    GetEpochStatusResponse, GetSessionStatusRequest,
+    server_manager_client::ServerManagerClient, EpochState,
+    GetEpochStatusRequest, GetEpochStatusResponse, GetSessionStatusRequest,
 };
 use rollups_events::Payload;
 use std::path::Path;
@@ -199,5 +199,25 @@ impl ServerManagerFixture<'_> {
                 }
             }
         }
+    }
+
+    /// Wait until the given epoch is finished.
+    /// Raises error if the epoch is not finished after the backoff timeout.
+    #[tracing::instrument(level = "trace", skip_all)]
+    pub async fn assert_epoch_finished(&self, epoch_index: u64) {
+        tracing::trace!(epoch_index, "asserting epoch finished");
+        retry(self.backoff.clone(), || async {
+            let request = GetEpochStatusRequest {
+                session_id: self.session_id.clone(),
+                epoch_index,
+            };
+            let response = grpc_call!(self, get_epoch_status, request)?;
+            if response.state() == EpochState::Active {
+                Err(anyhow!("epoch {} is not finished", epoch_index))?;
+            }
+            Ok(())
+        })
+        .await
+        .expect("failed to wait for epoch status")
     }
 }

@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactor GraphQL API for simplified architecture
 - Bumped grpc-interfaces to 0.11.0
 - Changed inspect-server to use new server-manager interface
+- Changed advance-runner to use new server-manager interface
 
 ### Removed
 

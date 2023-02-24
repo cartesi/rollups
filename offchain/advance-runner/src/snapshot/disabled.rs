@@ -11,7 +11,6 @@
 // specific language governing permissions and limitations under the License.
 
 use super::{Snapshot, SnapshotManager};
-use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct SnapshotDisabled {}
@@ -27,33 +26,26 @@ impl SnapshotManager for SnapshotDisabled {
     /// Get the most recent snapshot
     #[tracing::instrument(level = "trace", skip_all)]
     async fn get_latest(&self) -> Result<Snapshot, SnapshotDisabledError> {
-        let snapshot = Snapshot {
-            path: PathBuf::from(""),
-            epoch: 0,
-        };
-        tracing::trace!(?snapshot, "snapshots disabled; returning default");
-        Ok(snapshot)
+        tracing::trace!("snapshots disabled; returning default");
+        Ok(Default::default())
     }
 
     /// Get the target storage directory for the snapshot
     #[tracing::instrument(level = "trace", skip_all)]
     async fn get_storage_directory(
         &self,
-        _epoch: u64,
+        _: u64,
+        _: u64,
     ) -> Result<Snapshot, SnapshotDisabledError> {
-        let snapshot = Snapshot {
-            path: PathBuf::from(""),
-            epoch: 0,
-        };
-        tracing::trace!(?snapshot, "snapshots disabled; returning default");
-        Ok(snapshot)
+        tracing::trace!("snapshots disabled; returning default");
+        Ok(Default::default())
     }
 
     /// Set the most recent snapshot
     #[tracing::instrument(level = "trace", skip_all)]
     async fn set_latest(
         &self,
-        _snapshot: Snapshot,
+        _: Snapshot,
     ) -> Result<(), SnapshotDisabledError> {
         tracing::trace!("snapshots disabled; ignoring");
         Ok(())

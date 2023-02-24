@@ -44,6 +44,12 @@ pub enum FSSnapshotError {
     #[snafu(display("snapshot path with invalid epoch {:?}", snapshot))]
     InvalidEpochError { snapshot: Snapshot },
 
+    #[snafu(display(
+        "snapshot path with invalid processed_input_count {:?}",
+        snapshot
+    ))]
+    InvalidProcessedInputCountError { snapshot: Snapshot },
+
     #[snafu(display("failed to read snapshot {:?}", path))]
     NotFoundError { path: PathBuf },
 
@@ -88,11 +94,12 @@ impl SnapshotManager for FSSnapshotManager {
     async fn get_storage_directory(
         &self,
         epoch: u64,
+        processed_input_count: u64,
     ) -> Result<Snapshot, Self::Error> {
         tracing::trace!(epoch, "getting storage directory");
 
         let mut path = self.config.snapshot_dir.clone();
-        path.push(epoch.to_string());
+        path.push(encode_filename(epoch, processed_input_count));
         tracing::trace!(?path, "computed the path");
 
         // Make sure that the target directory for the snapshot doesn't exists
@@ -102,7 +109,11 @@ impl SnapshotManager for FSSnapshotManager {
                 .context(RemoveSnafu { path: path.clone() })?;
         }
 
-        Ok(Snapshot { path, epoch })
+        Ok(Snapshot {
+            path,
+            epoch,
+            processed_input_count,
+        })
     }
 
     #[tracing::instrument(level = "trace", skip_all)]
@@ -116,9 +127,11 @@ impl SnapshotManager for FSSnapshotManager {
                 path: snapshot.path.clone()
             }
         );
+        let (epoch, processed_input_count) = decode_filename(&snapshot.path)?;
+        ensure!(epoch == snapshot.epoch, InvalidEpochSnafu { snapshot });
         ensure!(
-            get_epoch_number(&snapshot.path)? == snapshot.epoch,
-            InvalidEpochSnafu { snapshot }
+            processed_input_count == snapshot.processed_input_count,
+            InvalidProcessedInputCountSnafu { snapshot }
         );
         ensure!(
             snapshot.path.is_dir(),
@@ -170,7 +183,11 @@ impl SnapshotManager for FSSnapshotManager {
     }
 }
 
-fn get_epoch_number(path: &Path) -> Result<u64, FSSnapshotError> {
+fn encode_filename(epoch: u64, processed_input_count: u64) -> String {
+    format!("{}_{}", epoch, processed_input_count)
+}
+
+fn decode_filename(path: &Path) -> Result<(u64, u64), FSSnapshotError> {
     let file_name = path
         .file_name()
         .map(|file_name| file_name.to_str())
@@ -178,18 +195,25 @@ fn get_epoch_number(path: &Path) -> Result<u64, FSSnapshotError> {
         .context(DirNameSnafu)?;
     tracing::trace!(file_name, "got snapshot file name");
 
-    let epoch = file_name.parse::<u64>().context(ParsingSnafu)?;
-    tracing::trace!(epoch, "got epoch number");
+    let parts: Vec<_> = file_name.split("_").collect();
+    ensure!(parts.len() == 2, DirNameSnafu);
+    let epoch = parts[0].parse::<u64>().context(ParsingSnafu)?;
+    let processed_input_count =
+        parts[1].parse::<u64>().context(ParsingSnafu)?;
 
-    Ok(epoch)
+    Ok((epoch, processed_input_count))
 }
 
 impl TryFrom<PathBuf> for Snapshot {
     type Error = FSSnapshotError;
 
     fn try_from(path: PathBuf) -> Result<Snapshot, FSSnapshotError> {
-        let epoch = get_epoch_number(&path)?;
-        Ok(Snapshot { path, epoch })
+        let (epoch, processed_input_count) = decode_filename(&path)?;
+        Ok(Snapshot {
+            path,
+            epoch,
+            processed_input_count,
+        })
     }
 }
 
@@ -251,7 +275,7 @@ mod tests {
     async fn test_it_fails_to_get_latest_when_link_is_broken() {
         let state = TestState::setup();
         std::os::unix::fs::symlink(
-            state.tempdir.path().join("0"),
+            state.tempdir.path().join("0_0"),
             state.tempdir.path().join("latest"),
         )
         .expect("failed to create link");
@@ -277,17 +301,17 @@ mod tests {
             .get_latest()
             .await
             .expect_err("get latest should fail");
-        assert!(matches!(err, FSSnapshotError::ParsingError { .. }));
+        assert!(matches!(err, FSSnapshotError::DirNameError {}));
     }
 
     #[test_log::test(tokio::test)]
     async fn test_it_get_latest_snapshot() {
         let state = TestState::setup();
-        state.create_snapshot("0");
-        state.create_snapshot("1");
-        state.create_snapshot("2");
+        state.create_snapshot("0_0");
+        state.create_snapshot("1_0");
+        state.create_snapshot("2_0");
         std::os::unix::fs::symlink(
-            state.tempdir.path().join("1"),
+            state.tempdir.path().join("1_0"),
             state.tempdir.path().join("latest"),
         )
         .expect("failed to create link");
@@ -299,8 +323,9 @@ mod tests {
         assert_eq!(
             snapshot,
             Snapshot {
-                path: state.tempdir.path().join("1"),
-                epoch: 1
+                path: state.tempdir.path().join("1_0"),
+                epoch: 1,
+                processed_input_count: 0,
             }
         );
     }
@@ -310,14 +335,15 @@ mod tests {
         let state = TestState::setup();
         let storage_directory = state
             .manager
-            .get_storage_directory(0)
+            .get_storage_directory(0, 0)
             .await
             .expect("get storage directory should not fail");
         assert_eq!(
             storage_directory,
             Snapshot {
-                path: state.tempdir.path().join("0"),
+                path: state.tempdir.path().join("0_0"),
                 epoch: 0,
+                processed_input_count: 0,
             }
         );
         assert!(state.list_snapshots_dir().is_empty());
@@ -326,26 +352,27 @@ mod tests {
     #[test_log::test(tokio::test)]
     async fn test_it_gets_storage_when_snapshot_already_exists() {
         let state = TestState::setup();
-        state.create_snapshot("0");
-        state.create_snapshot("1");
-        state.create_snapshot("2");
+        state.create_snapshot("0_0");
+        state.create_snapshot("1_0");
+        state.create_snapshot("2_0");
         let storage_directory = state
             .manager
-            .get_storage_directory(2)
+            .get_storage_directory(2, 0)
             .await
             .expect("get storage directory should not fail");
         assert_eq!(
             storage_directory,
             Snapshot {
-                path: state.tempdir.path().join("2"),
+                path: state.tempdir.path().join("2_0"),
                 epoch: 2,
+                processed_input_count: 0,
             }
         );
         assert_eq!(
             state.list_snapshots_dir(),
             vec![
-                state.tempdir.path().join("0"),
-                state.tempdir.path().join("1"),
+                state.tempdir.path().join("0_0"),
+                state.tempdir.path().join("1_0"),
             ]
         );
     }
@@ -353,10 +380,14 @@ mod tests {
     #[test_log::test(tokio::test)]
     async fn test_it_fails_to_set_latest_when_path_is_not_on_snapshots_dir() {
         let state = TestState::setup();
-        let path = state.tempdir.path().parent().unwrap().join("0");
+        let path = state.tempdir.path().parent().unwrap().join("0_0");
         let err = state
             .manager
-            .set_latest(Snapshot { path, epoch: 0 })
+            .set_latest(Snapshot {
+                path,
+                epoch: 0,
+                processed_input_count: 0,
+            })
             .await
             .expect_err("set latest should fail");
         assert!(matches!(err, FSSnapshotError::WrongDirError { .. }));
@@ -368,8 +399,9 @@ mod tests {
         let err = state
             .manager
             .set_latest(Snapshot {
-                path: state.tempdir.path().join("0"),
+                path: state.tempdir.path().join("0_0"),
                 epoch: 1,
+                processed_input_count: 0,
             })
             .await
             .expect_err("set latest should fail");
@@ -382,8 +414,9 @@ mod tests {
         let err = state
             .manager
             .set_latest(Snapshot {
-                path: state.tempdir.path().join("0"),
+                path: state.tempdir.path().join("0_0"),
                 epoch: 0,
+                processed_input_count: 0,
             })
             .await
             .expect_err("set latest should fail");
@@ -393,13 +426,14 @@ mod tests {
     #[test_log::test(tokio::test)]
     async fn test_it_fails_to_set_latest_when_latest_is_not_symlink() {
         let state = TestState::setup();
-        state.create_snapshot("0");
+        state.create_snapshot("0_0");
         state.create_snapshot("latest");
         let err = state
             .manager
             .set_latest(Snapshot {
-                path: state.tempdir.path().join("0"),
+                path: state.tempdir.path().join("0_0"),
                 epoch: 0,
+                processed_input_count: 0,
             })
             .await
             .expect_err("set latest should fail");
@@ -409,57 +443,59 @@ mod tests {
     #[test_log::test(tokio::test)]
     async fn test_it_sets_latest_snapshot() {
         let state = TestState::setup();
-        state.create_snapshot("0");
+        state.create_snapshot("0_0");
         state
             .manager
             .set_latest(Snapshot {
-                path: state.tempdir.path().join("0"),
+                path: state.tempdir.path().join("0_0"),
                 epoch: 0,
+                processed_input_count: 0,
             })
             .await
             .expect("set latest should work");
         assert_eq!(
             state.list_snapshots_dir(),
             vec![
-                state.tempdir.path().join("0"),
+                state.tempdir.path().join("0_0"),
                 state.tempdir.path().join("latest"),
             ]
         );
         assert_eq!(
             fs::read_link(&state.tempdir.path().join("latest")).unwrap(),
-            state.tempdir.path().join("0"),
+            state.tempdir.path().join("0_0"),
         );
     }
 
     #[test_log::test(tokio::test)]
     async fn test_it_deletes_previous_snapshots_after_setting_latest() {
         let state = TestState::setup();
-        state.create_snapshot("0");
-        state.create_snapshot("1");
-        state.create_snapshot("2");
+        state.create_snapshot("0_0");
+        state.create_snapshot("1_1");
+        state.create_snapshot("2_2");
         std::os::unix::fs::symlink(
-            state.tempdir.path().join("1"),
+            state.tempdir.path().join("1_1"),
             state.tempdir.path().join("latest"),
         )
         .expect("failed to create link");
         state
             .manager
             .set_latest(Snapshot {
-                path: state.tempdir.path().join("2"),
+                path: state.tempdir.path().join("2_2"),
                 epoch: 2,
+                processed_input_count: 2,
             })
             .await
             .expect("set latest should work");
         assert_eq!(
             state.list_snapshots_dir(),
             vec![
-                state.tempdir.path().join("2"),
+                state.tempdir.path().join("2_2"),
                 state.tempdir.path().join("latest"),
             ]
         );
         assert_eq!(
             fs::read_link(&state.tempdir.path().join("latest")).unwrap(),
-            state.tempdir.path().join("2"),
+            state.tempdir.path().join("2_2"),
         );
     }
 }

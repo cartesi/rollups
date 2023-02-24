@@ -13,7 +13,7 @@
 use rollups_events::{
     Broker, BrokerConfig, BrokerError, DAppMetadata, Event, Hash, RollupsClaim,
     RollupsClaimsStream, RollupsData, RollupsInput, RollupsInputsStream,
-    INITIAL_ID,
+    RollupsOutput, RollupsOutputsStream, INITIAL_ID,
 };
 use snafu::{ResultExt, Snafu};
 
@@ -40,6 +40,7 @@ pub type Result<T> = std::result::Result<T, BrokerFacadeError>;
 pub struct BrokerFacade {
     client: Broker,
     inputs_stream: RollupsInputsStream,
+    outputs_stream: RollupsOutputsStream,
     claims_stream: RollupsClaimsStream,
 }
 
@@ -51,11 +52,13 @@ impl BrokerFacade {
     ) -> Result<Self> {
         tracing::trace!(?config, "connecting to broker");
         let inputs_stream = RollupsInputsStream::new(&dapp_metadata);
+        let outputs_stream = RollupsOutputsStream::new(&dapp_metadata);
         let claims_stream = RollupsClaimsStream::new(&dapp_metadata);
         let client = Broker::new(config).await.context(BrokerInternalSnafu)?;
         Ok(Self {
             client,
             inputs_stream,
+            outputs_stream,
             claims_stream,
         })
     }
@@ -123,33 +126,7 @@ impl BrokerFacade {
         }
     }
 
-    /// Obtain the epoch number of the last generated claim
-    #[tracing::instrument(level = "trace", skip_all)]
-    pub async fn was_claim_produced(
-        &mut self,
-        epoch_index: u64,
-    ) -> Result<bool> {
-        tracing::trace!(epoch_index, "peeking last generated claim");
-
-        let result = self
-            .client
-            .peek_latest(&self.claims_stream)
-            .await
-            .context(BrokerInternalSnafu)?;
-
-        Ok(match result {
-            Some(event) => {
-                tracing::trace!(?event, "got last claim produced");
-                epoch_index <= event.payload.epoch_index
-            }
-            None => {
-                tracing::trace!("no claims in the stream");
-                false
-            }
-        })
-    }
-
-    /// Obtain the epoch hashes from the server-manager and generate the rollups claim
+    /// Produce the rollups claim if it isn't in the stream yet
     #[tracing::instrument(level = "trace", skip_all)]
     pub async fn produce_rollups_claim(
         &mut self,
@@ -158,11 +135,48 @@ impl BrokerFacade {
     ) -> Result<()> {
         tracing::trace!(epoch_index, ?claim, "producing rollups claim");
 
-        let rollups_claim = RollupsClaim { epoch_index, claim };
-        self.client
-            .produce(&self.claims_stream, rollups_claim)
+        let result = self
+            .client
+            .peek_latest(&self.claims_stream)
             .await
             .context(BrokerInternalSnafu)?;
+
+        let claim_produced = match result {
+            Some(event) => {
+                tracing::trace!(?event, "got last claim produced");
+                epoch_index <= event.payload.epoch_index
+            }
+            None => {
+                tracing::trace!("no claims in the stream");
+                false
+            }
+        };
+
+        if !claim_produced {
+            let rollups_claim = RollupsClaim { epoch_index, claim };
+            self.client
+                .produce(&self.claims_stream, rollups_claim)
+                .await
+                .context(BrokerInternalSnafu)?;
+        }
+
+        Ok(())
+    }
+
+    /// Produce outputs to the rollups-outputs stream
+    #[tracing::instrument(level = "trace", skip_all)]
+    pub async fn produce_outputs(
+        &mut self,
+        outputs: Vec<RollupsOutput>,
+    ) -> Result<()> {
+        tracing::trace!(?outputs, "producing rollups outputs");
+
+        for output in outputs {
+            self.client
+                .produce(&self.outputs_stream, output)
+                .await
+                .context(BrokerInternalSnafu)?;
+        }
 
         Ok(())
     }
@@ -312,7 +326,7 @@ mod tests {
                 payload: RollupsInput {
                     parent_id: ids[1].clone(),
                     epoch_index: 1,
-                    inputs_sent_count: 1,
+                    inputs_sent_count: 2,
                     data: inputs[2].clone(),
                 },
             }
@@ -320,36 +334,25 @@ mod tests {
     }
 
     #[test_log::test(tokio::test)]
-    async fn test_it_checks_claim_was_produced() {
+    async fn test_it_does_not_produce_claim_when_it_was_already_produced() {
         let docker = Cli::default();
         let mut state = TestState::setup(&docker).await;
-        let claims = vec![
-            Hash::new([0xa0; HASH_SIZE]),
-            Hash::new([0xa1; HASH_SIZE]),
-            Hash::new([0xa2; HASH_SIZE]),
-        ];
-        for claim in claims {
-            state.broker.produce_claim(claim).await;
-        }
-        assert!(state.facade.was_claim_produced(0).await.unwrap());
-        assert!(state.facade.was_claim_produced(1).await.unwrap());
-        assert!(state.facade.was_claim_produced(2).await.unwrap());
-    }
-
-    #[test_log::test(tokio::test)]
-    async fn test_it_checks_claim_was_not_produced() {
-        let docker = Cli::default();
-        let mut state = TestState::setup(&docker).await;
-        let claims = vec![
-            Hash::new([0xa0; HASH_SIZE]),
-            Hash::new([0xa1; HASH_SIZE]),
-            Hash::new([0xa2; HASH_SIZE]),
-        ];
-        for claim in claims {
-            state.broker.produce_claim(claim).await;
-        }
-        assert!(!state.facade.was_claim_produced(3).await.unwrap());
-        assert!(!state.facade.was_claim_produced(4).await.unwrap());
+        state
+            .broker
+            .produce_claim(Hash::new([0xa0; HASH_SIZE]))
+            .await;
+        state
+            .facade
+            .produce_rollups_claim(0, Hash::new([0xb0; HASH_SIZE]))
+            .await
+            .unwrap();
+        assert_eq!(
+            state.broker.consume_all_claims().await,
+            vec![RollupsClaim {
+                epoch_index: 0,
+                claim: Hash::new([0xa0; HASH_SIZE]),
+            },]
+        );
     }
 
     #[test_log::test(tokio::test)]

@@ -80,7 +80,6 @@ async fn test_advance_runner_sends_inputs_to_server_manager() {
     for (i, payload) in payloads.iter().enumerate() {
         let data = RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
             metadata: InputMetadata {
-                epoch_index: 0,
                 input_index: i as u64,
                 ..Default::default()
             },
@@ -106,7 +105,6 @@ async fn test_advance_runner_fails_when_inputs_has_wrong_epoch() {
     tracing::info!("producing input with wrong epoch index");
     let data = RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
         metadata: InputMetadata {
-            epoch_index: 0,
             input_index: 0,
             ..Default::default()
         },
@@ -134,7 +132,6 @@ async fn test_advance_runner_fails_when_inputs_has_wrong_parent_id() {
     tracing::info!("producing input with wrong parent id");
     let data = RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
         metadata: InputMetadata {
-            epoch_index: 0,
             input_index: 0,
             ..Default::default()
         },
@@ -174,6 +171,33 @@ async fn test_advance_runner_generates_claim_after_finishing_epoch() {
     assert_eq!(claims.len(), N);
 }
 
+#[test_log::test(tokio::test)]
+async fn test_advance_runner_finishes_epoch_when_the_previous_epoch_has_inputs()
+{
+    let docker = Cli::default();
+    let state = TestState::setup(&docker).await;
+
+    tracing::info!("producing input, and finishing first and second epochs");
+    let inputs = vec![
+        RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+            metadata: InputMetadata {
+                input_index: 0,
+                ..Default::default()
+            },
+            payload: Default::default(),
+            tx_hash: Hash::default(),
+        }),
+        RollupsData::FinishEpoch {},
+        RollupsData::FinishEpoch {},
+    ];
+    for input in inputs {
+        state.broker.produce_input_event(input).await;
+    }
+
+    tracing::info!("waiting until second epoch is finished");
+    state.server_manager.assert_epoch_finished(1).await;
+}
+
 /// Send an input, an finish epoch, and another input.
 /// After the second input is processed by the server-manager we know
 /// for sure that the advance_runner finished processing the finish epoch.
@@ -185,7 +209,6 @@ async fn finish_epoch_and_wait_for_next_input(state: &TestState<'_>) {
     let inputs = vec![
         RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
             metadata: InputMetadata {
-                epoch_index: 0,
                 input_index: 0,
                 ..Default::default()
             },
@@ -195,8 +218,7 @@ async fn finish_epoch_and_wait_for_next_input(state: &TestState<'_>) {
         RollupsData::FinishEpoch {},
         RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
             metadata: InputMetadata {
-                epoch_index: 1,
-                input_index: 0,
+                input_index: 1,
                 ..Default::default()
             },
             payload: payload.clone(),
@@ -248,7 +270,7 @@ async fn test_advance_runner_stores_snapshot_after_finishing_epoch() {
     finish_epoch_and_wait_for_next_input(&state).await;
 
     tracing::info!("checking the snapshots dir");
-    state.snapshots.assert_latest_snapshot(1);
+    state.snapshots.assert_latest_snapshot(1, 1);
 }
 
 #[test_log::test(tokio::test)]
@@ -264,8 +286,7 @@ async fn test_advance_runner_restore_session_after_restart() {
     tracing::info!("producing another input and checking");
     let input = RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
         metadata: InputMetadata {
-            epoch_index: 1,
-            input_index: 1,
+            input_index: 2,
             ..Default::default()
         },
         payload: generate_payload(),

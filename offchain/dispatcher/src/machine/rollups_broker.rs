@@ -475,11 +475,13 @@ mod broker_facade_tests {
     async fn finish_epoch_ok_2() {
         let docker = Cli::default();
         let (fixture, broker) = setup(&docker).await;
-        produce_advance_state_inputs(&fixture, 3).await;
+        let first_epoch_inputs = 3;
+        produce_advance_state_inputs(&fixture, first_epoch_inputs).await;
         produce_finish_epoch_input(&fixture).await;
-        let n = 7;
-        produce_advance_state_inputs(&fixture, n).await;
-        assert!(broker.finish_epoch(n as u64).await.is_ok());
+        let second_epoch_inputs = 7;
+        produce_advance_state_inputs(&fixture, second_epoch_inputs).await;
+        let total_inputs = first_epoch_inputs + second_epoch_inputs;
+        assert!(broker.finish_epoch(total_inputs as u64).await.is_ok());
     }
 
     #[tokio::test]
