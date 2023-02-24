@@ -45,4 +45,7 @@ url = "2"
 [dev-dependencies]
 im = { version = "15", features = ["serde"] }
 rand = "0.8"
+redis = "0.21"
+testcontainers = "0.14"
+test-fixtures = { path = "../test-fixtures" }
 
