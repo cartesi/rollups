@@ -12,6 +12,7 @@
 
 use crate::schema::{Context, Query, RollupsGraphQLScalarValue, Schema};
 use actix_cors::Cors;
+use actix_web::dev::Server;
 use actix_web::{
     middleware::Logger, web, web::Data, App, HttpResponse, HttpServer,
     Responder,
@@ -26,12 +27,12 @@ struct HttpContext {
     context: Context,
 }
 
-pub async fn start_service(
+pub fn start_service(
     host: &str,
     port: u16,
     context: Context,
-) -> std::io::Result<()> {
-    HttpServer::new(move || {
+) -> std::io::Result<Server> {
+    Ok(HttpServer::new(move || {
         let schema = std::sync::Arc::new(Schema::new_with_scalar_value(
             Query,
             EmptyMutation::new(),
@@ -55,8 +56,7 @@ pub async fn start_service(
             .service(healthz)
     })
     .bind((host, port))?
-    .run()
-    .await
+    .run())
 }
 
 #[actix_web::get("/")]

@@ -1,0 +1,3 @@
+{
+    "query": "{notices(first: 2, after: \"Mg==\"){totalCount, edges {node {index, payload}}}}"
+}

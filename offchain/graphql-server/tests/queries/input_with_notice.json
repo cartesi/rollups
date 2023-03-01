@@ -1,0 +1,3 @@
+{
+    "query": "{input(index: 0){index, notice(index: 0){index}}}"
+}

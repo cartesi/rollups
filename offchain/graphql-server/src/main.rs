@@ -12,6 +12,7 @@
 
 use clap::Parser;
 use graphql_server::{http, schema::Context};
+use http::start_service;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
@@ -46,7 +47,8 @@ async fn main() {
         .expect("failed to connect to database");
     let context = Context::new(repository);
     let service_handler =
-        http::start_service(&config.graphql_host, config.graphql_port, context);
+        start_service(&config.graphql_host, config.graphql_port, context)
+            .expect("failed to create server");
 
     if let Err(e) = service_handler.await {
         tracing::error!("service terminated with error: {:?}", e);
