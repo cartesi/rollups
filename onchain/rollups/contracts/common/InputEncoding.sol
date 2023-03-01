@@ -1,4 +1,4 @@
-// Copyright 2022 Cartesi Pte. Ltd.
+// Copyright 2023 Cartesi Pte. Ltd.
 
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -15,6 +15,7 @@ pragma solidity ^0.8.13;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 library InputEncoding {
     /// @notice Encode Ether deposit
@@ -93,6 +94,62 @@ library InputEncoding {
         return
             abi.encodePacked(
                 dapp //        20B
+            );
+    }
+
+    /// @notice Encode a ERC-1155 batch token deposit
+    /// @param token The ERC-1155 token contract
+    /// @param sender The address of the DApp
+    /// @param tokenId The identifiers of the tokens being transferred
+    /// @param value Transfer amounts per token type (order and length must match _ids array)
+    /// @param L1data Additional data with no specified format, MUST be sent unaltered in call to the `ERC1155TokenReceiver` hook(s) on `_to`
+    /// @param L2data Additional data to be interpreted by L2
+    /// @return The encoded input
+    /// @dev L1data should be forwarded to the ERC-1155 token contract
+    function encodeERC1155Deposit(
+        IERC1155 token,
+        address sender,
+        uint256 tokenId,
+        uint256 value,
+        bytes calldata L1data,
+        bytes calldata L2data
+    ) internal pure returns (bytes memory) {
+        bytes memory L1L2data = abi.encode(L1data, L2data);
+        return
+            abi.encodePacked(
+                token, //          20B
+                sender, //         20B
+                tokenId, //        32B
+                value, //          32B
+                L1L2data //        arbitrary size
+            );
+    }
+
+    /// @notice Encode a ERC-1155 batch token deposit
+    /// @param token The ERC-1155 token contract
+    /// @param sender The address of the DApp
+    /// @param tokenIds The identifiers of the tokens being transferred
+    /// @param values Transfer amounts per token type (order and length must match _ids array)
+    /// @param L1data Additional data with no specified format, MUST be sent unaltered in call to the `ERC1155TokenReceiver` hook(s) on `_to`
+    /// @param L2data Additional data to be interpreted by L2
+    /// @return The encoded input
+    /// @dev L1data should be forwarded to the ERC-1155 token contract
+    function encodeBatchERC1155Token(
+        IERC1155 token,
+        address sender,
+        uint256[] calldata tokenIds,
+        uint256[] calldata values,
+        bytes calldata L1data,
+        bytes calldata L2data
+    ) internal pure returns (bytes memory) {
+        bytes memory L1L2data = abi.encode(L1data, L2data);
+        return
+            abi.encodePacked(
+                token, //          20B
+                sender, //         20B
+                tokenIds, //       arbitrary size
+                values, //        arbitrary size
+                L1L2data //        arbitrary size
             );
     }
 }

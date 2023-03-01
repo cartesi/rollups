@@ -31,7 +31,8 @@
     },
     "dependencies": {
         "@cartesi/util": "^5.0.2",
-        "@openzeppelin/contracts": "4.8.0"
+        "@openzeppelin/contracts": "4.8.0",
+        "prettier": "^2.8.1"
     },
     "devDependencies": {
         "@ethersproject/abi": "^5.7.0",

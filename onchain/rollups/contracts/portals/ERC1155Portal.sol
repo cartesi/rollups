@@ -10,16 +10,16 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title ERC-721 Portal
+/// @title ERC-1155 Portal
 pragma solidity ^0.8.13;
 
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
-import {IERC721Portal} from "./IERC721Portal.sol";
+import {IERC1155Portal} from "./IERC1155Portal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
-contract ERC721Portal is IERC721Portal {
+contract ERC1155Portal is IERC1155Portal {
     IInputBox immutable inputBox;
 
     constructor(IInputBox _inputBox) {
@@ -30,19 +30,49 @@ contract ERC721Portal is IERC721Portal {
         return inputBox;
     }
 
-    function depositERC721Token(
-        IERC721 _token,
+    function depositERC1155Token(
+        IERC1155 _token,
         address _dapp,
         uint256 _tokenId,
+        uint256 _value,
         bytes calldata _L1data,
         bytes calldata _L2data
     ) external override {
-        _token.safeTransferFrom(msg.sender, _dapp, _tokenId, _L1data);
+        _token.safeTransferFrom(msg.sender, _dapp, _tokenId, _value, _L1data);
 
-        bytes memory input = InputEncoding.encodeERC721Deposit(
+        bytes memory input = InputEncoding.encodeERC1155Deposit(
             _token,
             msg.sender,
             _tokenId,
+            _value,
+            _L1data,
+            _L2data
+        );
+
+        inputBox.addInput(_dapp, input);
+    }
+
+    function depositBatchERC1155Token(
+        IERC1155 _token,
+        address _dapp,
+        uint256[] calldata _tokenIds,
+        uint256[] calldata _values,
+        bytes calldata _L1data,
+        bytes calldata _L2data
+    ) external override {
+        _token.safeBatchTransferFrom(
+            msg.sender,
+            _dapp,
+            _tokenIds,
+            _values,
+            _L1data
+        );
+
+        bytes memory input = InputEncoding.encodeBatchERC1155Token(
+            _token,
+            msg.sender,
+            _tokenIds,
+            _values,
             _L1data,
             _L2data
         );
