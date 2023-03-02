@@ -153,12 +153,13 @@ contract ERC1155PortalTest is Test {
         assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
-    function testFailNoBalanceERC1155DepositEOA(
+    function testNoBalanceERC1155DepositEOA(
         uint256 tokenId,
         uint256 value,
         bytes calldata L1data,
         bytes calldata L2data
     ) public {
+        // We can always transfer 0 tokens
         vm.assume(value > 0);
 
         // Mint ERC1155 tokens for 3rd actor instead of Alice
@@ -170,6 +171,7 @@ contract ERC1155PortalTest is Test {
         // Allow the portal to withdraw tokens from Alice
         token.setApprovalForAll(address(erc1155Portal), true);
 
+        vm.expectRevert("ERC1155: insufficient balance for transfer");
         erc1155Portal.depositSingleERC1155Token(
             token,
             dapp,
@@ -178,7 +180,6 @@ contract ERC1155PortalTest is Test {
             L1data,
             L2data
         );
-        vm.expectRevert("ERC1155: insufficient balance for transfer");
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
@@ -190,8 +191,6 @@ contract ERC1155PortalTest is Test {
         bytes calldata L1data,
         bytes calldata L2data
     ) public {
-        vm.assume(value > 0);
-
         // Use an ERC1155 Receiver contract as a destination
         dapp = address(new ERC1155Receiver());
 
@@ -230,7 +229,7 @@ contract ERC1155PortalTest is Test {
         assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
-    function testFailNotReceiverERC1155DepositContract(
+    function testNotReceiverERC1155DepositContract(
         uint256 tokenId,
         uint256 value,
         bytes calldata L1data,
@@ -248,6 +247,7 @@ contract ERC1155PortalTest is Test {
         // Allow the portal to withdraw the token from Alice
         token.setApprovalForAll(address(erc1155Portal), true);
 
+        vm.expectRevert("ERC1155: transfer to non-ERC1155Receiver implementer");
         erc1155Portal.depositSingleERC1155Token(
             token,
             dapp,
@@ -256,7 +256,6 @@ contract ERC1155PortalTest is Test {
             L1data,
             L2data
         );
-        vm.expectRevert("ERC1155: transfer to non-ERC1155Receiver implementer");
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
@@ -312,7 +311,7 @@ contract ERC1155PortalTest is Test {
         assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
-    function testFailNotApprovedBatchERC1155DepositEOA(
+    function testNotApprovedBatchERC1155DepositEOA(
         bytes calldata L1data,
         bytes calldata L2data,
         uint256[] calldata totalSupplies
@@ -327,6 +326,7 @@ contract ERC1155PortalTest is Test {
         // Start impersonating Alice
         vm.startPrank(alice);
 
+        vm.expectRevert("ERC1155: caller is not token owner or approved");
         erc1155Portal.depositBatchERC1155Token(
             token,
             dapp,
@@ -335,7 +335,6 @@ contract ERC1155PortalTest is Test {
             L1data,
             L2data
         );
-        vm.expectRevert("ERC1155: caller is not token owner or approved");
     }
 
     // HELPER FUNCTIONS
