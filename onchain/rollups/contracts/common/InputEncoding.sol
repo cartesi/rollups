@@ -105,9 +105,9 @@ library InputEncoding {
 
     /// @notice Encode an ERC-1155 single token deposit
     /// @param token The ERC-1155 token contract
-    /// @param sender The address of the DApp
+    /// @param sender The token sender
     /// @param tokenId The identifier of the token being transferred
-    /// @param value Transfer amounts per token type
+    /// @param value Transfer amount
     /// @param L1data Additional data to be interpreted by L1
     /// @param L2data Additional data to be interpreted by L2
     /// @return The encoded input
@@ -133,10 +133,10 @@ library InputEncoding {
     }
 
     /// @notice Encode an ERC-1155 batch token deposit
-    /// @param token The ERC-1155 token contract, it has to implement the 'onERC1155Received' function
-    /// @param sender The address of the DApp
+    /// @param token The ERC-1155 token contract
+    /// @param sender The token sender
     /// @param tokenIds The identifiers of the tokens being transferred
-    /// @param values Transfer amounts per token type (order and length must match tokenIds array)
+    /// @param values Transfer amounts per token type
     /// @param L1data Additional data to be interpreted by L1
     /// @param L2data Additional data to be interpreted by L2
     /// @return The encoded input

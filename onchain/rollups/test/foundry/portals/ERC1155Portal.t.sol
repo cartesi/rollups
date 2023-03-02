@@ -14,7 +14,6 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import "forge-std/console.sol";
 import {ERC1155Portal} from "contracts/portals/ERC1155Portal.sol";
 import {IERC1155Portal} from "contracts/portals/IERC1155Portal.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
@@ -83,6 +82,7 @@ contract ERC1155PortalTest is Test {
     IERC1155 token;
     address alice;
     address dapp;
+    address bob;
 
     event TransferSingle(
         address indexed operator,
@@ -105,6 +105,7 @@ contract ERC1155PortalTest is Test {
         erc1155Portal = new ERC1155Portal(inputBox);
         alice = address(vm.addr(1));
         dapp = address(vm.addr(2));
+        bob = address(vm.addr(3));
     }
 
     function testGetInputBox() public {
@@ -117,8 +118,6 @@ contract ERC1155PortalTest is Test {
         bytes calldata L1data,
         bytes calldata L2data
     ) public {
-        vm.assume(value > 0);
-
         // Mint ERC1155 tokens for Alice
         token = new NormalToken(alice, tokenId, value);
 
@@ -161,7 +160,6 @@ contract ERC1155PortalTest is Test {
         bytes calldata L2data
     ) public {
         vm.assume(value > 0);
-        address bob = address(vm.addr(3));
 
         // Mint ERC1155 tokens for 3rd actor instead of Alice
         token = new NormalToken(bob, tokenId, value);
@@ -232,14 +230,12 @@ contract ERC1155PortalTest is Test {
         assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
-    function testFailnotReceiverERC1155DepositContract(
+    function testFailNotReceiverERC1155DepositContract(
         uint256 tokenId,
         uint256 value,
         bytes calldata L1data,
         bytes calldata L2data
     ) public {
-        vm.assume(value > 0);
-
         // Use a contract as a destination that does NOT implement ERC1155 Receiver
         dapp = address(new BadERC1155Receiver());
 
@@ -316,19 +312,6 @@ contract ERC1155PortalTest is Test {
         assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
-    function testFailLengthMismatchBatchERC1155DepositEOA(
-        uint256[] calldata totalSupplies,
-        uint256[] calldata differentSupplies
-    ) public {
-        vm.assume(totalSupplies.length != differentSupplies.length);
-        uint256[] memory tokenIds = generateTokenIDs(totalSupplies);
-        uint256[] memory values = generateValues(differentSupplies);
-
-        // Mint ERC1155 tokens for Alice
-        token = new BatchToken(alice, tokenIds, values);
-        vm.expectRevert("ERC1155: ids and amounts length mismatch");
-    }
-
     function testFailNotApprovedBatchERC1155DepositEOA(
         bytes calldata L1data,
         bytes calldata L2data,
@@ -356,6 +339,7 @@ contract ERC1155PortalTest is Test {
     }
 
     // HELPER FUNCTIONS
+
     function generateTokenIDs(
         uint256[] calldata totalSupplies
     ) internal pure returns (uint256[] memory) {
@@ -375,14 +359,5 @@ contract ERC1155PortalTest is Test {
             values[i] = (value <= totalSupplies[i]) ? value : totalSupplies[i];
         }
         return values;
-    }
-
-    function generateTokenOwners(
-        uint256 totalSupply
-    ) internal pure returns (address[] memory) {
-        address[] memory tokenOwners = new address[](totalSupply);
-        for (uint256 i; i < totalSupply; ++i)
-            tokenOwners[i] = address(vm.addr(i + 1));
-        return tokenOwners;
     }
 }
