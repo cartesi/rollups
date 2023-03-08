@@ -16,24 +16,8 @@ Once you've installed all dependencies listed above, there is still some setup l
 
 **Warning:** We use `python3` and `pip3` to interact with Python. If you do not wish to dirty your global Python installation, we recommend you to create a local virtual environment (with `venv` or `pyenv`), and activate it beforehand.
 
-### Automatic Setup
-
 ```sh
 ./update-proofs.sh --setup
-```
-
-### Manual Setup
-
-1. Build the `gen-proofs` Docker image
-
-```sh
-docker build -t cartesi/server-manager-gen-proofs:devel .
-```
-
-2. Install the necessary Python packages
-
-```sh
-pip3 install -r requirements.txt
 ```
 
 ## Procedure
