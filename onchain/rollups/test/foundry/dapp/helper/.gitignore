@@ -1,3 +1,5 @@
 gen-proofs.sh
 epoch-status.json
 output
+LibOutputProof*.sol
+inputs.json
