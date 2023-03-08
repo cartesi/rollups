@@ -47,7 +47,7 @@ genscript() {
 # Run the Cartesi Machine responsible for generating
 # the epoch status JSON file
 runmachine() {
-    docker run -it --rm \
+    docker run --rm \
         --name gen-proofs \
         -v "`pwd`/gen-proofs.sh:/opt/gen-proofs/gen-proofs.sh" \
         -v "`pwd`/output:/opt/gen-proofs/output" \
