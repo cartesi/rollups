@@ -86,9 +86,14 @@ jobs:
         with:
           version: nightly
 
+      - name: Install jq
+        run: sudo apt update && sudo apt install -y jq
+
       - run: yarn install
         working-directory: onchain/rollups
       - run: yarn build
+        working-directory: onchain/rollups
+      - run: ./test/foundry/dapp/helper/update-proofs.sh --setup
         working-directory: onchain/rollups
       - run: forge test -vvv
         working-directory: onchain/rollups
