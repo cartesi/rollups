@@ -555,17 +555,17 @@ struct OutputValidityProof {
     pub output_index: i32,
 
     #[graphql(
-        description = "Merkle root of all output metadata hashes of the related input, given in Ethereum hex binary format (32 bytes), starting with '0x'"
+        description = "Merkle root of all output hashes of the related input, given in Ethereum hex binary format (32 bytes), starting with '0x'"
     )]
     pub output_hashes_root_hash: String,
 
     #[graphql(
-        description = "Merkle root of all voucher metadata hashes of the related epoch, given in Ethereum hex binary format (32 bytes), starting with '0x'"
+        description = "Merkle root of all voucher hashes of the related epoch, given in Ethereum hex binary format (32 bytes), starting with '0x'"
     )]
     pub vouchers_epoch_root_hash: String,
 
     #[graphql(
-        description = "Merkle root of all notice metadata hashes of the related epoch, given in Ethereum hex binary format (32 bytes), starting with '0x'"
+        description = "Merkle root of all notice hashes of the related epoch, given in Ethereum hex binary format (32 bytes), starting with '0x'"
     )]
     pub notices_epoch_root_hash: String,
 
@@ -575,12 +575,12 @@ struct OutputValidityProof {
     pub machine_state_hash: String,
 
     #[graphql(
-        description = "Array of hashes representing a proof that this output metadata is in the metadata memory range, where each hash is given in Ethereum hex binary format (32 bytes), starting with '0x'"
+        description = "Proof that this output hash is in the output-hashes merkle tree. This array of siblings is bottom-up ordered (from the leaf to the root). Each hash is given in Ethereum hex binary format (32 bytes), starting with '0x'."
     )]
     pub keccak_in_hashes_siblings: Vec<String>,
 
     #[graphql(
-        description = "Array of hashes representing a proof that this output metadata is in the epoch's output memory range, where each hash is given in Ethereum hex binary format (32 bytes), starting with '0x'"
+        description = "Proof that this output-hashes root hash is in epoch's output merkle tree. This array of siblings is bottom-up ordered (from the leaf to the root). Each hash is given in Ethereum hex binary format (32 bytes), starting with '0x'."
     )]
     pub output_hashes_in_epoch_siblings: Vec<String>,
 }
