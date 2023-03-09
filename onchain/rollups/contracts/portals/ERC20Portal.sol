@@ -34,7 +34,7 @@ contract ERC20Portal is IERC20Portal {
         IERC20 _token,
         address _dapp,
         uint256 _amount,
-        bytes calldata _L2data
+        bytes calldata _execLayerData
     ) external override {
         bool success = _token.transferFrom(msg.sender, _dapp, _amount);
 
@@ -43,7 +43,7 @@ contract ERC20Portal is IERC20Portal {
             _token,
             msg.sender,
             _amount,
-            _L2data
+            _execLayerData
         );
 
         inputBox.addInput(_dapp, input);

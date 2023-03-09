@@ -21,10 +21,10 @@ interface IEtherPortal is IPortal {
     /// @notice Transfer Ether to a DApp and add an input to
     ///         the DApp's input box to signal such operation.
     /// @param _dapp The address of the DApp
-    /// @param _L2data Additional data to be interpreted by L2
+    /// @param _execLayerData Additional data to be interpreted by the execution layer
     /// @dev All the value sent through this function is forwarded to the DApp
     function depositEther(
         address _dapp,
-        bytes calldata _L2data
+        bytes calldata _execLayerData
     ) external payable;
 }

@@ -61,7 +61,7 @@ contract WatcherERC721Receiver is IERC721Receiver {
         address operator,
         address from,
         uint256 tokenId,
-        bytes L1data,
+        bytes baseLayer,
         uint256 numberOfInputs
     );
 
@@ -73,14 +73,14 @@ contract WatcherERC721Receiver is IERC721Receiver {
         address _operator,
         address _from,
         uint256 _tokenId,
-        bytes calldata _L1data
+        bytes calldata _baseLayer
     ) external override returns (bytes4) {
         uint256 numberOfInputs = inputBox.getNumberOfInputs(address(this));
         emit WatchedTransfer(
             _operator,
             _from,
             _tokenId,
-            _L1data,
+            _baseLayer,
             numberOfInputs
         );
         return this.onERC721Received.selector;
@@ -109,7 +109,7 @@ contract ERC721PortalTest is Test {
         address operator,
         address from,
         uint256 tokenId,
-        bytes L1data,
+        bytes baseLayer,
         uint256 numberOfInputs
     );
 
@@ -125,8 +125,8 @@ contract ERC721PortalTest is Test {
 
     function testERC721DepositEOA(
         uint256 tokenId,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayer,
+        bytes calldata executionLayer
     ) public {
         // Assume the DApp is an EOA
         dapp = address(0x12345678);
@@ -139,7 +139,7 @@ contract ERC721PortalTest is Test {
             token,
             alice,
             tokenId,
-            abi.encode(L1data, L2data)
+            abi.encode(baseLayer, executionLayer)
         );
 
         // Start impersonating Alice
@@ -160,7 +160,13 @@ contract ERC721PortalTest is Test {
         emit InputAdded(dapp, 0, address(erc721Portal), input);
 
         // Transfer ERC-721 tokens to the DApp via the portal
-        erc721Portal.depositERC721Token(token, dapp, tokenId, L1data, L2data);
+        erc721Portal.depositERC721Token(
+            token,
+            dapp,
+            tokenId,
+            baseLayer,
+            executionLayer
+        );
 
         // Check the new owner of the token
         assertEq(token.ownerOf(tokenId), dapp);
@@ -171,8 +177,8 @@ contract ERC721PortalTest is Test {
 
     function testERC721DepositContract(
         uint256 tokenId,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayer,
+        bytes calldata executionLayer
     ) public {
         // Create contract that implements IERC721Receiver
         ERC721Receiver receiver = new ERC721Receiver();
@@ -186,7 +192,7 @@ contract ERC721PortalTest is Test {
             token,
             alice,
             tokenId,
-            abi.encode(L1data, L2data)
+            abi.encode(baseLayer, executionLayer)
         );
 
         // Start impersonating Alice
@@ -207,7 +213,13 @@ contract ERC721PortalTest is Test {
         emit InputAdded(dapp, 0, address(erc721Portal), input);
 
         // Transfer ERC-721 tokens to the DApp via the portal
-        erc721Portal.depositERC721Token(token, dapp, tokenId, L1data, L2data);
+        erc721Portal.depositERC721Token(
+            token,
+            dapp,
+            tokenId,
+            baseLayer,
+            executionLayer
+        );
 
         // Check the new owner of the token
         assertEq(token.ownerOf(tokenId), dapp);
@@ -218,8 +230,8 @@ contract ERC721PortalTest is Test {
 
     function testRevertsNoApproval(
         uint256 tokenId,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayer,
+        bytes calldata executionLayer
     ) public {
         // Create contract that implements IERC721Receiver
         ERC721Receiver receiver = new ERC721Receiver();
@@ -233,7 +245,13 @@ contract ERC721PortalTest is Test {
 
         // Transfer ERC-721 tokens to the DApp via the portal
         vm.expectRevert("ERC721: caller is not token owner or approved");
-        erc721Portal.depositERC721Token(token, dapp, tokenId, L1data, L2data);
+        erc721Portal.depositERC721Token(
+            token,
+            dapp,
+            tokenId,
+            baseLayer,
+            executionLayer
+        );
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
@@ -241,8 +259,8 @@ contract ERC721PortalTest is Test {
 
     function testRevertsNonImplementer(
         uint256 tokenId,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayer,
+        bytes calldata executionLayer
     ) public {
         // Create contract that refuses ERC-721 transfers
         BadERC721Receiver receiver = new BadERC721Receiver();
@@ -259,7 +277,13 @@ contract ERC721PortalTest is Test {
 
         // Expect ERC-721 transfer to revert with message
         vm.expectRevert("This contract refuses ERC-721 transfers");
-        erc721Portal.depositERC721Token(token, dapp, tokenId, L1data, L2data);
+        erc721Portal.depositERC721Token(
+            token,
+            dapp,
+            tokenId,
+            baseLayer,
+            executionLayer
+        );
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
@@ -267,8 +291,8 @@ contract ERC721PortalTest is Test {
 
     function testNumberOfInputs(
         uint256 tokenId,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayer,
+        bytes calldata executionLayer
     ) public {
         // Create a contract that records the number of inputs it has received
         WatcherERC721Receiver receiver = new WatcherERC721Receiver(inputBox);
@@ -282,7 +306,7 @@ contract ERC721PortalTest is Test {
             token,
             alice,
             tokenId,
-            abi.encode(L1data, L2data)
+            abi.encode(baseLayer, executionLayer)
         );
 
         // Start impersonating Alice
@@ -298,13 +322,13 @@ contract ERC721PortalTest is Test {
         vm.expectEmit(true, true, true, true, address(token));
         emit Transfer(alice, dapp, tokenId);
 
-        // Expect receiver to emit event with L1 data
+        // Expect receiver to emit event with the base layer data
         vm.expectEmit(false, false, false, true, dapp);
         emit WatchedTransfer(
             address(erc721Portal),
             alice,
             tokenId,
-            L1data,
+            baseLayer,
             numberOfInputsBefore
         );
 
@@ -313,7 +337,13 @@ contract ERC721PortalTest is Test {
         emit InputAdded(dapp, 0, address(erc721Portal), input);
 
         // Deposit token in DApp's account
-        erc721Portal.depositERC721Token(token, dapp, tokenId, L1data, L2data);
+        erc721Portal.depositERC721Token(
+            token,
+            dapp,
+            tokenId,
+            baseLayer,
+            executionLayer
+        );
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), numberOfInputsBefore + 1);

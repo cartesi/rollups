@@ -115,8 +115,8 @@ contract ERC1155PortalTest is Test {
     function testERC1155DepositEOA(
         uint256 tokenId,
         uint256 value,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayer,
+        bytes calldata executionLayer
     ) public {
         // Mint ERC1155 tokens for Alice
         token = new NormalToken(alice, tokenId, value);
@@ -142,8 +142,8 @@ contract ERC1155PortalTest is Test {
             dapp,
             tokenId,
             value,
-            L1data,
-            L2data
+            baseLayer,
+            executionLayer
         );
 
         // Check the DApp's balance of the token
@@ -156,8 +156,8 @@ contract ERC1155PortalTest is Test {
     function testNoBalanceERC1155DepositEOA(
         uint256 tokenId,
         uint256 value,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayer,
+        bytes calldata executionLayer
     ) public {
         // We can always transfer 0 tokens
         vm.assume(value > 0);
@@ -177,8 +177,8 @@ contract ERC1155PortalTest is Test {
             dapp,
             tokenId,
             value,
-            L1data,
-            L2data
+            baseLayer,
+            executionLayer
         );
 
         // Check the DApp's input box
@@ -188,8 +188,8 @@ contract ERC1155PortalTest is Test {
     function testERC1155DepositContract(
         uint256 tokenId,
         uint256 value,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayer,
+        bytes calldata executionLayer
     ) public {
         // Use an ERC1155 Receiver contract as a destination
         dapp = address(new ERC1155Receiver());
@@ -218,8 +218,8 @@ contract ERC1155PortalTest is Test {
             dapp,
             tokenId,
             value,
-            L1data,
-            L2data
+            baseLayer,
+            executionLayer
         );
 
         // Check the DApp's balance of the token
@@ -232,8 +232,8 @@ contract ERC1155PortalTest is Test {
     function testNotReceiverERC1155DepositContract(
         uint256 tokenId,
         uint256 value,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayer,
+        bytes calldata executionLayer
     ) public {
         // Use a contract as a destination that does NOT implement ERC1155 Receiver
         dapp = address(new BadERC1155Receiver());
@@ -253,8 +253,8 @@ contract ERC1155PortalTest is Test {
             dapp,
             tokenId,
             value,
-            L1data,
-            L2data
+            baseLayer,
+            executionLayer
         );
 
         // Check the DApp's input box
@@ -262,8 +262,8 @@ contract ERC1155PortalTest is Test {
     }
 
     function testBatchERC1155DepositEOA(
-        bytes calldata L1data,
-        bytes calldata L2data,
+        bytes calldata baseLayer,
+        bytes calldata executionLayer,
         uint256[] calldata totalSupplies
     ) public {
         vm.assume(totalSupplies.length > 0);
@@ -294,8 +294,8 @@ contract ERC1155PortalTest is Test {
             dapp,
             tokenIds,
             values,
-            L1data,
-            L2data
+            baseLayer,
+            executionLayer
         );
 
         // Check the token balance of each party
@@ -312,8 +312,8 @@ contract ERC1155PortalTest is Test {
     }
 
     function testNotApprovedBatchERC1155DepositEOA(
-        bytes calldata L1data,
-        bytes calldata L2data,
+        bytes calldata baseLayer,
+        bytes calldata executionLayer,
         uint256[] calldata totalSupplies
     ) public {
         vm.assume(totalSupplies.length > 0);
@@ -332,8 +332,8 @@ contract ERC1155PortalTest is Test {
             dapp,
             tokenIds,
             values,
-            L1data,
-            L2data
+            baseLayer,
+            executionLayer
         );
     }
 

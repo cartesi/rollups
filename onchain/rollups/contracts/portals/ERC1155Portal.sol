@@ -34,18 +34,24 @@ contract ERC1155Portal is IERC1155Portal {
         address _dapp,
         uint256 _tokenId,
         uint256 _value,
-        bytes calldata _L1data,
-        bytes calldata _L2data
+        bytes calldata _baseLayer,
+        bytes calldata _execLayerData
     ) external override {
-        _token.safeTransferFrom(msg.sender, _dapp, _tokenId, _value, _L1data);
+        _token.safeTransferFrom(
+            msg.sender,
+            _dapp,
+            _tokenId,
+            _value,
+            _baseLayer
+        );
 
         bytes memory input = InputEncoding.encodeSingleERC1155Deposit(
             _token,
             msg.sender,
             _tokenId,
             _value,
-            _L1data,
-            _L2data
+            _baseLayer,
+            _execLayerData
         );
 
         inputBox.addInput(_dapp, input);
@@ -56,15 +62,15 @@ contract ERC1155Portal is IERC1155Portal {
         address _dapp,
         uint256[] calldata _tokenIds,
         uint256[] calldata _values,
-        bytes calldata _L1data,
-        bytes calldata _L2data
+        bytes calldata _baseLayer,
+        bytes calldata _execLayerData
     ) external override {
         _token.safeBatchTransferFrom(
             msg.sender,
             _dapp,
             _tokenIds,
             _values,
-            _L1data
+            _baseLayer
         );
 
         bytes memory input = InputEncoding.encodeBatchERC1155Deposit(
@@ -72,8 +78,8 @@ contract ERC1155Portal is IERC1155Portal {
             msg.sender,
             _tokenIds,
             _values,
-            _L1data,
-            _L2data
+            _baseLayer,
+            _execLayerData
         );
 
         inputBox.addInput(_dapp, input);

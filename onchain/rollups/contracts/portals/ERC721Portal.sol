@@ -34,17 +34,17 @@ contract ERC721Portal is IERC721Portal {
         IERC721 _token,
         address _dapp,
         uint256 _tokenId,
-        bytes calldata _L1data,
-        bytes calldata _L2data
+        bytes calldata _baseLayerData,
+        bytes calldata _execLayerData
     ) external override {
-        _token.safeTransferFrom(msg.sender, _dapp, _tokenId, _L1data);
+        _token.safeTransferFrom(msg.sender, _dapp, _tokenId, _baseLayerData);
 
         bytes memory input = InputEncoding.encodeERC721Deposit(
             _token,
             msg.sender,
             _tokenId,
-            _L1data,
-            _L2data
+            _baseLayerData,
+            _execLayerData
         );
 
         inputBox.addInput(_dapp, input);

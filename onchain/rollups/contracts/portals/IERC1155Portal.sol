@@ -25,8 +25,8 @@ interface IERC1155Portal is IPortal {
     /// @param _dapp The address of the DApp
     /// @param _tokenId The identifier of the token being transferred
     /// @param _value Transfer amount
-    /// @param _L1data Additional data to be interpreted by L1
-    /// @param _L2data Additional data to be interpreted by L2
+    /// @param _baseLayerData Additional data to be interpreted by the base layer
+    /// @param _execLayerData Additional data to be interpreted by the execution layer
     /// @dev The caller must allow the portal to withdraw the token
     ///      from their account beforehand.
     function depositSingleERC1155Token(
@@ -34,8 +34,8 @@ interface IERC1155Portal is IPortal {
         address _dapp,
         uint256 _tokenId,
         uint256 _value,
-        bytes calldata _L1data,
-        bytes calldata _L2data
+        bytes calldata _baseLayerData,
+        bytes calldata _execLayerData
     ) external;
 
     /// @notice Transfer a batch of ERC-1155 tokens to a DApp and add an input to
@@ -44,8 +44,8 @@ interface IERC1155Portal is IPortal {
     /// @param _dapp The address of the DApp
     /// @param _tokenIds The identifiers of the tokens being transferred
     /// @param _values Transfer amounts per token type
-    /// @param _L1data Additional data to be interpreted by L1
-    /// @param _L2data Additional data to be interpreted by L2
+    /// @param _baseLayerData Additional data to be interpreted by the base layer
+    /// @param _execLayerData Additional data to be interpreted by the execution layer
     /// @dev Requirements:
     // `ids` and `amounts` must have the same length.
     //  If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the
@@ -55,7 +55,7 @@ interface IERC1155Portal is IPortal {
         address _dapp,
         uint256[] calldata _tokenIds,
         uint256[] calldata _values,
-        bytes calldata _L1data,
-        bytes calldata _L2data
+        bytes calldata _baseLayerData,
+        bytes calldata _execLayerData
     ) external;
 }

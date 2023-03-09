@@ -27,18 +27,18 @@ library InputEncoding {
     /// @notice Encode Ether deposit
     /// @param sender The Ether sender
     /// @param value The amount of Ether being sent in Wei
-    /// @param L2data Additional data to be interpreted by L2
+    /// @param execLayerData Additional data to be interpreted by the execution layer
     /// @return The encoded input
     function encodeEtherDeposit(
         address sender,
         uint256 value,
-        bytes calldata L2data
+        bytes calldata execLayerData
     ) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
-                sender, //     20B
-                value, //      32B
-                L2data //      arbitrary size
+                sender, //              20B
+                value, //               32B
+                execLayerData //        arbitrary size
             );
     }
 
@@ -47,22 +47,22 @@ library InputEncoding {
     /// @param token The token contract
     /// @param sender The token sender
     /// @param amount The amount of tokens being sent
-    /// @param L2data Additional data to be interpreted by L2
+    /// @param execLayerData Additional data to be interpreted by the execution layer
     /// @return The encoded input
     function encodeERC20Deposit(
         bool ret,
         IERC20 token,
         address sender,
         uint256 amount,
-        bytes calldata L2data
+        bytes calldata execLayerData
     ) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
-                ret, //        1B
-                token, //      20B
-                sender, //     20B
-                amount, //     32B
-                L2data //      arbitrary size
+                ret, //                 1B
+                token, //               20B
+                sender, //              20B
+                amount, //              32B
+                execLayerData //        arbitrary size
             );
     }
 
@@ -70,24 +70,24 @@ library InputEncoding {
     /// @param token The token contract
     /// @param sender The token sender
     /// @param tokenId The token identifier
-    /// @param L1data Additional data to be interpreted by L1
-    /// @param L2data Additional data to be interpreted by L2
+    /// @param baseLayerData Additional data to be interpreted by the base layer
+    /// @param execLayerData Additional data to be interpreted by the execution layer
     /// @return The encoded input
-    /// @dev L1data should be forwarded to the ERC-721 token contract
+    /// @dev baseLayerData should be forwarded to the ERC-721 token contract
     function encodeERC721Deposit(
         IERC721 token,
         address sender,
         uint256 tokenId,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayerData,
+        bytes calldata execLayerData
     ) internal pure returns (bytes memory) {
-        bytes memory L1L2data = abi.encode(L1data, L2data);
+        bytes memory data = abi.encode(baseLayerData, execLayerData);
         return
             abi.encodePacked(
                 token, //      20B
                 sender, //     20B
                 tokenId, //    32B
-                L1L2data //    arbitrary size
+                data //        arbitrary size
             );
     }
 
@@ -108,19 +108,19 @@ library InputEncoding {
     /// @param sender The token sender
     /// @param tokenId The identifier of the token being transferred
     /// @param value Transfer amount
-    /// @param L1data Additional data to be interpreted by L1
-    /// @param L2data Additional data to be interpreted by L2
+    /// @param baseLayerData Additional data to be interpreted by the base layer
+    /// @param execLayerData Additional data to be interpreted by the execution layer
     /// @return The encoded input
-    /// @dev L1data should be forwarded to the ERC-1155 token contract
+    /// @dev baseLayerData should be forwarded to the ERC-1155 token contract
     function encodeSingleERC1155Deposit(
         IERC1155 token,
         address sender,
         uint256 tokenId,
         uint256 value,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayerData,
+        bytes calldata execLayerData
     ) internal pure returns (bytes memory) {
-        bytes memory L1L2data = abi.encode(L1data, L2data);
+        bytes memory data = abi.encode(baseLayerData, execLayerData);
         return
             abi.encodePacked(
                 ERC1155_SINGLE_DEPOSIT, //  1B
@@ -128,7 +128,7 @@ library InputEncoding {
                 sender, //                  20B
                 tokenId, //                 32B
                 value, //                   32B
-                L1L2data //                 arbitrary size
+                data //                     arbitrary size
             );
     }
 
@@ -137,19 +137,24 @@ library InputEncoding {
     /// @param sender The token sender
     /// @param tokenIds The identifiers of the tokens being transferred
     /// @param values Transfer amounts per token type
-    /// @param L1data Additional data to be interpreted by L1
-    /// @param L2data Additional data to be interpreted by L2
+    /// @param baseLayerData Additional data to be interpreted by the base layer
+    /// @param execLayerData Additional data to be interpreted by the execution layer
     /// @return The encoded input
-    /// @dev L1data should be forwarded to the ERC-1155 token contract
+    /// @dev baseLayerData should be forwarded to the ERC-1155 token contract
     function encodeBatchERC1155Deposit(
         IERC1155 token,
         address sender,
         uint256[] calldata tokenIds,
         uint256[] calldata values,
-        bytes calldata L1data,
-        bytes calldata L2data
+        bytes calldata baseLayerData,
+        bytes calldata execLayerData
     ) internal pure returns (bytes memory) {
-        bytes memory data = abi.encode(tokenIds, values, L1data, L2data);
+        bytes memory data = abi.encode(
+            tokenIds,
+            values,
+            baseLayerData,
+            execLayerData
+        );
         return
             abi.encodePacked(
                 ERC1155_BATCH_DEPOSIT, //   1B
