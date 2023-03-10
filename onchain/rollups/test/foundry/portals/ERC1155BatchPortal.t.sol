@@ -10,7 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title ERC-1155 Portal Test
+/// @title ERC-1155 Batch Transfer Portal Test
 pragma solidity ^0.8.8;
 
 import {Test} from "forge-std/Test.sol";
@@ -67,7 +67,7 @@ contract ERC1155Receiver is IERC1155Receiver {
 
 contract ERC1155BatchPortalTest is Test {
     IInputBox inputBox;
-    IERC1155BatchPortal erc1155BatchPortal;
+    IERC1155BatchPortal portal;
     IERC1155 token;
     address alice;
     address dapp;
@@ -83,19 +83,19 @@ contract ERC1155BatchPortalTest is Test {
 
     function setUp() public {
         inputBox = new InputBox();
-        erc1155BatchPortal = new ERC1155BatchPortal(inputBox);
+        portal = new ERC1155BatchPortal(inputBox);
         alice = address(vm.addr(1));
         dapp = address(vm.addr(2));
         bob = address(vm.addr(3));
     }
 
     function testGetInputBoxBatch() public {
-        assertEq(address(erc1155BatchPortal.getInputBox()), address(inputBox));
+        assertEq(address(portal.getInputBox()), address(inputBox));
     }
 
     function testBatchERC1155DepositEOA(
-        bytes calldata baseLayer,
-        bytes calldata executionLayer,
+        bytes calldata baseLayerData,
+        bytes calldata execLayerData,
         uint256[] calldata totalSupplies
     ) public {
         vm.assume(totalSupplies.length > 0);
@@ -109,25 +109,19 @@ contract ERC1155BatchPortalTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw the token from Alice
-        token.setApprovalForAll(address(erc1155BatchPortal), true);
+        token.setApprovalForAll(address(portal), true);
 
         // Expect TransferBatch to be emitted with the right arguments
         vm.expectEmit(true, true, true, true);
-        emit TransferBatch(
-            address(erc1155BatchPortal),
-            alice,
-            dapp,
-            tokenIds,
-            values
-        );
+        emit TransferBatch(address(portal), alice, dapp, tokenIds, values);
 
-        erc1155BatchPortal.depositBatchERC1155Token(
+        portal.depositBatchERC1155Token(
             token,
             dapp,
             tokenIds,
             values,
-            baseLayer,
-            executionLayer
+            baseLayerData,
+            execLayerData
         );
 
         // Check the token balances
@@ -144,8 +138,8 @@ contract ERC1155BatchPortalTest is Test {
     }
 
     function testNotApprovedBatchERC1155DepositEOA(
-        bytes calldata baseLayer,
-        bytes calldata executionLayer,
+        bytes calldata baseLayerData,
+        bytes calldata execLayerData,
         uint256[] calldata totalSupplies
     ) public {
         vm.assume(totalSupplies.length > 0);
@@ -159,19 +153,19 @@ contract ERC1155BatchPortalTest is Test {
         vm.startPrank(alice);
 
         vm.expectRevert("ERC1155: caller is not token owner or approved");
-        erc1155BatchPortal.depositBatchERC1155Token(
+        portal.depositBatchERC1155Token(
             token,
             dapp,
             tokenIds,
             values,
-            baseLayer,
-            executionLayer
+            baseLayerData,
+            execLayerData
         );
     }
 
     function testBatchERC1155DepositContract(
-        bytes calldata baseLayer,
-        bytes calldata executionLayer,
+        bytes calldata baseLayerData,
+        bytes calldata execLayerData,
         uint256[] calldata totalSupplies
     ) public {
         vm.assume(totalSupplies.length > 0);
@@ -188,25 +182,19 @@ contract ERC1155BatchPortalTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw tokens from Alice
-        token.setApprovalForAll(address(erc1155BatchPortal), true);
+        token.setApprovalForAll(address(portal), true);
 
         // Expect TransferBatch to be emitted with the right arguments
         vm.expectEmit(true, true, true, true);
-        emit TransferBatch(
-            address(erc1155BatchPortal),
-            alice,
-            dapp,
-            tokenIds,
-            values
-        );
+        emit TransferBatch(address(portal), alice, dapp, tokenIds, values);
 
-        erc1155BatchPortal.depositBatchERC1155Token(
+        portal.depositBatchERC1155Token(
             token,
             dapp,
             tokenIds,
             values,
-            baseLayer,
-            executionLayer
+            baseLayerData,
+            execLayerData
         );
 
         // Check the token balances
@@ -223,8 +211,8 @@ contract ERC1155BatchPortalTest is Test {
     }
 
     function testNotReceiverBatchERC1155DepositContract(
-        bytes calldata baseLayer,
-        bytes calldata executionLayer,
+        bytes calldata baseLayerData,
+        bytes calldata execLayerData,
         uint256[] calldata totalSupplies
     ) public {
         vm.assume(totalSupplies.length > 0);
@@ -241,16 +229,16 @@ contract ERC1155BatchPortalTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw tokens from Alice
-        token.setApprovalForAll(address(erc1155BatchPortal), true);
+        token.setApprovalForAll(address(portal), true);
 
         vm.expectRevert("ERC1155: transfer to non-ERC1155Receiver implementer");
-        erc1155BatchPortal.depositBatchERC1155Token(
+        portal.depositBatchERC1155Token(
             token,
             dapp,
             tokenIds,
             values,
-            baseLayer,
-            executionLayer
+            baseLayerData,
+            execLayerData
         );
 
         // Check the DApp's input box
