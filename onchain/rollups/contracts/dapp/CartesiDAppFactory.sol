@@ -60,4 +60,36 @@ contract CartesiDAppFactory is ICartesiDAppFactory {
 
         return application;
     }
+
+    function calculateApplicationAddress(
+        IConsensus _consensus,
+        address _dappOwner,
+        bytes32 _templateHash,
+        bytes32 _salt
+    ) external view override returns (address) {
+        return
+            address(
+                uint160(
+                    uint256(
+                        keccak256(
+                            abi.encodePacked(
+                                bytes1(0xff),
+                                address(this),
+                                _salt,
+                                keccak256(
+                                    abi.encodePacked(
+                                        type(CartesiDApp).creationCode,
+                                        abi.encode(
+                                            _consensus,
+                                            _dappOwner,
+                                            _templateHash
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+    }
 }

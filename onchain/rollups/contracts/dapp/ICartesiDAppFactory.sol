@@ -56,4 +56,17 @@ interface ICartesiDAppFactory {
         bytes32 _templateHash,
         bytes32 _salt
     ) external returns (CartesiDApp);
+
+    /// @notice Calculate the address of an application to be deployed deterministically
+    /// @param _consensus The consensus to which the DApp should be subscribed
+    /// @param _dappOwner The address that should own the DApp
+    /// @param _templateHash The hash of the initial state of the Cartesi Machine
+    /// @param _salt The salt used to generate the DApp's address deterministically
+    /// @return The application address
+    function calculateApplicationAddress(
+        IConsensus _consensus,
+        address _dappOwner,
+        bytes32 _templateHash,
+        bytes32 _salt
+    ) external view returns (address);
 }
