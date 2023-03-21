@@ -70,6 +70,15 @@ contract CartesiDAppFactoryTest is TestBase {
         assertEq(address(dapp.getConsensus()), address(consensus));
         assertEq(dapp.owner(), _dappOwner);
         assertEq(dapp.getTemplateHash(), _templateHash);
+
+        // Cannot deploy a DApp with the same salt twice
+        vm.expectRevert(bytes(""));
+        factory.newApplication(
+            _consensus,
+            _dappOwner,
+            _templateHash,
+            _salt
+        );
     }
 
     function testApplicationCreatedEvent(
