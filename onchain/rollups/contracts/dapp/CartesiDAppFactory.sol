@@ -38,4 +38,26 @@ contract CartesiDAppFactory is ICartesiDAppFactory {
 
         return application;
     }
+
+    function newApplication(
+        IConsensus _consensus,
+        address _dappOwner,
+        bytes32 _templateHash,
+        bytes32 _salt
+    ) external override returns (CartesiDApp) {
+        CartesiDApp application = new CartesiDApp{salt: _salt}(
+            _consensus,
+            _dappOwner,
+            _templateHash
+        );
+
+        emit ApplicationCreated(
+            _consensus,
+            _dappOwner,
+            _templateHash,
+            application
+        );
+
+        return application;
+    }
 }

@@ -42,15 +42,34 @@ contract CartesiDAppFactoryTest is TestBase {
     ) public {
         vm.assume(_dappOwner != address(0));
 
-        CartesiDApp newDapp = factory.newApplication(
+        CartesiDApp dapp = factory.newApplication(
             consensus,
             _dappOwner,
             _templateHash
         );
 
-        assertEq(address(newDapp.getConsensus()), address(consensus));
-        assertEq(newDapp.owner(), _dappOwner);
-        assertEq(newDapp.getTemplateHash(), _templateHash);
+        assertEq(address(dapp.getConsensus()), address(consensus));
+        assertEq(dapp.owner(), _dappOwner);
+        assertEq(dapp.getTemplateHash(), _templateHash);
+    }
+
+    function testNewApplicationDeterministic(
+        address _dappOwner,
+        bytes32 _templateHash,
+        bytes32 _salt
+    ) public {
+        vm.assume(_dappOwner != address(0));
+
+        CartesiDApp dapp = factory.newApplication(
+            consensus,
+            _dappOwner,
+            _templateHash,
+            _salt
+        );
+
+        assertEq(address(dapp.getConsensus()), address(consensus));
+        assertEq(dapp.owner(), _dappOwner);
+        assertEq(dapp.getTemplateHash(), _templateHash);
     }
 
     function testApplicationCreatedEvent(
@@ -63,13 +82,49 @@ contract CartesiDAppFactoryTest is TestBase {
         vm.recordLogs();
 
         // perform call and emit event
-        CartesiDApp newDapp = factory.newApplication(
+        // the first event is `OwnershipTransferred` emitted by Ownable constructor
+        // the second event is `OwnershipTransferred` emitted by CartesiDApp constructor
+        // the third event is `ApplicationCreated` emitted by `newApplication` function
+        // we focus on the third event
+        CartesiDApp dapp = factory.newApplication(
             consensus,
             _dappOwner,
             _templateHash
         );
 
-        // get recorder logs
+        testApplicationCreatedEventAux(_dappOwner, _templateHash, dapp);
+    }
+
+    function testApplicationCreatedEventDeterministic(
+        address _dappOwner,
+        bytes32 _templateHash,
+        bytes32 _salt
+    ) public {
+        vm.assume(_dappOwner != address(0));
+
+        // Start the recorder
+        vm.recordLogs();
+
+        // perform call and emit event
+        // the first event is `OwnershipTransferred` emitted by Ownable constructor
+        // the second event is `OwnershipTransferred` emitted by CartesiDApp constructor
+        // the third event is `ApplicationCreated` emitted by `newApplication` function
+        // we focus on the third event
+        CartesiDApp dapp = factory.newApplication(
+            consensus,
+            _dappOwner,
+            _templateHash,
+            _salt
+        );
+
+        testApplicationCreatedEventAux(_dappOwner, _templateHash, dapp);
+    }
+
+    function testApplicationCreatedEventAux(
+        address _dappOwner,
+        bytes32 _templateHash,
+        CartesiDApp _dapp
+    ) internal {
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         // there is at least one entry
@@ -97,7 +152,6 @@ contract CartesiDAppFactoryTest is TestBase {
         );
 
         // test data
-        // no need to test decodedApplication
         (
             address decodedDappOwner,
             bytes32 decodedTemplateHash,
@@ -105,6 +159,6 @@ contract CartesiDAppFactoryTest is TestBase {
         ) = abi.decode(entry.data, (address, bytes32, address));
         assertEq(_dappOwner, decodedDappOwner);
         assertEq(_templateHash, decodedTemplateHash);
-        assertEq(address(newDapp), decodedApplication);
+        assertEq(address(_dapp), decodedApplication);
     }
 }

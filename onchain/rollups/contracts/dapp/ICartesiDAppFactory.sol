@@ -43,4 +43,17 @@ interface ICartesiDAppFactory {
         address _dappOwner,
         bytes32 _templateHash
     ) external returns (CartesiDApp);
+
+    /// @notice Deploy a new application deterministically
+    /// @param _consensus The consensus to which the DApp should be subscribed
+    /// @param _dappOwner The address that should own the DApp
+    /// @param _templateHash The hash of the initial state of the Cartesi Machine
+    /// @param _salt The salt used to generate the DApp's address deterministically
+    /// @return The application
+    function newApplication(
+        IConsensus _consensus,
+        address _dappOwner,
+        bytes32 _templateHash,
+        bytes32 _salt
+    ) external returns (CartesiDApp);
 }
