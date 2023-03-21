@@ -60,6 +60,13 @@ contract CartesiDAppFactoryTest is TestBase {
     ) public {
         vm.assume(_dappOwner != address(0));
 
+        address precalculatedAddress = factory.calculateApplicationAddress(
+            consensus,
+            _dappOwner,
+            _templateHash,
+            _salt
+        );
+
         CartesiDApp dapp = factory.newApplication(
             consensus,
             _dappOwner,
@@ -67,18 +74,26 @@ contract CartesiDAppFactoryTest is TestBase {
             _salt
         );
 
+        // Precalculated address must match actual address
+        assertEq(precalculatedAddress, address(dapp));
+
         assertEq(address(dapp.getConsensus()), address(consensus));
         assertEq(dapp.owner(), _dappOwner);
         assertEq(dapp.getTemplateHash(), _templateHash);
 
-        // Cannot deploy a DApp with the same salt twice
-        vm.expectRevert(bytes(""));
-        factory.newApplication(
-            _consensus,
+        precalculatedAddress = factory.calculateApplicationAddress(
+            consensus,
             _dappOwner,
             _templateHash,
             _salt
         );
+
+        // Precalculated address must STILL match actual address
+        assertEq(precalculatedAddress, address(dapp));
+
+        // Cannot deploy a DApp with the same salt twice
+        vm.expectRevert(bytes(""));
+        factory.newApplication(consensus, _dappOwner, _templateHash, _salt);
     }
 
     function testApplicationCreatedEvent(
