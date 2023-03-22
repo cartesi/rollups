@@ -61,7 +61,7 @@ mod tests {
     // --------------------------------------------------------------------------------------------
 
     #[test]
-    fn test_new() {
+    fn new() {
         let dapp_address = H160::default();
         let blockchain_driver = BlockchainDriver::new(dapp_address);
         assert_eq!(blockchain_driver.dapp_address, dapp_address);
@@ -72,7 +72,7 @@ mod tests {
     // --------------------------------------------------------------------------------------------
 
     #[test]
-    fn test_claims_sent_some_0() {
+    fn claims_sent_some_0() {
         let dapp_address = H160::random();
         let history = mock::new_history();
         let history = mock::update_history(&history, dapp_address, 0);
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn test_claims_sent_some_1() {
+    fn claims_sent_some_1() {
         let dapp_address1 = H160::random();
         let dapp_address2 = H160::random();
         let history = mock::new_history();
@@ -94,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn test_claims_sent_some_n() {
+    fn claims_sent_some_n() {
         let dapp_address1 = H160::random();
         let dapp_address2 = H160::random();
         let history = mock::new_history();
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[test]
-    fn test_claims_sent_none() {
+    fn claims_sent_none() {
         let dapp_address1 = H160::random();
         let dapp_address2 = H160::random();
         let history = mock::new_history();
@@ -149,31 +149,31 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_react_no_claim() {
+    async fn react_no_claim() {
         test_react(vec![], 0).await;
     }
 
     // broker has 1 (new) claim -- sent 1 claim
     #[tokio::test]
-    async fn test_react_1_new_claim_sent_1_claim() {
+    async fn react_1_new_claim_sent_1_claim() {
         test_react(vec![6], 1).await;
     }
 
     // broker has 1 (old) claim -- sent 0 claims
     #[tokio::test]
-    async fn test_react_1_old_claim_sent_0_claims() {
+    async fn react_1_old_claim_sent_0_claims() {
         test_react(vec![5], 0).await;
     }
 
     // broker has 2 claims (1 old, 1 new) -- sent 1 claim
     #[tokio::test]
-    async fn test_react_2_claims_sent_1_claim() {
+    async fn react_2_claims_sent_1_claim() {
         test_react(vec![5, 6], 1).await;
     }
 
     // broker has interleaved old and new claims -- sent 5 new claims
     #[tokio::test]
-    async fn test_react_interleaved_old_new_claims_sent_5_claims() {
+    async fn react_interleaved_old_new_claims_sent_5_claims() {
         test_react(vec![1, 5, 6, 2, 3, 7, 8, 4, 5, 9, 10], 5).await;
     }
 }

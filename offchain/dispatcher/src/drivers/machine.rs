@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_process_input_right_before_finish_epoch() {
+    async fn process_input_right_before_finish_epoch() {
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_process_input_at_finish_epoch() {
+    async fn process_input_at_finish_epoch() {
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_process_input_last_event_is_finish_epoch() {
+    async fn process_input_last_event_is_finish_epoch() {
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: true,
@@ -170,7 +170,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_process_input_after_finish_epoch() {
+    async fn process_input_after_finish_epoch() {
         let rollup_status = RollupStatus {
             inputs_sent_count: 3,
             last_event_is_finish_epoch: false,
@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_process_input_crossing_two_epochs() {
+    async fn process_input_crossing_two_epochs() {
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_process_inputs_with_some_skipping() {
+    async fn process_inputs_with_some_skipping() {
         let rollup_status = RollupStatus {
             inputs_sent_count: 3,
             last_event_is_finish_epoch: false,
@@ -265,7 +265,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_process_inputs_skipping_all() {
+    async fn process_inputs_skipping_all() {
         let rollup_status = RollupStatus {
             inputs_sent_count: 4,
             last_event_is_finish_epoch: false,
@@ -305,7 +305,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_react_without_finish_epoch() {
+    async fn react_without_finish_epoch() {
         let block = mock::new_block(3);
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
@@ -321,7 +321,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_react_with_finish_epoch() {
+    async fn react_with_finish_epoch() {
         let block = mock::new_block(5);
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
@@ -338,7 +338,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_react_with_internal_finish_epoch() {
+    async fn react_with_internal_finish_epoch() {
         let block = mock::new_block(5);
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
@@ -355,7 +355,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_react_without_inputs() {
+    async fn react_without_inputs() {
         let rollup_status = RollupStatus {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,

@@ -113,7 +113,7 @@ mod private_tests {
     }
 
     #[test]
-    fn test_calculate_epoch_with_zero_genesis() {
+    fn calculate_epoch_with_zero_genesis() {
         let epoch_length = 3;
         let context = new_context_for_calculate_epoch_test(0, epoch_length);
         let n = 10;
@@ -131,7 +131,7 @@ mod private_tests {
     }
 
     #[test]
-    fn test_calculate_epoch_with_offset_genesis() {
+    fn calculate_epoch_with_offset_genesis() {
         let context = new_context_for_calculate_epoch_test(2, 2);
         assert_eq!(context.calculate_epoch(2), 0);
         assert_eq!(context.calculate_epoch(3), 0);
@@ -142,7 +142,7 @@ mod private_tests {
 
     #[test]
     #[should_panic]
-    fn test_calculate_epoch_invalid() {
+    fn calculate_epoch_invalid() {
         new_context_for_calculate_epoch_test(4, 3).calculate_epoch(2);
     }
 
@@ -151,7 +151,7 @@ mod private_tests {
     // --------------------------------------------------------------------------------------------
 
     #[test]
-    fn test_should_finish_epoch_false() {
+    fn should_finish_epoch_false() {
         let context = Context {
             inputs_sent_count: 0, // ignored
             last_event_is_finish_epoch: false,
@@ -163,7 +163,7 @@ mod private_tests {
     }
 
     #[test]
-    fn test_should_finish_epoch_true() {
+    fn should_finish_epoch_true() {
         let context = Context {
             inputs_sent_count: 0, // ignored
             last_event_is_finish_epoch: false,
@@ -175,7 +175,7 @@ mod private_tests {
     }
 
     #[test]
-    fn test_should_finish_epoch_when_last_event_is_finish_epoch() {
+    fn should_finish_epoch_when_last_event_is_finish_epoch() {
         let context = Context {
             inputs_sent_count: 0, // ignored
             last_event_is_finish_epoch: true,
@@ -191,7 +191,7 @@ mod private_tests {
     // --------------------------------------------------------------------------------------------
 
     #[tokio::test]
-    async fn test_finish_epoch_ok() {
+    async fn finish_epoch_ok() {
         let mut context = Context {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -209,7 +209,7 @@ mod private_tests {
 
     #[tokio::test]
     #[should_panic]
-    async fn test_finish_epoch_invalid() {
+    async fn finish_epoch_invalid() {
         let mut context = Context {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -222,7 +222,7 @@ mod private_tests {
     }
 
     #[tokio::test]
-    async fn test_finish_epoch_broker_error() {
+    async fn finish_epoch_broker_error() {
         let last_timestamp = 3;
         let last_event_is_finish_epoch = false;
         let mut context = Context {
@@ -257,7 +257,7 @@ mod public_tests {
     // --------------------------------------------------------------------------------------------
 
     #[tokio::test]
-    async fn test_new_ok() {
+    async fn new_ok() {
         let genesis_timestamp = 42;
         let epoch_length = 24;
         let inputs_sent_count = 150;
@@ -280,7 +280,7 @@ mod public_tests {
     }
 
     #[tokio::test]
-    async fn test_new_broker_error() {
+    async fn new_broker_error() {
         let broker = Broker::with_status_error();
         let result = Context::new(1337, 7331, &broker).await;
         assert!(result.is_err());
@@ -291,7 +291,7 @@ mod public_tests {
     // --------------------------------------------------------------------------------------------
 
     #[test]
-    fn test_inputs_sent_count() {
+    fn inputs_sent_count() {
         let inputs_sent_count = 42;
         let context = Context {
             inputs_sent_count,
@@ -308,7 +308,7 @@ mod public_tests {
     // --------------------------------------------------------------------------------------------
 
     #[tokio::test]
-    async fn test_finish_epoch_if_needed_true() {
+    async fn finish_epoch_if_needed_true() {
         let mut context = Context {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -324,7 +324,7 @@ mod public_tests {
     }
 
     #[tokio::test]
-    async fn test_finish_epoch_if_needed_false() {
+    async fn finish_epoch_if_needed_false() {
         let mut context = Context {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -339,7 +339,7 @@ mod public_tests {
     }
 
     #[tokio::test]
-    async fn test_finish_epoch_if_needed_broker_error() {
+    async fn finish_epoch_if_needed_broker_error() {
         let mut context = Context {
             inputs_sent_count: 0,
             last_event_is_finish_epoch: false,
@@ -357,7 +357,7 @@ mod public_tests {
     // --------------------------------------------------------------------------------------------
 
     #[tokio::test]
-    async fn test_enqueue_input_ok() {
+    async fn enqueue_input_ok() {
         let inputs_sent_count = 42;
         let mut context = Context {
             inputs_sent_count,
@@ -378,7 +378,7 @@ mod public_tests {
     }
 
     #[tokio::test]
-    async fn test_enqueue_input_broker_error() {
+    async fn enqueue_input_broker_error() {
         let mut context = Context {
             inputs_sent_count: 42,
             last_event_is_finish_epoch: true,

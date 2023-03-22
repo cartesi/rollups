@@ -346,7 +346,7 @@ impl From<Event<RollupsClaim>> for super::RollupClaim {
 }
 
 #[cfg(test)]
-mod tests {
+mod broker_facade_tests {
     use std::{sync::Arc, time::Duration};
 
     use rollups_events::{
@@ -372,13 +372,13 @@ mod tests {
     // --------------------------------------------------------------------------------------------
 
     #[tokio::test]
-    async fn test_broker_facade_new_ok() {
+    async fn new_ok() {
         let docker = Cli::default();
         let (_fixture, _broker) = setup(&docker).await;
     }
 
     #[tokio::test]
-    async fn test_broker_facade_new_error() {
+    async fn new_error() {
         let result = BrokerFacade::new(BrokerConfig {
             redis_endpoint: "invalid".to_string(),
             chain_id: 1,
@@ -400,60 +400,52 @@ mod tests {
     // --------------------------------------------------------------------------------------------
 
     #[tokio::test]
-    async fn test_broker_status_inputs_sent_count_equals_0() {
+    async fn status_inputs_sent_count_equals_0() {
         let docker = Cli::default();
         let (_fixture, broker) = setup(&docker).await;
         let status = broker.status().await.expect("'status' function failed");
-        assert!(status.inputs_sent_count == 0);
+        assert_eq!(status.inputs_sent_count, 0);
         assert!(!status.last_event_is_finish_epoch);
     }
 
     #[tokio::test]
-    async fn test_broker_status_inputs_sent_count_equals_1() {
+    async fn status_inputs_sent_count_equals_1() {
         let docker = Cli::default();
         let (fixture, broker) = setup(&docker).await;
-        let _ = fixture.produce_input_event(new_rollups_data()).await;
+        produce_advance_state_inputs(&fixture, 1).await;
         let status = broker.status().await.expect("'status' function failed");
-        assert!(status.inputs_sent_count == 1);
+        assert_eq!(status.inputs_sent_count, 1);
         assert!(!status.last_event_is_finish_epoch);
     }
 
     #[tokio::test]
-    async fn test_broker_status_inputs_sent_count_equals_10() {
+    async fn status_inputs_sent_count_equals_10() {
         let docker = Cli::default();
         let (fixture, broker) = setup(&docker).await;
-        for _ in 0..10 {
-            let _ = fixture.produce_input_event(new_rollups_data()).await;
-        }
+        produce_advance_state_inputs(&fixture, 10).await;
         let status = broker.status().await.expect("'status' function failed");
-        assert!(status.inputs_sent_count == 10);
+        assert_eq!(status.inputs_sent_count, 10);
         assert!(!status.last_event_is_finish_epoch);
     }
 
     #[tokio::test]
-    async fn test_broker_status_is_finish_epoch() {
+    async fn status_is_finish_epoch() {
         let docker = Cli::default();
         let (fixture, broker) = setup(&docker).await;
-        let _ = fixture
-            .produce_input_event(RollupsData::FinishEpoch {})
-            .await;
+        produce_finish_epoch_input(&fixture).await;
         let status = broker.status().await.expect("'status' function failed");
-        assert!(status.inputs_sent_count == 0);
+        assert_eq!(status.inputs_sent_count, 0);
         assert!(status.last_event_is_finish_epoch);
     }
 
     #[tokio::test]
-    async fn test_broker_status_inputs_with_finish_epoch() {
+    async fn status_inputs_with_finish_epoch() {
         let docker = Cli::default();
         let (fixture, broker) = setup(&docker).await;
-        for _ in 0..5 {
-            let _ = fixture.produce_input_event(new_rollups_data()).await;
-        }
-        let _ = fixture
-            .produce_input_event(RollupsData::FinishEpoch {})
-            .await;
+        produce_advance_state_inputs(&fixture, 5).await;
+        produce_finish_epoch_input(&fixture).await;
         let status = broker.status().await.expect("'status' function failed");
-        assert!(status.inputs_sent_count == 5);
+        assert_eq!(status.inputs_sent_count, 5);
         assert!(status.last_event_is_finish_epoch);
     }
 
@@ -462,7 +454,7 @@ mod tests {
     // --------------------------------------------------------------------------------------------
 
     #[tokio::test]
-    async fn test_broker_enqueue_input_ok() {
+    async fn enqueue_input_ok() {
         let docker = Cli::default();
         let (_fixture, broker) = setup(&docker).await;
         for i in 0..3 {
@@ -475,7 +467,7 @@ mod tests {
 
     #[tokio::test]
     #[should_panic(expected = "left: `1`,\n right: `6`")]
-    async fn test_broker_enqueue_input_assertion_error_1() {
+    async fn enqueue_input_assertion_error_1() {
         let docker = Cli::default();
         let (_fixture, broker) = setup(&docker).await;
         let _ = broker.enqueue_input(5, &new_enqueue_input()).await;
@@ -483,7 +475,7 @@ mod tests {
 
     #[tokio::test]
     #[should_panic(expected = "left: `5`,\n right: `6`")]
-    async fn test_broker_enqueue_input_assertion_error_2() {
+    async fn enqueue_input_assertion_error_2() {
         let docker = Cli::default();
         let (_fixture, broker) = setup(&docker).await;
         for i in 0..4 {
@@ -495,53 +487,48 @@ mod tests {
         let _ = broker.enqueue_input(5, &new_enqueue_input()).await;
     }
 
-    // TODO: test result error
+    // NOTE: cannot test result error because the dependency is not injectable.
 
     // --------------------------------------------------------------------------------------------
     // finish_epoch
     // --------------------------------------------------------------------------------------------
 
     #[tokio::test]
-    async fn test_broker_finish_epoch_ok_1() {
+    async fn finish_epoch_ok_1() {
         let docker = Cli::default();
         let (_fixture, broker) = setup(&docker).await;
         assert!(broker.finish_epoch(0).await.is_ok());
+        // BONUS TEST: testing for a finished epoch with no inputs
         assert!(broker.finish_epoch(0).await.is_ok());
     }
 
     #[tokio::test]
-    async fn test_broker_finish_epoch_ok_2() {
+    async fn finish_epoch_ok_2() {
         let docker = Cli::default();
         let (fixture, broker) = setup(&docker).await;
-        let (x, y) = (3, 10);
-        for i in 0..x {
-            broker.enqueue_input(i, &new_enqueue_input()).await.unwrap();
-        }
-        let _ = fixture
-            .produce_input_event(RollupsData::FinishEpoch {})
-            .await;
-        for i in x..y {
-            broker.enqueue_input(i, &new_enqueue_input()).await.unwrap();
-        }
-        assert!(broker.finish_epoch(y as u64).await.is_ok());
+        produce_advance_state_inputs(&fixture, 3).await;
+        produce_finish_epoch_input(&fixture).await;
+        let n = 7;
+        produce_advance_state_inputs(&fixture, n).await;
+        assert!(broker.finish_epoch(n as u64).await.is_ok());
     }
 
     #[tokio::test]
     #[should_panic(expected = "left: `0`,\n right: `1`")]
-    async fn test_broker_finish_epoch_assertion_error_1() {
+    async fn finish_epoch_assertion_error() {
         let docker = Cli::default();
         let (_fixture, broker) = setup(&docker).await;
         let _ = broker.finish_epoch(1).await;
     }
 
-    // TODO: test result error
+    // NOTE: cannot test result error because the dependency is not injectable.
 
     // --------------------------------------------------------------------------------------------
     // next_claim
     // --------------------------------------------------------------------------------------------
 
     #[tokio::test]
-    async fn test_broker_next_claim_is_none() {
+    async fn next_claim_is_none() {
         let docker = Cli::default();
         let (_fixture, broker) = setup(&docker).await;
         let option = broker
@@ -552,51 +539,45 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_broker_next_claim_is_some_1() {
+    async fn next_claim_is_some() {
         let docker = Cli::default();
         let (fixture, broker) = setup(&docker).await;
 
-        let hash = Hash::new([1; HASH_SIZE]);
-        fixture.produce_claim(hash.clone()).await;
+        let hashes = produce_claims(&fixture, 1).await;
         let claim = broker
             .next_claim()
             .await
             .expect("'next_claim' function failed")
             .expect("no claims retrieved");
 
-        assert_eq!(hash.inner().to_owned(), claim.hash);
+        assert_eq!(hashes[0].inner().to_owned(), claim.hash);
         assert_eq!(0, claim.number);
     }
 
     #[tokio::test]
-    async fn test_broker_next_claim_is_some_2() {
+    async fn next_claim_is_some_sequential() {
         let docker = Cli::default();
         let (fixture, broker) = setup(&docker).await;
-        let (x, y) = (0, 3);
 
-        for i in x..y {
-            let hash = Hash::new([i; HASH_SIZE]);
-            fixture.produce_claim(hash).await;
-        }
-        for i in x..y {
-            let hash = [i; HASH_SIZE];
+        let n = 3;
+        let hashes = produce_claims(&fixture, n).await;
+        for i in 0..n {
             let claim = broker
                 .next_claim()
                 .await
                 .expect("'next_claim' function failed")
                 .expect("no claims retrieved");
-            assert_eq!(hash, claim.hash);
+            assert_eq!(hashes[i as usize].inner().to_owned(), claim.hash);
             assert_eq!(i as u64, claim.number);
         }
     }
 
     #[tokio::test]
-    async fn test_broker_next_claim_is_some_3() {
+    async fn next_claim_is_some_interleaved() {
         let docker = Cli::default();
         let (fixture, broker) = setup(&docker).await;
-        let (x, y) = (0, 5);
 
-        for i in x..y {
+        for i in 0..5 {
             let hash = Hash::new([i; HASH_SIZE]);
             fixture.produce_claim(hash.clone()).await;
             let claim = broker
@@ -642,11 +623,33 @@ mod tests {
         }
     }
 
-    fn new_rollups_data() -> RollupsData {
-        RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
-            metadata: InputMetadata::default(),
-            payload: Payload::default(),
-            tx_hash: Hash::default(),
-        })
+    async fn produce_advance_state_inputs(fixture: &BrokerFixture<'_>, n: u32) {
+        for _ in 0..n {
+            let _ = fixture
+                .produce_input_event(RollupsData::AdvanceStateInput(
+                    RollupsAdvanceStateInput {
+                        metadata: InputMetadata::default(),
+                        payload: Payload::default(),
+                        tx_hash: Hash::default(),
+                    },
+                ))
+                .await;
+        }
+    }
+
+    async fn produce_finish_epoch_input(fixture: &BrokerFixture<'_>) {
+        let _ = fixture
+            .produce_input_event(RollupsData::FinishEpoch {})
+            .await;
+    }
+
+    async fn produce_claims(fixture: &BrokerFixture<'_>, n: u32) -> Vec<Hash> {
+        let mut hashes = Vec::new();
+        for i in 0..n {
+            let hash = Hash::new([i as u8; HASH_SIZE]);
+            fixture.produce_claim(hash.clone()).await;
+            hashes.push(hash);
+        }
+        hashes
     }
 }
