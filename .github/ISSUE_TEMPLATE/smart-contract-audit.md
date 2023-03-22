@@ -30,7 +30,6 @@ You can find many others from the list of references.
 - [ ] Weak Sources of Randomness from Chain Attributes [(SWC-120)](https://swcregistry.io/docs/SWC-120)
 
 ### Authorization
-- [ ] Function's Default Visibility [(SWC-100)](https://swcregistry.io/docs/SWC-100)
 - [ ] Unprotected Ether Withdrawal [(SWC-105)](https://swcregistry.io/docs/SWC-105)
 - [ ] Unprotected Self-Destruct [(SWC-106)](https://swcregistry.io/docs/SWC-106)
 - [ ] State Variable Default Visibility [(SWC-108)](https://swcregistry.io/docs/SWC-108)
