@@ -128,7 +128,7 @@ export const handler = safeHandler<Args>(async (args) => {
         overrides.gasLimit = gasLimit;
     }
 
-    const tx = await factoryContract.newApplication(
+    const tx = await factoryContract["newApplication(address,address,bytes32)"](
         args.consensusAddress || authorityContract.address,
         args.dappOwner || address,
         templateHash,
