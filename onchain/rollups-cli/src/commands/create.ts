@@ -25,6 +25,7 @@ interface Args extends BlockchainArgs {
     consensusAddress?: string;
     templateHash?: string;
     templateHashFile?: string;
+    salt?: string;
     outputFile?: string;
     gasPrice?: number;
     gasLimit?: number;
@@ -61,6 +62,10 @@ export const builder = (yargs: Argv<{}>): Argv<Args> => {
         })
         .option("templateHashFile", {
             describe: "Cartesi Machine template hash file",
+            type: "string",
+        })
+        .option("salt", {
+            describe: "Salt used in deterministic deployment",
             type: "string",
         })
         .option("outputFile", {
@@ -128,12 +133,23 @@ export const handler = safeHandler<Args>(async (args) => {
         overrides.gasLimit = gasLimit;
     }
 
-    const tx = await factoryContract["newApplication(address,address,bytes32)"](
-        args.consensusAddress || authorityContract.address,
-        args.dappOwner || address,
-        templateHash,
-        overrides
-    );
+    const consensusAddress = args.consensusAddress || authorityContract.address;
+    const dappOwner = args.dappOwner || address;
+
+    let tx;
+    if (args.salt) {
+        tx = await factoryContract[
+            "newApplication(address,address,bytes32,bytes32)"
+        ](consensusAddress, dappOwner, templateHash, args.salt, overrides);
+    } else {
+        tx = await factoryContract["newApplication(address,address,bytes32)"](
+            consensusAddress,
+            dappOwner,
+            templateHash,
+            overrides
+        );
+    }
+
     console.log(`transaction: ${tx.hash}`);
     console.log("waiting for confirmation...");
     const receipt = await tx.wait(1);
