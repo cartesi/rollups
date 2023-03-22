@@ -31,9 +31,9 @@ contract CartesiDApp is
     using Bitmask for mapping(uint256 => uint256);
     using LibOutputValidation for OutputValidityProof;
 
-    bytes32 immutable templateHash;
-    mapping(uint256 => uint256) voucherBitmask;
-    IConsensus consensus;
+    bytes32 internal immutable templateHash;
+    mapping(uint256 => uint256) internal voucherBitmask;
+    IConsensus internal consensus;
 
     constructor(IConsensus _consensus, address _owner, bytes32 _templateHash) {
         transferOwnership(_owner);

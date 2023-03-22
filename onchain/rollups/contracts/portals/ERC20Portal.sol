@@ -20,7 +20,7 @@ import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
 contract ERC20Portal is IERC20Portal {
-    IInputBox immutable inputBox;
+    IInputBox internal immutable inputBox;
 
     constructor(IInputBox _inputBox) {
         inputBox = _inputBox;

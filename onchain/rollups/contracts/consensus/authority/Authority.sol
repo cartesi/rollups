@@ -21,7 +21,7 @@ import {IHistory} from "../../history/IHistory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Authority is AbstractConsensus, Ownable {
-    IHistory history;
+    IHistory internal history;
 
     /// @notice A consensus was created
     /// @param owner The address that owns the consensus

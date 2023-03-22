@@ -17,7 +17,7 @@ import {IInputBox} from "./IInputBox.sol";
 import {LibInput} from "../library/LibInput.sol";
 
 contract InputBox is IInputBox {
-    mapping(address => bytes32[]) inputBoxes;
+    mapping(address => bytes32[]) internal inputBoxes;
 
     function addInput(
         address _dapp,

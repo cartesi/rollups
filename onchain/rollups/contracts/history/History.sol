@@ -25,7 +25,7 @@ contract History is IHistory, Ownable {
     }
 
     // mapping from dapp address => array of claims
-    mapping(address => Claim[]) claims;
+    mapping(address => Claim[]) internal claims;
 
     // Events
 
