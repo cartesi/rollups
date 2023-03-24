@@ -16,27 +16,8 @@ pragma solidity ^0.8.8;
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IPortal} from "./IPortal.sol";
 
-interface IERC1155Portal is IPortal {
+interface IERC1155PortalBatch is IPortal {
     // Permissionless functions
-
-    /// @notice Transfer an ERC-1155 token to a DApp and add an input to
-    ///         the DApp's input box to signal such operation.
-    /// @param _token The ERC-1155 token contract
-    /// @param _dapp The address of the DApp
-    /// @param _tokenId The identifier of the token being transferred
-    /// @param _value Transfer amount
-    /// @param _baseLayerData Additional data to be interpreted by the base layer
-    /// @param _execLayerData Additional data to be interpreted by the execution layer
-    /// @dev The caller must allow the portal to withdraw the token
-    ///      from their account beforehand.
-    function depositSingleERC1155Token(
-        IERC1155 _token,
-        address _dapp,
-        uint256 _tokenId,
-        uint256 _value,
-        bytes calldata _baseLayerData,
-        bytes calldata _execLayerData
-    ) external;
 
     /// @notice Transfer a batch of ERC-1155 tokens to a DApp and add an input to
     ///         the DApp's input box to signal such operation.

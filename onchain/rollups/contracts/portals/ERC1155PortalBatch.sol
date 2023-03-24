@@ -14,11 +14,11 @@
 pragma solidity ^0.8.8;
 
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {IERC1155Portal} from "./IERC1155Portal.sol";
+import {IERC1155PortalBatch} from "./IERC1155PortalBatch.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
-contract ERC1155Portal is IERC1155Portal {
+contract ERC1155PortalBatch is IERC1155PortalBatch {
     IInputBox internal immutable inputBox;
 
     constructor(IInputBox _inputBox) {
@@ -27,34 +27,6 @@ contract ERC1155Portal is IERC1155Portal {
 
     function getInputBox() external view override returns (IInputBox) {
         return inputBox;
-    }
-
-    function depositSingleERC1155Token(
-        IERC1155 _token,
-        address _dapp,
-        uint256 _tokenId,
-        uint256 _value,
-        bytes calldata _baseLayer,
-        bytes calldata _execLayerData
-    ) external override {
-        _token.safeTransferFrom(
-            msg.sender,
-            _dapp,
-            _tokenId,
-            _value,
-            _baseLayer
-        );
-
-        bytes memory input = InputEncoding.encodeSingleERC1155Deposit(
-            _token,
-            msg.sender,
-            _tokenId,
-            _value,
-            _baseLayer,
-            _execLayerData
-        );
-
-        inputBox.addInput(_dapp, input);
     }
 
     function depositBatchERC1155Token(

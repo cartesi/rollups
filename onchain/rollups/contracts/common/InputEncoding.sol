@@ -18,12 +18,6 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 library InputEncoding {
-    /// @notice ERC-1155 token deposit
-    bytes1 constant ERC1155_SINGLE_DEPOSIT = bytes1(0x04);
-
-    /// @notice ERC-1155 batch token deposit
-    bytes1 constant ERC1155_BATCH_DEPOSIT = bytes1(0x05);
-
     /// @notice Encode Ether deposit
     /// @param sender The Ether sender
     /// @param value The amount of Ether being sent in Wei
@@ -123,7 +117,6 @@ library InputEncoding {
         bytes memory data = abi.encode(baseLayerData, execLayerData);
         return
             abi.encodePacked(
-                ERC1155_SINGLE_DEPOSIT, //  1B
                 token, //                   20B
                 sender, //                  20B
                 tokenId, //                 32B
@@ -157,7 +150,6 @@ library InputEncoding {
         );
         return
             abi.encodePacked(
-                ERC1155_BATCH_DEPOSIT, //   1B
                 token, //                   20B
                 sender, //                  20B
                 data //                     arbitrary size

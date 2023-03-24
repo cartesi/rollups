@@ -10,18 +10,17 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title ERC-1155 Portal Test
-pragma solidity ^0.8.8;
+/// @title ERC-1155 Portal Single Test
+pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC1155Portal} from "contracts/portals/ERC1155Portal.sol";
-import {IERC1155Portal} from "contracts/portals/IERC1155Portal.sol";
+import {ERC1155PortalSingle} from "contracts/portals/ERC1155PortalSingle.sol";
+import {IERC1155PortalSingle} from "contracts/portals/IERC1155PortalSingle.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {InputBox} from "contracts/inputs/InputBox.sol";
-import {InputEncoding} from "contracts/common/InputEncoding.sol";
 
 contract NormalToken is ERC1155 {
     constructor(
@@ -30,16 +29,6 @@ contract NormalToken is ERC1155 {
         uint256 totalSupply
     ) ERC1155("NormalToken") {
         _mint(tokenOwner, tokenId, totalSupply, "");
-    }
-}
-
-contract BatchToken is ERC1155 {
-    constructor(
-        address tokenOwner,
-        uint256[] memory tokenIds,
-        uint256[] memory totalSupplies
-    ) ERC1155("BatchToken") {
-        _mintBatch(tokenOwner, tokenIds, totalSupplies, "");
     }
 }
 
@@ -76,9 +65,9 @@ contract ERC1155Receiver is IERC1155Receiver {
     }
 }
 
-contract ERC1155PortalTest is Test {
+contract ERC1155PortalSingleTest is Test {
     IInputBox inputBox;
-    IERC1155Portal erc1155Portal;
+    IERC1155PortalSingle erc1155PortalSingle;
     IERC1155 token;
     address alice;
     address dapp;
@@ -92,24 +81,16 @@ contract ERC1155PortalTest is Test {
         uint256 value
     );
 
-    event TransferBatch(
-        address indexed operator,
-        address indexed from,
-        address indexed to,
-        uint256[] ids,
-        uint256[] values
-    );
-
     function setUp() public {
         inputBox = new InputBox();
-        erc1155Portal = new ERC1155Portal(inputBox);
+        erc1155PortalSingle = new ERC1155PortalSingle(inputBox);
         alice = address(vm.addr(1));
         dapp = address(vm.addr(2));
         bob = address(vm.addr(3));
     }
 
-    function testGetInputBox() public {
-        assertEq(address(erc1155Portal.getInputBox()), address(inputBox));
+    function testGetInputBoxSingle() public {
+        assertEq(address(erc1155PortalSingle.getInputBox()), address(inputBox));
     }
 
     function testERC1155DepositEOA(
@@ -125,19 +106,19 @@ contract ERC1155PortalTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw tokens from Alice
-        token.setApprovalForAll(address(erc1155Portal), true);
+        token.setApprovalForAll(address(erc1155PortalSingle), true);
 
         // Expect TransferSingle to be emitted with the right arguments
         vm.expectEmit(true, true, true, true);
         emit TransferSingle(
-            address(erc1155Portal),
+            address(erc1155PortalSingle),
             alice,
             dapp,
             tokenId,
             value
         );
 
-        erc1155Portal.depositSingleERC1155Token(
+        erc1155PortalSingle.depositSingleERC1155Token(
             token,
             dapp,
             tokenId,
@@ -169,10 +150,10 @@ contract ERC1155PortalTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw tokens from Alice
-        token.setApprovalForAll(address(erc1155Portal), true);
+        token.setApprovalForAll(address(erc1155PortalSingle), true);
 
         vm.expectRevert("ERC1155: insufficient balance for transfer");
-        erc1155Portal.depositSingleERC1155Token(
+        erc1155PortalSingle.depositSingleERC1155Token(
             token,
             dapp,
             tokenId,
@@ -201,19 +182,19 @@ contract ERC1155PortalTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw tokens from Alice
-        token.setApprovalForAll(address(erc1155Portal), true);
+        token.setApprovalForAll(address(erc1155PortalSingle), true);
 
         // Expect TransferSingle to be emitted with the right arguments
         vm.expectEmit(true, true, true, true);
         emit TransferSingle(
-            address(erc1155Portal),
+            address(erc1155PortalSingle),
             alice,
             dapp,
             tokenId,
             value
         );
 
-        erc1155Portal.depositSingleERC1155Token(
+        erc1155PortalSingle.depositSingleERC1155Token(
             token,
             dapp,
             tokenId,
@@ -245,10 +226,10 @@ contract ERC1155PortalTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw the token from Alice
-        token.setApprovalForAll(address(erc1155Portal), true);
+        token.setApprovalForAll(address(erc1155PortalSingle), true);
 
         vm.expectRevert("ERC1155: transfer to non-ERC1155Receiver implementer");
-        erc1155Portal.depositSingleERC1155Token(
+        erc1155PortalSingle.depositSingleERC1155Token(
             token,
             dapp,
             tokenId,
@@ -259,104 +240,5 @@ contract ERC1155PortalTest is Test {
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
-    }
-
-    function testBatchERC1155DepositEOA(
-        bytes calldata baseLayer,
-        bytes calldata executionLayer,
-        uint256[] calldata totalSupplies
-    ) public {
-        vm.assume(totalSupplies.length > 0);
-        uint256[] memory tokenIds = generateTokenIDs(totalSupplies);
-        uint256[] memory values = generateValues(totalSupplies);
-
-        // Mint ERC1155 tokens for Alice
-        token = new BatchToken(alice, tokenIds, totalSupplies);
-
-        // Start impersonating Alice
-        vm.startPrank(alice);
-
-        // Allow the portal to withdraw the token from Alice
-        token.setApprovalForAll(address(erc1155Portal), true);
-
-        // Expect TransferBatch to be emitted with the right arguments
-        vm.expectEmit(true, true, true, true);
-        emit TransferBatch(
-            address(erc1155Portal),
-            alice,
-            dapp,
-            tokenIds,
-            values
-        );
-
-        erc1155Portal.depositBatchERC1155Token(
-            token,
-            dapp,
-            tokenIds,
-            values,
-            baseLayer,
-            executionLayer
-        );
-
-        // Check the token balance of each party
-        for (uint256 i; i < totalSupplies.length; ++i) {
-            assertEq(token.balanceOf(dapp, tokenIds[i]), values[i]);
-            assertEq(
-                token.balanceOf(alice, tokenIds[i]),
-                totalSupplies[i] - values[i]
-            );
-        }
-
-        // Check the DApp's input box
-        assertEq(inputBox.getNumberOfInputs(dapp), 1);
-    }
-
-    function testNotApprovedBatchERC1155DepositEOA(
-        bytes calldata baseLayer,
-        bytes calldata executionLayer,
-        uint256[] calldata totalSupplies
-    ) public {
-        vm.assume(totalSupplies.length > 0);
-        uint256[] memory tokenIds = generateTokenIDs(totalSupplies);
-        uint256[] memory values = generateValues(totalSupplies);
-
-        // Mint tokens for Alice
-        token = new BatchToken(alice, tokenIds, values);
-
-        // Start impersonating Alice
-        vm.startPrank(alice);
-
-        vm.expectRevert("ERC1155: caller is not token owner or approved");
-        erc1155Portal.depositBatchERC1155Token(
-            token,
-            dapp,
-            tokenIds,
-            values,
-            baseLayer,
-            executionLayer
-        );
-    }
-
-    // HELPER FUNCTIONS
-
-    function generateTokenIDs(
-        uint256[] calldata totalSupplies
-    ) internal pure returns (uint256[] memory) {
-        uint256[] memory tokenIds = new uint256[](totalSupplies.length);
-        for (uint256 i; i < totalSupplies.length; ++i) tokenIds[i] = i;
-        return tokenIds;
-    }
-
-    function generateValues(
-        uint256[] calldata totalSupplies
-    ) internal pure returns (uint256[] memory) {
-        uint256[] memory values = new uint256[](totalSupplies.length);
-        for (uint256 i; i < totalSupplies.length; ++i) {
-            uint256 value = uint256(
-                keccak256(abi.encodePacked(i, totalSupplies[i]))
-            );
-            values[i] = (value <= totalSupplies[i]) ? value : totalSupplies[i];
-        }
-        return values;
     }
 }
