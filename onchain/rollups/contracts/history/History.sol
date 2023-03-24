@@ -56,9 +56,13 @@ contract History is IHistory, Ownable {
         uint256 numDAppClaims = dappClaims.length;
 
         require(
-            numDAppClaims == 0 ||
-                (claim.firstIndex > dappClaims[numDAppClaims - 1].lastIndex),
-            "History: FI <= previous LI"
+            claim.firstIndex ==
+                (
+                    (numDAppClaims == 0)
+                        ? 0
+                        : (dappClaims[numDAppClaims - 1].lastIndex + 1)
+                ),
+            "History: unclaimed inputs"
         );
 
         dappClaims.push(claim);

@@ -85,23 +85,29 @@ contract HistoryTest is Test {
         uint128 fi,
         uint128 li
     ) internal {
-        vm.assume(fi <= li);
-        vm.expectEmit(false, false, false, true, address(history));
+        vm.expectEmit(true, false, false, true, address(history));
         History.Claim memory claim = History.Claim(epochHash, fi, li);
         emit NewClaimToHistory(dapp, claim);
         bytes memory encodedClaim = abi.encode(dapp, claim);
         history.submitClaim(encodedClaim);
     }
 
-    function testSubmitClaims(
+    function testSubmitAndGetClaims(
         address dapp,
-        bytes32[2] calldata epochHash,
-        uint128[2] calldata fi,
-        uint128[2] calldata li
+        bytes32[3] calldata epochHash,
+        uint64[3] calldata indexIncreases
     ) public {
-        vm.assume(fi[1] > li[0]);
-        for (uint256 i; i < 2; ++i) {
-            submitClaim(dapp, epochHash[i], fi[i], li[i]);
+        uint128 fi;
+        for (uint256 i; i < epochHash.length; ++i) {
+            uint128 li = fi + indexIncreases[i];
+            submitClaim(dapp, epochHash[i], fi, li);
+            fi = li + 1;
+        }
+        fi = 0;
+        for (uint256 i; i < epochHash.length; ++i) {
+            uint128 li = fi + indexIncreases[i];
+            checkClaim(dapp, i, epochHash[i], fi, li);
+            fi = li + 1;
         }
     }
 
@@ -109,13 +115,34 @@ contract HistoryTest is Test {
         address alice,
         address dapp,
         bytes32 epochHash,
-        uint128 fi,
         uint128 li
     ) public {
         vm.assume(alice != address(this));
         vm.startPrank(alice);
-        vm.assume(fi <= li);
         vm.expectRevert("Ownable: caller is not the owner");
+        history.submitClaim(abi.encode(dapp, epochHash, 0, li));
+    }
+
+    function testRevertsMaxUint128(
+        address dapp,
+        bytes32 epochHash1,
+        bytes32 epochHash2
+    ) public {
+        uint128 max = type(uint128).max;
+        submitClaim(dapp, epochHash1, 0, max);
+        vm.expectRevert(stdError.arithmeticError);
+        history.submitClaim(abi.encode(dapp, epochHash2, max, max));
+    }
+
+    function testRevertsHeadstart(
+        address dapp,
+        bytes32 epochHash,
+        uint128 fi,
+        uint128 li
+    ) public {
+        vm.assume(fi > 0);
+        vm.assume(fi <= li);
+        vm.expectRevert("History: unclaimed inputs");
         history.submitClaim(abi.encode(dapp, epochHash, fi, li));
     }
 
@@ -123,15 +150,31 @@ contract HistoryTest is Test {
         address dapp,
         bytes32 epochHash1,
         bytes32 epochHash2,
-        uint128 fi1,
         uint128 fi2,
         uint128 li1,
         uint128 li2
     ) public {
-        submitClaim(dapp, epochHash1, fi1, li1);
+        vm.assume(li1 < type(uint128).max);
         vm.assume(fi2 <= li2);
         vm.assume(fi2 <= li1); // overlaps with previous claim
-        vm.expectRevert("History: FI <= previous LI");
+        submitClaim(dapp, epochHash1, 0, li1);
+        vm.expectRevert("History: unclaimed inputs");
+        history.submitClaim(abi.encode(dapp, epochHash2, fi2, li2));
+    }
+
+    function testRevertsHole(
+        address dapp,
+        bytes32 epochHash1,
+        bytes32 epochHash2,
+        uint128 fi2,
+        uint128 li1,
+        uint128 li2
+    ) public {
+        vm.assume(li1 < type(uint128).max);
+        vm.assume(fi2 <= li2);
+        vm.assume(fi2 > li1 + 1); // leaves a hole
+        submitClaim(dapp, epochHash1, 0, li1);
+        vm.expectRevert("History: unclaimed inputs");
         history.submitClaim(abi.encode(dapp, epochHash2, fi2, li2));
     }
 
@@ -139,14 +182,14 @@ contract HistoryTest is Test {
         address dapp,
         bytes32 epochHash1,
         bytes32 epochHash2,
-        uint128 fi1,
         uint128 fi2,
         uint128 li1,
         uint128 li2
     ) public {
-        submitClaim(dapp, epochHash1, fi1, li1);
+        vm.assume(li1 < type(uint128).max);
         vm.assume(fi2 > li2); // starts after it ends
         vm.assume(fi2 > li1);
+        submitClaim(dapp, epochHash1, 0, li1);
         vm.expectRevert("History: FI > LI");
         history.submitClaim(abi.encode(dapp, epochHash2, fi2, li2));
     }
@@ -172,18 +215,6 @@ contract HistoryTest is Test {
         assertEq(retEpochHash, epochHash);
         assertEq(retFirstInputIndex, firstInputIndex);
         assertEq(retLastInputIndex, lastInputIndex);
-    }
-
-    function testGetClaim(
-        address dapp,
-        bytes32[2] calldata epochHash,
-        uint128[2] calldata fi,
-        uint128[2] calldata li
-    ) public {
-        testSubmitClaims(dapp, epochHash, fi, li);
-        for (uint256 i; i < epochHash.length; ++i) {
-            checkClaim(dapp, i, epochHash[i], fi[i], li[i]);
-        }
     }
 
     function testRevertsGetClaimEncoding(address dapp) public {
