@@ -26,6 +26,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "application",
+        "type": "address"
+      }
+    ],
+    "name": "ApplicationJoined",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "owner",
         "type": "address"
       },
@@ -122,6 +135,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "join",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

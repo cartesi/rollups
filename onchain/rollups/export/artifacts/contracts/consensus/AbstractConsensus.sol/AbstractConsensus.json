@@ -1,0 +1,109 @@
+{
+  "contractName": "AbstractConsensus",
+  "sourceName": "contracts/consensus/AbstractConsensus.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "application",
+          "type": "address"
+        }
+      ],
+      "name": "ApplicationJoined",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dapp",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_proofContext",
+          "type": "bytes"
+        }
+      ],
+      "name": "getClaim",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "epochHash_",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "firstInputIndex_",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastInputIndex_",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "join",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getClaim(address,bytes)": {
+        "details": "The encoding of _proofContext might vary depending on the implementation",
+        "params": {
+          "_dapp": "The DApp",
+          "_proofContext": "Data for retrieving the desired claim"
+        },
+        "returns": {
+          "epochHash_": "The epoch hash contained in the claim",
+          "firstInputIndex_": "The index of the first input in the input box for which the epoch hash is valid",
+          "lastInputIndex_": "The index of the last input in the input box for which the epoch hash is valid"
+        }
+      },
+      "join()": {
+        "details": "This function should be called by a DApp when it migrates to this consensusMUST fire the `ApplicationJoined` event with the message sender as argument"
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ApplicationJoined(address)": {
+        "notice": "An application has joined the consensus' validation set"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "getClaim(address,bytes)": {
+        "notice": "Get a claim"
+      },
+      "join()": {
+        "notice": "Join the consensus' validation set"
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "getClaim(address,bytes)": "d79a8240",
+      "join()": "b688a363"
+    }
+  }
+}

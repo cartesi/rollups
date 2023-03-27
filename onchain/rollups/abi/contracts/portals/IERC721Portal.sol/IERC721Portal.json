@@ -18,12 +18,12 @@
       },
       {
         "internalType": "bytes",
-        "name": "_L1data",
+        "name": "_baseLayerData",
         "type": "bytes"
       },
       {
         "internalType": "bytes",
-        "name": "_L2data",
+        "name": "_execLayerData",
         "type": "bytes"
       }
     ],

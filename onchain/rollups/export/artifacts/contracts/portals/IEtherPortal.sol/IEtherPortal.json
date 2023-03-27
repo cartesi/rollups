@@ -11,7 +11,7 @@
         },
         {
           "internalType": "bytes",
-          "name": "_L2data",
+          "name": "_execLayerData",
           "type": "bytes"
         }
       ],
@@ -44,8 +44,8 @@
       "depositEther(address,bytes)": {
         "details": "All the value sent through this function is forwarded to the DApp",
         "params": {
-          "_L2data": "Additional data to be interpreted by L2",
-          "_dapp": "The address of the DApp"
+          "_dapp": "The address of the DApp",
+          "_execLayerData": "Additional data to be interpreted by the execution layer"
         }
       },
       "getInputBox()": {

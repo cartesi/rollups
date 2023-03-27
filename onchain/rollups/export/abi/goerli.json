@@ -3,7 +3,7 @@
   "chainId": "5",
   "contracts": {
     "Authority": {
-      "address": "0x664AF8a1734f0726D47407F980d68f434e00cc49",
+      "address": "0x42dbe3e9c8242a4cA1e9B637AA24068B263566fA",
       "abi": [
         {
           "inputs": [
@@ -25,6 +25,19 @@
           ],
           "stateMutability": "nonpayable",
           "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "application",
+              "type": "address"
+            }
+          ],
+          "name": "ApplicationJoined",
+          "type": "event"
         },
         {
           "anonymous": false,
@@ -131,6 +144,13 @@
           "type": "function"
         },
         {
+          "inputs": [],
+          "name": "join",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
           "inputs": [
             {
               "internalType": "address",
@@ -228,7 +248,7 @@
       ]
     },
     "CartesiDAppFactory": {
-      "address": "0x9ab95861e60533bE1794490025164505ea4cF4Dd",
+      "address": "0x9a4003ff8b13CddCC200900e24660C23dAeBe16A",
       "abi": [
         {
           "anonymous": false,
@@ -292,8 +312,50 @@
         }
       ]
     },
+    "DAppAddressRelay": {
+      "address": "0xE273B361c08D55f6F823140518d6640E3B496869",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "_inputBox",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [],
+          "name": "getInputBox",
+          "outputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            }
+          ],
+          "name": "relayDAppAddress",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+    },
     "ERC20Portal": {
-      "address": "0xd35ffb73F41aE52063ff8d032ceb57d31Ab0EEf6",
+      "address": "0x6194124979177D5A30c518B971815Aae54d6B4Eb",
       "abi": [
         {
           "inputs": [
@@ -325,7 +387,7 @@
             },
             {
               "internalType": "bytes",
-              "name": "_L2data",
+              "name": "_execLayerData",
               "type": "bytes"
             }
           ],
@@ -350,7 +412,7 @@
       ]
     },
     "ERC721Portal": {
-      "address": "0xe49c1cb93D110df0BE29515F34dDd5Afe3AAADCA",
+      "address": "0x08D4c06806cAe3346fA29D53B0B7a1abdf85A001",
       "abi": [
         {
           "inputs": [
@@ -382,12 +444,12 @@
             },
             {
               "internalType": "bytes",
-              "name": "_L1data",
+              "name": "_baseLayerData",
               "type": "bytes"
             },
             {
               "internalType": "bytes",
-              "name": "_L2data",
+              "name": "_execLayerData",
               "type": "bytes"
             }
           ],
@@ -412,7 +474,7 @@
       ]
     },
     "EtherPortal": {
-      "address": "0xf0c46F5De39A8423410E5Ee770AE4be2D2D74A9c",
+      "address": "0x95ad4d15EF32f1cb8690D2eefDfd55a99677A8BF",
       "abi": [
         {
           "inputs": [
@@ -459,7 +521,7 @@
       ]
     },
     "History": {
-      "address": "0xB82891259423911774FA11a4Be7F1bac0DCf095D",
+      "address": "0xF84d5c70144d0E0608e2Ab763A6DcC67ed610d78",
       "abi": [
         {
           "inputs": [
@@ -623,7 +685,7 @@
       ]
     },
     "InputBox": {
-      "address": "0xDA5fbE19afC6e8cf32aAb6Df0A1154EF507Ee238",
+      "address": "0xAccC223E89A37e2cA71Eb0cEf04C990a678c7f04",
       "abi": [
         {
           "anonymous": false,

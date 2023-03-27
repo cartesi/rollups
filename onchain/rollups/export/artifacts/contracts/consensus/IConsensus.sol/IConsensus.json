@@ -8,36 +8,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "contract IInputBox",
-          "name": "inputBox",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "contract IHistory",
-          "name": "history",
+          "name": "application",
           "type": "address"
         }
       ],
-      "name": "ConsensusCreated",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "contract IHistory",
-          "name": "history",
-          "type": "address"
-        }
-      ],
-      "name": "NewHistory",
+      "name": "ApplicationJoined",
       "type": "event"
     },
     {
@@ -76,75 +51,7 @@
     },
     {
       "inputs": [],
-      "name": "getHistory",
-      "outputs": [
-        {
-          "internalType": "contract IHistory",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_consensus",
-          "type": "address"
-        }
-      ],
-      "name": "migrateHistoryToConsensus",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "contract IHistory",
-          "name": "_history",
-          "type": "address"
-        }
-      ],
-      "name": "setHistory",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes",
-          "name": "_claimData",
-          "type": "bytes"
-        }
-      ],
-      "name": "submitClaim",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "_token",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_recipient",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "withdrawERC20Tokens",
+      "name": "join",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -156,23 +63,17 @@
   "deployedLinkReferences": {},
   "devdoc": {
     "events": {
-      "ConsensusCreated(address,address,address)": {
+      "ApplicationJoined(address)": {
+        "details": "MUST be triggered on a successful call to `join()`",
         "params": {
-          "history": "The history that the consensus writes to",
-          "inputBox": "The input box used by the consensus",
-          "owner": "The address that owns the consensus"
-        }
-      },
-      "NewHistory(address)": {
-        "params": {
-          "history": "The new history"
+          "application": "The application"
         }
       }
     },
     "kind": "dev",
     "methods": {
       "getClaim(address,bytes)": {
-        "details": "The encoding of _proofContext might vary depending on the history implementation",
+        "details": "The encoding of _proofContext might vary depending on the implementation",
         "params": {
           "_dapp": "The DApp",
           "_proofContext": "Data for retrieving the desired claim"
@@ -183,67 +84,25 @@
           "lastInputIndex_": "The index of the last input in the input box for which the epoch hash is valid"
         }
       },
-      "getHistory()": {
-        "returns": {
-          "_0": "The current history"
-        }
-      },
-      "migrateHistoryToConsensus(address)": {
-        "details": "Should have access control",
-        "params": {
-          "_consensus": "The new consensus"
-        }
-      },
-      "setHistory(address)": {
-        "details": "Should have access control",
-        "params": {
-          "_history": "The new history"
-        }
-      },
-      "submitClaim(bytes)": {
-        "details": "The encoding of _claimData might vary depending on the history implementationShould have access control",
-        "params": {
-          "_claimData": "Data for submitting a claim"
-        }
-      },
-      "withdrawERC20Tokens(address,address,uint256)": {
-        "params": {
-          "_amount": "The transfer amount",
-          "_recipient": "The recipient address",
-          "_token": "The ERC-20 token"
-        }
+      "join()": {
+        "details": "This function should be called by a DApp when it migrates to this consensusMUST fire the `ApplicationJoined` event with the message sender as argument"
       }
     },
     "version": 1
   },
   "userdoc": {
     "events": {
-      "ConsensusCreated(address,address,address)": {
-        "notice": "A consensus was created"
-      },
-      "NewHistory(address)": {
-        "notice": "A new history is used"
+      "ApplicationJoined(address)": {
+        "notice": "An application has joined the consensus' validation set"
       }
     },
     "kind": "user",
     "methods": {
       "getClaim(address,bytes)": {
-        "notice": "Get the epoch hash for a given DApp from a claim"
+        "notice": "Get a claim"
       },
-      "getHistory()": {
-        "notice": "Get the current history"
-      },
-      "migrateHistoryToConsensus(address)": {
-        "notice": "Migrate the current history to a new consensus"
-      },
-      "setHistory(address)": {
-        "notice": "Point the consensus to a new history"
-      },
-      "submitClaim(bytes)": {
-        "notice": "Submit a claim to history"
-      },
-      "withdrawERC20Tokens(address,address,uint256)": {
-        "notice": "Transfer ERC-20 tokens from consensus contract to a recipient"
+      "join()": {
+        "notice": "Join the consensus' validation set"
       }
     },
     "version": 1
@@ -252,11 +111,7 @@
     "gasEstimates": null,
     "methodIdentifiers": {
       "getClaim(address,bytes)": "d79a8240",
-      "getHistory()": "aa15efc8",
-      "migrateHistoryToConsensus(address)": "9368a3d3",
-      "setHistory(address)": "159c5ea1",
-      "submitClaim(bytes)": "ddfdfbb0",
-      "withdrawERC20Tokens(address,address,uint256)": "bcdd1e13"
+      "join()": "b688a363"
     }
   }
 }

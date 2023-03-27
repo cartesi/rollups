@@ -21,7 +21,7 @@
         },
         {
           "internalType": "bytes",
-          "name": "_L2data",
+          "name": "_execLayerData",
           "type": "bytes"
         }
       ],
@@ -54,9 +54,9 @@
       "depositERC20Tokens(address,address,uint256,bytes)": {
         "details": "The caller must allow the portal to withdraw at least      `_amount` tokens from their account beforehand.",
         "params": {
-          "_L2data": "Additional data to be interpreted by L2",
           "_amount": "The amount of tokens to be transferred",
           "_dapp": "The address of the DApp",
+          "_execLayerData": "Additional data to be interpreted by the execution layer",
           "_token": "The ERC-20 token contract"
         }
       },

@@ -21,12 +21,12 @@
         },
         {
           "internalType": "bytes",
-          "name": "_L1data",
+          "name": "_baseLayerData",
           "type": "bytes"
         },
         {
           "internalType": "bytes",
-          "name": "_L2data",
+          "name": "_execLayerData",
           "type": "bytes"
         }
       ],
@@ -59,9 +59,9 @@
       "depositERC721Token(address,address,uint256,bytes,bytes)": {
         "details": "The caller must allow the portal to withdraw the token      from their account beforehand.",
         "params": {
-          "_L1data": "Additional data to be interpreted by L1                (forwarded to the ERC-721 token contract)",
-          "_L2data": "Additional data to be interpreted by L2",
+          "_baseLayerData": "Additional data to be interpreted by the base layer                (forwarded to the ERC-721 token contract)",
           "_dapp": "The address of the DApp",
+          "_execLayerData": "Additional data to be interpreted by the execution layer",
           "_token": "The ERC-721 token contract",
           "_tokenId": "The identifier of the NFT being transferred"
         }
