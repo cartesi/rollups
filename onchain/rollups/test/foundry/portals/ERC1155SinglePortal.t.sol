@@ -14,8 +14,8 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC1155PortalSingle} from "contracts/portals/ERC1155PortalSingle.sol";
-import {IERC1155PortalSingle} from "contracts/portals/IERC1155PortalSingle.sol";
+import {ERC1155SinglePortal} from "contracts/portals/ERC1155SinglePortal.sol";
+import {IERC1155SinglePortal} from "contracts/portals/IERC1155SinglePortal.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
@@ -65,9 +65,9 @@ contract ERC1155Receiver is IERC1155Receiver {
     }
 }
 
-contract ERC1155PortalSingleTest is Test {
+contract ERC1155SinglePortalTest is Test {
     IInputBox inputBox;
-    IERC1155PortalSingle erc1155PortalSingle;
+    IERC1155SinglePortal erc1155SinglePortal;
     IERC1155 token;
     address alice;
     address dapp;
@@ -83,14 +83,14 @@ contract ERC1155PortalSingleTest is Test {
 
     function setUp() public {
         inputBox = new InputBox();
-        erc1155PortalSingle = new ERC1155PortalSingle(inputBox);
+        erc1155SinglePortal = new ERC1155SinglePortal(inputBox);
         alice = address(vm.addr(1));
         dapp = address(vm.addr(2));
         bob = address(vm.addr(3));
     }
 
     function testGetInputBoxSingle() public {
-        assertEq(address(erc1155PortalSingle.getInputBox()), address(inputBox));
+        assertEq(address(erc1155SinglePortal.getInputBox()), address(inputBox));
     }
 
     function testERC1155DepositEOA(
@@ -106,19 +106,19 @@ contract ERC1155PortalSingleTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw tokens from Alice
-        token.setApprovalForAll(address(erc1155PortalSingle), true);
+        token.setApprovalForAll(address(erc1155SinglePortal), true);
 
         // Expect TransferSingle to be emitted with the right arguments
         vm.expectEmit(true, true, true, true);
         emit TransferSingle(
-            address(erc1155PortalSingle),
+            address(erc1155SinglePortal),
             alice,
             dapp,
             tokenId,
             value
         );
 
-        erc1155PortalSingle.depositSingleERC1155Token(
+        erc1155SinglePortal.depositSingleERC1155Token(
             token,
             dapp,
             tokenId,
@@ -150,10 +150,10 @@ contract ERC1155PortalSingleTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw tokens from Alice
-        token.setApprovalForAll(address(erc1155PortalSingle), true);
+        token.setApprovalForAll(address(erc1155SinglePortal), true);
 
         vm.expectRevert("ERC1155: insufficient balance for transfer");
-        erc1155PortalSingle.depositSingleERC1155Token(
+        erc1155SinglePortal.depositSingleERC1155Token(
             token,
             dapp,
             tokenId,
@@ -182,19 +182,19 @@ contract ERC1155PortalSingleTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw tokens from Alice
-        token.setApprovalForAll(address(erc1155PortalSingle), true);
+        token.setApprovalForAll(address(erc1155SinglePortal), true);
 
         // Expect TransferSingle to be emitted with the right arguments
         vm.expectEmit(true, true, true, true);
         emit TransferSingle(
-            address(erc1155PortalSingle),
+            address(erc1155SinglePortal),
             alice,
             dapp,
             tokenId,
             value
         );
 
-        erc1155PortalSingle.depositSingleERC1155Token(
+        erc1155SinglePortal.depositSingleERC1155Token(
             token,
             dapp,
             tokenId,
@@ -226,10 +226,10 @@ contract ERC1155PortalSingleTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw the token from Alice
-        token.setApprovalForAll(address(erc1155PortalSingle), true);
+        token.setApprovalForAll(address(erc1155SinglePortal), true);
 
         vm.expectRevert("ERC1155: transfer to non-ERC1155Receiver implementer");
-        erc1155PortalSingle.depositSingleERC1155Token(
+        erc1155SinglePortal.depositSingleERC1155Token(
             token,
             dapp,
             tokenId,

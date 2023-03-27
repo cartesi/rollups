@@ -14,8 +14,8 @@
 pragma solidity ^0.8.8;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC1155PortalBatch} from "contracts/portals/ERC1155PortalBatch.sol";
-import {IERC1155PortalBatch} from "contracts/portals/IERC1155PortalBatch.sol";
+import {ERC1155BatchPortal} from "contracts/portals/ERC1155BatchPortal.sol";
+import {IERC1155BatchPortal} from "contracts/portals/IERC1155BatchPortal.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
@@ -65,9 +65,9 @@ contract ERC1155Receiver is IERC1155Receiver {
     }
 }
 
-contract ERC1155PortalBatchTest is Test {
+contract ERC1155BatchPortalTest is Test {
     IInputBox inputBox;
-    IERC1155PortalBatch erc1155PortalBatch;
+    IERC1155BatchPortal erc1155BatchPortal;
     IERC1155 token;
     address alice;
     address dapp;
@@ -83,14 +83,14 @@ contract ERC1155PortalBatchTest is Test {
 
     function setUp() public {
         inputBox = new InputBox();
-        erc1155PortalBatch = new ERC1155PortalBatch(inputBox);
+        erc1155BatchPortal = new ERC1155BatchPortal(inputBox);
         alice = address(vm.addr(1));
         dapp = address(vm.addr(2));
         bob = address(vm.addr(3));
     }
 
     function testGetInputBoxBatch() public {
-        assertEq(address(erc1155PortalBatch.getInputBox()), address(inputBox));
+        assertEq(address(erc1155BatchPortal.getInputBox()), address(inputBox));
     }
 
     function testBatchERC1155DepositEOA(
@@ -109,19 +109,19 @@ contract ERC1155PortalBatchTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw the token from Alice
-        token.setApprovalForAll(address(erc1155PortalBatch), true);
+        token.setApprovalForAll(address(erc1155BatchPortal), true);
 
         // Expect TransferBatch to be emitted with the right arguments
         vm.expectEmit(true, true, true, true);
         emit TransferBatch(
-            address(erc1155PortalBatch),
+            address(erc1155BatchPortal),
             alice,
             dapp,
             tokenIds,
             values
         );
 
-        erc1155PortalBatch.depositBatchERC1155Token(
+        erc1155BatchPortal.depositBatchERC1155Token(
             token,
             dapp,
             tokenIds,
@@ -159,7 +159,7 @@ contract ERC1155PortalBatchTest is Test {
         vm.startPrank(alice);
 
         vm.expectRevert("ERC1155: caller is not token owner or approved");
-        erc1155PortalBatch.depositBatchERC1155Token(
+        erc1155BatchPortal.depositBatchERC1155Token(
             token,
             dapp,
             tokenIds,
@@ -188,19 +188,19 @@ contract ERC1155PortalBatchTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw tokens from Alice
-        token.setApprovalForAll(address(erc1155PortalBatch), true);
+        token.setApprovalForAll(address(erc1155BatchPortal), true);
 
         // Expect TransferBatch to be emitted with the right arguments
         vm.expectEmit(true, true, true, true);
         emit TransferBatch(
-            address(erc1155PortalBatch),
+            address(erc1155BatchPortal),
             alice,
             dapp,
             tokenIds,
             values
         );
 
-        erc1155PortalBatch.depositBatchERC1155Token(
+        erc1155BatchPortal.depositBatchERC1155Token(
             token,
             dapp,
             tokenIds,
@@ -241,10 +241,10 @@ contract ERC1155PortalBatchTest is Test {
         vm.startPrank(alice);
 
         // Allow the portal to withdraw tokens from Alice
-        token.setApprovalForAll(address(erc1155PortalBatch), true);
+        token.setApprovalForAll(address(erc1155BatchPortal), true);
 
         vm.expectRevert("ERC1155: transfer to non-ERC1155Receiver implementer");
-        erc1155PortalBatch.depositBatchERC1155Token(
+        erc1155BatchPortal.depositBatchERC1155Token(
             token,
             dapp,
             tokenIds,

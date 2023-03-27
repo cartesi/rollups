@@ -10,15 +10,15 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title ERC-1155 Portal
-pragma solidity ^0.8.8;
+/// @title ERC-1155 Portal Single
+pragma solidity ^0.8.13;
 
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {IERC1155PortalBatch} from "./IERC1155PortalBatch.sol";
+import {IERC1155SinglePortal} from "./IERC1155SinglePortal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
-contract ERC1155PortalBatch is IERC1155PortalBatch {
+contract ERC1155SinglePortal is IERC1155SinglePortal {
     IInputBox internal immutable inputBox;
 
     constructor(IInputBox _inputBox) {
@@ -29,27 +29,27 @@ contract ERC1155PortalBatch is IERC1155PortalBatch {
         return inputBox;
     }
 
-    function depositBatchERC1155Token(
+    function depositSingleERC1155Token(
         IERC1155 _token,
         address _dapp,
-        uint256[] calldata _tokenIds,
-        uint256[] calldata _values,
+        uint256 _tokenId,
+        uint256 _value,
         bytes calldata _baseLayer,
         bytes calldata _execLayerData
     ) external override {
-        _token.safeBatchTransferFrom(
+        _token.safeTransferFrom(
             msg.sender,
             _dapp,
-            _tokenIds,
-            _values,
+            _tokenId,
+            _value,
             _baseLayer
         );
 
-        bytes memory input = InputEncoding.encodeBatchERC1155Deposit(
+        bytes memory input = InputEncoding.encodeSingleERC1155Deposit(
             _token,
             msg.sender,
-            _tokenIds,
-            _values,
+            _tokenId,
+            _value,
             _baseLayer,
             _execLayerData
         );
