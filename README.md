@@ -103,19 +103,17 @@ Vouchers allow DApps in the execution layer to interact with contracts in the ba
 
 A voucher can only be executed once the DApp's consensus submits a claim containing it. They can be executed in any order. Although the DApp contract is indifferent to the content of the voucher being executed, it enforces some sanity checks before allowing its execution. First, it checks whether the voucher has been successfully executed already. Second, it ensures that the voucher has been emitted by the off-chain machine, by requiring a validity proof.
 
-Because of their generality, vouchers can be used in a wide range of applications: from withdrawing funds to providing liquidity in a DeFi protocol. Typically, DApps use vouchers to withdraw assets. Below, we show how vouchers can be used to withdraw different types of assets.
+Because of their generality, vouchers can be used in a wide range of applications: from withdrawing funds to providing liquidity in a DeFi protocol. Typically, DApps use vouchers to withdraw assets. Below, we show how vouchers can be used to withdraw different types of assets. You can find more information about a particular function by clicking on the :page_facing_up: emoji near it.
 
-| Asset | Destination | Function signature | Arguments | Comments |
-| :- | :- |  :- | :- | :- |
-| Ether | The DApp contract itself | `withdrawEther(address,uint256)` ([source](https://github.com/cartesi/rollups/tree/main/onchain/rollups/contracts/dapp/CartesiDApp.sol)) | recipient, value | |
-| ERC-20 tokens | The ERC-20 token contract | `transfer(address,uint256)` | recipient, value | |
-| ERC-20 tokens | The ERC-20 token contract | `transferFrom(address,address,uint256)` | owner, recipient, value | (1) |
-| ERC-721 tokens | The ERC-721 token contract | `safeTransferFrom(address,address,uint256)` | dapp, recipient, token ID | |
-| ERC-721 tokens | The ERC-721 token contract | `safeTransferFrom(address,address,uint256,bytes)` | dapp, recipient, token ID, data | (2) |
-| ERC-1155 tokens | The ERC-1155 token contract | `safeTransferFrom(address,address,uint256,uint256,data)` | dapp, recipient, token ID, value, data | |
-| ERC-1155 tokens | The ERC-1155 token contract | `safeBatchTransferFrom(address,address,uint256[],uint256[],data)` | dapp, recipient, token IDs, values, data | (3) |
-
-### Comments
+| Asset | Destination | Function | Reference | Notes |
+| :- | :- |  :- | :-: | :-: |
+| Ether | DApp contract | `withdrawEther(address,uint256)` | [:page_facing_up:](https://github.com/cartesi/rollups/tree/main/onchain/rollups/contracts/dapp/CartesiDApp.sol) | |
+| ERC-20 | Token contract | `transfer(address,uint256)` | [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-20#methods) | |
+| ERC-20 | Token contract | `transferFrom(address,address,uint256)` | [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-20#methods) | 1. |
+| ERC-721 | Token contract | `safeTransferFrom(address,address,uint256)` | [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-721#specification) | |
+| ERC-721 | Token contract | `safeTransferFrom(address,address,uint256,bytes)` | [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-721#specification) | 2. |
+| ERC-1155 | Token contract | `safeTransferFrom(address,address,uint256,uint256,data)` | [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-1155#specification) | |
+| ERC-1155 | Token contract | `safeBatchTransferFrom(address,address,uint256[],uint256[],data)` | [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-1155#specification) | 3. |
 
 1. If the DApp owns the tokens, prefer to use `transfer(address,uint256)`
 2. If no data is being passed as argument, prefer to use `safeTransferFrom(address,address,uint256)`
