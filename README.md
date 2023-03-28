@@ -32,8 +32,14 @@ graph TD
     History:::core
     ERC20Portal[ERC-20 Portal]:::core
     ERC721Portal[ERC-721 Portal]:::core
+    ERC1155SinglePortal[ERC-1155 Single Transfer Portal]:::core
+    ERC1155BatchPortal[ERC-1155 Batch Transfer Portal]:::core
     EtherPortal[Ether Portal]:::core
     DAppAddressRelay[DApp Address Relay]:::core
+
+    ERC20[Any ERC-20 token]:::hasLink
+    ERC721[Any ERC-721 token]:::hasLink
+    ERC1155[Any ERC-1155 token]:::hasLink
 
     Anyone1[Anyone] -- executeVoucher --> CartesiDApp
     Anyone1 -. validateNotice .-> CartesiDApp
@@ -45,16 +51,21 @@ graph TD
     Authority -- submitClaim --> History
     Authority -- migrateToConsensus --> History
     Authority -- transfer --> ERC20
-    ERC20Portal -- transferFrom --> ERC20[Any ERC-20 token]:::hasLink
+    ERC20Portal -- transferFrom --> ERC20
     ERC20Portal -- addInput ---> InputBox
-    ERC721Portal -- safeTransferFrom --> ERC721[Any ERC-721 token]:::hasLink
+    ERC721Portal -- safeTransferFrom --> ERC721
     ERC721Portal -- addInput ---> InputBox
+    ERC1155SinglePortal -- safeTransferFrom --> ERC1155
+    ERC1155SinglePortal -- addInput ---> InputBox
+    ERC1155BatchPortal -- safeBatchTransferFrom --> ERC1155
+    ERC1155BatchPortal -- addInput ---> InputBox
     EtherPortal -- "Ether transfer" --> Anyone
     EtherPortal -- addInput ---> InputBox
     DAppAddressRelay -- addInput ---> InputBox
 
     click ERC20 href "https://eips.ethereum.org/EIPS/eip-20"
     click ERC721 href "https://eips.ethereum.org/EIPS/eip-721"
+    click ERC1155 href "https://eips.ethereum.org/EIPS/eip-1155"
 ```
 
 ## Input Box
@@ -82,8 +93,9 @@ The withdrawal process is quite simple from the user's perspective. Typically, t
 Currently, we support the following types of assets:
 
 - [Ether](https://ethereum.org/en/eth/) (ETH)
-- [ERC-20](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/)
-- [ERC-721](https://ethereum.org/en/developers/docs/standards/tokens/erc-721/) (NFTs)
+- [ERC-20](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/) (Tokens)
+- [ERC-721](https://ethereum.org/en/developers/docs/standards/tokens/erc-721/) (Non-fungible tokens)
+- [ERC-1155](https://ethereum.org/en/developers/docs/standards/tokens/erc-1155/) (Multi-tokens)
 
 ## Vouchers
 
@@ -93,15 +105,25 @@ A voucher can only be executed once the DApp's consensus submits a claim contain
 
 Because of their generality, vouchers can be used in a wide range of applications: from withdrawing funds to providing liquidity in a DeFi protocol. Typically, DApps use vouchers to withdraw assets. Below, we show how vouchers can be used to withdraw different types of assets.
 
-| Asset | Destination | Function signature | Arguments |
-| :- | :- |  :- | :- |
-| Ether (ETH) | The DApp contract itself | `withdrawEther(address,uint256)` ([source](https://github.com/cartesi/rollups/tree/main/onchain/rollups/contracts/dapp/CartesiDApp.sol)) | recipient, value |
-| ERC-20 tokens | The ERC-20 token contract | `transfer(address,uint256)` | recipient, value |
-| ERC-721 tokens (NFTs) | The ERC-721 token contract | `safeTransferFrom(address,address,uint256)` | dapp, recipient, value |
+| Asset | Destination | Function signature | Arguments | Comments |
+| :- | :- |  :- | :- | :- |
+| Ether | The DApp contract itself | `withdrawEther(address,uint256)` ([source](https://github.com/cartesi/rollups/tree/main/onchain/rollups/contracts/dapp/CartesiDApp.sol)) | recipient, value | |
+| ERC-20 tokens | The ERC-20 token contract | `transfer(address,uint256)` | recipient, value | |
+| ERC-20 tokens | The ERC-20 token contract | `transferFrom(address,address,uint256)` | owner, recipient, value | (1) |
+| ERC-721 tokens | The ERC-721 token contract | `safeTransferFrom(address,address,uint256)` | dapp, recipient, token ID | |
+| ERC-721 tokens | The ERC-721 token contract | `safeTransferFrom(address,address,uint256,bytes)` | dapp, recipient, token ID, data | (2) |
+| ERC-1155 tokens | The ERC-1155 token contract | `safeTransferFrom(address,address,uint256,uint256,data)` | dapp, recipient, token ID, value, data | |
+| ERC-1155 tokens | The ERC-1155 token contract | `safeBatchTransferFrom(address,address,uint256[],uint256[],data)` | dapp, recipient, token IDs, values, data | (3) |
+
+### Comments
+
+1. If the DApp owns the tokens, prefer to use `transfer(address,uint256)`
+2. If no data is being passed as argument, prefer to use `safeTransferFrom(address,address,uint256)`
+3. If only one token is being transferred, prefer to use `safeTransferFrom(address,address,uint256,uint256,data)`
 
 ## DApp Address Relay
 
-In the previous section, we showed how vouchers can be used to withdraw different types of assets. Some of those vouchers contained the address of the DApp contract, which depends on the initial state of the machine. This "chicken-and-egg" problem is circumvented by a very small permissionless contract in the base layer, the DApp Address Relay ([source](https://github.com/cartesi/rollups/tree/main/onchain/rollups/contracts/relays/DAppAddressRelay.sol)). Its only job is to add an input to a DApp's input box with the DApp contract address. The off-chain machine then decodes this input and stores the address somewhere for future use. Just like in the case of portals, the machine must also know the address of the relay in order to validate the origin of the input.
+In the previous section, we showed how vouchers can be used to withdraw different types of assets. Most of those vouchers contained the address of the DApp contract, which depends on the initial state of the machine. This "chicken-and-egg" problem is circumvented by a very small permissionless contract in the base layer, the DApp Address Relay ([source](https://github.com/cartesi/rollups/tree/main/onchain/rollups/contracts/relays/DAppAddressRelay.sol)). Its only job is to add an input to a DApp's input box with the DApp contract address. The off-chain machine then decodes this input and stores the address somewhere for future use. Just like in the case of portals, the machine must also know the address of the relay in order to validate the origin of the input.
 
 ## Notices
 
