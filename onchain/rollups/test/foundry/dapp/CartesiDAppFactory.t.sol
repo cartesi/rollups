@@ -14,6 +14,7 @@
 pragma solidity ^0.8.13;
 
 import {TestBase} from "../util/TestBase.sol";
+import {SimpleConsensus} from "../util/SimpleConsensus.sol";
 import {CartesiDAppFactory} from "contracts/dapp/CartesiDAppFactory.sol";
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
@@ -21,9 +22,11 @@ import {Vm} from "forge-std/Vm.sol";
 
 contract CartesiDAppFactoryTest is TestBase {
     CartesiDAppFactory factory;
+    IConsensus consensus;
 
     function setUp() public {
         factory = new CartesiDAppFactory();
+        consensus = new SimpleConsensus();
     }
 
     event ApplicationCreated(
@@ -34,63 +37,63 @@ contract CartesiDAppFactoryTest is TestBase {
     );
 
     function testNewApplication(
-        IConsensus _consensus,
         address _dappOwner,
         bytes32 _templateHash
     ) public {
         vm.assume(_dappOwner != address(0));
 
-        mockConsensusJoin(_consensus);
-
         CartesiDApp newDapp = factory.newApplication(
-            _consensus,
+            consensus,
             _dappOwner,
             _templateHash
         );
 
-        assertEq(address(newDapp.getConsensus()), address(_consensus));
+        assertEq(address(newDapp.getConsensus()), address(consensus));
         assertEq(newDapp.owner(), _dappOwner);
         assertEq(newDapp.getTemplateHash(), _templateHash);
     }
 
     function testApplicationCreatedEvent(
-        IConsensus _consensus,
         address _dappOwner,
         bytes32 _templateHash
     ) public {
         vm.assume(_dappOwner != address(0));
 
-        mockConsensusJoin(_consensus);
-
         // Start the recorder
         vm.recordLogs();
 
         // perform call and emit event
-        // the first event is `OwnershipTransferred` emitted by Ownable constructor
-        // the second event is `OwnershipTransferred` emitted by CartesiDApp constructor
-        // the third event is `ApplicationCreated` emitted by `newApplication` function
-        // we focus on the third event
         CartesiDApp newDapp = factory.newApplication(
-            _consensus,
+            consensus,
             _dappOwner,
             _templateHash
         );
+
+        // get recorder logs
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
+        // there is at least one entry
+        assertGt(entries.length, 0);
+
+        // get last log entry
+        Vm.Log memory entry = entries[entries.length - 1];
+
         // there are 2 topics
-        assertEq(entries[2].topics.length, 2);
+        assertEq(entry.topics.length, 2);
+
         // topics[0] is the event signature
         assertEq(
-            entries[2].topics[0],
+            entry.topics[0],
             keccak256("ApplicationCreated(address,address,bytes32,address)")
         );
+
         // topics[1] is the IConsensus parameter
         // restrictions on explicit type convertions:
         // "The conversion is only allowed when there is at most one change in sign, width or type-category"
         // ref: https://docs.soliditylang.org/en/latest/080-breaking-changes.html#new-restrictions
         assertEq(
-            entries[2].topics[1],
-            bytes32(uint256(uint160(address(_consensus))))
+            entry.topics[1],
+            bytes32(uint256(uint160(address(consensus))))
         );
 
         // test data
@@ -99,19 +102,9 @@ contract CartesiDAppFactoryTest is TestBase {
             address decodedDappOwner,
             bytes32 decodedTemplateHash,
             address decodedApplication
-        ) = abi.decode(entries[2].data, (address, bytes32, address));
+        ) = abi.decode(entry.data, (address, bytes32, address));
         assertEq(_dappOwner, decodedDappOwner);
         assertEq(_templateHash, decodedTemplateHash);
         assertEq(address(newDapp), decodedApplication);
-    }
-
-    function mockConsensusJoin(
-        IConsensus _consensus
-    ) internal isMockable(address(_consensus)) {
-        vm.mockCall(
-            address(_consensus),
-            abi.encodeWithSelector(IConsensus.join.selector),
-            ""
-        );
     }
 }

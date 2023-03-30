@@ -25,6 +25,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
+import {SimpleConsensus} from "../util/SimpleConsensus.sol";
 import {SimpleERC20} from "../util/SimpleERC20.sol";
 import {SimpleERC721} from "../util/SimpleERC721.sol";
 import {SimpleERC721Receiver} from "../util/SimpleERC721Receiver.sol";
@@ -49,6 +50,7 @@ contract EtherReceiver {
 contract CartesiDAppTest is TestBase {
     Proof proof;
     CartesiDApp dapp;
+    IConsensus consensus;
     IERC20 erc20Token;
     IERC721 erc721Token;
     IERC721Receiver erc721Receiver;
@@ -59,7 +61,6 @@ contract CartesiDAppTest is TestBase {
     address constant dappOwner = address(bytes20(keccak256("dappOwner")));
     address constant tokenOwner = address(bytes20(keccak256("tokenOwner")));
     address constant recipient = address(bytes20(keccak256("recipient")));
-    address constant consensus = address(bytes20(keccak256("consensus")));
     address constant noticeSender = address(bytes20(keccak256("noticeSender")));
     bytes32 constant salt = keccak256("salt");
     bytes32 constant templateHash = keccak256("templateHash");
@@ -78,24 +79,19 @@ contract CartesiDAppTest is TestBase {
     );
     event NewConsensus(IConsensus newConsensus);
 
-    function testConstructorWithOwnerAsZeroAddress(
-        IConsensus _consensus,
-        bytes32 _templateHash
-    ) public {
-        mockConsensusJoin(_consensus);
-
-        vm.expectRevert("Ownable: new owner is the zero address");
-        new CartesiDApp(_consensus, address(0), _templateHash);
+    function setUp() public {
+        consensus = deployConsensusDeterministically();
     }
 
-    function testConstructor(
-        IConsensus _consensus,
-        address _owner,
+    function testConstructorWithOwnerAsZeroAddress(
         bytes32 _templateHash
     ) public {
-        vm.assume(_owner != address(0));
+        vm.expectRevert("Ownable: new owner is the zero address");
+        new CartesiDApp(consensus, address(0), _templateHash);
+    }
 
-        mockConsensusJoin(_consensus);
+    function testConstructor(address _owner, bytes32 _templateHash) public {
+        vm.assume(_owner != address(0));
 
         // An OwnershipTransferred event is always emitted
         // by the Ownership contract constructor
@@ -108,10 +104,10 @@ contract CartesiDAppTest is TestBase {
         emit OwnershipTransferred(address(this), _owner);
 
         // perform call to constructor
-        dapp = new CartesiDApp(_consensus, _owner, _templateHash);
+        dapp = new CartesiDApp(consensus, _owner, _templateHash);
 
         // check set values
-        assertEq(address(dapp.getConsensus()), address(_consensus));
+        assertEq(address(dapp.getConsensus()), address(consensus));
         assertEq(dapp.owner(), _owner);
         assertEq(dapp.getTemplateHash(), _templateHash);
     }
@@ -364,7 +360,7 @@ contract CartesiDAppTest is TestBase {
         // but we are registering a proof whose epoch input index is 1...
         // so the proof would succeed but the input would be out of bounds
         vm.mockCall(
-            consensus,
+            address(consensus),
             abi.encodeWithSelector(IConsensus.getClaim.selector),
             abi.encode(epochHash, _inboxInputIndex, _inboxInputIndex)
         );
@@ -586,10 +582,8 @@ contract CartesiDAppTest is TestBase {
     // test migration
 
     function testMigrateToConsensus(
-        IConsensus _consensus,
         address _owner,
         bytes32 _templateHash,
-        IConsensus _newConsensus,
         address _newOwner,
         address _nonZeroAddress
     ) public {
@@ -599,28 +593,27 @@ contract CartesiDAppTest is TestBase {
         vm.assume(address(_newOwner) != address(0));
         vm.assume(_nonZeroAddress != address(0));
 
-        mockConsensusJoin(_consensus);
-        mockConsensusJoin(_newConsensus);
+        dapp = new CartesiDApp(consensus, _owner, _templateHash);
 
-        dapp = new CartesiDApp(_consensus, _owner, _templateHash);
+        IConsensus newConsensus = new SimpleConsensus();
 
         // migrate fail if not called from owner
         vm.expectRevert("Ownable: caller is not the owner");
-        dapp.migrateToConsensus(_newConsensus);
+        dapp.migrateToConsensus(newConsensus);
 
         // now impersonate owner
         vm.prank(_owner);
         vm.expectEmit(false, false, false, true, address(dapp));
-        emit NewConsensus(_newConsensus);
-        dapp.migrateToConsensus(_newConsensus);
-        assertEq(address(dapp.getConsensus()), address(_newConsensus));
+        emit NewConsensus(newConsensus);
+        dapp.migrateToConsensus(newConsensus);
+        assertEq(address(dapp.getConsensus()), address(newConsensus));
 
         // if owner changes, then original owner no longer can migrate consensus
         vm.prank(_owner);
         dapp.transferOwnership(_newOwner);
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(_owner);
-        dapp.migrateToConsensus(_consensus);
+        dapp.migrateToConsensus(consensus);
 
         // if new owner renounce ownership (give ownership to address 0)
         // no one will be able to migrate consensus
@@ -628,11 +621,11 @@ contract CartesiDAppTest is TestBase {
         dapp.renounceOwnership();
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(_nonZeroAddress);
-        dapp.migrateToConsensus(_consensus);
+        dapp.migrateToConsensus(consensus);
     }
 
     // Store proof in storage
-    // Mock `consensus` so that calls to `getClaim` return
+    // Mock consensus so that calls to `getClaim` return
     // values that can be used to validate the proof.
     function registerProof(
         uint256 _inboxInputIndex,
@@ -652,7 +645,7 @@ contract CartesiDAppTest is TestBase {
 
         // mock the consensus contract to return the right epoch hash
         vm.mockCall(
-            consensus,
+            address(consensus),
             abi.encodeWithSelector(IConsensus.getClaim.selector),
             abi.encode(epochHash, firstInputIndex, lastInputIndex)
         );
@@ -662,15 +655,13 @@ contract CartesiDAppTest is TestBase {
     }
 
     function deployDAppDeterministically() internal returns (CartesiDApp) {
-        mockConsensusJoin(IConsensus(consensus));
-
         vm.prank(dappOwner);
-        return
-            new CartesiDApp{salt: salt}(
-                IConsensus(consensus),
-                dappOwner,
-                templateHash
-            );
+        return new CartesiDApp{salt: salt}(consensus, dappOwner, templateHash);
+    }
+
+    function deployConsensusDeterministically() internal returns (IConsensus) {
+        vm.prank(dappOwner);
+        return new SimpleConsensus{salt: salt}();
     }
 
     function deployERC20Deterministically() internal returns (IERC20) {
@@ -702,15 +693,5 @@ contract CartesiDAppTest is TestBase {
                     _validity.machineStateHash
                 )
             );
-    }
-
-    function mockConsensusJoin(
-        IConsensus _consensus
-    ) internal isMockable(address(_consensus)) {
-        vm.mockCall(
-            address(_consensus),
-            abi.encodeWithSelector(IConsensus.join.selector),
-            ""
-        );
     }
 }
