@@ -34,7 +34,7 @@ contract ERC1155BatchPortal is IERC1155BatchPortal {
         address _dapp,
         uint256[] calldata _tokenIds,
         uint256[] calldata _values,
-        bytes calldata _baseLayer,
+        bytes calldata _baseLayerData,
         bytes calldata _execLayerData
     ) external override {
         _token.safeBatchTransferFrom(
@@ -42,7 +42,7 @@ contract ERC1155BatchPortal is IERC1155BatchPortal {
             _dapp,
             _tokenIds,
             _values,
-            _baseLayer
+            _baseLayerData
         );
 
         bytes memory input = InputEncoding.encodeBatchERC1155Deposit(
@@ -50,7 +50,7 @@ contract ERC1155BatchPortal is IERC1155BatchPortal {
             msg.sender,
             _tokenIds,
             _values,
-            _baseLayer,
+            _baseLayerData,
             _execLayerData
         );
 

@@ -30,7 +30,7 @@ contract EtherPortal is IEtherPortal {
 
     function depositEther(
         address _dapp,
-        bytes calldata _L2data
+        bytes calldata _execLayerData
     ) external payable override {
         // We used to call `transfer()` but it's not considered safe,
         // as it assumes gas costs are immutable (they are not).
@@ -40,7 +40,7 @@ contract EtherPortal is IEtherPortal {
         bytes memory input = InputEncoding.encodeEtherDeposit(
             msg.sender,
             msg.value,
-            _L2data
+            _execLayerData
         );
 
         inputBox.addInput(_dapp, input);

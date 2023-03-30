@@ -49,12 +49,12 @@ library CanonicalMachine {
 
     /// @notice Return the position of an intra memory range on a memory range
     //          with contents with the same size
-    /// @param _index index of intra memory range
-    /// @param _log2Size size of intra memory range
+    /// @param index index of intra memory range
+    /// @param log2Size size of intra memory range
     function getIntraMemoryRangePosition(
-        uint64 _index,
-        Log2Size _log2Size
+        uint64 index,
+        Log2Size log2Size
     ) internal pure returns (uint64) {
-        return _index << Log2Size.unwrap(_log2Size);
+        return index << Log2Size.unwrap(log2Size);
     }
 }

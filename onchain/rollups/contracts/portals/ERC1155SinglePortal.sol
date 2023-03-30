@@ -34,7 +34,7 @@ contract ERC1155SinglePortal is IERC1155SinglePortal {
         address _dapp,
         uint256 _tokenId,
         uint256 _value,
-        bytes calldata _baseLayer,
+        bytes calldata _baseLayerData,
         bytes calldata _execLayerData
     ) external override {
         _token.safeTransferFrom(
@@ -42,7 +42,7 @@ contract ERC1155SinglePortal is IERC1155SinglePortal {
             _dapp,
             _tokenId,
             _value,
-            _baseLayer
+            _baseLayerData
         );
 
         bytes memory input = InputEncoding.encodeSingleERC1155Deposit(
@@ -50,7 +50,7 @@ contract ERC1155SinglePortal is IERC1155SinglePortal {
             msg.sender,
             _tokenId,
             _value,
-            _baseLayer,
+            _baseLayerData,
             _execLayerData
         );
 

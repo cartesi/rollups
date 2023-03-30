@@ -94,7 +94,7 @@ contract WatcherToken is ERC20 {
 
 contract ERC20PortalTest is Test {
     IInputBox inputBox;
-    IERC20Portal erc20Portal;
+    IERC20Portal portal;
     IERC20 token;
     address alice;
     address dapp;
@@ -114,144 +114,156 @@ contract ERC20PortalTest is Test {
 
     function setUp() public {
         inputBox = new InputBox();
-        erc20Portal = new ERC20Portal(inputBox);
-        alice = address(0xdeadbeef);
-        dapp = address(0x12345678);
+        portal = new ERC20Portal(inputBox);
+        alice = address(vm.addr(1));
+        dapp = address(vm.addr(2));
     }
 
     function testGetInputBox() public {
-        assertEq(address(erc20Portal.getInputBox()), address(inputBox));
+        assertEq(address(portal.getInputBox()), address(inputBox));
     }
 
-    function testERC20DepositTrue(uint256 amount, bytes calldata data) public {
+    function testERC20DepositTrue(
+        uint256 _amount,
+        bytes calldata _data
+    ) public {
         // Create a normal token
-        token = new NormalToken(amount);
+        token = new NormalToken(_amount);
 
         // Construct the ERC-20 deposit input
-        bytes memory input = abi.encodePacked(true, token, alice, amount, data);
+        bytes memory input = abi.encodePacked(
+            true,
+            token,
+            alice,
+            _amount,
+            _data
+        );
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
-        token.transfer(alice, amount);
+        token.transfer(alice, _amount);
         vm.startPrank(alice);
 
-        // Allow the portal to withdraw `amount` tokens from Alice
-        token.approve(address(erc20Portal), amount);
+        // Allow the portal to withdraw `_amount` tokens from Alice
+        token.approve(address(portal), _amount);
 
         // Save the ERC-20 token balances
-        uint256 alicesBalanceBefore = token.balanceOf(alice);
-        uint256 dappsBalanceBefore = token.balanceOf(dapp);
-        uint256 portalsBalanceBefore = token.balanceOf(address(erc20Portal));
+        uint256 aliceBalanceBefore = token.balanceOf(alice);
+        uint256 dappBalanceBefore = token.balanceOf(dapp);
+        uint256 portalBalanceBefore = token.balanceOf(address(portal));
 
         // Expect InputAdded to be emitted with the right arguments
         vm.expectEmit(true, true, false, true, address(inputBox));
-        emit InputAdded(dapp, 0, address(erc20Portal), input);
+        emit InputAdded(dapp, 0, address(portal), input);
 
         // Transfer ERC-20 tokens to the DApp via the portal
-        erc20Portal.depositERC20Tokens(token, dapp, amount, data);
+        portal.depositERC20Tokens(token, dapp, _amount, _data);
 
         // Check the balances after the deposit
-        assertEq(token.balanceOf(alice), alicesBalanceBefore - amount);
-        assertEq(token.balanceOf(dapp), dappsBalanceBefore + amount);
-        assertEq(token.balanceOf(address(erc20Portal)), portalsBalanceBefore);
+        assertEq(token.balanceOf(alice), aliceBalanceBefore - _amount);
+        assertEq(token.balanceOf(dapp), dappBalanceBefore + _amount);
+        assertEq(token.balanceOf(address(portal)), portalBalanceBefore);
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
-    function testERC20DepositFalse(uint256 amount, bytes calldata data) public {
+    function testERC20DepositFalse(
+        uint256 _amount,
+        bytes calldata _data
+    ) public {
         // Create untransferable token
-        token = new UntransferableToken(amount);
+        token = new UntransferableToken(_amount);
 
         // Construct the ERC-20 deposit input
         bytes memory input = abi.encodePacked(
             false,
             token,
             alice,
-            amount,
-            data
+            _amount,
+            _data
         );
 
         // Start impersonating Alice
         vm.startPrank(alice);
 
         // Save the ERC-20 token balances
-        uint256 alicesBalanceBefore = token.balanceOf(alice);
-        uint256 dappsBalanceBefore = token.balanceOf(dapp);
-        uint256 portalsBalanceBefore = token.balanceOf(address(erc20Portal));
+        uint256 aliceBalanceBefore = token.balanceOf(alice);
+        uint256 dappBalanceBefore = token.balanceOf(dapp);
+        uint256 portalBalanceBefore = token.balanceOf(address(portal));
 
         // Expect InputAdded to be emitted with the right arguments
         vm.expectEmit(true, true, false, true, address(inputBox));
-        emit InputAdded(dapp, 0, address(erc20Portal), input);
+        emit InputAdded(dapp, 0, address(portal), input);
 
         // Transfer ERC-20 tokens to the DApp via the portal
-        erc20Portal.depositERC20Tokens(token, dapp, amount, data);
+        portal.depositERC20Tokens(token, dapp, _amount, _data);
 
         // Check the balances after the deposit
-        assertEq(token.balanceOf(alice), alicesBalanceBefore);
-        assertEq(token.balanceOf(dapp), dappsBalanceBefore);
-        assertEq(token.balanceOf(address(erc20Portal)), portalsBalanceBefore);
+        assertEq(token.balanceOf(alice), aliceBalanceBefore);
+        assertEq(token.balanceOf(dapp), dappBalanceBefore);
+        assertEq(token.balanceOf(address(portal)), portalBalanceBefore);
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 1);
     }
 
     function testRevertsInsufficientAllowance(
-        uint256 amount,
-        bytes calldata data
+        uint256 _amount,
+        bytes calldata _data
     ) public {
         // Anyone can transfer 0 tokens :-)
-        vm.assume(amount > 0);
+        vm.assume(_amount > 0);
 
         // Create a normal token
-        token = new NormalToken(amount);
+        token = new NormalToken(_amount);
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
-        token.transfer(alice, amount);
+        token.transfer(alice, _amount);
         vm.startPrank(alice);
 
         // Expect deposit to revert with message
         vm.expectRevert("ERC20: insufficient allowance");
-        erc20Portal.depositERC20Tokens(token, dapp, amount, data);
+        portal.depositERC20Tokens(token, dapp, _amount, _data);
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
     }
 
     function testRevertsInsufficientBalance(
-        uint256 amount,
-        bytes calldata data
+        uint256 _amount,
+        bytes calldata _data
     ) public {
-        // Check if `amount + 1` won't overflow
-        vm.assume(amount < type(uint256).max);
+        // Check if `_amount + 1` won't overflow
+        vm.assume(_amount < type(uint256).max);
 
         // Create a normal token
-        token = new NormalToken(amount);
+        token = new NormalToken(_amount);
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
-        token.transfer(alice, amount);
+        token.transfer(alice, _amount);
         vm.startPrank(alice);
 
-        // Allow the portal to withdraw `amount+1` tokens from Alice
-        token.approve(address(erc20Portal), amount + 1);
+        // Allow the portal to withdraw `_amount+1` tokens from Alice
+        token.approve(address(portal), _amount + 1);
 
         // Expect deposit to revert with message
         vm.expectRevert("ERC20: transfer amount exceeds balance");
-        erc20Portal.depositERC20Tokens(token, dapp, amount + 1, data);
+        portal.depositERC20Tokens(token, dapp, _amount + 1, _data);
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
     }
 
-    function testNumberOfInputs(uint256 amount, bytes calldata data) public {
+    function testNumberOfInputs(uint256 _amount, bytes calldata _data) public {
         // Create a token that records the number of inputs it has received
-        token = new WatcherToken(inputBox, amount);
+        token = new WatcherToken(inputBox, _amount);
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
-        token.transfer(alice, amount);
+        token.transfer(alice, _amount);
         vm.startPrank(alice);
 
-        // Allow the portal to withdraw `amount` tokens from Alice
-        token.approve(address(erc20Portal), amount);
+        // Allow the portal to withdraw `_amount` tokens from Alice
+        token.approve(address(portal), _amount);
 
         // Save number of inputs before the deposit
         uint256 numberOfInputsBefore = inputBox.getNumberOfInputs(dapp);
@@ -261,12 +273,12 @@ contract ERC20PortalTest is Test {
         emit WatchedTransfer(
             alice,
             address(dapp),
-            amount,
+            _amount,
             numberOfInputsBefore
         );
 
         // Transfer ERC-20 tokens to DApp
-        erc20Portal.depositERC20Tokens(token, dapp, amount, data);
+        portal.depositERC20Tokens(token, dapp, _amount, _data);
 
         // Expect new input
         assertEq(inputBox.getNumberOfInputs(dapp), numberOfInputsBefore + 1);
