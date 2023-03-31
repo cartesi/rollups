@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title History interface
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 interface IHistory {
     // Permissioned functions

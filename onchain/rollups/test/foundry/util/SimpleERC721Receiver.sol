@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title A Simple ERC-721 Receiver Contract
-pragma solidity 0.8.13;
+pragma solidity ^0.8.8;
 
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 

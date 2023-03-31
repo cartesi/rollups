@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title History Test
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 import {Test, stdError} from "forge-std/Test.sol";
 import {History} from "contracts/history/History.sol";

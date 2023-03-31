@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title Input Box Test
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 import {Test} from "forge-std/Test.sol";
 import {InputBox} from "contracts/inputs/InputBox.sol";

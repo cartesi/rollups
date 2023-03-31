@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title DApp Address Relay
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 import {IDAppAddressRelay} from "./IDAppAddressRelay.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";

@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title ERC-20 Portal Test
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC20Portal} from "contracts/portals/ERC20Portal.sol";

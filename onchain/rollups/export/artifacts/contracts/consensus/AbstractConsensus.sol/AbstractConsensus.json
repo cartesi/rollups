@@ -62,6 +62,14 @@
   "linkReferences": {},
   "deployedLinkReferences": {},
   "devdoc": {
+    "events": {
+      "ApplicationJoined(address)": {
+        "details": "MUST be triggered on a successful call to `join()`",
+        "params": {
+          "application": "The application"
+        }
+      }
+    },
     "kind": "dev",
     "methods": {
       "getClaim(address,bytes)": {

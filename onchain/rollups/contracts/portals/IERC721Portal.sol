@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title ERC-721 Portal interface
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 import {IPortal} from "./IPortal.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";

@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title Input Box interface
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 interface IInputBox {
     /// @notice Emitted when an input is added to a DApp's input box

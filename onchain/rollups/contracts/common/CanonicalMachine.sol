@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title Canonical Machine Constants
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 library CanonicalMachine {
     // Log base 2 of size in bytes

@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title Input Library
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 
