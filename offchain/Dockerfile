@@ -93,7 +93,7 @@ FROM debian:bullseye-slim AS inspect_server
 COPY --from=inspect_server_build /usr/src/app/offchain/target/release/inspect-server /usr/local/bin
 ENTRYPOINT ["inspect-server"]
 
-FROM rust:1.67.0-bullseye AS graphql_server
+FROM debian:bullseye-slim AS graphql_server
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
