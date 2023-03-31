@@ -1,4 +1,6 @@
 # syntax=docker.io/docker/dockerfile:1.4
+# define runtime image
+FROM debian:bullseye-20230320-slim as runtime
 # deps install
 FROM rust:1.67.0-bullseye AS chef
 
@@ -51,7 +53,7 @@ FROM golang:1.19.0-bullseye as grpc_health_probe
 RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
 
 ## runtimes
-FROM debian:bullseye-slim AS state_server
+FROM runtime AS state_server
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
@@ -61,7 +63,7 @@ COPY --from=grpc_health_probe /go/bin/grpc-health-probe /usr/local/bin
 COPY --from=state_server_build /usr/src/app/offchain/target/release/rollups_state_server /usr/local/bin
 ENTRYPOINT ["rollups_state_server"]
 
-FROM debian:bullseye-slim AS indexer
+FROM runtime AS indexer
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
@@ -70,7 +72,7 @@ EOF
 COPY --from=indexer_build /usr/src/app/offchain/target/release/indexer /usr/local/bin
 ENTRYPOINT ["indexer"]
 
-FROM debian:bullseye-slim AS dispatcher
+FROM runtime AS dispatcher
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
@@ -80,7 +82,7 @@ COPY --from=dispatcher_build /usr/src/app/offchain/target/release/rollups_dispat
 COPY onchain/rollups/export/abi /usr/local/share/cartesi/deployments/
 ENTRYPOINT ["rollups_dispatcher"]
 
-FROM debian:bullseye-slim AS advance_runner
+FROM runtime AS advance_runner
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates curl
@@ -89,11 +91,11 @@ EOF
 COPY --from=advance_runner_build /usr/src/app/offchain/target/release/advance-runner /usr/local/bin
 ENTRYPOINT ["advance-runner"]
 
-FROM debian:bullseye-slim AS inspect_server
+FROM runtime AS inspect_server
 COPY --from=inspect_server_build /usr/src/app/offchain/target/release/inspect-server /usr/local/bin
 ENTRYPOINT ["inspect-server"]
 
-FROM debian:bullseye-slim AS graphql_server
+FROM runtime AS graphql_server
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
