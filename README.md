@@ -18,51 +18,60 @@ Check the [official Cartesi Rollups documentation website](https://docs.cartesi.
 
 ## On-chain Rollups
 
-Designed to mediate the relationship between the off-chain components with other smart contracts and externally owned accounts. It is composed by several modules, each with clear responsibilities and well-defined interfaces. The modules are the following:
+Designed to mediate the relationship between the off-chain components with other smart contracts and externally owned accounts. It is composed by several modules, each with clear responsibilities and well-defined interfaces. The modules are depicted in the diagram below. The yellow boxes correspond to the core contracts, and the blue boxes correspond to externally-owned accounts (EOAs) or other contracts.
 
 ```mermaid
 graph TD
     classDef core fill:#ffe95a,color:#000
+    classDef external fill:#85b4ff,color:#000
     classDef hasLink text-decoration: underline
 
     InputBox[Input Box]:::core
     CartesiDApp[Cartesi DApp]:::core
     CartesiDAppFactory[Cartesi DApp Factory]:::core
-    Authority:::core
-    History:::core
+    EtherPortal[Ether Portal]:::core
     ERC20Portal[ERC-20 Portal]:::core
     ERC721Portal[ERC-721 Portal]:::core
     ERC1155SinglePortal[ERC-1155 Single Transfer Portal]:::core
     ERC1155BatchPortal[ERC-1155 Batch Transfer Portal]:::core
-    EtherPortal[Ether Portal]:::core
     DAppAddressRelay[DApp Address Relay]:::core
+    Consensus:::external
+    
+    ERC20[Any ERC-20 token]:::external
+    ERC721[Any ERC-721 token]:::external
+    ERC1155[Any ERC-1155 token]:::external
+    DAppOwner[Cartesi DApp Owner]:::external
+    Anyone1[Anyone]:::external
+    Anyone2[Anyone]:::external
+    Anyone3[Anyone]:::external
 
-    ERC20[Any ERC-20 token]:::hasLink
-    ERC721[Any ERC-721 token]:::hasLink
-    ERC1155[Any ERC-1155 token]:::hasLink
-
-    Anyone1[Anyone] -- executeVoucher --> CartesiDApp
+    Anyone1 -- executeVoucher --> CartesiDApp
     Anyone1 -. validateNotice .-> CartesiDApp
     Anyone1 -- newApplication --> CartesiDAppFactory
-    CartesiDApp -. getClaim .-> Authority
+    DAppOwner -- migrateToConsensus ---> CartesiDApp
+    CartesiDApp -. getClaim .-> Consensus
     CartesiDApp -- withdrawEther --> CartesiDApp
     CartesiDAppFactory == creates ==> CartesiDApp
-    Authority -. getClaim .-> History
-    Authority -- submitClaim --> History
-    Authority -- migrateToConsensus --> History
-    Authority -- transfer --> ERC20
-    ERC20Portal -- transferFrom --> ERC20
-    ERC20Portal -- addInput ---> InputBox
-    ERC721Portal -- safeTransferFrom --> ERC721
-    ERC721Portal -- addInput ---> InputBox
-    ERC1155SinglePortal -- safeTransferFrom --> ERC1155
-    ERC1155SinglePortal -- addInput ---> InputBox
-    ERC1155BatchPortal -- safeBatchTransferFrom --> ERC1155
-    ERC1155BatchPortal -- addInput ---> InputBox
-    EtherPortal -- "Ether transfer" --> Anyone
-    EtherPortal -- addInput ---> InputBox
-    DAppAddressRelay -- addInput ---> InputBox
+    Anyone2 -- addInput -------> InputBox
+    Anyone2 -- depositEther ---> EtherPortal
+    EtherPortal -- "Ether transfer" ----> Anyone3
+    EtherPortal -- addInput -----> InputBox
+    Anyone2 -- depositERC20Tokens ---> ERC20Portal
+    ERC20Portal -- transferFrom ----> ERC20
+    ERC20Portal -- addInput -----> InputBox
+    Anyone2 -- depositERC721Token ---> ERC721Portal
+    ERC721Portal -- safeTransferFrom ----> ERC721
+    ERC721Portal -- addInput -----> InputBox
+    Anyone2 -- depositSingleERC1155Token ---> ERC1155SinglePortal
+    ERC1155SinglePortal -- safeTransferFrom ----> ERC1155
+    ERC1155SinglePortal -- addInput -----> InputBox
+    Anyone2 -- depositBatchERC1155Token ---> ERC1155BatchPortal
+    ERC1155BatchPortal -- safeBatchTransferFrom ----> ERC1155
+    ERC1155BatchPortal -- addInput -----> InputBox
+    Anyone2 -- relayDAppAddress ---> DAppAddressRelay
+    DAppAddressRelay -- addInput -----> InputBox
 
+    class ERC20,ERC721,ERC1155 hasLink
     click ERC20 href "https://eips.ethereum.org/EIPS/eip-20"
     click ERC721 href "https://eips.ethereum.org/EIPS/eip-721"
     click ERC1155 href "https://eips.ethereum.org/EIPS/eip-1155"
