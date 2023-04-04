@@ -99,7 +99,6 @@ FROM runtime AS graphql_server
 RUN <<EOF
 apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
-cargo install diesel_cli --no-default-features --features "postgres"
 rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=graphql_server_build /usr/src/app/offchain/target/release/graphql-server /usr/local/bin
