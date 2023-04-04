@@ -84,9 +84,9 @@ contract ERC1155BatchPortalTest is Test {
     function setUp() public {
         inputBox = new InputBox();
         portal = new ERC1155BatchPortal(inputBox);
-        alice = address(vm.addr(1));
-        dapp = address(vm.addr(2));
-        bob = address(vm.addr(3));
+        alice = vm.addr(1);
+        dapp = vm.addr(2);
+        bob = vm.addr(3);
     }
 
     function testGetInputBoxBatch() public {

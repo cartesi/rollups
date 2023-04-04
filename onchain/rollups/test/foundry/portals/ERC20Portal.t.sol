@@ -115,8 +115,8 @@ contract ERC20PortalTest is Test {
     function setUp() public {
         inputBox = new InputBox();
         portal = new ERC20Portal(inputBox);
-        alice = address(vm.addr(1));
-        dapp = address(vm.addr(2));
+        alice = vm.addr(1);
+        dapp = vm.addr(2);
     }
 
     function testGetInputBox() public {

@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title ERC-1155 Single Transfer Portal Interface
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IPortal} from "./IPortal.sol";

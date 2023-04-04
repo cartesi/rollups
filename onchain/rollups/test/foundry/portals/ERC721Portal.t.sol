@@ -116,7 +116,7 @@ contract ERC721PortalTest is Test {
     function setUp() public {
         inputBox = new InputBox();
         portal = new ERC721Portal(inputBox);
-        alice = address(vm.addr(1));
+        alice = vm.addr(1);
     }
 
     function testGetInputBox() public {
@@ -129,7 +129,7 @@ contract ERC721PortalTest is Test {
         bytes calldata _execLayerData
     ) public {
         // Assume the DApp is an EOA
-        dapp = address(vm.addr(1));
+        dapp = vm.addr(2);
 
         // Create a normal token with one NFT
         token = new NormalToken(alice, _tokenId);

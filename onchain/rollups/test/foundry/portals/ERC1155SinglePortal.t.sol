@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 /// @title ERC-1155 Single Transfer Portal Test
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.8;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC1155SinglePortal} from "contracts/portals/ERC1155SinglePortal.sol";
@@ -84,9 +84,9 @@ contract ERC1155SinglePortalTest is Test {
     function setUp() public {
         inputBox = new InputBox();
         portal = new ERC1155SinglePortal(inputBox);
-        alice = address(vm.addr(1));
-        dapp = address(vm.addr(2));
-        bob = address(vm.addr(3));
+        alice = vm.addr(1);
+        dapp = vm.addr(2);
+        bob = vm.addr(3);
     }
 
     function testGetInputBox() public {
