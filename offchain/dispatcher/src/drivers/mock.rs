@@ -252,11 +252,11 @@ impl BrokerSend for Broker {
 // ------------------------------------------------------------------------------------------------
 
 #[derive(Debug)]
-pub struct TxSender {
+pub struct Sender {
     pub sent_rollups_claims: Mutex<Vec<(Address, RollupsClaim)>>,
 }
 
-impl TxSender {
+impl Sender {
     pub fn new() -> Self {
         Self {
             sent_rollups_claims: Mutex::new(vec![]),
@@ -269,7 +269,7 @@ impl TxSender {
 }
 
 #[async_trait]
-impl crate::tx_sender::TxSender for TxSender {
+impl crate::sender::Sender for Sender {
     async fn submit_claim(
         self,
         dapp_address: Address,

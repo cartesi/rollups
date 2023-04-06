@@ -16,8 +16,7 @@ use tracing::{info, instrument, trace};
 use state_fold_types::ethereum_types::Address;
 use types::foldables::claims::History;
 
-use crate::machine::BrokerReceive;
-use crate::tx_sender::TxSender;
+use crate::{machine::BrokerReceive, sender::Sender};
 
 #[derive(Debug)]
 pub struct BlockchainDriver {
@@ -30,12 +29,12 @@ impl BlockchainDriver {
     }
 
     #[instrument(level = "trace", skip_all)]
-    pub async fn react<TS: TxSender + Sync + Send>(
+    pub async fn react<S: Sender>(
         &self,
         history: &History,
         broker: &impl BrokerReceive,
-        mut tx_sender: TS,
-    ) -> Result<TS> {
+        mut claim_sender: S,
+    ) -> Result<S> {
         let claims_sent = claims_sent(history, &self.dapp_address);
         trace!(?claims_sent);
 
@@ -43,13 +42,13 @@ impl BlockchainDriver {
             trace!("Got claim `{:?}` from broker", rollups_claim);
             if rollups_claim.epoch_index >= claims_sent {
                 info!("Sending claim `{:?}`", rollups_claim);
-                tx_sender = tx_sender
+                claim_sender = claim_sender
                     .submit_claim(self.dapp_address, rollups_claim)
-                    .await?;
+                    .await?
             }
         }
 
-        Ok(tx_sender)
+        Ok(claim_sender)
     }
 }
 
@@ -151,7 +150,7 @@ mod tests {
             })
             .collect();
         let broker = mock::Broker::new(vec![], next_claims);
-        let tx_sender = mock::TxSender::new();
+        let tx_sender = mock::Sender::new();
 
         let result =
             blockchain_driver.react(&history, &broker, tx_sender).await;
