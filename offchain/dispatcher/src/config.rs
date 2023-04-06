@@ -11,20 +11,24 @@
 // specific language governing permissions and limitations under the License.
 
 use clap::Parser;
-use eth_tx_manager::config::{
-    Error as TxError, TxEnvCLIConfig, TxManagerConfig,
+use eth_tx_manager::{
+    config::{Error as TxError, TxEnvCLIConfig, TxManagerConfig},
+    Priority,
 };
-use rollups_events::{BrokerCLIConfig, BrokerConfig};
 use snafu::{ResultExt, Snafu};
 use state_client_lib::config::{Error as SCError, SCConfig, SCEnvCLIConfig};
 use std::{fs::File, io::BufReader, path::PathBuf};
 
+use rollups_events::{BrokerCLIConfig, BrokerConfig};
 use types::deployment_files::{
     dapp_deployment::DappDeployment,
     rollups_deployment::{RollupsDeployment, RollupsDeploymentJson},
 };
 
-use crate::http_health::config::{HealthCheckConfig, HealthCheckEnvCLIConfig};
+use crate::{
+    auth::{AuthConfig, AuthEnvCLIConfig, AuthError},
+    http_health::config::{HealthCheckConfig, HealthCheckEnvCLIConfig},
+};
 
 #[derive(Clone, Parser)]
 #[command(name = "rd_config")]
@@ -41,6 +45,9 @@ pub struct DispatcherEnvCLIConfig {
 
     #[command(flatten)]
     pub hc_config: HealthCheckEnvCLIConfig,
+
+    #[command(flatten)]
+    pub auth_config: AuthEnvCLIConfig,
 
     /// Path to file with deployment json of dapp
     #[arg(long, env, default_value = "./dapp_deployment.json")]
@@ -61,10 +68,12 @@ pub struct DispatcherConfig {
     pub tx_config: TxManagerConfig,
     pub broker_config: BrokerConfig,
     pub hc_config: HealthCheckConfig,
+    pub auth_config: AuthConfig,
 
     pub dapp_deployment: DappDeployment,
     pub rollups_deployment: RollupsDeployment,
     pub epoch_duration: u64,
+    pub priority: Priority,
 }
 
 #[derive(Debug, Snafu)]
@@ -80,6 +89,9 @@ pub enum Error {
         path: PathBuf,
         source: std::io::Error,
     },
+
+    #[snafu(display("Auth configuration error: {}", source))]
+    AuthError { source: AuthError },
 
     #[snafu(display("Json parse error ({})", path.display()))]
     JsonParseError {
@@ -110,6 +122,9 @@ impl DispatcherConfig {
 
         let hc_config = HealthCheckConfig::initialize(env_cli_config.hc_config);
 
+        let auth_config = AuthConfig::initialize(env_cli_config.auth_config)
+            .context(AuthSnafu)?;
+
         let path = env_cli_config.rd_dapp_deployment_file;
         let dapp_deployment: DappDeployment = read_json(path)?;
 
@@ -118,8 +133,6 @@ impl DispatcherConfig {
             .map(RollupsDeployment::from)?;
 
         let broker_config = BrokerConfig::from(env_cli_config.broker_config);
-
-        let epoch_duration = env_cli_config.rd_epoch_duration;
 
         assert!(
             sc_config.default_confirmations < tx_config.default_confirmations,
@@ -131,10 +144,12 @@ impl DispatcherConfig {
             tx_config,
             broker_config,
             hc_config,
+            auth_config,
 
             dapp_deployment,
             rollups_deployment,
-            epoch_duration,
+            epoch_duration: env_cli_config.rd_epoch_duration,
+            priority: Priority::Normal,
         })
     }
 }

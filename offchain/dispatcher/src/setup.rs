@@ -10,46 +10,21 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use crate::{
-    config::DispatcherConfig,
-    drivers::Context,
-    machine::BrokerStatus,
-    tx_sender::{BulletproofTxSender, TxSender},
-};
-
-use eth_tx_manager::{
-    config::TxManagerConfig, database::FileSystemDatabase,
-    gas_oracle::DefaultGasOracle,
-    manager::Configuration as ManagerConfiguration, Priority,
-    TransactionManager,
-};
+use anyhow::Result;
 use state_client_lib::{
     config::SCConfig, error::StateServerError, BlockServer,
     GrpcStateFoldClient, StateServer,
 };
-use state_fold_types::{
-    ethers::{
-        middleware::SignerMiddleware,
-        providers::{Http, HttpRateLimitRetryPolicy, Provider, RetryClient},
-        signers::Signer,
-        types::Address,
-    },
-    BlockStreamItem,
-};
-use tracing::warn;
-
-use types::foldables::authority::{RollupsInitialState, RollupsState};
-
-use anyhow::{anyhow, Result};
-use std::sync::Arc;
+use state_fold_types::BlockStreamItem;
 use tokio_stream::{Stream, StreamExt};
 use tonic::transport::Channel;
-use url::Url;
+use types::foldables::authority::{RollupsInitialState, RollupsState};
+
+use crate::{
+    config::DispatcherConfig, drivers::Context, machine::BrokerStatus,
+};
 
 const BUFFER_LEN: usize = 256;
-
-const MAX_RETRIES: u32 = 10;
-const INITIAL_BACKOFF: u64 = 1000;
 
 pub async fn create_state_server(
     config: &SCConfig,
@@ -89,66 +64,6 @@ pub async fn create_block_subscription(
     });
 
     Ok(s)
-}
-
-pub async fn create_tx_sender(
-    config: &TxManagerConfig,
-    consensus_address: Address,
-    priority: Priority,
-) -> Result<impl TxSender> {
-    let tx_manager = {
-        let provider = {
-            let http = Http::new(Url::parse(&config.provider_http_endpoint)?);
-
-            let retry_client = RetryClient::new(
-                http,
-                Box::new(HttpRateLimitRetryPolicy),
-                MAX_RETRIES,
-                INITIAL_BACKOFF,
-            );
-
-            let provider = Provider::new(retry_client);
-
-            Arc::new(SignerMiddleware::new(provider, config.wallet.clone()))
-        };
-
-        let tx_manager = match TransactionManager::new(
-            provider.clone(),
-            DefaultGasOracle::new(),
-            FileSystemDatabase::new(config.database_path.to_owned()),
-            config.into(),
-            ManagerConfiguration::default(),
-        )
-        .await
-        {
-            Ok((m, _)) => m,
-
-            Err(eth_tx_manager::Error::NonceTooLow { .. }) => {
-                warn!("Nonce too low! Clearing tx database");
-
-                TransactionManager::force_new(
-                    provider,
-                    DefaultGasOracle::new(),
-                    FileSystemDatabase::new(config.database_path.to_owned()),
-                    config.into(),
-                    ManagerConfiguration::default(),
-                )
-                .await?
-            }
-
-            Err(e) => return Err(anyhow!(e)),
-        };
-
-        tx_manager
-    };
-
-    Ok(BulletproofTxSender::new(
-        tx_manager,
-        config.default_confirmations,
-        priority,
-        config.wallet.address(),
-        consensus_address,
-    ))
 }
 
 pub async fn create_context(

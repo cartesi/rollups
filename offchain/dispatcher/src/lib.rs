@@ -14,7 +14,9 @@ pub mod config;
 pub mod http_health;
 pub mod main_loop;
 
+mod auth;
 mod drivers;
 mod machine;
+mod sender;
 mod setup;
-mod tx_sender;
+mod signer;
