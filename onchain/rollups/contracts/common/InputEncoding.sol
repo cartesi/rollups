@@ -85,18 +85,6 @@ library InputEncoding {
             );
     }
 
-    /// @notice Encode DApp address relay
-    /// @param dapp The DApp address
-    /// @return The encoded input
-    function encodeDAppAddressRelay(
-        address dapp
-    ) internal pure returns (bytes memory) {
-        return
-            abi.encodePacked(
-                dapp //        20B
-            );
-    }
-
     /// @notice Encode an ERC-1155 single token deposit
     /// @param token The ERC-1155 token contract
     /// @param sender The token sender
@@ -153,6 +141,18 @@ library InputEncoding {
                 token, //                   20B
                 sender, //                  20B
                 data //                     arbitrary size
+            );
+    }
+
+    /// @notice Encode DApp address relay
+    /// @param dapp The DApp address
+    /// @return The encoded input
+    function encodeDAppAddressRelay(
+        address dapp
+    ) internal pure returns (bytes memory) {
+        return
+            abi.encodePacked(
+                dapp //        20B
             );
     }
 }
