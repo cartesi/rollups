@@ -10,38 +10,28 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+use anyhow::{bail, Result};
+use rollups_events::{Address, DAppMetadata};
+use state_client_lib::{error::StateServerError, StateServer};
+use state_fold_types::{Block, BlockStreamItem};
+use tokio_stream::{Stream, StreamExt};
+use tracing::{error, info, instrument, trace, warn};
+use types::foldables::authority::rollups::{RollupsInitialState, RollupsState};
+
 use crate::{
     config::DispatcherConfig,
     drivers::{blockchain::BlockchainDriver, machine::MachineDriver, Context},
     machine::{rollups_broker::BrokerFacade, BrokerReceive, BrokerSend},
-    setup::{
-        create_block_subscription, create_context, create_state_server,
-        create_tx_sender,
-    },
-    tx_sender::TxSender,
+    sender::ClaimSender,
+    setup::{create_block_subscription, create_context, create_state_server},
 };
-
-use eth_tx_manager::transaction::Priority;
-use rollups_events::{Address, DAppMetadata};
-use state_client_lib::{error::StateServerError, StateServer};
-use state_fold_types::{Block, BlockStreamItem};
-use types::foldables::authority::rollups::{RollupsInitialState, RollupsState};
-
-use anyhow::{bail, Result};
-use tokio_stream::{Stream, StreamExt};
-use tracing::{error, info, instrument, trace, warn};
 
 #[instrument(level = "trace", skip_all)]
 pub async fn run(config: DispatcherConfig) -> Result<()> {
     info!("Setting up dispatcher with config: {:?}", config);
 
     trace!("Creating transaction manager");
-    let tx_sender = create_tx_sender(
-        &config.tx_config,
-        config.rollups_deployment.authority_address,
-        Priority::Normal,
-    )
-    .await?;
+    let claim_sender = ClaimSender::new(&config).await?;
 
     trace!("Creating state-server connection");
     let state_server = create_state_server(&config.sc_config).await?;
@@ -88,13 +78,13 @@ pub async fn run(config: DispatcherConfig) -> Result<()> {
         machine_driver,
         blockchain_driver,
         broker,
-        tx_sender,
+        claim_sender,
     )
     .await
 }
 
 #[instrument(level = "trace", skip_all)]
-async fn main_loop<TS: TxSender + Sync + Send>(
+async fn main_loop(
     mut block_subscription: impl Stream<Item = Result<BlockStreamItem, StateServerError>>
         + Send
         + std::marker::Unpin,
@@ -111,7 +101,7 @@ async fn main_loop<TS: TxSender + Sync + Send>(
 
     broker: impl BrokerSend + BrokerReceive,
 
-    mut tx_sender: TS,
+    mut claim_sender: ClaimSender,
 ) -> Result<()> {
     loop {
         match block_subscription.next().await {
@@ -123,7 +113,7 @@ async fn main_loop<TS: TxSender + Sync + Send>(
                     b.hash,
                     b.parent_hash
                 );
-                tx_sender = process_block(
+                claim_sender = process_block(
                     &b,
                     &client,
                     &initial_state,
@@ -131,9 +121,9 @@ async fn main_loop<TS: TxSender + Sync + Send>(
                     &mut machine_driver,
                     &mut blockchain_driver,
                     &broker,
-                    tx_sender,
+                    claim_sender,
                 )
-                .await?;
+                .await?
             }
 
             Some(Ok(BlockStreamItem::Reorg(bs))) => {
@@ -163,7 +153,7 @@ async fn main_loop<TS: TxSender + Sync + Send>(
 }
 
 #[instrument(level = "trace", skip_all)]
-async fn process_block<TS: TxSender + Sync + Send>(
+async fn process_block(
     block: &Block,
 
     client: &impl StateServer<
@@ -178,8 +168,8 @@ async fn process_block<TS: TxSender + Sync + Send>(
 
     broker: &(impl BrokerSend + BrokerReceive),
 
-    tx_sender: TS,
-) -> Result<TS> {
+    claim_sender: ClaimSender,
+) -> Result<ClaimSender> {
     trace!("Querying rollup state");
     let state = client.query_state(initial_state, block.hash).await?;
 
@@ -192,6 +182,6 @@ async fn process_block<TS: TxSender + Sync + Send>(
     // Drive blockchain
     trace!("Reacting to state with `blockchain_driver`");
     blockchain_driver
-        .react(&state.state.history, broker, tx_sender)
+        .react(&state.state.history, broker, claim_sender)
         .await
 }

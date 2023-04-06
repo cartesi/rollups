@@ -10,20 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-mod bulletproof_tx_sender;
+mod aws_signer;
+mod signer;
 
-pub use bulletproof_tx_sender::BulletproofTxSender;
-
-use anyhow::Result;
-use async_trait::async_trait;
-use rollups_events::RollupsClaim;
-use state_fold_types::ethers::types::Address;
-
-#[async_trait]
-pub trait TxSender: std::fmt::Debug + Sized {
-    async fn submit_claim(
-        self,
-        dapp_address: Address,
-        rollups_claim: RollupsClaim,
-    ) -> Result<Self>;
-}
+pub use signer::{ConditionalSigner, ConditionalSignerError};
