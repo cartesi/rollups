@@ -20,7 +20,8 @@ use testcontainers::{
 };
 
 use rollups_events::{
-    Broker, BrokerConfig, BrokerError, BrokerStream, INITIAL_ID,
+    Broker, BrokerConfig, BrokerError, BrokerStream, RedactedUrl, Url,
+    INITIAL_ID,
 };
 
 const STREAM_KEY: &'static str = "test-stream";
@@ -28,7 +29,7 @@ const CONSUME_TIMEOUT: usize = 10;
 
 struct TestState<'d> {
     _node: Container<'d, GenericImage>,
-    redis_endpoint: String,
+    redis_endpoint: RedactedUrl,
     conn: ConnectionManager,
     backoff: ExponentialBackoff,
 }
@@ -40,10 +41,12 @@ impl TestState<'_> {
         );
         let node = docker.run(image);
         let port = node.get_host_port_ipv4(6379);
-        let redis_endpoint = format!("redis://127.0.0.1:{}", port);
+        let redis_endpoint = Url::parse(&format!("redis://127.0.0.1:{}", port))
+            .map(RedactedUrl::new)
+            .expect("failed to parse Redis Url");
         let backoff = ExponentialBackoff::default();
 
-        let client = Client::open(redis_endpoint.as_str())
+        let client = Client::open(redis_endpoint.inner().as_str())
             .expect("failed to create client");
         let conn = ConnectionManager::new(client)
             .await

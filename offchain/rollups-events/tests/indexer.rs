@@ -14,8 +14,9 @@ use backoff::ExponentialBackoff;
 use rollups_events::indexer::{IndexerEvent, IndexerState};
 use rollups_events::{
     Address, Broker, BrokerConfig, BrokerError, BrokerStream, DAppMetadata,
-    Event, Hash, RollupsAdvanceStateInput, RollupsData, RollupsInput,
-    RollupsInputsStream, RollupsOutput, RollupsOutputsStream,
+    Event, Hash, RedactedUrl, RollupsAdvanceStateInput, RollupsData,
+    RollupsInput, RollupsInputsStream, RollupsOutput, RollupsOutputsStream,
+    Url,
 };
 use testcontainers::{
     clients::Cli, core::WaitFor, images::generic::GenericImage, Container,
@@ -27,7 +28,7 @@ pub const DAPP_ADDRESS: Address = Address::new([0xfa; 20]);
 
 pub struct TestState<'d> {
     _node: Container<'d, GenericImage>,
-    redis_endpoint: String,
+    redis_endpoint: RedactedUrl,
 }
 
 impl TestState<'_> {
@@ -37,7 +38,9 @@ impl TestState<'_> {
         );
         let node = docker.run(image);
         let port = node.get_host_port_ipv4(6379);
-        let redis_endpoint = format!("redis://127.0.0.1:{}", port);
+        let redis_endpoint = Url::parse(&format!("redis://127.0.0.1:{}", port))
+            .map(RedactedUrl::new)
+            .expect("failed to parse Redis Url");
         TestState {
             _node: node,
             redis_endpoint,

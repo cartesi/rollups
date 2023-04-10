@@ -16,9 +16,10 @@ use rollups_data::{
     Input, Notice, OutputEnum, Proof, Report, RepositoryConfig, Voucher,
 };
 use rollups_events::{
-    BrokerConfig, DAppMetadata, InputMetadata, RollupsAdvanceStateInput,
-    RollupsData, RollupsNotice, RollupsOutput, RollupsOutputEnum,
-    RollupsOutputValidityProof, RollupsProof, RollupsReport, RollupsVoucher,
+    BrokerConfig, DAppMetadata, InputMetadata, RedactedUrl,
+    RollupsAdvanceStateInput, RollupsData, RollupsNotice, RollupsOutput,
+    RollupsOutputEnum, RollupsOutputValidityProof, RollupsProof, RollupsReport,
+    RollupsVoucher,
 };
 use test_fixtures::{BrokerFixture, RepositoryFixture};
 use testcontainers::clients::Cli;
@@ -431,7 +432,7 @@ impl TestState<'_> {
 
 async fn spawn_indexer(
     repository_config: RepositoryConfig,
-    redis_endpoint: String,
+    redis_endpoint: RedactedUrl,
     dapp_metadata: DAppMetadata,
 ) -> JoinHandle<Result<(), IndexerError>> {
     let broker_config = BrokerConfig {

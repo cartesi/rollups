@@ -350,8 +350,8 @@ mod broker_facade_tests {
     use std::{sync::Arc, time::Duration};
 
     use rollups_events::{
-        Hash, InputMetadata, Payload, RollupsAdvanceStateInput, RollupsData,
-        HASH_SIZE,
+        Hash, InputMetadata, Payload, RedactedUrl, RollupsAdvanceStateInput,
+        RollupsData, Url, HASH_SIZE,
     };
     use state_fold_types::{
         ethereum_types::{Bloom, H160, H256, U256, U64},
@@ -380,7 +380,9 @@ mod broker_facade_tests {
     #[tokio::test]
     async fn new_error() {
         let result = BrokerFacade::new(BrokerConfig {
-            redis_endpoint: "invalid".to_string(),
+            redis_endpoint: Url::parse("redis://invalid")
+                .map(RedactedUrl::new)
+                .expect("failed to parse Redis Url"),
             chain_id: 1,
             dapp_contract_address: [0; 20],
             claims_consume_timeout: 300000,

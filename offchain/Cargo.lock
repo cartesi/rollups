@@ -3974,6 +3974,9 @@ dependencies = [
 [[package]]
 name = "redacted"
 version = "0.9.0"
+dependencies = [
+ "url",
+]
 
 [[package]]
 name = "redis"
@@ -4215,6 +4218,7 @@ dependencies = [
  "clap 4.1.6",
  "env_logger",
  "hex",
+ "redacted",
  "redis",
  "serde",
  "serde_json",

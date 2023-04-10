@@ -12,9 +12,10 @@
 
 use backoff::ExponentialBackoff;
 use rollups_events::{
-    Address, Broker, BrokerConfig, DAppMetadata, Event, Hash, RollupsClaim,
-    RollupsClaimsStream, RollupsData, RollupsInput, RollupsInputsStream,
-    RollupsOutput, RollupsOutputsStream, ADDRESS_SIZE, INITIAL_ID,
+    Address, Broker, BrokerConfig, DAppMetadata, Event, Hash, RedactedUrl,
+    RollupsClaim, RollupsClaimsStream, RollupsData, RollupsInput,
+    RollupsInputsStream, RollupsOutput, RollupsOutputsStream, Url,
+    ADDRESS_SIZE, INITIAL_ID,
 };
 use testcontainers::{
     clients::Cli, core::WaitFor, images::generic::GenericImage, Container,
@@ -31,7 +32,7 @@ pub struct BrokerFixture<'d> {
     inputs_stream: RollupsInputsStream,
     claims_stream: RollupsClaimsStream,
     outputs_stream: RollupsOutputsStream,
-    redis_endpoint: String,
+    redis_endpoint: RedactedUrl,
     chain_id: u64,
     dapp_address: Address,
 }
@@ -47,7 +48,9 @@ impl BrokerFixture<'_> {
         );
         let node = docker.run(image);
         let port = node.get_host_port_ipv4(6379);
-        let redis_endpoint = format!("redis://127.0.0.1:{}", port);
+        let redis_endpoint = Url::parse(&format!("redis://127.0.0.1:{}", port))
+            .map(RedactedUrl::new)
+            .expect("failed to parse Redis Url");
         let chain_id = CHAIN_ID;
         let dapp_address = DAPP_ADDRESS;
         let backoff = ExponentialBackoff::default();
@@ -65,7 +68,7 @@ impl BrokerFixture<'_> {
         };
 
         tracing::trace!(
-            redis_endpoint,
+            ?redis_endpoint,
             "connecting to redis with rollups_events crate"
         );
         let client = Mutex::new(
@@ -85,7 +88,7 @@ impl BrokerFixture<'_> {
         }
     }
 
-    pub fn redis_endpoint(&self) -> &str {
+    pub fn redis_endpoint(&self) -> &RedactedUrl {
         &self.redis_endpoint
     }
 

@@ -22,6 +22,8 @@ use snafu::{ResultExt, Snafu};
 use std::fmt;
 use std::time::Duration;
 
+pub use redacted::{RedactedUrl, Url};
+
 pub mod indexer;
 
 pub const INITIAL_ID: &'static str = "0";
@@ -43,7 +45,7 @@ impl Broker {
 
         let connection = retry(config.backoff.clone(), || async {
             tracing::trace!("creating Redis Client");
-            let client = Client::open(config.redis_endpoint.as_str())?;
+            let client = Client::open(config.redis_endpoint.inner().as_str())?;
 
             tracing::trace!("creating Redis ConnectionManager");
             let connection = ConnectionManager::new(client).await?;
@@ -282,7 +284,7 @@ pub struct BrokerCLIConfig {
 
 #[derive(Debug, Clone)]
 pub struct BrokerConfig {
-    pub redis_endpoint: String,
+    pub redis_endpoint: RedactedUrl,
     pub consume_timeout: usize,
     pub backoff: ExponentialBackoff,
 }
@@ -295,8 +297,11 @@ impl From<BrokerCLIConfig> for BrokerConfig {
         let backoff = ExponentialBackoffBuilder::new()
             .with_max_elapsed_time(Some(max_elapsed_time))
             .build();
+        let redis_endpoint = Url::parse(&cli_config.redis_endpoint)
+            .map(RedactedUrl::new)
+            .expect("failed to parse Redis URL");
         BrokerConfig {
-            redis_endpoint: cli_config.redis_endpoint,
+            redis_endpoint,
             consume_timeout: cli_config.broker_consume_timeout,
             backoff,
         }

@@ -19,7 +19,7 @@ mod rollups_stream;
 
 pub use broker::{
     indexer, Broker, BrokerCLIConfig, BrokerConfig, BrokerError, BrokerStream,
-    Event, INITIAL_ID,
+    Event, RedactedUrl, Url, INITIAL_ID,
 };
 pub use common::{Address, Hash, Payload, ADDRESS_SIZE, HASH_SIZE};
 pub use rollups_claims::{RollupsClaim, RollupsClaimsStream};

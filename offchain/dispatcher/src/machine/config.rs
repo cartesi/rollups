@@ -1,3 +1,4 @@
+use rollups_events::{RedactedUrl, Url};
 use std::time::Duration;
 use structopt::StructOpt;
 
@@ -19,7 +20,7 @@ pub struct BrokerEnvCLIConfig {
 
 #[derive(Clone, Debug)]
 pub struct BrokerConfig {
-    pub redis_endpoint: String,
+    pub redis_endpoint: RedactedUrl,
     pub chain_id: u64,
     pub dapp_contract_address: [u8; 20],
     pub claims_consume_timeout: usize,
@@ -32,8 +33,11 @@ impl BrokerConfig {
         chain_id: u64,
         dapp_contract_address: [u8; 20],
     ) -> Self {
+        let redis_endpoint = Url::parse(&env_cli_config.redis_endpoint)
+            .map(RedactedUrl::new)
+            .expect("failed to parse Redis URL");
         Self {
-            redis_endpoint: env_cli_config.redis_endpoint,
+            redis_endpoint,
             chain_id,
             dapp_contract_address,
             claims_consume_timeout: env_cli_config.claims_consume_timeout,

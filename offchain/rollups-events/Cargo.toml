@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+redacted = { path = "../redacted" }
+
 backoff = { version = "0.4", features = ["tokio"] }
 base64 = "0.21"
 clap = { version = "4.0", features = ["derive", "env"] }
