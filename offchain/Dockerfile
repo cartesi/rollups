@@ -52,7 +52,11 @@ RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
 
 # define runtime image
 FROM debian:bullseye-20230502-slim as runtime
-WORKDIR /opt/cartesi
+RUN addgroup --system --gid 102 cartesi && \
+    adduser --system --uid 102 --ingroup cartesi --disabled-login --no-create-home --home /nonexistent --gecos "cartesi user" --shell /bin/false cartesi
+RUN mkdir -p /var/opt/cartesi
+RUN chown cartesi:cartesi /var/opt/cartesi
+WORKDIR /var/opt/cartesi
 ENV PATH="/opt/cartesi/bin:${PATH}"
 
 ## runtimes
@@ -64,6 +68,7 @@ rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=grpc_health_probe /go/bin/grpc-health-probe /usr/local/bin
 COPY --from=state_server_build /usr/src/app/offchain/target/release/rollups_state_server /opt/cartesi/bin/rollups_state_server
+USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/rollups_state_server"]
 
 FROM runtime AS indexer
@@ -73,6 +78,7 @@ DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libp
 rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=indexer_build /usr/src/app/offchain/target/release/indexer /opt/cartesi/bin/indexer
+USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/indexer"]
 
 FROM runtime AS dispatcher
@@ -83,6 +89,7 @@ rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=dispatcher_build /usr/src/app/offchain/target/release/rollups_dispatcher /opt/cartesi/bin/rollups_dispatcher
 COPY onchain/rollups/export/abi /opt/cartesi/share/deployments/
+USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/rollups_dispatcher"]
 
 FROM runtime AS advance_runner
@@ -92,10 +99,12 @@ DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-c
 rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=advance_runner_build /usr/src/app/offchain/target/release/advance-runner /opt/cartesi/bin/advance-runner
+USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/advance-runner"]
 
 FROM runtime AS inspect_server
 COPY --from=inspect_server_build /usr/src/app/offchain/target/release/inspect-server /opt/cartesi/bin/inspect-server
+USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/inspect-server"]
 
 FROM runtime AS graphql_server
@@ -105,6 +114,7 @@ DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libp
 rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=graphql_server_build /usr/src/app/offchain/target/release/graphql-server /opt/cartesi/bin/graphql-server
+USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/graphql-server"]
 
 FROM scratch AS deployments
