@@ -17,10 +17,13 @@ import {Test} from "forge-std/Test.sol";
 
 contract TestBase is Test {
     /// @notice Guarantess `addr` is an address that can be mocked
-    /// @dev Some addresses are reserved by Forge and cannot be mocked
+    /// @dev Some addresses are reserved by Forge and should not be mocked
     modifier isMockable(address addr) {
-        vm.assume(addr != 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D); // VM
-        vm.assume(addr != 0xCe71065D4017F316EC606Fe4422e11eB2c47c246); // FuzzerDict
+        vm.assume(addr != VM_ADDRESS);
+        vm.assume(addr != CONSOLE);
+        vm.assume(addr != DEFAULT_SENDER);
+        vm.assume(addr != DEFAULT_TEST_CONTRACT);
+        vm.assume(addr != MULTICALL3_ADDRESS);
         _;
     }
 }
