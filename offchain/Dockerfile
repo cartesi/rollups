@@ -1,6 +1,4 @@
 # syntax=docker.io/docker/dockerfile:1.4
-# define runtime image
-FROM debian:bullseye-20230320-slim as runtime
 # deps install
 FROM rust:1.67.0-bullseye AS chef
 
@@ -52,6 +50,11 @@ RUN cargo build --release --bin graphql-server
 FROM golang:1.19.0-bullseye as grpc_health_probe
 RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
 
+# define runtime image
+FROM debian:bullseye-20230320-slim as runtime
+WORKDIR /opt/cartesi
+ENV PATH="/opt/cartesi/bin:${PATH}"
+
 ## runtimes
 FROM runtime AS state_server
 RUN <<EOF
@@ -60,8 +63,8 @@ DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-c
 rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=grpc_health_probe /go/bin/grpc-health-probe /usr/local/bin
-COPY --from=state_server_build /usr/src/app/offchain/target/release/rollups_state_server /usr/local/bin
-ENTRYPOINT ["rollups_state_server"]
+COPY --from=state_server_build /usr/src/app/offchain/target/release/rollups_state_server /opt/cartesi/bin/rollups_state_server
+ENTRYPOINT ["/opt/cartesi/bin/rollups_state_server"]
 
 FROM runtime AS indexer
 RUN <<EOF
@@ -69,8 +72,8 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=indexer_build /usr/src/app/offchain/target/release/indexer /usr/local/bin
-ENTRYPOINT ["indexer"]
+COPY --from=indexer_build /usr/src/app/offchain/target/release/indexer /opt/cartesi/bin/indexer
+ENTRYPOINT ["/opt/cartesi/bin/indexer"]
 
 FROM runtime AS dispatcher
 RUN <<EOF
@@ -78,9 +81,9 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=dispatcher_build /usr/src/app/offchain/target/release/rollups_dispatcher /usr/local/bin
-COPY onchain/rollups/export/abi /usr/local/share/cartesi/deployments/
-ENTRYPOINT ["rollups_dispatcher"]
+COPY --from=dispatcher_build /usr/src/app/offchain/target/release/rollups_dispatcher /opt/cartesi/bin/rollups_dispatcher
+COPY onchain/rollups/export/abi /opt/cartesi/share/deployments/
+ENTRYPOINT ["/opt/cartesi/bin/rollups_dispatcher"]
 
 FROM runtime AS advance_runner
 RUN <<EOF
@@ -88,12 +91,12 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates curl
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=advance_runner_build /usr/src/app/offchain/target/release/advance-runner /usr/local/bin
-ENTRYPOINT ["advance-runner"]
+COPY --from=advance_runner_build /usr/src/app/offchain/target/release/advance-runner /opt/cartesi/bin/advance-runner
+ENTRYPOINT ["/opt/cartesi/bin/advance-runner"]
 
 FROM runtime AS inspect_server
-COPY --from=inspect_server_build /usr/src/app/offchain/target/release/inspect-server /usr/local/bin
-ENTRYPOINT ["inspect-server"]
+COPY --from=inspect_server_build /usr/src/app/offchain/target/release/inspect-server /opt/cartesi/bin/inspect-server
+ENTRYPOINT ["/opt/cartesi/bin/inspect-server"]
 
 FROM runtime AS graphql_server
 RUN <<EOF
@@ -101,8 +104,8 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=graphql_server_build /usr/src/app/offchain/target/release/graphql-server /usr/local/bin
-ENTRYPOINT ["graphql-server"]
+COPY --from=graphql_server_build /usr/src/app/offchain/target/release/graphql-server /opt/cartesi/bin/graphql-server
+ENTRYPOINT ["/opt/cartesi/bin/graphql-server"]
 
 FROM scratch AS deployments
 
