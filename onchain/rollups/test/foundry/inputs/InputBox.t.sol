@@ -42,11 +42,31 @@ contract InputBoxHandler is Test {
     // mapping of dapp addresses to number of inputs
     mapping(address => uint256) numOfInputs;
 
+    // block variables
+    uint256 blockTimestamp;
+    uint256 blockNumber;
+
     constructor(IInputBox _inputBox) {
         inputBox = _inputBox;
     }
 
+    function incrementBlockTimestamp() external {
+        blockTimestamp++;
+    }
+
+    function incrementBlockNumber() external {
+        blockNumber++;
+    }
+
+    function setBlockProperties() internal {
+        vm.warp(blockTimestamp);
+        vm.roll(blockNumber);
+    }
+
     function addInput(address _dapp, bytes calldata _input) external {
+        // Set block properties through forge cheatcodes
+        setBlockProperties();
+
         // Get the index of the to-be-added input
         uint256 index = inputBox.getNumberOfInputs(_dapp);
 
