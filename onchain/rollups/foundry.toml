@@ -6,4 +6,7 @@ test = 'test/foundry'
 cache_path  = 'forge-cache'
 solc_version = '0.8.19'
 
+[invariant]
+fail_on_revert = true
+
 # See more config options https://book.getfoundry.sh/reference/config.html
