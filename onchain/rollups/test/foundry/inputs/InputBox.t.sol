@@ -19,10 +19,115 @@ import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {CanonicalMachine} from "contracts/common/CanonicalMachine.sol";
 import {LibInput} from "contracts/library/LibInput.sol";
 
+contract InputBoxHandler is Test {
+    IInputBox immutable inputBox;
+
+    // The input hash and all the data necessary to reconstruct it
+    // plus the dapp address for testing purposes
+    struct InputData {
+        address sender;
+        uint256 blockNumber;
+        uint256 blockTimestamp;
+        bytes input;
+        uint256 index;
+        address dapp;
+        bytes32 inputHash;
+    }
+
+    InputData[] inputDataArray;
+
+    // array of addresses of dapps whose inboxes aren't empty
+    address[] dapps;
+
+    // mapping of dapp addresses to number of inputs
+    mapping(address => uint256) numOfInputs;
+
+    constructor(IInputBox _inputBox) {
+        inputBox = _inputBox;
+    }
+
+    function addInput(address _dapp, bytes calldata _input) external {
+        // Get the index of the to-be-added input
+        uint256 index = inputBox.getNumberOfInputs(_dapp);
+
+        // Check if `getNumberOfInputs` matches internal count
+        assertEq(index, numOfInputs[_dapp], "inbox size");
+
+        // Make the sender add the input to the DApp's inbox
+        vm.prank(msg.sender);
+        bytes32 inputHash = inputBox.addInput(_dapp, _input);
+
+        // If this is the first input being added to the DApp's inbox,
+        // then push the dapp to the array of dapps
+        if (index == 0) {
+            dapps.push(_dapp);
+        }
+
+        // Increment the dapp's input count
+        ++numOfInputs[_dapp];
+
+        // Create the input data struct
+        InputData memory inputData = InputData({
+            sender: msg.sender,
+            blockNumber: block.number,
+            blockTimestamp: block.timestamp,
+            input: _input,
+            index: index,
+            dapp: _dapp,
+            inputHash: inputHash
+        });
+
+        // Add the input data to the array
+        inputDataArray.push(inputData);
+
+        // Check if the inbox size increases by one
+        assertEq(
+            index + 1,
+            inputBox.getNumberOfInputs(_dapp),
+            "inbox size increment"
+        );
+
+        // Compute the input hash from the arguments passed to `addInput`
+        bytes32 computedInputHash = LibInput.computeInputHash(
+            inputData.sender,
+            inputData.blockNumber,
+            inputData.blockTimestamp,
+            _input, // has to be calldata, not memory
+            inputData.index
+        );
+
+        // Check if the input hash matches the computed one
+        assertEq(inputHash, computedInputHash, "computed input hash");
+    }
+
+    function getNumberOfInputs() external view returns (uint256) {
+        return inputDataArray.length;
+    }
+
+    function getInputAt(uint256 _i) external view returns (InputData memory) {
+        return inputDataArray[_i];
+    }
+
+    function getNumberOfDApps() external view returns (uint256) {
+        return dapps.length;
+    }
+
+    function getDAppAt(uint256 _i) external view returns (address) {
+        return dapps[_i];
+    }
+
+    function getNumberOfInputsForDApp(
+        address _dapp
+    ) external view returns (uint256) {
+        return numOfInputs[_dapp];
+    }
+}
+
 contract InputBoxTest is Test {
     using CanonicalMachine for CanonicalMachine.Log2Size;
 
     InputBox inputBox;
+    InputBoxHandler handler;
 
     event InputAdded(
         address indexed dapp,
@@ -33,6 +138,12 @@ contract InputBoxTest is Test {
 
     function setUp() public {
         inputBox = new InputBox();
+        handler = new InputBoxHandler(inputBox);
+
+        // for the invariant testing,
+        // don't call the input box contract directly
+        // (do it through the handler contract)
+        excludeContract(address(inputBox));
     }
 
     function testNoInputs(address _dapp) public {
@@ -86,5 +197,46 @@ contract InputBoxTest is Test {
             // test if input hash is the same as returned from calling addInput() function
             assertEq(inputHash, returnedValues[i]);
         }
+    }
+
+    function invariantInputData() external {
+        // Get the total number of inputs
+        uint256 totalNumOfInputs = handler.getNumberOfInputs();
+
+        for (uint256 i; i < totalNumOfInputs; ++i) {
+            // Get input data and metadata passed to `addInput`
+            InputBoxHandler.InputData memory inputData = handler.getInputAt(i);
+
+            // Make sure the input index is less than the inbox size
+            assertLt(
+                inputData.index,
+                inputBox.getNumberOfInputs(inputData.dapp),
+                "index bound check"
+            );
+
+            // Get the input hash returned by `getInputHash`
+            bytes32 inputHash = inputBox.getInputHash(
+                inputData.dapp,
+                inputData.index
+            );
+
+            // Check if the input hash matches the one returned by `addInput`
+            assertEq(inputHash, inputData.inputHash, "returned input hash");
+        }
+
+        // Get the number of dapps in the array
+        uint256 numOfDApps = handler.getNumberOfDApps();
+
+        // Check the input box size of all the dapps that
+        // were interacted with, and sum them all up
+        uint256 sum;
+        for (uint256 i; i < numOfDApps; ++i) {
+            address dapp = handler.getDAppAt(i);
+            uint256 expected = handler.getNumberOfInputsForDApp(dapp);
+            uint256 actual = inputBox.getNumberOfInputs(dapp);
+            assertEq(expected, actual, "number of inputs for dapp");
+            sum += actual;
+        }
+        assertEq(sum, totalNumOfInputs, "total number of inputs");
     }
 }
