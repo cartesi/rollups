@@ -37,8 +37,8 @@ contract InputBoxHandler is Test {
     mapping(address => uint256) numOfInputs;
 
     // block variables
-    uint256 blockTimestamp;
-    uint256 blockNumber;
+    uint256 blockTimestamp = block.timestamp;
+    uint256 blockNumber = block.number;
 
     constructor(IInputBox _inputBox) {
         inputBox = _inputBox;
@@ -58,7 +58,9 @@ contract InputBoxHandler is Test {
     }
 
     function addInput(address _dapp, bytes calldata _input) external {
-        // Set block properties through forge cheatcodes
+        // For some reason, the invariant testing framework doesn't
+        // record changes made to block properties, so we have to
+        // set them in the beginning of every call
         setBlockProperties();
 
         // Get the index of the to-be-added input
