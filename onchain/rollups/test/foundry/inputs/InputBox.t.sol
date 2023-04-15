@@ -119,7 +119,7 @@ contract InputBoxHandler is Test {
         assertEq(inputHash, computedInputHash, "computed input hash");
     }
 
-    function getNumberOfInputs() external view returns (uint256) {
+    function getTotalNumberOfInputs() external view returns (uint256) {
         return inputDataArray.length;
     }
 
@@ -135,9 +135,7 @@ contract InputBoxHandler is Test {
         return dapps[_i];
     }
 
-    function getNumberOfInputsForDApp(
-        address _dapp
-    ) external view returns (uint256) {
+    function getNumberOfInputs(address _dapp) external view returns (uint256) {
         return numOfInputs[_dapp];
     }
 }
@@ -220,7 +218,7 @@ contract InputBoxTest is Test {
 
     function invariantInputData() external {
         // Get the total number of inputs
-        uint256 totalNumOfInputs = handler.getNumberOfInputs();
+        uint256 totalNumOfInputs = handler.getTotalNumberOfInputs();
 
         for (uint256 i; i < totalNumOfInputs; ++i) {
             // Get input data and metadata passed to `addInput`
@@ -251,7 +249,7 @@ contract InputBoxTest is Test {
         uint256 sum;
         for (uint256 i; i < numOfDApps; ++i) {
             address dapp = handler.getDAppAt(i);
-            uint256 expected = handler.getNumberOfInputsForDApp(dapp);
+            uint256 expected = handler.getNumberOfInputs(dapp);
             uint256 actual = inputBox.getNumberOfInputs(dapp);
             assertEq(expected, actual, "number of inputs for dapp");
             sum += actual;
