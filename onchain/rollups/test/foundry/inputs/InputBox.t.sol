@@ -22,13 +22,7 @@ import {LibInput} from "contracts/library/LibInput.sol";
 contract InputBoxHandler is Test {
     IInputBox immutable inputBox;
 
-    // The input hash and all the data necessary to reconstruct it
-    // plus the dapp address for testing purposes
     struct InputData {
-        address sender;
-        uint256 blockNumber;
-        uint256 blockTimestamp;
-        bytes input;
         uint256 index;
         address dapp;
         bytes32 inputHash;
@@ -88,10 +82,6 @@ contract InputBoxHandler is Test {
 
         // Create the input data struct
         InputData memory inputData = InputData({
-            sender: msg.sender,
-            blockNumber: block.number,
-            blockTimestamp: block.timestamp,
-            input: _input,
             index: index,
             dapp: _dapp,
             inputHash: inputHash
@@ -109,11 +99,11 @@ contract InputBoxHandler is Test {
 
         // Compute the input hash from the arguments passed to `addInput`
         bytes32 computedInputHash = LibInput.computeInputHash(
-            inputData.sender,
-            inputData.blockNumber,
-            inputData.blockTimestamp,
-            _input, // has to be calldata, not memory
-            inputData.index
+            msg.sender,
+            block.number,
+            block.timestamp,
+            _input,
+            index
         );
 
         // Check if the input hash matches the computed one
