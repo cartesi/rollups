@@ -23,8 +23,8 @@ contract InputBoxHandler is Test {
     IInputBox immutable inputBox;
 
     struct InputData {
-        uint256 index;
         address dapp;
+        uint256 index;
         bytes32 inputHash;
     }
 
@@ -84,8 +84,8 @@ contract InputBoxHandler is Test {
 
         // Create the input data struct
         InputData memory inputData = InputData({
-            index: index,
             dapp: _dapp,
+            index: index,
             inputHash: inputHash
         });
 
