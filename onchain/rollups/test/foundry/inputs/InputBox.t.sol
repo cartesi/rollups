@@ -99,6 +99,13 @@ contract InputBoxHandler is Test {
             "inbox size increment"
         );
 
+        // Check if the input hash matches the one returned by `getInputHash`
+        assertEq(
+            inputHash,
+            inputBox.getInputHash(_dapp, index),
+            "returned input hash"
+        );
+
         // Compute the input hash from the arguments passed to `addInput`
         bytes32 computedInputHash = LibInput.computeInputHash(
             msg.sender,
