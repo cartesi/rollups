@@ -22,6 +22,7 @@ use types::foldables::authority::{RollupsInitialState, RollupsState};
 
 use crate::{
     config::DispatcherConfig, drivers::Context, machine::BrokerStatus,
+    metrics::DispatcherMetrics,
 };
 
 const BUFFER_LEN: usize = 256;
@@ -70,6 +71,7 @@ pub async fn create_context(
     config: &DispatcherConfig,
     block_server: &impl BlockServer,
     broker: &impl BrokerStatus,
+    metrics: DispatcherMetrics,
 ) -> Result<Context> {
     let genesis_timestamp: u64 = block_server
         .query_block(config.dapp_deployment.deploy_block_hash)
@@ -77,7 +79,8 @@ pub async fn create_context(
         .timestamp
         .as_u64();
     let epoch_length = config.epoch_duration;
-    let context = Context::new(genesis_timestamp, epoch_length, broker).await?;
+    let context =
+        Context::new(genesis_timestamp, epoch_length, broker, metrics).await?;
 
     Ok(context)
 }

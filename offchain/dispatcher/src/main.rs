@@ -11,6 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 use anyhow::Result;
+use dispatcher::metrics::Metrics;
 
 // NOTE: doesn't support History upgradability.
 // NOTE: doesn't support changing epoch_duration in the middle of things.
@@ -23,18 +24,32 @@ async fn main() -> Result<()> {
 
     let health_handle = tokio::spawn(async move {
         dispatcher::http_health::start_health_check(
-            hc_config.host_address.as_ref(),
+            &hc_config.host_address,
             hc_config.port,
         )
         .await
     });
 
-    let dispatcher_handle =
-        tokio::spawn(async move { dispatcher::main_loop::run(config).await });
+    let (metrics, metrics_handle) = {
+        let metrics = dispatcher::metrics::DispatcherMetrics::default();
+        let metrics_host = config.metrics_config.host.clone();
+        let metrics_port = config.metrics_config.port;
+        let metrics_handle = metrics.run(metrics_host, metrics_port).await;
+        (metrics, metrics_handle)
+    };
+
+    let dispatcher_handle = tokio::spawn(async move {
+        dispatcher::main_loop::run(config, metrics).await
+    });
 
     tokio::select! {
         ret = health_handle => {
             tracing::error!("HTTP health-check stopped: {:?}", ret);
+            ret??;
+        }
+
+        ret = metrics_handle => {
+            tracing::error!("HTTP metrics stopped: {:?}", ret);
             ret??;
         }
 

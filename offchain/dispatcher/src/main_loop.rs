@@ -22,12 +22,16 @@ use crate::{
     config::DispatcherConfig,
     drivers::{blockchain::BlockchainDriver, machine::MachineDriver, Context},
     machine::{rollups_broker::BrokerFacade, BrokerReceive, BrokerSend},
+    metrics::DispatcherMetrics,
     sender::ClaimSender,
     setup::{create_block_subscription, create_context, create_state_server},
 };
 
 #[instrument(level = "trace", skip_all)]
-pub async fn run(config: DispatcherConfig) -> Result<()> {
+pub async fn run(
+    config: DispatcherConfig,
+    metrics: DispatcherMetrics,
+) -> Result<()> {
     info!("Setting up dispatcher with config: {:?}", config);
 
     trace!("Creating transaction manager");
@@ -56,7 +60,8 @@ pub async fn run(config: DispatcherConfig) -> Result<()> {
     .await?;
 
     trace!("Creating context");
-    let context = create_context(&config, &state_server, &broker).await?;
+    let context =
+        create_context(&config, &state_server, &broker, metrics).await?;
 
     trace!("Creating machine driver and blockchain driver");
     let machine_driver =
@@ -182,6 +187,6 @@ async fn process_block(
     // Drive blockchain
     trace!("Reacting to state with `blockchain_driver`");
     blockchain_driver
-        .react(&state.state.history, broker, claim_sender)
+        .react(&context.metrics, &state.state.history, broker, claim_sender)
         .await
 }

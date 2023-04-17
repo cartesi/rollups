@@ -13,6 +13,7 @@
 pub mod config;
 pub mod http_health;
 pub mod main_loop;
+pub mod metrics; // TODO: pub
 
 mod auth;
 mod drivers;

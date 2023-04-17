@@ -115,6 +115,7 @@ mod tests {
             Context,
         },
         machine::RollupStatus,
+        metrics::DispatcherMetrics,
     };
 
     use super::MachineDriver;
@@ -129,7 +130,10 @@ mod tests {
         expected: Vec<SendInteraction>,
     ) {
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
-        let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
+        let mut context =
+            Context::new(0, 5, &broker, DispatcherMetrics::default())
+                .await
+                .unwrap(); // zero indexed!
         let machine_driver = MachineDriver::new(H160::random());
         for block_timestamp in input_timestamps {
             let input = mock::new_input(block_timestamp);
@@ -230,7 +234,10 @@ mod tests {
         expected: Vec<SendInteraction>,
     ) {
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
-        let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
+        let mut context =
+            Context::new(0, 5, &broker, DispatcherMetrics::default())
+                .await
+                .unwrap(); // zero indexed!
         let machine_driver = MachineDriver::new(H160::random());
         let dapp_input_box = types::foldables::input_box::DAppInputBox {
             inputs: input_timestamps
@@ -297,9 +304,12 @@ mod tests {
         rollup_status: RollupStatus,
         input_timestamps: Vec<u32>,
         expected: Vec<SendInteraction>,
-    ) {
+    ) -> DispatcherMetrics {
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
-        let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
+        let mut context =
+            Context::new(0, 5, &broker, DispatcherMetrics::default())
+                .await
+                .unwrap(); // zero indexed!
 
         let dapp_address = H160::random();
         let machine_driver = MachineDriver::new(dapp_address);
@@ -314,6 +324,8 @@ mod tests {
         assert!(result.is_ok());
 
         broker.assert_send_interactions(expected);
+
+        context.metrics
     }
 
     #[tokio::test]
@@ -328,8 +340,17 @@ mod tests {
             SendInteraction::EnqueuedInput(0),
             SendInteraction::EnqueuedInput(1),
         ];
-        test_react(block, rollup_status, input_timestamps, send_interactions)
-            .await;
+        let metrics = test_react(
+            block,
+            rollup_status,
+            input_timestamps,
+            send_interactions,
+        )
+        .await;
+
+        assert_eq!(metrics.claims_sent_total.get(), 0);
+        assert_eq!(metrics.advance_inputs_sent_total.get(), 2);
+        assert_eq!(metrics.finish_epochs_sent_total.get(), 0);
     }
 
     #[tokio::test]
@@ -345,8 +366,17 @@ mod tests {
             SendInteraction::EnqueuedInput(1),
             SendInteraction::FinishedEpoch(2),
         ];
-        test_react(block, rollup_status, input_timestamps, send_interactions)
-            .await;
+        let metrics = test_react(
+            block,
+            rollup_status,
+            input_timestamps,
+            send_interactions,
+        )
+        .await;
+
+        assert_eq!(metrics.claims_sent_total.get(), 0);
+        assert_eq!(metrics.advance_inputs_sent_total.get(), 2);
+        assert_eq!(metrics.finish_epochs_sent_total.get(), 1);
     }
 
     #[tokio::test]
@@ -362,8 +392,17 @@ mod tests {
             SendInteraction::FinishedEpoch(1),
             SendInteraction::EnqueuedInput(1),
         ];
-        test_react(block, rollup_status, input_timestamps, send_interactions)
-            .await;
+        let metrics = test_react(
+            block,
+            rollup_status,
+            input_timestamps,
+            send_interactions,
+        )
+        .await;
+
+        assert_eq!(metrics.claims_sent_total.get(), 0);
+        assert_eq!(metrics.advance_inputs_sent_total.get(), 2);
+        assert_eq!(metrics.finish_epochs_sent_total.get(), 1);
     }
 
     #[tokio::test]
@@ -373,7 +412,10 @@ mod tests {
             last_event_is_finish_epoch: false,
         };
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
-        let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
+        let mut context =
+            Context::new(0, 5, &broker, DispatcherMetrics::default())
+                .await
+                .unwrap(); // zero indexed!
         let block = mock::new_block(5);
         let input_box = mock::new_input_box();
         let machine_driver = MachineDriver::new(H160::random());
@@ -382,5 +424,9 @@ mod tests {
             .await;
         assert!(result.is_ok());
         broker.assert_send_interactions(vec![]);
+
+        assert_eq!(context.metrics.claims_sent_total.get(), 0);
+        assert_eq!(context.metrics.advance_inputs_sent_total.get(), 0);
+        assert_eq!(context.metrics.finish_epochs_sent_total.get(), 0);
     }
 }

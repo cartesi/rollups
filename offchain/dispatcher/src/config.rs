@@ -28,6 +28,7 @@ use types::deployment_files::{
 use crate::{
     auth::{AuthConfig, AuthEnvCLIConfig, AuthError},
     http_health::config::{HealthCheckConfig, HealthCheckEnvCLIConfig},
+    metrics::{MetricsCLIConfig, MetricsConfig},
 };
 
 #[derive(Clone, Parser)]
@@ -49,6 +50,9 @@ pub struct DispatcherEnvCLIConfig {
     #[command(flatten)]
     pub auth_config: AuthEnvCLIConfig,
 
+    #[command(flatten)]
+    pub metrics_config: MetricsCLIConfig,
+
     /// Path to file with deployment json of dapp
     #[arg(long, env, default_value = "./dapp_deployment.json")]
     pub rd_dapp_deployment_file: PathBuf,
@@ -69,6 +73,7 @@ pub struct DispatcherConfig {
     pub broker_config: BrokerConfig,
     pub hc_config: HealthCheckConfig,
     pub auth_config: AuthConfig,
+    pub metrics_config: MetricsConfig,
 
     pub dapp_deployment: DappDeployment,
     pub rollups_deployment: RollupsDeployment,
@@ -128,6 +133,9 @@ impl DispatcherConfig {
         let path = env_cli_config.rd_dapp_deployment_file;
         let dapp_deployment: DappDeployment = read_json(path)?;
 
+        let metrics_config =
+            MetricsConfig::initialize(env_cli_config.metrics_config);
+
         let path = env_cli_config.rd_rollups_deployment_file;
         let rollups_deployment = read_json::<RollupsDeploymentJson>(path)
             .map(RollupsDeployment::from)?;
@@ -145,6 +153,7 @@ impl DispatcherConfig {
             broker_config,
             hc_config,
             auth_config,
+            metrics_config,
 
             dapp_deployment,
             rollups_deployment,

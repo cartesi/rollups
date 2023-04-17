@@ -16,7 +16,9 @@ use tracing::{info, instrument, trace};
 use state_fold_types::ethereum_types::Address;
 use types::foldables::claims::History;
 
-use crate::{machine::BrokerReceive, sender::Sender};
+use crate::{
+    machine::BrokerReceive, metrics::DispatcherMetrics, sender::Sender,
+};
 
 #[derive(Debug)]
 pub struct BlockchainDriver {
@@ -31,9 +33,10 @@ impl BlockchainDriver {
     #[instrument(level = "trace", skip_all)]
     pub async fn react<S: Sender>(
         &self,
+        metrics: &DispatcherMetrics,
         history: &History,
         broker: &impl BrokerReceive,
-        mut claim_sender: S,
+        mut sender: S,
     ) -> Result<S> {
         let claims_sent = claims_sent(history, &self.dapp_address);
         trace!(?claims_sent);
@@ -42,13 +45,14 @@ impl BlockchainDriver {
             trace!("Got claim `{:?}` from broker", rollups_claim);
             if rollups_claim.epoch_index >= claims_sent {
                 info!("Sending claim `{:?}`", rollups_claim);
-                claim_sender = claim_sender
+                sender = sender
                     .submit_claim(self.dapp_address, rollups_claim)
-                    .await?
+                    .await?;
+                metrics.claims_sent_total.inc();
             }
         }
 
-        Ok(claim_sender)
+        Ok(sender)
     }
 }
 
@@ -64,7 +68,7 @@ mod tests {
     use rollups_events::{RollupsClaim, HASH_SIZE};
     use state_fold_types::ethereum_types::H160;
 
-    use crate::drivers::mock;
+    use crate::{drivers::mock, metrics::DispatcherMetrics};
 
     use super::BlockchainDriver;
 
@@ -136,6 +140,8 @@ mod tests {
         let dapp_address = H160::random();
         let blockchain_driver = BlockchainDriver::new(dapp_address);
 
+        let metrics = DispatcherMetrics::default();
+
         let history = mock::new_history();
         let history = mock::update_history(&history, dapp_address, 5);
         let history = mock::update_history(&history, H160::random(), 2);
@@ -152,11 +158,16 @@ mod tests {
         let broker = mock::Broker::new(vec![], next_claims);
         let tx_sender = mock::Sender::new();
 
-        let result =
-            blockchain_driver.react(&history, &broker, tx_sender).await;
+        let result = blockchain_driver
+            .react(&metrics, &history, &broker, tx_sender)
+            .await;
         assert!(result.is_ok());
         let tx_sender = result.unwrap();
         assert_eq!(tx_sender.count(), n);
+
+        assert_eq!(metrics.claims_sent_total.get(), n as u64);
+        assert_eq!(metrics.advance_inputs_sent_total.get(), 0);
+        assert_eq!(metrics.finish_epochs_sent_total.get(), 0);
     }
 
     #[tokio::test]

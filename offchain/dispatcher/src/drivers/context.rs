@@ -15,6 +15,8 @@ use crate::machine::{BrokerSend, BrokerStatus};
 use anyhow::Result;
 use types::foldables::input_box::Input;
 
+use crate::metrics::DispatcherMetrics;
+
 #[derive(Debug)]
 pub struct Context {
     inputs_sent_count: u64,
@@ -24,6 +26,8 @@ pub struct Context {
     // constants
     genesis_timestamp: u64,
     epoch_length: u64,
+
+    pub metrics: DispatcherMetrics,
 }
 
 impl Context {
@@ -31,6 +35,7 @@ impl Context {
         genesis_timestamp: u64,
         epoch_length: u64,
         broker: &impl BrokerStatus,
+        metrics: DispatcherMetrics,
     ) -> Result<Self> {
         let status = broker.status().await?;
 
@@ -40,6 +45,7 @@ impl Context {
             last_timestamp: genesis_timestamp,
             genesis_timestamp,
             epoch_length,
+            metrics,
         })
     }
 
@@ -66,6 +72,7 @@ impl Context {
         broker.enqueue_input(self.inputs_sent_count, input).await?;
         self.inputs_sent_count += 1;
         self.last_event_is_finish_epoch = false;
+        self.metrics.advance_inputs_sent_total.inc();
         Ok(())
     }
 }
@@ -97,13 +104,14 @@ impl Context {
         broker.finish_epoch(self.inputs_sent_count).await?;
         self.last_timestamp = event_timestamp;
         self.last_event_is_finish_epoch = true;
+        self.metrics.finish_epochs_sent_total.inc();
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod private_tests {
-    use crate::drivers::mock;
+    use crate::{drivers::mock, metrics::DispatcherMetrics};
 
     use super::Context;
 
@@ -121,6 +129,7 @@ mod private_tests {
             last_timestamp: 0,
             genesis_timestamp,
             epoch_length,
+            metrics: DispatcherMetrics::default(),
         }
     }
 
@@ -170,6 +179,7 @@ mod private_tests {
             last_timestamp: 3,
             genesis_timestamp: 0,
             epoch_length: 5,
+            metrics: DispatcherMetrics::default(),
         };
         assert!(!context.should_finish_epoch(4));
     }
@@ -182,6 +192,7 @@ mod private_tests {
             last_timestamp: 3,
             genesis_timestamp: 0,
             epoch_length: 5,
+            metrics: DispatcherMetrics::default(),
         };
         assert!(context.should_finish_epoch(5));
     }
@@ -194,6 +205,7 @@ mod private_tests {
             last_timestamp: 3,
             genesis_timestamp: 0,
             epoch_length: 5,
+            metrics: DispatcherMetrics::default(),
         };
         assert!(!context.should_finish_epoch(5));
     }
@@ -210,6 +222,7 @@ mod private_tests {
             last_timestamp: 3,
             genesis_timestamp: 0,
             epoch_length: 5,
+            metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::new(vec![], vec![]);
         let timestamp = 6;
@@ -228,6 +241,7 @@ mod private_tests {
             last_timestamp: 6,
             genesis_timestamp: 5,
             epoch_length: 5,
+            metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::new(vec![], vec![]);
         let _ = context.finish_epoch(0, &broker).await;
@@ -243,6 +257,7 @@ mod private_tests {
             last_timestamp,
             genesis_timestamp: 0,
             epoch_length: 5,
+            metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::with_finish_epoch_error();
         let result = context.finish_epoch(6, &broker).await;
@@ -260,6 +275,7 @@ mod public_tests {
     use crate::{
         drivers::mock::{self, Broker, SendInteraction},
         machine::RollupStatus,
+        metrics::DispatcherMetrics,
     };
 
     use super::Context;
@@ -279,8 +295,13 @@ mod public_tests {
             last_event_is_finish_epoch,
         };
         let broker = Broker::new(vec![rollup_status], vec![]);
-        let result =
-            Context::new(genesis_timestamp, epoch_length, &broker).await;
+        let result = Context::new(
+            genesis_timestamp,
+            epoch_length,
+            &broker,
+            DispatcherMetrics::default(),
+        )
+        .await;
         assert!(result.is_ok());
         let context = result.unwrap();
         assert_eq!(context.genesis_timestamp, genesis_timestamp);
@@ -294,7 +315,10 @@ mod public_tests {
     #[tokio::test]
     async fn new_broker_error() {
         let broker = Broker::with_status_error();
-        let result = Context::new(1337, 7331, &broker).await;
+        let result =
+            Context::new(1337, 7331, &broker, DispatcherMetrics::default())
+                .await;
+
         assert!(result.is_err());
     }
 
@@ -311,6 +335,7 @@ mod public_tests {
             last_timestamp: 0,                 // ignored
             genesis_timestamp: 0,              // ignored
             epoch_length: 0,                   // ignored
+            metrics: DispatcherMetrics::default(),
         };
         assert_eq!(context.inputs_sent_count(), inputs_sent_count);
     }
@@ -327,6 +352,7 @@ mod public_tests {
             last_timestamp: 2,
             genesis_timestamp: 0,
             epoch_length: 4,
+            metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::new(vec![], vec![]);
         let result = context.finish_epoch_if_needed(4, &broker).await;
@@ -343,6 +369,7 @@ mod public_tests {
             last_timestamp: 2,
             genesis_timestamp: 0,
             epoch_length: 2,
+            metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::new(vec![], vec![]);
         let result = context.finish_epoch_if_needed(3, &broker).await;
@@ -358,6 +385,7 @@ mod public_tests {
             last_timestamp: 2,
             genesis_timestamp: 0,
             epoch_length: 4,
+            metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::with_finish_epoch_error();
         let result = context.finish_epoch_if_needed(4, &broker).await;
@@ -377,6 +405,7 @@ mod public_tests {
             last_timestamp: 0,    // ignored
             genesis_timestamp: 0, // ignored
             epoch_length: 0,      // ignored
+            metrics: DispatcherMetrics::default(),
         };
         let input = mock::new_input(2);
         let broker = mock::Broker::new(vec![], vec![]);
@@ -397,6 +426,7 @@ mod public_tests {
             last_timestamp: 0,    // ignored
             genesis_timestamp: 0, // ignored
             epoch_length: 0,      // ignored
+            metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::with_enqueue_input_error();
         let result = context.enqueue_input(&mock::new_input(2), &broker).await;
