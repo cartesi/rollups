@@ -109,5 +109,5 @@ ENTRYPOINT ["/opt/cartesi/bin/graphql-server"]
 
 FROM scratch AS deployments
 
-WORKDIR /usr/local/share/cartesi/deployments
+WORKDIR /opt/cartesi/share/deployments
 COPY onchain/rollups/export/abi .
