@@ -72,11 +72,17 @@ pub enum Error {
     #[snafu(display("TxManager configuration error: {}", source))]
     TxManagerError { source: TxError },
 
-    #[snafu(display("Dapp json read file error"))]
-    DappJsonReadFileError { source: std::io::Error },
+    #[snafu(display("Json read file error ({})", path.display()))]
+    JsonReadFileError {
+        path: PathBuf,
+        source: std::io::Error,
+    },
 
-    #[snafu(display("Dapp json parse error"))]
-    DappJsonParseError { source: serde_json::Error },
+    #[snafu(display("Json parse error ({})", path.display()))]
+    JsonParseError {
+        path: PathBuf,
+        source: serde_json::Error,
+    },
 
     #[snafu(display("Rollups json read file error"))]
     RollupsJsonReadFileError { source: std::io::Error },
@@ -102,21 +108,12 @@ impl DispatcherConfig {
 
         let hc_config = HealthCheckConfig::initialize(env_cli_config.hc_config);
 
-        let dapp_deployment: DappDeployment = {
-            let path = env_cli_config.rd_dapp_deployment_file;
-            let file = File::open(path).context(DappJsonReadFileSnafu)?;
-            let reader = BufReader::new(file);
-            serde_json::from_reader(reader).context(DappJsonParseSnafu)?
-        };
+        let path = env_cli_config.rd_dapp_deployment_file;
+        let dapp_deployment: DappDeployment = read_json(path)?;
 
-        let rollups_deployment: RollupsDeployment = {
-            let path = env_cli_config.rd_rollups_deployment_file;
-            let file = File::open(path).context(DappJsonReadFileSnafu)?;
-            let reader = BufReader::new(file);
-            let deployment: RollupsDeploymentJson =
-                serde_json::from_reader(reader).context(DappJsonParseSnafu)?;
-            deployment.into()
-        };
+        let path = env_cli_config.rd_rollups_deployment_file;
+        let rollups_deployment = read_json::<RollupsDeploymentJson>(path)
+            .map(RollupsDeployment::from)?;
 
         let broker_config = BrokerConfig::initialize(
             env_cli_config.broker_config,
@@ -142,4 +139,14 @@ impl DispatcherConfig {
             epoch_duration,
         })
     }
+}
+
+fn read_json<T>(path: PathBuf) -> Result<T>
+where
+    T: serde::de::DeserializeOwned,
+{
+    let file =
+        File::open(&path).context(JsonReadFileSnafu { path: path.clone() })?;
+    let reader = BufReader::new(file);
+    serde_json::from_reader(reader).context(JsonParseSnafu { path })
 }
