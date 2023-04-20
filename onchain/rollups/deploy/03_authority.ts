@@ -12,7 +12,7 @@
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction, DeployOptions } from "hardhat-deploy/types";
-import { History__factory } from "../src/types";
+import { Authority__factory } from "../src/types";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments, ethers, getNamedAccounts, network } = hre;
@@ -28,28 +28,30 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         log: true,
     };
 
-    const History = await deployments.deploy("History", {
-        ...opts,
-        args: [deployer],
-    });
-
     const { InputBox } = await deployments.all();
 
     const Authority = await deployments.deploy("Authority", {
         ...opts,
-        args: [deployer, InputBox.address, History.address],
+        args: [deployer, InputBox.address],
     });
 
-    const history = History__factory.connect(History.address, deployerSigner);
-    const historyOwner = await history.owner();
+    const History = await deployments.deploy("History", {
+        ...opts,
+        args: [Authority.address],
+    });
 
-    if (historyOwner != Authority.address) {
-        const tx = await history.transferOwnership(Authority.address);
+    const authority = Authority__factory.connect(
+        Authority.address,
+        deployerSigner
+    );
+
+    const currentHistory = await authority.getHistory();
+
+    if (currentHistory != History.address) {
+        const tx = await authority.setHistory(History.address);
         const receipt = await tx.wait();
-        if (!receipt.status) {
-            throw Error(
-                `Could not transfer ownership over History to Authority: ${tx.hash}`
-            );
+        if (receipt.status == 0) {
+            throw Error(`Could not link Authority to history: ${tx.hash}`);
         }
     }
 };

@@ -10,11 +10,6 @@
         "internalType": "contract IInputBox",
         "name": "_inputBox",
         "type": "address"
-      },
-      {
-        "internalType": "contract IHistory",
-        "name": "_history",
-        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -46,12 +41,6 @@
         "indexed": false,
         "internalType": "contract IInputBox",
         "name": "inputBox",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "contract IHistory",
-        "name": "history",
         "type": "address"
       }
     ],

@@ -26,21 +26,19 @@ contract Authority is AbstractConsensus, Ownable {
     /// @notice A consensus was created
     /// @param owner The address that owns the consensus
     /// @param inputBox The input box used by the consensus
-    /// @param history The history that the consensus writes to
-    event ConsensusCreated(address owner, IInputBox inputBox, IHistory history);
+    event ConsensusCreated(address owner, IInputBox inputBox);
 
     /// @notice A new history is used
     /// @param history The new history
     event NewHistory(IHistory history);
 
-    constructor(address _owner, IInputBox _inputBox, IHistory _history) {
+    constructor(address _owner, IInputBox _inputBox) {
         // constructor in Ownable already called `transferOwnership(msg.sender)`, so
         // we only need to call `transferOwnership(_owner)` if _owner != msg.sender
         if (msg.sender != _owner) {
             transferOwnership(_owner);
         }
-        history = _history;
-        emit ConsensusCreated(_owner, _inputBox, _history);
+        emit ConsensusCreated(_owner, _inputBox);
     }
 
     /// @dev Will fail if history has migrated to another consensus

@@ -62,69 +62,37 @@ contract AuthorityTest is TestBase {
         address indexed previousOwner,
         address indexed newOwner
     );
-    event ConsensusCreated(address owner, IInputBox inputBox, IHistory history);
+    event ConsensusCreated(address owner, IInputBox inputBox);
     event NewHistory(IHistory history);
     event ApplicationJoined(address application);
 
-    function testConstructor(
-        address _owner,
-        IInputBox _inputBox,
-        IHistory _history
-    ) public {
+    function testConstructor(address _owner, IInputBox _inputBox) public {
         vm.assume(_owner != address(0));
-        vm.assume(_owner != address(this));
 
-        // two `OwnershipTransferred` events will be emitted during the constructor call
+        // two `OwnershipTransferred` events might be emitted during the constructor call
         // the first event is emitted by Ownable constructor
-        // the second event is emitted by Authority constructor
         vm.expectEmit(true, true, false, false);
         emit OwnershipTransferred(address(0), address(this));
-        vm.expectEmit(true, true, false, false);
-        emit OwnershipTransferred(address(this), _owner);
+
+        // a second event is emitted by Authority constructor iff msg.sender != _owner
+        if (_owner != address(this)) {
+            vm.expectEmit(true, true, false, false);
+            emit OwnershipTransferred(address(this), _owner);
+        }
+
         // then the event `ConsensusCreated` will be emitted
         vm.expectEmit(false, false, false, true);
-        emit ConsensusCreated(_owner, _inputBox, _history);
+        emit ConsensusCreated(_owner, _inputBox);
 
-        authority = new Authority(_owner, _inputBox, _history);
+        authority = new Authority(_owner, _inputBox);
 
-        // check values set by constructor
+        // check the Authority owner
         assertEq(authority.owner(), _owner);
-        assertEq(address(authority.getHistory()), address(_history));
     }
 
-    function testAuthorityConstructorOwner(
-        IInputBox _inputBox,
-        IHistory _history
-    ) public {
-        vm.recordLogs();
-        authority = new Authority(address(this), _inputBox, _history);
-        Vm.Log[] memory entries = vm.getRecordedLogs();
-        uint256 eventsFound;
-        for (uint256 i; i < entries.length; ++i) {
-            if (
-                entries[i].topics[0] ==
-                keccak256("OwnershipTransferred(address,address)")
-            ) {
-                assertEq(
-                    entries[i].topics[1], // from
-                    bytes32(uint256(uint160(address(0))))
-                );
-                assertEq(
-                    entries[i].topics[2], // to
-                    bytes32(uint256(uint160(address(this))))
-                );
-                eventsFound++;
-            }
-        }
-        assertEq(eventsFound, 1);
-    }
-
-    function testRevertsOwnerAddressZero(
-        IInputBox _inputBox,
-        IHistory _history
-    ) public {
+    function testRevertsOwnerAddressZero(IInputBox _inputBox) public {
         vm.expectRevert("Ownable: new owner is the zero address");
-        new Authority(address(0), _inputBox, _history);
+        new Authority(address(0), _inputBox);
     }
 
     function testMigrateHistory(
@@ -134,12 +102,13 @@ contract AuthorityTest is TestBase {
         address _newConsensus
     ) public isMockable(address(_history)) {
         vm.assume(_owner != address(0));
-        vm.assume(_owner != address(this));
         vm.assume(_newConsensus != address(0));
 
-        authority = new Authority(_owner, _inputBox, _history);
+        authority = new Authority(_owner, _inputBox);
 
-        // mocking history
+        vm.prank(_owner);
+        authority.setHistory(_history);
+
         vm.assume(address(_history) != address(authority));
         vm.mockCall(
             address(_history),
@@ -153,6 +122,14 @@ contract AuthorityTest is TestBase {
         // will fail as not called from owner
         vm.expectRevert("Ownable: caller is not the owner");
         authority.migrateHistoryToConsensus(_newConsensus);
+
+        vm.expectCall(
+            address(_history),
+            abi.encodeWithSelector(
+                IHistory.migrateToConsensus.selector,
+                _newConsensus
+            )
+        );
 
         // can only be called by owner
         vm.prank(_owner);
@@ -168,19 +145,26 @@ contract AuthorityTest is TestBase {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
 
-        authority = new Authority(_owner, _inputBox, _history);
+        authority = new Authority(_owner, _inputBox);
 
-        // mocking history
+        vm.prank(_owner);
+        authority.setHistory(_history);
+
         vm.assume(address(_history) != address(authority));
         vm.mockCall(
             address(_history),
-            abi.encodeWithSelector(IHistory.submitClaim.selector),
+            abi.encodeWithSelector(IHistory.submitClaim.selector, _claim),
             ""
         );
 
         // will fail as not called from owner
         vm.expectRevert("Ownable: caller is not the owner");
         authority.submitClaim(_claim);
+
+        vm.expectCall(
+            address(_history),
+            abi.encodeWithSelector(IHistory.submitClaim.selector, _claim)
+        );
 
         // can only be called by owner
         vm.prank(_owner);
@@ -196,7 +180,12 @@ contract AuthorityTest is TestBase {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
 
-        authority = new Authority(_owner, _inputBox, _history);
+        authority = new Authority(_owner, _inputBox);
+
+        vm.prank(_owner);
+        vm.expectEmit(false, false, false, true);
+        emit NewHistory(_history);
+        authority.setHistory(_history);
 
         // before setting new history
         assertEq(address(authority.getHistory()), address(_history));
@@ -205,6 +194,7 @@ contract AuthorityTest is TestBase {
         // will fail as not called from owner
         vm.expectRevert("Ownable: caller is not the owner");
         authority.setHistory(_newHistory);
+
         // can only be called by owner
         vm.prank(_owner);
         // expect event NewHistory
@@ -229,7 +219,10 @@ contract AuthorityTest is TestBase {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
 
-        authority = new Authority(_owner, _inputBox, _history);
+        authority = new Authority(_owner, _inputBox);
+
+        vm.prank(_owner);
+        authority.setHistory(_history);
 
         // mocking history
         vm.assume(address(_history) != address(authority));
@@ -241,6 +234,15 @@ contract AuthorityTest is TestBase {
                 _proofContext
             ),
             abi.encode(_r0, _r1, _r2)
+        );
+
+        vm.expectCall(
+            address(_history),
+            abi.encodeWithSelector(
+                IHistory.getClaim.selector,
+                _dapp,
+                _proofContext
+            )
         );
 
         // perform call
@@ -259,6 +261,7 @@ contract AuthorityTest is TestBase {
     function testHistoryReverts(
         address _owner,
         IInputBox _inputBox,
+        IHistory _newHistory,
         address _dapp,
         bytes calldata _claim,
         address _consensus,
@@ -268,7 +271,11 @@ contract AuthorityTest is TestBase {
 
         HistoryReverts historyR = new HistoryReverts();
 
-        authority = new Authority(_owner, _inputBox, historyR);
+        authority = new Authority(_owner, _inputBox);
+
+        vm.prank(_owner);
+        authority.setHistory(historyR);
+        assertEq(address(authority.getHistory()), address(historyR));
 
         vm.expectRevert();
         vm.prank(_owner);
@@ -280,6 +287,10 @@ contract AuthorityTest is TestBase {
 
         vm.expectRevert();
         authority.getClaim(_dapp, _proofContext);
+
+        vm.prank(_owner);
+        authority.setHistory(_newHistory);
+        assertEq(address(authority.getHistory()), address(_newHistory));
     }
 
     function testWithdrawERC20TokensNotOwner(
@@ -294,7 +305,10 @@ contract AuthorityTest is TestBase {
         vm.assume(_owner != address(0));
         vm.assume(_owner != _notOwner);
 
-        authority = new Authority(_owner, _inputBox, _history);
+        authority = new Authority(_owner, _inputBox);
+
+        vm.prank(_owner);
+        authority.setHistory(_history);
 
         vm.prank(_notOwner);
         vm.expectRevert("Ownable: caller is not the owner");
@@ -314,7 +328,10 @@ contract AuthorityTest is TestBase {
         vm.assume(_amount <= _balance);
         vm.assume(_balance < type(uint256).max);
 
-        authority = new Authority(_owner, _inputBox, _history);
+        authority = new Authority(_owner, _inputBox);
+
+        vm.prank(_owner);
+        authority.setHistory(_history);
 
         vm.assume(_recipient != address(authority));
 
@@ -352,7 +369,10 @@ contract AuthorityTest is TestBase {
         vm.assume(_amount <= _balance);
         vm.assume(_balance < type(uint256).max);
 
-        authority = new Authority(_owner, _inputBox, _history);
+        authority = new Authority(_owner, _inputBox);
+
+        vm.prank(_owner);
+        authority.setHistory(_history);
 
         vm.assume(_recipient != address(authority));
 
@@ -384,7 +404,10 @@ contract AuthorityTest is TestBase {
     ) public {
         vm.assume(_owner != address(0));
 
-        authority = new Authority(_owner, _inputBox, _history);
+        authority = new Authority(_owner, _inputBox);
+
+        vm.prank(_owner);
+        authority.setHistory(_history);
 
         vm.expectEmit(false, false, false, true);
         emit ApplicationJoined(_dapp);
