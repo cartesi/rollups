@@ -1,45 +1,7 @@
 {
-  "contractName": "IERC1155Portal",
-  "sourceName": "contracts/portals/IERC1155Portal.sol",
+  "contractName": "IERC1155SinglePortal",
+  "sourceName": "contracts/portals/IERC1155SinglePortal.sol",
   "abi": [
-    {
-      "inputs": [
-        {
-          "internalType": "contract IERC1155",
-          "name": "_token",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_dapp",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "_tokenIds",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "_values",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "bytes",
-          "name": "_baseLayerData",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "_execLayerData",
-          "type": "bytes"
-        }
-      ],
-      "name": "depositBatchERC1155Token",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
     {
       "inputs": [
         {
@@ -99,17 +61,6 @@
   "devdoc": {
     "kind": "dev",
     "methods": {
-      "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": {
-        "details": "Requirements:",
-        "params": {
-          "_baseLayerData": "Additional data to be interpreted by the base layer",
-          "_dapp": "The address of the DApp",
-          "_execLayerData": "Additional data to be interpreted by the execution layer",
-          "_token": "The ERC-1155 token contract",
-          "_tokenIds": "The identifiers of the tokens being transferred",
-          "_values": "Transfer amounts per token type"
-        }
-      },
       "depositSingleERC1155Token(address,address,uint256,uint256,bytes,bytes)": {
         "details": "The caller must allow the portal to withdraw the token      from their account beforehand.",
         "params": {
@@ -132,9 +83,6 @@
   "userdoc": {
     "kind": "user",
     "methods": {
-      "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": {
-        "notice": "Transfer a batch of ERC-1155 tokens to a DApp and add an input to         the DApp's input box to signal such operation."
-      },
       "depositSingleERC1155Token(address,address,uint256,uint256,bytes,bytes)": {
         "notice": "Transfer an ERC-1155 token to a DApp and add an input to         the DApp's input box to signal such operation."
       },
@@ -147,7 +95,6 @@
   "evm": {
     "gasEstimates": null,
     "methodIdentifiers": {
-      "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": "24d15c67",
       "depositSingleERC1155Token(address,address,uint256,uint256,bytes,bytes)": "dec07dca",
       "getInputBox()": "00aace9a"
     }

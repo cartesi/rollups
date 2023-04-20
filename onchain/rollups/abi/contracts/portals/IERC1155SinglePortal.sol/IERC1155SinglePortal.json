@@ -2,20 +2,29 @@
   {
     "inputs": [
       {
-        "internalType": "contract IInputBox",
-        "name": "_inputBox",
+        "internalType": "contract IERC1155",
+        "name": "_token",
         "type": "address"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "address",
         "name": "_dapp",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_value",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_baseLayerData",
+        "type": "bytes"
       },
       {
         "internalType": "bytes",
@@ -23,9 +32,9 @@
         "type": "bytes"
       }
     ],
-    "name": "depositEther",
+    "name": "depositSingleERC1155Token",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
