@@ -188,6 +188,14 @@ In order to also clone submodules like `grpc-interfaces` and `state-fold`, you n
 git submodule update --init --recursive
 ```
 
+### Building Docker images
+
+To build the Rollups Docker images, run the following command.
+
+```
+docker buildx bake --load
+```
+
 ### Compile on-chain code
 
 The on-chain part is mainly written in Solidity and Typescript. For that, you'll need `yarn` to install dependencies and to run build scripts.
