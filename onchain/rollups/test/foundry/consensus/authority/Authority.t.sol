@@ -68,26 +68,32 @@ contract AuthorityTest is TestBase {
 
     function testConstructor(address _owner, IInputBox _inputBox) public {
         vm.assume(_owner != address(0));
+        uint256 numOfEvents;
 
         // two `OwnershipTransferred` events might be emitted during the constructor call
         // the first event is emitted by Ownable constructor
         vm.expectEmit(true, true, false, false);
         emit OwnershipTransferred(address(0), address(this));
+        ++numOfEvents;
 
         // a second event is emitted by Authority constructor iff msg.sender != _owner
         if (_owner != address(this)) {
             vm.expectEmit(true, true, false, false);
             emit OwnershipTransferred(address(this), _owner);
+            ++numOfEvents;
         }
 
         // then the event `ConsensusCreated` will be emitted
         vm.expectEmit(false, false, false, true);
         emit ConsensusCreated(_owner, _inputBox);
+        ++numOfEvents;
 
+        vm.recordLogs();
         authority = new Authority(_owner, _inputBox);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
 
-        // check the Authority owner
-        assertEq(authority.owner(), _owner);
+        assertEq(entries.length, numOfEvents, "number of events");
+        assertEq(authority.owner(), _owner, "authority owner");
     }
 
     function testRevertsOwnerAddressZero(IInputBox _inputBox) public {
