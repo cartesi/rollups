@@ -1,4 +1,3 @@
-pub mod config;
 pub mod rollups_broker;
 
 use types::foldables::input_box::Input;

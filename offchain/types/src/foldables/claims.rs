@@ -35,13 +35,15 @@ pub struct Claim {
     pub claim_timestamp: u64,
 }
 
-impl From<(([u8; 32], u128, u128), U256)> for Claim {
-    fn from(x: (([u8; 32], u128, u128), U256)) -> Self {
+impl From<(contracts::history::Claim, U256)> for Claim {
+    fn from(x: (contracts::history::Claim, U256)) -> Self {
+        let c = x.0;
+        let t = x.1;
         Self {
-            epoch_hash: x.0 .0.into(),
-            start_input_index: x.0 .1 as usize,
-            end_input_index: x.0 .2 as usize,
-            claim_timestamp: x.1.as_u64(),
+            epoch_hash: c.epoch_hash.into(),
+            start_input_index: c.first_index as usize,
+            end_input_index: c.last_index as usize,
+            claim_timestamp: t.as_u64(),
         }
     }
 }
@@ -140,7 +142,8 @@ async fn fetch_history<M1: Middleware + 'static, M2: Middleware + 'static>(
             .context("Error querying for block")?
             .timestamp;
 
-        let new_claim: Arc<Claim> = Arc::new((claim.claim, timestamp).into());
+        let new_claim: Arc<crate::foldables::claims::Claim> =
+            Arc::new((claim.claim, timestamp).into());
         let dapp_address = Arc::new(claim.dapp);
 
         dapp_claims

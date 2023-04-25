@@ -1,17 +1,15 @@
-use structopt::StructOpt;
+use clap::Parser;
 
-#[derive(StructOpt, Clone)]
-#[structopt(
-    name = "hc_config",
-    about = "Configuration for rollups dispatcher health check"
-)]
+#[derive(Clone, Parser)]
+#[command(name = "hc_config")]
+#[command(about = "Configuration for rollups dispatcher health check")]
 pub struct HealthCheckEnvCLIConfig {
     /// Host address of health check
-    #[structopt(long, env)]
+    #[arg(long, env)]
     pub hc_host_address: Option<String>,
 
     /// Port of health check
-    #[structopt(long, env)]
+    #[arg(long, env)]
     pub hc_port: Option<u16>,
 }
 
@@ -26,8 +24,7 @@ const DEFAULT_PORT: u16 = 80;
 
 impl HealthCheckConfig {
     pub fn initialize_from_args() -> Self {
-        let env_cli_config = HealthCheckEnvCLIConfig::from_args();
-        Self::initialize(env_cli_config)
+        Self::initialize(HealthCheckEnvCLIConfig::parse())
     }
 
     pub fn initialize(env_cli_config: HealthCheckEnvCLIConfig) -> Self {

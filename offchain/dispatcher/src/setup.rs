@@ -1,12 +1,16 @@
 use crate::{
     config::DispatcherConfig,
     drivers::Context,
-    machine::{
-        rollups_broker::BrokerFacade, BrokerReceive, BrokerSend, BrokerStatus,
-    },
+    machine::BrokerStatus,
     tx_sender::{BulletproofTxSender, TxSender},
 };
 
+use eth_tx_manager::{
+    config::TxManagerConfig, database::FileSystemDatabase,
+    gas_oracle::DefaultGasOracle,
+    manager::Configuration as ManagerConfiguration, Priority,
+    TransactionManager,
+};
 use state_client_lib::{
     config::SCConfig, error::StateServerError, BlockServer,
     GrpcStateFoldClient, StateServer,
@@ -21,12 +25,6 @@ use state_fold_types::{
     BlockStreamItem,
 };
 use tracing::warn;
-use tx_manager::{
-    config::TxManagerConfig, database::FileSystemDatabase,
-    gas_oracle::DefaultGasOracle,
-    manager::Configuration as ManagerConfiguration, Priority,
-    TransactionManager,
-};
 
 use types::foldables::authority::{RollupsInitialState, RollupsState};
 
@@ -113,7 +111,7 @@ pub async fn create_tx_sender(
         {
             Ok((m, _)) => m,
 
-            Err(tx_manager::Error::NonceTooLow { .. }) => {
+            Err(eth_tx_manager::Error::NonceTooLow { .. }) => {
                 warn!("Nonce too low! Clearing tx database");
 
                 TransactionManager::force_new(
@@ -139,12 +137,6 @@ pub async fn create_tx_sender(
         config.wallet.address(),
         consensus_address,
     ))
-}
-
-pub async fn create_broker(
-    config: &DispatcherConfig,
-) -> Result<impl BrokerStatus + BrokerSend + BrokerReceive> {
-    Ok(BrokerFacade::new(config.broker_config.clone()).await?)
 }
 
 pub async fn create_context(

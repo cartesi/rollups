@@ -1,18 +1,18 @@
 use crate::{
     config::DispatcherConfig,
     drivers::{blockchain::BlockchainDriver, machine::MachineDriver, Context},
-    machine::{BrokerReceive, BrokerSend},
+    machine::{rollups_broker::BrokerFacade, BrokerReceive, BrokerSend},
     setup::{
-        create_block_subscription, create_broker, create_context,
-        create_state_server, create_tx_sender,
+        create_block_subscription, create_context, create_state_server,
+        create_tx_sender,
     },
     tx_sender::TxSender,
 };
 
+use eth_tx_manager::transaction::Priority;
+use rollups_events::{Address, DAppMetadata};
 use state_client_lib::{error::StateServerError, StateServer};
 use state_fold_types::{Block, BlockStreamItem};
-use tx_manager::transaction::Priority;
-
 use types::foldables::authority::rollups::{RollupsInitialState, RollupsState};
 
 use anyhow::{bail, Result};
@@ -42,7 +42,16 @@ pub async fn run(config: DispatcherConfig) -> Result<()> {
     .await?;
 
     trace!("Creating broker connection");
-    let broker = create_broker(&config).await?;
+    let broker = BrokerFacade::new(
+        config.broker_config.clone(),
+        DAppMetadata {
+            chain_id: config.tx_config.chain_id,
+            dapp_address: Address::new(
+                config.dapp_deployment.dapp_address.into(),
+            ),
+        },
+    )
+    .await?;
 
     trace!("Creating context");
     let context = create_context(&config, &state_server, &broker).await?;

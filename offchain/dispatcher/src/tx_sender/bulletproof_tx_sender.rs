@@ -2,7 +2,7 @@ use super::TxSender;
 
 use contracts::authority::Authority;
 
-use tx_manager::{
+use eth_tx_manager::{
     database::FileSystemDatabase as TxDatabase,
     gas_oracle::DefaultGasOracle as GasOracle,
     time::DefaultTime,

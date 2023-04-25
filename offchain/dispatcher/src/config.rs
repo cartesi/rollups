@@ -1,6 +1,11 @@
-use crate::machine::config::{BrokerConfig, BrokerEnvCLIConfig};
+use clap::Parser;
+use eth_tx_manager::config::{
+    Error as TxError, TxEnvCLIConfig, TxManagerConfig,
+};
+use rollups_events::{BrokerCLIConfig, BrokerConfig};
+use snafu::{ResultExt, Snafu};
 use state_client_lib::config::{Error as SCError, SCConfig, SCEnvCLIConfig};
-use tx_manager::config::{Error as TxError, TxEnvCLIConfig, TxManagerConfig};
+use std::{fs::File, io::BufReader, path::PathBuf};
 
 use types::deployment_files::{
     dapp_deployment::DappDeployment,
@@ -9,46 +14,32 @@ use types::deployment_files::{
 
 use crate::http_health::config::{HealthCheckConfig, HealthCheckEnvCLIConfig};
 
-use snafu::{ResultExt, Snafu};
-use std::{fs::File, io::BufReader, path::PathBuf};
-
-use structopt::StructOpt;
-
-#[derive(StructOpt, Clone)]
-#[structopt(name = "rd_config", about = "Configuration for rollups dispatcher")]
+#[derive(Clone, Parser)]
+#[command(name = "rd_config")]
+#[command(about = "Configuration for rollups dispatcher")]
 pub struct DispatcherEnvCLIConfig {
-    #[structopt(flatten)]
+    #[command(flatten)]
     pub sc_config: SCEnvCLIConfig,
 
-    #[structopt(flatten)]
+    #[command(flatten)]
     pub tx_config: TxEnvCLIConfig,
 
-    #[structopt(flatten)]
-    pub broker_config: BrokerEnvCLIConfig,
+    #[command(flatten)]
+    pub broker_config: BrokerCLIConfig,
 
-    #[structopt(flatten)]
+    #[command(flatten)]
     pub hc_config: HealthCheckEnvCLIConfig,
 
     /// Path to file with deployment json of dapp
-    #[structopt(
-        long,
-        env,
-        default_value = "./dapp_deployment.json",
-        parse(from_os_str)
-    )]
+    #[arg(long, env, default_value = "./dapp_deployment.json")]
     pub rd_dapp_deployment_file: PathBuf,
 
     /// Path to file with deployment json of rollups
-    #[structopt(
-        long,
-        env,
-        default_value = "./rollups_deployment.json",
-        parse(from_os_str)
-    )]
+    #[arg(long, env, default_value = "./rollups_deployment.json")]
     pub rd_rollups_deployment_file: PathBuf,
 
     /// Duration of rollups epoch in seconds, for which dispatcher will make claims.
-    #[structopt(long, env, default_value = "604800")]
+    #[arg(long, env, default_value = "604800")]
     pub rd_epoch_duration: u64,
 }
 
@@ -95,8 +86,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 impl DispatcherConfig {
     pub fn initialize_from_args() -> Result<Self> {
-        let env_cli_config = DispatcherEnvCLIConfig::from_args();
-        Self::initialize(env_cli_config)
+        Self::initialize(DispatcherEnvCLIConfig::parse())
     }
 
     pub fn initialize(env_cli_config: DispatcherEnvCLIConfig) -> Result<Self> {
@@ -115,11 +105,7 @@ impl DispatcherConfig {
         let rollups_deployment = read_json::<RollupsDeploymentJson>(path)
             .map(RollupsDeployment::from)?;
 
-        let broker_config = BrokerConfig::initialize(
-            env_cli_config.broker_config,
-            tx_config.chain_id,
-            dapp_deployment.dapp_address.clone().to_fixed_bytes(),
-        );
+        let broker_config = BrokerConfig::from(env_cli_config.broker_config);
 
         let epoch_duration = env_cli_config.rd_epoch_duration;
 

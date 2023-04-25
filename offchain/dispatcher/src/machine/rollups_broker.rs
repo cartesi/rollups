@@ -12,20 +12,17 @@
 
 use anyhow::Result;
 use async_trait::async_trait;
-use backoff::ExponentialBackoffBuilder;
 use snafu::{ResultExt, Snafu};
 use tokio::sync::{self, Mutex};
 
 use rollups_events::{
-    Broker, BrokerError, Event, InputMetadata, RollupsAdvanceStateInput,
-    RollupsClaim, RollupsClaimsStream, RollupsData, RollupsInput,
-    RollupsInputsStream, INITIAL_ID,
+    Broker, BrokerConfig, BrokerError, DAppMetadata, Event, InputMetadata,
+    RollupsAdvanceStateInput, RollupsClaim, RollupsClaimsStream, RollupsData,
+    RollupsInput, RollupsInputsStream, INITIAL_ID,
 };
 use types::foldables::input_box::Input;
 
-use super::{
-    config::BrokerConfig, BrokerReceive, BrokerSend, BrokerStatus, RollupStatus,
-};
+use super::{BrokerReceive, BrokerSend, BrokerStatus, RollupStatus};
 
 #[derive(Debug, Snafu)]
 pub enum BrokerFacadeError {
@@ -61,38 +58,17 @@ struct BrokerStreamStatus {
 
 impl BrokerFacade {
     #[tracing::instrument(level = "trace", skip_all)]
-    pub async fn new(config: BrokerConfig) -> Result<Self> {
+    pub async fn new(
+        config: BrokerConfig,
+        dapp_metadata: DAppMetadata,
+    ) -> Result<Self> {
         tracing::trace!(?config, "connection to the broker");
-
-        let backoff = ExponentialBackoffBuilder::new()
-            .with_max_elapsed_time(Some(config.backoff_max_elapsed_duration))
-            .build();
-        let broker_config = rollups_events::BrokerConfig {
-            redis_endpoint: config.redis_endpoint,
-            backoff,
-            consume_timeout: config.claims_consume_timeout,
-        };
-        let broker = Mutex::new(
-            Broker::new(broker_config)
-                .await
-                .context(BrokerConnectionSnafu)?,
-        );
-
-        tracing::trace!("connected to the broker successfully");
-
-        let dapp_metadata = rollups_events::DAppMetadata {
-            chain_id: config.chain_id,
-            dapp_address: config.dapp_contract_address.into(),
-        };
-
-        let inputs_stream = RollupsInputsStream::new(&dapp_metadata);
-
-        let claims_stream = RollupsClaimsStream::new(&dapp_metadata);
-
         Ok(Self {
-            broker,
-            inputs_stream,
-            claims_stream,
+            broker: Mutex::new(
+                Broker::new(config).await.context(BrokerConnectionSnafu)?,
+            ),
+            inputs_stream: RollupsInputsStream::new(&dapp_metadata),
+            claims_stream: RollupsClaimsStream::new(&dapp_metadata),
             last_claim_id: Mutex::new(INITIAL_ID.to_owned()),
         })
     }
@@ -349,9 +325,10 @@ impl From<Event<RollupsClaim>> for super::RollupClaim {
 mod broker_facade_tests {
     use std::{sync::Arc, time::Duration};
 
+    use backoff::ExponentialBackoffBuilder;
     use rollups_events::{
-        Hash, InputMetadata, Payload, RedactedUrl, RollupsAdvanceStateInput,
-        RollupsData, Url, HASH_SIZE,
+        BrokerConfig, DAppMetadata, Hash, InputMetadata, Payload, RedactedUrl,
+        RollupsAdvanceStateInput, RollupsData, Url, HASH_SIZE,
     };
     use state_fold_types::{
         ethereum_types::{Bloom, H160, H256, U256, U64},
@@ -361,9 +338,7 @@ mod broker_facade_tests {
     use testcontainers::clients::Cli;
     use types::foldables::input_box::Input;
 
-    use crate::machine::{
-        config::BrokerConfig, BrokerReceive, BrokerSend, BrokerStatus,
-    };
+    use crate::machine::{BrokerReceive, BrokerSend, BrokerStatus};
 
     use super::BrokerFacade;
 
@@ -379,17 +354,9 @@ mod broker_facade_tests {
 
     #[tokio::test]
     async fn new_error() {
-        let result = BrokerFacade::new(BrokerConfig {
-            redis_endpoint: Url::parse("redis://invalid")
-                .map(RedactedUrl::new)
-                .expect("failed to parse Redis Url"),
-            chain_id: 1,
-            dapp_contract_address: [0; 20],
-            claims_consume_timeout: 300000,
-            backoff_max_elapsed_duration: Duration::from_millis(1000),
-        })
-        .await;
-        let error = result
+        let docker = Cli::default();
+        let error = failable_setup(&docker, true)
+            .await
             .err()
             .expect("'status' function has not failed")
             .to_string();
@@ -596,17 +563,34 @@ mod broker_facade_tests {
     // auxiliary
     // --------------------------------------------------------------------------------------------
 
-    async fn setup(docker: &Cli) -> (BrokerFixture, BrokerFacade) {
+    async fn failable_setup(
+        docker: &Cli,
+        should_fail: bool,
+    ) -> anyhow::Result<(BrokerFixture, BrokerFacade)> {
         let fixture = BrokerFixture::setup(docker).await;
-        let config = BrokerConfig {
-            redis_endpoint: fixture.redis_endpoint().to_owned(),
-            chain_id: fixture.chain_id(),
-            dapp_contract_address: fixture.dapp_address().inner().to_owned(),
-            claims_consume_timeout: 300000,
-            backoff_max_elapsed_duration: Duration::from_millis(1000),
+        let redis_endpoint = if should_fail {
+            RedactedUrl::new(Url::parse("https://invalid.com").unwrap())
+        } else {
+            fixture.redis_endpoint().clone()
         };
-        let broker = BrokerFacade::new(config).await.unwrap();
-        (fixture, broker)
+        let config = BrokerConfig {
+            redis_endpoint,
+            consume_timeout: 300000,
+            backoff: ExponentialBackoffBuilder::new()
+                .with_initial_interval(Duration::from_millis(1000))
+                .with_max_elapsed_time(Some(Duration::from_millis(3000)))
+                .build(),
+        };
+        let metadata = DAppMetadata {
+            chain_id: fixture.chain_id(),
+            dapp_address: fixture.dapp_address().clone(),
+        };
+        let broker = BrokerFacade::new(config, metadata).await?;
+        Ok((fixture, broker))
+    }
+
+    async fn setup(docker: &Cli) -> (BrokerFixture, BrokerFacade) {
+        failable_setup(docker, false).await.unwrap()
     }
 
     fn new_enqueue_input() -> Input {
