@@ -13,11 +13,12 @@
 /// @title Authority Test
 pragma solidity ^0.8.8;
 
+import {Test} from "forge-std/Test.sol";
 import {TestBase} from "../../util/TestBase.sol";
 import {Authority} from "contracts/consensus/authority/Authority.sol";
-import {IConsensus} from "contracts/consensus/IConsensus.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {IHistory} from "contracts/history/IHistory.sol";
+import {History} from "contracts/history/History.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -390,5 +391,211 @@ contract AuthorityTest is TestBase {
 
         vm.prank(_dapp);
         authority.join();
+    }
+}
+
+contract AuthorityHandler is Test {
+    struct Claim {
+        bytes32 epochHash;
+        uint128 firstIndex;
+        uint128 lastIndex;
+    }
+    struct ClaimContext {
+        address dapp;
+        Claim claim;
+        uint256 proofContext;
+    }
+
+    Authority immutable authority;
+    History history; // current history
+    History[] histories; // histories that have been used
+    History[] backUpHistories; // new histories that are ready to use
+
+    mapping(History => ClaimContext[]) claimContext; // history => ClaimContext
+    mapping(History => mapping(address => uint256)) numClaims; // history => dapp => #claims
+    mapping(History => mapping(address => uint256)) firstIndexes; // history => dapp => first index
+
+    constructor(
+        History _history,
+        Authority _authority,
+        History[] memory _backUpHistories
+    ) {
+        history = _history;
+        histories.push(history);
+        authority = _authority;
+        backUpHistories = _backUpHistories;
+    }
+
+    function submitClaim(address _dapp, Claim memory _claim) external {
+        _claim.firstIndex = uint128(firstIndexes[history][_dapp]);
+        // bound the last index to be in the range (firstIndex, type(uint128).max)
+        _claim.lastIndex = uint128(
+            bound(
+                _claim.lastIndex,
+                _claim.firstIndex + 1,
+                type(uint128).max - 1
+            )
+        );
+
+        bytes memory encodedData = abi.encode(_dapp, _claim);
+        if (address(authority) != history.owner()) {
+            vm.expectRevert("Ownable: caller is not the owner");
+            authority.submitClaim(encodedData);
+            return;
+        }
+
+        authority.submitClaim(encodedData);
+
+        claimContext[history].push(
+            ClaimContext(_dapp, _claim, numClaims[history][_dapp]++)
+        );
+        firstIndexes[history][_dapp] = _claim.lastIndex + 1;
+    }
+
+    function migrateHistoryToConsensus(address _consensus) external {
+        if (address(authority) != history.owner()) {
+            vm.expectRevert("Ownable: caller is not the owner");
+        } else if (_consensus == address(0)) {
+            vm.expectRevert("Ownable: new owner is the zero address");
+        }
+        authority.migrateHistoryToConsensus(_consensus);
+    }
+
+    function setNewHistory() external {
+        // take a back up new history from array
+        if (backUpHistories.length > 0) {
+            history = backUpHistories[backUpHistories.length - 1];
+            backUpHistories.pop();
+            authority.setHistory(history);
+            histories.push(history);
+        }
+    }
+
+    function setSameHistory() external {
+        authority.setHistory(history);
+    }
+
+    function setOldHistory(uint256 _index) external {
+        // pick a random old history
+        history = histories[_index % histories.length];
+
+        // with 50% chance randomly migrate the history to the authority
+        if (_index % 2 == 0) {
+            vm.prank(history.owner());
+            history.migrateToConsensus(address(authority));
+        }
+
+        authority.setHistory(history);
+    }
+
+    function checkHistory() external {
+        assertEq(
+            address(history),
+            address(authority.getHistory()),
+            "check history"
+        );
+    }
+
+    function checkClaim(
+        uint256 _historyIndex,
+        uint256 _claimContextIndex
+    ) external {
+        History selectedHistory = histories[_historyIndex % histories.length];
+        // skip if history has no claim
+        uint256 numClaimContext = claimContext[selectedHistory].length;
+        if (numClaimContext == 0) return;
+
+        ClaimContext memory selectedClaimContext = claimContext[
+            selectedHistory
+        ][_claimContextIndex % numClaimContext];
+
+        bytes32 returnedEpochHash;
+        uint256 returnedFirstIndex;
+        uint256 returnedLastIndex;
+        if (address(selectedHistory) == address(authority.getHistory())) {
+            // selected history is the current history
+            // call through authority
+            (
+                returnedEpochHash,
+                returnedFirstIndex,
+                returnedLastIndex
+            ) = authority.getClaim(
+                selectedClaimContext.dapp,
+                abi.encode(selectedClaimContext.proofContext)
+            );
+        } else {
+            // selected history is an old history
+            // call through old history directly
+            (
+                returnedEpochHash,
+                returnedFirstIndex,
+                returnedLastIndex
+            ) = selectedHistory.getClaim(
+                selectedClaimContext.dapp,
+                abi.encode(selectedClaimContext.proofContext)
+            );
+        }
+        assertEq(
+            returnedEpochHash,
+            selectedClaimContext.claim.epochHash,
+            "check epoch hash"
+        );
+        assertEq(
+            returnedFirstIndex,
+            selectedClaimContext.claim.firstIndex,
+            "check first index"
+        );
+        assertEq(
+            returnedLastIndex,
+            selectedClaimContext.claim.lastIndex,
+            "check last index"
+        );
+    }
+
+    // view functions
+    function getNumHistories() external view returns (uint256) {
+        return histories.length;
+    }
+
+    function getNumClaimContext(
+        uint256 _historyIndex
+    ) external view returns (uint256) {
+        return claimContext[histories[_historyIndex]].length;
+    }
+}
+
+contract AuthorityInvariantTest is Test {
+    AuthorityHandler handler;
+    History[] backUpHistories;
+
+    function setUp() public {
+        // this setup is only for invariant testing
+        address inputBox = vm.addr(uint256(keccak256("inputBox")));
+        History hist = new History(address(this));
+        Authority auth = new Authority(
+            address(this),
+            IInputBox(inputBox),
+            hist
+        );
+        hist.migrateToConsensus(address(auth));
+
+        // back up new histories
+        for (uint256 i; i < 30; ++i) {
+            backUpHistories.push(new History(address(auth)));
+        }
+
+        handler = new AuthorityHandler(hist, auth, backUpHistories);
+        auth.transferOwnership(address(handler));
+
+        targetContract(address(handler));
+    }
+
+    function invariantTests() external {
+        // check all claims
+        for (uint256 i; i < handler.getNumHistories(); ++i) {
+            for (uint256 j; j < handler.getNumClaimContext(i); ++j) {
+                handler.checkClaim(i, j);
+            }
+        }
     }
 }
