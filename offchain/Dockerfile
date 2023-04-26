@@ -51,7 +51,7 @@ FROM golang:1.19.0-bullseye as grpc_health_probe
 RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
 
 # define runtime image
-FROM debian:bullseye-20230320-slim as runtime
+FROM debian:bullseye-20230502-slim as runtime
 WORKDIR /opt/cartesi
 ENV PATH="/opt/cartesi/bin:${PATH}"
 
