@@ -30,6 +30,10 @@ contract NormalToken is ERC721 {
     ) ERC721("NormalToken", "NORMAL") {
         _safeMint(_tokenOwner, _tokenId);
     }
+
+    function mint(address _tokenOwner, uint256 _tokenId) public {
+        _safeMint(_tokenOwner, _tokenId);
+    }
 }
 
 contract ERC721Receiver is IERC721Receiver {
@@ -167,6 +171,7 @@ contract ERC721PortalTest is Test {
             _baseLayerData,
             _execLayerData
         );
+        vm.stopPrank();
 
         // Check the new owner of the token
         assertEq(token.ownerOf(_tokenId), dapp);
@@ -220,6 +225,7 @@ contract ERC721PortalTest is Test {
             _baseLayerData,
             _execLayerData
         );
+        vm.stopPrank();
 
         // Check the new owner of the token
         assertEq(token.ownerOf(_tokenId), dapp);
@@ -252,6 +258,7 @@ contract ERC721PortalTest is Test {
             _baseLayerData,
             _execLayerData
         );
+        vm.stopPrank();
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
@@ -284,6 +291,7 @@ contract ERC721PortalTest is Test {
             _baseLayerData,
             _execLayerData
         );
+        vm.stopPrank();
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
@@ -344,8 +352,119 @@ contract ERC721PortalTest is Test {
             _baseLayerData,
             _execLayerData
         );
+        vm.stopPrank();
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), numberOfInputsBefore + 1);
+    }
+}
+
+contract ERC721PortalHandler is Test {
+    IERC721Portal portal;
+    IERC721 token;
+    IInputBox inputBox;
+    address alice;
+    uint256 aliceBalance;
+    uint256 numTokenIds;
+    address[] dapps;
+    mapping(address => uint256) public dappBalances;
+
+    constructor(
+        IERC721Portal _portal,
+        address[] memory _dapps,
+        IERC721 _token,
+        uint256 _numTokenIds,
+        address _alice
+    ) {
+        portal = _portal;
+        dapps = _dapps;
+        token = _token;
+        numTokenIds = _numTokenIds;
+
+        inputBox = portal.getInputBox();
+        alice = _alice;
+        aliceBalance = token.balanceOf(alice);
+    }
+
+    function depositERC721Token(
+        uint256 _dappIndex,
+        uint256 _tokenIndex,
+        bytes calldata _baseLayerData,
+        bytes calldata _execLayerData
+    ) external {
+        uint256 tokenID = _tokenIndex % numTokenIds;
+        if (token.ownerOf(tokenID) != alice) return;
+        address dapp = dapps[_dappIndex % dapps.length];
+
+        assertEq(token.balanceOf(address(portal)), 0);
+        assertEq(token.balanceOf(alice), aliceBalance);
+        assertEq(token.ownerOf(tokenID), alice);
+        assertEq(token.balanceOf(dapp), dappBalances[dapp]);
+        assertEq(inputBox.getNumberOfInputs(dapp), dappBalances[dapp]);
+
+        vm.startPrank(alice);
+        token.approve(address(portal), tokenID);
+        portal.depositERC721Token(
+            token,
+            dapp,
+            tokenID,
+            _baseLayerData,
+            _execLayerData
+        );
+        vm.stopPrank();
+
+        assertEq(token.balanceOf(address(portal)), 0);
+        assertEq(token.balanceOf(alice), --aliceBalance);
+        assertEq(token.ownerOf(tokenID), dapp);
+        assertEq(token.balanceOf(dapp), ++dappBalances[dapp]);
+        assertEq(inputBox.getNumberOfInputs(dapp), dappBalances[dapp]);
+
+        dapps.push(dapp);
+    }
+}
+
+contract ERC721PortalInvariantTest is Test {
+    IInputBox inputBox;
+    IERC721Portal portal;
+    NormalToken token;
+    ERC721PortalHandler handler;
+    address alice;
+    uint256 numTokenIds;
+    uint256 numDapps;
+    address[] dapps;
+
+    function setUp() public {
+        inputBox = new InputBox();
+        portal = new ERC721Portal(inputBox);
+        // create 30 dapps
+        numDapps = 30;
+        for (uint256 i; i < numDapps; ++i) {
+            dapps.push(address(new ERC721Receiver()));
+        }
+        // mint 10000 erc721 tokens
+        alice = vm.addr(1);
+        numTokenIds = 10000;
+        token = new NormalToken(alice, 0);
+        for (uint256 i = 1; i < numTokenIds; ++i) {
+            token.mint(alice, i);
+        }
+        handler = new ERC721PortalHandler(
+            portal,
+            dapps,
+            token,
+            numTokenIds,
+            alice
+        );
+
+        targetContract(address(handler));
+    }
+
+    function invariantTests() external {
+        for (uint256 i; i < numDapps; ++i) {
+            address dapp = dapps[i];
+            assertEq(token.balanceOf(dapp), handler.dappBalances(dapp));
+            uint256 numInputs = inputBox.getNumberOfInputs(dapp);
+            assertEq(numInputs, handler.dappBalances(dapp));
+        }
     }
 }

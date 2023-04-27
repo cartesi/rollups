@@ -26,6 +26,10 @@ contract BadEtherReceiver {
     }
 }
 
+contract EtherReceiver {
+    receive() external payable {}
+}
+
 contract InputBoxWatcher {
     IInputBox inputBox;
 
@@ -139,5 +143,83 @@ contract EtherPortalTest is Test {
             inputBox.getNumberOfInputs(address(watcher)),
             numberOfInputsBefore + 1
         );
+    }
+}
+
+contract EtherPortalHandler is Test {
+    IEtherPortal portal;
+    IInputBox inputBox;
+    address[] dapps;
+    mapping(address => uint256) public dappBalances;
+    mapping(address => uint256) public dappNumInputs;
+
+    constructor(IEtherPortal _portal, address[] memory _dapps) {
+        portal = _portal;
+        inputBox = portal.getInputBox();
+        dapps = _dapps;
+    }
+
+    function depositEther(
+        uint256 _dappIndex,
+        uint256 _amount,
+        bytes calldata _execLayerData
+    ) external {
+        address sender = msg.sender;
+        address dapp = dapps[_dappIndex % dapps.length];
+        _amount = bound(_amount, 0, type(uint128).max);
+
+        // fund sender
+        for (uint256 i; i < dapps.length; ++i) {
+            if (sender == dapps[i]) {
+                return;
+            }
+        }
+        vm.deal(sender, _amount);
+
+        // balance before the deposit
+        uint256 senderBalanceBefore = sender.balance;
+        uint256 dappBalanceBefore = dapp.balance;
+        // balance of the portal is 0 all the time during tests
+        assertEq(address(portal).balance, 0);
+
+        vm.prank(sender);
+        portal.depositEther{value: _amount}(dapp, _execLayerData);
+
+        // Check the balances after the deposit
+        assertEq(sender.balance, senderBalanceBefore - _amount);
+        assertEq(dapp.balance, dappBalanceBefore + _amount);
+        assertEq(address(portal).balance, 0);
+
+        dappBalances[dapp] += _amount;
+        assertEq(++dappNumInputs[dapp], inputBox.getNumberOfInputs(dapp));
+    }
+}
+
+contract EtherPortalInvariantTest is Test {
+    InputBox inputBox;
+    EtherPortal portal;
+    EtherPortalHandler handler;
+    uint256 numDapps;
+    address[] dapps;
+
+    function setUp() public {
+        inputBox = new InputBox();
+        portal = new EtherPortal(inputBox);
+        numDapps = 30;
+        for (uint256 i; i < numDapps; ++i) {
+            dapps.push(address(new EtherReceiver()));
+        }
+        handler = new EtherPortalHandler(portal, dapps);
+
+        targetContract(address(handler));
+    }
+
+    function invariantTests() external {
+        for (uint256 i; i < numDapps; ++i) {
+            address dapp = dapps[i];
+            assertEq(dapp.balance, handler.dappBalances(dapp));
+            uint256 numInputs = inputBox.getNumberOfInputs(dapp);
+            assertEq(numInputs, handler.dappNumInputs(dapp));
+        }
     }
 }

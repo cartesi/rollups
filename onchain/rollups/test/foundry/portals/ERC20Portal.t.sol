@@ -140,7 +140,7 @@ contract ERC20PortalTest is Test {
         );
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
-        token.transfer(alice, _amount);
+        require(token.transfer(alice, _amount), "token transfer fail");
         vm.startPrank(alice);
 
         // Allow the portal to withdraw `_amount` tokens from Alice
@@ -157,6 +157,7 @@ contract ERC20PortalTest is Test {
 
         // Transfer ERC-20 tokens to the DApp via the portal
         portal.depositERC20Tokens(token, dapp, _amount, _data);
+        vm.stopPrank();
 
         // Check the balances after the deposit
         assertEq(token.balanceOf(alice), aliceBalanceBefore - _amount);
@@ -197,6 +198,7 @@ contract ERC20PortalTest is Test {
 
         // Transfer ERC-20 tokens to the DApp via the portal
         portal.depositERC20Tokens(token, dapp, _amount, _data);
+        vm.stopPrank();
 
         // Check the balances after the deposit
         assertEq(token.balanceOf(alice), aliceBalanceBefore);
@@ -218,12 +220,13 @@ contract ERC20PortalTest is Test {
         token = new NormalToken(_amount);
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
-        token.transfer(alice, _amount);
+        require(token.transfer(alice, _amount), "token transfer fail");
         vm.startPrank(alice);
 
         // Expect deposit to revert with message
         vm.expectRevert("ERC20: insufficient allowance");
         portal.depositERC20Tokens(token, dapp, _amount, _data);
+        vm.stopPrank();
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
@@ -240,7 +243,7 @@ contract ERC20PortalTest is Test {
         token = new NormalToken(_amount);
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
-        token.transfer(alice, _amount);
+        require(token.transfer(alice, _amount), "token transfer fail");
         vm.startPrank(alice);
 
         // Allow the portal to withdraw `_amount+1` tokens from Alice
@@ -249,6 +252,7 @@ contract ERC20PortalTest is Test {
         // Expect deposit to revert with message
         vm.expectRevert("ERC20: transfer amount exceeds balance");
         portal.depositERC20Tokens(token, dapp, _amount + 1, _data);
+        vm.stopPrank();
 
         // Check the DApp's input box
         assertEq(inputBox.getNumberOfInputs(dapp), 0);
@@ -259,7 +263,7 @@ contract ERC20PortalTest is Test {
         token = new WatcherToken(inputBox, _amount);
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
-        token.transfer(alice, _amount);
+        require(token.transfer(alice, _amount), "token transfer fail");
         vm.startPrank(alice);
 
         // Allow the portal to withdraw `_amount` tokens from Alice
@@ -279,8 +283,92 @@ contract ERC20PortalTest is Test {
 
         // Transfer ERC-20 tokens to DApp
         portal.depositERC20Tokens(token, dapp, _amount, _data);
+        vm.stopPrank();
 
         // Expect new input
         assertEq(inputBox.getNumberOfInputs(dapp), numberOfInputsBefore + 1);
+    }
+}
+
+contract ERC20PortalHandler is Test {
+    IERC20Portal portal;
+    IERC20 token;
+    IInputBox inputBox;
+    address[] public dapps;
+    mapping(address => uint256) public dappBalances;
+    mapping(address => uint256) public dappNumInputs;
+
+    constructor(IERC20Portal _portal, IERC20 _token) {
+        portal = _portal;
+        token = _token;
+        inputBox = portal.getInputBox();
+    }
+
+    function depositERC20Tokens(
+        address _dapp,
+        uint256 _amount,
+        bytes calldata _execLayerData
+    ) external {
+        address sender = msg.sender;
+        if (_dapp == address(0) || sender == address(0)) return;
+        _amount = bound(_amount, 0, token.balanceOf(address(this)));
+
+        // fund sender
+        require(token.transfer(sender, _amount), "token transfer fail");
+        vm.prank(sender);
+        token.approve(address(portal), _amount);
+
+        // balance before the deposit
+        uint256 senderBalanceBefore = token.balanceOf(sender);
+        uint256 dappBalanceBefore = token.balanceOf(_dapp);
+        // balance of the portal is 0 all the time during tests
+        assertEq(token.balanceOf(address(portal)), 0);
+
+        vm.prank(sender);
+        portal.depositERC20Tokens(token, _dapp, _amount, _execLayerData);
+
+        // Check the balances after the deposit
+        assertEq(token.balanceOf(sender), senderBalanceBefore - _amount);
+        assertEq(token.balanceOf(_dapp), dappBalanceBefore + _amount);
+        assertEq(token.balanceOf(address(portal)), 0);
+
+        dapps.push(_dapp);
+        dappBalances[_dapp] += _amount;
+        assertEq(++dappNumInputs[_dapp], inputBox.getNumberOfInputs(_dapp));
+    }
+
+    function getNumDapps() external view returns (uint256) {
+        return dapps.length;
+    }
+}
+
+contract ERC20PortalInvariantTest is Test {
+    InputBox inputBox;
+    ERC20Portal portal;
+    NormalToken token;
+    ERC20PortalHandler handler;
+    uint256 constant tokenSupply = type(uint256).max;
+
+    function setUp() public {
+        inputBox = new InputBox();
+        portal = new ERC20Portal(inputBox);
+        token = new NormalToken(tokenSupply);
+        handler = new ERC20PortalHandler(portal, token);
+        // transfer all tokens to handler
+        require(
+            token.transfer(address(handler), tokenSupply),
+            "token transfer fail"
+        );
+
+        targetContract(address(handler));
+    }
+
+    function invariantTests() external {
+        for (uint256 i; i < handler.getNumDapps(); ++i) {
+            address dapp = handler.dapps(i);
+            assertEq(token.balanceOf(dapp), handler.dappBalances(dapp));
+            uint256 numInputs = inputBox.getNumberOfInputs(dapp);
+            assertEq(numInputs, handler.dappNumInputs(dapp));
+        }
     }
 }

@@ -62,6 +62,7 @@ contract HistoryTest is Test {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.startPrank(alice);
         history.migrateToConsensus(bob);
+        vm.stopPrank();
         testInitialConsensus(); // consensus hasn't changed
     }
 
@@ -76,6 +77,7 @@ contract HistoryTest is Test {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.startPrank(alice);
         history.renounceOwnership();
+        vm.stopPrank();
         testInitialConsensus(); // consensus hasn't changed
     }
 
@@ -121,6 +123,7 @@ contract HistoryTest is Test {
         vm.startPrank(alice);
         vm.expectRevert("Ownable: caller is not the owner");
         history.submitClaim(abi.encode(dapp, epochHash, 0, li));
+        vm.stopPrank();
     }
 
     function testRevertsMaxUint128(
