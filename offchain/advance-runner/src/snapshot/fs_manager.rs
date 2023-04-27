@@ -23,22 +23,30 @@ pub enum FSSnapshotError {
     #[snafu(display("failed to follow latest symlink"))]
     ReadLinkError { source: std::io::Error },
 
-    #[snafu(display("failed to read symlink path={:?}", path))]
+    #[snafu(display("failed to read symlink path ({})", path.display()))]
     BrokenLinkError { path: PathBuf },
 
-    #[snafu(display("failed to get snapshot file name"))]
-    DirNameError {},
+    #[snafu(display("failed to get snapshot file name ({})", path.display()))]
+    DirNameError { path: PathBuf },
 
-    #[snafu(display("failed to parse the epoch from snapshot file name"))]
-    ParsingError { source: std::num::ParseIntError },
+    #[snafu(display(
+        "failed to parse the {} from snapshot file name ({})",
+        field,
+        path.display(),
+    ))]
+    ParsingError {
+        field: String,
+        path: PathBuf,
+        source: std::num::ParseIntError,
+    },
 
-    #[snafu(display("failed to remove snapshot {:?}", path))]
+    #[snafu(display("failed to remove snapshot {}", path.display()))]
     RemoveError {
         path: PathBuf,
         source: std::io::Error,
     },
 
-    #[snafu(display("snapshot on wrong dir {:?}", path))]
+    #[snafu(display("snapshot on wrong dir {}", path.display()))]
     WrongDirError { path: PathBuf },
 
     #[snafu(display("snapshot path with invalid epoch {:?}", snapshot))]
@@ -50,17 +58,23 @@ pub enum FSSnapshotError {
     ))]
     InvalidProcessedInputCountError { snapshot: Snapshot },
 
-    #[snafu(display("failed to read snapshot {:?}", path))]
+    #[snafu(display("failed to read snapshot {}", path.display()))]
     NotFoundError { path: PathBuf },
 
-    #[snafu(display("failed to list snapshots in dir"))]
-    ListDirError { source: std::io::Error },
+    #[snafu(display("failed to list snapshots in dir ({})", path.display()))]
+    ListDirError {
+        path: PathBuf,
+        source: std::io::Error,
+    },
 
-    #[snafu(display("existing latest path exists but it is not symlink"))]
-    LatestNotLinkError {},
+    #[snafu(display("existing latest path exists but it is not symlink ({})", path.display()))]
+    LatestNotLinkError { path: PathBuf },
 
-    #[snafu(display("failed to set latest symlink"))]
-    SetLatestError { source: std::io::Error },
+    #[snafu(display("failed to set latest symlink ({})", path.display()))]
+    SetLatestError {
+        path: PathBuf,
+        source: std::io::Error,
+    },
 }
 
 #[derive(Debug)]
@@ -121,8 +135,10 @@ impl SnapshotManager for FSSnapshotManager {
         tracing::trace!(?snapshot, "setting latest snapshot");
 
         // basic verifications
+        let latest = &self.config.snapshot_latest;
+        let snapshot_dir = &self.config.snapshot_dir;
         ensure!(
-            snapshot.path.parent() == Some(&self.config.snapshot_dir),
+            snapshot.path.parent() == Some(snapshot_dir),
             WrongDirSnafu {
                 path: snapshot.path.clone()
             }
@@ -143,33 +159,40 @@ impl SnapshotManager for FSSnapshotManager {
         // list other snapshots
         let mut snapshots = HashSet::new();
         let dir_iterator =
-            fs::read_dir(&self.config.snapshot_dir).context(ListDirSnafu)?;
+            fs::read_dir(snapshot_dir).context(ListDirSnafu {
+                path: snapshot_dir.clone(),
+            })?;
         for entry in dir_iterator {
-            let entry = entry.context(ListDirSnafu)?;
+            let entry = entry.context(ListDirSnafu {
+                path: snapshot_dir.clone(),
+            })?;
             let path = entry.path();
-            if path != self.config.snapshot_latest && path != snapshot.path {
+            if &path != latest && path != snapshot.path {
                 snapshots.insert(path.to_owned());
             }
         }
         tracing::trace!(?snapshots, "listed other existing snapshots");
 
         // delete previous snapshot link
-        if self.config.snapshot_latest.exists() {
+        if latest.exists() {
             ensure!(
-                self.config.snapshot_latest.is_symlink(),
-                LatestNotLinkSnafu
+                latest.is_symlink(),
+                LatestNotLinkSnafu {
+                    path: latest.clone()
+                }
             );
-            fs::remove_file(&self.config.snapshot_latest)
-                .context(SetLatestSnafu)?;
+            fs::remove_file(&latest).context(SetLatestSnafu {
+                path: latest.clone(),
+            })?;
             tracing::trace!("deleted previous latest symlink");
         }
 
         // set latest link
-        std::os::unix::fs::symlink(
-            &snapshot.path,
-            &self.config.snapshot_latest,
-        )
-        .context(SetLatestSnafu)?;
+        std::os::unix::fs::symlink(&snapshot.path, latest).context(
+            SetLatestSnafu {
+                path: latest.clone(),
+            },
+        )?;
         tracing::trace!("set latest snapshot");
 
         // delete other snapshots
@@ -192,14 +215,27 @@ fn decode_filename(path: &Path) -> Result<(u64, u64), FSSnapshotError> {
         .file_name()
         .map(|file_name| file_name.to_str())
         .flatten()
-        .context(DirNameSnafu)?;
+        .context(DirNameSnafu {
+            path: path.to_owned(),
+        })?;
     tracing::trace!(file_name, "got snapshot file name");
 
     let parts: Vec<_> = file_name.split("_").collect();
-    ensure!(parts.len() == 2, DirNameSnafu);
-    let epoch = parts[0].parse::<u64>().context(ParsingSnafu)?;
+    ensure!(
+        parts.len() == 2,
+        DirNameSnafu {
+            path: path.to_owned()
+        }
+    );
+    let epoch = parts[0].parse::<u64>().context(ParsingSnafu {
+        field: "epoch".to_owned(),
+        path: path.to_owned(),
+    })?;
     let processed_input_count =
-        parts[1].parse::<u64>().context(ParsingSnafu)?;
+        parts[1].parse::<u64>().context(ParsingSnafu {
+            field: "processed_input_count".to_owned(),
+            path: path.to_owned(),
+        })?;
 
     Ok((epoch, processed_input_count))
 }
@@ -301,7 +337,7 @@ mod tests {
             .get_latest()
             .await
             .expect_err("get latest should fail");
-        assert!(matches!(err, FSSnapshotError::DirNameError {}));
+        assert!(matches!(err, FSSnapshotError::DirNameError { .. }));
     }
 
     #[test_log::test(tokio::test)]
