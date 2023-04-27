@@ -10,12 +10,14 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Abstract Consensus
 pragma solidity ^0.8.8;
 
 import {IConsensus} from "./IConsensus.sol";
 
+/// @title Abstract Consensus
+/// @notice An abstract contract that partially implements `IConsensus`.
 abstract contract AbstractConsensus is IConsensus {
+    /// @notice Emits an `ApplicationJoined` event with the message sender.
     function join() external override {
         emit ApplicationJoined(msg.sender);
     }

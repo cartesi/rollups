@@ -10,22 +10,24 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Consensus interface
 pragma solidity ^0.8.8;
 
+/// @title Consensus interface
+/// @notice Defines a generic interface for consensuses.
 interface IConsensus {
-    /// @notice An application has joined the consensus' validation set
+    /// @notice An application has joined the consensus' validation set.
     /// @param application The application
-    /// @dev MUST be triggered on a successful call to `join()`
+    /// @dev MUST be triggered on a successful call to `join`.
     event ApplicationJoined(address application);
 
-    /// @notice Get a claim
-    /// @param _dapp The DApp
+    /// @notice Get a specific claim regarding a specific DApp.
+    ///         The encoding of `_proofContext` might vary
+    ///         depending on the implementation.
+    /// @param _dapp The DApp address
     /// @param _proofContext Data for retrieving the desired claim
-    /// @return epochHash_ The epoch hash contained in the claim
-    /// @return firstInputIndex_ The index of the first input in the input box for which the epoch hash is valid
-    /// @return lastInputIndex_ The index of the last input in the input box for which the epoch hash is valid
-    /// @dev The encoding of _proofContext might vary depending on the implementation
+    /// @return epochHash_ The claimed epoch hash
+    /// @return firstInputIndex_ The index of the first input of the epoch in the input box
+    /// @return lastInputIndex_ The index of the last input of the epoch in the input box
     function getClaim(
         address _dapp,
         bytes calldata _proofContext
@@ -38,8 +40,7 @@ interface IConsensus {
             uint256 lastInputIndex_
         );
 
-    /// @notice Join the consensus' validation set
-    /// @dev This function should be called by a DApp when it migrates to this consensus
-    /// @dev MUST fire the `ApplicationJoined` event with the message sender as argument
+    /// @notice Signal the consensus that the message sender wants to join its validation set.
+    /// @dev MUST fire an `ApplicationJoined` event with the message sender as argument.
     function join() external;
 }
