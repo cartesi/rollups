@@ -18,10 +18,10 @@ import {
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
 } from "@cartesi/rollups";
-// import goerli from "@cartesi/rollups/export/abi/goerli.json";
-// import polygon_mumbai from "@cartesi/rollups/export/abi/polygon_mumbai.json";
-// import arbitrum_goerli from "@cartesi/rollups/export/abi/arbitrum_goerli.json";
-// import optimism_goerli from "@cartesi/rollups/export/abi/optimism_goerli.json";
+import goerli from "@cartesi/rollups/export/abi/goerli.json";
+import polygon_mumbai from "@cartesi/rollups/export/abi/polygon_mumbai.json";
+import arbitrum_goerli from "@cartesi/rollups/export/abi/arbitrum_goerli.json";
+import optimism_goerli from "@cartesi/rollups/export/abi/optimism_goerli.json";
 
 type DeploymentContract = {
     address: string;
@@ -35,10 +35,10 @@ type Deployment = {
 };
 
 const deployments: Record<number, Deployment> = {
-    // 5: goerli,
-    // 80001: polygon_mumbai,
-    // 421613: arbitrum_goerli,
-    // 420: optimism_goerli,
+    5: goerli,
+    80001: polygon_mumbai,
+    421613: arbitrum_goerli,
+    420: optimism_goerli,
 };
 
 function getContractConnector<T>(contractName: string, contractFactory: any) {
