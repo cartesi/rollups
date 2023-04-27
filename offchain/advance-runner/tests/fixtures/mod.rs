@@ -36,7 +36,7 @@ impl AdvanceRunnerFixture {
         redis_endpoint: RedactedUrl,
         chain_id: u64,
         dapp_address: Address,
-        snapshot_dir: &Path,
+        snapshot_dir: Option<&Path>,
     ) -> Self {
         let runtime_config = MachineRuntimeConfig {
             concurrency: Some(ConcurrencyConfig {
@@ -83,10 +83,18 @@ impl AdvanceRunnerFixture {
             backoff: Default::default(),
         };
 
-        let snapshot_config = SnapshotConfig::FileSystem(FSManagerConfig {
-            snapshot_dir: snapshot_dir.to_owned(),
-            snapshot_latest: snapshot_dir.join("latest"),
-        });
+        let snapshot_config = if snapshot_dir.is_some() {
+            SnapshotConfig::FileSystem(FSManagerConfig {
+                snapshot_dir: snapshot_dir
+                    .expect("Should have a Path")
+                    .to_owned(),
+                snapshot_latest: snapshot_dir
+                    .expect("Should have a Path")
+                    .join("latest"),
+            });
+        } else {
+            SnapshotConfig::Disabled;
+        };
 
         let backoff_max_elapsed_duration = Duration::from_millis(1);
 

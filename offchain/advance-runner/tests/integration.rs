@@ -1,4 +1,4 @@
-// Copyright 2022 Cartesi Pte. Ltd.
+// Copyright 2023 Cartesi Pte. Ltd.
 //
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -42,7 +42,7 @@ impl TestState<'_> {
             broker.redis_endpoint().to_owned(),
             broker.chain_id(),
             broker.dapp_address().to_owned(),
-            snapshots.path(),
+            Some(snapshots.path()),
         )
         .await;
         TestState {
