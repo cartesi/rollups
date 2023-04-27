@@ -10,15 +10,16 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Input Encoding Library
 pragma solidity ^0.8.8;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
+/// @title Input Encoding Library
+/// @notice Defines the encoding of canonical inputs.
 library InputEncoding {
-    /// @notice Encode Ether deposit
+    /// @notice Encode an Ether deposit.
     /// @param sender The Ether sender
     /// @param value The amount of Ether being sent in Wei
     /// @param execLayerData Additional data to be interpreted by the execution layer
@@ -36,7 +37,7 @@ library InputEncoding {
             );
     }
 
-    /// @notice Encode ERC-20 token deposit
+    /// @notice Encode an ERC-20 token deposit.
     /// @param ret The return value of `transferFrom`
     /// @param token The token contract
     /// @param sender The token sender
@@ -60,14 +61,14 @@ library InputEncoding {
             );
     }
 
-    /// @notice Encode ERC-721 token deposit
+    /// @notice Encode an ERC-721 token deposit.
     /// @param token The token contract
     /// @param sender The token sender
     /// @param tokenId The token identifier
     /// @param baseLayerData Additional data to be interpreted by the base layer
     /// @param execLayerData Additional data to be interpreted by the execution layer
     /// @return The encoded input
-    /// @dev baseLayerData should be forwarded to the ERC-721 token contract
+    /// @dev `baseLayerData` should be forwarded to `token`.
     function encodeERC721Deposit(
         IERC721 token,
         address sender,
@@ -85,7 +86,7 @@ library InputEncoding {
             );
     }
 
-    /// @notice Encode an ERC-1155 single token deposit
+    /// @notice Encode an ERC-1155 single token deposit.
     /// @param token The ERC-1155 token contract
     /// @param sender The token sender
     /// @param tokenId The identifier of the token being transferred
@@ -93,7 +94,7 @@ library InputEncoding {
     /// @param baseLayerData Additional data to be interpreted by the base layer
     /// @param execLayerData Additional data to be interpreted by the execution layer
     /// @return The encoded input
-    /// @dev baseLayerData should be forwarded to the ERC-1155 token contract
+    /// @dev `baseLayerData` should be forwarded to `token`.
     function encodeSingleERC1155Deposit(
         IERC1155 token,
         address sender,
@@ -113,7 +114,7 @@ library InputEncoding {
             );
     }
 
-    /// @notice Encode an ERC-1155 batch token deposit
+    /// @notice Encode an ERC-1155 batch token deposit.
     /// @param token The ERC-1155 token contract
     /// @param sender The token sender
     /// @param tokenIds The identifiers of the tokens being transferred
@@ -121,7 +122,7 @@ library InputEncoding {
     /// @param baseLayerData Additional data to be interpreted by the base layer
     /// @param execLayerData Additional data to be interpreted by the execution layer
     /// @return The encoded input
-    /// @dev baseLayerData should be forwarded to the ERC-1155 token contract
+    /// @dev `baseLayerData` should be forwarded to `token`.
     function encodeBatchERC1155Deposit(
         IERC1155 token,
         address sender,
@@ -144,7 +145,7 @@ library InputEncoding {
             );
     }
 
-    /// @notice Encode DApp address relay
+    /// @notice Encode a DApp address relay.
     /// @param dapp The DApp address
     /// @return The encoded input
     function encodeDAppAddressRelay(

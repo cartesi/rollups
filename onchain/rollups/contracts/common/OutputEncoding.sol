@@ -10,11 +10,12 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Output Encoding Library
 pragma solidity ^0.8.8;
 
+/// @title Output Encoding Library
+/// @notice Defines the encoding of canonical outputs.
 library OutputEncoding {
-    /// @notice Encode notice
+    /// @notice Encode a notice.
     /// @param notice The notice
     /// @return The encoded output
     function encodeNotice(
@@ -23,9 +24,9 @@ library OutputEncoding {
         return abi.encode(notice);
     }
 
-    /// @notice Encode voucher
-    /// @param destination The contract that will execute the payload
-    /// @param payload The ABI-encoded function call
+    /// @notice Encode a voucher.
+    /// @param destination The address that will receive the payload through a message call
+    /// @param payload The payload, which—in the case of Solidity contracts—encodes a function call
     /// @return The encoded output
     function encodeVoucher(
         address destination,
