@@ -3,7 +3,7 @@ import fs from "fs";
 import epochStatus from "./epoch-status.json";
 
 interface OutputValidityProof {
-    epochInputIndex: number;
+    inputIndex: number;
     outputIndex: number;
     outputHashesRootHash: BytesLike;
     vouchersEpochRootHash: BytesLike;
@@ -13,12 +13,12 @@ interface OutputValidityProof {
     outputHashesInEpochSiblings: BytesLike[];
 }
 
-function setupVoucherProof(epochInputIndex: number): OutputValidityProof {
+function setupVoucherProof(inputIndex: number): OutputValidityProof {
     let voucherDataKeccakInHashes =
-        epochStatus.processedInputs[epochInputIndex].acceptedData.vouchers[0]
+        epochStatus.processedInputs[inputIndex].acceptedData.vouchers[0]
             .keccakInVoucherHashes;
     let voucherHashesInEpoch =
-        epochStatus.processedInputs[epochInputIndex].voucherHashesInEpoch
+        epochStatus.processedInputs[inputIndex].voucherHashesInEpoch
             .siblingHashes;
     var siblingKeccakInHashesV: BytesLike[] = [];
     var voucherHashesInEpochSiblings: BytesLike[] = [];
@@ -29,7 +29,7 @@ function setupVoucherProof(epochInputIndex: number): OutputValidityProof {
         voucherHashesInEpochSiblings.push(element.data);
     });
     let voucherProof: OutputValidityProof = {
-        epochInputIndex: epochInputIndex,
+        inputIndex: inputIndex,
         outputIndex: 0,
         outputHashesRootHash: voucherDataKeccakInHashes.rootHash.data,
         vouchersEpochRootHash: epochStatus.mostRecentVouchersEpochRootHash.data,
@@ -41,12 +41,12 @@ function setupVoucherProof(epochInputIndex: number): OutputValidityProof {
     return voucherProof;
 }
 
-function setupNoticeProof(epochInputIndex: number): OutputValidityProof {
+function setupNoticeProof(inputIndex: number): OutputValidityProof {
     let noticeDataKeccakInHashes =
-        epochStatus.processedInputs[epochInputIndex].acceptedData.notices[0]
+        epochStatus.processedInputs[inputIndex].acceptedData.notices[0]
             .keccakInNoticeHashes;
     let noticeHashesInEpoch =
-        epochStatus.processedInputs[epochInputIndex].noticeHashesInEpoch
+        epochStatus.processedInputs[inputIndex].noticeHashesInEpoch
             .siblingHashes;
     var siblingKeccakInHashesN: BytesLike[] = [];
     var noticeHashesInEpochSiblingsN: BytesLike[] = [];
@@ -57,7 +57,7 @@ function setupNoticeProof(epochInputIndex: number): OutputValidityProof {
         noticeHashesInEpochSiblingsN.push(element.data);
     });
     let noticeProof: OutputValidityProof = {
-        epochInputIndex: epochInputIndex,
+        inputIndex: inputIndex,
         outputIndex: 0,
         outputHashesRootHash: noticeDataKeccakInHashes.rootHash.data,
         vouchersEpochRootHash: epochStatus.mostRecentVouchersEpochRootHash.data,
@@ -96,7 +96,7 @@ function buildSolCodes(
         `        for (uint256 i; i < ${array1.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array1[i]); }`,
         `        for (uint256 i; i < ${array2.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array2[i]); }`,
         `        return OutputValidityProof({`,
-        `            epochInputIndex: ${noticeProof.epochInputIndex},`,
+        `            inputIndex: ${noticeProof.inputIndex},`,
         `            outputIndex: ${noticeProof.outputIndex},`,
         `            outputHashesRootHash: ${noticeProof.outputHashesRootHash},`,
         `            vouchersEpochRootHash: ${noticeProof.vouchersEpochRootHash},`,
@@ -114,7 +114,7 @@ function buildSolCodes(
         `        for (uint256 i; i < ${array3.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array3[i]); }`,
         `        for (uint256 i; i < ${array4.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array4[i]); }`,
         `        return OutputValidityProof({`,
-        `            epochInputIndex: ${voucherProof.epochInputIndex},`,
+        `            inputIndex: ${voucherProof.inputIndex},`,
         `            outputIndex: ${voucherProof.outputIndex},`,
         `            outputHashesRootHash: ${voucherProof.outputHashesRootHash},`,
         `            vouchersEpochRootHash: ${voucherProof.vouchersEpochRootHash},`,

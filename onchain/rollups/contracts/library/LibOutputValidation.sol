@@ -17,7 +17,7 @@ import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {MerkleV2} from "@cartesi/util/contracts/MerkleV2.sol";
 import {OutputEncoding} from "../common/OutputEncoding.sol";
 
-/// @param epochInputIndex which input, inside the epoch, the output belongs to
+/// @param inputIndex which input, inside the epoch, the output belongs to
 /// @param outputIndex index of output emitted by the input
 /// @param outputHashesRootHash Merkle root of hashes of outputs emitted by the input
 /// @param vouchersEpochRootHash merkle root of all epoch's voucher metadata hashes
@@ -26,7 +26,7 @@ import {OutputEncoding} from "../common/OutputEncoding.sol";
 /// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range
 /// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range
 struct OutputValidityProof {
-    uint64 epochInputIndex;
+    uint64 inputIndex;
     uint64 outputIndex;
     bytes32 outputHashesRootHash;
     bytes32 vouchersEpochRootHash;
@@ -73,7 +73,7 @@ library LibOutputValidation {
         require(
             MerkleV2.getRootAfterReplacementInDrive(
                 CanonicalMachine.getIntraMemoryRangePosition(
-                    v.epochInputIndex,
+                    v.inputIndex,
                     CanonicalMachine.KECCAK_LOG2_SIZE
                 ),
                 CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
@@ -193,7 +193,7 @@ library LibOutputValidation {
         uint256 firstInputIndex,
         uint256 lastInputIndex
     ) internal pure returns (uint256) {
-        uint256 inboxInputIndex = firstInputIndex + v.epochInputIndex;
+        uint256 inboxInputIndex = firstInputIndex + v.inputIndex;
 
         require(
             inboxInputIndex <= lastInputIndex,
