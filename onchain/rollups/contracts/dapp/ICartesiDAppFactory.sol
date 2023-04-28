@@ -10,20 +10,21 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Cartesi DApp Factory interface
 pragma solidity ^0.8.8;
 
 import {CartesiDApp} from "./CartesiDApp.sol";
 import {IConsensus} from "../consensus/IConsensus.sol";
 
+/// @title Cartesi DApp Factory interface
 interface ICartesiDAppFactory {
     // Events
 
-    /// @notice A new application was deployed
-    /// @param consensus The consensus to which the DApp is subscribed
-    /// @param dappOwner The address that owns the DApp
-    /// @param templateHash The hash of the initial state of the Cartesi Machine
+    /// @notice A new application was deployed.
+    /// @param consensus The initial consensus contract
+    /// @param dappOwner The initial DApp owner
+    /// @param templateHash The initial machine state hash
     /// @param application The application
+    /// @dev MUST be triggered on a successful call to `newApplication`.
     event ApplicationCreated(
         IConsensus indexed consensus,
         address dappOwner,
@@ -33,23 +34,25 @@ interface ICartesiDAppFactory {
 
     // Permissionless functions
 
-    /// @notice Deploy a new application
-    /// @param _consensus The consensus to which the DApp should be subscribed
-    /// @param _dappOwner The address that should own the DApp
-    /// @param _templateHash The hash of the initial state of the Cartesi Machine
+    /// @notice Deploy a new application.
+    /// @param _consensus The initial consensus contract
+    /// @param _dappOwner The initial DApp owner
+    /// @param _templateHash The initial machine state hash
     /// @return The application
+    /// @dev On success, MUST emit an `ApplicationCreated` event.
     function newApplication(
         IConsensus _consensus,
         address _dappOwner,
         bytes32 _templateHash
     ) external returns (CartesiDApp);
 
-    /// @notice Deploy a new application deterministically
-    /// @param _consensus The consensus to which the DApp should be subscribed
-    /// @param _dappOwner The address that should own the DApp
-    /// @param _templateHash The hash of the initial state of the Cartesi Machine
-    /// @param _salt The salt used to generate the DApp's address deterministically
+    /// @notice Deploy a new application deterministically.
+    /// @param _consensus The initial consensus contract
+    /// @param _dappOwner The initial DApp owner
+    /// @param _templateHash The initial machine state hash
+    /// @param _salt The salt used to deterministically generate the DApp address
     /// @return The application
+    /// @dev On success, MUST emit an `ApplicationCreated` event.
     function newApplication(
         IConsensus _consensus,
         address _dappOwner,
@@ -57,12 +60,14 @@ interface ICartesiDAppFactory {
         bytes32 _salt
     ) external returns (CartesiDApp);
 
-    /// @notice Calculate the address of an application to be deployed deterministically
-    /// @param _consensus The consensus to which the DApp should be subscribed
-    /// @param _dappOwner The address that should own the DApp
-    /// @param _templateHash The hash of the initial state of the Cartesi Machine
-    /// @param _salt The salt used to generate the DApp's address deterministically
-    /// @return The application address
+    /// @notice Calculate the address of an application to be deployed deterministically.
+    /// @param _consensus The initial consensus contract
+    /// @param _dappOwner The initial DApp owner
+    /// @param _templateHash The initial machine state hash
+    /// @param _salt The salt used to deterministically generate the DApp address
+    /// @return The deterministic application address
+    /// @dev Beware that only the `newApplication` function with the `_salt` parameter
+    ///      is able to deterministically deploy an application.
     function calculateApplicationAddress(
         IConsensus _consensus,
         address _dappOwner,

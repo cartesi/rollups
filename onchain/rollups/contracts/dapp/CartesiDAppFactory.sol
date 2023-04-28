@@ -10,13 +10,14 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Cartesi DApp Factory
 pragma solidity ^0.8.8;
 
 import {ICartesiDAppFactory} from "./ICartesiDAppFactory.sol";
 import {IConsensus} from "../consensus/IConsensus.sol";
 import {CartesiDApp} from "./CartesiDApp.sol";
 
+/// @title Cartesi DApp Factory
+/// @notice Allows anyone to reliably deploy a new `CartesiDApp` contract.
 contract CartesiDAppFactory is ICartesiDAppFactory {
     function newApplication(
         IConsensus _consensus,
