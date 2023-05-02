@@ -10,13 +10,30 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title History
 pragma solidity ^0.8.8;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IHistory} from "./IHistory.sol";
 
+/// @title Simple History
+///
+/// @notice This contract stores claims for each DApp individually.
+/// This means that, for each DApp, the contract stores an array of
+/// `Claim`, where each `Claim` is composed of:
+///
+/// * An epoch hash (`bytes32`)
+/// * A closed interval of input indices (`uint128`, `uint128`)
+///
+/// The contract guarantees that, for any given DApp, there exists
+/// some `N` such that the union of all ranges of input indices is
+/// equal to `[0,N)`, and that all such ranges are disjoint.
+///
+/// Furthermore, claims can only be submitted by the contract owner
+/// through `submitClaim`, but can be retrieved by anyone with `getClaim`.
+///
+/// @dev This contract inherits OpenZeppelin's `Ownable` contract.
+///      For more information on `Ownable`, please consult OpenZeppelin's official documentation.
 contract History is IHistory, Ownable {
     struct Claim {
         bytes32 epochHash;
@@ -24,16 +41,18 @@ contract History is IHistory, Ownable {
         uint128 lastIndex;
     }
 
-    // mapping from dapp address => array of claims
+    /// @notice Mapping from DApp address to array of claims
+    /// @dev See the `getClaim` and `submitClaim` functions.
     mapping(address => Claim[]) internal claims;
 
-    // Events
-
-    /// @notice A new claim was submitted
-    /// @param dapp  The address of the dapp for which the claim was submitted.
-    /// @param claim Claim for a specific dapp
+    /// @notice A new claim regarding a specific DApp was submitted.
+    /// @param dapp The address of the DApp
+    /// @param claim The newly-submitted claim
+    /// @dev MUST be triggered on a successful call to `submitClaim`.
     event NewClaimToHistory(address indexed dapp, Claim claim);
 
+    /// @notice Creates a `History` contract.
+    /// @param _owner The initial owner
     constructor(address _owner) {
         // constructor in Ownable already called `transferOwnership(msg.sender)`, so
         // we only need to call `transferOwnership(_owner)` if _owner != msg.sender
@@ -42,11 +61,27 @@ contract History is IHistory, Ownable {
         }
     }
 
+    /// @notice Submit a claim regarding a DApp.
+    /// There are several requirements for this function to be called successfully.
+    ///
+    /// * `_claimData` MUST be well-encoded. In Solidity, it can be constructed
+    ///   as `abi.encode(dapp, claim)`, where `dapp` is the DApp address (type `address`)
+    ///   and `claim` is the claim structure (type `Claim`).
+    ///
+    /// * `firstIndex` MUST be less than or equal to `lastIndex`.
+    ///   As a result, every claim MUST encompass AT LEAST one input.
+    ///
+    /// * If this is the DApp's first claim, then `firstIndex` MUST be `0`.
+    ///   Otherwise, `firstIndex` MUST be the `lastClaim.lastIndex + 1`.
+    ///   In other words, claims MUST NOT skip inputs.
+    ///
+    /// @inheritdoc IHistory
+    /// @dev Emits a `NewClaimToHistory` event. Should have access control.
     function submitClaim(
-        bytes calldata _encodedClaim
+        bytes calldata _claimData
     ) external override onlyOwner {
         (address dapp, Claim memory claim) = abi.decode(
-            _encodedClaim,
+            _claimData,
             (address, Claim)
         );
 
@@ -70,6 +105,16 @@ contract History is IHistory, Ownable {
         emit NewClaimToHistory(dapp, claim);
     }
 
+    /// @notice Get a specific claim regarding a specific DApp.
+    /// There are several requirements for this function to be called successfully.
+    ///
+    /// * `_proofContext` MUST be well-encoded. In Solidity, it can be constructed
+    ///   as `abi.encode(claimIndex)`, where `claimIndex` is the claim index (type `uint256`).
+    ///
+    /// * `claimIndex` MUST be inside the interval `[0, n)` where `n` is the number of claims
+    ///   that have been submitted to `_dapp` already.
+    ///
+    /// @inheritdoc IHistory
     function getClaim(
         address _dapp,
         bytes calldata _proofContext
@@ -81,7 +126,8 @@ contract History is IHistory, Ownable {
         return (claim.epochHash, claim.firstIndex, claim.lastIndex);
     }
 
-    // emits an `OwnershipTransfered` event (see `Ownable`)
+    /// @inheritdoc IHistory
+    /// @dev Emits an `OwnershipTransferred` event. Should have access control.
     function migrateToConsensus(
         address _consensus
     ) external override onlyOwner {

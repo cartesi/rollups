@@ -10,32 +10,34 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title History interface
 pragma solidity ^0.8.8;
 
+/// @title History interface
 interface IHistory {
     // Permissioned functions
 
-    /// @notice Submit a claim
+    /// @notice Submit a claim.
+    ///         The encoding of `_claimData` might vary
+    ///         depending on the history implementation.
     /// @param _claimData Data for submitting a claim
-    /// @dev The encoding of _claimData might vary depending on the history implementation
-    /// @dev Should have access control
+    /// @dev Should have access control.
     function submitClaim(bytes calldata _claimData) external;
 
-    /// @notice Migrate to a new consensus
+    /// @notice Transfer ownership to another consensus
     /// @param _consensus The new consensus
-    /// @dev Should have access control
+    /// @dev Should have access control.
     function migrateToConsensus(address _consensus) external;
 
     // Permissionless functions
 
-    /// @notice Get a claim
-    /// @param _dapp The DApp
+    /// @notice Get a specific claim regarding a specific DApp.
+    ///         The encoding of `_proofContext` might vary
+    ///         depending on the history implementation.
+    /// @param _dapp The DApp address
     /// @param _proofContext Data for retrieving the desired claim
-    /// @return epochHash_ The epoch hash of the claim
+    /// @return epochHash_ The claimed epoch hash
     /// @return firstInputIndex_ The index of the first input of the epoch in the input box
     /// @return lastInputIndex_ The index of the last input of the epoch in the input box
-    /// @dev The encoding of _proofContext might vary depending on the history implementation
     function getClaim(
         address _dapp,
         bytes calldata _proofContext
