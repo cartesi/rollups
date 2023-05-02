@@ -11,7 +11,7 @@
 // specific language governing permissions and limitations under the License.
 
 use rollups_events::{
-    Broker, BrokerConfig, BrokerError, DAppMetadata, Event, Hash, RollupsClaim,
+    Broker, BrokerConfig, BrokerError, DAppMetadata, Event, RollupsClaim,
     RollupsClaimsStream, RollupsData, RollupsInput, RollupsInputsStream,
     RollupsOutput, RollupsOutputsStream, INITIAL_ID,
 };
@@ -130,10 +130,12 @@ impl BrokerFacade {
     #[tracing::instrument(level = "trace", skip_all)]
     pub async fn produce_rollups_claim(
         &mut self,
-        epoch_index: u64,
-        claim: Hash,
+        rollups_claim: RollupsClaim,
     ) -> Result<()> {
-        tracing::trace!(epoch_index, ?claim, "producing rollups claim");
+        tracing::trace!(rollups_claim.epoch_index,
+            ?rollups_claim.epoch_hash,
+            "producing rollups claim"
+        );
 
         let result = self
             .client
@@ -144,7 +146,7 @@ impl BrokerFacade {
         let claim_produced = match result {
             Some(event) => {
                 tracing::trace!(?event, "got last claim produced");
-                epoch_index <= event.payload.epoch_index
+                rollups_claim.epoch_index <= event.payload.epoch_index
             }
             None => {
                 tracing::trace!("no claims in the stream");
@@ -153,7 +155,6 @@ impl BrokerFacade {
         };
 
         if !claim_produced {
-            let rollups_claim = RollupsClaim { epoch_index, claim };
             self.client
                 .produce(&self.claims_stream, rollups_claim)
                 .await
@@ -187,34 +188,34 @@ mod tests {
     use super::*;
     use backoff::ExponentialBackoff;
     use rollups_events::{
-        DAppMetadata, InputMetadata, Payload, RollupsAdvanceStateInput,
+        DAppMetadata, Hash, InputMetadata, Payload, RollupsAdvanceStateInput,
         HASH_SIZE,
     };
     use test_fixtures::BrokerFixture;
     use testcontainers::clients::Cli;
 
     struct TestState<'d> {
-        broker: BrokerFixture<'d>,
+        fixture: BrokerFixture<'d>,
         facade: BrokerFacade,
     }
 
     impl TestState<'_> {
         async fn setup(docker: &Cli) -> TestState<'_> {
-            let broker = BrokerFixture::setup(docker).await;
+            let fixture = BrokerFixture::setup(docker).await;
             let backoff = ExponentialBackoff::default();
             let dapp_metadata = DAppMetadata {
-                chain_id: broker.chain_id(),
-                dapp_address: broker.dapp_address().to_owned(),
+                chain_id: fixture.chain_id(),
+                dapp_address: fixture.dapp_address().to_owned(),
             };
             let config = BrokerConfig {
-                redis_endpoint: broker.redis_endpoint().to_owned(),
+                redis_endpoint: fixture.redis_endpoint().to_owned(),
                 consume_timeout: 10,
                 backoff,
             };
             let facade = BrokerFacade::new(config, dapp_metadata)
                 .await
                 .expect("failed to create broker facade");
-            TestState { broker, facade }
+            TestState { fixture, facade }
         }
     }
 
@@ -234,7 +235,7 @@ mod tests {
             vec![RollupsData::FinishEpoch {}, RollupsData::FinishEpoch {}];
         let mut ids = Vec::new();
         for input in inputs {
-            ids.push(state.broker.produce_input_event(input).await);
+            ids.push(state.fixture.produce_input_event(input).await);
         }
         assert_eq!(
             state.facade.find_previous_finish_epoch(1).await.unwrap(),
@@ -254,7 +255,7 @@ mod tests {
             vec![RollupsData::FinishEpoch {}, RollupsData::FinishEpoch {}];
         let mut ids = Vec::new();
         for input in inputs {
-            ids.push(state.broker.produce_input_event(input).await);
+            ids.push(state.fixture.produce_input_event(input).await);
         }
         assert!(matches!(
             state
@@ -293,7 +294,7 @@ mod tests {
         ];
         let mut ids = Vec::new();
         for input in inputs.iter() {
-            ids.push(state.broker.produce_input_event(input.clone()).await);
+            ids.push(state.fixture.produce_input_event(input.clone()).await);
         }
         assert_eq!(
             state.facade.consume_input(INITIAL_ID).await.unwrap(),
@@ -337,21 +338,24 @@ mod tests {
     async fn test_it_does_not_produce_claim_when_it_was_already_produced() {
         let docker = Cli::default();
         let mut state = TestState::setup(&docker).await;
+        let rollups_claim = RollupsClaim {
+            epoch_index: 0,
+            epoch_hash: Hash::new([0xa0; HASH_SIZE]),
+            first_index: 0,
+            last_index: 6,
+        };
         state
-            .broker
-            .produce_claim(Hash::new([0xa0; HASH_SIZE]))
+            .fixture
+            .produce_rollups_claim(rollups_claim.clone())
             .await;
         state
             .facade
-            .produce_rollups_claim(0, Hash::new([0xb0; HASH_SIZE]))
+            .produce_rollups_claim(rollups_claim.clone())
             .await
             .unwrap();
         assert_eq!(
-            state.broker.consume_all_claims().await,
-            vec![RollupsClaim {
-                epoch_index: 0,
-                claim: Hash::new([0xa0; HASH_SIZE]),
-            },]
+            state.fixture.consume_all_claims().await,
+            vec![rollups_claim]
         );
     }
 
@@ -359,28 +363,31 @@ mod tests {
     async fn test_it_produces_claims() {
         let docker = Cli::default();
         let mut state = TestState::setup(&docker).await;
+        let rollups_claim0 = RollupsClaim {
+            epoch_index: 0,
+            epoch_hash: Hash::new([0xa0; HASH_SIZE]),
+            first_index: 0,
+            last_index: 0,
+        };
+        let rollups_claim1 = RollupsClaim {
+            epoch_index: 1,
+            epoch_hash: Hash::new([0xa1; HASH_SIZE]),
+            first_index: 1,
+            last_index: 1,
+        };
         state
             .facade
-            .produce_rollups_claim(0, Hash::new([0xa0; HASH_SIZE]))
+            .produce_rollups_claim(rollups_claim0.clone())
             .await
             .unwrap();
         state
             .facade
-            .produce_rollups_claim(1, Hash::new([0xa1; HASH_SIZE]))
+            .produce_rollups_claim(rollups_claim1.clone())
             .await
             .unwrap();
         assert_eq!(
-            state.broker.consume_all_claims().await,
-            vec![
-                RollupsClaim {
-                    epoch_index: 0,
-                    claim: Hash::new([0xa0; HASH_SIZE]),
-                },
-                RollupsClaim {
-                    epoch_index: 1,
-                    claim: Hash::new([0xa1; HASH_SIZE]),
-                },
-            ]
+            state.fixture.consume_all_claims().await,
+            vec![rollups_claim0, rollups_claim1]
         );
     }
 }

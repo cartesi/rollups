@@ -13,8 +13,8 @@
 use fixtures::AdvanceRunnerFixture;
 use rand::Rng;
 use rollups_events::{
-    Hash, InputMetadata, Payload, RollupsAdvanceStateInput, RollupsData,
-    RollupsInput, HASH_SIZE, INITIAL_ID,
+    Hash, InputMetadata, Payload, RollupsAdvanceStateInput, RollupsClaim,
+    RollupsData, RollupsInput, INITIAL_ID,
 };
 use test_fixtures::{
     BrokerFixture, MachineSnapshotsFixture, ServerManagerFixture,
@@ -158,9 +158,19 @@ async fn test_advance_runner_generates_claim_after_finishing_epoch() {
 
     const N: usize = 3;
     tracing::info!("producing {} finish epoch events", N);
-    let inputs = vec![RollupsData::FinishEpoch {}; N];
-    for input in inputs {
-        state.broker.produce_input_event(input).await;
+    for i in 0..N {
+        let advance =
+            RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
+                metadata: InputMetadata {
+                    input_index: i as u64,
+                    ..Default::default()
+                },
+                payload: generate_payload(),
+                tx_hash: Hash::default(),
+            });
+        let finish = RollupsData::FinishEpoch {};
+        state.broker.produce_input_event(advance).await;
+        state.broker.produce_input_event(finish).await;
     }
 
     tracing::info!("waiting until the expected claims are generated");
@@ -172,30 +182,26 @@ async fn test_advance_runner_generates_claim_after_finishing_epoch() {
 }
 
 #[test_log::test(tokio::test)]
-async fn test_advance_runner_finishes_epoch_when_the_previous_epoch_has_inputs()
-{
+async fn test_advance_runner_finishes_epoch_when_it_has_no_inputs() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
 
-    tracing::info!("producing input, and finishing first and second epochs");
-    let inputs = vec![
-        RollupsData::AdvanceStateInput(RollupsAdvanceStateInput {
-            metadata: InputMetadata {
-                input_index: 0,
-                ..Default::default()
-            },
-            payload: Default::default(),
-            tx_hash: Hash::default(),
-        }),
-        RollupsData::FinishEpoch {},
-        RollupsData::FinishEpoch {},
-    ];
-    for input in inputs {
-        state.broker.produce_input_event(input).await;
-    }
+    tracing::info!("finishing epochs with no inputs");
+    state
+        .broker
+        .produce_input_event(RollupsData::FinishEpoch {})
+        .await;
+    state
+        .broker
+        .produce_input_event(RollupsData::FinishEpoch {})
+        .await;
 
     tracing::info!("waiting until second epoch is finished");
     state.server_manager.assert_epoch_finished(1).await;
+
+    tracing::info!("checking it didn't produce claims");
+    let claims = state.broker.consume_all_claims().await;
+    assert_eq!(claims.len(), 0);
 }
 
 /// Send an input, an finish epoch, and another input.
@@ -251,15 +257,18 @@ async fn test_advance_runner_does_not_generate_duplicate_claim() {
     let state = TestState::setup(&docker).await;
 
     tracing::info!("producing claim");
-    let claim = Hash::new([0xfa; HASH_SIZE]);
-    state.broker.produce_claim(claim.clone()).await;
+    let rollups_claim = RollupsClaim::default();
+    state
+        .broker
+        .produce_rollups_claim(rollups_claim.clone())
+        .await;
 
     finish_epoch_and_wait_for_next_input(&state).await;
 
     tracing::info!("getting all claims");
     let produced_claims = state.broker.consume_all_claims().await;
     assert_eq!(produced_claims.len(), 1);
-    assert_eq!(produced_claims[0].claim, claim);
+    assert_eq!(produced_claims[0].epoch_hash, rollups_claim.epoch_hash);
 }
 
 #[test_log::test(tokio::test)]

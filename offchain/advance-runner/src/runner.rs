@@ -218,24 +218,34 @@ impl<Snap: SnapshotManager + std::fmt::Debug + 'static> Runner<Snap> {
             .context(GetStorageDirectorySnafu)?;
         tracing::trace!(?snapshot, "got storage directory");
 
-        let (claim, proofs) = self
+        let result = self
             .server_manager
             .finish_epoch(epoch_index, &snapshot.path)
-            .await
-            .context(FinishEpochSnafu)?;
+            .await;
         tracing::trace!("finished epoch in server-manager");
 
-        self.broker
-            .produce_outputs(proofs)
-            .await
-            .context(ProduceOutputsSnafu)?;
-        tracing::trace!("produced outputs in broker");
+        match result {
+            Ok((rollups_claim, proofs)) => {
+                self.broker
+                    .produce_outputs(proofs)
+                    .await
+                    .context(ProduceOutputsSnafu)?;
+                tracing::trace!("produced outputs in broker");
 
-        self.broker
-            .produce_rollups_claim(epoch_index, claim)
-            .await
-            .context(ProduceClaimSnafu)?;
-        tracing::info!("produced epoch claim");
+                self.broker
+                    .produce_rollups_claim(rollups_claim)
+                    .await
+                    .context(ProduceClaimSnafu)?;
+                tracing::info!("produced epoch claim");
+            }
+            Err(source) => {
+                if let ServerManagerError::EmptyEpochError { .. } = source {
+                    tracing::warn!("{}", source)
+                } else {
+                    return Err(RunnerError::FinishEpochError { source });
+                }
+            }
+        }
 
         self.snapshot_manager
             .set_latest(snapshot)

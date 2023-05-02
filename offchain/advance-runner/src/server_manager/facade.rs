@@ -12,10 +12,10 @@
 
 use backoff::{future::retry, Error, ExponentialBackoff};
 use rollups_events::{
-    Hash, InputMetadata as RollupsInputMetadata, Payload, RollupsNotice,
-    RollupsOutput, RollupsReport, RollupsVoucher,
+    InputMetadata as RollupsInputMetadata, Payload, RollupsClaim,
+    RollupsNotice, RollupsOutput, RollupsReport, RollupsVoucher,
 };
-use snafu::ResultExt;
+use snafu::{OptionExt, ResultExt};
 use std::path::Path;
 use tonic::{transport::Channel, Request};
 use uuid::Uuid;
@@ -29,13 +29,14 @@ use grpc_interfaces::cartesi_server_manager::{
     StartSessionRequest,
 };
 
-use super::claim::compute_claim_hash;
+use super::claim::compute_epoch_hash;
 use super::config::ServerManagerConfig;
 use super::conversions::{
     convert_address, convert_hash, convert_proof, get_field,
 };
 use super::error::{
-    ConnectionSnafu, InvalidProcessedInputSnafu, ServerManagerError,
+    ConnectionSnafu, EmptyEpochSnafu, InvalidProcessedInputSnafu,
+    ServerManagerError,
 };
 
 /// Call the grpc method passing an unique request-id and with retry
@@ -281,20 +282,20 @@ impl ServerManagerFacade {
     #[tracing::instrument(level = "trace", skip_all)]
     pub async fn finish_epoch(
         &mut self,
-        active_epoch_index: u64,
+        epoch_index: u64,
         storage_directory: &Path,
-    ) -> Result<(Hash, Vec<RollupsOutput>)> {
-        tracing::info!(active_epoch_index, "sending finish epoch");
+    ) -> Result<(RollupsClaim, Vec<RollupsOutput>)> {
+        tracing::info!(epoch_index, "sending finish epoch");
 
         // Wait for pending inputs before sending a finish request
-        let processed_input_count_within_epoch = self
-            .wait_for_pending_inputs(active_epoch_index)
-            .await?
-            .len() as u64;
+        let processed_inputs =
+            self.wait_for_pending_inputs(epoch_index).await?;
+        let processed_input_count_within_epoch = processed_inputs.len() as u64;
+
         let response = grpc_call!(self, finish_epoch, {
             FinishEpochRequest {
                 session_id: self.config.session_id.to_owned(),
-                active_epoch_index,
+                active_epoch_index: epoch_index,
                 processed_input_count_within_epoch,
                 storage_directory: storage_directory
                     .to_string_lossy()
@@ -302,18 +303,24 @@ impl ServerManagerFacade {
             }
         })?;
 
+        // Only try to get first and last after making the finish epoch request
+        let (first_input, last_input) = processed_inputs
+            .first()
+            .zip(processed_inputs.last())
+            .context(EmptyEpochSnafu { epoch_index })?;
+
         let vouchers_metadata_hash =
             convert_hash(get_field!(response.vouchers_epoch_root_hash))?;
         let notices_metadata_hash =
             convert_hash(get_field!(response.notices_epoch_root_hash))?;
         let machine_state_hash =
             convert_hash(get_field!(response.machine_hash))?;
-        let claim = compute_claim_hash(
+        let epoch_hash = compute_epoch_hash(
             &vouchers_metadata_hash,
             &notices_metadata_hash,
             &machine_state_hash,
         );
-        tracing::trace!(?claim, "computed claim hash");
+        tracing::trace!(?epoch_hash, "computed epoch hash");
 
         let mut proofs = vec![];
         for proof in response.proofs {
@@ -322,7 +329,14 @@ impl ServerManagerFacade {
         }
         tracing::trace!(?proofs, "got proofs");
 
-        Ok((claim, proofs))
+        let rollups_claim = RollupsClaim {
+            epoch_index,
+            epoch_hash,
+            first_index: first_input.input_index as u128,
+            last_index: last_input.input_index as u128,
+        };
+
+        Ok((rollups_claim, proofs))
     }
 
     /// Wait until the server-manager processes all pending inputs

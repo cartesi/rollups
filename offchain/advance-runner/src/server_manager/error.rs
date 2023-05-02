@@ -56,4 +56,10 @@ pub enum ServerManagerError {
         got
     ))]
     InvalidProcessedInputError { expected: u64, got: u64 },
+
+    #[snafu(display(
+        "can't generate claim for epoch {} because it has no inputs",
+        epoch_index
+    ))]
+    EmptyEpochError { epoch_index: u64 },
 }

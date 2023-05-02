@@ -12,7 +12,7 @@
 
 use backoff::ExponentialBackoff;
 use rollups_events::{
-    Address, Broker, BrokerConfig, DAppMetadata, Event, Hash, RedactedUrl,
+    Address, Broker, BrokerConfig, DAppMetadata, Event, RedactedUrl,
     RollupsClaim, RollupsClaimsStream, RollupsData, RollupsInput,
     RollupsInputsStream, RollupsOutput, RollupsOutputsStream, Url,
     ADDRESS_SIZE, INITIAL_ID,
@@ -173,24 +173,29 @@ impl BrokerFixture<'_> {
 
     /// Produce the claim given the hash
     #[tracing::instrument(level = "trace", skip_all)]
-    pub async fn produce_claim(&self, claim: Hash) {
-        tracing::trace!(?claim, "producing rollups-claim event");
-        let last_claim = self
-            .client
-            .lock()
-            .await
-            .peek_latest(&self.claims_stream)
-            .await
-            .expect("failed to get latest claim");
-        let epoch_index = match last_claim {
-            Some(event) => event.payload.epoch_index + 1,
-            None => 0,
-        };
-        let claim = RollupsClaim { epoch_index, claim };
+    pub async fn produce_rollups_claim(&self, rollups_claim: RollupsClaim) {
+        tracing::trace!(?rollups_claim.epoch_hash, "producing rollups-claim event");
+        {
+            let last_claim = self
+                .client
+                .lock()
+                .await
+                .peek_latest(&self.claims_stream)
+                .await
+                .expect("failed to get latest claim");
+            let epoch_index = match last_claim {
+                Some(event) => event.payload.epoch_index + 1,
+                None => 0,
+            };
+            assert_eq!(
+                rollups_claim.epoch_index, epoch_index,
+                "invalid epoch index",
+            );
+        }
         self.client
             .lock()
             .await
-            .produce(&self.claims_stream, claim)
+            .produce(&self.claims_stream, rollups_claim)
             .await
             .expect("failed to produce claim");
     }

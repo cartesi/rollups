@@ -209,14 +209,14 @@ impl BrokerSend for BrokerFacade {
 #[async_trait]
 impl BrokerReceive for BrokerFacade {
     #[tracing::instrument(level = "trace", skip_all)]
-    async fn next_claim(&self) -> Result<Option<super::RollupClaim>> {
+    async fn next_claim(&self) -> Result<Option<RollupsClaim>> {
         let mut last_id = self.last_claim_id.lock().await;
         tracing::trace!(?last_id, "getting next epoch claim");
 
         match self.claim(&last_id).await? {
             Some(event) => {
                 *last_id = event.id.clone();
-                Ok(Some(event.into()))
+                Ok(Some(event.payload))
             }
             None => Ok(None),
         }
@@ -312,15 +312,6 @@ fn build_next_finish_epoch(status: &BrokerStreamStatus) -> RollupsInput {
     }
 }
 
-impl From<Event<RollupsClaim>> for super::RollupClaim {
-    fn from(event: Event<RollupsClaim>) -> Self {
-        super::RollupClaim {
-            hash: event.payload.claim.into_inner(),
-            number: event.payload.epoch_index,
-        }
-    }
-}
-
 #[cfg(test)]
 mod broker_facade_tests {
     use std::{sync::Arc, time::Duration};
@@ -328,7 +319,7 @@ mod broker_facade_tests {
     use backoff::ExponentialBackoffBuilder;
     use rollups_events::{
         BrokerConfig, DAppMetadata, Hash, InputMetadata, Payload, RedactedUrl,
-        RollupsAdvanceStateInput, RollupsData, Url, HASH_SIZE,
+        RollupsAdvanceStateInput, RollupsClaim, RollupsData, Url, HASH_SIZE,
     };
     use state_fold_types::{
         ethereum_types::{Bloom, H160, H256, U256, U64},
@@ -514,15 +505,14 @@ mod broker_facade_tests {
         let docker = Cli::default();
         let (fixture, broker) = setup(&docker).await;
 
-        let hashes = produce_claims(&fixture, 1).await;
-        let claim = broker
+        let fixture_rollups_claims = produce_claims(&fixture, 1).await;
+        let fixture_rollups_claim = fixture_rollups_claims.first().unwrap();
+        let broker_rollups_claim = broker
             .next_claim()
             .await
             .expect("'next_claim' function failed")
             .expect("no claims retrieved");
-
-        assert_eq!(hashes[0].inner().to_owned(), claim.hash);
-        assert_eq!(0, claim.number);
+        assert_eq!(broker_rollups_claim, *fixture_rollups_claim);
     }
 
     #[tokio::test]
@@ -531,15 +521,14 @@ mod broker_facade_tests {
         let (fixture, broker) = setup(&docker).await;
 
         let n = 3;
-        let hashes = produce_claims(&fixture, n).await;
+        let rollups_claims = produce_claims(&fixture, n).await;
         for i in 0..n {
-            let claim = broker
+            let rollups_claim = broker
                 .next_claim()
                 .await
                 .expect("'next_claim' function failed")
                 .expect("no claims retrieved");
-            assert_eq!(hashes[i as usize].inner().to_owned(), claim.hash);
-            assert_eq!(i as u64, claim.number);
+            assert_eq!(rollups_claim, rollups_claims[i as usize]);
         }
     }
 
@@ -549,15 +538,21 @@ mod broker_facade_tests {
         let (fixture, broker) = setup(&docker).await;
 
         for i in 0..5 {
-            let hash = Hash::new([i; HASH_SIZE]);
-            fixture.produce_claim(hash.clone()).await;
-            let claim = broker
+            let fixture_rollups_claim = RollupsClaim {
+                epoch_index: i,
+                epoch_hash: Hash::new([i as u8; HASH_SIZE]),
+                first_index: i as u128,
+                last_index: i as u128,
+            };
+            fixture
+                .produce_rollups_claim(fixture_rollups_claim.clone())
+                .await;
+            let broker_rollups_claim = broker
                 .next_claim()
                 .await
                 .expect("'next_claim' function failed")
                 .expect("no claims retrieved");
-            assert_eq!(hash.inner().to_owned(), claim.hash);
-            assert_eq!(i as u64, claim.number);
+            assert_eq!(fixture_rollups_claim, broker_rollups_claim);
         }
     }
 
@@ -631,13 +626,21 @@ mod broker_facade_tests {
             .await;
     }
 
-    async fn produce_claims(fixture: &BrokerFixture<'_>, n: u32) -> Vec<Hash> {
-        let mut hashes = Vec::new();
+    async fn produce_claims(
+        fixture: &BrokerFixture<'_>,
+        n: u64,
+    ) -> Vec<RollupsClaim> {
+        let mut rollups_claims = Vec::new();
         for i in 0..n {
-            let hash = Hash::new([i as u8; HASH_SIZE]);
-            fixture.produce_claim(hash.clone()).await;
-            hashes.push(hash);
+            let rollups_claim = RollupsClaim {
+                epoch_index: i,
+                epoch_hash: Hash::new([i as u8; HASH_SIZE]),
+                first_index: i as u128,
+                last_index: i as u128,
+            };
+            fixture.produce_rollups_claim(rollups_claim.clone()).await;
+            rollups_claims.push(rollups_claim);
         }
-        hashes
+        rollups_claims
     }
 }

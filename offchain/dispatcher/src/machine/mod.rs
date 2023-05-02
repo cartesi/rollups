@@ -1,5 +1,6 @@
 pub mod rollups_broker;
 
+use rollups_events::RollupsClaim;
 use types::foldables::input_box::Input;
 
 use anyhow::Result;
@@ -20,12 +21,6 @@ impl Default for RollupStatus {
     }
 }
 
-#[derive(Debug)]
-pub struct RollupClaim {
-    pub hash: [u8; 32],
-    pub number: u64,
-}
-
 #[async_trait]
 pub trait BrokerStatus: std::fmt::Debug {
     async fn status(&self) -> Result<RollupStatus>;
@@ -43,5 +38,5 @@ pub trait BrokerSend: std::fmt::Debug {
 
 #[async_trait]
 pub trait BrokerReceive: std::fmt::Debug {
-    async fn next_claim(&self) -> Result<Option<RollupClaim>>;
+    async fn next_claim(&self) -> Result<Option<RollupsClaim>>;
 }

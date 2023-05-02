@@ -13,7 +13,7 @@
 use rollups_events::{Hash, HASH_SIZE};
 use sha3::{Digest, Keccak256};
 
-pub fn compute_claim_hash(
+pub fn compute_epoch_hash(
     machine_state_hash: &Hash,
     vouchers_metadata_hash: &Hash,
     notices_metadata_hash: &Hash,
@@ -28,7 +28,7 @@ pub fn compute_claim_hash(
 
 #[cfg(test)]
 mod tests {
-    use super::{compute_claim_hash, Hash};
+    use super::{compute_epoch_hash, Hash};
 
     #[test_log::test]
     fn test_claim_hash() {
@@ -40,7 +40,7 @@ mod tests {
             .try_into()
             .unwrap()
         );
-        let claim = compute_claim_hash(&hash, &hash, &hash);
+        let claim = compute_epoch_hash(&hash, &hash, &hash);
         let expected = Hash::new(
             hex::decode(
                 "8590bbc3ea43e28e8624fb1a2d59aaca701a5517e08511c4a14d9037de6f6086",

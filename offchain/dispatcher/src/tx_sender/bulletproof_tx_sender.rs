@@ -1,6 +1,7 @@
-use super::TxSender;
-
-use contracts::authority::Authority;
+use anyhow::Result;
+use async_trait::async_trait;
+use std::sync::Arc;
+use tracing::{instrument, trace};
 
 use eth_tx_manager::{
     database::FileSystemDatabase as TxDatabase,
@@ -10,16 +11,20 @@ use eth_tx_manager::{
     TransactionManager,
 };
 
-use state_fold_types::ethers::{
-    prelude::NameOrAddress,
-    providers::{Middleware, MockProvider, Provider},
-    types::Address,
+use contracts::{authority::Authority, history::Claim};
+use rollups_events::RollupsClaim;
+use state_fold_types::{
+    ethabi::Token,
+    ethers::{
+        self,
+        abi::AbiEncode,
+        prelude::NameOrAddress,
+        providers::{Middleware, MockProvider, Provider},
+        types::{Address, Bytes},
+    },
 };
 
-use anyhow::Result;
-use async_trait::async_trait;
-use std::sync::Arc;
-use tracing::{instrument, trace};
+use super::TxSender;
 
 #[derive(Debug)]
 pub struct BulletproofTxSender<M>
@@ -36,6 +41,24 @@ struct Constants {
     priority: Priority,
     sender_address: Address,
     authority_consensus: Authority<Provider<MockProvider>>,
+}
+
+struct SubmittableClaim(Address, RollupsClaim);
+
+impl From<SubmittableClaim> for Bytes {
+    fn from(submittable_claim: SubmittableClaim) -> Self {
+        let SubmittableClaim(dapp_address, claim) = submittable_claim;
+        let claim = Claim {
+            epoch_hash: claim.epoch_hash.into_inner(),
+            first_index: claim.first_index,
+            last_index: claim.last_index,
+        };
+        ethers::abi::encode(&[
+            Token::Address(dapp_address),
+            Token::FixedBytes(claim.encode()),
+        ])
+        .into()
+    }
 }
 
 impl<M> BulletproofTxSender<M>
@@ -75,12 +98,18 @@ where
     M: Middleware + Send + Sync + 'static,
 {
     #[instrument(level = "trace")]
-    async fn send_claim_tx(self, claim: &[u8; 32]) -> Result<Self> {
+    async fn submit_claim(
+        self,
+        dapp_address: Address,
+        rollups_claim: RollupsClaim,
+    ) -> Result<Self> {
         let claim_tx = {
             let call = self
                 .constants
                 .authority_consensus
-                .submit_claim(claim.into())
+                .submit_claim(
+                    SubmittableClaim(dapp_address, rollups_claim).into(),
+                )
                 .from(self.constants.sender_address);
 
             Transaction {

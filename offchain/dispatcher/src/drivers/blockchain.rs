@@ -1,12 +1,11 @@
-use crate::machine::BrokerReceive;
-use crate::tx_sender::TxSender;
+use anyhow::Result;
+use tracing::{info, instrument, trace};
 
 use state_fold_types::ethereum_types::Address;
 use types::foldables::claims::History;
 
-use anyhow::Result;
-
-use tracing::{info, instrument, trace};
+use crate::machine::BrokerReceive;
+use crate::tx_sender::TxSender;
 
 #[derive(Debug)]
 pub struct BlockchainDriver {
@@ -28,11 +27,13 @@ impl BlockchainDriver {
         let claims_sent = claims_sent(history, &self.dapp_address);
         trace!(?claims_sent);
 
-        while let Some(claim) = broker.next_claim().await? {
-            trace!("Got claim `{:?}` from broker", claim);
-            if claim.number > claims_sent {
-                info!("Sending claim `{:?}`", claim);
-                tx_sender = tx_sender.send_claim_tx(&claim.hash).await?;
+        while let Some(rollups_claim) = broker.next_claim().await? {
+            trace!("Got claim `{:?}` from broker", rollups_claim);
+            if rollups_claim.epoch_index > claims_sent {
+                info!("Sending claim `{:?}`", rollups_claim);
+                tx_sender = tx_sender
+                    .submit_claim(self.dapp_address, rollups_claim)
+                    .await?;
             }
         }
 
@@ -49,10 +50,10 @@ fn claims_sent(history: &History, dapp_address: &Address) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use rand::Rng;
+    use rollups_events::{RollupsClaim, HASH_SIZE};
     use state_fold_types::ethereum_types::H160;
 
-    use crate::{drivers::mock, machine::RollupClaim};
+    use crate::drivers::mock;
 
     use super::BlockchainDriver;
 
@@ -130,12 +131,11 @@ mod tests {
 
         let next_claims = next_claims
             .iter()
-            .map(|n| {
-                let mut rng = rand::thread_rng();
-                let hash = (0..32).map(|_| rng.gen()).collect::<Vec<u8>>();
-                assert_eq!(hash.len(), 32);
-                let hash: [u8; 32] = hash.try_into().unwrap();
-                RollupClaim { hash, number: *n }
+            .map(|i| RollupsClaim {
+                epoch_hash: [*i as u8; HASH_SIZE].into(),
+                epoch_index: *i,
+                first_index: *i as u128,
+                last_index: *i as u128,
             })
             .collect();
         let broker = mock::Broker::new(vec![], next_claims);
@@ -156,24 +156,24 @@ mod tests {
     // broker has 1 (new) claim -- sent 1 claim
     #[tokio::test]
     async fn react_1_new_claim_sent_1_claim() {
-        test_react(vec![6], 1).await;
+        test_react(vec![5], 1).await;
     }
 
     // broker has 1 (old) claim -- sent 0 claims
     #[tokio::test]
     async fn react_1_old_claim_sent_0_claims() {
-        test_react(vec![5], 0).await;
+        test_react(vec![4], 0).await;
     }
 
     // broker has 2 claims (1 old, 1 new) -- sent 1 claim
     #[tokio::test]
     async fn react_2_claims_sent_1_claim() {
-        test_react(vec![5, 6], 1).await;
+        test_react(vec![4, 5], 1).await;
     }
 
     // broker has interleaved old and new claims -- sent 5 new claims
     #[tokio::test]
     async fn react_interleaved_old_new_claims_sent_5_claims() {
-        test_react(vec![1, 5, 6, 2, 3, 7, 8, 4, 5, 9, 10], 5).await;
+        test_react(vec![0, 4, 5, 1, 2, 6, 7, 3, 4, 8, 9], 5).await;
     }
 }
