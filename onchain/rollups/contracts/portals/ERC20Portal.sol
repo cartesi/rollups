@@ -10,25 +10,23 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title ERC-20 Portal
 pragma solidity ^0.8.8;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IERC20Portal} from "./IERC20Portal.sol";
+import {Portal} from "./Portal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
-contract ERC20Portal is IERC20Portal {
-    IInputBox internal immutable inputBox;
-
-    constructor(IInputBox _inputBox) {
-        inputBox = _inputBox;
-    }
-
-    function getInputBox() external view override returns (IInputBox) {
-        return inputBox;
-    }
+/// @title ERC-20 Portal
+///
+/// @notice This contract allows anyone to perform transfers of
+/// ERC-20 tokens to a DApp while informing the off-chain machine.
+contract ERC20Portal is Portal, IERC20Portal {
+    /// @notice Constructs the portal.
+    /// @param _inputBox The input box used by the portal
+    constructor(IInputBox _inputBox) Portal(_inputBox) {}
 
     function depositERC20Tokens(
         IERC20 _token,

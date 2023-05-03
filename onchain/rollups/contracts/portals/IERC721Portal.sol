@@ -10,25 +10,27 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title ERC-721 Portal interface
 pragma solidity ^0.8.8;
 
 import {IPortal} from "./IPortal.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+/// @title ERC-721 Portal interface
 interface IERC721Portal is IPortal {
     // Permissionless functions
 
     /// @notice Transfer an ERC-721 token to a DApp and add an input to
-    ///         the DApp's input box to signal such operation.
+    /// the DApp's input box to signal such operation.
+    ///
+    /// The caller must change the approved address for the ERC-721 token
+    /// to the portal address beforehand, by calling the `approve` function in the
+    /// token contract.
+    ///
     /// @param _token The ERC-721 token contract
     /// @param _dapp The address of the DApp
-    /// @param _tokenId The identifier of the NFT being transferred
+    /// @param _tokenId The identifier of the token being transferred
     /// @param _baseLayerData Additional data to be interpreted by the base layer
-    ///                (forwarded to the ERC-721 token contract)
     /// @param _execLayerData Additional data to be interpreted by the execution layer
-    /// @dev The caller must allow the portal to withdraw the token
-    ///      from their account beforehand.
     function depositERC721Token(
         IERC721 _token,
         address _dapp,

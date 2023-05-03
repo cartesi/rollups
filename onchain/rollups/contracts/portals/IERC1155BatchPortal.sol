@@ -10,27 +10,29 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title ERC-1155 Batch Transfer Portal Interface
 pragma solidity ^0.8.8;
 
-import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IPortal} from "./IPortal.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
+/// @title ERC-1155 Batch Transfer Portal interface
 interface IERC1155BatchPortal is IPortal {
     // Permissionless functions
 
     /// @notice Transfer a batch of ERC-1155 tokens to a DApp and add an input to
-    ///         the DApp's input box to signal such operation.
+    /// the DApp's input box to signal such operation.
+    ///
+    /// The caller must enable approval for the portal to manage all of their tokens
+    /// beforehand, by calling the `setApprovalForAll` function in the token contract.
+    ///
     /// @param _token The ERC-1155 token contract
     /// @param _dapp The address of the DApp
     /// @param _tokenIds The identifiers of the tokens being transferred
     /// @param _values Transfer amounts per token type
     /// @param _baseLayerData Additional data to be interpreted by the base layer
     /// @param _execLayerData Additional data to be interpreted by the execution layer
-    /// @dev Requirements:
-    // `ids` and `amounts` must have the same length.
-    //  If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the
-    //  acceptance magic value.
+    ///
+    /// @dev Please make sure `_tokenIds` and `_values` have the same length.
     function depositBatchERC1155Token(
         IERC1155 _token,
         address _dapp,

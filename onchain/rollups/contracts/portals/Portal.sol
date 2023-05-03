@@ -12,13 +12,22 @@
 
 pragma solidity ^0.8.8;
 
+import {IPortal} from "./IPortal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 
-/// @title Portal interface
-interface IPortal {
-    // Permissionless functions
+/// @title Portal
+/// @notice This contract serves as a base for all the other portals.
+contract Portal is IPortal {
+    /// @notice The input box used by the portal.
+    IInputBox internal immutable inputBox;
 
-    /// @notice Get the input box used by this portal.
-    /// @return The input box
-    function getInputBox() external view returns (IInputBox);
+    /// @notice Constructs the portal.
+    /// @param _inputBox The input box used by the portal
+    constructor(IInputBox _inputBox) {
+        inputBox = _inputBox;
+    }
+
+    function getInputBox() external view override returns (IInputBox) {
+        return inputBox;
+    }
 }

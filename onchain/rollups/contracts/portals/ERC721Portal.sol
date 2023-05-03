@@ -10,25 +10,23 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title ERC-721 Portal
 pragma solidity ^0.8.8;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {IERC721Portal} from "./IERC721Portal.sol";
+import {Portal} from "./Portal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
-contract ERC721Portal is IERC721Portal {
-    IInputBox internal immutable inputBox;
-
-    constructor(IInputBox _inputBox) {
-        inputBox = _inputBox;
-    }
-
-    function getInputBox() external view override returns (IInputBox) {
-        return inputBox;
-    }
+/// @title ERC-721 Portal
+///
+/// @notice This contract allows anyone to perform transfers of
+/// ERC-721 tokens to a DApp while informing the off-chain machine.
+contract ERC721Portal is Portal, IERC721Portal {
+    /// @notice Constructs the portal.
+    /// @param _inputBox The input box used by the portal
+    constructor(IInputBox _inputBox) Portal(_inputBox) {}
 
     function depositERC721Token(
         IERC721 _token,

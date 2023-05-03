@@ -10,23 +10,21 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Ether Portal
 pragma solidity ^0.8.8;
 
 import {IEtherPortal} from "./IEtherPortal.sol";
+import {Portal} from "./Portal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
-contract EtherPortal is IEtherPortal {
-    IInputBox internal immutable inputBox;
-
-    constructor(IInputBox _inputBox) {
-        inputBox = _inputBox;
-    }
-
-    function getInputBox() external view override returns (IInputBox) {
-        return inputBox;
-    }
+/// @title Ether Portal
+///
+/// @notice This contract allows anyone to perform transfers of
+/// Ether to a DApp while informing the off-chain machine.
+contract EtherPortal is Portal, IEtherPortal {
+    /// @notice Constructs the portal.
+    /// @param _inputBox The input box used by the portal
+    constructor(IInputBox _inputBox) Portal(_inputBox) {}
 
     function depositEther(
         address _dapp,

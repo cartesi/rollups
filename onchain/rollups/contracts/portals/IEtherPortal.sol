@@ -10,19 +10,21 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Ether Portal interface
 pragma solidity ^0.8.8;
 
 import {IPortal} from "./IPortal.sol";
 
+/// @title Ether Portal interface
 interface IEtherPortal is IPortal {
     // Permissionless functions
 
     /// @notice Transfer Ether to a DApp and add an input to
-    ///         the DApp's input box to signal such operation.
+    /// the DApp's input box to signal such operation.
+    ///
+    /// All the value sent through this function is forwarded to the DApp.
+    ///
     /// @param _dapp The address of the DApp
     /// @param _execLayerData Additional data to be interpreted by the execution layer
-    /// @dev All the value sent through this function is forwarded to the DApp
     function depositEther(
         address _dapp,
         bytes calldata _execLayerData
