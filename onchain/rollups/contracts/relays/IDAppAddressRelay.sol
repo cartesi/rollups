@@ -10,15 +10,15 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title DApp Address Relay interface
 pragma solidity ^0.8.8;
 
 import {IRelay} from "./IRelay.sol";
 
+/// @title DApp Address Relay interface
 interface IDAppAddressRelay is IRelay {
     // Permissionless functions
 
-    /// @notice Add an input to a DApp's input box with its address
-    /// @param _dapp the DApp's address
+    /// @notice Add an input to a DApp's input box with its address.
+    /// @param _dapp The address of the DApp
     function relayDAppAddress(address _dapp) external;
 }

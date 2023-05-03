@@ -12,13 +12,22 @@
 
 pragma solidity ^0.8.8;
 
+import {IRelay} from "./IRelay.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 
-/// @title Relay interface
-interface IRelay {
-    // Permissionless functions
+/// @title Relay
+/// @notice This contract serves as a base for all the other relays.
+contract Relay is IRelay {
+    /// @notice The input box used by the relay.
+    IInputBox internal immutable inputBox;
 
-    /// @notice Get the input box used by this relay.
-    /// @return The input box
-    function getInputBox() external view returns (IInputBox);
+    /// @notice Constructs the relay.
+    /// @param _inputBox The input box used by the relay
+    constructor(IInputBox _inputBox) {
+        inputBox = _inputBox;
+    }
+
+    function getInputBox() external view override returns (IInputBox) {
+        return inputBox;
+    }
 }

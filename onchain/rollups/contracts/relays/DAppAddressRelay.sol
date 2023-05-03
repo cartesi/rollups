@@ -10,23 +10,21 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title DApp Address Relay
 pragma solidity ^0.8.8;
 
 import {IDAppAddressRelay} from "./IDAppAddressRelay.sol";
+import {Relay} from "./Relay.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
-contract DAppAddressRelay is IDAppAddressRelay {
-    IInputBox internal immutable inputBox;
-
-    constructor(IInputBox _inputBox) {
-        inputBox = _inputBox;
-    }
-
-    function getInputBox() external view override returns (IInputBox) {
-        return inputBox;
-    }
+/// @title DApp Address Relay
+///
+/// @notice This contract allows anyone to informing the off-chain machine
+/// of the address of the DApp contract in a trustless and permissionless way.
+contract DAppAddressRelay is Relay, IDAppAddressRelay {
+    /// @notice Constructs the relay.
+    /// @param _inputBox The input box used by the relay
+    constructor(IInputBox _inputBox) Relay(_inputBox) {}
 
     function relayDAppAddress(address _dapp) external override {
         bytes memory input = InputEncoding.encodeDAppAddressRelay(_dapp);
