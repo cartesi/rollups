@@ -10,14 +10,21 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Input Library
 pragma solidity ^0.8.8;
 
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 
+/// @title Input Library
 library LibInput {
     using CanonicalMachine for CanonicalMachine.Log2Size;
 
+    /// @notice Summarize input data in a single hash.
+    /// @param sender `msg.sender`
+    /// @param blockNumber `block.number`
+    /// @param blockTimestamp `block.timestamp`
+    /// @param input The input blob
+    /// @param inboxInputIndex The index of the input in the input box
+    /// @return The input hash
     function computeInputHash(
         address sender,
         uint256 blockNumber,

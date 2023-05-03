@@ -10,21 +10,20 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Output Validation Library
 pragma solidity ^0.8.8;
 
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {MerkleV2} from "@cartesi/util/contracts/MerkleV2.sol";
 import {OutputEncoding} from "../common/OutputEncoding.sol";
 
-/// @param inputIndex which input, inside the epoch, the output belongs to
-/// @param outputIndex index of output emitted by the input
+/// @param inputIndex Which input, inside the epoch, the output belongs to
+/// @param outputIndex Index of output emitted by the input
 /// @param outputHashesRootHash Merkle root of hashes of outputs emitted by the input
-/// @param vouchersEpochRootHash merkle root of all epoch's voucher metadata hashes
-/// @param noticesEpochRootHash merkle root of all epoch's notice metadata hashes
-/// @param machineStateHash hash of the machine state claimed this epoch
-/// @param keccakInHashesSiblings proof that this output metadata is in metadata memory range
-/// @param outputHashesInEpochSiblings proof that this output metadata is in epoch's output memory range
+/// @param vouchersEpochRootHash Merkle root of all epoch's voucher metadata hashes
+/// @param noticesEpochRootHash Merkle root of all epoch's notice metadata hashes
+/// @param machineStateHash Hash of the machine state claimed this epoch
+/// @param keccakInHashesSiblings Proof that this output metadata is in metadata memory range
+/// @param outputHashesInEpochSiblings Proof that this output metadata is in epoch's output memory range
 struct OutputValidityProof {
     uint64 inputIndex;
     uint64 outputIndex;
@@ -36,19 +35,20 @@ struct OutputValidityProof {
     bytes32[] outputHashesInEpochSiblings;
 }
 
+/// @title Output Validation Library
 library LibOutputValidation {
     using CanonicalMachine for CanonicalMachine.Log2Size;
 
-    /// @notice Make sure the output proof is valid, otherwise revert
-    /// @param v the output validity proof
-    /// @param encodedOutput the encoded output
-    /// @param epochHash the hash of the epoch in which the output was generated
-    /// @param outputsEpochRootHash either v.vouchersEpochRootHash (for vouchers)
-    ///                              or v.noticesEpochRootHash (for notices)
-    /// @param outputEpochLog2Size either EPOCH_VOUCHER_LOG2_SIZE (for vouchers)
-    ///                             or EPOCH_NOTICE_LOG2_SIZE (for notices)
-    /// @param outputHashesLog2Size either VOUCHER_METADATA_LOG2_SIZE (for vouchers)
-    ///                              or NOTICE_METADATA_LOG2_SIZE (for notices)
+    /// @notice Make sure the output proof is valid, otherwise revert.
+    /// @param v The output validity proof
+    /// @param encodedOutput The encoded output
+    /// @param epochHash The hash of the epoch in which the output was generated
+    /// @param outputsEpochRootHash Either `v.vouchersEpochRootHash` (for vouchers)
+    ///                             or `v.noticesEpochRootHash` (for notices)
+    /// @param outputEpochLog2Size Either `EPOCH_VOUCHER_LOG2_SIZE` (for vouchers)
+    ///                            or `EPOCH_NOTICE_LOG2_SIZE` (for notices)
+    /// @param outputHashesLog2Size Either `VOUCHER_METADATA_LOG2_SIZE` (for vouchers)
+    ///                             or `NOTICE_METADATA_LOG2_SIZE` (for notices)
     function validateEncodedOutput(
         OutputValidityProof calldata v,
         bytes memory encodedOutput,
@@ -123,11 +123,11 @@ library LibOutputValidation {
         );
     }
 
-    /// @notice Make sure the output proof is valid, otherwise revert
-    /// @param v the output validity proof
-    /// @param destination The contract that will execute the payload
-    /// @param payload The ABI-encoded function call
-    /// @param epochHash the hash of the epoch in which the output was generated
+    /// @notice Make sure the output proof is valid, otherwise revert.
+    /// @param v The output validity proof
+    /// @param destination The message call destination address
+    /// @param payload The message call payload
+    /// @param epochHash The hash of the epoch in which the output was generated
     function validateVoucher(
         OutputValidityProof calldata v,
         address destination,
@@ -148,10 +148,10 @@ library LibOutputValidation {
         );
     }
 
-    /// @notice Make sure the output proof is valid, otherwise revert
-    /// @param v the output validity proof
+    /// @notice Make sure the output proof is valid, otherwise revert.
+    /// @param v The output validity proof
     /// @param notice The notice
-    /// @param epochHash the hash of the epoch in which the output was generated
+    /// @param epochHash The hash of the epoch in which the output was generated
     function validateNotice(
         OutputValidityProof calldata v,
         bytes calldata notice,
@@ -168,10 +168,10 @@ library LibOutputValidation {
         );
     }
 
-    /// @notice Get the position of a voucher on the bit mask
-    /// @param voucher the index of voucher from those generated by such input
-    /// @param input the index of the input in the DApp's input box
-    /// @return position of the voucher on the bit mask
+    /// @notice Get the position of a voucher on the bit mask.
+    /// @param voucher The index of voucher from those generated by such input
+    /// @param input The index of the input in the DApp's input box
+    /// @return Position of the voucher on the bit mask
     function getBitMaskPosition(
         uint256 voucher,
         uint256 input
@@ -182,12 +182,12 @@ library LibOutputValidation {
         return (((voucher << 128) | input));
     }
 
-    /// @notice Validate input index range and get the inbox input index
-    /// @param v the output validity proof
-    /// @param firstInputIndex the index of the first input of the epoch in the input box
-    /// @param lastInputIndex the index of the last input of the epoch in the input box
-    /// @return the index of the input in the DApp's input box
-    /// @dev reverts if epoch input index is not compatible with the provided input index range
+    /// @notice Validate input index range and get the inbox input index.
+    /// @param v The output validity proof
+    /// @param firstInputIndex The index of the first input of the epoch in the input box
+    /// @param lastInputIndex The index of the last input of the epoch in the input box
+    /// @return The index of the input in the DApp's input box
+    /// @dev Reverts if epoch input index is not compatible with the provided input index range.
     function validateInputIndexRange(
         OutputValidityProof calldata v,
         uint256 firstInputIndex,
