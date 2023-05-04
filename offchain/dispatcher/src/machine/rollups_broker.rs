@@ -164,7 +164,7 @@ impl BrokerSend for BrokerFacade {
         input_index: u64,
         input: &Input,
     ) -> Result<()> {
-        tracing::trace!(?input_index, ?input, "enqueueing input");
+        tracing::info!(?input_index, ?input, "enqueueing input");
 
         let mut broker = self.broker.lock().await;
         let status = self.broker_status(&mut broker).await?;
@@ -185,7 +185,7 @@ impl BrokerSend for BrokerFacade {
 
     #[tracing::instrument(level = "trace", skip_all)]
     async fn finish_epoch(&self, inputs_sent_count: u64) -> Result<()> {
-        tracing::trace!(?inputs_sent_count, "finishing epoch");
+        tracing::info!(?inputs_sent_count, "finishing epoch");
 
         let mut broker = self.broker.lock().await;
         let status = self.broker_status(&mut broker).await?;

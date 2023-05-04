@@ -17,11 +17,11 @@ use types::foldables::authority::rollups::{RollupsInitialState, RollupsState};
 
 use anyhow::{bail, Result};
 use tokio_stream::{Stream, StreamExt};
-use tracing::{debug, error, instrument, trace, warn};
+use tracing::{error, info, instrument, trace, warn};
 
 #[instrument(level = "trace", skip_all)]
 pub async fn run(config: DispatcherConfig) -> Result<()> {
-    debug!("Setting up dispatcher with config: {:?}", config);
+    info!("Setting up dispatcher with config: {:?}", config);
 
     trace!("Creating transaction manager");
     let tx_sender = create_tx_sender(
