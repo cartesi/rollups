@@ -45,8 +45,16 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 /// Therefore, the users of a DApp must trust both the consensus and the DApp owner.
 ///
 /// The DApp developer can choose whichever ownership and consensus models it wants.
-/// Ownership models include individual signer, multiple signers (multi-sig), and DAO.
-/// Consensus models include Authority, Quorum, and NxN.
+///
+/// Examples of DApp ownership models include:
+///
+/// * no owner (address zero)
+/// * individual signer (externally-owned account)
+/// * multiple signers (multi-sig)
+/// * DAO (decentralized autonomous organization)
+/// * self-owned DApp (off-chain governance logic)
+///
+/// See `IConsensus` for examples of consensus models.
 ///
 /// This contract inherits the following OpenZeppelin contracts.
 /// For more information, please consult OpenZeppelin's official documentation.

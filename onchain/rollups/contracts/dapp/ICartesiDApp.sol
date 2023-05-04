@@ -51,8 +51,8 @@ interface ICartesiDApp {
     ///
     /// Reverts if voucher was already successfully executed.
     ///
-    /// @param _destination The message call destination address
-    /// @param _payload The message call payload
+    /// @param _destination The address that will receive the payload through a message call
+    /// @param _payload The payload, which—in the case of Solidity contracts—encodes a function call
     /// @param _proof The proof used to validate the voucher against
     ///               a claim submitted by the current consensus contract
     /// @return Whether the execution was successful or not

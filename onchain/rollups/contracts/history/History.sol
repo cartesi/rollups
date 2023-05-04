@@ -20,7 +20,7 @@ import {IHistory} from "./IHistory.sol";
 ///
 /// @notice This contract stores claims for each DApp individually.
 /// This means that, for each DApp, the contract stores an array of
-/// `Claim`, where each `Claim` is composed of:
+/// `Claim` entries, where each `Claim` is composed of:
 ///
 /// * An epoch hash (`bytes32`)
 /// * A closed interval of input indices (`uint128`, `uint128`)

@@ -19,7 +19,7 @@ import {InputEncoding} from "../common/InputEncoding.sol";
 
 /// @title DApp Address Relay
 ///
-/// @notice This contract allows anyone to informing the off-chain machine
+/// @notice This contract allows anyone to inform the off-chain machine
 /// of the address of the DApp contract in a trustless and permissionless way.
 contract DAppAddressRelay is Relay, IDAppAddressRelay {
     /// @notice Constructs the relay.

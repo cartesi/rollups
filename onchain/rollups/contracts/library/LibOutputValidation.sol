@@ -125,8 +125,8 @@ library LibOutputValidation {
 
     /// @notice Make sure the output proof is valid, otherwise revert.
     /// @param v The output validity proof
-    /// @param destination The message call destination address
-    /// @param payload The message call payload
+    /// @param destination The address that will receive the payload through a message call
+    /// @param payload The payload, which—in the case of Solidity contracts—encodes a function call
     /// @param epochHash The hash of the epoch in which the output was generated
     function validateVoucher(
         OutputValidityProof calldata v,

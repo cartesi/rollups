@@ -100,8 +100,7 @@ contract Authority is AbstractConsensus, Ownable {
         return history.getClaim(_dapp, _proofContext);
     }
 
-    /// @notice Transfer some amount of ERC-20 tokens from the
-    ///         `Authority` contract's account to the `Authority` owner's account.
+    /// @notice Transfer some amount of ERC-20 tokens to a recipient.
     /// @param _token The token contract
     /// @param _recipient The recipient address
     /// @param _amount The amount of tokens to be withdrawn
