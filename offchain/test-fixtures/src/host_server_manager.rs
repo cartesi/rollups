@@ -55,13 +55,12 @@ impl HostServerManagerFixture<'_> {
     pub async fn setup(docker: &Cli) -> HostServerManagerFixture<'_> {
         tracing::info!("setting up host-server-manager fixture");
         tracing::trace!("starting host-server-manager docker container");
-        let image =
-            GenericImage::new("cartesicorp/host-server-manager", "0.9.0-test2")
-                .with_wait_for(WaitFor::message_on_stderr(
-                    "starting in Actix runtime",
-                ))
-                .with_exposed_port(5001)
-                .with_exposed_port(5004);
+        let image = GenericImage::new("cartesi/host-server-manager", "0.9.0")
+            .with_wait_for(WaitFor::message_on_stderr(
+                "starting in Actix runtime",
+            ))
+            .with_exposed_port(5001)
+            .with_exposed_port(5004);
         let node = docker.run(image);
         let grpc_endpoint =
             format!("http://127.0.0.1:{}", node.get_host_port_ipv4(5001));

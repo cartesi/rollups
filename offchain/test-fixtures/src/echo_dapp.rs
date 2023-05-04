@@ -90,7 +90,7 @@ async fn handle_inspect(
 pub struct EchoDAppFixture {}
 
 impl EchoDAppFixture {
-    async fn start_echo_dapp(
+    pub async fn start_echo_dapp(
         server_addr: String,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let client = hyper::Client::new();

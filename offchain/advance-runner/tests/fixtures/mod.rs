@@ -91,9 +91,9 @@ impl AdvanceRunnerFixture {
                 snapshot_latest: snapshot_dir
                     .expect("Should have a Path")
                     .join("latest"),
-            });
+            })
         } else {
-            SnapshotConfig::Disabled;
+            SnapshotConfig::Disabled
         };
 
         let backoff_max_elapsed_duration = Duration::from_millis(1);
