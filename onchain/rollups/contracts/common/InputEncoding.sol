@@ -17,7 +17,9 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 /// @title Input Encoding Library
-/// @notice Defines the encoding of canonical inputs.
+
+/// @notice Defines the encoding of inputs added by core trustless and
+/// permissionless contracts, such as portals and relays.
 library InputEncoding {
     /// @notice Encode an Ether deposit.
     /// @param sender The Ether sender

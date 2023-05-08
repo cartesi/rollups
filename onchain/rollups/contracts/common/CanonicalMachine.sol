@@ -13,7 +13,9 @@
 pragma solidity ^0.8.8;
 
 /// @title Canonical Machine Constants Library
-/// @notice Defines several constants related to the canonical off-chain machine.
+///
+/// @notice Defines several constants related to the reference implementation
+/// of the RISC-V machine that runs Linux, also known as the "Cartesi Machine".
 library CanonicalMachine {
     /// @notice Base-2 logarithm of number of bytes
     type Log2Size is uint64;
