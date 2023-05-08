@@ -285,7 +285,7 @@ impl ServerManagerFacade {
         epoch_index: u64,
         storage_directory: &Path,
     ) -> Result<(RollupsClaim, Vec<RollupsOutput>)> {
-        tracing::info!(epoch_index, "sending finish epoch");
+        tracing::trace!(epoch_index, "sending finish epoch");
 
         // Wait for pending inputs before sending a finish request
         let processed_inputs =
@@ -359,7 +359,7 @@ impl ServerManagerFacade {
                 let duration = std::time::Duration::from_millis(
                     self.config.pending_inputs_sleep_duration,
                 );
-                tracing::info!(
+                tracing::debug!(
                     "server-manager has {} pending inputs; sleeping for {} ms",
                     response.pending_input_count,
                     duration.as_millis(),
