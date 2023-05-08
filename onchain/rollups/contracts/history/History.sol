@@ -25,9 +25,8 @@ import {IHistory} from "./IHistory.sol";
 /// * An epoch hash (`bytes32`)
 /// * A closed interval of input indices (`uint128`, `uint128`)
 ///
-/// The contract guarantees that, for any given DApp, there exists
-/// some `N` such that the union of all ranges of input indices is
-/// equal to `[0,N)`, and that all such ranges are disjoint.
+/// The contract guarantees that the first interval starts at index 0,
+/// and that the following intervals don't have gaps or overlaps.
 ///
 /// Furthermore, claims can only be submitted by the contract owner
 /// through `submitClaim`, but can be retrieved by anyone with `getClaim`.
