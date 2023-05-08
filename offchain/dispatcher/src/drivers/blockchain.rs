@@ -29,7 +29,7 @@ impl BlockchainDriver {
 
         while let Some(rollups_claim) = broker.next_claim().await? {
             trace!("Got claim `{:?}` from broker", rollups_claim);
-            if rollups_claim.epoch_index > claims_sent {
+            if rollups_claim.epoch_index >= claims_sent {
                 info!("Sending claim `{:?}`", rollups_claim);
                 tx_sender = tx_sender
                     .submit_claim(self.dapp_address, rollups_claim)
