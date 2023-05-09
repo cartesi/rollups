@@ -17,31 +17,31 @@ pragma solidity ^0.8.8;
 /// @notice Defines several constants related to the reference implementation
 /// of the RISC-V machine that runs Linux, also known as the "Cartesi Machine".
 library CanonicalMachine {
-    /// @notice Base-2 logarithm of number of bytes
+    /// @notice Base-2 logarithm of number of bytes.
     type Log2Size is uint64;
 
-    /// @notice Machine word size (8 bytes)
+    /// @notice Machine word size (8 bytes).
     Log2Size constant WORD_LOG2_SIZE = Log2Size.wrap(3);
 
-    /// @notice Machine address space size (2^64 bytes)
+    /// @notice Machine address space size (2^64 bytes).
     Log2Size constant MACHINE_LOG2_SIZE = Log2Size.wrap(64);
 
-    /// @notice Keccak-256 output size (32 bytes)
+    /// @notice Keccak-256 output size (32 bytes).
     Log2Size constant KECCAK_LOG2_SIZE = Log2Size.wrap(5);
 
-    /// @notice Maximum input size (32 megabytes)
+    /// @notice Maximum input size (32 megabytes).
     Log2Size constant INPUT_MAX_LOG2_SIZE = Log2Size.wrap(25);
 
-    /// @notice Maximum voucher metadata memory range (2 megabytes)
+    /// @notice Maximum voucher metadata memory range (2 megabytes).
     Log2Size constant VOUCHER_METADATA_LOG2_SIZE = Log2Size.wrap(21);
 
-    /// @notice Maximum notice metadata memory range (2 megabytes)
+    /// @notice Maximum notice metadata memory range (2 megabytes).
     Log2Size constant NOTICE_METADATA_LOG2_SIZE = Log2Size.wrap(21);
 
-    /// @notice Maximum epoch voucher memory range (128 megabytes)
+    /// @notice Maximum epoch voucher memory range (128 megabytes).
     Log2Size constant EPOCH_VOUCHER_LOG2_SIZE = Log2Size.wrap(37);
 
-    /// @notice Maximum epoch notice memory range (128 megabytes)
+    /// @notice Maximum epoch notice memory range (128 megabytes).
     Log2Size constant EPOCH_NOTICE_LOG2_SIZE = Log2Size.wrap(37);
 
     /// @notice Unwrap `s` into its underlying uint64 value.

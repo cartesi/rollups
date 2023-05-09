@@ -40,7 +40,7 @@ contract History is IHistory, Ownable {
         uint128 lastIndex;
     }
 
-    /// @notice Mapping from DApp address to array of claims
+    /// @notice Mapping from DApp address to array of claims.
     /// @dev See the `getClaim` and `submitClaim` functions.
     mapping(address => Claim[]) internal claims;
 

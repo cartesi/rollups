@@ -23,7 +23,7 @@ interface IHistory {
     /// @dev Should have access control.
     function submitClaim(bytes calldata _claimData) external;
 
-    /// @notice Transfer ownership to another consensus
+    /// @notice Transfer ownership to another consensus.
     /// @param _consensus The new consensus
     /// @dev Should have access control.
     function migrateToConsensus(address _consensus) external;
