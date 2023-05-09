@@ -409,11 +409,13 @@ contract AuthorityHandler is Test {
     Authority immutable authority;
     History history; // current history
     History[] histories; // histories that have been used
-    History[] backUpHistories; // new histories that are ready to use
+    History[] backUpHistories; // new histories that are ready to be used
 
-    mapping(History => ClaimContext[]) claimContext; // history => ClaimContext
+    mapping(History => ClaimContext[]) claimContext; // history => ClaimContext[]
     mapping(History => mapping(address => uint256)) numClaims; // history => dapp => #claims
-    mapping(History => mapping(address => uint256)) firstIndexes; // history => dapp => first index
+    mapping(History => mapping(address => uint256)) nextIndices; // history => dapp => index of the next input to be processed
+
+    uint128 constant MAXIDX = type(uint128).max;
 
     constructor(
         History _history,
@@ -427,17 +429,20 @@ contract AuthorityHandler is Test {
     }
 
     function submitClaim(address _dapp, Claim memory _claim) external {
-        _claim.firstIndex = uint128(firstIndexes[history][_dapp]);
-        // bound the last index to be in the range (firstIndex, type(uint128).max)
-        _claim.lastIndex = uint128(
-            bound(
-                _claim.lastIndex,
-                _claim.firstIndex + 1,
-                type(uint128).max - 1
-            )
-        );
+        uint256 firstIndex = nextIndices[history][_dapp];
+
+        // We need to represent `firstIndex` in a uint128
+        vm.assume(firstIndex <= MAXIDX);
+
+        // `lastIndex` needs to be greater than or equal to `firstIndex` and
+        // also fit in a `uint128`
+        uint256 lastIndex = bound(_claim.lastIndex, _claim.firstIndex, MAXIDX);
+
+        _claim.firstIndex = uint128(firstIndex);
+        _claim.lastIndex = uint128(lastIndex);
 
         bytes memory encodedData = abi.encode(_dapp, _claim);
+
         if (address(authority) != history.owner()) {
             vm.expectRevert("Ownable: caller is not the owner");
             authority.submitClaim(encodedData);
@@ -446,10 +451,14 @@ contract AuthorityHandler is Test {
 
         authority.submitClaim(encodedData);
 
-        claimContext[history].push(
-            ClaimContext(_dapp, _claim, numClaims[history][_dapp]++)
-        );
-        firstIndexes[history][_dapp] = _claim.lastIndex + 1;
+        // Get the claim index and increment the number of claims
+        uint256 claimIndex = numClaims[history][_dapp]++;
+
+        claimContext[history].push(ClaimContext(_dapp, _claim, claimIndex));
+
+        // Here we are not worried about overflowing 'lastIndex` because
+        // it is a `uint256` guaranteed to fit in a `uint128`
+        nextIndices[history][_dapp] = lastIndex + 1;
     }
 
     function migrateHistoryToConsensus(address _consensus) external {
@@ -477,9 +486,14 @@ contract AuthorityHandler is Test {
 
     function setOldHistory(uint256 _index) external {
         // pick a random old history
+        // this should not raise a division-by-zero error because
+        // the `histories` array is guaranteed to have at least one
+        // history from construction
         history = histories[_index % histories.length];
 
         // with 50% chance randomly migrate the history to the authority
+        // this will help cover the cases where authority is not the owner
+        // of the history contract
         if (_index % 2 == 0) {
             vm.prank(history.owner());
             history.migrateToConsensus(address(authority));
@@ -496,45 +510,12 @@ contract AuthorityHandler is Test {
         );
     }
 
-    function checkClaim(
-        uint256 _historyIndex,
-        uint256 _claimContextIndex
-    ) external {
-        History selectedHistory = histories[_historyIndex % histories.length];
-        // skip if history has no claim
-        uint256 numClaimContext = claimContext[selectedHistory].length;
-        if (numClaimContext == 0) return;
-
-        ClaimContext memory selectedClaimContext = claimContext[
-            selectedHistory
-        ][_claimContextIndex % numClaimContext];
-
-        bytes32 returnedEpochHash;
-        uint256 returnedFirstIndex;
-        uint256 returnedLastIndex;
-        if (address(selectedHistory) == address(authority.getHistory())) {
-            // selected history is the current history
-            // call through authority
-            (
-                returnedEpochHash,
-                returnedFirstIndex,
-                returnedLastIndex
-            ) = authority.getClaim(
-                selectedClaimContext.dapp,
-                abi.encode(selectedClaimContext.proofContext)
-            );
-        } else {
-            // selected history is an old history
-            // call through old history directly
-            (
-                returnedEpochHash,
-                returnedFirstIndex,
-                returnedLastIndex
-            ) = selectedHistory.getClaim(
-                selectedClaimContext.dapp,
-                abi.encode(selectedClaimContext.proofContext)
-            );
-        }
+    function checkClaimAux(
+        ClaimContext memory selectedClaimContext,
+        bytes32 returnedEpochHash,
+        uint256 returnedFirstIndex,
+        uint256 returnedLastIndex
+    ) internal {
         assertEq(
             returnedEpochHash,
             selectedClaimContext.claim.epochHash,
@@ -550,6 +531,64 @@ contract AuthorityHandler is Test {
             selectedClaimContext.claim.lastIndex,
             "check last index"
         );
+    }
+
+    function checkClaim(
+        uint256 _historyIndex,
+        uint256 _claimContextIndex
+    ) external {
+        // this should not raise a division-by-zero error because
+        // the `histories` array is guaranteed to have at least one
+        // history from construction
+        History selectedHistory = histories[_historyIndex % histories.length];
+
+        // skip if history has no claim
+        uint256 numClaimContexts = claimContext[selectedHistory].length;
+        if (numClaimContexts == 0) return;
+
+        ClaimContext memory selectedClaimContext = claimContext[
+            selectedHistory
+        ][_claimContextIndex % numClaimContexts];
+
+        bytes32 returnedEpochHash;
+        uint256 returnedFirstIndex;
+        uint256 returnedLastIndex;
+
+        (
+            returnedEpochHash,
+            returnedFirstIndex,
+            returnedLastIndex
+        ) = selectedHistory.getClaim(
+            selectedClaimContext.dapp,
+            abi.encode(selectedClaimContext.proofContext)
+        );
+
+        checkClaimAux(
+            selectedClaimContext,
+            returnedEpochHash,
+            returnedFirstIndex,
+            returnedLastIndex
+        );
+
+        if (address(selectedHistory) == address(authority.getHistory())) {
+            // selected history is the current history
+            // also check that call through authority returns the same claim
+            (
+                returnedEpochHash,
+                returnedFirstIndex,
+                returnedLastIndex
+            ) = authority.getClaim(
+                selectedClaimContext.dapp,
+                abi.encode(selectedClaimContext.proofContext)
+            );
+
+            checkClaimAux(
+                selectedClaimContext,
+                returnedEpochHash,
+                returnedFirstIndex,
+                returnedLastIndex
+            );
+        }
     }
 
     // view functions
