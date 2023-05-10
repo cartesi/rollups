@@ -432,7 +432,7 @@ contract AuthorityHandler is Test {
         uint256 firstIndex = nextIndices[history][_dapp];
 
         // We need to represent `firstIndex` in a uint128
-        vm.assume(firstIndex <= MAXIDX);
+        if (firstIndex > MAXIDX) return;
 
         // `lastIndex` needs to be greater than or equal to `firstIndex` and
         // also fit in a `uint128`
