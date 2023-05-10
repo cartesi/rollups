@@ -23,8 +23,6 @@ types = { path = "../types" }
 
 anyhow = "1"
 serde = "1"
-snafu = "0.7"
-structopt = "0.3"
 url = "2"
 
 tokio = { version = "1", features = ["macros", "sync", "rt-multi-thread"] }
