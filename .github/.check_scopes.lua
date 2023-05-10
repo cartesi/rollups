@@ -18,7 +18,7 @@ function extractScopesFromFile(filename)
   end
   for line in file:lines() do
     local scope = line:match("%S+")
-    if scope and scopes[scope] == nil then
+    if scope then
       scopes[scope] = true
     end
   end
