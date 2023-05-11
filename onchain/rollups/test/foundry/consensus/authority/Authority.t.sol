@@ -639,13 +639,9 @@ contract AuthorityInvariantTest is Test {
     function setUp() public {
         // this setup is only for invariant testing
         address inputBox = vm.addr(uint256(keccak256("inputBox")));
-        History hist = new History(address(this));
-        Authority auth = new Authority(
-            address(this),
-            IInputBox(inputBox),
-            hist
-        );
-        hist.migrateToConsensus(address(auth));
+        Authority auth = new Authority(address(this), IInputBox(inputBox));
+        History hist = new History(address(auth));
+        auth.setHistory(hist);
 
         // back up new histories
         for (uint256 i; i < 30; ++i) {
