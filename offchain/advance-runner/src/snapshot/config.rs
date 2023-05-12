@@ -64,10 +64,10 @@ pub struct SnapshotCLIConfig {
     snapshot_enabled: bool,
 
     /// Path to the directory with the snapshots
-    #[arg(long, env, default_value = "/opt/cartesi/share/dapp-bin")]
+    #[arg(long, env)]
     snapshot_dir: String,
 
     /// Path to the symlink of the latest snapshot
-    #[arg(long, env, default_value = "/opt/cartesi/share/dapp-bin/latest")]
+    #[arg(long, env)]
     snapshot_latest: String,
 }
