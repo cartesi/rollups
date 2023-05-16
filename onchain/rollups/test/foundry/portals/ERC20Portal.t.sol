@@ -310,7 +310,11 @@ contract ERC20PortalHandler is Test {
         bytes calldata _execLayerData
     ) external {
         address sender = msg.sender;
-        if (_dapp == address(0) || sender == address(0)) return;
+        if (
+            _dapp == address(0) ||
+            sender == address(0) ||
+            _dapp == address(this)
+        ) return;
         _amount = bound(_amount, 0, token.balanceOf(address(this)));
 
         // fund sender

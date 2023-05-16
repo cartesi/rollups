@@ -465,7 +465,7 @@ contract AuthorityHandler is Test {
 
         // `lastIndex` needs to be greater than or equal to `firstIndex` and
         // also fit in a `uint128`
-        uint256 lastIndex = bound(_claim.lastIndex, _claim.firstIndex, MAXIDX);
+        uint256 lastIndex = bound(_claim.lastIndex, firstIndex, MAXIDX);
 
         _claim.firstIndex = uint128(firstIndex);
         _claim.lastIndex = uint128(lastIndex);
