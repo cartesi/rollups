@@ -3845,11 +3845,13 @@ dependencies = [
  "futures",
  "futures-util",
  "itoa",
+ "native-tls",
  "percent-encoding",
  "pin-project-lite",
  "ryu",
  "sha1_smol",
  "tokio",
+ "tokio-native-tls",
  "tokio-util",
  "url",
 ]
