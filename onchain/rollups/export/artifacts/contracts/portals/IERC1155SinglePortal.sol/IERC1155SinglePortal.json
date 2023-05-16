@@ -62,7 +62,6 @@
     "kind": "dev",
     "methods": {
       "depositSingleERC1155Token(address,address,uint256,uint256,bytes,bytes)": {
-        "details": "The caller must allow the portal to withdraw the token      from their account beforehand.",
         "params": {
           "_baseLayerData": "Additional data to be interpreted by the base layer",
           "_dapp": "The address of the DApp",
@@ -74,20 +73,21 @@
       },
       "getInputBox()": {
         "returns": {
-          "_0": "the input box"
+          "_0": "The input box"
         }
       }
     },
+    "title": "ERC-1155 Single Transfer Portal interface",
     "version": 1
   },
   "userdoc": {
     "kind": "user",
     "methods": {
       "depositSingleERC1155Token(address,address,uint256,uint256,bytes,bytes)": {
-        "notice": "Transfer an ERC-1155 token to a DApp and add an input to         the DApp's input box to signal such operation."
+        "notice": "Transfer an ERC-1155 token to a DApp and add an input to the DApp's input box to signal such operation. The caller must enable approval for the portal to manage all of their tokens beforehand, by calling the `setApprovalForAll` function in the token contract."
       },
       "getInputBox()": {
-        "notice": "Get the input box used by this portal"
+        "notice": "Get the input box used by this portal."
       }
     },
     "version": 1

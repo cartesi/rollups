@@ -64,7 +64,7 @@
   "devdoc": {
     "events": {
       "ApplicationJoined(address)": {
-        "details": "MUST be triggered on a successful call to `join()`",
+        "details": "MUST be triggered on a successful call to `join`.",
         "params": {
           "application": "The application"
         }
@@ -73,38 +73,36 @@
     "kind": "dev",
     "methods": {
       "getClaim(address,bytes)": {
-        "details": "The encoding of _proofContext might vary depending on the implementation",
         "params": {
-          "_dapp": "The DApp",
+          "_dapp": "The DApp address",
           "_proofContext": "Data for retrieving the desired claim"
         },
         "returns": {
-          "epochHash_": "The epoch hash contained in the claim",
-          "firstInputIndex_": "The index of the first input in the input box for which the epoch hash is valid",
-          "lastInputIndex_": "The index of the last input in the input box for which the epoch hash is valid"
+          "epochHash_": "The claimed epoch hash",
+          "firstInputIndex_": "The index of the first input of the epoch in the input box",
+          "lastInputIndex_": "The index of the last input of the epoch in the input box"
         }
-      },
-      "join()": {
-        "details": "This function should be called by a DApp when it migrates to this consensusMUST fire the `ApplicationJoined` event with the message sender as argument"
       }
     },
+    "title": "Abstract Consensus",
     "version": 1
   },
   "userdoc": {
     "events": {
       "ApplicationJoined(address)": {
-        "notice": "An application has joined the consensus' validation set"
+        "notice": "An application has joined the consensus' validation set."
       }
     },
     "kind": "user",
     "methods": {
       "getClaim(address,bytes)": {
-        "notice": "Get a claim"
+        "notice": "Get a specific claim regarding a specific DApp.         The encoding of `_proofContext` might vary         depending on the implementation."
       },
       "join()": {
-        "notice": "Join the consensus' validation set"
+        "notice": "Emits an `ApplicationJoined` event with the message sender."
       }
     },
+    "notice": "An abstract contract that partially implements `IConsensus`.",
     "version": 1
   },
   "evm": {

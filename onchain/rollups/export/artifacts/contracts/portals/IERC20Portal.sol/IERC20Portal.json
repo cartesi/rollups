@@ -52,7 +52,6 @@
     "kind": "dev",
     "methods": {
       "depositERC20Tokens(address,address,uint256,bytes)": {
-        "details": "The caller must allow the portal to withdraw at least      `_amount` tokens from their account beforehand.",
         "params": {
           "_amount": "The amount of tokens to be transferred",
           "_dapp": "The address of the DApp",
@@ -62,20 +61,21 @@
       },
       "getInputBox()": {
         "returns": {
-          "_0": "the input box"
+          "_0": "The input box"
         }
       }
     },
+    "title": "ERC-20 Portal interface",
     "version": 1
   },
   "userdoc": {
     "kind": "user",
     "methods": {
       "depositERC20Tokens(address,address,uint256,bytes)": {
-        "notice": "Transfer ERC-20 tokens to a DApp and add an input to         the DApp's input box to signal such operation."
+        "notice": "Transfer ERC-20 tokens to a DApp and add an input to the DApp's input box to signal such operation. The caller must allow the portal to withdraw at least `_amount` tokens from their account beforehand, by calling the `approve` function in the token contract."
       },
       "getInputBox()": {
-        "notice": "Get the input box used by this portal"
+        "notice": "Get the input box used by this portal."
       }
     },
     "version": 1

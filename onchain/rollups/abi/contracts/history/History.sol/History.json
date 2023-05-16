@@ -136,7 +136,7 @@
     "inputs": [
       {
         "internalType": "bytes",
-        "name": "_encodedClaim",
+        "name": "_claimData",
         "type": "bytes"
       }
     ],

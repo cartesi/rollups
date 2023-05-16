@@ -42,7 +42,6 @@
     "kind": "dev",
     "methods": {
       "depositEther(address,bytes)": {
-        "details": "All the value sent through this function is forwarded to the DApp",
         "params": {
           "_dapp": "The address of the DApp",
           "_execLayerData": "Additional data to be interpreted by the execution layer"
@@ -50,20 +49,21 @@
       },
       "getInputBox()": {
         "returns": {
-          "_0": "the input box"
+          "_0": "The input box"
         }
       }
     },
+    "title": "Ether Portal interface",
     "version": 1
   },
   "userdoc": {
     "kind": "user",
     "methods": {
       "depositEther(address,bytes)": {
-        "notice": "Transfer Ether to a DApp and add an input to         the DApp's input box to signal such operation."
+        "notice": "Transfer Ether to a DApp and add an input to the DApp's input box to signal such operation. All the value sent through this function is forwarded to the DApp."
       },
       "getInputBox()": {
-        "notice": "Get the input box used by this portal"
+        "notice": "Get the input box used by this portal."
       }
     },
     "version": 1

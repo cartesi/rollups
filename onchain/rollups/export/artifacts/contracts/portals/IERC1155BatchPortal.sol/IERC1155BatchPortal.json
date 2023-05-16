@@ -62,7 +62,7 @@
     "kind": "dev",
     "methods": {
       "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": {
-        "details": "Requirements:",
+        "details": "Please make sure `_tokenIds` and `_values` have the same length.",
         "params": {
           "_baseLayerData": "Additional data to be interpreted by the base layer",
           "_dapp": "The address of the DApp",
@@ -74,20 +74,21 @@
       },
       "getInputBox()": {
         "returns": {
-          "_0": "the input box"
+          "_0": "The input box"
         }
       }
     },
+    "title": "ERC-1155 Batch Transfer Portal interface",
     "version": 1
   },
   "userdoc": {
     "kind": "user",
     "methods": {
       "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": {
-        "notice": "Transfer a batch of ERC-1155 tokens to a DApp and add an input to         the DApp's input box to signal such operation."
+        "notice": "Transfer a batch of ERC-1155 tokens to a DApp and add an input to the DApp's input box to signal such operation. The caller must enable approval for the portal to manage all of their tokens beforehand, by calling the `setApprovalForAll` function in the token contract."
       },
       "getInputBox()": {
-        "notice": "Get the input box used by this portal"
+        "notice": "Get the input box used by this portal."
       }
     },
     "version": 1

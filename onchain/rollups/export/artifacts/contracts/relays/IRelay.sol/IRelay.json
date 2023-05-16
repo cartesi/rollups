@@ -25,17 +25,18 @@
     "methods": {
       "getInputBox()": {
         "returns": {
-          "_0": "the input box"
+          "_0": "The input box"
         }
       }
     },
+    "title": "Relay interface",
     "version": 1
   },
   "userdoc": {
     "kind": "user",
     "methods": {
       "getInputBox()": {
-        "notice": "Get the input box used by this relay"
+        "notice": "Get the input box used by this relay."
       }
     },
     "version": 1

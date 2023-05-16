@@ -46,7 +46,7 @@
               "components": [
                 {
                   "internalType": "uint64",
-                  "name": "epochInputIndex",
+                  "name": "inputIndex",
                   "type": "uint64"
                 },
                 {
@@ -163,7 +163,7 @@
               "components": [
                 {
                   "internalType": "uint64",
-                  "name": "epochInputIndex",
+                  "name": "inputIndex",
                   "type": "uint64"
                 },
                 {
@@ -260,8 +260,9 @@
   "devdoc": {
     "events": {
       "NewConsensus(address)": {
+        "details": "MUST be triggered on a successful call to `migrateToConsensus`.",
         "params": {
-          "newConsensus": "The new consensus"
+          "newConsensus": "The new consensus contract"
         }
       },
       "VoucherExecuted(uint256)": {
@@ -273,14 +274,14 @@
     "kind": "dev",
     "methods": {
       "executeVoucher(address,bytes,((uint64,uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]),bytes))": {
-        "details": "Each voucher can only be executed once",
+        "details": "On a successful execution, emits a `VoucherExecuted` event.",
         "params": {
-          "_destination": "The contract that will execute the payload",
-          "_payload": "The ABI-encoded function call",
-          "_proof": "Data for validating outputs"
+          "_destination": "The address that will receive the payload through a message call",
+          "_payload": "The payload, which—in the case of Solidity contracts—encodes a function call",
+          "_proof": "The proof used to validate the voucher against               a claim submitted by the current consensus contract"
         },
         "returns": {
-          "_0": "Whether the voucher was executed successfully or not"
+          "_0": "Whether the execution was successful or not"
         }
       },
       "getConsensus()": {
@@ -294,7 +295,7 @@
         }
       },
       "migrateToConsensus(address)": {
-        "details": "Should have access control",
+        "details": "Can only be called by the DApp owner.",
         "params": {
           "_newConsensus": "The new consensus"
         }
@@ -318,36 +319,37 @@
         }
       }
     },
+    "title": "Cartesi DApp interface",
     "version": 1
   },
   "userdoc": {
     "events": {
       "NewConsensus(address)": {
-        "notice": "A new consensus is used"
+        "notice": "The DApp has migrated to another consensus contract."
       },
       "VoucherExecuted(uint256)": {
-        "notice": "A voucher was executed from the DApp"
+        "notice": "A voucher was executed from the DApp."
       }
     },
     "kind": "user",
     "methods": {
       "executeVoucher(address,bytes,((uint64,uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]),bytes))": {
-        "notice": "Execute a voucher"
+        "notice": "Try to execute a voucher. Reverts if voucher was already successfully executed."
       },
       "getConsensus()": {
-        "notice": "Get the current consensus"
+        "notice": "Get the current consensus."
       },
       "getTemplateHash()": {
-        "notice": "Get the DApp's template hash"
+        "notice": "Get the DApp's template hash."
       },
       "migrateToConsensus(address)": {
-        "notice": "Migrate the DApp to a new consensus"
+        "notice": "Migrate the DApp to a new consensus."
       },
       "validateNotice(bytes,((uint64,uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]),bytes))": {
-        "notice": "Validate a notice"
+        "notice": "Validate a notice."
       },
       "wasVoucherExecuted(uint256,uint256)": {
-        "notice": "Check whether a voucher has been executed"
+        "notice": "Check whether a voucher has been executed."
       }
     },
     "version": 1

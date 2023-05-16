@@ -138,67 +138,72 @@
   "devdoc": {
     "events": {
       "ApplicationCreated(address,address,bytes32,address)": {
+        "details": "MUST be triggered on a successful call to `newApplication`.",
         "params": {
           "application": "The application",
-          "consensus": "The consensus to which the DApp is subscribed",
-          "dappOwner": "The address that owns the DApp",
-          "templateHash": "The hash of the initial state of the Cartesi Machine"
+          "consensus": "The initial consensus contract",
+          "dappOwner": "The initial DApp owner",
+          "templateHash": "The initial machine state hash"
         }
       }
     },
     "kind": "dev",
     "methods": {
       "calculateApplicationAddress(address,address,bytes32,bytes32)": {
+        "details": "Beware that only the `newApplication` function with the `_salt` parameter      is able to deterministically deploy an application.",
         "params": {
-          "_consensus": "The consensus to which the DApp should be subscribed",
-          "_dappOwner": "The address that should own the DApp",
-          "_salt": "The salt used to generate the DApp's address deterministically",
-          "_templateHash": "The hash of the initial state of the Cartesi Machine"
+          "_consensus": "The initial consensus contract",
+          "_dappOwner": "The initial DApp owner",
+          "_salt": "The salt used to deterministically generate the DApp address",
+          "_templateHash": "The initial machine state hash"
         },
         "returns": {
-          "_0": "The application address"
+          "_0": "The deterministic application address"
         }
       },
       "newApplication(address,address,bytes32)": {
+        "details": "On success, MUST emit an `ApplicationCreated` event.",
         "params": {
-          "_consensus": "The consensus to which the DApp should be subscribed",
-          "_dappOwner": "The address that should own the DApp",
-          "_templateHash": "The hash of the initial state of the Cartesi Machine"
+          "_consensus": "The initial consensus contract",
+          "_dappOwner": "The initial DApp owner",
+          "_templateHash": "The initial machine state hash"
         },
         "returns": {
           "_0": "The application"
         }
       },
       "newApplication(address,address,bytes32,bytes32)": {
+        "details": "On success, MUST emit an `ApplicationCreated` event.",
         "params": {
-          "_consensus": "The consensus to which the DApp should be subscribed",
-          "_dappOwner": "The address that should own the DApp",
-          "_salt": "The salt used to generate the DApp's address deterministically",
-          "_templateHash": "The hash of the initial state of the Cartesi Machine"
+          "_consensus": "The initial consensus contract",
+          "_dappOwner": "The initial DApp owner",
+          "_salt": "The salt used to deterministically generate the DApp address",
+          "_templateHash": "The initial machine state hash"
         },
         "returns": {
           "_0": "The application"
         }
       }
     },
+    "title": "Cartesi DApp Factory interface",
     "version": 1
   },
   "userdoc": {
     "events": {
       "ApplicationCreated(address,address,bytes32,address)": {
-        "notice": "A new application was deployed"
+        "notice": "A new application was deployed."
       }
     },
     "kind": "user",
     "methods": {
       "calculateApplicationAddress(address,address,bytes32,bytes32)": {
-        "notice": "Calculate the address of an application to be deployed deterministically"
+        "notice": "Calculate the address of an application to be deployed deterministically."
       },
       "newApplication(address,address,bytes32)": {
-        "notice": "Deploy a new application"
+        "notice": "Deploy a new application."
       },
       "newApplication(address,address,bytes32,bytes32)": {
-        "notice": "Deploy a new application deterministically"
+        "notice": "Deploy a new application deterministically."
       }
     },
     "version": 1
