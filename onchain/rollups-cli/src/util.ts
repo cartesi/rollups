@@ -1,4 +1,4 @@
-// Copyright 2022 Cartesi Pte. Ltd.
+// Copyright Cartesi Pte. Ltd.
 
 import { ArgumentsCamelCase } from "yargs";
 
