@@ -86,7 +86,7 @@ ENTRYPOINT ["/opt/cartesi/bin/rollups_state_server"]
 FROM runtime AS indexer
 RUN <<EOF
 apt-get update
-DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
+DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5 ca-certificates
 rm -rf /var/lib/apt/lists/*
 EOF
 COPY --from=indexer_build /usr/src/app/offchain/target/release/indexer /opt/cartesi/bin/indexer
