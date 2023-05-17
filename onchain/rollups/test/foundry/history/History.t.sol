@@ -14,7 +14,7 @@
 pragma solidity ^0.8.8;
 
 import {Test, stdError} from "forge-std/Test.sol";
-import {History} from "contracts/history/History.sol";
+import {History, InvalidInputIndices, UnclaimedInputs} from "contracts/history/History.sol";
 
 contract HistoryTest is Test {
     History history;
@@ -145,7 +145,7 @@ contract HistoryTest is Test {
     ) public {
         vm.assume(fi > 0);
         vm.assume(fi <= li);
-        vm.expectRevert("History: unclaimed inputs");
+        vm.expectRevert(UnclaimedInputs.selector);
         history.submitClaim(abi.encode(dapp, epochHash, fi, li));
     }
 
@@ -161,7 +161,7 @@ contract HistoryTest is Test {
         vm.assume(fi2 <= li2);
         vm.assume(fi2 <= li1); // overlaps with previous claim
         submitClaim(dapp, epochHash1, 0, li1);
-        vm.expectRevert("History: unclaimed inputs");
+        vm.expectRevert(UnclaimedInputs.selector);
         history.submitClaim(abi.encode(dapp, epochHash2, fi2, li2));
     }
 
@@ -177,7 +177,7 @@ contract HistoryTest is Test {
         vm.assume(fi2 <= li2);
         vm.assume(fi2 > li1 + 1); // leaves a hole
         submitClaim(dapp, epochHash1, 0, li1);
-        vm.expectRevert("History: unclaimed inputs");
+        vm.expectRevert(UnclaimedInputs.selector);
         history.submitClaim(abi.encode(dapp, epochHash2, fi2, li2));
     }
 
@@ -193,7 +193,7 @@ contract HistoryTest is Test {
         vm.assume(fi2 > li2); // starts after it ends
         vm.assume(fi2 > li1);
         submitClaim(dapp, epochHash1, 0, li1);
-        vm.expectRevert("History: FI > LI");
+        vm.expectRevert(InvalidInputIndices.selector);
         history.submitClaim(abi.encode(dapp, epochHash2, fi2, li2));
     }
 
