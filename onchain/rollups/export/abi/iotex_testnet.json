@@ -3,7 +3,7 @@
   "chainId": "4690",
   "contracts": {
     "Authority": {
-      "address": "0x870d079FBB8f439863DCD5c241bc9A5E5D02900D",
+      "address": "0x951056281A282B3725e11D9fef72D7f7749c1408",
       "abi": [
         {
           "inputs": [
@@ -15,11 +15,6 @@
             {
               "internalType": "contract IInputBox",
               "name": "_inputBox",
-              "type": "address"
-            },
-            {
-              "internalType": "contract IHistory",
-              "name": "_history",
               "type": "address"
             }
           ],
@@ -52,12 +47,6 @@
               "indexed": false,
               "internalType": "contract IInputBox",
               "name": "inputBox",
-              "type": "address"
-            },
-            {
-              "indexed": false,
-              "internalType": "contract IHistory",
-              "name": "history",
               "type": "address"
             }
           ],
@@ -248,7 +237,7 @@
       ]
     },
     "CartesiDAppFactory": {
-      "address": "0xE9CcC831fAfB8FdE006Dadb8e376Bb8119A29579",
+      "address": "0x7D2e32213c690aa6029260A4d6dEA0250Eb7f340",
       "abi": [
         {
           "anonymous": false,
@@ -297,6 +286,74 @@
               "internalType": "bytes32",
               "name": "_templateHash",
               "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_salt",
+              "type": "bytes32"
+            }
+          ],
+          "name": "calculateApplicationAddress",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract IConsensus",
+              "name": "_consensus",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dappOwner",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_templateHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_salt",
+              "type": "bytes32"
+            }
+          ],
+          "name": "newApplication",
+          "outputs": [
+            {
+              "internalType": "contract CartesiDApp",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract IConsensus",
+              "name": "_consensus",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dappOwner",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_templateHash",
+              "type": "bytes32"
             }
           ],
           "name": "newApplication",
@@ -313,7 +370,7 @@
       ]
     },
     "DAppAddressRelay": {
-      "address": "0xDA3B012c2b0947b0851aE87cDBdc6C6a297fED36",
+      "address": "0xaB2c6138162D9e2E9AA0e48Be16e7C5f49656B4E",
       "abi": [
         {
           "inputs": [
@@ -355,7 +412,7 @@
       ]
     },
     "ERC20Portal": {
-      "address": "0x034A8dE01476a9E973c2dfF56bf0d2A84A0DaD4F",
+      "address": "0xA46559148B1998Cc0DdE13f875b2E1e39C3f2675",
       "abi": [
         {
           "inputs": [
@@ -412,7 +469,7 @@
       ]
     },
     "ERC721Portal": {
-      "address": "0xa945Dc7eE7f1d3A88DbCe73581Ad941a8d446590",
+      "address": "0x38A9ab53468302660F07a07d429912FE43c9198c",
       "abi": [
         {
           "inputs": [
@@ -474,7 +531,7 @@
       ]
     },
     "EtherPortal": {
-      "address": "0x88871Cf88e8440D6925b07e59E79f06ac1DE776d",
+      "address": "0x19bCDEbeDcdBABA3993B78A9a522e1EB44BD8dE3",
       "abi": [
         {
           "inputs": [
@@ -496,7 +553,7 @@
             },
             {
               "internalType": "bytes",
-              "name": "_L2data",
+              "name": "_execLayerData",
               "type": "bytes"
             }
           ],
@@ -521,7 +578,7 @@
       ]
     },
     "History": {
-      "address": "0x22189c430844c8cC84224A18aa8B5Cbd354a234f",
+      "address": "0x8f610cd3BA2404E1d918c406fa6CF7B187a643E6",
       "abi": [
         {
           "inputs": [
@@ -660,7 +717,7 @@
           "inputs": [
             {
               "internalType": "bytes",
-              "name": "_encodedClaim",
+              "name": "_claimData",
               "type": "bytes"
             }
           ],
@@ -685,7 +742,7 @@
       ]
     },
     "InputBox": {
-      "address": "0xD6d09b0d631287F3877D4B70CF1123B2fc4eD0B8",
+      "address": "0xc97d900c8cBC72D7512C68a8a21cC98107E0581C",
       "abi": [
         {
           "anonymous": false,
