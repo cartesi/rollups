@@ -13,8 +13,10 @@
 pragma solidity ^0.8.8;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-
 import {IHistory} from "./IHistory.sol";
+
+error InvalidInputIndices();
+error UnclaimedInputs();
 
 /// @title Simple History
 ///
@@ -84,20 +86,23 @@ contract History is IHistory, Ownable {
             (address, Claim)
         );
 
-        require(claim.firstIndex <= claim.lastIndex, "History: FI > LI");
+        if (claim.firstIndex > claim.lastIndex) {
+            revert InvalidInputIndices();
+        }
 
         Claim[] storage dappClaims = claims[dapp];
         uint256 numDAppClaims = dappClaims.length;
 
-        require(
-            claim.firstIndex ==
-                (
-                    (numDAppClaims == 0)
-                        ? 0
-                        : (dappClaims[numDAppClaims - 1].lastIndex + 1)
-                ),
-            "History: unclaimed inputs"
-        );
+        if (
+            claim.firstIndex !=
+            (
+                (numDAppClaims == 0)
+                    ? 0
+                    : (dappClaims[numDAppClaims - 1].lastIndex + 1)
+            )
+        ) {
+            revert UnclaimedInputs();
+        }
 
         dappClaims.push(claim);
 

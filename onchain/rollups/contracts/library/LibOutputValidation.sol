@@ -16,6 +16,11 @@ import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {MerkleV2} from "@cartesi/util/contracts/MerkleV2.sol";
 import {OutputEncoding} from "../common/OutputEncoding.sol";
 
+error IncorrectEpochHash();
+error IncorrectOutputsEpochRootHash();
+error IncorrectOutputHashesRootHash();
+error IncorrectInputIndex();
+
 /// @param inputIndex Which input, inside the epoch, the output belongs to
 /// @param outputIndex Index of output emitted by the input
 /// @param outputHashesRootHash Merkle root of hashes of outputs emitted by the input
@@ -58,19 +63,20 @@ library LibOutputValidation {
         uint256 outputHashesLog2Size
     ) internal pure {
         // prove that outputs hash is represented in a finalized epoch
-        require(
+        if (
             keccak256(
                 abi.encodePacked(
                     v.vouchersEpochRootHash,
                     v.noticesEpochRootHash,
                     v.machineStateHash
                 )
-            ) == epochHash,
-            "incorrect epochHash"
-        );
+            ) != epochHash
+        ) {
+            revert IncorrectEpochHash();
+        }
 
         // prove that output metadata memory range is contained in epoch's output memory range
-        require(
+        if (
             MerkleV2.getRootAfterReplacementInDrive(
                 CanonicalMachine.getIntraMemoryRangePosition(
                     v.inputIndex,
@@ -80,9 +86,10 @@ library LibOutputValidation {
                 outputEpochLog2Size,
                 v.outputHashesRootHash,
                 v.outputHashesInEpochSiblings
-            ) == outputsEpochRootHash,
-            "incorrect outputsEpochRootHash"
-        );
+            ) != outputsEpochRootHash
+        ) {
+            revert IncorrectOutputsEpochRootHash();
+        }
 
         // The hash of the output is converted to bytes (abi.encode) and
         // treated as data. The metadata output memory range stores that data while
@@ -108,7 +115,7 @@ library LibOutputValidation {
 
         // prove that Merkle root hash of bytes(hashOfOutput) is contained
         // in the output metadata array memory range
-        require(
+        if (
             MerkleV2.getRootAfterReplacementInDrive(
                 CanonicalMachine.getIntraMemoryRangePosition(
                     v.outputIndex,
@@ -118,9 +125,10 @@ library LibOutputValidation {
                 outputHashesLog2Size,
                 merkleRootOfHashOfOutput,
                 v.keccakInHashesSiblings
-            ) == v.outputHashesRootHash,
-            "incorrect outputHashesRootHash"
-        );
+            ) != v.outputHashesRootHash
+        ) {
+            revert IncorrectOutputHashesRootHash();
+        }
     }
 
     /// @notice Make sure the output proof is valid, otherwise revert.
@@ -195,10 +203,9 @@ library LibOutputValidation {
     ) internal pure returns (uint256) {
         uint256 inboxInputIndex = firstInputIndex + v.inputIndex;
 
-        require(
-            inboxInputIndex <= lastInputIndex,
-            "inbox input index out of bounds"
-        );
+        if (inboxInputIndex > lastInputIndex) {
+            revert IncorrectInputIndex();
+        }
 
         return inboxInputIndex;
     }

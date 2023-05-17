@@ -14,6 +14,8 @@ pragma solidity ^0.8.8;
 
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 
+error InputSizeExceedsLimit();
+
 /// @title Input Library
 library LibInput {
     using CanonicalMachine for CanonicalMachine.Log2Size;
@@ -34,11 +36,12 @@ library LibInput {
     ) internal pure returns (bytes32) {
         // Currently sending an input larger than driveSize surpasses the block gas limit
         // But we keep the following check in case this changes in the future
-        require(
-            input.length <=
-                (1 << CanonicalMachine.INPUT_MAX_LOG2_SIZE.uint64OfSize()),
-            "input len: [0,driveSize]"
-        );
+        if (
+            input.length >
+            (1 << CanonicalMachine.INPUT_MAX_LOG2_SIZE.uint64OfSize())
+        ) {
+            revert InputSizeExceedsLimit();
+        }
 
         bytes32 keccakMetadata = keccak256(
             abi.encode(

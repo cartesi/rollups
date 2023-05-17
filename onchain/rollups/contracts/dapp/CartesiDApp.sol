@@ -22,6 +22,10 @@ import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Hol
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+error VoucherReexecutionNotAllowed();
+error EtherTransferFailed();
+error OnlyDapp();
+
 /// @title Cartesi DApp
 ///
 /// @notice This contract acts as the base layer incarnation of a DApp running on the execution layer.
@@ -129,10 +133,9 @@ contract CartesiDApp is
         );
 
         // check if voucher has been executed
-        require(
-            !_wasVoucherExecuted(voucherPosition),
-            "re-execution not allowed"
-        );
+        if (_wasVoucherExecuted(voucherPosition)) {
+            revert VoucherReexecutionNotAllowed();
+        }
 
         // execute voucher
         (bool succ, ) = _destination.call(_payload);
@@ -227,7 +230,10 @@ contract CartesiDApp is
     /// @param _value The amount of Ether to be transferred in Wei
     /// @dev This function can only be called by the DApp itself through vouchers.
     function withdrawEther(address _receiver, uint256 _value) external {
-        require(msg.sender == address(this), "only itself");
+        if (msg.sender != address(this)) {
+            revert OnlyDapp();
+        }
+
         (bool sent, ) = _receiver.call{value: _value}("");
         require(sent, "withdrawEther failed");
     }

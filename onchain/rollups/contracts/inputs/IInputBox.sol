@@ -32,6 +32,7 @@ interface IInputBox {
     /// @param _input The contents of the input
     /// @return The hash of the input plus some extra metadata
     /// @dev MUST fire an `InputAdded` event accordingly.
+    /// Incorrect input length will raise InputSizeExceedsLimit error.
     function addInput(
         address _dapp,
         bytes calldata _input
