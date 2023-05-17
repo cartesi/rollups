@@ -42,8 +42,8 @@ graph TD
     jqFilter -. as filter .-> jq
     jq --> updatedInputs[("inputs.json (updated)")]
     updatedInputs --> genScript.ts --> script[(gen-proofs.sh)]
-    script --> docker --> epochStatus[(epoch-status.json)]
-    epochStatus --> b64to16[python -m b64to16] --> formatedEpochStatus[("epoch-status.json (formatted)")]
-    formatedEpochStatus --> genProofLibraries.ts
+    script --> docker --> finishEpochResponse[(finish_epoch_response_64.json)]
+    finishEpochResponse --> b64to16[python -m b64to16] --> formatedFinishEpochResponse[("finish_epoch_response.json")]
+    formatedFinishEpochResponse --> genProofLibraries.ts
     genProofLibraries.ts --> proofLibraries[(Proof Libraries)]
 ```

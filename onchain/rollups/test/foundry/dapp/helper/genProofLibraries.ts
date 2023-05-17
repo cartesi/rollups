@@ -1,6 +1,6 @@
 import { BytesLike } from "@ethersproject/bytes";
 import fs from "fs";
-import epochStatus from "./epoch-status.json";
+import response from "./finish_epoch_response.json";
 
 interface OutputValidityProof {
     inputIndex: number;
@@ -13,58 +13,52 @@ interface OutputValidityProof {
     outputHashesInEpochSiblings: BytesLike[];
 }
 
-function setupVoucherProof(inputIndex: number): OutputValidityProof {
-    let voucherDataKeccakInHashes =
-        epochStatus.processedInputs[inputIndex].acceptedData.vouchers[0]
-            .keccakInVoucherHashes;
-    let voucherHashesInEpoch =
-        epochStatus.processedInputs[inputIndex].voucherHashesInEpoch
-            .siblingHashes;
-    var siblingKeccakInHashesV: BytesLike[] = [];
-    var voucherHashesInEpochSiblings: BytesLike[] = [];
-    voucherDataKeccakInHashes.siblingHashes.forEach((element: any) => {
-        siblingKeccakInHashesV.push(element.data);
+function setupVoucherProof(positionIndex: number): OutputValidityProof {
+    let v = response.proofs[positionIndex].validity;
+    let keccakInHashesSiblingsRawData = v.keccakInHashesSiblings;
+    let outputHashesInEpochSiblingsRawData = v.outputHashesInEpochSiblings;
+    var keccakInHashesSiblings: BytesLike[] = [];
+    var outputHashesInEpochSiblings: BytesLike[] = [];
+    keccakInHashesSiblingsRawData.forEach((element: any) => {
+        keccakInHashesSiblings.push(element.data);
     });
-    voucherHashesInEpoch.forEach((element: any) => {
-        voucherHashesInEpochSiblings.push(element.data);
+    outputHashesInEpochSiblingsRawData.forEach((element: any) => {
+        outputHashesInEpochSiblings.push(element.data);
     });
     let voucherProof: OutputValidityProof = {
-        inputIndex: inputIndex,
-        outputIndex: 0,
-        outputHashesRootHash: voucherDataKeccakInHashes.rootHash.data,
-        vouchersEpochRootHash: epochStatus.mostRecentVouchersEpochRootHash.data,
-        noticesEpochRootHash: epochStatus.mostRecentNoticesEpochRootHash.data,
-        machineStateHash: epochStatus.mostRecentMachineHash.data,
-        keccakInHashesSiblings: siblingKeccakInHashesV.reverse(),
-        outputHashesInEpochSiblings: voucherHashesInEpochSiblings.reverse(),
+        inputIndex: Number(v.inputIndex),
+        outputIndex: Number(v.outputIndex),
+        outputHashesRootHash: v.outputHashesRootHash.data,
+        vouchersEpochRootHash: v.vouchersEpochRootHash.data,
+        noticesEpochRootHash: v.noticesEpochRootHash.data,
+        machineStateHash: v.machineStateHash.data,
+        keccakInHashesSiblings: keccakInHashesSiblings, // siblings should be bottom-up ordered (from the leaf to the root)
+        outputHashesInEpochSiblings: outputHashesInEpochSiblings,
     };
     return voucherProof;
 }
 
-function setupNoticeProof(inputIndex: number): OutputValidityProof {
-    let noticeDataKeccakInHashes =
-        epochStatus.processedInputs[inputIndex].acceptedData.notices[0]
-            .keccakInNoticeHashes;
-    let noticeHashesInEpoch =
-        epochStatus.processedInputs[inputIndex].noticeHashesInEpoch
-            .siblingHashes;
-    var siblingKeccakInHashesN: BytesLike[] = [];
-    var noticeHashesInEpochSiblingsN: BytesLike[] = [];
-    noticeDataKeccakInHashes.siblingHashes.forEach((element) => {
-        siblingKeccakInHashesN.push(element.data);
+function setupNoticeProof(positionIndex: number): OutputValidityProof {
+    let v = response.proofs[positionIndex].validity;
+    let keccakInHashesSiblingsRawData = v.keccakInHashesSiblings;
+    let outputHashesInEpochSiblingsRawData = v.outputHashesInEpochSiblings;
+    var keccakInHashesSiblings: BytesLike[] = [];
+    var outputHashesInEpochSiblings: BytesLike[] = [];
+    keccakInHashesSiblingsRawData.forEach((element) => {
+        keccakInHashesSiblings.push(element.data);
     });
-    noticeHashesInEpoch.forEach((element) => {
-        noticeHashesInEpochSiblingsN.push(element.data);
+    outputHashesInEpochSiblingsRawData.forEach((element) => {
+        outputHashesInEpochSiblings.push(element.data);
     });
     let noticeProof: OutputValidityProof = {
-        inputIndex: inputIndex,
-        outputIndex: 0,
-        outputHashesRootHash: noticeDataKeccakInHashes.rootHash.data,
-        vouchersEpochRootHash: epochStatus.mostRecentVouchersEpochRootHash.data,
-        noticesEpochRootHash: epochStatus.mostRecentNoticesEpochRootHash.data,
-        machineStateHash: epochStatus.mostRecentMachineHash.data,
-        keccakInHashesSiblings: siblingKeccakInHashesN.reverse(), // from top-down to bottom-up
-        outputHashesInEpochSiblings: noticeHashesInEpochSiblingsN.reverse(),
+        inputIndex: Number(v.inputIndex),
+        outputIndex: Number(v.outputIndex),
+        outputHashesRootHash: v.outputHashesRootHash.data,
+        vouchersEpochRootHash: v.vouchersEpochRootHash.data,
+        noticesEpochRootHash: v.noticesEpochRootHash.data,
+        machineStateHash: v.machineStateHash.data,
+        keccakInHashesSiblings: keccakInHashesSiblings,
+        outputHashesInEpochSiblings: outputHashesInEpochSiblings,
     };
     return noticeProof;
 }
@@ -130,14 +124,31 @@ function buildSolCodes(
     return lines.join("\n");
 }
 
-epochStatus.processedInputs.forEach((_value: any, index: number) => {
-    let libraryName = `LibOutputProof${index}`;
-    let noticeProof = setupNoticeProof(index);
-    let voucherProof = setupVoucherProof(index);
-    let solidityCode = buildSolCodes(noticeProof, voucherProof, libraryName);
+let pairs = response.proofs.length / 2; // need to half because there's a voucher proof and notice proof for each input
+
+// set up proofs
+let voucherProofs: OutputValidityProof[] = new Array(pairs);
+let noticeProofs: OutputValidityProof[] = new Array(pairs);
+for (let i = 0; i < response.proofs.length; i++) {
+    let inputIndex = Number(response.proofs[i].inputIndex);
+    if (response.proofs[i].outputEnum == "NOTICE") {
+        noticeProofs[inputIndex] = setupNoticeProof(i);
+    } else {
+        voucherProofs[inputIndex] = setupVoucherProof(i);
+    }
+}
+
+// write to solidity library codes
+for (let i = 0; i < pairs; i++) {
+    let libraryName = `LibOutputProof${i}`;
+    let solidityCode = buildSolCodes(
+        noticeProofs[i],
+        voucherProofs[i],
+        libraryName
+    );
     let fileName = `${__dirname}/${libraryName}.sol`;
     fs.writeFile(fileName, solidityCode, (err: any) => {
         if (err) throw err;
         console.log(`File '${fileName}' was generated.`);
     });
-});
+}

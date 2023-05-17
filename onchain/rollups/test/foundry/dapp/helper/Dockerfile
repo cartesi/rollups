@@ -10,12 +10,15 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-FROM cartesi/server-manager:0.5.0
+FROM cartesi/server-manager:0.7.0
 WORKDIR /opt/gen-proofs
 
+# root permission
+USER root
+
 # Install system dependencies
-RUN apt update && \
-    apt install -y wget xxd jq git
+RUN apt-get update && \
+    apt-get install -y wget xxd jq git
 
 # Install grpcurl
 RUN export ARCH=$(uname -m | sed 's/aarch64/arm64/') && \
@@ -32,7 +35,7 @@ RUN wget -O ${IMAGES_PATH}/rootfs.ext2 https://github.com/cartesi/image-rootfs/r
     wget -O ${IMAGES_PATH}/rom.bin https://github.com/cartesi/machine-emulator-rom/releases/download/v0.13.0/rom-v0.13.0.bin
 
 # Download grpc-interfaces repo
-RUN git clone --branch v0.10.0 https://github.com/cartesi/grpc-interfaces
+RUN git clone --branch v0.12.0 https://github.com/cartesi/grpc-interfaces
 
 # Generate machine with echo and store it
 ENV MACHINE_DIR=/tmp/gen-proofs-machine
