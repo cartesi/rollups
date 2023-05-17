@@ -17,6 +17,8 @@ import {Portal} from "./Portal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
+error EtherTransferFailed();
+
 /// @title Ether Portal
 ///
 /// @notice This contract allows anyone to perform transfers of
@@ -33,7 +35,10 @@ contract EtherPortal is Portal, IEtherPortal {
         // We used to call `transfer()` but it's not considered safe,
         // as it assumes gas costs are immutable (they are not).
         (bool success, ) = _dapp.call{value: msg.value}("");
-        require(success, "EtherPortal: transfer failed");
+
+        if (!success) {
+            revert EtherTransferFailed();
+        }
 
         bytes memory input = InputEncoding.encodeEtherDeposit(
             msg.sender,

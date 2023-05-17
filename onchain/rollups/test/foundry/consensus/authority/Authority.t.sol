@@ -15,7 +15,7 @@ pragma solidity ^0.8.8;
 
 import {Test} from "forge-std/Test.sol";
 import {TestBase} from "../../util/TestBase.sol";
-import {Authority} from "contracts/consensus/authority/Authority.sol";
+import {Authority, AuthorityWithdrawalFailed} from "contracts/consensus/authority/Authority.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {IHistory} from "contracts/history/IHistory.sol";
 import {History} from "contracts/history/History.sol";
@@ -394,7 +394,7 @@ contract AuthorityTest is TestBase {
 
         // withdrawal fails because `transfer` returns `false`
         vm.prank(_owner);
-        vm.expectRevert("Authority: withdrawal failed");
+        vm.expectRevert(AuthorityWithdrawalFailed.selector);
         authority.withdrawERC20Tokens(tokenFailed, _recipient, _amount);
 
         // after failed withdraw. All balances stay the same

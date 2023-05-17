@@ -9,7 +9,6 @@
 // under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
-
 pragma solidity ^0.8.8;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -19,6 +18,8 @@ import {IConsensus} from "../IConsensus.sol";
 import {AbstractConsensus} from "../AbstractConsensus.sol";
 import {IInputBox} from "../../inputs/IInputBox.sol";
 import {IHistory} from "../../history/IHistory.sol";
+
+error AuthorityWithdrawalFailed();
 
 /// @title Authority consensus
 /// @notice A consensus model controlled by a single address, the owner.
@@ -110,9 +111,10 @@ contract Authority is AbstractConsensus, Ownable {
         address _recipient,
         uint256 _amount
     ) external onlyOwner {
-        require(
-            _token.transfer(_recipient, _amount),
-            "Authority: withdrawal failed"
-        );
+        bool success = _token.transfer(_recipient, _amount);
+
+        if (!success) {
+            revert AuthorityWithdrawalFailed();
+        }
     }
 }

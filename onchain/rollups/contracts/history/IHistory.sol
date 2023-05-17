@@ -20,7 +20,11 @@ interface IHistory {
     ///         The encoding of `_claimData` might vary
     ///         depending on the history implementation.
     /// @param _claimData Data for submitting a claim
+    /// @dev The encoding of _claimData might vary depending on the history implementation
     /// @dev Should have access control.
+    ///      Incorrect claim indices could raise two errors:
+    ///      InvalidInputIndices if first index is posterior than last index or
+    ///      UnclaimedInputs if first index is not the subsequent of previous claimed index.
     function submitClaim(bytes calldata _claimData) external;
 
     /// @notice Transfer ownership to another consensus.
