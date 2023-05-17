@@ -12,7 +12,7 @@
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { create } from "./commands";
+import create from "./commands/create";
 
 yargs(hideBin(process.argv))
     .version()

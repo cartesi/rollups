@@ -11,7 +11,7 @@
 
 import fs from "fs";
 import fse from "fs-extra";
-import { Argv } from "yargs";
+import { Argv, CommandModule } from "yargs";
 import { Overrides } from "@ethersproject/contracts";
 import { parseUnits } from "@ethersproject/units";
 import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/dapp/ICartesiDAppFactory";
@@ -31,9 +31,6 @@ interface Args extends BlockchainArgs {
     gasLimit?: number;
 }
 
-export const command = "create";
-export const describe = "Instantiate rollups application";
-
 /**
  * Read a Cartesi Machine hash from its internal `hash` binary file
  * @param filename path of cartesi machine internal hash file
@@ -46,7 +43,7 @@ const readTemplateHash = (filename: string): string => {
     return "0x" + fs.readFileSync(filename).toString("hex");
 };
 
-export const builder = (yargs: Argv<{}>): Argv<Args> => {
+const builder = (yargs: Argv<{}>): Argv<Args> => {
     return blockchainBuilder(yargs, true)
         .option("dappOwner", {
             describe: "Rollups contract owner",
@@ -84,7 +81,7 @@ export const builder = (yargs: Argv<{}>): Argv<Args> => {
         .config();
 };
 
-export const handler = safeHandler<Args>(async (args) => {
+const handler = safeHandler<Args>(async (args) => {
     const {
         deploymentFile,
         mnemonic,
@@ -180,3 +177,12 @@ export const handler = safeHandler<Args>(async (args) => {
         }
     }
 });
+
+const cmd: CommandModule<{}, Args> = {
+    command: "create",
+    describe: "Instantiate rollups application",
+    builder,
+    handler,
+};
+
+export default cmd;
