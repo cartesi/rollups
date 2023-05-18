@@ -10,6 +10,10 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+permissions:
+  packages: write
+  id-token: write
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-22.04
@@ -73,10 +77,6 @@ jobs:
 
   build_docker:
     runs-on: ubuntu-22.04
-    permissions:
-      packages: write
-      id-token: write
-      contents: read
     needs:
       - test
       - test_onchain
