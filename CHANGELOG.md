@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] 2023-05-19
+
 ### Added
 
 - Added support to Cartesi Machine snapshots
@@ -179,6 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Specific ERC-20 Portal
 - Deprecated mock contracts
 
+[0.9.0]: https://github.com/cartesi/rollups/releases/tag/v0.9.0
 [0.8.2]: https://github.com/cartesi/rollups/releases/tag/v0.8.2
 [0.8.1]: https://github.com/cartesi/rollups/releases/tag/v0.8.1
 [0.8.0]: https://github.com/cartesi/rollups/releases/tag/v0.8.0
