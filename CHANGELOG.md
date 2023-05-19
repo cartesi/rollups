@@ -28,14 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CartesiDApp` does not implement [EIP-2535](https://eips.ethereum.org/EIPS/eip-2535) anymore
 - Made each Portal a contract of their own, and shared amongst all the DApps
 - Made inputs added by Portals more compact by using the [packed ABI encoding](https://docs.soliditylang.org/en/latest/abi-spec.html#non-standard-packed-mode) instead of the standard one
-- Made ERC-20 deposits more generic by allowing L1 transfers to fail, and adding a boolean field signaling whether it was successful or not
-- Made ERC-721 deposits more generic by adding an arbitrary data field to be interpreted by L2
-- Validators are now paid by working time (new Consensus Payment System), and not by number of claims (old Fee Manager Facet)
+- Made ERC-20 deposits more generic by allowing base layer transfers to fail, and adding a boolean field signaling whether it was successful or not
+- Made ERC-721 deposits more generic by adding an arbitrary data field to be interpreted by the off-chain machine in the execution layer
 - Moved the input boxes of every DApp into a single, permissionless contract
-- Input boxes are now append-only -- they are not cleared every new epoch (old Input Facet)
+- Input boxes are now append-only—they are not cleared every new epoch (old Input Facet)
 - Modularized the consensus layer (a DApp can now seamlessly change its consensus model)
 - Modularized the claim storage layer (a consensus can now seamlessly change how it stores claims)
-- Renamed `inputIndex` field from `OutputValidityProof` struct as `epochInputIndex`
 - Voucher bitmask position is now determined by the input index (in the input box) and output index
 - Validators need now to specify the range of inputs of each claim they submit on-chain
 - Refactor GraphQL API for simplified architecture
