@@ -19,8 +19,15 @@ FROM base as builder
 # install git and python3
 RUN <<EOF
 apk update
-apk add --no-cache g++ git make python3
+apk add --no-cache curl g++ git make python3
 rm -rf /var/cache/apk/*
+EOF
+
+# v0.2 -> f85e5bde1afef399021fbc2a99c837cf851ceafa
+WORKDIR /usr/local/src
+RUN <<EOF
+curl -sL https://github.com/ncopa/su-exec/archive/f85e5bde1afef399021fbc2a99c837cf851ceafa.tar.gz | tar --strip-components=1 -zxvf -
+make
 EOF
 
 WORKDIR /app
@@ -52,6 +59,7 @@ FROM base as hardhat
 
 # copy yarn build
 COPY --from=rollups-builder /app /app
+COPY --from=builder /usr/local/src/su-exec /usr/local/bin/
 WORKDIR /app/rollups
 
 # expose hardhat node port
@@ -64,6 +72,7 @@ CMD ["node"]
 # this stage is runtime for rollups-cli (built with esbuild)
 FROM base as cli
 COPY --from=cli-builder /usr/local/bin/cartesi-rollups /usr/local/bin/
+COPY --from=builder /usr/local/src/su-exec /usr/local/bin/
 COPY rollups-cli/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["--help"]

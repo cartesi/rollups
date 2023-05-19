@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 if [ -z "$GID" -o -z "$UID" -o -z "$USER" -o -z "$GROUP" ]; then
     exec cartesi-rollups "$@"
