@@ -6,7 +6,7 @@ on:
     tags:
       - v*
     branches:
-      - develop
+      - main
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
