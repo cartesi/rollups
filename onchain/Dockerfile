@@ -57,10 +57,13 @@ WORKDIR /app/rollups
 # expose hardhat node port
 EXPOSE 8545
 
-ENTRYPOINT ["npx", "hardhat"]
+COPY rollups/entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["node"]
 
 # this stage is runtime for rollups-cli (built with esbuild)
 FROM base as cli
 COPY --from=cli-builder /usr/local/bin/cartesi-rollups /usr/local/bin/
-ENTRYPOINT ["cartesi-rollups"]
+COPY rollups-cli/entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["--help"]
