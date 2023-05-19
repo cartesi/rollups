@@ -106,6 +106,30 @@ Currently, we support the following types of assets:
 - [ERC-721](https://ethereum.org/en/developers/docs/standards/tokens/erc-721/) (Non-fungible tokens)
 - [ERC-1155](https://ethereum.org/en/developers/docs/standards/tokens/erc-1155/) (Multi-tokens)
 
+### Input encodings for deposits
+
+As explained above, in order to teleport assets to the execution layer, the portals add inputs to the DApp's input box, which will then need to be interpreted and validated by the off-chain machine. To do that, the machine will need to understand and decode each input's payload.
+
+The input payloads for deposits are always specified as packed ABI-encoded parameters, as detailed below:
+
+| Asset | Payload |
+| :- | :- |
+| Ether | `address sender, uint256 value, bytes execLayerData` |
+| ERC-20 | `bool success, address token, address sender, uint256 amount, bytes execLayerData` |
+| ERC-721 | `address token, address sender, uint256 tokenId, bytes data` `*` |
+| ERC-1155 (single) | `address token, address sender, uint256 tokenId, uint256 value, bytes data` `*`|
+| ERC-1155 (batch) | `address token, address sender, bytes data` `**` |
+
+**`*`** The ERC-721 and ERC-1155 (single) `data` fields correspond to the standard (unpacked) ABI-encoding of: `bytes baseLayerData, bytes execLayerData`
+
+**`**`** The ERC-1155 (batch) `data` field corresponds to the standard (unpacked) ABI-encoding of: `uint256[] tokenIds, uint256[] values, bytes baseLayerData, bytes execLayerData`
+
+As an example, the deposit of 100 Wei (of Ether) sent by address `0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266` with data `0xabcd` would result in the following input payload:
+
+```
+0xf39fd6e51aad88f6f4ce6ab8827279cfffb922660000000000000000000000000000000000000000000000000000000000000064abcd
+```
+
 ## Vouchers
 
 Vouchers allow DApps in the execution layer to interact with contracts in the base layer through message calls. They are emitted by the off-chain machine, and executed by anyone in the base layer. Each voucher is composed of a destination address and a payload. In Solidity terms, the payload encodes the function signature and the arguments.
@@ -123,6 +147,14 @@ Because of their generality, vouchers can be used in a wide range of application
 | ERC-721 | Token contract | `safeTransferFrom(address,address,uint256,bytes)` [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-721#specification) [^2] |
 | ERC-1155 | Token contract | `safeTransferFrom(address,address,uint256,uint256,data)` [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-1155#specification) |
 | ERC-1155 | Token contract | `safeBatchTransferFrom(address,address,uint256[],uint256[],data)` [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-1155#specification) [^3] |
+
+Please note that the voucher payload should be encoded according to the [Ethereum ABI specification for calling contract functions](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html). As such, it should start with the first four bytes of the Keccak-256 hash of the function signature string (as given in the table above), followed by the ABI-encoded parameter values.
+
+As an example, the voucher for a simple ERC-20 transfer (2nd line in the table above) to address `0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266` with amount 100 should specify the following payload:
+
+```
+0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb922660000000000000000000000000000000000000000000000000000000000000064
+```
 
 [^1]: If the DApp owns the tokens, prefer to use `transfer(address,uint256)`
 [^2]: If no data is being passed as argument, prefer to use `safeTransferFrom(address,address,uint256)`
