@@ -4035,7 +4035,7 @@ dependencies = [
 
 [[package]]
 name = "rollups-events"
-version = "0.1.0"
+version = "0.9.0"
 dependencies = [
  "backoff",
  "base64 0.21.0",
