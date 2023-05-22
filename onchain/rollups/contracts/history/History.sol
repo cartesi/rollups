@@ -13,6 +13,7 @@
 pragma solidity ^0.8.8;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
 import {IHistory} from "./IHistory.sol";
 
 error InvalidInputIndices();

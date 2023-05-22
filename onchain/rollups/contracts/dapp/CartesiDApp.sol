@@ -24,7 +24,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 
 error VoucherReexecutionNotAllowed();
 error EtherTransferFailed();
-error OnlyDapp();
+error OnlyDApp();
 
 /// @title Cartesi DApp
 ///
@@ -231,10 +231,13 @@ contract CartesiDApp is
     /// @dev This function can only be called by the DApp itself through vouchers.
     function withdrawEther(address _receiver, uint256 _value) external {
         if (msg.sender != address(this)) {
-            revert OnlyDapp();
+            revert OnlyDApp();
         }
 
         (bool sent, ) = _receiver.call{value: _value}("");
-        require(sent, "withdrawEther failed");
+
+        if (!sent) {
+            revert EtherTransferFailed();
+        }
     }
 }
