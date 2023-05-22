@@ -19,7 +19,7 @@ import {OutputEncoding} from "../common/OutputEncoding.sol";
 error IncorrectEpochHash();
 error IncorrectOutputsEpochRootHash();
 error IncorrectOutputHashesRootHash();
-error IncorrectInputIndex();
+error InputIndexOutOfClaimBounds();
 
 /// @param inputIndex Which input, inside the epoch, the output belongs to
 /// @param outputIndex Index of output emitted by the input
@@ -204,7 +204,7 @@ library LibOutputValidation {
         uint256 inboxInputIndex = firstInputIndex + v.inputIndex;
 
         if (inboxInputIndex > lastInputIndex) {
-            revert IncorrectInputIndex();
+            revert InputIndexOutOfClaimBounds();
         }
 
         return inboxInputIndex;

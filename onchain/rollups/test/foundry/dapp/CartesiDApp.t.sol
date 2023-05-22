@@ -14,24 +14,28 @@
 pragma solidity ^0.8.8;
 
 import {TestBase} from "../util/TestBase.sol";
-import "forge-std/console.sol";
 
-import {CartesiDApp, VoucherReexecutionNotAllowed, EtherTransferFailed, OnlyDapp} from "contracts/dapp/CartesiDApp.sol";
+import {CartesiDApp, VoucherReexecutionNotAllowed, EtherTransferFailed, OnlyDApp} from "contracts/dapp/CartesiDApp.sol";
 import {Proof} from "contracts/dapp/ICartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
-import {OutputValidityProof, LibOutputValidation, IncorrectEpochHash, IncorrectOutputsEpochRootHash, IncorrectOutputHashesRootHash, IncorrectInputIndex} from "contracts/library/LibOutputValidation.sol";
+import {OutputValidityProof, LibOutputValidation, IncorrectEpochHash, IncorrectOutputsEpochRootHash, IncorrectOutputHashesRootHash, InputIndexOutOfClaimBounds} from "contracts/library/LibOutputValidation.sol";
 import {OutputEncoding} from "contracts/common/OutputEncoding.sol";
+
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+
 import {SimpleConsensus} from "../util/SimpleConsensus.sol";
 import {SimpleERC20} from "../util/SimpleERC20.sol";
 import {SimpleERC721} from "../util/SimpleERC721.sol";
 import {SimpleERC721Receiver} from "../util/SimpleERC721Receiver.sol";
+
 import {LibOutputProof0} from "./helper/LibOutputProof0.sol";
 import {LibOutputProof1} from "./helper/LibOutputProof1.sol";
 import {LibOutputProof2} from "./helper/LibOutputProof2.sol";
 import {LibOutputProof3} from "./helper/LibOutputProof3.sol";
+
+import "forge-std/console.sol";
 
 contract EtherReceiver {
     receive() external payable {}
@@ -360,7 +364,7 @@ contract CartesiDAppTest is TestBase {
             abi.encode(epochHash, _inboxInputIndex, _inboxInputIndex)
         );
 
-        vm.expectRevert(IncorrectInputIndex.selector);
+        vm.expectRevert(InputIndexOutOfClaimBounds.selector);
         dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
     }
 
@@ -456,7 +460,7 @@ contract CartesiDAppTest is TestBase {
         vm.deal(address(dapp), _value);
 
         // withdrawEther cannot be called by anyone
-        vm.expectRevert(OnlyDapp.selector);
+        vm.expectRevert(OnlyDApp.selector);
         vm.prank(_notDApp);
         dapp.withdrawEther(receiver, _value);
 
@@ -493,7 +497,7 @@ contract CartesiDAppTest is TestBase {
         vm.deal(address(dapp), _value);
 
         // withdrawEther cannot be called by anyone
-        vm.expectRevert(OnlyDapp.selector);
+        vm.expectRevert(OnlyDApp.selector);
         vm.prank(_notDApp);
         dapp.withdrawEther(receiver, _value);
 
@@ -503,6 +507,20 @@ contract CartesiDAppTest is TestBase {
         dapp.withdrawEther(receiver, _value);
         assertEq(receiver.balance, preBalance + _value);
         assertEq(address(dapp).balance, 0);
+    }
+
+    function testRevertsWithdrawEther(uint256 _value, uint256 _funds) public {
+        dapp = deployDAppDeterministically();
+        vm.assume(_value > _funds);
+        address receiver = address(new EtherReceiver());
+
+        // Fund DApp
+        vm.deal(address(dapp), _funds);
+
+        //DApp is not funded or does not have enough funds
+        vm.prank(address(dapp));
+        vm.expectRevert(EtherTransferFailed.selector);
+        dapp.withdrawEther(receiver, _value);
     }
 
     // test NFT transfer

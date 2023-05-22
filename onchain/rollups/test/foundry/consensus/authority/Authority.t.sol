@@ -108,6 +108,7 @@ contract AuthorityTest is TestBase {
         address _newConsensus
     ) public isMockable(address(_history)) {
         vm.assume(_owner != address(0));
+        vm.assume(_owner != msg.sender);
         vm.assume(_newConsensus != address(0));
 
         authority = new Authority(_owner, _inputBox);
