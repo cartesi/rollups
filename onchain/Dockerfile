@@ -11,7 +11,8 @@
 # the License.
 
 # syntax=docker.io/docker/dockerfile:1.4
-FROM node:16.17.0-bullseye as base
+ARG ${NODEJS_VERSION}=18.16.0
+FROM node:${NODEJS_VERSION}-bullseye as base
 
 # this stage installs system dependencies for building the node projects
 FROM base as builder
@@ -48,7 +49,7 @@ RUN yarn build
 RUN npm install -g .
 
 # this stage is runtime image for rollups (hardhat)
-FROM node:16.17.0-bullseye-slim as hardhat
+FROM node:${NODEJS_VERSION}-bullseye-slim as hardhat
 
 # copy yarn build
 COPY --from=rollups-builder /app /app
@@ -61,6 +62,6 @@ ENTRYPOINT ["npx", "hardhat"]
 CMD ["node"]
 
 # this stage is runtime for rollups-cli (built with esbuild)
-FROM node:16.17.0-bullseye-slim as cli
+FROM node:${NODEJS_VERSION}-bullseye-slim as cli
 COPY --from=cli-builder /usr/local/bin/cartesi-rollups /usr/local/bin/
 ENTRYPOINT ["cartesi-rollups"]
