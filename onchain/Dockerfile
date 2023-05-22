@@ -11,7 +11,7 @@
 # the License.
 
 # syntax=docker.io/docker/dockerfile:1.4
-ARG ${NODEJS_VERSION}=18.16.0
+ARG NODEJS_VERSION=18.16.0
 FROM node:${NODEJS_VERSION}-bullseye as base
 
 # this stage installs system dependencies for building the node projects
