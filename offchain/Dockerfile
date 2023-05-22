@@ -63,7 +63,7 @@ FROM golang:1.19.0-bullseye as grpc_health_probe
 RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
 
 # define runtime image
-FROM debian:bullseye-20230502-slim as runtime
+FROM debian:bullseye-20230522-slim as runtime
 RUN addgroup --system --gid 102 cartesi && \
     adduser --system --uid 102 --ingroup cartesi --disabled-login --no-create-home --home /nonexistent --gecos "cartesi user" --shell /bin/false cartesi
 RUN mkdir -p /var/opt/cartesi
