@@ -56,7 +56,8 @@ interface ICartesiDApp {
     /// @param _proof The proof used to validate the voucher against
     ///               a claim submitted by the current consensus contract
     /// @return Whether the execution was successful or not
-    /// @dev On a successful execution, emits a `VoucherExecuted` event. Execution of already executed voucher will raise a VoucherReexecutionNotAllowed error.
+    /// @dev On a successful execution, emits a `VoucherExecuted` event.
+    ///      Execution of already executed voucher will raise a `VoucherReexecutionNotAllowed` error.
     function executeVoucher(
         address _destination,
         bytes calldata _payload,

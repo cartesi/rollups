@@ -26,7 +26,7 @@ interface IEtherPortal is IPortal {
     /// @param _dapp The address of the DApp
     /// @param _execLayerData Additional data to be interpreted by the execution layer
     /// @dev All the value sent through this function is forwarded to the DApp.
-    ///      If the transfer fails, an EtherTransferFailed error is raised.
+    /// If the transfer fails, an `EtherTransferFailed` error is raised.
     function depositEther(
         address _dapp,
         bytes calldata _execLayerData
