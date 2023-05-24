@@ -81,10 +81,10 @@ library InputEncoding {
         bytes memory data = abi.encode(baseLayerData, execLayerData);
         return
             abi.encodePacked(
-                token, //      20B
-                sender, //     20B
-                tokenId, //    32B
-                data //        arbitrary size
+                token, //               20B
+                sender, //              20B
+                tokenId, //             32B
+                data //                 arbitrary size
             );
     }
 
@@ -108,11 +108,11 @@ library InputEncoding {
         bytes memory data = abi.encode(baseLayerData, execLayerData);
         return
             abi.encodePacked(
-                token, //                   20B
-                sender, //                  20B
-                tokenId, //                 32B
-                value, //                   32B
-                data //                     arbitrary size
+                token, //               20B
+                sender, //              20B
+                tokenId, //             32B
+                value, //               32B
+                data //                 arbitrary size
             );
     }
 
@@ -155,7 +155,7 @@ library InputEncoding {
     ) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
-                dapp //        20B
+                dapp //                     20B
             );
     }
 }
