@@ -1631,6 +1631,7 @@ dependencies = [
  "serde_json",
  "snafu",
  "state-client-lib",
+ "state-fold",
  "state-fold-types",
  "test-fixtures",
  "testcontainers",
