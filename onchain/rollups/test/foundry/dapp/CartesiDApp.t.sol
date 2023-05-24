@@ -517,7 +517,7 @@ contract CartesiDAppTest is TestBase {
         // Fund DApp
         vm.deal(address(dapp), _funds);
 
-        //DApp is not funded or does not have enough funds
+        // DApp is not funded or does not have enough funds
         vm.prank(address(dapp));
         vm.expectRevert(EtherTransferFailed.selector);
         dapp.withdrawEther(receiver, _value);

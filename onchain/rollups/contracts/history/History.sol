@@ -79,6 +79,10 @@ contract History is IHistory, Ownable {
     ///
     /// @inheritdoc IHistory
     /// @dev Emits a `NewClaimToHistory` event. Should have access control.
+    ///      Incorrect claim indices could raise two errors:
+    ///      `InvalidInputIndices` if first index is posterior than last index or
+    ///      `UnclaimedInputs` if first index is not the subsequent of previous claimed index or
+    ///                        if the first index of the first claim is not zero.
     function submitClaim(
         bytes calldata _claimData
     ) external override onlyOwner {

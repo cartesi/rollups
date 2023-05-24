@@ -229,6 +229,8 @@ contract CartesiDApp is
     /// @param _receiver The address which will receive the amount of Ether
     /// @param _value The amount of Ether to be transferred in Wei
     /// @dev This function can only be called by the DApp itself through vouchers.
+    ///      If this method is not called by DApp itself, `OnlyDApp` error is raised.
+    ///      If the transfer fails, `EtherTransferFailed` error is raised.
     function withdrawEther(address _receiver, uint256 _value) external {
         if (msg.sender != address(this)) {
             revert OnlyDApp();
