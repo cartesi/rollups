@@ -57,9 +57,8 @@ runmachine() {
 }
 
 # Decode strings in epoch status from Base64 to hexadecimal
-# Format the output with jq so that git diffs are smoother
 b64to16() {
-    python3 -m b64to16 output/finish_epoch_response_64.json | jq > finish_epoch_response.json
+    python3 -m b64to16 output/finish_epoch_response_64.json > finish_epoch_response.json
 }
 
 # Generate Solidity libraries with proofs from epoch status
