@@ -254,6 +254,8 @@ Once you've setup the repository, you can test the different pieces that compose
 
 ### Testing the on-chain code
 
+Since we have test cases for voucher execution and notice validation, we need to generate Merkle proofs for those voucher/notice test cases. Please first visit [this README](https://github.com/cartesi/rollups/tree/main/onchain/rollups/test/foundry/dapp/helper) for instructions on how to set up and update Merkle proofs. Afterwards, run the following commands for on-chain tests.
+
 ```sh
 cd onchain/rollups
 yarn test
@@ -268,7 +270,7 @@ cd offchain
 cargo build
 ```
 
-Now you can run the onchain tests alongside the state servers by running the following commands:
+Now you can run the on-chain tests alongside the state servers by running the following commands:
 
 ```sh
 cd onchain/rollups
