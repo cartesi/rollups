@@ -1,20 +1,21 @@
 ---
-name: Gas Optimization
-about: Template for solidity smart contract gas optimization
+name: ⛽ Gas optimization
+about: Reduce gas usage of smart contracts
 title: ''
-labels: ''
+labels: onchain
 assignees: ''
-
 ---
 
-## Steps
-- [ ] configure and run the [HardHat profiler](https://www.npmjs.com/package/hardhat-gas-reporter)
-- [ ] check the boxes in the checklist if they are applicable. Leave out those that are not applicable. It would be helpful to record the gas savings amount for modification steps.
-- [ ] create a PR to compare the original/current gas report, display the amount of gas savings of modification steps, discuss and comment.
-- [ ] you can use [this Python script](https://gist.github.com/guidanoli/b7566f54c437e0b0f28c4554d151286f) to ease the job of comparing Hardhat gas reports. It takes two Hardhat gas reports (before and after some change) and outputs a Markdown table comparing them. Other options are available.
+## 🚶 Steps
+
+- [ ] Configure and run the [HardHat profiler](https://www.npmjs.com/package/hardhat-gas-reporter)
+- [ ] Check the boxes in the checklist if they are applicable. Leave out those that are not applicable. It would be helpful to record the gas savings amount for modification steps.
+- [ ] Create a PR to compare the original/current gas report, display the amount of gas savings of modification steps, discuss and comment.
+- [ ] You can use [this Python script](https://gist.github.com/guidanoli/b7566f54c437e0b0f28c4554d151286f) to ease the job of comparing Hardhat gas reports. It takes two Hardhat gas reports (before and after some change) and outputs a Markdown table comparing them. Other options are available.
 - [ ] (optional) Learn more about [gas consumption components of deploying a contract](https://ethereum.stackexchange.com/questions/35539/what-is-the-real-price-of-deploying-a-contract-on-the-mainnet/37898), [more detailed analysis](https://hackernoon.com/costs-of-a-real-world-ethereum-contract-2033511b3214), and how to [reduce contract bytecode](https://medium.com/daox/avoiding-out-of-gas-error-in-large-ethereum-smart-contracts-18961b1fc0c6)
 
-## Checklist
+## 📝 Checklist
+
 - [ ] 1. Pack storage variables
 - [ ] 2. uint8 is not always cheaper than uint256
 - [ ] 3. Mappings are cheaper than Arrays
@@ -39,4 +40,4 @@ assignees: ''
 - [ ] 22. Using proxy patterns for mass deployment
 - [ ] 23. General logic/programming optimization
 
-Please refer to [this article](https://mudit.blog/solidity-gas-optimization-tips/) and [this article](https://blog.polymath.network/solidity-tips-and-tricks-to-save-gas-and-reduce-bytecode-size-c44580b218e6) for details regarding the checkpoints.
+Please refer to articles [(a)](https://mudit.blog/solidity-gas-optimization-tips/) and [(b)](https://blog.polymath.network/solidity-tips-and-tricks-to-save-gas-and-reduce-bytecode-size-c44580b218e6) for details regarding the checkpoints.

@@ -1,10 +1,9 @@
 ---
-name: 🏗️ Technical Debt
+name: 🏗️ Technical debt
 about: Propose solutions to technical debts
 title: ''
 labels: refactor
 assignees: ''
-
 ---
 
 ## 📚 Context

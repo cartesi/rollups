@@ -4,7 +4,6 @@ about: Suggest a new feature or improvement
 title: ''
 labels: feature
 assignees: ''
-
 ---
 
 ## 📚 Context

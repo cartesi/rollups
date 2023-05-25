@@ -1,13 +1,12 @@
 ---
-name: Smart Contract Audit
-about: Template for auditing smart contracts
+name: 🔍 Smart contract audit
+about: Detect vulnerabilities in smart contracts
 title: ''
-labels: ''
+labels: onchain
 assignees: ''
-
 ---
 
-## Vulnerabilities
+## 🚩 Vulnerabilities
 
 Listed below are some well documented vulnerabilities that affect smart contracts.
 You can find many others from the list of references.
@@ -57,7 +56,7 @@ You can find many others from the list of references.
 - [ ] Outdated Compiler Version [(SWC-102)](https://swcregistry.io/docs/SWC-102)
 - [ ] Floating Pragma [(SWC-103)](https://swcregistry.io/docs/SWC-103)
 
-## References
+## 📚 References
 
 Smart Contract Weakness Classification and Test Cases. https://swcregistry.io/
 
