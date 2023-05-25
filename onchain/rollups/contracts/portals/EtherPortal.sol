@@ -17,13 +17,14 @@ import {Portal} from "./Portal.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
-error EtherTransferFailed();
-
 /// @title Ether Portal
 ///
 /// @notice This contract allows anyone to perform transfers of
 /// Ether to a DApp while informing the off-chain machine.
 contract EtherPortal is Portal, IEtherPortal {
+    /// @notice Raised when the Ether the transfer fails.
+    error EtherTransferFailed();
+
     /// @notice Constructs the portal.
     /// @param _inputBox The input box used by the portal
     constructor(IInputBox _inputBox) Portal(_inputBox) {}

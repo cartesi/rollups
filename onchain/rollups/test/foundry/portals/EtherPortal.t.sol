@@ -14,7 +14,7 @@
 pragma solidity ^0.8.8;
 
 import {Test} from "forge-std/Test.sol";
-import {EtherPortal, EtherTransferFailed} from "contracts/portals/EtherPortal.sol";
+import {EtherPortal} from "contracts/portals/EtherPortal.sol";
 import {IEtherPortal} from "contracts/portals/IEtherPortal.sol";
 import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {InputBox} from "contracts/inputs/InputBox.sol";
@@ -116,7 +116,7 @@ contract EtherPortalTest is Test {
         startHoax(alice, value);
 
         // Expect the deposit to revert with the following message
-        vm.expectRevert(EtherTransferFailed.selector);
+        vm.expectRevert(EtherPortal.EtherTransferFailed.selector);
         etherPortal.depositEther{value: value}(address(badEtherReceiver), data);
     }
 

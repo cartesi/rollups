@@ -16,9 +16,6 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IHistory} from "./IHistory.sol";
 
-error InvalidInputIndices();
-error UnclaimedInputs();
-
 /// @title Simple History
 ///
 /// @notice This contract stores claims for each DApp individually.
@@ -52,6 +49,12 @@ contract History is IHistory, Ownable {
     /// @param claim The newly-submitted claim
     /// @dev MUST be triggered on a successful call to `submitClaim`.
     event NewClaimToHistory(address indexed dapp, Claim claim);
+
+    /// @notice Raised due to an incorrect indices claim when first index is posterior than last index.
+    error InvalidInputIndices();
+
+    /// @notice Raised due to an incorrect indices claim when the first index of the first claim is not zero.
+    error UnclaimedInputs();
 
     /// @notice Creates a `History` contract.
     /// @param _owner The initial owner

@@ -15,10 +15,10 @@ pragma solidity ^0.8.8;
 
 import {TestBase} from "../util/TestBase.sol";
 
-import {CartesiDApp, VoucherReexecutionNotAllowed, EtherTransferFailed, OnlyDApp} from "contracts/dapp/CartesiDApp.sol";
+import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {Proof} from "contracts/dapp/ICartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
-import {OutputValidityProof, LibOutputValidation, IncorrectEpochHash, IncorrectOutputsEpochRootHash, IncorrectOutputHashesRootHash, InputIndexOutOfClaimBounds} from "contracts/library/LibOutputValidation.sol";
+import {OutputValidityProof, LibOutputValidation} from "contracts/library/LibOutputValidation.sol";
 import {OutputEncoding} from "contracts/common/OutputEncoding.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -155,7 +155,9 @@ contract CartesiDAppTest is TestBase {
 
         // reverts if notice is incorrect
         bytes memory falseNotice = abi.encodePacked(bytes4(0xdeaddead));
-        vm.expectRevert(IncorrectOutputHashesRootHash.selector);
+        vm.expectRevert(
+            LibOutputValidation.IncorrectOutputHashesRootHash.selector
+        );
         dapp.validateNotice(falseNotice, proof);
     }
 
@@ -233,7 +235,7 @@ contract CartesiDAppTest is TestBase {
         assertEq(success, true);
 
         // 2nd execution attempt should fail
-        vm.expectRevert(VoucherReexecutionNotAllowed.selector);
+        vm.expectRevert(CartesiDApp.VoucherReexecutionNotAllowed.selector);
         dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
 
         // end result should be the same as executing successfully only once
@@ -311,7 +313,7 @@ contract CartesiDAppTest is TestBase {
 
         proof.validity.vouchersEpochRootHash = bytes32(uint256(0xdeadbeef));
 
-        vm.expectRevert(IncorrectEpochHash.selector);
+        vm.expectRevert(LibOutputValidation.IncorrectEpochHash.selector);
         dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
     }
 
@@ -323,7 +325,9 @@ contract CartesiDAppTest is TestBase {
 
         proof.validity.outputHashesRootHash = bytes32(uint256(0xdeadbeef));
 
-        vm.expectRevert(IncorrectOutputsEpochRootHash.selector);
+        vm.expectRevert(
+            LibOutputValidation.IncorrectOutputsEpochRootHash.selector
+        );
         dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
     }
 
@@ -335,7 +339,9 @@ contract CartesiDAppTest is TestBase {
 
         proof.validity.outputIndex = 0xdeadbeef;
 
-        vm.expectRevert(IncorrectOutputHashesRootHash.selector);
+        vm.expectRevert(
+            LibOutputValidation.IncorrectOutputHashesRootHash.selector
+        );
         dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
     }
 
@@ -364,7 +370,9 @@ contract CartesiDAppTest is TestBase {
             abi.encode(epochHash, _inboxInputIndex, _inboxInputIndex)
         );
 
-        vm.expectRevert(InputIndexOutOfClaimBounds.selector);
+        vm.expectRevert(
+            LibOutputValidation.InputIndexOutOfClaimBounds.selector
+        );
         dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
     }
 
@@ -443,7 +451,7 @@ contract CartesiDAppTest is TestBase {
         assertEq(address(recipient).balance, transferAmount);
 
         // cannot execute the same voucher again
-        vm.expectRevert(VoucherReexecutionNotAllowed.selector);
+        vm.expectRevert(CartesiDApp.VoucherReexecutionNotAllowed.selector);
         dapp.executeVoucher(address(dapp), withdrawEtherPayload, proof);
     }
 
@@ -460,7 +468,7 @@ contract CartesiDAppTest is TestBase {
         vm.deal(address(dapp), _value);
 
         // withdrawEther cannot be called by anyone
-        vm.expectRevert(OnlyDApp.selector);
+        vm.expectRevert(CartesiDApp.OnlyDApp.selector);
         vm.prank(_notDApp);
         dapp.withdrawEther(receiver, _value);
 
@@ -497,7 +505,7 @@ contract CartesiDAppTest is TestBase {
         vm.deal(address(dapp), _value);
 
         // withdrawEther cannot be called by anyone
-        vm.expectRevert(OnlyDApp.selector);
+        vm.expectRevert(CartesiDApp.OnlyDApp.selector);
         vm.prank(_notDApp);
         dapp.withdrawEther(receiver, _value);
 
@@ -519,7 +527,7 @@ contract CartesiDAppTest is TestBase {
 
         // DApp is not funded or does not have enough funds
         vm.prank(address(dapp));
-        vm.expectRevert(EtherTransferFailed.selector);
+        vm.expectRevert(CartesiDApp.EtherTransferFailed.selector);
         dapp.withdrawEther(receiver, _value);
     }
 
@@ -584,7 +592,7 @@ contract CartesiDAppTest is TestBase {
         assertEq(erc721Token.ownerOf(tokenId), address(erc721Receiver));
 
         // cannot execute the same voucher again
-        vm.expectRevert(VoucherReexecutionNotAllowed.selector);
+        vm.expectRevert(CartesiDApp.VoucherReexecutionNotAllowed.selector);
         dapp.executeVoucher(
             address(erc721Token),
             safeTransferFromPayload,
