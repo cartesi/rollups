@@ -16,11 +16,6 @@ import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {MerkleV2} from "@cartesi/util/contracts/MerkleV2.sol";
 import {OutputEncoding} from "../common/OutputEncoding.sol";
 
-error IncorrectEpochHash();
-error IncorrectOutputsEpochRootHash();
-error IncorrectOutputHashesRootHash();
-error InputIndexOutOfClaimBounds();
-
 /// @param inputIndex Which input, inside the epoch, the output belongs to
 /// @param outputIndex Index of output emitted by the input
 /// @param outputHashesRootHash Merkle root of hashes of outputs emitted by the input
@@ -43,6 +38,22 @@ struct OutputValidityProof {
 /// @title Output Validation Library
 library LibOutputValidation {
     using CanonicalMachine for CanonicalMachine.Log2Size;
+
+    /// @notice Raised when some `OutputvalidityProof` variables does not match
+    ///          the presented finalized epoch.
+    error IncorrectEpochHash();
+
+    /// @notice Raised when `OutputvalidityProof` metadata memory range is NOT
+    ///         contained in epoch's output memory range.
+    error IncorrectOutputsEpochRootHash();
+
+    /// @notice Raised when Merkle root hash of bytes(hashOfOutput) is NOT
+    ///         contained In the output metadata array memory range.
+    error IncorrectOutputHashesRootHash();
+
+    /// @notice Raised when epoch input index is NOT compatible with the
+    ///         provided input index range.
+    error InputIndexOutOfClaimBounds();
 
     /// @notice Make sure the output proof is valid, otherwise revert.
     /// @param v The output validity proof
