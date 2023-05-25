@@ -14,11 +14,12 @@ pragma solidity ^0.8.8;
 
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 
-error InputSizeExceedsLimit();
-
 /// @title Input Library
 library LibInput {
     using CanonicalMachine for CanonicalMachine.Log2Size;
+
+    /// @notice Raised when input is larger than the machine limit.
+    error InputSizeExceedsLimit();
 
     /// @notice Summarize input data in a single hash.
     /// @param sender `msg.sender`

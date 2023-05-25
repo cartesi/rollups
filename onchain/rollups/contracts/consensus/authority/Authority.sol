@@ -20,8 +20,6 @@ import {AbstractConsensus} from "../AbstractConsensus.sol";
 import {IInputBox} from "../../inputs/IInputBox.sol";
 import {IHistory} from "../../history/IHistory.sol";
 
-error AuthorityWithdrawalFailed();
-
 /// @title Authority consensus
 /// @notice A consensus model controlled by a single address, the owner.
 ///         Claims are stored in an auxiliary contract called `History`.
@@ -42,6 +40,9 @@ contract Authority is AbstractConsensus, Ownable {
     /// @param history The new history contract
     /// @dev MUST be triggered on a successful call to `setHistory`.
     event NewHistory(IHistory history);
+
+    /// @notice Raised when a transfer of tokens from an authority to a recipient fails.
+    error AuthorityWithdrawalFailed();
 
     /// @notice Constructs an `Authority` contract.
     /// @param _owner The initial contract owner

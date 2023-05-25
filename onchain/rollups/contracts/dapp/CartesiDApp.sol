@@ -22,10 +22,6 @@ import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Hol
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-error VoucherReexecutionNotAllowed();
-error EtherTransferFailed();
-error OnlyDApp();
-
 /// @title Cartesi DApp
 ///
 /// @notice This contract acts as the base layer incarnation of a DApp running on the execution layer.
@@ -77,6 +73,15 @@ contract CartesiDApp is
 {
     using Bitmask for mapping(uint256 => uint256);
     using LibOutputValidation for OutputValidityProof;
+
+    /// @notice Raised when executing an already executed voucher.
+    error VoucherReexecutionNotAllowed();
+
+    /// @notice Raised when the transfer fails.
+    error EtherTransferFailed();
+
+    /// @notice Raised when a mehtod is not called by DApp itself.
+    error OnlyDApp();
 
     /// @notice The initial machine state hash.
     /// @dev See the `getTemplateHash` function.
