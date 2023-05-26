@@ -39,16 +39,16 @@ struct OutputValidityProof {
 library LibOutputValidation {
     using CanonicalMachine for CanonicalMachine.Log2Size;
 
-    /// @notice Raised when some `OutputvalidityProof` variables does not match
-    ///          the presented finalized epoch.
+    /// @notice Raised when some `OutputValidityProof` variables does not match
+    ///         the presented finalized epoch.
     error IncorrectEpochHash();
 
-    /// @notice Raised when `OutputvalidityProof` metadata memory range is NOT
+    /// @notice Raised when `OutputValidityProof` metadata memory range is NOT
     ///         contained in epoch's output memory range.
     error IncorrectOutputsEpochRootHash();
 
-    /// @notice Raised when Merkle root hash of bytes(hashOfOutput) is NOT
-    ///         contained In the output metadata array memory range.
+    /// @notice Raised when Merkle root of output hash is NOT
+    ///         contained in the output metadata array memory range.
     error IncorrectOutputHashesRootHash();
 
     /// @notice Raised when epoch input index is NOT compatible with the
@@ -124,7 +124,7 @@ library LibOutputValidation {
             CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize()
         );
 
-        // prove that Merkle root hash of bytes(hashOfOutput) is contained
+        // prove that Merkle root of bytes(hashOfOutput) is contained
         // in the output metadata array memory range
         if (
             MerkleV2.getRootAfterReplacementInDrive(
