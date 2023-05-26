@@ -1,0 +1,34 @@
+name: Remove docker images for stale/closed PR(s).
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+jobs:
+  cleanup:
+    name: Cleanup ghcr.io/cartesi/${{ matrix.image }}:pr-${{ github.event.number }} image
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    strategy:
+      matrix:
+        image:
+          - deployments
+          - rollups-advance-runner
+          - rollups-cli
+          - rollups-dispatcher
+          - rollups-graphql-server
+          - rollups-hardhat
+          - rollups-indexer
+          - rollups-inspect-server
+          - rollups-state-server
+    steps:
+      - uses: vlaurin/action-ghcr-prune@v0.5.0
+        with:
+          organization: cartesi
+          container: ${{ matrix.image }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          prune-untagged: true
+          keep-last: 0
+          prune-tags-regexes: |
+            ^pr-${{ github.event.number }}$
