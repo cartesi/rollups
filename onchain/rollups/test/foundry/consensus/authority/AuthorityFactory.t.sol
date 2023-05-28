@@ -10,7 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Cartesi DApp Factory Test
+/// @title Cartesi Authority Factory Test
 pragma solidity ^0.8.8;
 
 import {TestBase} from "../../util/TestBase.sol";
@@ -79,7 +79,7 @@ contract AuthorityFactoryTest is TestBase {
         // Precalculated address must STILL match actual address
         assertEq(precalculatedAddress, address(authority));
 
-        // Cannot deploy a DApp with the same salt twice
+        // Cannot deploy a authority with the same salt twice
         vm.expectRevert(bytes(""));
         factory.newAuthority(
             _authorityOwner,
