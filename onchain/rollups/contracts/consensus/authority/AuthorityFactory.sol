@@ -23,16 +23,9 @@ contract AuthorityFactory is IAuthorityFactory {
         address _authorityOwner,
         IInputBox _inputBox
     ) external override returns (Authority) {
-        Authority authority = new Authority(
-            _authorityOwner,
-            _inputBox
-        );
+        Authority authority = new Authority(_authorityOwner, _inputBox);
 
-        emit AuthorityCreated(
-            _authorityOwner,
-            _inputBox,
-            authority
-        );
+        emit AuthorityCreated(_authorityOwner, _inputBox, authority);
 
         return authority;
     }
@@ -47,14 +40,10 @@ contract AuthorityFactory is IAuthorityFactory {
             _inputBox
         );
 
-        emit AuthorityCreated(
-            _authorityOwner,
-            _inputBox,
-            authority
-        );
+        emit AuthorityCreated(_authorityOwner, _inputBox, authority);
 
         return authority;
-   }
+    }
 
     function calculateAuthorityAddress(
         address _authorityOwner,
@@ -73,10 +62,7 @@ contract AuthorityFactory is IAuthorityFactory {
                                 keccak256(
                                     abi.encodePacked(
                                         type(Authority).creationCode,
-                                        abi.encode(
-                                            _authorityOwner,
-                                            _inputBox
-                                        )
+                                        abi.encode(_authorityOwner, _inputBox)
                                     )
                                 )
                             )

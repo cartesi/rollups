@@ -15,16 +15,18 @@ pragma solidity ^0.8.8;
 import {Authority} from "./Authority.sol";
 import {IInputBox} from "../../inputs/IInputBox.sol";
 
-/// @title Cartesi DApp Factory interface
+/// @title Authority Factory interface
 interface IAuthorityFactory {
     // Events
 
     /// @notice A new authority was deployed.
-    /// @param authorityOwner The initial DApp owner
+    /// @param authorityOwner The initial authority owner
+    /// @param inputBox The input box
+    /// @param authority The authority
     /// @dev MUST be triggered on a successful call to `newAuthority`.
     event AuthorityCreated(
         address authorityOwner,
-        IInputBox _inputBox,
+        IInputBox inputBox,
         Authority authority
     );
 
@@ -32,6 +34,7 @@ interface IAuthorityFactory {
 
     /// @notice Deploy a new authority.
     /// @param _authorityOwner The initial authority owner
+    /// @param _inputBox The input box
     /// @return The authority
     /// @dev On success, MUST emit an `AuthorityCreated` event.
     function newAuthority(
@@ -40,8 +43,9 @@ interface IAuthorityFactory {
     ) external returns (Authority);
 
     /// @notice Deploy a new authority deterministically.
-    /// @param _authorityOwner The initial DApp owner
-    /// @param _salt The salt used to deterministically generate the DApp address
+    /// @param _authorityOwner The initial authority owner
+    /// @param _inputBox The input box
+    /// @param _salt The salt used to deterministically generate the authority address
     /// @return The authority
     /// @dev On success, MUST emit an `AuthorityCreated` event.
     function newAuthority(
@@ -53,7 +57,7 @@ interface IAuthorityFactory {
     /// @notice Calculate the address of an authority to be deployed deterministically.
     /// @param _authorityOwner The initial authority owner
     /// @param _inputBox The input box
-    /// @param _salt The salt used to deterministically generate the DApp address
+    /// @param _salt The salt used to deterministically generate the authority address
     /// @return The deterministic authority address
     /// @dev Beware that only the `newAuthority` function with the `_salt` parameter
     ///      is able to deterministically deploy an authority.
