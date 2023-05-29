@@ -13,7 +13,7 @@
 /// @title Cartesi DApp Test
 pragma solidity ^0.8.8;
 
-import {TestBase} from "../util/TestBase.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {Proof} from "contracts/dapp/ICartesiDApp.sol";
@@ -47,7 +47,7 @@ contract EtherReceiver {
 // 2: voucher ETH withdrawal
 // 3: voucher ERC-721 transfer
 
-contract CartesiDAppTest is TestBase {
+contract CartesiDAppTest is Test {
     Proof proof;
     CartesiDApp dapp;
     IConsensus consensus;

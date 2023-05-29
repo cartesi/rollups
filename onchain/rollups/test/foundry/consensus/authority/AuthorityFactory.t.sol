@@ -10,44 +10,75 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-/// @title Cartesi Authority Factory Test
+/// @title Authority Factory Test
 pragma solidity ^0.8.8;
 
-import {TestBase} from "../../util/TestBase.sol";
+import {Test} from "forge-std/Test.sol";
 import {AuthorityFactory} from "contracts/consensus/authority/AuthorityFactory.sol";
 import {Authority} from "contracts/consensus/authority/Authority.sol";
+import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {InputBox} from "contracts/inputs/InputBox.sol";
 import {Vm} from "forge-std/Vm.sol";
 
-contract AuthorityFactoryTest is TestBase {
+contract AuthorityFactoryTest is Test {
     AuthorityFactory factory;
     InputBox inputBox;
+
+    // event emitted in the factory
+    event AuthorityCreated(
+        address authorityOwner,
+        IInputBox inputBox,
+        Authority authority
+    );
+    // event emitted in the authority contract
+    event ConsensusCreated(address owner, IInputBox inputBox);
 
     function setUp() public {
         factory = new AuthorityFactory();
         inputBox = new InputBox();
     }
 
-    event AuthorityCreated(
-        address authorityOwner,
-        InputBox _inputBox,
-        Authority authority
-    );
-
-    function testNewAuthority(
-        address _authorityOwner
-    ) public {
+    function testNewAuthority(address _authorityOwner) public {
         vm.assume(_authorityOwner != address(0));
 
-        Authority authority = factory.newAuthority(
-            _authorityOwner,
-            inputBox
-        );
+        // expect event emitted from the authority contract
+        vm.expectEmit(false, false, false, true);
+        emit ConsensusCreated(_authorityOwner, inputBox);
+        // to check the deployed authority address emitted in the AuthorityCreated event
+        // we need to record logs
+        vm.recordLogs();
 
+        Authority authority = factory.newAuthority(_authorityOwner, inputBox);
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        uint256 count;
+        for (uint256 i; i < entries.length; ++i) {
+            if (
+                entries[i].topics[0] ==
+                keccak256("AuthorityCreated(address,address,address)")
+            ) {
+                // test data
+                (
+                    address decodedAuthorityOwner,
+                    address decodedInputBox,
+                    address decodedAuthority
+                ) = abi.decode(entries[i].data, (address, address, address));
+                assertEq(_authorityOwner, decodedAuthorityOwner);
+                assertEq(address(inputBox), decodedInputBox);
+                assertEq(address(authority), decodedAuthority);
+
+                ++count;
+            }
+        }
+        // check there's only 1 AuthorityCreated event
+        assertEq(count, 1);
+
+        // call to check authority's owner
         assertEq(authority.owner(), _authorityOwner);
     }
 
-    function testNewApplicationDeterministic(
+    function testNewAuthorityDeterministic(
         address _authorityOwner,
         bytes32 _salt
     ) public {
@@ -57,6 +88,17 @@ contract AuthorityFactoryTest is TestBase {
             _authorityOwner,
             inputBox,
             _salt
+        );
+
+        // expect event emitted from the authority contract
+        vm.expectEmit(false, false, false, true);
+        emit ConsensusCreated(_authorityOwner, inputBox);
+        // expect event emitted from the factory
+        vm.expectEmit(false, false, false, true);
+        emit AuthorityCreated(
+            _authorityOwner,
+            inputBox,
+            Authority(precalculatedAddress)
         );
 
         Authority authority = factory.newAuthority(
@@ -79,13 +121,8 @@ contract AuthorityFactoryTest is TestBase {
         // Precalculated address must STILL match actual address
         assertEq(precalculatedAddress, address(authority));
 
-        // Cannot deploy a authority with the same salt twice
-        vm.expectRevert(bytes(""));
-        factory.newAuthority(
-            _authorityOwner,
-            inputBox,
-            _salt
-        );
+        // Cannot deploy an authority with the same salt twice
+        vm.expectRevert();
+        factory.newAuthority(_authorityOwner, inputBox, _salt);
     }
-
 }

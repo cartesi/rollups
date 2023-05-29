@@ -13,14 +13,14 @@
 /// @title Cartesi DApp Factory Test
 pragma solidity ^0.8.8;
 
-import {TestBase} from "../util/TestBase.sol";
+import {Test} from "forge-std/Test.sol";
 import {SimpleConsensus} from "../util/SimpleConsensus.sol";
 import {CartesiDAppFactory} from "contracts/dapp/CartesiDAppFactory.sol";
 import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
 import {Vm} from "forge-std/Vm.sol";
 
-contract CartesiDAppFactoryTest is TestBase {
+contract CartesiDAppFactoryTest is Test {
     CartesiDAppFactory factory;
     IConsensus consensus;
 
