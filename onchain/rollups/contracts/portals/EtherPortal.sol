@@ -13,7 +13,7 @@
 pragma solidity ^0.8.8;
 
 import {IEtherPortal} from "./IEtherPortal.sol";
-import {Portal} from "./Portal.sol";
+import {InputRelay} from "../inputs/InputRelay.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
@@ -21,13 +21,13 @@ import {InputEncoding} from "../common/InputEncoding.sol";
 ///
 /// @notice This contract allows anyone to perform transfers of
 /// Ether to a DApp while informing the off-chain machine.
-contract EtherPortal is Portal, IEtherPortal {
+contract EtherPortal is InputRelay, IEtherPortal {
     /// @notice Raised when the Ether transfer fails.
     error EtherTransferFailed();
 
     /// @notice Constructs the portal.
     /// @param _inputBox The input box used by the portal
-    constructor(IInputBox _inputBox) Portal(_inputBox) {}
+    constructor(IInputBox _inputBox) InputRelay(_inputBox) {}
 
     function depositEther(
         address _dapp,
