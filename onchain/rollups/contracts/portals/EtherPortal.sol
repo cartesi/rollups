@@ -22,7 +22,7 @@ import {InputEncoding} from "../common/InputEncoding.sol";
 /// @notice This contract allows anyone to perform transfers of
 /// Ether to a DApp while informing the off-chain machine.
 contract EtherPortal is Portal, IEtherPortal {
-    /// @notice Raised when the Ether the transfer fails.
+    /// @notice Raised when the Ether transfer fails.
     error EtherTransferFailed();
 
     /// @notice Constructs the portal.
