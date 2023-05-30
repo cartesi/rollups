@@ -47,8 +47,8 @@ library LibOutputValidation {
     ///         contained in epoch's output memory range.
     error IncorrectOutputsEpochRootHash();
 
-    /// @notice Raised when Merkle root of output hash is NOT
-    ///         contained in the output metadata array memory range.
+    /// @notice Raised when Merkle root of output hash is NOT contained
+    ///         in the output metadata array memory range.
     error IncorrectOutputHashesRootHash();
 
     /// @notice Raised when epoch input index is NOT compatible with the
