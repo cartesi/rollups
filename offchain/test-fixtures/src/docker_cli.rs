@@ -12,23 +12,32 @@
 
 use std::process::Command;
 
-pub fn build(dockerfile: &str, tag: &str, build_args: &[(&str, &str)]) {
+pub fn build(
+    dockerfile: &str,
+    tag: &str,
+    build_args: &[(&str, &str)],
+    context: Option<&str>,
+) {
+    let mut docker_args = vec!["build", "-f", dockerfile, "-t", tag];
     let build_args: Vec<String> = build_args
         .iter()
         .map(|(key, value)| format!("--build-arg={}={}", key, value))
         .collect();
-    let mut args = vec!["build", "-f", dockerfile, "-t", tag];
     for build_arg in build_args.iter() {
-        args.push(&build_arg);
+        docker_args.push(&build_arg);
     }
-    args.push(".");
-    docker_run(&args);
+    docker_args.push(context.unwrap_or("."));
+    docker_run(&docker_args);
 }
 
 pub fn create(tag: &str) -> String {
     let mut id = docker_run(&["create", tag]);
     id.pop().expect("failed to remove new line");
     String::from_utf8_lossy(&id).to_string()
+}
+
+pub fn exec(container_id: &str, executable: &str) -> Vec<u8> {
+    docker_run(&["exec", container_id, executable])
 }
 
 pub fn cp(from: &str, to: &str) {

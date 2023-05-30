@@ -4050,6 +4050,7 @@ dependencies = [
  "serde",
  "serde_json",
  "snafu",
+ "test-fixtures",
  "test-log",
  "testcontainers",
  "tokio",

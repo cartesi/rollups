@@ -73,7 +73,7 @@ impl ServerManagerFixture<'_> {
             ("group", group.to_str().unwrap()),
             ("gid", &gid),
         ];
-        docker_cli::build(DOCKERFILE, DOCKER_TAG, &build_args);
+        docker_cli::build(DOCKERFILE, DOCKER_TAG, &build_args, None);
 
         tracing::trace!("starting server manager container");
         let snapshot_dir = snapshot_dir.to_str().unwrap();

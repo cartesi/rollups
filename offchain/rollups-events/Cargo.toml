@@ -3,6 +3,10 @@ name = "rollups-events"
 version = "1.0.0"
 edition = "2021"
 
+[[bin]]
+name = "broker-tls-test"
+path = "src/broker_tls_test.rs"
+
 [dependencies]
 redacted = { path = "../redacted" }
 
@@ -28,3 +32,4 @@ env_logger = "0.10"
 testcontainers = "0.14"
 test-log = { version = "0.2", features = ["trace"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+test-fixtures = { path = "../test-fixtures" }

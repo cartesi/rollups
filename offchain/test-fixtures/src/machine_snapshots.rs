@@ -32,7 +32,7 @@ impl MachineSnapshotsFixture {
         tracing::info!("setting up machine snapshots fixture");
 
         let dir = tempfile::tempdir().expect("failed to create temp dir");
-        docker_cli::build(DOCKERFILE, TAG, &[]);
+        docker_cli::build(DOCKERFILE, TAG, &[], None);
         let id = docker_cli::create(TAG);
         let from_container = format!("{}:{}", id, CONTAINER_SNAPSHOT_DIR);
         let to_host = dir.path().join(SNAPSHOT_NAME);
