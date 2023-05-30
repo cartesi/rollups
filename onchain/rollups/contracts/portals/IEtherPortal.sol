@@ -12,10 +12,10 @@
 
 pragma solidity ^0.8.8;
 
-import {IPortal} from "./IPortal.sol";
+import {IInputRelay} from "../inputs/IInputRelay.sol";
 
 /// @title Ether Portal interface
-interface IEtherPortal is IPortal {
+interface IEtherPortal is IInputRelay {
     // Permissionless functions
 
     /// @notice Transfer Ether to a DApp and add an input to
