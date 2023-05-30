@@ -12,11 +12,11 @@
 
 pragma solidity ^0.8.8;
 
-import {IPortal} from "./IPortal.sol";
+import {IInputRelay} from "../inputs/IInputRelay.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 /// @title ERC-1155 Batch Transfer Portal interface
-interface IERC1155BatchPortal is IPortal {
+interface IERC1155BatchPortal is IInputRelay {
     // Permissionless functions
 
     /// @notice Transfer a batch of ERC-1155 tokens to a DApp and add an input to

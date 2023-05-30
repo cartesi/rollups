@@ -12,10 +12,10 @@
 
 pragma solidity ^0.8.8;
 
-import {IRelay} from "./IRelay.sol";
+import {IInputRelay} from "../inputs/IInputRelay.sol";
 
 /// @title DApp Address Relay interface
-interface IDAppAddressRelay is IRelay {
+interface IDAppAddressRelay is IInputRelay {
     // Permissionless functions
 
     /// @notice Add an input to a DApp's input box with its address.

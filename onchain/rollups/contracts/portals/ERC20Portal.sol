@@ -15,7 +15,7 @@ pragma solidity ^0.8.8;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IERC20Portal} from "./IERC20Portal.sol";
-import {Portal} from "./Portal.sol";
+import {InputRelay} from "../inputs/InputRelay.sol";
 import {IInputBox} from "../inputs/IInputBox.sol";
 import {InputEncoding} from "../common/InputEncoding.sol";
 
@@ -23,10 +23,10 @@ import {InputEncoding} from "../common/InputEncoding.sol";
 ///
 /// @notice This contract allows anyone to perform transfers of
 /// ERC-20 tokens to a DApp while informing the off-chain machine.
-contract ERC20Portal is Portal, IERC20Portal {
+contract ERC20Portal is InputRelay, IERC20Portal {
     /// @notice Constructs the portal.
     /// @param _inputBox The input box used by the portal
-    constructor(IInputBox _inputBox) Portal(_inputBox) {}
+    constructor(IInputBox _inputBox) InputRelay(_inputBox) {}
 
     function depositERC20Tokens(
         IERC20 _token,
