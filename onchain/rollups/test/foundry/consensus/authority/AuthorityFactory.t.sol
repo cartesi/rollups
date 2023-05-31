@@ -62,29 +62,46 @@ contract AuthorityFactoryTest is Test {
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         uint256 numOfAuthorityCreated;
+        uint256 numOfConsensusCreated;
 
         for (uint256 i; i < entries.length; ++i) {
-            if (entries[i].topics[0] == AuthorityCreated.selector) {
-                // test emitter
-                assertEq(address(factory), entries[i].emitter);
+            Vm.Log memory entry = entries[i];
 
-                // test data
-                (
-                    address decodedAuthorityOwner,
-                    address decodedInputBox,
-                    address decodedAuthority
-                ) = abi.decode(entries[i].data, (address, address, address));
-
-                assertEq(_authorityOwner, decodedAuthorityOwner);
-                assertEq(address(inputBox), decodedInputBox);
-                assertEq(address(_authority), decodedAuthority);
-
+            if (
+                entry.emitter == address(factory) &&
+                entry.topics[0] == AuthorityCreated.selector
+            ) {
                 ++numOfAuthorityCreated;
+
+                address a;
+                address b;
+                address c;
+
+                (a, b, c) = abi.decode(entry.data, (address, address, address));
+
+                assertEq(_authorityOwner, a);
+                assertEq(address(inputBox), b);
+                assertEq(address(_authority), c);
+            }
+
+            if (
+                entry.emitter == address(_authority) &&
+                entry.topics[0] == ConsensusCreated.selector
+            ) {
+                ++numOfConsensusCreated;
+
+                address a;
+                address b;
+
+                (a, b) = abi.decode(entry.data, (address, address));
+
+                assertEq(_authorityOwner, a);
+                assertEq(address(inputBox), b);
             }
         }
 
-        // check if exactly one authority was created
         assertEq(numOfAuthorityCreated, 1);
+        assertEq(numOfConsensusCreated, 1);
 
         // call to check authority's owner
         assertEq(_authority.owner(), _authorityOwner);
