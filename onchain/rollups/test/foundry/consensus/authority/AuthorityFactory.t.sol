@@ -54,7 +54,8 @@ contract AuthorityFactoryTest is Test {
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
-        uint256 count;
+        uint256 numOfAuthorityCreated;
+
         for (uint256 i; i < entries.length; ++i) {
             if (entries[i].topics[0] == AuthorityCreated.selector) {
                 // test emitter
@@ -70,12 +71,12 @@ contract AuthorityFactoryTest is Test {
                 assertEq(address(inputBox), decodedInputBox);
                 assertEq(address(authority), decodedAuthority);
 
-                ++count;
+                ++numOfAuthorityCreated;
             }
         }
 
-        // check there's only 1 AuthorityCreated event
-        assertEq(count, 1);
+        // check if exactly one authority was created
+        assertEq(numOfAuthorityCreated, 1);
 
         // call to check authority's owner
         assertEq(authority.owner(), _authorityOwner);
