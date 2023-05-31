@@ -12,6 +12,8 @@
 
 pragma solidity ^0.8.8;
 
+import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+
 import {IAuthorityFactory} from "./IAuthorityFactory.sol";
 import {Authority} from "./Authority.sol";
 import {IInputBox} from "../../inputs/IInputBox.sol";
@@ -51,22 +53,12 @@ contract AuthorityFactory is IAuthorityFactory {
         bytes32 _salt
     ) external view override returns (address) {
         return
-            address(
-                uint160(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                bytes1(0xff),
-                                address(this),
-                                _salt,
-                                keccak256(
-                                    abi.encodePacked(
-                                        type(Authority).creationCode,
-                                        abi.encode(_authorityOwner, _inputBox)
-                                    )
-                                )
-                            )
-                        )
+            Create2.computeAddress(
+                _salt,
+                keccak256(
+                    abi.encodePacked(
+                        type(Authority).creationCode,
+                        abi.encode(_authorityOwner, _inputBox)
                     )
                 )
             );
