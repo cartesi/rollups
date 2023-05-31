@@ -12,6 +12,8 @@
 
 pragma solidity ^0.8.8;
 
+import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+
 import {ICartesiDAppFactory} from "./ICartesiDAppFactory.sol";
 import {IConsensus} from "../consensus/IConsensus.sol";
 import {CartesiDApp} from "./CartesiDApp.sol";
@@ -69,26 +71,12 @@ contract CartesiDAppFactory is ICartesiDAppFactory {
         bytes32 _salt
     ) external view override returns (address) {
         return
-            address(
-                uint160(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                bytes1(0xff),
-                                address(this),
-                                _salt,
-                                keccak256(
-                                    abi.encodePacked(
-                                        type(CartesiDApp).creationCode,
-                                        abi.encode(
-                                            _consensus,
-                                            _dappOwner,
-                                            _templateHash
-                                        )
-                                    )
-                                )
-                            )
-                        )
+            Create2.computeAddress(
+                _salt,
+                keccak256(
+                    abi.encodePacked(
+                        type(CartesiDApp).creationCode,
+                        abi.encode(_consensus, _dappOwner, _templateHash)
                     )
                 )
             );
