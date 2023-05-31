@@ -40,6 +40,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         ...opts,
         args: [InputBox.address],
     });
+    await deployments.deploy("ERC1155SinglePortal", {
+        ...opts,
+        args: [InputBox.address],
+    });
+    await deployments.deploy("ERC1155BatchPortal", {
+        ...opts,
+        args: [InputBox.address],
+    });
     await deployments.deploy("DAppAddressRelay", {
         ...opts,
         args: [InputBox.address],
