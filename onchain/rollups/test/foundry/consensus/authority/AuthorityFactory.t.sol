@@ -30,6 +30,7 @@ contract AuthorityFactoryTest is Test {
         IInputBox inputBox,
         Authority authority
     );
+
     // event emitted in the authority contract
     event ConsensusCreated(address owner, IInputBox inputBox);
 
@@ -44,6 +45,7 @@ contract AuthorityFactoryTest is Test {
         // expect event emitted from the authority contract
         vm.expectEmit(false, false, false, true);
         emit ConsensusCreated(_authorityOwner, inputBox);
+
         // to check the deployed authority address emitted in the AuthorityCreated event
         // we need to record logs
         vm.recordLogs();
@@ -71,6 +73,7 @@ contract AuthorityFactoryTest is Test {
                 ++count;
             }
         }
+
         // check there's only 1 AuthorityCreated event
         assertEq(count, 1);
 
@@ -93,6 +96,7 @@ contract AuthorityFactoryTest is Test {
         // expect event emitted from the authority contract
         vm.expectEmit(false, false, false, true);
         emit ConsensusCreated(_authorityOwner, inputBox);
+
         // expect event emitted from the factory
         vm.expectEmit(false, false, false, true);
         emit AuthorityCreated(
