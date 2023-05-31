@@ -27,5 +27,6 @@ test-fixtures = { path = "../test-fixtures" }
 backoff = "0.4"
 env_logger = "0.10"
 rand = "0.8"
-testcontainers = "0.14"
+serial_test = "2.0"
 test-log = { version = "0.2", features = ["trace"] }
+testcontainers = "0.14"
