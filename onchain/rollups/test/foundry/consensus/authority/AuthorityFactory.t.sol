@@ -57,6 +57,9 @@ contract AuthorityFactoryTest is Test {
         uint256 count;
         for (uint256 i; i < entries.length; ++i) {
             if (entries[i].topics[0] == AuthorityCreated.selector) {
+                // test emitter
+                assertEq(address(factory), entries[i].emitter);
+
                 // test data
                 (
                     address decodedAuthorityOwner,
