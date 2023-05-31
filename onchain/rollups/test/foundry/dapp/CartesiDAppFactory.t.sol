@@ -151,35 +151,30 @@ contract CartesiDAppFactoryTest is Test {
     ) internal {
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
-        // there is at least one entry
-        assertGt(entries.length, 0);
+        uint256 numOfApplicationCreated;
 
-        // get last log entry
-        Vm.Log memory entry = entries[entries.length - 1];
+        for (uint256 i; i < entries.length; ++i) {
+            if (entries[i].topics[0] == ApplicationCreated.selector) {
+                assertEq(entries[i].emitter, address(factory));
+                assertEq(
+                    entries[i].topics[1],
+                    bytes32(uint256(uint160(address(consensus))))
+                );
+                (
+                    address decodedDappOwner,
+                    bytes32 decodedTemplateHash,
+                    address decodedApplication
+                ) = abi.decode(entries[i].data, (address, bytes32, address));
 
-        // there are 2 topics
-        assertEq(entry.topics.length, 2);
+                assertEq(_dappOwner, decodedDappOwner);
+                assertEq(_templateHash, decodedTemplateHash);
+                assertEq(address(_dapp), decodedApplication);
 
-        // topics[0] is the event signature
-        assertEq(entry.topics[0], ApplicationCreated.selector);
+                ++numOfApplicationCreated;
+            }
+        }
 
-        // topics[1] is the IConsensus parameter
-        // restrictions on explicit type convertions:
-        // "The conversion is only allowed when there is at most one change in sign, width or type-category"
-        // ref: https://docs.soliditylang.org/en/latest/080-breaking-changes.html#new-restrictions
-        assertEq(
-            entry.topics[1],
-            bytes32(uint256(uint160(address(consensus))))
-        );
-
-        // test data
-        (
-            address decodedDappOwner,
-            bytes32 decodedTemplateHash,
-            address decodedApplication
-        ) = abi.decode(entry.data, (address, bytes32, address));
-        assertEq(_dappOwner, decodedDappOwner);
-        assertEq(_templateHash, decodedTemplateHash);
-        assertEq(address(_dapp), decodedApplication);
+        // exactly one `ApplicationCreated` event must have been emitted
+        assertEq(numOfApplicationCreated, 1);
     }
 }
