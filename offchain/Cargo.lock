@@ -4025,6 +4025,7 @@ dependencies = [
  "diesel_migrations",
  "env_logger",
  "redacted",
+ "serial_test",
  "snafu",
  "test-fixtures",
  "test-log",
