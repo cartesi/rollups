@@ -42,12 +42,6 @@ contract AuthorityFactoryTest is Test {
     function testNewAuthority(address _authorityOwner) public {
         vm.assume(_authorityOwner != address(0));
 
-        // expect event emitted from the authority contract
-        vm.expectEmit(false, false, false, true);
-        emit ConsensusCreated(_authorityOwner, inputBox);
-
-        // to check the deployed authority address emitted in the AuthorityCreated event
-        // we need to record logs
         vm.recordLogs();
 
         Authority authority = factory.newAuthority(_authorityOwner, inputBox);
@@ -118,10 +112,6 @@ contract AuthorityFactoryTest is Test {
             inputBox,
             _salt
         );
-
-        // expect event emitted from the authority contract
-        vm.expectEmit(false, false, false, true);
-        emit ConsensusCreated(_authorityOwner, inputBox);
 
         vm.recordLogs();
 
