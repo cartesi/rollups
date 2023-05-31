@@ -52,6 +52,13 @@ contract AuthorityFactoryTest is Test {
 
         Authority authority = factory.newAuthority(_authorityOwner, inputBox);
 
+        testNewAuthorityAux(_authorityOwner, authority);
+    }
+
+    function testNewAuthorityAux(
+        address _authorityOwner,
+        Authority _authority
+    ) internal {
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         uint256 numOfAuthorityCreated;
@@ -67,9 +74,10 @@ contract AuthorityFactoryTest is Test {
                     address decodedInputBox,
                     address decodedAuthority
                 ) = abi.decode(entries[i].data, (address, address, address));
+
                 assertEq(_authorityOwner, decodedAuthorityOwner);
                 assertEq(address(inputBox), decodedInputBox);
-                assertEq(address(authority), decodedAuthority);
+                assertEq(address(_authority), decodedAuthority);
 
                 ++numOfAuthorityCreated;
             }
@@ -79,7 +87,7 @@ contract AuthorityFactoryTest is Test {
         assertEq(numOfAuthorityCreated, 1);
 
         // call to check authority's owner
-        assertEq(authority.owner(), _authorityOwner);
+        assertEq(_authority.owner(), _authorityOwner);
     }
 
     function testNewAuthorityDeterministic(
