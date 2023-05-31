@@ -22,6 +22,7 @@ use rollups_data::{
     Cursor, Edge, Error, Input, InputQueryFilter, Notice, PageInfo, Proof,
     Report, Repository, RepositoryConfig, Voucher,
 };
+use serial_test::serial;
 use std::time::Duration;
 use test_fixtures::DataFixture;
 use testcontainers::clients::Cli;
@@ -52,7 +53,7 @@ impl TestState<'_> {
             port: self.data.port.clone(),
             db: self.data.db.clone(),
             connection_pool_size: 3,
-            backoff: backoff,
+            backoff,
         })
         .expect("Repository should have connected successfully")
     }
@@ -97,6 +98,7 @@ pub fn create_input() -> Input {
 }
 
 #[test]
+#[serial]
 fn test_create_repository() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -107,6 +109,7 @@ fn test_create_repository() {
 }
 
 #[test]
+#[serial]
 fn test_fail_to_create_repository() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -122,7 +125,7 @@ fn test_fail_to_create_repository() {
         port: test.data.port.clone(),
         db: test.data.db.clone(),
         connection_pool_size: 3,
-        backoff: backoff,
+        backoff,
     })
     .expect_err("Repository::new should fail");
 
@@ -130,6 +133,7 @@ fn test_fail_to_create_repository() {
 }
 
 #[test]
+#[serial]
 fn test_insert_input() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -146,6 +150,7 @@ fn test_insert_input() {
 }
 
 #[test]
+#[serial]
 fn test_get_input() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -162,6 +167,7 @@ fn test_get_input() {
 }
 
 #[test]
+#[serial]
 fn test_get_input_error() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -181,6 +187,7 @@ fn test_get_input_error() {
 }
 
 #[test]
+#[serial]
 fn test_insert_notice() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -203,6 +210,7 @@ fn test_insert_notice() {
 }
 
 #[test]
+#[serial]
 fn test_get_notice() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -227,6 +235,7 @@ fn test_get_notice() {
 }
 
 #[test]
+#[serial]
 fn test_insert_notice_error() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -247,6 +256,7 @@ fn test_insert_notice_error() {
 }
 
 #[test]
+#[serial]
 fn test_get_notice_error() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -272,6 +282,7 @@ fn test_get_notice_error() {
 }
 
 #[test]
+#[serial]
 fn test_insert_voucher() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -295,6 +306,7 @@ fn test_insert_voucher() {
 }
 
 #[test]
+#[serial]
 fn test_get_voucher() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -318,6 +330,7 @@ fn test_get_voucher() {
 }
 
 #[test]
+#[serial]
 fn test_insert_voucher_error() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -339,6 +352,7 @@ fn test_insert_voucher_error() {
 }
 
 #[test]
+#[serial]
 fn test_get_voucher_error() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -365,6 +379,7 @@ fn test_get_voucher_error() {
 }
 
 #[test]
+#[serial]
 fn test_insert_report() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -387,6 +402,7 @@ fn test_insert_report() {
 }
 
 #[test]
+#[serial]
 fn test_get_report() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -408,6 +424,7 @@ fn test_get_report() {
 }
 
 #[test]
+#[serial]
 fn test_insert_report_error() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -428,6 +445,7 @@ fn test_insert_report_error() {
 }
 
 #[test]
+#[serial]
 fn test_get_report_error() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -453,6 +471,7 @@ fn test_get_report_error() {
 }
 
 #[test]
+#[serial]
 fn test_insert_proof() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -486,6 +505,7 @@ fn test_insert_proof() {
 }
 
 #[test]
+#[serial]
 fn test_get_proof() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -521,6 +541,7 @@ fn test_get_proof() {
 }
 
 #[test]
+#[serial]
 fn test_get_proof_error() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
@@ -557,6 +578,7 @@ fn test_get_proof_error() {
 }
 
 #[test]
+#[serial]
 fn test_pagination_macro() {
     let docker = Cli::default();
     let test = TestState::setup(&docker);
