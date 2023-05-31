@@ -56,10 +56,7 @@ contract AuthorityFactoryTest is Test {
 
         uint256 count;
         for (uint256 i; i < entries.length; ++i) {
-            if (
-                entries[i].topics[0] ==
-                keccak256("AuthorityCreated(address,address,address)")
-            ) {
+            if (entries[i].topics[0] == AuthorityCreated.selector) {
                 // test data
                 (
                     address decodedAuthorityOwner,

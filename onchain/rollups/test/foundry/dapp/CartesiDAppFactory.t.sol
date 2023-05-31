@@ -161,10 +161,7 @@ contract CartesiDAppFactoryTest is Test {
         assertEq(entry.topics.length, 2);
 
         // topics[0] is the event signature
-        assertEq(
-            entry.topics[0],
-            keccak256("ApplicationCreated(address,address,bytes32,address)")
-        );
+        assertEq(entry.topics[0], ApplicationCreated.selector);
 
         // topics[1] is the IConsensus parameter
         // restrictions on explicit type convertions:
