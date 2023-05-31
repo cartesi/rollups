@@ -106,13 +106,7 @@ contract AuthorityFactoryTest is Test {
         vm.expectEmit(false, false, false, true);
         emit ConsensusCreated(_authorityOwner, inputBox);
 
-        // expect event emitted from the factory
-        vm.expectEmit(false, false, false, true);
-        emit AuthorityCreated(
-            _authorityOwner,
-            inputBox,
-            Authority(precalculatedAddress)
-        );
+        vm.recordLogs();
 
         Authority authority = factory.newAuthority(
             _authorityOwner,
@@ -120,10 +114,10 @@ contract AuthorityFactoryTest is Test {
             _salt
         );
 
+        testNewAuthorityAux(_authorityOwner, authority);
+
         // Precalculated address must match actual address
         assertEq(precalculatedAddress, address(authority));
-
-        assertEq(authority.owner(), _authorityOwner);
 
         precalculatedAddress = factory.calculateAuthorityAddress(
             _authorityOwner,
