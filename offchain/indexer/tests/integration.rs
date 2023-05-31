@@ -21,6 +21,7 @@ use rollups_events::{
     RollupsOutputEnum, RollupsOutputValidityProof, RollupsProof, RollupsReport,
     RollupsVoucher,
 };
+use serial_test::serial;
 use test_fixtures::{BrokerFixture, RepositoryFixture};
 use testcontainers::clients::Cli;
 use tokio::task::JoinHandle;
@@ -36,6 +37,7 @@ struct TestState<'d> {
 }
 
 #[test_log::test(tokio::test)]
+#[serial]
 async fn indexer_inserts_inputs() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
@@ -54,6 +56,7 @@ async fn indexer_inserts_inputs() {
 }
 
 #[test_log::test(tokio::test)]
+#[serial]
 async fn indexer_inserts_vouchers() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
@@ -75,6 +78,7 @@ async fn indexer_inserts_vouchers() {
 }
 
 #[test_log::test(tokio::test)]
+#[serial]
 async fn indexer_inserts_notices() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
@@ -96,6 +100,7 @@ async fn indexer_inserts_notices() {
 }
 
 #[test_log::test(tokio::test)]
+#[serial]
 async fn indexer_inserts_reports() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
@@ -117,6 +122,7 @@ async fn indexer_inserts_reports() {
 }
 
 #[test_log::test(tokio::test)]
+#[serial]
 async fn indexer_inserts_proofs() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
@@ -148,6 +154,7 @@ async fn indexer_inserts_proofs() {
 }
 
 #[test_log::test(tokio::test)]
+#[serial]
 async fn indexer_ignores_finish_epoch_and_insert_input_after() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
@@ -162,6 +169,7 @@ async fn indexer_ignores_finish_epoch_and_insert_input_after() {
 }
 
 #[test_log::test(tokio::test)]
+#[serial]
 async fn indexer_does_not_override_existing_input() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
@@ -173,6 +181,7 @@ async fn indexer_does_not_override_existing_input() {
 }
 
 #[test_log::test(tokio::test)]
+#[serial]
 async fn indexer_ignores_invalid_timestamp() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
@@ -188,6 +197,7 @@ async fn indexer_ignores_invalid_timestamp() {
 }
 
 #[test_log::test(tokio::test)]
+#[serial]
 async fn indexer_inserts_input_after_broker_timeout() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;
@@ -204,6 +214,7 @@ async fn indexer_inserts_input_after_broker_timeout() {
 }
 
 #[test_log::test(tokio::test)]
+#[serial]
 async fn indexer_fails_to_insert_output_when_input_does_not_exist() {
     let docker = Cli::default();
     let state = TestState::setup(&docker).await;

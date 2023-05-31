@@ -2745,6 +2745,7 @@ dependencies = [
  "rand 0.8.5",
  "rollups-data",
  "rollups-events",
+ "serial_test",
  "snafu",
  "test-fixtures",
  "test-log",
