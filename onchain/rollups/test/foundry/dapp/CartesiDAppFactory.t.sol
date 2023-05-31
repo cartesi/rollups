@@ -116,7 +116,7 @@ contract CartesiDAppFactoryTest is Test {
             _templateHash
         );
 
-        testApplicationCreatedEventAux(_dappOwner, _templateHash, dapp);
+        testNewApplicationAux(_dappOwner, _templateHash, dapp);
     }
 
     function testApplicationCreatedEventDeterministic(
@@ -141,10 +141,10 @@ contract CartesiDAppFactoryTest is Test {
             _salt
         );
 
-        testApplicationCreatedEventAux(_dappOwner, _templateHash, dapp);
+        testNewApplicationAux(_dappOwner, _templateHash, dapp);
     }
 
-    function testApplicationCreatedEventAux(
+    function testNewApplicationAux(
         address _dappOwner,
         bytes32 _templateHash,
         CartesiDApp _dapp
@@ -154,27 +154,31 @@ contract CartesiDAppFactoryTest is Test {
         uint256 numOfApplicationCreated;
 
         for (uint256 i; i < entries.length; ++i) {
-            if (entries[i].topics[0] == ApplicationCreated.selector) {
-                assertEq(entries[i].emitter, address(factory));
+            Vm.Log memory entry = entries[i];
+
+            if (
+                entry.emitter == address(factory) &&
+                entry.topics[0] == ApplicationCreated.selector
+            ) {
+                ++numOfApplicationCreated;
+
                 assertEq(
-                    entries[i].topics[1],
+                    entry.topics[1],
                     bytes32(uint256(uint160(address(consensus))))
                 );
-                (
-                    address decodedDappOwner,
-                    bytes32 decodedTemplateHash,
-                    address decodedApplication
-                ) = abi.decode(entries[i].data, (address, bytes32, address));
 
-                assertEq(_dappOwner, decodedDappOwner);
-                assertEq(_templateHash, decodedTemplateHash);
-                assertEq(address(_dapp), decodedApplication);
+                address a;
+                bytes32 b;
+                address c;
 
-                ++numOfApplicationCreated;
+                (a, b, c) = abi.decode(entry.data, (address, bytes32, address));
+
+                assertEq(_dappOwner, a);
+                assertEq(_templateHash, b);
+                assertEq(address(_dapp), c);
             }
         }
 
-        // exactly one `ApplicationCreated` event must have been emitted
         assertEq(numOfApplicationCreated, 1);
     }
 }
