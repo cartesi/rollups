@@ -93,7 +93,7 @@ The Cartesi DApp Factory allows anyone to deploy Cartesi DApp contracts with a s
 
 ## Portals
 
-Portals, as the name suggests, are used to safely teleport assets from the base layer to the execution layer. It works in the following way. First, for some types of assets, the user has to allow the portal to deduct the asset(s) from their account. Second, the user tells the portal to transfer the asset(s) from their account to some DApp's account. If the transfer is successful, the portal adds an input to the DApp's input box to inform the machine about the transfer that just took place in the base layer. Finally, the off-chain machine is made aware of the transfer through the input sent by the portal. Note that the machine must know the address of the portal beforehand in order to validate such input.
+Portals, as the name suggests, are used to safely teleport assets from the base layer to the execution layer. It works in the following way. First, for some types of assets, the user has to allow the portal to deduct the asset(s) from their account. Second, the user tells the portal to transfer the asset(s) from their account to some DApp's account. The portal then adds an input to the DApp's input box to inform the machine of the transfer that just took place in the base layer. Finally, the off-chain machine is made aware of the transfer through the input sent by the portal. Note that the machine must know the address of the portal beforehand in order to validate such input.
 
 The DApp developer can choose to do whatever they want with this information. For example, they might choose to create a wallet for each user in the execution layer, where assets can be managed at a much lower cost through inputs that are understood by the Linux logic. In this sense, one could think of the DApp contract as a wallet, owned by the off-chain machine. Anyone can deposit assets there but only the DApp—through vouchers—can decide on withdrawals.
 
@@ -108,7 +108,7 @@ Currently, we support the following types of assets:
 
 ### Input encodings for deposits
 
-As explained above, in order to teleport assets to the execution layer, the portals add inputs to the DApp's input box, which will then need to be interpreted and validated by the off-chain machine. To do that, the machine will need to understand and decode each input's payload.
+As explained above, in order to teleport assets from the base layer to the execution layer, the portals add inputs to the DApp's input box, which will then need to be interpreted and validated by the off-chain machine. To do that, the machine will need to understand and decode each input's payload.
 
 The input payloads for deposits are always specified as packed ABI-encoded parameters, as detailed below:
 
@@ -132,15 +132,15 @@ As an example, the deposit of 100 Wei (of Ether) sent by address `0xf39fd6e51aad
 
 ## Vouchers
 
-Vouchers allow DApps in the execution layer to interact with contracts in the base layer through message calls. They are emitted by the off-chain machine, and executed by anyone in the base layer. Each voucher is composed of a destination address and a payload. In Solidity terms, the payload encodes the function signature and the arguments.
+Vouchers allow DApps in the execution layer to interact with contracts in the base layer through message calls. They are emitted by the off-chain machine, and executed by anyone in the base layer. Each voucher is composed of a destination address and a payload. In the case of vouchers destined to Solidity contracts, the payload generally encodes a function call.
 
 A voucher can only be executed once the DApp's consensus submits a claim containing it. They can be executed in any order. Although the DApp contract is indifferent to the content of the voucher being executed, it enforces some sanity checks before allowing its execution. First, it checks whether the voucher has been successfully executed already. Second, it ensures that the voucher has been emitted by the off-chain machine, by requiring a validity proof.
 
-Because of their generality, vouchers can be used in a wide range of applications: from withdrawing funds to providing liquidity in a DeFi protocol. Typically, DApps use vouchers to withdraw assets. Below, we show how vouchers can be used to withdraw different types of assets. You can find more information about a particular function by clicking on the :page_facing_up: emoji near it.
+Because of their generality, vouchers can be used in a wide range of applications: from withdrawing funds to providing liquidity in a DeFi protocol. Typically, DApps use vouchers to withdraw assets. Below, we show how vouchers can be used to withdraw several types of assets. You can find more information about a particular function by clicking on the :page_facing_up: emoji near it.
 
-| Asset | Destination | Function |
+| Asset | Destination | Function signature |
 | :- | :- |  :- |
-| Ether | DApp contract | `withdrawEther(address,uint256)` [:page_facing_up:](https://github.com/cartesi/rollups/tree/main/onchain/rollups/contracts/dapp/CartesiDApp.sol) |
+| Ether | DApp contract | `withdrawEther(address,uint256)` [:page_facing_up:](./onchain/rollups/contracts/dapp/CartesiDApp.sol) |
 | ERC-20 | Token contract | `transfer(address,uint256)` [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-20#methods) |
 | ERC-20 | Token contract | `transferFrom(address,address,uint256)` [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-20#methods) [^1] |
 | ERC-721 | Token contract | `safeTransferFrom(address,address,uint256)` [:page_facing_up:](https://eips.ethereum.org/EIPS/eip-721#specification) |
@@ -162,7 +162,9 @@ As an example, the voucher for a simple ERC-20 transfer (2nd line in the table a
 
 ## DApp Address Relay
 
-In the previous section, we showed how vouchers can be used to withdraw different types of assets. Most of those vouchers contained the address of the DApp contract, which depends on the initial state of the machine. This "chicken-and-egg" problem is circumvented by a very small permissionless contract in the base layer, the DApp Address Relay ([source](https://github.com/cartesi/rollups/tree/main/onchain/rollups/contracts/relays/DAppAddressRelay.sol)). Its only job is to add an input to a DApp's input box with the DApp contract address. The off-chain machine then decodes this input and stores the address somewhere for future use. Just like in the case of portals, the machine must also know the address of the relay in order to validate the origin of the input.
+In the previous section, we showed how vouchers can be used to withdraw different types of assets. Most of those vouchers contain the address of the DApp contract, either as the destination address or as a function argument. So, the off-chain machine needs to "know" the DApp contract address at some point. If the off-chain machine knew the DApp contract address from the beginning, it would create a cyclical dependency between the initial machine state hash (also called "template hash") and the DApp contract address. This is due to the fact that the address of a DApp contract depends on its construction arguments, which include the template hash; and that the template hash is the Merkle root of the machine address space, which includes the DApp contract address.
+
+This "chicken-and-egg" problem is circumvented by a very small permissionless contract in the base layer, the DApp Address Relay ([source](./onchain/rollups/contracts/relays/DAppAddressRelay.sol)). Its only job is to add an input to a DApp's input box with the DApp contract address. The off-chain machine then decodes this input and stores the address somewhere for future use. Just like in the case of portals, the machine must also know the address of the relay in order to validate the origin of the input.
 
 ## Notices
 
@@ -178,7 +180,7 @@ The only type of consensus that is currently implemented by Cartesi is called Au
 
 The sole purpose of this module is to store claims and to allow them to be retrieved later. Just as with the consensus interface, we leave much of the details open for the implementation to define.
 
-Our only implementation of history stores claims in a very simple manner: each claim is composed of an epoch hash and a range of input indices. Each DApp has its own append-only list of claims, where ranges don't overlap, and come one after the other. As a result, one cannot overwrite past claims or claim in a non-linear order.
+Our only implementation of history stores claims in a very simple manner: each claim is composed of an epoch hash and a range of input indices. Each DApp has its own append-only list of claims, where ranges don't overlap, and come one after the other. As a result, one cannot overwrite past claims, or skip inputs, or claim in a non-linear order.
 
 ## Dispute Resolution
 
@@ -212,15 +214,15 @@ Please note we have a [Code of Conduct](CODE_OF_CONDUCT.md), please follow it in
 
 ## Setting up
 
-### Initialize submodules recursively
+### Cloning submodules
 
-In order to also clone submodules like `grpc-interfaces` and `state-fold`, you need to run the following command.
+In order to also clone submodules like `grpc-interfaces` and `forge-std`, you need to run the following command.
 
 ```sh
 git submodule update --init --recursive
 ```
 
-### Building Docker images
+### Building the Docker images
 
 To build the Rollups Docker images, run the following command.
 
@@ -228,18 +230,17 @@ To build the Rollups Docker images, run the following command.
 docker buildx bake --load
 ```
 
-### Compile on-chain code
+### Compiling the on-chain code
 
-The on-chain part is mainly written in Solidity and Typescript. For that, you'll need `yarn` to install dependencies and to run build scripts.
+In order to install dependencies for the on-chain code, you'll need `yarn`. See the [Yarn documentation](https://classic.yarnpkg.com/en/docs/install) for instructions on how to install `yarn` on your system. Once you have `yarn` installed on your system, you can install the necessary dependencies and build the on-chain code by running the following commands.
 
 ```sh
-cd onchain
+cd onchain/rollups
 yarn
-cd rollups
 yarn build
 ```
 
-### Compile off-chain code
+### Compiling the off-chain code
 
 The off-chain code is written in Rust. For that, you'll need `cargo`. See the [Rust documentation](https://doc.rust-lang.org/cargo/getting-started/installation.html) for instructions on how to install `cargo` on your system.
 
@@ -254,27 +255,11 @@ Once you've setup the repository, you can test the different pieces that compose
 
 ### Testing the on-chain code
 
-Since we have test cases for voucher execution and notice validation, we need to generate Merkle proofs for those voucher/notice test cases. Please first visit [this README](https://github.com/cartesi/rollups/tree/main/onchain/rollups/test/foundry/dapp/helper) for instructions on how to set up and update Merkle proofs. Afterwards, run the following commands for on-chain tests.
+In order to run the on-chain tests, you'll also need `forge`. Please consult the [Foundry documentation](https://book.getfoundry.sh/getting-started/installation) for installation instructions. In case you already have `forge` on your machine, then please make sure you have the latest version. Furthermore, you'll also need to generate Merkle proofs for output validation tests. Please carefully read [this README](./onchain/rollups/test/foundry/dapp/helper) for further instructions. Once everything is properly set up, you can test the on-chain code by running the following commands.
 
 ```sh
 cd onchain/rollups
 yarn test
-```
-
-### Testing the state-server
-
-Make sure you built the offchain code:
-
-```sh
-cd offchain
-cargo build
-```
-
-Now you can run the on-chain tests alongside the state servers by running the following commands:
-
-```sh
-cd onchain/rollups
-STATE_FOLD_TEST=true yarn test
 ```
 
 ## License
