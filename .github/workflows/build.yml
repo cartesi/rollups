@@ -192,5 +192,5 @@ jobs:
     uses: ./.github/workflows/docker.yml
     with:
       target: deployments
-      image-name: deployments
+      image-name: rollups-deployments
     secrets: inherit
