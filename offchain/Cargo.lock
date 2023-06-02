@@ -1502,8 +1502,8 @@ dependencies = [
  "eth-tx-manager",
  "ethers-signers",
  "futures",
+ "http-metrics",
  "im",
- "prometheus-client",
  "rand 0.8.5",
  "redis",
  "rollups-events",
@@ -2446,6 +2446,19 @@ dependencies = [
  "clap 4.3.0",
  "hyper",
  "snafu",
+ "tracing",
+]
+
+[[package]]
+name = "http-metrics"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum",
+ "clap 4.3.0",
+ "prometheus-client",
+ "tokio",
  "tracing",
 ]
 

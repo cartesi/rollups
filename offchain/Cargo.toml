@@ -7,6 +7,7 @@ members = [
   "graphql-server",
   "grpc-interfaces",
   "http-health-check",
+  "http-metrics",
   "indexer",
   "inspect-server",
   "redacted",

@@ -11,7 +11,8 @@
 // specific language governing permissions and limitations under the License.
 
 use anyhow::Result;
-use dispatcher::metrics::Metrics;
+use dispatcher::metrics::DispatcherMetrics;
+use http_metrics::Metrics;
 
 // NOTE: doesn't support History upgradability.
 // NOTE: doesn't support changing epoch_duration in the middle of things.
@@ -31,7 +32,7 @@ async fn main() -> Result<()> {
     });
 
     let (metrics, metrics_handle) = {
-        let metrics = dispatcher::metrics::DispatcherMetrics::default();
+        let metrics = DispatcherMetrics::default();
         let metrics_host = config.metrics_config.host.clone();
         let metrics_port = config.metrics_config.port;
         let metrics_handle = metrics.run(metrics_host, metrics_port).await;

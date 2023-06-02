@@ -19,6 +19,7 @@ use snafu::{ResultExt, Snafu};
 use state_client_lib::config::{Error as SCError, SCConfig, SCEnvCLIConfig};
 use std::{fs::File, io::BufReader, path::PathBuf};
 
+use http_metrics::config::{MetricsCLIConfig, MetricsConfig};
 use rollups_events::{BrokerCLIConfig, BrokerConfig};
 use types::deployment_files::{
     dapp_deployment::DappDeployment,
@@ -28,7 +29,6 @@ use types::deployment_files::{
 use crate::{
     auth::{AuthConfig, AuthEnvCLIConfig, AuthError},
     http_health::config::{HealthCheckConfig, HealthCheckEnvCLIConfig},
-    metrics::{MetricsCLIConfig, MetricsConfig},
 };
 
 #[derive(Clone, Parser)]
