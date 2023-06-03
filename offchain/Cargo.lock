@@ -2453,11 +2453,13 @@ dependencies = [
 name = "http-metrics"
 version = "1.0.0"
 dependencies = [
- "anyhow",
+ "actix-web",
  "async-trait",
  "axum",
  "clap 4.3.0",
+ "hyper",
  "prometheus-client",
+ "snafu",
  "tokio",
  "tracing",
 ]

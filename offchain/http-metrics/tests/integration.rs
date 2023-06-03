@@ -1,38 +1,38 @@
-use axum::Router;
 use clap::Parser;
-use http_metrics::{config::MetricsConfig, Counter, Metrics, Registry};
+use http_metrics::{
+    config::MetricsCLIConfig, Counter, MetricsServer, Registry,
+};
 
 #[derive(Default)]
 struct TestMetrics {
-    counter1: Counter,
-    counter2: Counter,
-    counter3: Counter,
+    pub a: Counter,
+    pub b: Counter,
 }
 
-impl Metrics for TestMetrics {
-    fn registry(&self) -> http_metrics::Registry {
+impl TestMetrics {
+    fn new() -> Self {
+        let a = Counter::default();
+        let b = Counter::default();
+
+        TestMetrics { a, b }
+    }
+
+    fn registry(&self) -> Registry {
         let mut registry = Registry::default();
-        registry.register("counter1", "Counter 1", self.counter1.clone());
-        registry.register("counter2", "Counter 2", self.counter2.clone());
-        registry.register("counter3", "Counter 3", self.counter3.clone());
+        registry.register("counter1", "Counter 1", self.a.clone());
+        registry.register("counter2", "Counter 2", self.b.clone());
         registry
     }
 }
 
 #[tokio::test]
 async fn todo() {
-    let config = MetricsConfig::parse();
+    let metrics_server: MetricsServer =
+        MetricsCLIConfig::parse().try_into().unwrap();
 
-    let app = Router::new()
-        .route("/metrics", axum::routing::get(||{
+    let test_metrics = TestMetrics::new();
 
-        }))
+    let metrics_handle = metrics_server.run(test_metrics.registry()).await;
 
-    let (metrics, join_handle) = {
-        let metrics = TestMetrics::default();
-        let metrics_host = config.host.clone();
-        let metrics_port = config.port;
-        let join_handle = metrics.run(metrics_host, metrics_port).await;
-        (metrics, join_handle)
-    };
+    let x = metrics_handle.await.unwrap().unwrap();
 }

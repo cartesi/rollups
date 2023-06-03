@@ -1,4 +1,4 @@
-use http_metrics::{Counter, Metrics, Registry};
+use http_metrics::{Counter, MetricsServer, Registry};
 
 #[derive(Debug, Default)]
 pub struct DispatcherMetrics {
@@ -7,7 +7,7 @@ pub struct DispatcherMetrics {
     pub finish_epochs_sent_total: Counter,
 }
 
-impl Metrics for DispatcherMetrics {
+impl MetricsServer for DispatcherMetrics {
     fn registry(&self) -> Registry {
         let mut registry = Registry::default();
         registry.register(

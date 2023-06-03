@@ -1,4 +1,7 @@
 use clap::Parser;
+use std::net::AddrParseError;
+
+use crate::MetricsServer;
 
 #[derive(Clone, Debug, Parser)]
 pub struct MetricsCLIConfig {
@@ -9,11 +12,13 @@ pub struct MetricsCLIConfig {
     pub port: u16,
 }
 
-// Keeping standards.
-pub type MetricsConfig = MetricsCLIConfig;
+impl TryFrom<MetricsCLIConfig> for MetricsServer {
+    type Error = AddrParseError;
 
-impl MetricsConfig {
-    pub fn initialize(cli: MetricsCLIConfig) -> MetricsConfig {
-        cli
+    fn try_from(config: MetricsCLIConfig) -> Result<Self, Self::Error> {
+        Ok(MetricsServer {
+            host: config.host.parse()?,
+            port: config.port,
+        })
     }
 }

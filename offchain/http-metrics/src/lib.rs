@@ -1,7 +1,7 @@
 pub mod config;
 mod metrics;
 
-pub use metrics::Metrics;
+pub use metrics::MetricsServer;
 
 pub use prometheus_client::registry::Registry;
 

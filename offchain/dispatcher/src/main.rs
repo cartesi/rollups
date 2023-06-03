@@ -12,7 +12,7 @@
 
 use anyhow::Result;
 use dispatcher::metrics::DispatcherMetrics;
-use http_metrics::Metrics;
+use http_metrics::MetricsServer;
 
 // NOTE: doesn't support History upgradability.
 // NOTE: doesn't support changing epoch_duration in the middle of things.
