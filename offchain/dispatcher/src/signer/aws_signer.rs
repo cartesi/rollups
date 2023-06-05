@@ -11,22 +11,15 @@
 // specific language governing permissions and limitations under the License.
 
 use async_trait::async_trait;
-use rusoto_core::{
-    credential::ChainProvider, region::ParseRegionError, HttpClient, Region,
-};
+use rusoto_core::{credential::DefaultCredentialsProvider, HttpClient, Region};
 use rusoto_kms::KmsClient;
-use snafu::{ResultExt, Snafu};
 use state_fold_types::ethers::{
-    signers::{
-        AwsSigner as InnerAwsSigner, AwsSignerError as InnerAwsSignerError,
-        Signer,
-    },
+    signers::{AwsSigner as InnerAwsSigner, AwsSignerError, Signer},
     types::{
         transaction::{eip2718::TypedTransaction, eip712::Eip712},
         Address, Signature,
     },
 };
-use std::str::FromStr;
 
 /// The `AwsSigner` (re)implements the `Signer` trait for the `InnerAwsSigner`.
 ///
@@ -37,49 +30,30 @@ use std::str::FromStr;
 /// a function from `Signer`.
 #[derive(Debug, Clone)]
 pub struct AwsSigner {
-    region: String,
+    region: Region,
     key_id: String,
     chain_id: u64,
     address: Address,
 }
 
-#[derive(Debug, Snafu)]
-pub enum AwsSignerError {
-    #[snafu(display("AWS KMS error"))]
-    Inner { source: InnerAwsSignerError },
-
-    #[snafu(display("Invalid AWS region"))]
-    InvalidRegion { source: ParseRegionError },
-}
-
 /// Creates a `KmsClient` instance.
-fn create_kms(region: &String) -> Result<KmsClient, AwsSignerError> {
-    Ok(KmsClient::new_with(
+fn create_kms(region: &Region) -> KmsClient {
+    KmsClient::new_with(
         HttpClient::new().expect("http client TLS error"),
-        ChainProvider::new(),
-        Region::from_str(region).context(InvalidRegionSnafu)?,
-    ))
-}
-
-async fn create_inner_aws_signer<'a>(
-    kms: &'a KmsClient,
-    key_id: &String,
-    chain_id: u64,
-) -> Result<InnerAwsSigner<'a>, AwsSignerError> {
-    InnerAwsSigner::new(&kms, key_id.clone(), chain_id)
-        .await
-        .context(InnerSnafu)
+        DefaultCredentialsProvider::new().expect("credentials error"),
+        region.clone(),
+    )
 }
 
 impl AwsSigner {
     pub async fn new(
         key_id: String,
         chain_id: u64,
-        region: String,
+        region: Region,
     ) -> Result<Self, AwsSignerError> {
-        let kms = create_kms(&region)?;
+        let kms = create_kms(&region);
         let aws_signer =
-            create_inner_aws_signer(&kms, &key_id, chain_id).await?;
+            InnerAwsSigner::new(&kms, key_id.clone(), chain_id).await?;
         Ok(Self {
             region,
             key_id,
@@ -95,15 +69,14 @@ macro_rules! inner_aws_signer_call {
     ($aws_signer: expr,
      $method: ident,
      $argument: expr) => {
-        create_inner_aws_signer(
-            &create_kms(&$aws_signer.region)?,
-            &$aws_signer.key_id,
+        InnerAwsSigner::new(
+            &create_kms(&$aws_signer.region),
+            &$aws_signer.key_id.clone(),
             $aws_signer.chain_id,
         )
         .await?
         .$method($argument)
         .await
-        .context(InnerSnafu)
     };
 }
 

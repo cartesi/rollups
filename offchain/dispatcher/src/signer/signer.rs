@@ -14,7 +14,8 @@ use async_trait::async_trait;
 use snafu::{ResultExt, Snafu};
 use state_fold_types::ethers::{
     signers::{
-        coins_bip39::English, LocalWallet, MnemonicBuilder, Signer, WalletError,
+        coins_bip39::English, AwsSignerError, LocalWallet, MnemonicBuilder,
+        Signer, WalletError,
     },
     types::{
         transaction::{eip2718::TypedTransaction, eip712::Eip712},
@@ -22,10 +23,7 @@ use state_fold_types::ethers::{
     },
 };
 
-use crate::{
-    auth::AuthConfig,
-    signer::aws_signer::{AwsSigner, AwsSignerError},
-};
+use crate::{auth::AuthConfig, signer::aws_signer::AwsSigner};
 
 /// The `ConditionalSigner` is implementing conditional dispatch (instead of
 /// dynamic dispatch) by hand for objects that implement the `Sender` trait.
@@ -159,6 +157,8 @@ impl Signer for ConditionalSigner {
 
 #[cfg(test)]
 mod tests {
+    use rusoto_core::Region;
+    use serial_test::serial;
     use state_fold_types::ethers::{
         signers::Signer,
         types::{
@@ -166,6 +166,7 @@ mod tests {
             Address, Eip1559TransactionRequest,
         },
     };
+    use test_fixtures::LocalStackFixture;
 
     use crate::auth::AuthConfig;
 
@@ -174,8 +175,6 @@ mod tests {
     const CHAIN_ID: u64 = 1;
     const MNEMONIC: &str =
         "indoor dish desk flag debris potato excuse depart ticket judge file exit";
-    const KEY_ID: &str = "3a5dd2e1-5d01-43a1-89a9-deb5d6db190b";
-    const REGION: &str = "us-east-1";
 
     #[tokio::test]
     async fn new_local_wallet_from_auth_config() {
@@ -186,11 +185,12 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore]
+    #[serial]
     async fn new_aws_signer_from_auth_config() {
-        let conditional_signer = new_aws_conditional_signer().await;
+        let fixture = LocalStackFixture::setup().await;
+        let conditional_signer = new_aws_conditional_signer(&fixture).await;
         if let ConditionalSigner::LocalWallet(_) = conditional_signer {
-            panic!("expected Aws conditional signer")
+            panic!("expected AWS conditional signer")
         }
     }
 
@@ -203,9 +203,10 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore]
+    #[serial]
     async fn aws_signer_sign_transaction() {
-        let conditional_signer = new_aws_conditional_signer().await;
+        let fixture = LocalStackFixture::setup().await;
+        let conditional_signer = new_aws_conditional_signer(&fixture).await;
         let message = TypedTransaction::Eip1559(eip1559_request());
         let result = conditional_signer.sign_transaction(&message).await;
         assert!(result.is_ok());
@@ -245,11 +246,15 @@ mod tests {
         .await
     }
 
-    async fn new_aws_conditional_signer() -> ConditionalSigner {
-        new_conditional_signer(AuthConfig::AWS {
-            key_id: KEY_ID.to_string(),
-            region: REGION.to_string(),
-        })
-        .await
+    async fn new_aws_conditional_signer(
+        fixture: &LocalStackFixture,
+    ) -> ConditionalSigner {
+        let key_id = fixture.create_key();
+        let endpoint = LocalStackFixture::ENDPOINT.to_string();
+        let region = Region::Custom {
+            name: "us-east-1".to_string(),
+            endpoint,
+        };
+        new_conditional_signer(AuthConfig::AWS { key_id, region }).await
     }
 }

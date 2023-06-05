@@ -10,11 +10,11 @@ rollups-data = { path = "../data" }
 
 anyhow = "1.0"
 backoff = { version = "0.4", features = ["tokio"] }
+hyper = "0.14"
+json = "0.12"
 tempfile = "3.5"
 testcontainers = "0.14"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tonic = "0.9"
 tracing = "0.1"
 users = "0.11"
-json = "0.12"
-hyper = { version = "0.14", features = ["http1", "runtime", "client"] }
