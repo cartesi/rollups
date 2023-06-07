@@ -158,4 +158,19 @@ library InputEncoding {
                 dapp //                     20B
             );
     }
+
+    /// @notice Encode an ENS resolution relay.
+    /// @param node The cryptographic hash of an ENS identifier
+    /// @param resolution The resoltion of the ENS node
+    /// @return The encoded input
+    function encodeENSResolutionRelay(
+        bytes32 node,
+        address resolution
+    ) internal pure returns (bytes memory) {
+        return
+            abi.encodePacked(
+                node, //                    32B
+                resolution //               20B
+            );
+    }
 }
