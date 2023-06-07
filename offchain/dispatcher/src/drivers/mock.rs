@@ -199,9 +199,17 @@ impl Broker {
     }
 
     pub fn assert_send_interactions(&self, expected: Vec<SendInteraction>) {
-        assert_eq!(self.send_interactions_len(), expected.len());
+        assert_eq!(
+            self.send_interactions_len(),
+            expected.len(),
+            "{:?}",
+            self.send_interactions
+        );
+        println!("Send interactions:");
         for (i, expected) in expected.iter().enumerate() {
-            assert_eq!(self.get_send_interaction(i), *expected);
+            let send_interaction = self.get_send_interaction(i);
+            println!("{:?} - {:?}", send_interaction, expected);
+            assert_eq!(send_interaction, *expected);
         }
     }
 }
