@@ -80,7 +80,7 @@ impl Context {
     // This logic works because we call this function with `event_timestamp` being equal to the
     // timestamp of each individual input, rather than just the latest from the blockchain.
     fn should_finish_epoch(&self, event_timestamp: u64) -> bool {
-        if self.last_event_is_finish_epoch {
+        if self.inputs_sent_count == 0 || self.last_event_is_finish_epoch {
             false
         } else {
             let current_epoch = self.calculate_epoch(self.last_timestamp);
@@ -164,9 +164,9 @@ mod private_tests {
     // --------------------------------------------------------------------------------------------
 
     #[test]
-    fn should_finish_epoch_false() {
+    fn should_not_finish_epoch_because_of_time() {
         let context = Context {
-            inputs_sent_count: 0, // ignored
+            inputs_sent_count: 1,
             last_event_is_finish_epoch: false,
             last_timestamp: 3,
             genesis_timestamp: 0,
@@ -176,9 +176,21 @@ mod private_tests {
     }
 
     #[test]
-    fn should_finish_epoch_true() {
+    fn should_not_finish_epoch_because_of_zero_inputs() {
         let context = Context {
-            inputs_sent_count: 0, // ignored
+            inputs_sent_count: 1,
+            last_event_is_finish_epoch: false,
+            last_timestamp: 3,
+            genesis_timestamp: 0,
+            epoch_length: 5,
+        };
+        assert!(!context.should_finish_epoch(4));
+    }
+
+    #[test]
+    fn should_finish_epoch_because_of_time() {
+        let context = Context {
+            inputs_sent_count: 1,
             last_event_is_finish_epoch: false,
             last_timestamp: 3,
             genesis_timestamp: 0,
@@ -188,9 +200,9 @@ mod private_tests {
     }
 
     #[test]
-    fn should_finish_epoch_when_last_event_is_finish_epoch() {
+    fn should_finish_epoch_because_last_event_is_finish_epoch() {
         let context = Context {
-            inputs_sent_count: 0, // ignored
+            inputs_sent_count: 1,
             last_event_is_finish_epoch: true,
             last_timestamp: 3,
             genesis_timestamp: 0,
@@ -323,7 +335,7 @@ mod public_tests {
     #[tokio::test]
     async fn finish_epoch_if_needed_true() {
         let mut context = Context {
-            inputs_sent_count: 0,
+            inputs_sent_count: 1,
             last_event_is_finish_epoch: false,
             last_timestamp: 2,
             genesis_timestamp: 0,
@@ -333,7 +345,7 @@ mod public_tests {
         let result = context.finish_epoch_if_needed(4, &broker).await;
         assert!(result.is_ok());
         broker
-            .assert_send_interactions(vec![SendInteraction::FinishedEpoch(0)]);
+            .assert_send_interactions(vec![SendInteraction::FinishedEpoch(1)]);
     }
 
     #[tokio::test]
@@ -354,7 +366,7 @@ mod public_tests {
     #[tokio::test]
     async fn finish_epoch_if_needed_broker_error() {
         let mut context = Context {
-            inputs_sent_count: 0,
+            inputs_sent_count: 1,
             last_event_is_finish_epoch: false,
             last_timestamp: 2,
             genesis_timestamp: 0,

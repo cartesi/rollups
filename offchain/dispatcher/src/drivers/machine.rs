@@ -155,13 +155,13 @@ mod tests {
     #[tokio::test]
     async fn process_input_at_finish_epoch() {
         let rollup_status = RollupStatus {
-            inputs_sent_count: 0,
+            inputs_sent_count: 1,
             last_event_is_finish_epoch: false,
         };
         let input_timestamps = vec![5];
         let send_interactions = vec![
-            SendInteraction::FinishedEpoch(0),
-            SendInteraction::EnqueuedInput(0),
+            SendInteraction::FinishedEpoch(1),
+            SendInteraction::EnqueuedInput(1),
         ];
         test_process_input(rollup_status, input_timestamps, send_interactions)
             .await;
@@ -380,5 +380,22 @@ mod tests {
             .await;
         assert!(result.is_ok());
         broker.assert_send_interactions(vec![]);
+    }
+
+    #[tokio::test]
+    async fn react_with_inputs_after_first_epoch_length() {
+        let block = mock::new_block(5);
+        let rollup_status = RollupStatus {
+            inputs_sent_count: 0,
+            last_event_is_finish_epoch: false,
+        };
+        let input_timestamps = vec![7, 8];
+        let send_interactions = vec![
+            SendInteraction::EnqueuedInput(0),
+            SendInteraction::FinishedEpoch(1),
+            SendInteraction::EnqueuedInput(1),
+        ];
+        test_react(block, rollup_status, input_timestamps, send_interactions)
+            .await;
     }
 }
