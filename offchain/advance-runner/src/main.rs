@@ -10,29 +10,17 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use anyhow::{Context, Result};
+use advance_runner::config::Config;
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
-use advance_runner::config::Config;
-
 #[tokio::main]
-async fn main() {
-    if let Err(e) = run().await {
-        tracing::error!("{:?}", e);
-    }
-}
-
-async fn run() -> Result<()> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
-    let config = Config::parse().context("config error")?;
+    let config = Config::parse()?;
 
-    advance_runner::run(config)
-        .await
-        .context("advance runner error")?;
-
-    Ok(())
+    advance_runner::run(config).await.map_err(|e| e.into())
 }

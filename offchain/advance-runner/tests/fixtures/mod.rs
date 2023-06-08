@@ -14,6 +14,7 @@ use advance_runner::config::{
     AdvanceRunnerConfig, BrokerConfig, Config, DAppMetadata, FSManagerConfig,
     HealthCheckConfig, ServerManagerConfig, SnapshotConfig,
 };
+use advance_runner::AdvanceRunnerError;
 use grpc_interfaces::cartesi_machine::{
     ConcurrencyConfig, MachineRuntimeConfig,
 };
@@ -26,7 +27,7 @@ use tokio::task::JoinHandle;
 
 pub struct AdvanceRunnerFixture {
     config: Config,
-    handler: RefCell<Option<JoinHandle<anyhow::Result<()>>>>,
+    handler: RefCell<Option<JoinHandle<Result<(), AdvanceRunnerError>>>>,
 }
 
 impl AdvanceRunnerFixture {
@@ -122,7 +123,7 @@ impl AdvanceRunnerFixture {
 
     /// Wait until the advance runner exists with an error
     #[tracing::instrument(level = "trace", skip_all)]
-    pub async fn wait_err(&self) -> anyhow::Error {
+    pub async fn wait_err(&self) -> AdvanceRunnerError {
         tracing::trace!("waiting for advance runner error");
         let handler = self.handler.replace(None);
         handler
@@ -148,7 +149,7 @@ impl AdvanceRunnerFixture {
 
 fn start_advance_runner(
     config: Config,
-) -> JoinHandle<Result<(), anyhow::Error>> {
+) -> JoinHandle<Result<(), AdvanceRunnerError>> {
     tokio::spawn(async move {
         let output = advance_runner::run(config).await;
         tracing::error!(?output, "advance_runner exited");

@@ -13,7 +13,6 @@ grpc-interfaces = { path = "../grpc-interfaces" }
 http-health-check = { path = "../http-health-check" }
 rollups-events = { path = "../rollups-events" }
 
-anyhow = "1.0"
 async-trait = "0.1"
 backoff = { version = "0.4", features = ["tokio"] }
 clap = { version = "4.2", features = ["derive", "env"] }
