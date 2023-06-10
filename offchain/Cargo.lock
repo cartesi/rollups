@@ -2646,7 +2646,6 @@ version = "1.0.0"
 dependencies = [
  "actix-cors",
  "actix-web",
- "anyhow",
  "env_logger",
  "futures",
  "hex",

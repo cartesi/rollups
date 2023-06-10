@@ -15,13 +15,23 @@
 /// Command-line parameters take precedence over environment variables and environment variables
 /// take precedence over same parameter from file configuration.
 use serde::Deserialize;
-use snafu::Snafu;
+use snafu::{whatever, OptionExt, ResultExt, Snafu};
 use structopt::StructOpt;
 
 #[derive(Debug, Snafu)]
-#[snafu(display("Bad configuration: {}", err))]
-pub struct BadConfigurationError {
-    err: String,
+pub enum ConfigError {
+    #[snafu(display("parse configuration file error"))]
+    FileError { source: std::io::Error },
+
+    #[snafu(display("parse configuration file error"))]
+    ParseError { source: toml::de::Error },
+
+    #[snafu(whatever, display("{message}"))]
+    Whatever {
+        message: String,
+        #[snafu(source(from(Box<dyn std::error::Error>, Some)))]
+        source: Option<Box<dyn std::error::Error>>,
+    },
 }
 
 /// Final config structure exported by this module
@@ -38,32 +48,29 @@ pub struct Config {
 impl Config {
     /// Generate config from command line arguments and and environment variables.
     /// If config path is provided, read configuration from the file.
-    pub fn initialize() -> Result<Self, BadConfigurationError> {
+    pub fn initialize() -> Result<Self, ConfigError> {
         let env_cli_config = EnvCLIConfig::from_args();
         let file_config: FileConfig =
-            load_config_file(env_cli_config.config_path)
-                .map_err(|e| BadConfigurationError { err: e.to_string() })?;
+            load_config_file(env_cli_config.config_path)?;
 
         let inspect_server_address: String = env_cli_config
             .inspect_server_address
             .or(file_config.inspect_server_address)
-            .ok_or(BadConfigurationError {
-                err: String::from("Must specify inspect server address"),
-            })?;
+            .whatever_context(
+                "must specify inspect server address".to_string(),
+            )?;
 
         let server_manager_address: String = env_cli_config
             .server_manager_address
             .or(file_config.server_manager_address)
-            .ok_or(BadConfigurationError {
-                err: String::from("Must specify server manager address"),
-            })?;
+            .whatever_context(
+                "must specify server manager address".to_string(),
+            )?;
 
         let session_id: String = env_cli_config
             .session_id
             .or(file_config.session_id)
-            .ok_or(BadConfigurationError {
-                err: String::from("Must specify session id"),
-            })?;
+            .whatever_context("must specify session id".to_string())?;
 
         let queue_size: usize = env_cli_config
             .queue_size
@@ -82,11 +89,7 @@ impl Config {
             .map(check_path_prefix)
             .unwrap_or(Ok(String::from("/inspect")))?;
         if inspect_path_prefix == healthcheck_path {
-            return Err(BadConfigurationError {
-                err: String::from(
-                    "inspect path must be different from healthcheck path",
-                ),
-            });
+            whatever!("inspect path must be different from healthcheck path");
         }
 
         Ok(Self {
@@ -142,32 +145,24 @@ struct FileConfig {
     healthcheck_path: Option<String>,
 }
 
-fn check_path_prefix(prefix: String) -> Result<String, BadConfigurationError> {
+fn check_path_prefix(prefix: String) -> Result<String, ConfigError> {
     let re = regex::Regex::new(r"^/[a-z]+$").unwrap();
     if re.is_match(&prefix) {
         Ok(prefix)
     } else {
-        Err(BadConfigurationError {
-            err: String::from(
-                "invalid path prefix, it should be in the format `/[a-z]+`.",
-            ),
-        })
+        whatever!("invalid path prefix, it should be in the format `/[a-z]+`.");
     }
 }
 
 fn load_config_file<T: Default + serde::de::DeserializeOwned>(
     // path to the config file if provided
     config_file: Option<String>,
-) -> anyhow::Result<T> {
-    use anyhow::Context;
-
+) -> Result<T, ConfigError> {
     match config_file {
         Some(config) => {
-            let s = std::fs::read_to_string(&config)
-                .context(format!("Fail to read config file {}", config))?;
+            let s = std::fs::read_to_string(&config).context(FileSnafu)?;
 
-            let file_config: T = toml::from_str(&s)
-                .context(format!("Fail to parse config {}", config))?;
+            let file_config: T = toml::from_str(&s).context(ParseSnafu)?;
 
             Ok(file_config)
         }
