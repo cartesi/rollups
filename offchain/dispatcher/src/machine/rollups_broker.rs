@@ -10,7 +10,6 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use anyhow::Result;
 use async_trait::async_trait;
 use snafu::{ResultExt, Snafu};
 use tokio::sync::{self, Mutex};
@@ -40,6 +39,13 @@ pub enum BrokerFacadeError {
 
     #[snafu(display("error consuming claim event"))]
     ConsumeClaimError { source: BrokerError },
+
+    #[snafu(whatever, display("{message}"))]
+    Whatever {
+        message: String,
+        #[snafu(source(from(Box<dyn std::error::Error>, Some)))]
+        source: Option<Box<dyn std::error::Error>>,
+    },
 }
 
 #[derive(Debug)]
@@ -61,7 +67,7 @@ impl BrokerFacade {
     pub async fn new(
         config: BrokerConfig,
         dapp_metadata: DAppMetadata,
-    ) -> Result<Self> {
+    ) -> Result<Self, BrokerFacadeError> {
         tracing::trace!(?config, "connection to the broker");
         Ok(Self {
             broker: Mutex::new(
@@ -77,7 +83,7 @@ impl BrokerFacade {
     async fn broker_status(
         &self,
         broker: &mut sync::MutexGuard<'_, Broker>,
-    ) -> Result<BrokerStreamStatus> {
+    ) -> Result<BrokerStreamStatus, BrokerFacadeError> {
         let event = self.peek(broker).await?;
         Ok(event.into())
     }
@@ -86,7 +92,7 @@ impl BrokerFacade {
     async fn peek(
         &self,
         broker: &mut sync::MutexGuard<'_, Broker>,
-    ) -> Result<Option<Event<RollupsInput>>> {
+    ) -> Result<Option<Event<RollupsInput>>, BrokerFacadeError> {
         tracing::trace!("peeking last produced event");
         let response = broker
             .peek_latest(&self.inputs_stream)
@@ -98,7 +104,10 @@ impl BrokerFacade {
     }
 
     #[tracing::instrument(level = "trace", skip_all)]
-    async fn claim(&self, id: &String) -> Result<Option<Event<RollupsClaim>>> {
+    async fn claim(
+        &self,
+        id: &String,
+    ) -> Result<Option<Event<RollupsClaim>>, BrokerFacadeError> {
         let mut broker = self.broker.lock().await;
         let event = broker
             .consume_nonblocking(&self.claims_stream, id)
@@ -114,7 +123,7 @@ impl BrokerFacade {
 #[async_trait]
 impl BrokerStatus for BrokerFacade {
     #[tracing::instrument(level = "trace", skip_all)]
-    async fn status(&self) -> Result<RollupStatus> {
+    async fn status(&self) -> Result<RollupStatus, BrokerFacadeError> {
         tracing::trace!("querying broker status");
         let mut broker = self.broker.lock().await;
         let status = self.broker_status(&mut broker).await?.status;
@@ -163,7 +172,7 @@ impl BrokerSend for BrokerFacade {
         &self,
         input_index: u64,
         input: &Input,
-    ) -> Result<()> {
+    ) -> Result<(), BrokerFacadeError> {
         tracing::info!(?input_index, ?input, "enqueueing input");
 
         let mut broker = self.broker.lock().await;
@@ -184,7 +193,10 @@ impl BrokerSend for BrokerFacade {
     }
 
     #[tracing::instrument(level = "trace", skip_all)]
-    async fn finish_epoch(&self, inputs_sent_count: u64) -> Result<()> {
+    async fn finish_epoch(
+        &self,
+        inputs_sent_count: u64,
+    ) -> Result<(), BrokerFacadeError> {
         tracing::info!(?inputs_sent_count, "finishing epoch");
 
         let mut broker = self.broker.lock().await;
@@ -209,7 +221,9 @@ impl BrokerSend for BrokerFacade {
 #[async_trait]
 impl BrokerReceive for BrokerFacade {
     #[tracing::instrument(level = "trace", skip_all)]
-    async fn next_claim(&self) -> Result<Option<RollupsClaim>> {
+    async fn next_claim(
+        &self,
+    ) -> Result<Option<RollupsClaim>, BrokerFacadeError> {
         let mut last_id = self.last_claim_id.lock().await;
         tracing::trace!(?last_id, "getting next epoch claim");
 
@@ -329,7 +343,10 @@ mod broker_facade_tests {
     use testcontainers::clients::Cli;
     use types::foldables::input_box::Input;
 
-    use crate::machine::{BrokerReceive, BrokerSend, BrokerStatus};
+    use crate::machine::{
+        rollups_broker::BrokerFacadeError, BrokerReceive, BrokerSend,
+        BrokerStatus,
+    };
 
     use super::BrokerFacade;
 
@@ -563,7 +580,7 @@ mod broker_facade_tests {
     async fn failable_setup(
         docker: &Cli,
         should_fail: bool,
-    ) -> anyhow::Result<(BrokerFixture, BrokerFacade)> {
+    ) -> Result<(BrokerFixture, BrokerFacade), BrokerFacadeError> {
         let fixture = BrokerFixture::setup(docker).await;
         let redis_endpoint = if should_fail {
             RedactedUrl::new(Url::parse("https://invalid.com").unwrap())

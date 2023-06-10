@@ -10,12 +10,12 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use anyhow::Result;
-use tracing::{info, instrument, trace};
-
+use snafu::ResultExt;
 use state_fold_types::ethereum_types::Address;
+use tracing::{info, instrument, trace};
 use types::foldables::claims::History;
 
+use crate::error::{BrokerSnafu, DispatcherError, SenderSnafu};
 use crate::{machine::BrokerReceive, sender::Sender};
 
 #[derive(Debug)]
@@ -34,17 +34,20 @@ impl BlockchainDriver {
         history: &History,
         broker: &impl BrokerReceive,
         mut claim_sender: S,
-    ) -> Result<S> {
+    ) -> Result<S, DispatcherError> {
         let claims_sent = claims_sent(history, &self.dapp_address);
         trace!(?claims_sent);
 
-        while let Some(rollups_claim) = broker.next_claim().await? {
+        while let Some(rollups_claim) =
+            broker.next_claim().await.context(BrokerSnafu)?
+        {
             trace!("Got claim `{:?}` from broker", rollups_claim);
             if rollups_claim.epoch_index >= claims_sent {
                 info!("Sending claim `{:?}`", rollups_claim);
                 claim_sender = claim_sender
                     .submit_claim(self.dapp_address, rollups_claim)
-                    .await?
+                    .await
+                    .context(SenderSnafu)?
             }
         }
 

@@ -10,9 +10,10 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use crate::machine::{BrokerSend, BrokerStatus};
+use crate::machine::{
+    rollups_broker::BrokerFacadeError, BrokerSend, BrokerStatus,
+};
 
-use anyhow::Result;
 use types::foldables::input_box::Input;
 
 #[derive(Debug)]
@@ -31,7 +32,7 @@ impl Context {
         genesis_timestamp: u64,
         epoch_length: u64,
         broker: &impl BrokerStatus,
-    ) -> Result<Self> {
+    ) -> Result<Self, BrokerFacadeError> {
         let status = broker.status().await?;
 
         Ok(Self {
@@ -51,7 +52,7 @@ impl Context {
         &mut self,
         event_timestamp: u64,
         broker: &impl BrokerSend,
-    ) -> Result<()> {
+    ) -> Result<(), BrokerFacadeError> {
         if self.should_finish_epoch(event_timestamp) {
             self.finish_epoch(event_timestamp, broker).await?;
         }
@@ -62,7 +63,7 @@ impl Context {
         &mut self,
         input: &Input,
         broker: &impl BrokerSend,
-    ) -> Result<()> {
+    ) -> Result<(), BrokerFacadeError> {
         broker.enqueue_input(self.inputs_sent_count, input).await?;
         self.inputs_sent_count += 1;
         self.last_event_is_finish_epoch = false;
@@ -92,7 +93,7 @@ impl Context {
         &mut self,
         event_timestamp: u64,
         broker: &impl BrokerSend,
-    ) -> Result<()> {
+    ) -> Result<(), BrokerFacadeError> {
         assert!(event_timestamp >= self.genesis_timestamp);
         broker.finish_epoch(self.inputs_sent_count).await?;
         self.last_timestamp = event_timestamp;

@@ -10,39 +10,17 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use anyhow::Result;
+use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
 // NOTE: doesn't support History upgradability.
 // NOTE: doesn't support changing epoch_duration in the middle of things.
 #[tokio::main]
-async fn main() -> Result<()> {
-    tracing_subscriber::fmt::init();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt().with_env_filter(filter).init();
 
     let config = dispatcher::config::DispatcherConfig::initialize_from_args()?;
-    let hc_config = config.hc_config.clone();
-
-    let health_handle = tokio::spawn(async move {
-        dispatcher::http_health::start_health_check(
-            hc_config.host_address.as_ref(),
-            hc_config.port,
-        )
-        .await
-    });
-
-    let dispatcher_handle =
-        tokio::spawn(async move { dispatcher::main_loop::run(config).await });
-
-    tokio::select! {
-        ret = health_handle => {
-            tracing::error!("HTTP health-check stopped: {:?}", ret);
-            ret??;
-        }
-
-        ret = dispatcher_handle => {
-            tracing::error!("Dispatcher stopped: {:?}", ret);
-            ret??;
-        }
-    }
-
-    Ok(())
+    dispatcher::run(config).await.map_err(|e| e.into())
 }

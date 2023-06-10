@@ -10,13 +10,54 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+use config::DispatcherConfig;
+pub use error::DispatcherError;
+use snafu::ResultExt;
+
 pub mod config;
+pub mod dispatcher;
 pub mod http_health;
-pub mod main_loop;
+pub mod machine;
+pub mod sender;
 
 mod auth;
 mod drivers;
-mod machine;
-mod sender;
+mod error;
 mod setup;
 mod signer;
+
+#[tracing::instrument(level = "trace", skip_all)]
+pub async fn run(config: DispatcherConfig) -> Result<(), DispatcherError> {
+    // tracing::info!(?config, "starting indexer");
+
+    // let health_handle = http_health_check::start(config.health_check_config);
+    // let indexer_handle = indexer::Indexer::start(config.indexer_config);
+
+    // tokio::select! {
+    //     ret = health_handle => {
+    //         ret.context(error::HealthCheckSnafu)
+    //     }
+    //     ret = indexer_handle => {
+    //         ret
+    //     }
+    // }
+
+    let hc_config = config.hc_config.clone();
+
+    let health_handle = http_health::start_health_check(
+        hc_config.host_address.as_ref(),
+        hc_config.port,
+    );
+
+    let dispatcher_handle = dispatcher::start(config);
+
+    tokio::select! {
+        ret = health_handle => {
+            ret.context(error::HealthCheckSnafu)
+        }
+
+        ret = dispatcher_handle => {
+            ret
+        }
+    }
+}
