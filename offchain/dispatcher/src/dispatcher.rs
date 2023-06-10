@@ -10,34 +10,37 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use anyhow::{bail, Result};
 use rollups_events::{Address, DAppMetadata};
-use state_client_lib::{error::StateServerError, StateServer};
+use state_client_lib::StateServer;
 use state_fold_types::{Block, BlockStreamItem};
-use tokio_stream::{Stream, StreamExt};
+use tokio_stream::StreamExt;
 use tracing::{error, info, instrument, trace, warn};
 use types::foldables::authority::rollups::{RollupsInitialState, RollupsState};
 
 use crate::{
     config::DispatcherConfig,
     drivers::{blockchain::BlockchainDriver, machine::MachineDriver, Context},
+    error::{BrokerSnafu, DispatcherError, SenderSnafu, StateServerSnafu},
     machine::{rollups_broker::BrokerFacade, BrokerReceive, BrokerSend},
     sender::ClaimSender,
     setup::{create_block_subscription, create_context, create_state_server},
 };
 
+use snafu::{whatever, ResultExt};
+
 #[instrument(level = "trace", skip_all)]
-pub async fn run(config: DispatcherConfig) -> Result<()> {
+pub async fn start(config: DispatcherConfig) -> Result<(), DispatcherError> {
     info!("Setting up dispatcher with config: {:?}", config);
 
     trace!("Creating transaction manager");
-    let claim_sender = ClaimSender::new(&config).await?;
+    let mut claim_sender =
+        ClaimSender::new(&config).await.context(SenderSnafu)?;
 
     trace!("Creating state-server connection");
     let state_server = create_state_server(&config.sc_config).await?;
 
     trace!("Starting block subscription with confirmations");
-    let block_subscription = create_block_subscription(
+    let mut block_subscription = create_block_subscription(
         &state_server,
         config.sc_config.default_confirmations,
     )
@@ -53,15 +56,16 @@ pub async fn run(config: DispatcherConfig) -> Result<()> {
             ),
         },
     )
-    .await?;
+    .await
+    .context(BrokerSnafu)?;
 
     trace!("Creating context");
-    let context = create_context(&config, &state_server, &broker).await?;
+    let mut context = create_context(&config, &state_server, &broker).await?;
 
     trace!("Creating machine driver and blockchain driver");
-    let machine_driver =
+    let mut machine_driver =
         MachineDriver::new(config.dapp_deployment.dapp_address);
-    let blockchain_driver =
+    let mut blockchain_driver =
         BlockchainDriver::new(config.dapp_deployment.dapp_address);
 
     let initial_state = RollupsInitialState {
@@ -69,40 +73,7 @@ pub async fn run(config: DispatcherConfig) -> Result<()> {
         input_box_address: config.rollups_deployment.input_box_address,
     };
 
-    trace!("Entering main loop...");
-    main_loop(
-        block_subscription,
-        state_server,
-        initial_state,
-        context,
-        machine_driver,
-        blockchain_driver,
-        broker,
-        claim_sender,
-    )
-    .await
-}
-
-#[instrument(level = "trace", skip_all)]
-async fn main_loop(
-    mut block_subscription: impl Stream<Item = Result<BlockStreamItem, StateServerError>>
-        + Send
-        + std::marker::Unpin,
-
-    client: impl StateServer<
-        InitialState = RollupsInitialState,
-        State = RollupsState,
-    >,
-    initial_state: RollupsInitialState,
-
-    mut context: Context,
-    mut machine_driver: MachineDriver,
-    mut blockchain_driver: BlockchainDriver,
-
-    broker: impl BrokerSend + BrokerReceive,
-
-    mut claim_sender: ClaimSender,
-) -> Result<()> {
+    trace!("Starting dispatcher...");
     loop {
         match block_subscription.next().await {
             Some(Ok(BlockStreamItem::NewBlock(b))) => {
@@ -115,7 +86,7 @@ async fn main_loop(
                 );
                 claim_sender = process_block(
                     &b,
-                    &client,
+                    &state_server,
                     &initial_state,
                     &mut context,
                     &mut machine_driver,
@@ -135,7 +106,7 @@ async fn main_loop(
                     bs.last().map(|b| b.parent_hash)
                 );
                 error!("Bailing...");
-                bail!("Deep blockchain reorg");
+                whatever!("deep blockchain reorg");
             }
 
             Some(Err(e)) => {
@@ -146,7 +117,7 @@ async fn main_loop(
             }
 
             None => {
-                bail!("Subscription closed");
+                whatever!("subscription closed");
             }
         }
     }
@@ -156,7 +127,7 @@ async fn main_loop(
 async fn process_block(
     block: &Block,
 
-    client: &impl StateServer<
+    state_server: &impl StateServer<
         InitialState = RollupsInitialState,
         State = RollupsState,
     >,
@@ -169,15 +140,19 @@ async fn process_block(
     broker: &(impl BrokerSend + BrokerReceive),
 
     claim_sender: ClaimSender,
-) -> Result<ClaimSender> {
+) -> Result<ClaimSender, DispatcherError> {
     trace!("Querying rollup state");
-    let state = client.query_state(initial_state, block.hash).await?;
+    let state = state_server
+        .query_state(initial_state, block.hash)
+        .await
+        .context(StateServerSnafu)?;
 
     // Drive machine
     trace!("Reacting to state with `machine_driver`");
     machine_driver
         .react(context, &state.block, &state.state.input_box, broker)
-        .await?;
+        .await
+        .context(BrokerSnafu)?;
 
     // Drive blockchain
     trace!("Reacting to state with `blockchain_driver`");

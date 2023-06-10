@@ -10,10 +10,10 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use anyhow::Result;
 use async_trait::async_trait;
 use im::{hashmap, Vector};
 use rollups_events::RollupsClaim;
+use snafu::whatever;
 use state_fold_types::{
     ethereum_types::{Address, Bloom, H160, H256},
     Block,
@@ -29,7 +29,10 @@ use types::foldables::{
 };
 
 use crate::{
-    machine::{BrokerReceive, BrokerSend, BrokerStatus, RollupStatus},
+    machine::{
+        rollups_broker::BrokerFacadeError, BrokerReceive, BrokerSend,
+        BrokerStatus, RollupStatus,
+    },
     sender::SenderError,
 };
 
@@ -205,9 +208,9 @@ impl Broker {
 
 #[async_trait]
 impl BrokerStatus for Broker {
-    async fn status(&self) -> Result<RollupStatus> {
+    async fn status(&self) -> Result<RollupStatus, BrokerFacadeError> {
         if self.status_error {
-            Err(anyhow::anyhow!("status error"))
+            whatever!("status error")
         } else {
             let mut mutex_guard = self.rollup_statuses.lock().unwrap();
             Ok(mutex_guard.deref_mut().pop_front().unwrap())
@@ -217,7 +220,9 @@ impl BrokerStatus for Broker {
 
 #[async_trait]
 impl BrokerReceive for Broker {
-    async fn next_claim(&self) -> Result<Option<RollupsClaim>> {
+    async fn next_claim(
+        &self,
+    ) -> Result<Option<RollupsClaim>, BrokerFacadeError> {
         let mut mutex_guard = self.next_claims.lock().unwrap();
         Ok(mutex_guard.deref_mut().pop_front())
     }
@@ -225,9 +230,13 @@ impl BrokerReceive for Broker {
 
 #[async_trait]
 impl BrokerSend for Broker {
-    async fn enqueue_input(&self, input_index: u64, _: &Input) -> Result<()> {
+    async fn enqueue_input(
+        &self,
+        input_index: u64,
+        _: &Input,
+    ) -> Result<(), BrokerFacadeError> {
         if self.enqueue_input_error {
-            Err(anyhow::anyhow!("enqueue_input error"))
+            whatever!("enqueue_input error")
         } else {
             let mut mutex_guard = self.send_interactions.lock().unwrap();
             mutex_guard
@@ -237,9 +246,12 @@ impl BrokerSend for Broker {
         }
     }
 
-    async fn finish_epoch(&self, inputs_sent_count: u64) -> Result<()> {
+    async fn finish_epoch(
+        &self,
+        inputs_sent_count: u64,
+    ) -> Result<(), BrokerFacadeError> {
         if self.finish_epoch_error {
-            Err(anyhow::anyhow!("finish_epoch error"))
+            whatever!("finish_epoch error")
         } else {
             let mut mutex_guard = self.send_interactions.lock().unwrap();
             mutex_guard

@@ -12,12 +12,10 @@
 
 use super::Context;
 
-use crate::machine::BrokerSend;
+use crate::machine::{rollups_broker::BrokerFacadeError, BrokerSend};
 
 use state_fold_types::{ethereum_types::Address, Block};
 use types::foldables::input_box::{DAppInputBox, Input, InputBox};
-
-use anyhow::Result;
 
 use tracing::{debug, instrument, trace};
 
@@ -38,7 +36,7 @@ impl MachineDriver {
         block: &Block,
         input_box: &InputBox,
         broker: &impl BrokerSend,
-    ) -> Result<()> {
+    ) -> Result<(), BrokerFacadeError> {
         let dapp_input_box =
             match input_box.dapp_input_boxes.get(&self.dapp_address) {
                 None => {
@@ -66,7 +64,7 @@ impl MachineDriver {
         context: &mut Context,
         dapp_input_box: &DAppInputBox,
         broker: &impl BrokerSend,
-    ) -> Result<()> {
+    ) -> Result<(), BrokerFacadeError> {
         trace!(
             "Last input sent to machine manager `{}`, current input `{}`",
             context.inputs_sent_count(),
@@ -90,7 +88,7 @@ impl MachineDriver {
         context: &mut Context,
         input: &Input,
         broker: &impl BrokerSend,
-    ) -> Result<()> {
+    ) -> Result<(), BrokerFacadeError> {
         let input_timestamp = input.block_added.timestamp.as_u64();
         trace!(?context, ?input_timestamp);
 

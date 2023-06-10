@@ -21,7 +21,6 @@ state-client-lib =  { version = "0.6", registry = "cartesi" }
 state-fold = { version = "0.6", registry = "cartesi" }
 state-fold-types = { version = "0.6", registry = "cartesi", features = ["ethers"] }
 
-anyhow = "1"
 async-trait = "0.1"
 axum = "0.6"
 backoff = { version = "0.4", features = ["tokio"] }
@@ -29,6 +28,7 @@ clap = { version = "4.2", features = ["derive", "env"] }
 eth-tx-manager = "0.10"
 ethers-signers = { version = "1.0", features = ["aws"] }
 futures = "0.3"
+hyper = "0.14"
 rusoto_core = "0.48"
 rusoto_kms = "0.48"
 serde = "1"

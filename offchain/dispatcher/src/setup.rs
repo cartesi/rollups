@@ -10,7 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use anyhow::Result;
+use snafu::ResultExt;
 use state_client_lib::{
     config::SCConfig, error::StateServerError, BlockServer,
     GrpcStateFoldClient, StateServer,
@@ -21,7 +21,13 @@ use tonic::transport::Channel;
 use types::foldables::authority::{RollupsInitialState, RollupsState};
 
 use crate::{
-    config::DispatcherConfig, drivers::Context, machine::BrokerStatus,
+    config::DispatcherConfig,
+    drivers::Context,
+    error::{
+        BrokerSnafu, ChannelSnafu, ConnectSnafu, DispatcherError,
+        StateServerSnafu,
+    },
+    machine::BrokerStatus,
 };
 
 const BUFFER_LEN: usize = 256;
@@ -31,10 +37,13 @@ pub async fn create_state_server(
 ) -> Result<
     impl StateServer<InitialState = RollupsInitialState, State = RollupsState>
         + BlockServer,
+    DispatcherError,
 > {
-    let channel = Channel::from_shared(config.grpc_endpoint.to_owned())?
+    let channel = Channel::from_shared(config.grpc_endpoint.to_owned())
+        .context(ChannelSnafu)?
         .connect()
-        .await?;
+        .await
+        .context(ConnectSnafu)?;
 
     Ok(GrpcStateFoldClient::new_from_channel(channel))
 }
@@ -46,8 +55,12 @@ pub async fn create_block_subscription(
     impl Stream<Item = Result<BlockStreamItem, StateServerError>>
         + Send
         + std::marker::Unpin,
+    DispatcherError,
 > {
-    let s = client.subscribe_blocks(confirmations).await?;
+    let s = client
+        .subscribe_blocks(confirmations)
+        .await
+        .context(StateServerSnafu)?;
 
     let s = {
         use futures::StreamExt;
@@ -70,14 +83,17 @@ pub async fn create_context(
     config: &DispatcherConfig,
     block_server: &impl BlockServer,
     broker: &impl BrokerStatus,
-) -> Result<Context> {
+) -> Result<Context, DispatcherError> {
     let genesis_timestamp: u64 = block_server
         .query_block(config.dapp_deployment.deploy_block_hash)
-        .await?
+        .await
+        .context(StateServerSnafu)?
         .timestamp
         .as_u64();
     let epoch_length = config.epoch_duration;
-    let context = Context::new(genesis_timestamp, epoch_length, broker).await?;
+    let context = Context::new(genesis_timestamp, epoch_length, broker)
+        .await
+        .context(BrokerSnafu)?;
 
     Ok(context)
 }

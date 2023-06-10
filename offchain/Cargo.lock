@@ -1471,7 +1471,6 @@ dependencies = [
 name = "dispatcher"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "async-trait",
  "axum",
  "backoff",
@@ -1480,6 +1479,7 @@ dependencies = [
  "eth-tx-manager",
  "ethers-signers",
  "futures",
+ "hyper",
  "im",
  "rand 0.8.5",
  "redis",
