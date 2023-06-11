@@ -4592,13 +4592,14 @@ dependencies = [
 name = "state-server"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "block-history",
  "serde",
+ "snafu",
  "state-fold",
  "state-fold-types",
  "state-server-lib",
  "tokio",
+ "tonic 0.8.3",
  "tracing",
  "tracing-subscriber",
  "types",
