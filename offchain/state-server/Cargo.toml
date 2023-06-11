@@ -11,7 +11,7 @@ authors = [
 
 [[bin]]
 name = "rollups_state_server"
-path = "src/rollups_state_server.rs"
+path = "src/main.rs"
 
 [dependencies]
 block-history = { version = "0.6", registry = "cartesi" }
@@ -21,8 +21,9 @@ state-server-lib = { version = "0.6", registry = "cartesi" }
 
 types = { path = "../types" }
 
-anyhow = "1"
 serde = "1"
+snafu = "0.7"
+tonic = "0.8"
 url = "2"
 
 tokio = { version = "1", features = ["macros", "sync", "rt-multi-thread"] }
