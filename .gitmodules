@@ -10,3 +10,6 @@
 [submodule "onchain/rollups/lib/forge-std"]
 	path = onchain/rollups/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "onchain/permissionless-arbitration/lib/forge-std"]
+	path = onchain/permissionless-arbitration/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
