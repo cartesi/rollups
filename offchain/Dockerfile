@@ -12,7 +12,7 @@
 
 # syntax=docker.io/docker/dockerfile:1.4
 # deps install
-FROM rust:1.67.0-bullseye AS chef
+FROM rust:1.67.0-bookworm AS chef
 
 ENV CARGO_REGISTRIES_CARTESI_INDEX=https://github.com/cartesi/crates-index
 RUN rustup component add rustfmt
@@ -59,7 +59,7 @@ FROM builder as graphql_server_build
 RUN cargo build --release --bin graphql-server
 
 # define runtime image
-FROM debian:bullseye-20230522-slim as runtime
+FROM debian:bookworm-20230612-slim as runtime
 RUN addgroup --system --gid 102 cartesi && \
     adduser --system --uid 102 --ingroup cartesi --disabled-login --no-create-home --home /nonexistent --gecos "cartesi user" --shell /bin/false cartesi
 RUN mkdir -p /var/opt/cartesi
