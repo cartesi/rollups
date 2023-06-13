@@ -42,6 +42,7 @@
     "kind": "dev",
     "methods": {
       "depositEther(address,bytes)": {
+        "details": "All the value sent through this function is forwarded to the DApp.      If the transfer fails, `EtherTransferFailed` error is raised.",
         "params": {
           "_dapp": "The address of the DApp",
           "_execLayerData": "Additional data to be interpreted by the execution layer"

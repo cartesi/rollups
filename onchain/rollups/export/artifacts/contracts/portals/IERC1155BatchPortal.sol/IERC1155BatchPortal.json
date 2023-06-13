@@ -1,16 +1,6 @@
 {
-<<<<<<< HEAD
-<<<<<<<< HEAD:onchain/rollups/export/artifacts/contracts/portals/IERC1155BatchPortal.sol/IERC1155BatchPortal.json
   "contractName": "IERC1155BatchPortal",
   "sourceName": "contracts/portals/IERC1155BatchPortal.sol",
-========
-  "contractName": "IERC1155SinglePortal",
-  "sourceName": "contracts/portals/IERC1155SinglePortal.sol",
->>>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts):onchain/rollups/export/artifacts/contracts/portals/IERC1155SinglePortal.sol/IERC1155SinglePortal.json
-=======
-  "contractName": "IERC1155BatchPortal",
-  "sourceName": "contracts/portals/IERC1155BatchPortal.sol",
->>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts)
   "abi": [
     {
       "inputs": [
@@ -25,10 +15,6 @@
           "type": "address"
         },
         {
-<<<<<<< HEAD
-<<<<<<<< HEAD:onchain/rollups/export/artifacts/contracts/portals/IERC1155BatchPortal.sol/IERC1155BatchPortal.json
-=======
->>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts)
           "internalType": "uint256[]",
           "name": "_tokenIds",
           "type": "uint256[]"
@@ -37,19 +23,6 @@
           "internalType": "uint256[]",
           "name": "_values",
           "type": "uint256[]"
-<<<<<<< HEAD
-========
-          "internalType": "uint256",
-          "name": "_tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_value",
-          "type": "uint256"
->>>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts):onchain/rollups/export/artifacts/contracts/portals/IERC1155SinglePortal.sol/IERC1155SinglePortal.json
-=======
->>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts)
         },
         {
           "internalType": "bytes",
@@ -62,15 +35,7 @@
           "type": "bytes"
         }
       ],
-<<<<<<< HEAD
-<<<<<<<< HEAD:onchain/rollups/export/artifacts/contracts/portals/IERC1155BatchPortal.sol/IERC1155BatchPortal.json
       "name": "depositBatchERC1155Token",
-========
-      "name": "depositSingleERC1155Token",
->>>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts):onchain/rollups/export/artifacts/contracts/portals/IERC1155SinglePortal.sol/IERC1155SinglePortal.json
-=======
-      "name": "depositBatchERC1155Token",
->>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts)
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -96,74 +61,34 @@
   "devdoc": {
     "kind": "dev",
     "methods": {
-<<<<<<< HEAD
-<<<<<<<< HEAD:onchain/rollups/export/artifacts/contracts/portals/IERC1155BatchPortal.sol/IERC1155BatchPortal.json
       "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": {
         "details": "Please make sure `_tokenIds` and `_values` have the same length.",
-========
-      "depositSingleERC1155Token(address,address,uint256,uint256,bytes,bytes)": {
-        "details": "The caller must allow the portal to withdraw the token      from their account beforehand.",
->>>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts):onchain/rollups/export/artifacts/contracts/portals/IERC1155SinglePortal.sol/IERC1155SinglePortal.json
-=======
-      "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": {
-        "details": "Requirements:",
->>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts)
         "params": {
           "_baseLayerData": "Additional data to be interpreted by the base layer",
           "_dapp": "The address of the DApp",
           "_execLayerData": "Additional data to be interpreted by the execution layer",
           "_token": "The ERC-1155 token contract",
-<<<<<<< HEAD
-<<<<<<<< HEAD:onchain/rollups/export/artifacts/contracts/portals/IERC1155BatchPortal.sol/IERC1155BatchPortal.json
           "_tokenIds": "The identifiers of the tokens being transferred",
           "_values": "Transfer amounts per token type"
-========
-          "_tokenId": "The identifier of the token being transferred",
-          "_value": "Transfer amount"
->>>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts):onchain/rollups/export/artifacts/contracts/portals/IERC1155SinglePortal.sol/IERC1155SinglePortal.json
-=======
-          "_tokenIds": "The identifiers of the tokens being transferred",
-          "_values": "Transfer amounts per token type"
->>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts)
         }
       },
       "getInputBox()": {
         "returns": {
-<<<<<<< HEAD
           "_0": "The input box"
         }
       }
     },
     "title": "ERC-1155 Batch Transfer Portal interface",
-=======
-          "_0": "the input box"
-        }
-      }
-    },
->>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts)
     "version": 1
   },
   "userdoc": {
     "kind": "user",
     "methods": {
-<<<<<<< HEAD
-<<<<<<<< HEAD:onchain/rollups/export/artifacts/contracts/portals/IERC1155BatchPortal.sol/IERC1155BatchPortal.json
       "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": {
         "notice": "Transfer a batch of ERC-1155 tokens to a DApp and add an input to the DApp's input box to signal such operation. The caller must enable approval for the portal to manage all of their tokens beforehand, by calling the `setApprovalForAll` function in the token contract."
-========
-      "depositSingleERC1155Token(address,address,uint256,uint256,bytes,bytes)": {
-        "notice": "Transfer an ERC-1155 token to a DApp and add an input to         the DApp's input box to signal such operation."
->>>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts):onchain/rollups/export/artifacts/contracts/portals/IERC1155SinglePortal.sol/IERC1155SinglePortal.json
       },
       "getInputBox()": {
         "notice": "Get the input box used by this portal."
-=======
-      "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": {
-        "notice": "Transfer a batch of ERC-1155 tokens to a DApp and add an input to         the DApp's input box to signal such operation."
-      },
-      "getInputBox()": {
-        "notice": "Get the input box used by this portal"
->>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts)
       }
     },
     "version": 1
@@ -171,15 +96,7 @@
   "evm": {
     "gasEstimates": null,
     "methodIdentifiers": {
-<<<<<<< HEAD
-<<<<<<<< HEAD:onchain/rollups/export/artifacts/contracts/portals/IERC1155BatchPortal.sol/IERC1155BatchPortal.json
       "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": "24d15c67",
-========
-      "depositSingleERC1155Token(address,address,uint256,uint256,bytes,bytes)": "dec07dca",
->>>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts):onchain/rollups/export/artifacts/contracts/portals/IERC1155SinglePortal.sol/IERC1155SinglePortal.json
-=======
-      "depositBatchERC1155Token(address,address,uint256[],uint256[],bytes,bytes)": "24d15c67",
->>>>>>> 31ce7a7f (fix(onchain): Added custom errors for contracts)
       "getInputBox()": "00aace9a"
     }
   }

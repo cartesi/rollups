@@ -1,0 +1,22 @@
+[
+  {
+    "inputs": [],
+    "name": "IncorrectEpochHash",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IncorrectOutputHashesRootHash",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IncorrectOutputsEpochRootHash",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InputIndexOutOfClaimBounds",
+    "type": "error"
+  }
+]

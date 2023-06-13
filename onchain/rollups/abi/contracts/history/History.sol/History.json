@@ -11,6 +11,16 @@
     "type": "constructor"
   },
   {
+    "inputs": [],
+    "name": "InvalidInputIndices",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnclaimedInputs",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {

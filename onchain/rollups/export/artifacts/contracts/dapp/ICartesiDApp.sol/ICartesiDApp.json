@@ -274,7 +274,7 @@
     "kind": "dev",
     "methods": {
       "executeVoucher(address,bytes,((uint64,uint64,bytes32,bytes32,bytes32,bytes32,bytes32[],bytes32[]),bytes))": {
-        "details": "On a successful execution, emits a `VoucherExecuted` event.",
+        "details": "On a successful execution, emits a `VoucherExecuted` event.      Execution of already executed voucher will raise a `VoucherReexecutionNotAllowed` error.",
         "params": {
           "_destination": "The address that will receive the payload through a message call",
           "_payload": "The payload, which—in the case of Solidity contracts—encodes a function call",

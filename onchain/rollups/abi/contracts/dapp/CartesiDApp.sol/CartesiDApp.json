@@ -21,6 +21,41 @@
     "type": "constructor"
   },
   {
+    "inputs": [],
+    "name": "EtherTransferFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IncorrectEpochHash",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IncorrectOutputHashesRootHash",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IncorrectOutputsEpochRootHash",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InputIndexOutOfClaimBounds",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyDApp",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "VoucherReexecutionNotAllowed",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
