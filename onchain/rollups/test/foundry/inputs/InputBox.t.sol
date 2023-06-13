@@ -167,6 +167,15 @@ contract InputBoxTest is Test {
         assertEq(inputBox.getNumberOfInputs(_dapp), 0);
     }
 
+    function testAddLargeInput() public {
+        address dapp = vm.addr(1);
+
+        inputBox.addInput(dapp, new bytes(CanonicalMachine.INPUT_MAX_SIZE));
+
+        vm.expectRevert(LibInput.InputSizeExceedsLimit.selector);
+        inputBox.addInput(dapp, new bytes(CanonicalMachine.INPUT_MAX_SIZE + 1));
+    }
+
     // fuzz testing with multiple inputs
     function testAddInput(address _dapp, bytes[] calldata _inputs) public {
         uint256 numInputs = _inputs.length;
