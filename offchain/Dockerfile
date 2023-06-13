@@ -58,10 +58,6 @@ RUN PATH="$PATH:$HOME/.local/bin" cargo build --release --bin advance-runner
 FROM builder as graphql_server_build
 RUN cargo build --release --bin graphql-server
 
-# grpc readiness probe
-FROM golang:1.19.0-bullseye as grpc_health_probe
-RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
-
 # define runtime image
 FROM debian:bullseye-20230522-slim as runtime
 RUN addgroup --system --gid 102 cartesi && \
@@ -78,7 +74,6 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=grpc_health_probe /go/bin/grpc-health-probe /usr/local/bin
 COPY --from=state_server_build /usr/src/app/offchain/target/release/rollups_state_server /opt/cartesi/bin/rollups_state_server
 USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/rollups_state_server"]
