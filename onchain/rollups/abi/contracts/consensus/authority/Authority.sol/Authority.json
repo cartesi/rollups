@@ -16,6 +16,11 @@
     "type": "constructor"
   },
   {
+    "inputs": [],
+    "name": "AuthorityWithdrawalFailed",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {

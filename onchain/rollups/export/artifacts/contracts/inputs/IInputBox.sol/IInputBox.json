@@ -120,7 +120,7 @@
     "kind": "dev",
     "methods": {
       "addInput(address,bytes)": {
-        "details": "MUST fire an `InputAdded` event accordingly.",
+        "details": "MUST fire an `InputAdded` event accordingly.      Input larger than machine limit will raise `InputSizeExceedsLimit` error.",
         "params": {
           "_dapp": "The address of the DApp",
           "_input": "The contents of the input"
