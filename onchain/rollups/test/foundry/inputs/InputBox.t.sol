@@ -175,10 +175,7 @@ contract InputBoxTest is Test {
 
         // assume #bytes for each input is within bounds
         for (uint256 i; i < numInputs; ++i) {
-            vm.assume(
-                _inputs[i].length <=
-                    (1 << CanonicalMachine.INPUT_MAX_LOG2_SIZE.uint64OfSize())
-            );
+            vm.assume(_inputs[i].length <= CanonicalMachine.INPUT_MAX_SIZE);
         }
 
         // adding inputs

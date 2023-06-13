@@ -35,12 +35,7 @@ library LibInput {
         bytes calldata input,
         uint256 inboxInputIndex
     ) internal pure returns (bytes32) {
-        // Currently sending an input larger than driveSize surpasses the block gas limit
-        // But we keep the following check in case this changes in the future
-        if (
-            input.length >
-            (1 << CanonicalMachine.INPUT_MAX_LOG2_SIZE.uint64OfSize())
-        ) {
+        if (input.length > CanonicalMachine.INPUT_MAX_SIZE) {
             revert InputSizeExceedsLimit();
         }
 
