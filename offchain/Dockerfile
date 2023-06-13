@@ -12,7 +12,7 @@
 
 # syntax=docker.io/docker/dockerfile:1.4
 # deps install
-FROM rust:1.67.0-bookworm AS chef
+FROM rust:1.70.0-bookworm AS chef
 
 ENV CARGO_REGISTRIES_CARTESI_INDEX=https://github.com/cartesi/crates-index
 RUN rustup component add rustfmt
