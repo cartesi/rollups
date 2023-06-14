@@ -53,8 +53,12 @@ contract History is IHistory, Ownable {
     /// @notice Raised due to an incorrect indices claim when first index is posterior than last index.
     error InvalidInputIndices();
 
-    /// @notice Raised due to an incorrect indices claim when the first index of the first claim is not zero.
+    /// @notice Raised due to an incorrect indices claim when first index is not the subsequent of previous
+    ///         claimed index or the first index of the first claim is not zero.
     error UnclaimedInputs();
+
+    /// @notice Raised due to an incorrect claim index when retrieving a claim from an out-of-bound array position.
+    error InvalidClaimIndex();
 
     /// @notice Creates a `History` contract.
     /// @param _owner The initial owner
@@ -82,7 +86,7 @@ contract History is IHistory, Ownable {
     ///
     /// @inheritdoc IHistory
     /// @dev Emits a `NewClaimToHistory` event. Should have access control.
-    ///      Incorrect claim indices could raise two errors:
+    ///      Incorrect claim input indices could raise two errors:
     ///      `InvalidInputIndices` if first index is posterior than last index or
     ///      `UnclaimedInputs` if first index is not the subsequent of previous claimed index or
     ///                        if the first index of the first claim is not zero.
@@ -127,11 +131,17 @@ contract History is IHistory, Ownable {
     ///   that have been submitted to `_dapp` already.
     ///
     /// @inheritdoc IHistory
+    /// @dev Incorrect claim index raises the error `InvalidClaimIndex` when retrieving a claim
+    ///      from an out-of-bound array position
     function getClaim(
         address _dapp,
         bytes calldata _proofContext
     ) external view override returns (bytes32, uint256, uint256) {
         uint256 claimIndex = abi.decode(_proofContext, (uint256));
+
+        if (claimIndex >= claims[_dapp].length) {
+            revert InvalidClaimIndex();
+        }
 
         Claim memory claim = claims[_dapp][claimIndex];
 

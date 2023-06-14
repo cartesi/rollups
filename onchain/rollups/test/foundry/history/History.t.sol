@@ -81,19 +81,6 @@ contract HistoryTest is Test {
         testInitialConsensus(); // consensus hasn't changed
     }
 
-    function submitClaim(
-        address dapp,
-        bytes32 epochHash,
-        uint128 fi,
-        uint128 li
-    ) internal {
-        vm.expectEmit(true, false, false, true, address(history));
-        History.Claim memory claim = History.Claim(epochHash, fi, li);
-        emit NewClaimToHistory(dapp, claim);
-        bytes memory encodedClaim = abi.encode(dapp, claim);
-        history.submitClaim(encodedClaim);
-    }
-
     function testSubmitAndGetClaims(
         address dapp,
         bytes32[3] calldata epochHash,
@@ -202,24 +189,6 @@ contract HistoryTest is Test {
         history.submitClaim("");
     }
 
-    function checkClaim(
-        address dapp,
-        uint256 claimIndex,
-        bytes32 epochHash,
-        uint256 firstInputIndex,
-        uint256 lastInputIndex
-    ) internal {
-        (
-            bytes32 retEpochHash,
-            uint256 retFirstInputIndex,
-            uint256 retLastInputIndex
-        ) = history.getClaim(dapp, abi.encode(claimIndex));
-
-        assertEq(retEpochHash, epochHash);
-        assertEq(retFirstInputIndex, firstInputIndex);
-        assertEq(retLastInputIndex, lastInputIndex);
-    }
-
     function testRevertsGetClaimEncoding(address dapp) public {
         vm.expectRevert();
         history.getClaim(dapp, "");
@@ -237,7 +206,39 @@ contract HistoryTest is Test {
             submitClaim(dapp, epochHash[i], i, i);
         }
 
-        vm.expectRevert(stdError.indexOOBError);
+        vm.expectRevert(History.InvalidClaimIndex.selector);
         history.getClaim(dapp, abi.encode(claimIndex));
+    }
+
+    // utility functions
+    function submitClaim(
+        address dapp,
+        bytes32 epochHash,
+        uint128 fi,
+        uint128 li
+    ) internal {
+        vm.expectEmit(true, false, false, true, address(history));
+        History.Claim memory claim = History.Claim(epochHash, fi, li);
+        emit NewClaimToHistory(dapp, claim);
+        bytes memory encodedClaim = abi.encode(dapp, claim);
+        history.submitClaim(encodedClaim);
+    }
+
+    function checkClaim(
+        address dapp,
+        uint256 claimIndex,
+        bytes32 epochHash,
+        uint256 firstInputIndex,
+        uint256 lastInputIndex
+    ) internal {
+        (
+            bytes32 retEpochHash,
+            uint256 retFirstInputIndex,
+            uint256 retLastInputIndex
+        ) = history.getClaim(dapp, abi.encode(claimIndex));
+
+        assertEq(retEpochHash, epochHash);
+        assertEq(retFirstInputIndex, firstInputIndex);
+        assertEq(retLastInputIndex, lastInputIndex);
     }
 }
