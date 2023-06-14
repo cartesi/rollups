@@ -40,9 +40,12 @@ contract History is IHistory, Ownable {
         uint128 lastIndex;
     }
 
-    /// @notice Mapping from DApp address to array of claims.
+    /// @notice Mapping from DApp address to number of claims.
+    mapping(address => uint256) internal numClaims;
+
+    /// @notice Mapping from DApp address and claim index to claim.
     /// @dev See the `getClaim` and `submitClaim` functions.
-    mapping(address => Claim[]) internal claims;
+    mapping(address => mapping(uint256 => Claim)) internal claims;
 
     /// @notice A new claim regarding a specific DApp was submitted.
     /// @param dapp The address of the DApp
@@ -55,6 +58,9 @@ contract History is IHistory, Ownable {
 
     /// @notice Raised due to an incorrect indices claim when the first index of the first claim is not zero.
     error UnclaimedInputs();
+
+    /// @notice Raised when one tries to retrieve a claim with an invalid index.
+    error InvalidClaimIndex();
 
     /// @notice Creates a `History` contract.
     /// @param _owner The initial owner
@@ -98,21 +104,21 @@ contract History is IHistory, Ownable {
             revert InvalidInputIndices();
         }
 
-        Claim[] storage dappClaims = claims[dapp];
-        uint256 numDAppClaims = dappClaims.length;
+        uint256 numDAppClaims = numClaims[dapp];
 
         if (
             claim.firstIndex !=
             (
                 (numDAppClaims == 0)
                     ? 0
-                    : (dappClaims[numDAppClaims - 1].lastIndex + 1)
+                    : (claims[dapp][numDAppClaims - 1].lastIndex + 1)
             )
         ) {
             revert UnclaimedInputs();
         }
 
-        dappClaims.push(claim);
+        claims[dapp][numDAppClaims] = claim;
+        numClaims[dapp] = numDAppClaims + 1;
 
         emit NewClaimToHistory(dapp, claim);
     }
@@ -127,11 +133,19 @@ contract History is IHistory, Ownable {
     ///   that have been submitted to `_dapp` already.
     ///
     /// @inheritdoc IHistory
+    /// @dev If `claimIndex` is not inside the interval `[0, n)`, then
+    ///      an `InvalidClaimIndex` error is raised.
     function getClaim(
         address _dapp,
         bytes calldata _proofContext
     ) external view override returns (bytes32, uint256, uint256) {
         uint256 claimIndex = abi.decode(_proofContext, (uint256));
+
+        uint256 numDAppClaims = numClaims[_dapp];
+
+        if (claimIndex >= numDAppClaims) {
+            revert InvalidClaimIndex();
+        }
 
         Claim memory claim = claims[_dapp][claimIndex];
 

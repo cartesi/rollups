@@ -237,7 +237,7 @@ contract HistoryTest is Test {
             submitClaim(dapp, epochHash[i], i, i);
         }
 
-        vm.expectRevert(stdError.indexOOBError);
+        vm.expectRevert(History.InvalidClaimIndex.selector);
         history.getClaim(dapp, abi.encode(claimIndex));
     }
 }
