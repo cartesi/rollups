@@ -1,0 +1,6 @@
+[submodule "grpc-interfaces"]
+	path = third-party/grpc-interfaces
+	url = ../grpc-interfaces.git
+[submodule "tests/machine-emulator-tools"]
+	path = third-party/machine-emulator-tools
+	url = ../machine-emulator-tools.git

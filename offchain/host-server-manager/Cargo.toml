@@ -1,0 +1,36 @@
+[package]
+name = "host-server-manager"
+version = "0.9.1"
+edition = "2021"
+
+[[bin]]
+name = "host-server-manager"
+path = "src/main.rs"
+
+[dependencies]
+actix-web = "4.3"
+async-trait = "0.1"
+byteorder = "1.4"
+env_logger = "0.10"
+futures-util = "0.3"
+hex = "0.4"
+log = "0.4"
+prost = "0.11"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+sha3 = { version = "0.10", features = ["std"] }
+snafu = "0.7"
+structopt = "0.3"
+tokio = { version = "1.28", features = ["macros", "time", "rt-multi-thread"] }
+tonic = "0.9"
+tonic-health = "0.9"
+ethabi = "18.0"
+
+[dev-dependencies]
+mockall = "0.11"
+rand = "0.8"
+serial_test = "2.0"
+rollup-http-client = { path = "third-party/machine-emulator-tools/linux/rollup/http/rollup-http-client" }
+
+[build-dependencies]
+tonic-build = "0.9"
