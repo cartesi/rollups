@@ -53,10 +53,14 @@ contract History is IHistory, Ownable {
     /// @dev MUST be triggered on a successful call to `submitClaim`.
     event NewClaimToHistory(address indexed dapp, Claim claim);
 
-    /// @notice Raised due to an incorrect indices claim when first index is posterior than last index.
+    /// @notice Raised when one tries to submit a claim whose first input index
+    ///         is not less than or equal to its last input index.
     error InvalidInputIndices();
 
-    /// @notice Raised due to an incorrect indices claim when the first index of the first claim is not zero.
+    /// @notice Raised when one tries to submit a claim that skips some input.
+    ///         For example, when the 1st claim starts at index 5 (instead of 0)
+    ///         or when the 1st claim ends at index 20 but the 2nd claim starts at
+    ///         index 22 (instead of 21).
     error UnclaimedInputs();
 
     /// @notice Raised when one tries to retrieve a claim with an invalid index.
@@ -88,7 +92,7 @@ contract History is IHistory, Ownable {
     ///
     /// @inheritdoc IHistory
     /// @dev Emits a `NewClaimToHistory` event. Should have access control.
-    ///      Incorrect claim indices could raise two errors:
+    ///      Incorrect claim input indices could raise two errors:
     ///      `InvalidInputIndices` if first index is posterior than last index or
     ///      `UnclaimedInputs` if first index is not the subsequent of previous claimed index or
     ///                        if the first index of the first claim is not zero.
