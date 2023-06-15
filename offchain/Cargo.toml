@@ -6,6 +6,7 @@ members = [
   "dispatcher",
   "graphql-server",
   "grpc-interfaces",
+  "host-runner",
   "http-health-check",
   "indexer",
   "inspect-server",

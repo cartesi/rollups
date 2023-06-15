@@ -1,0 +1,35 @@
+[package]
+name = "host-runner"
+version = "1.0.0"
+edition = "2021"
+
+[[bin]]
+name = "host-runner"
+
+[dependencies]
+grpc-interfaces = { path = "../grpc-interfaces" }
+
+actix-web = "4.3"
+async-trait = "0.1"
+byteorder = "1.4"
+clap = { version = "4.2", features = ["derive", "env"] }
+ethabi = "18.0"
+futures-util = "0.3"
+hex = "0.4"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+sha3 = { version = "0.10", features = ["std"] }
+snafu = "0.7"
+tokio = { version = "1.28", features = ["macros", "time", "rt-multi-thread"] }
+tonic = "0.9"
+tonic-health = "0.9"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+rollups-http-client = { path = "../rollups-http-client" }
+
+mockall = "0.11"
+rand = "0.8"
+serial_test = "2.0"
+tracing-test = "0.2"

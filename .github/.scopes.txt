@@ -1,4 +1,5 @@
 advance-runner [For every change inside the offchain/advance-runner service]
+host-runner [For every change inside the offchain/host-runner service]
 dispatcher [For every change inside the offchain/dispatcher service]
 graphql-server [For every change inside the offchain/graphql-server service]
 indexer [For every change inside the offchain/indexer service]

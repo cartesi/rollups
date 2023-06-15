@@ -9,6 +9,7 @@ group "default" {
     "dispatcher",
     "graphql-server",
     "hardhat",
+    "host-runner",
     "inspect-server",
     "indexer",
     "state-server"
@@ -61,6 +62,13 @@ target "advance-runner" {
   inherits   = ["docker-metadata-action", "docker-platforms"]
   dockerfile = "offchain/Dockerfile"
   target     = "advance_runner"
+  context    = "."
+}
+
+target "host-runner" {
+  inherits   = ["docker-metadata-action", "docker-platforms"]
+  dockerfile = "offchain/Dockerfile"
+  target     = "host_runner"
   context    = "."
 }
 

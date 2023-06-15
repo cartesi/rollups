@@ -58,6 +58,9 @@ RUN PATH="$PATH:$HOME/.local/bin" cargo build --release --bin advance-runner
 FROM builder as graphql_server_build
 RUN cargo build --release --bin graphql-server
 
+FROM builder as host_runner_build
+RUN cargo build --release --bin host-runner
+
 # define runtime image
 FROM debian:bookworm-20230612-slim as runtime
 RUN addgroup --system --gid 102 cartesi && \
@@ -123,6 +126,11 @@ EOF
 COPY --from=graphql_server_build /usr/src/app/offchain/target/release/graphql-server /opt/cartesi/bin/graphql-server
 USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/graphql-server"]
+
+FROM runtime AS host_runner
+COPY --from=host_runner_build /usr/src/app/offchain/target/release/host-runner /opt/cartesi/bin/host-runner
+USER cartesi
+ENTRYPOINT ["/opt/cartesi/bin/host-runner"]
 
 FROM scratch AS deployments
 

@@ -31,6 +31,10 @@ target "graphql-server" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-graphql-server:${TAG}"]
 }
 
+target "host-runner" {
+  tags = ["${DOCKER_ORGANIZATION}/rollups-host-runner:${TAG}"]
+}
+
 target "hardhat" {
   tags = ["${DOCKER_ORGANIZATION}/rollups-hardhat:${TAG}"]
 }

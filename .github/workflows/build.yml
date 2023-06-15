@@ -190,6 +190,14 @@ jobs:
       image-name: rollups-advance-runner
     secrets: inherit
 
+  host_runner:
+    needs: build_docker
+    uses: ./.github/workflows/docker.yml
+    with:
+      target: host-runner
+      image-name: rollups-host-runner
+    secrets: inherit
+
   hardhat:
     needs: build_docker
     uses: ./.github/workflows/docker.yml
