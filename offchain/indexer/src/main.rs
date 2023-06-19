@@ -16,14 +16,12 @@ use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 use indexer::CLIConfig;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
     let config = CLIConfig::parse().into();
-    if let Err(e) = indexer::run(config).await {
-        tracing::error!("{:?}", e);
-    }
+    indexer::run(config).await.map_err(|e| e.into())
 }
