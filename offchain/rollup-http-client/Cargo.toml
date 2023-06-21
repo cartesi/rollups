@@ -1,0 +1,25 @@
+[package]
+name = "rollup-http-client"
+version = "0.1.0"
+edition = "2021"
+authors = ["Marko Atnasievski <marko.atanasievski@cartesi.io>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+env_logger = "0.9"
+log = "0.4"
+async-trait = "0.1"
+hyper = { version = "0.14", features = ["http1", "runtime", "client"] }
+getopts = "0.2"
+hex = "0.4"
+
+
+[profile.release]
+strip = true
+lto = true          # Enable Link Time Optimization
+opt-level = "z"     # Optimize for size.
+codegen-units = 1   # Reduce number of codegen units to increase optimizations, but slower build
+# panic = "abort"     # Abort on panic

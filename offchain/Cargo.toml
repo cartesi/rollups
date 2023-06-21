@@ -10,6 +10,7 @@ members = [
   "indexer",
   "inspect-server",
   "redacted",
+  "rollup-http-client",
   "rollups-events",
   "state-server",
   "test-fixtures",
