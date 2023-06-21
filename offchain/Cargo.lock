@@ -3901,6 +3901,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rollups-http-client"
+version = "1.0.0"
+dependencies = [
+ "async-trait",
+ "hex",
+ "hyper",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
 name = "rusoto_core"
 version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,4 +1,4 @@
-// Copyright 2021 Cartesi Pte. Ltd.
+// Copyright Cartesi Pte. Ltd.
 //
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -10,7 +10,10 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use crate::rollup::{AdvanceRequest, Exception, IndexResponse, InspectRequest, Notice, Report, RollupRequest, RollupResponse, Voucher};
+use crate::rollup::{
+    AdvanceRequest, Exception, IndexResponse, InspectRequest, Notice, Report,
+    RollupRequest, RollupResponse, Voucher,
+};
 use serde::{Deserialize, Serialize};
 use std::io::ErrorKind;
 
@@ -18,17 +21,13 @@ use std::io::ErrorKind;
 #[serde(tag = "request_type")]
 enum RollupHttpRequest {
     #[serde(rename = "advance_state")]
-    Advance {
-        data: AdvanceRequest,
-    },
+    Advance { data: AdvanceRequest },
     #[serde(rename = "inspect_state")]
-    Inspect {
-        data: InspectRequest,
-    },
+    Inspect { data: InspectRequest },
 }
 
 pub async fn send_voucher(rollup_http_server_addr: &str, voucher: Voucher) {
-    log::debug!("sending voucher request to {}", rollup_http_server_addr);
+    tracing::debug!("sending voucher request to {}", rollup_http_server_addr);
     let client = hyper::Client::new();
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
@@ -44,10 +43,10 @@ pub async fn send_voucher(rollup_http_server_addr: &str, voucher: Voucher) {
                     .expect("error in voucher in response handling")
                     .to_vec(),
             );
-            log::debug!("voucher generated: {:?}", &id_response);
+            tracing::debug!("voucher generated: {:?}", &id_response);
         }
         Err(e) => {
-            log::error!(
+            tracing::error!(
                 "failed to send voucher request to rollup http server: {}",
                 e
             );
@@ -56,7 +55,7 @@ pub async fn send_voucher(rollup_http_server_addr: &str, voucher: Voucher) {
 }
 
 pub async fn send_notice(rollup_http_server_addr: &str, notice: Notice) {
-    log::debug!("sending notice request to {}", rollup_http_server_addr);
+    tracing::debug!("sending notice request to {}", rollup_http_server_addr);
     let client = hyper::Client::new();
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
@@ -72,16 +71,19 @@ pub async fn send_notice(rollup_http_server_addr: &str, notice: Notice) {
                     .expect("error in notice id response handling")
                     .to_vec(),
             );
-            log::debug!("notice generated: {:?}", &id_response);
+            tracing::debug!("notice generated: {:?}", &id_response);
         }
         Err(e) => {
-            log::error!("failed to send notice request to rollup http server: {}", e);
+            tracing::error!(
+                "failed to send notice request to rollup http server: {}",
+                e
+            );
         }
     }
 }
 
 pub async fn send_report(rollup_http_server_addr: &str, report: Report) {
-    log::debug!("sending report request to {}", rollup_http_server_addr);
+    tracing::debug!("sending report request to {}", rollup_http_server_addr);
     let client = hyper::Client::new();
     let req = hyper::Request::builder()
         .method(hyper::Method::POST)
@@ -90,12 +92,18 @@ pub async fn send_report(rollup_http_server_addr: &str, report: Report) {
         .body(hyper::Body::from(serde_json::to_string(&report).unwrap()))
         .expect("report request");
     if let Err(e) = client.request(req).await {
-        log::error!("failed to send report request to rollup http server: {}", e);
+        tracing::error!(
+            "failed to send report request to rollup http server: {}",
+            e
+        );
     }
 }
 
-pub async fn throw_exception(rollup_http_server_addr: &str, exception: Exception) {
-    log::debug!(
+pub async fn throw_exception(
+    rollup_http_server_addr: &str,
+    exception: Exception,
+) {
+    tracing::debug!(
         "throwing exception request to {}",
         rollup_http_server_addr
     );
@@ -109,7 +117,7 @@ pub async fn throw_exception(rollup_http_server_addr: &str, exception: Exception
         ))
         .expect("exception request");
     if let Err(e) = client.request(req).await {
-        log::error!(
+        tracing::error!(
             "failed to send exception throw request to rollup http server : {}",
             e
         );
@@ -137,8 +145,12 @@ pub async fn send_finish_request(
         }
     };
     // Reconstruct http dispatcher finish target endpoint
-    let rollup_http_server_endpoint = format!("{}/finish", rollup_http_server_addr);
-    log::debug!("sending finish request to {}", rollup_http_server_endpoint);
+    let rollup_http_server_endpoint =
+        format!("{}/finish", rollup_http_server_addr);
+    tracing::debug!(
+        "sending finish request to {}",
+        rollup_http_server_endpoint
+    );
     // Send finish request to rollup http server
     {
         let mut json_status = std::collections::HashMap::new();
@@ -164,9 +176,13 @@ pub async fn send_finish_request(
                         .await
                         .expect("error in rollup http server response handling")
                         .to_vec();
-                    let finish_response = serde_json::from_slice::<RollupHttpRequest>(&buf)
-                        .expect("rollup http server response deserialization failed");
-                    log::debug!(
+                    let finish_response = serde_json::from_slice::<
+                        RollupHttpRequest,
+                    >(&buf)
+                    .expect(
+                        "rollup http server response deserialization failed",
+                    );
+                    tracing::debug!(
                         "rollup http request finish response: {:?}",
                         &finish_response
                     );
@@ -195,7 +211,11 @@ pub async fn send_finish_request(
                 }
             }
             Err(e) => {
-                log::error!("Failed to send `{}` response to the server: {}", status, e);
+                tracing::error!(
+                    "Failed to send `{}` response to the server: {}",
+                    status,
+                    e
+                );
                 Err(std::io::Error::new(ErrorKind::Other, e.to_string()))
             }
         }
