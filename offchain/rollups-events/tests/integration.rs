@@ -20,8 +20,8 @@ use testcontainers::{
 };
 
 use rollups_events::{
-    Broker, BrokerConfig, BrokerError, BrokerStream, RedactedUrl, Url,
-    INITIAL_ID,
+    Broker, BrokerConfig, BrokerEndpoint, BrokerError, BrokerStream,
+    RedactedUrl, Url, INITIAL_ID,
 };
 
 const STREAM_KEY: &'static str = "test-stream";
@@ -62,7 +62,7 @@ impl TestState<'_> {
 
     async fn create_broker(&self) -> Broker {
         let config = BrokerConfig {
-            redis_endpoint: self.redis_endpoint.clone(),
+            redis_endpoint: BrokerEndpoint::Single(self.redis_endpoint.clone()),
             backoff: self.backoff.clone(),
             consume_timeout: CONSUME_TIMEOUT,
         };

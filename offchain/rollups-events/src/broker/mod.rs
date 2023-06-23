@@ -12,11 +12,15 @@
 
 use backoff::{future::retry, ExponentialBackoff, ExponentialBackoffBuilder};
 use clap::Parser;
-use redis::aio::ConnectionManager;
+use redis::aio::{ConnectionLike, ConnectionManager};
+use redis::cluster::ClusterClient;
+use redis::cluster_async::ClusterConnection;
 use redis::streams::{
     StreamId, StreamRangeReply, StreamReadOptions, StreamReadReply,
 };
-use redis::{AsyncCommands, Client, RedisError};
+use redis::{
+    AsyncCommands, Client, Cmd, Pipeline, RedisError, RedisFuture, Value,
+};
 use serde::{de::DeserializeOwned, Serialize};
 use snafu::{ResultExt, Snafu};
 use std::fmt;
@@ -28,10 +32,59 @@ pub mod indexer;
 
 pub const INITIAL_ID: &'static str = "0";
 
+/// The `BrokerConnection` enum implements the `ConnectionLike` trait
+/// to satisfy the `AsyncCommands` trait bounds.
+/// As `AsyncCommands` requires its implementors to be `Sized`, we couldn't
+/// use a trait object instead.
+#[derive(Clone)]
+enum BrokerConnection {
+    ConnectionManager(ConnectionManager),
+    ClusterConnection(ClusterConnection),
+}
+
+impl ConnectionLike for BrokerConnection {
+    fn req_packed_command<'a>(
+        &'a mut self,
+        cmd: &'a Cmd,
+    ) -> RedisFuture<'a, Value> {
+        match self {
+            Self::ConnectionManager(connection) => {
+                connection.req_packed_command(cmd)
+            }
+            Self::ClusterConnection(connection) => {
+                connection.req_packed_command(cmd)
+            }
+        }
+    }
+
+    fn req_packed_commands<'a>(
+        &'a mut self,
+        cmd: &'a Pipeline,
+        offset: usize,
+        count: usize,
+    ) -> RedisFuture<'a, Vec<Value>> {
+        match self {
+            Self::ConnectionManager(connection) => {
+                connection.req_packed_commands(cmd, offset, count)
+            }
+            Self::ClusterConnection(connection) => {
+                connection.req_packed_commands(cmd, offset, count)
+            }
+        }
+    }
+
+    fn get_db(&self) -> i64 {
+        match self {
+            Self::ConnectionManager(connection) => connection.get_db(),
+            Self::ClusterConnection(connection) => connection.get_db(),
+        }
+    }
+}
+
 /// Client that connects to the broker
 #[derive(Clone)]
 pub struct Broker {
-    connection: ConnectionManager,
+    connection: BrokerConnection,
     backoff: ExponentialBackoff,
     consume_timeout: usize,
 }
@@ -44,13 +97,29 @@ impl Broker {
         tracing::trace!(?config, "connecting to broker");
 
         let connection = retry(config.backoff.clone(), || async {
-            tracing::trace!("creating Redis Client");
-            let client = Client::open(config.redis_endpoint.inner().as_str())?;
+            match config.redis_endpoint.clone() {
+                BrokerEndpoint::Single(endpoint) => {
+                    tracing::trace!("creating Redis Client");
+                    let client = Client::open(endpoint.inner().as_str())?;
 
-            tracing::trace!("creating Redis ConnectionManager");
-            let connection = ConnectionManager::new(client).await?;
+                    tracing::trace!("creating Redis ConnectionManager");
+                    let connection = ConnectionManager::new(client).await?;
 
-            Ok(connection)
+                    Ok(BrokerConnection::ConnectionManager(connection))
+                }
+                BrokerEndpoint::Cluster(endpoints) => {
+                    tracing::trace!("creating Redis Cluster Client");
+                    let client = ClusterClient::new(
+                        endpoints
+                            .iter()
+                            .map(|endpoint| endpoint.inner().as_str())
+                            .collect(),
+                    )?;
+                    tracing::trace!("connecting to Redis Cluster");
+                    let connection = client.get_async_connection().await?;
+                    Ok(BrokerConnection::ClusterConnection(connection))
+                }
+            }
         })
         .await
         .context(ConnectionSnafu)?;
@@ -273,6 +342,13 @@ pub struct BrokerCLIConfig {
     #[arg(long, env, default_value = "redis://127.0.0.1:6379")]
     redis_endpoint: String,
 
+    /// Address list of Redis cluster nodes, defined by a single string
+    /// separated by commas. If present, it supersedes `redis_endpoint`.
+    /// A single endpoint can be enough as the client will discover
+    /// other nodes automatically
+    #[arg(long, env, num_args = 1.., value_delimiter = ',')]
+    redis_cluster_endpoints: Option<Vec<String>>,
+
     /// Timeout when consuming input events (in millis)
     #[arg(long, env, default_value = "5000")]
     broker_consume_timeout: usize,
@@ -283,8 +359,14 @@ pub struct BrokerCLIConfig {
 }
 
 #[derive(Debug, Clone)]
+pub enum BrokerEndpoint {
+    Single(RedactedUrl),
+    Cluster(Vec<RedactedUrl>),
+}
+
+#[derive(Debug, Clone)]
 pub struct BrokerConfig {
-    pub redis_endpoint: RedactedUrl,
+    pub redis_endpoint: BrokerEndpoint,
     pub consume_timeout: usize,
     pub backoff: ExponentialBackoff,
 }
@@ -297,9 +379,24 @@ impl From<BrokerCLIConfig> for BrokerConfig {
         let backoff = ExponentialBackoffBuilder::new()
             .with_max_elapsed_time(Some(max_elapsed_time))
             .build();
-        let redis_endpoint = Url::parse(&cli_config.redis_endpoint)
-            .map(RedactedUrl::new)
-            .expect("failed to parse Redis URL");
+        let redis_endpoint =
+            if let Some(endpoints) = cli_config.redis_cluster_endpoints {
+                let urls = endpoints
+                    .iter()
+                    .map(|endpoint| {
+                        RedactedUrl::new(
+                            Url::parse(endpoint)
+                                .expect("failed to parse Redis URL"),
+                        )
+                    })
+                    .collect();
+                BrokerEndpoint::Cluster(urls)
+            } else {
+                let url = Url::parse(&cli_config.redis_endpoint)
+                    .map(RedactedUrl::new)
+                    .expect("failed to parse Redis URL");
+                BrokerEndpoint::Single(url)
+            };
         BrokerConfig {
             redis_endpoint,
             consume_timeout: cli_config.broker_consume_timeout,

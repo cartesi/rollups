@@ -23,6 +23,8 @@ redis = { workspace = true, features = [
     "connection-manager",
     "tls-native-tls",
     "tokio-native-tls-comp",
+    "cluster",
+    "cluster-async"
 ] }
 
 [dev-dependencies]

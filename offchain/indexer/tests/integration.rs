@@ -16,7 +16,7 @@ use rollups_data::{
     Input, Notice, OutputEnum, Proof, Report, RepositoryConfig, Voucher,
 };
 use rollups_events::{
-    BrokerConfig, DAppMetadata, InputMetadata, RedactedUrl,
+    BrokerConfig, BrokerEndpoint, DAppMetadata, InputMetadata,
     RollupsAdvanceStateInput, RollupsData, RollupsNotice, RollupsOutput,
     RollupsOutputEnum, RollupsOutputValidityProof, RollupsProof, RollupsReport,
     RollupsVoucher,
@@ -443,7 +443,7 @@ impl TestState<'_> {
 
 async fn spawn_indexer(
     repository_config: RepositoryConfig,
-    redis_endpoint: RedactedUrl,
+    redis_endpoint: BrokerEndpoint,
     dapp_metadata: DAppMetadata,
 ) -> JoinHandle<Result<(), IndexerError>> {
     let broker_config = BrokerConfig {

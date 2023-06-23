@@ -332,8 +332,9 @@ mod broker_facade_tests {
 
     use backoff::ExponentialBackoffBuilder;
     use rollups_events::{
-        BrokerConfig, DAppMetadata, Hash, InputMetadata, Payload, RedactedUrl,
-        RollupsAdvanceStateInput, RollupsClaim, RollupsData, Url, HASH_SIZE,
+        BrokerConfig, BrokerEndpoint, DAppMetadata, Hash, InputMetadata,
+        Payload, RedactedUrl, RollupsAdvanceStateInput, RollupsClaim,
+        RollupsData, Url, HASH_SIZE,
     };
     use state_fold_types::{
         ethereum_types::{Bloom, H160, H256, U256, U64},
@@ -583,7 +584,9 @@ mod broker_facade_tests {
     ) -> Result<(BrokerFixture, BrokerFacade), BrokerFacadeError> {
         let fixture = BrokerFixture::setup(docker).await;
         let redis_endpoint = if should_fail {
-            RedactedUrl::new(Url::parse("https://invalid.com").unwrap())
+            BrokerEndpoint::Single(RedactedUrl::new(
+                Url::parse("https://invalid.com").unwrap(),
+            ))
         } else {
             fixture.redis_endpoint().clone()
         };
