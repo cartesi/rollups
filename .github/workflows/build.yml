@@ -27,8 +27,10 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CI_TOKEN }}
+
       - name: 📦 Install protoc
         run: sudo apt update && sudo apt install -y protobuf-compiler libprotobuf-dev
+
       - uses: actions/cache@v3
         with:
           path: |
@@ -39,11 +41,31 @@ jobs:
             offchain/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
-      - run: cargo install diesel_cli --no-default-features --features "postgres" --force
-      - run: cargo fmt --all -- --check
-      - run: cargo check --workspace
-      - run: cargo test --no-run
-      - run: cargo test
+
+      - name: Install diesel
+        run: cargo install diesel_cli --no-default-features --features "postgres" --force
+
+      - name: Install cargo sweep
+        run: cargo install cargo-sweep
+        continue-on-error: true
+
+      - name: Check format
+        run: cargo fmt --all -- --check
+
+      - name: Set sweep timestamp
+        run: cargo sweep -s
+
+      - name: Check code
+        run: cargo check --workspace
+
+      - name: Build binaries and tests
+        run: cargo test --no-run
+
+      - name: Clean old build files
+        run: cargo sweep -f
+
+      - name: Run tests
+        run: cargo test
 
   test_onchain:
     runs-on: ubuntu-22.04
