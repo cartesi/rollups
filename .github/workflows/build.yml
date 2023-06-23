@@ -42,9 +42,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
-      - name: Install diesel
-        run: cargo install diesel_cli --no-default-features --features "postgres" --force
-
       - name: Install cargo sweep
         run: cargo install cargo-sweep
         continue-on-error: true
