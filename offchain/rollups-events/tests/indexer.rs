@@ -13,10 +13,10 @@
 use backoff::ExponentialBackoff;
 use rollups_events::indexer::{IndexerEvent, IndexerState};
 use rollups_events::{
-    Address, Broker, BrokerConfig, BrokerError, BrokerStream, DAppMetadata,
-    Event, Hash, RedactedUrl, RollupsAdvanceStateInput, RollupsData,
-    RollupsInput, RollupsInputsStream, RollupsOutput, RollupsOutputsStream,
-    Url,
+    Address, Broker, BrokerConfig, BrokerEndpoint, BrokerError, BrokerStream,
+    DAppMetadata, Event, Hash, RedactedUrl, RollupsAdvanceStateInput,
+    RollupsData, RollupsInput, RollupsInputsStream, RollupsOutput,
+    RollupsOutputsStream, Url,
 };
 use testcontainers::{
     clients::Cli, core::WaitFor, images::generic::GenericImage, Container,
@@ -50,7 +50,7 @@ impl TestState<'_> {
     pub async fn create_broker(&self) -> Broker {
         let backoff = ExponentialBackoff::default();
         let config = BrokerConfig {
-            redis_endpoint: self.redis_endpoint.clone(),
+            redis_endpoint: BrokerEndpoint::Single(self.redis_endpoint.clone()),
             consume_timeout: CONSUME_TIMEOUT,
             backoff,
         };

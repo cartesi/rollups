@@ -12,8 +12,8 @@
 
 use backoff::ExponentialBackoff;
 use rollups_events::{
-    Address, Broker, BrokerConfig, DAppMetadata, Event, RedactedUrl,
-    RollupsClaim, RollupsClaimsStream, RollupsData, RollupsInput,
+    Address, Broker, BrokerConfig, BrokerEndpoint, DAppMetadata, Event,
+    RedactedUrl, RollupsClaim, RollupsClaimsStream, RollupsData, RollupsInput,
     RollupsInputsStream, RollupsOutput, RollupsOutputsStream, Url,
     ADDRESS_SIZE, INITIAL_ID,
 };
@@ -32,7 +32,7 @@ pub struct BrokerFixture<'d> {
     inputs_stream: RollupsInputsStream,
     claims_stream: RollupsClaimsStream,
     outputs_stream: RollupsOutputsStream,
-    redis_endpoint: RedactedUrl,
+    redis_endpoint: BrokerEndpoint,
     chain_id: u64,
     dapp_address: Address,
 }
@@ -48,9 +48,11 @@ impl BrokerFixture<'_> {
         );
         let node = docker.run(image);
         let port = node.get_host_port_ipv4(6379);
-        let redis_endpoint = Url::parse(&format!("redis://127.0.0.1:{}", port))
-            .map(RedactedUrl::new)
-            .expect("failed to parse Redis Url");
+        let redis_endpoint = BrokerEndpoint::Single(
+            Url::parse(&format!("redis://127.0.0.1:{}", port))
+                .map(RedactedUrl::new)
+                .expect("failed to parse Redis Url"),
+        );
         let chain_id = CHAIN_ID;
         let dapp_address = DAPP_ADDRESS;
         let backoff = ExponentialBackoff::default();
@@ -88,7 +90,7 @@ impl BrokerFixture<'_> {
         }
     }
 
-    pub fn redis_endpoint(&self) -> &RedactedUrl {
+    pub fn redis_endpoint(&self) -> &BrokerEndpoint {
         &self.redis_endpoint
     }
 

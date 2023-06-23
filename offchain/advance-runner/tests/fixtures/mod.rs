@@ -19,7 +19,7 @@ use grpc_interfaces::cartesi_machine::{
     ConcurrencyConfig, MachineRuntimeConfig,
 };
 use grpc_interfaces::cartesi_server_manager::{CyclesConfig, DeadlineConfig};
-use rollups_events::{Address, RedactedUrl};
+use rollups_events::{Address, BrokerEndpoint};
 use std::cell::RefCell;
 use std::path::Path;
 use std::time::Duration;
@@ -34,7 +34,7 @@ impl AdvanceRunnerFixture {
     pub async fn setup(
         server_manager_endpoint: String,
         session_id: String,
-        redis_endpoint: RedactedUrl,
+        redis_endpoint: BrokerEndpoint,
         chain_id: u64,
         dapp_address: Address,
         snapshot_dir: Option<&Path>,
