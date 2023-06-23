@@ -31,17 +31,6 @@ jobs:
       - name: 📦 Install protoc
         run: sudo apt update && sudo apt install -y protobuf-compiler libprotobuf-dev
 
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            offchain/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-
       - name: Install diesel
         run: cargo install diesel_cli --no-default-features --features "postgres" --force
 
@@ -63,8 +52,12 @@ jobs:
       - name: Run tests
         run: cargo test
 
+      - run: du -sh target
+
       - name: Clean old build files
         run: cargo sweep -f
+
+      - run: du -sh target
 
   test_onchain:
     runs-on: ubuntu-22.04
