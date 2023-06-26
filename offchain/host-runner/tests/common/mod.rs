@@ -46,7 +46,10 @@ pub async fn finish_advance_state(
     grpc_client: &mut grpc_client::ServerManagerClient,
     session_id: &str,
 ) -> Option<grpc_client::ProcessedInput> {
-    tokio::spawn(http_client::finish("accept".into()));
+    // Send a finish request in a separate thread.
+    let handle = tokio::spawn(http_client::finish("accept".into()));
+
+    // Wait for the input to be processed.
     const RETRIES: i32 = 10;
     let mut processed = None;
     for _ in 0..RETRIES {
@@ -65,5 +68,13 @@ pub async fn finish_advance_state(
         }
         tokio::time::sleep(std::time::Duration::from_millis(10)).await;
     }
+
+    // Wait for the finish to return.
+    // It should return error because there isn't a next request to be processed.
+    handle
+        .await
+        .expect("tokio spawn failed")
+        .expect_err("finish should return error");
+
     processed
 }

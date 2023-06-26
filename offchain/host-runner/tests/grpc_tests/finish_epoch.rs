@@ -491,6 +491,7 @@ async fn test_it_updates_input_index_after_finishing_epoch() {
         .await
         .unwrap();
 
+    http_client::finish("accept".into()).await.unwrap();
     finish_advance_state(&mut grpc_client, session_id).await;
 
     let epoch_status = grpc_client

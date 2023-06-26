@@ -62,6 +62,7 @@ async fn test_it_reports_session_state_correctly() {
     let _manager = manager::Wrapper::new().await;
     let mut grpc_client = grpc_client::connect().await;
 
+    // Send an input and finish the first epoch
     setup_advance_state(&mut grpc_client, "rollup session").await;
     finish_advance_state(&mut grpc_client, "rollup session").await;
     grpc_client
@@ -73,6 +74,8 @@ async fn test_it_reports_session_state_correctly() {
         })
         .await
         .expect("should finish epoch");
+
+    // Send an inspect request in the second epoch
     let inspect_handle = tokio::spawn(async move {
         grpc_client
             .inspect_state(grpc_client::InspectStateRequest {
@@ -83,6 +86,11 @@ async fn test_it_reports_session_state_correctly() {
             .unwrap()
             .into_inner()
     });
+
+    // Get inspect request state request
+    http_client::finish("accept".into()).await.unwrap();
+
+    // Accept inspect request
     http_client::finish("accept".into()).await.unwrap_err();
 
     let response = inspect_handle.await.unwrap();

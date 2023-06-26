@@ -25,7 +25,7 @@ impl Wrapper {
     pub async fn new() -> Self {
         let mut command = Command::new(config::get_host_runner_path());
         command
-            .env("RUST_LOG", "debug")
+            .env("RUST_LOG", "host_runner=debug,info")
             .arg("--grpc-server-manager-port")
             .arg(config::GRPC_SERVER_MANAGER_PORT.to_string())
             .arg("--http-inspect-port")
