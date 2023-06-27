@@ -77,13 +77,13 @@ impl TestState<'_> {
             input_index: 0,
             output_index: 0,
             output_enum: rollups_data::OutputEnum::Voucher,
-            validity_input_index: 0,
-            validity_output_index: 0,
+            validity_input_index_within_epoch: 0,
+            validity_output_index_within_input: 0,
             validity_output_hashes_root_hash: "<hash>".as_bytes().to_vec(),
             validity_vouchers_epoch_root_hash: "<hash>".as_bytes().to_vec(),
             validity_notices_epoch_root_hash: "<hash>".as_bytes().to_vec(),
             validity_machine_state_hash: "<hash>".as_bytes().to_vec(),
-            validity_keccak_in_hashes_siblings: vec![Some(
+            validity_output_hash_in_output_hashes_siblings: vec![Some(
                 "<array>".as_bytes().to_vec(),
             )],
             validity_output_hashes_in_epoch_siblings: vec![Some(
@@ -96,15 +96,15 @@ impl TestState<'_> {
             input_index: 0,
             output_index: 0,
             output_enum: rollups_data::OutputEnum::Notice,
-            validity_input_index: 0,
-            validity_output_index: 0,
+            validity_input_index_within_epoch: 0,
+            validity_output_index_within_input: 0,
             validity_output_hashes_root_hash: "<otherhash>".as_bytes().to_vec(),
             validity_vouchers_epoch_root_hash: "<otherhash>"
                 .as_bytes()
                 .to_vec(),
             validity_notices_epoch_root_hash: "<otherhash>".as_bytes().to_vec(),
             validity_machine_state_hash: "<otherhash>".as_bytes().to_vec(),
-            validity_keccak_in_hashes_siblings: vec![Some(
+            validity_output_hash_in_output_hashes_siblings: vec![Some(
                 "<otherarray>".as_bytes().to_vec(),
             )],
             validity_output_hashes_in_epoch_siblings: vec![Some(

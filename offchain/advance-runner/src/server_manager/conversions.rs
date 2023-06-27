@@ -97,8 +97,8 @@ fn convert_validity(
         convert_hash(get_field!(validity.notices_epoch_root_hash))?;
     let machine_state_hash =
         convert_hash(get_field!(validity.machine_state_hash))?;
-    let keccak_in_hashes_siblings = validity
-        .keccak_in_hashes_siblings
+    let output_hash_in_output_hashes_siblings = validity
+        .output_hash_in_output_hashes_siblings
         .into_iter()
         .map(convert_hash)
         .collect::<Result<Vec<RollupsHash>, ServerManagerError>>()?;
@@ -108,13 +108,13 @@ fn convert_validity(
         .map(convert_hash)
         .collect::<Result<Vec<RollupsHash>, ServerManagerError>>()?;
     Ok(RollupsOutputValidityProof {
-        input_index: validity.input_index,
-        output_index: validity.output_index,
+        input_index_within_epoch: validity.input_index_within_epoch,
+        output_index_within_input: validity.output_index_within_input,
         output_hashes_root_hash,
         vouchers_epoch_root_hash,
         notices_epoch_root_hash,
         machine_state_hash,
-        keccak_in_hashes_siblings,
+        output_hash_in_output_hashes_siblings,
         output_hashes_in_epoch_siblings,
     })
 }

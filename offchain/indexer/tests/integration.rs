@@ -390,13 +390,13 @@ impl TestState<'_> {
         output_enum: RollupsOutputEnum,
     ) -> RollupsProof {
         let validity = RollupsOutputValidityProof {
-            input_index,
-            output_index,
+            input_index_within_epoch: input_index,
+            output_index_within_input: output_index,
             output_hashes_root_hash: random_array().into(),
             vouchers_epoch_root_hash: random_array().into(),
             notices_epoch_root_hash: random_array().into(),
             machine_state_hash: random_array().into(),
-            keccak_in_hashes_siblings: vec![random_array().into()],
+            output_hash_in_output_hashes_siblings: vec![random_array().into()],
             output_hashes_in_epoch_siblings: vec![random_array().into()],
         };
         let proof = RollupsProof {
@@ -526,12 +526,12 @@ fn assert_proof_eq(proof_sent: &RollupsProof, proof_read: &Proof) {
     assert_eq!(proof_read.output_index as u64, proof_sent.output_index);
     assert_eq!(proof_read.output_enum, output_enum);
     assert_eq!(
-        proof_read.validity_input_index as u64,
-        proof_sent.validity.input_index
+        proof_read.validity_input_index_within_epoch as u64,
+        proof_sent.validity.input_index_within_epoch
     );
     assert_eq!(
-        proof_read.validity_output_index as u64,
-        proof_sent.validity.output_index
+        proof_read.validity_output_index_within_input as u64,
+        proof_sent.validity.output_index_within_input
     );
     assert_eq!(
         &proof_read.validity_output_hashes_root_hash,
@@ -550,9 +550,9 @@ fn assert_proof_eq(proof_sent: &RollupsProof, proof_read: &Proof) {
         proof_sent.validity.machine_state_hash.inner()
     );
     for (siblings_read, siblings_sent) in proof_read
-        .validity_keccak_in_hashes_siblings
+        .validity_output_hash_in_output_hashes_siblings
         .iter()
-        .zip(&proof_sent.validity.keccak_in_hashes_siblings)
+        .zip(&proof_sent.validity.output_hash_in_output_hashes_siblings)
     {
         assert_eq!(siblings_read.as_ref().unwrap(), siblings_sent.inner());
     }

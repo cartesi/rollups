@@ -712,8 +712,8 @@ impl Epoch {
                         output_enum: OutputEnum::Voucher.into(),
                         // Create OutputValidityProof for each voucher
                         validity: Some(OutputValidityProof {
-                            input_index: local_input_index as u64,
-                            output_index: output_index as u64,
+                            input_index_within_epoch: local_input_index as u64,
+                            output_index_within_input: output_index as u64,
                             output_hashes_root_hash: Some(GrpcHash::from(
                                 result.voucher_root.clone().expect(
                                     "expected voucher's root hash to exist",
@@ -728,7 +728,7 @@ impl Epoch {
                             machine_state_hash: Some(
                                 machine_state_hash.clone(),
                             ),
-                            keccak_in_hashes_siblings: voucher
+                            output_hash_in_output_hashes_siblings: voucher
                                 .keccak_in_voucher_hashes
                                 .clone()
                                 .expect("expected voucher proof to exist")
@@ -755,8 +755,8 @@ impl Epoch {
                         output_enum: OutputEnum::Notice.into(),
                         // Create OutputValidityProof for each notice
                         validity: Some(OutputValidityProof {
-                            input_index: local_input_index as u64,
-                            output_index: output_index as u64,
+                            input_index_within_epoch: local_input_index as u64,
+                            output_index_within_input: output_index as u64,
                             output_hashes_root_hash: Some(GrpcHash::from(
                                 result.notice_root.clone().expect(
                                     "expected notice's root hash to exist",
@@ -771,7 +771,7 @@ impl Epoch {
                             machine_state_hash: Some(
                                 machine_state_hash.clone(),
                             ),
-                            keccak_in_hashes_siblings: notice
+                            output_hash_in_output_hashes_siblings: notice
                                 .keccak_in_notice_hashes
                                 .clone()
                                 .expect("expected notice proof to exist")

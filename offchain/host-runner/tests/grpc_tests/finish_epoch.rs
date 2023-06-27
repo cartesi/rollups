@@ -112,15 +112,15 @@ async fn test_it_finishes_existing_epoch_with_outputs() {
                 output_index: 0,
                 output_enum: grpc_client::OutputEnum::Voucher.into(),
                 validity: Some(grpc_client::OutputValidityProof {
-                    input_index: 0,
-                    output_index: 0,
+                    input_index_within_epoch: 0,
+                    output_index_within_input: 0,
                     output_hashes_root_hash: Some(decode_hash(
                         "bf21d3dd50b9c5e542ea86c0f555b1bde6373829b59f51afd4a95eef24f05245",
                     )),
                     vouchers_epoch_root_hash: Some(vouchers_epoch_root_hash.clone()),
                     notices_epoch_root_hash: Some(notices_epoch_root_hash.clone()),
                     machine_state_hash: Some(machine_hash.clone()),
-                    keccak_in_hashes_siblings: vec![
+                    output_hash_in_output_hashes_siblings: vec![
                         decode_hash(
                             "99af665835aabfdc6740c7e2c3791a31c3cdc9f5ab962f681b12fc092816a62f",
                         ),
@@ -276,15 +276,15 @@ async fn test_it_finishes_existing_epoch_with_outputs() {
                 output_index: 0,
                 output_enum: grpc_client::OutputEnum::Notice.into(),
                 validity: Some(grpc_client::OutputValidityProof {
-                    input_index: 0,
-                    output_index: 0,
+                    input_index_within_epoch: 0,
+                    output_index_within_input: 0,
                     output_hashes_root_hash: Some(decode_hash(
                         "660c2d35b0a43d8179792345211d0eab28d88f47fafadd8334b80196cad41ded",
                     )),
                     vouchers_epoch_root_hash: Some(vouchers_epoch_root_hash.clone()),
                     notices_epoch_root_hash: Some(notices_epoch_root_hash.clone()),
                     machine_state_hash: Some(machine_hash.clone()),
-                    keccak_in_hashes_siblings: vec![
+                    output_hash_in_output_hashes_siblings: vec![
                         decode_hash(
                             "99af665835aabfdc6740c7e2c3791a31c3cdc9f5ab962f681b12fc092816a62f",
                         ),
@@ -535,13 +535,17 @@ fn assert_eq_validity_proof(
     lhs: grpc_client::OutputValidityProof,
     rhs: grpc_client::OutputValidityProof,
 ) {
-    assert_eq!(lhs.input_index, rhs.input_index);
-    assert_eq!(lhs.output_index, rhs.output_index);
+    assert_eq!(lhs.input_index_within_epoch, rhs.input_index_within_epoch);
+    assert_eq!(lhs.output_index_within_input, rhs.output_index_within_input);
     assert_eq!(lhs.machine_state_hash, rhs.machine_state_hash);
     assert_eq!(lhs.notices_epoch_root_hash, rhs.notices_epoch_root_hash);
     assert_eq!(lhs.vouchers_epoch_root_hash, rhs.vouchers_epoch_root_hash);
-    for (h_idx, hash) in lhs.keccak_in_hashes_siblings.into_iter().enumerate() {
-        assert_eq!(hash, rhs.keccak_in_hashes_siblings[h_idx]);
+    for (h_idx, hash) in lhs
+        .output_hash_in_output_hashes_siblings
+        .into_iter()
+        .enumerate()
+    {
+        assert_eq!(hash, rhs.output_hash_in_output_hashes_siblings[h_idx]);
     }
     for (h_idx, hash) in
         lhs.output_hashes_in_epoch_siblings.into_iter().enumerate()

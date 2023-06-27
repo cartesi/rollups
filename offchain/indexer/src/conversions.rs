@@ -78,8 +78,14 @@ pub fn convert_proof(proof: RollupsProof) -> Proof {
             RollupsOutputEnum::Voucher => OutputEnum::Voucher,
             RollupsOutputEnum::Notice => OutputEnum::Notice,
         },
-        validity_input_index: proof.validity.input_index as i32,
-        validity_output_index: proof.validity.output_index as i32,
+        validity_input_index_within_epoch: proof
+            .validity
+            .input_index_within_epoch
+            as i32,
+        validity_output_index_within_input: proof
+            .validity
+            .output_index_within_input
+            as i32,
         validity_output_hashes_root_hash: proof
             .validity
             .output_hashes_root_hash
@@ -100,9 +106,9 @@ pub fn convert_proof(proof: RollupsProof) -> Proof {
             .machine_state_hash
             .into_inner()
             .into(),
-        validity_keccak_in_hashes_siblings: proof
+        validity_output_hash_in_output_hashes_siblings: proof
             .validity
-            .keccak_in_hashes_siblings
+            .output_hash_in_output_hashes_siblings
             .into_iter()
             .map(|hash| Some(hash.into_inner().into()))
             .collect(),
