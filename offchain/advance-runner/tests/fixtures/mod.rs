@@ -11,8 +11,8 @@
 // specific language governing permissions and limitations under the License.
 
 use advance_runner::config::{
-    AdvanceRunnerConfig, BrokerConfig, Config, DAppMetadata, FSManagerConfig,
-    HealthCheckConfig, ServerManagerConfig, SnapshotConfig,
+    AdvanceRunnerConfig, AdvanceRunnerHealthCheckConfig, BrokerConfig, Config,
+    DAppMetadata, FSManagerConfig, ServerManagerConfig, SnapshotConfig,
 };
 use advance_runner::AdvanceRunnerError;
 use grpc_interfaces::cartesi_machine::{
@@ -107,9 +107,9 @@ impl AdvanceRunnerFixture {
             backoff_max_elapsed_duration,
         };
 
-        let health_check_config = HealthCheckConfig {
-            health_check_address: "0.0.0.0".to_string(),
-            health_check_port: 0,
+        let health_check_config = AdvanceRunnerHealthCheckConfig {
+            healthcheck_disabled: None,
+            healthcheck_port: 0,
         };
 
         let config = Config {
