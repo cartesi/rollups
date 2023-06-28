@@ -52,6 +52,10 @@ import "forge-std/console.sol";
 // 6: voucher ETH withdrawal to contract with invalid payload
 // 7: voucher ETH withdrawal to contract with valid payload
 
+contract EtherReceiver {
+    receive() external payable {}
+}
+
 contract CartesiDAppTest is TestBase {
     Proof proof;
     CartesiDApp dapp;
@@ -674,6 +678,69 @@ contract CartesiDAppTest is TestBase {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(_nonZeroAddress);
         dapp.migrateToConsensus(consensus);
+    }
+
+    // test for the deprecated function withdrawEther
+    function testWithdrawEtherContract(
+        uint256 _value,
+        address _notDApp
+    ) public {
+        dapp = deployDAppDeterministically();
+        vm.assume(_value <= address(this).balance);
+        vm.assume(_notDApp != address(dapp));
+        address receiver = address(new EtherReceiver());
+
+        // fund dapp
+        vm.deal(address(dapp), _value);
+
+        // withdrawEther cannot be called by anyone except dapp
+        vm.expectRevert("only itself");
+        vm.prank(_notDApp);
+        dapp.withdrawEther(receiver, _value);
+
+        // withdrawEther can only be called by dapp itself
+        uint256 preBalance = receiver.balance;
+        vm.prank(address(dapp));
+        dapp.withdrawEther(receiver, _value);
+        assertEq(receiver.balance, preBalance + _value);
+        assertEq(address(dapp).balance, 0);
+    }
+
+    function testWithdrawEtherEOA(
+        uint256 _value,
+        address _notDApp,
+        uint256 _receiverSeed
+    ) public {
+        dapp = deployDAppDeterministically();
+        vm.assume(_notDApp != address(dapp));
+        vm.assume(_value <= address(this).balance);
+
+        // by deriving receiver from keccak-256, we avoid
+        // collisions with precompiled contract addresses
+        // assume receiver is not a contract
+        address receiver = address(
+            bytes20(keccak256(abi.encode(_receiverSeed)))
+        );
+        uint256 codeSize;
+        assembly {
+            codeSize := extcodesize(receiver)
+        }
+        vm.assume(codeSize == 0);
+
+        // fund dapp
+        vm.deal(address(dapp), _value);
+
+        // withdrawEther cannot be called by anyone except dapp
+        vm.expectRevert("only itself");
+        vm.prank(_notDApp);
+        dapp.withdrawEther(receiver, _value);
+
+        // withdrawEther can only be called by dapp itself
+        uint256 preBalance = receiver.balance;
+        vm.prank(address(dapp));
+        dapp.withdrawEther(receiver, _value);
+        assertEq(receiver.balance, preBalance + _value);
+        assertEq(address(dapp).balance, 0);
     }
 
     // internal functions

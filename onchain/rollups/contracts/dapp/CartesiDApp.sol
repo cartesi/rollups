@@ -235,4 +235,15 @@ contract CartesiDApp is
     /// @dev If you wish to transfer Ether to a DApp while informing
     ///      the DApp backend of it, then please do so through the Ether portal contract.
     receive() external payable {}
+
+    /// @notice Transfer some amount of Ether to some recipient.
+    /// @param _receiver The address which will receive the amount of Ether
+    /// @param _value The amount of Ether to be transferred in Wei
+    /// @dev This function can only be called by the DApp itself through vouchers.
+    ///      This function is deprecated and may be removed in the future versions.
+    function withdrawEther(address _receiver, uint256 _value) external {
+        require(msg.sender == address(this), "only itself");
+        (bool sent, ) = _receiver.call{value: _value}("");
+        require(sent, "withdrawEther failed");
+    }
 }
