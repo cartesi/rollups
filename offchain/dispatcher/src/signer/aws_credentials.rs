@@ -146,7 +146,7 @@ pub mod tests {
         }
     }
 
-    fn set_default_vars() {
+    pub fn set_default_vars() {
         for env_var in DEFAULT_ENV_VARS {
             env::set_var(env_var, "irrelevant");
         }
@@ -164,7 +164,7 @@ pub mod tests {
         }
     }
 
-    fn clean_all_vars() {
+    pub fn clean_all_vars() {
         clean_web_identity_vars();
         clean_default_vars();
     }

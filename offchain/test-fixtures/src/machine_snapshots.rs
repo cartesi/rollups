@@ -17,8 +17,8 @@ use tempfile::TempDir;
 
 use crate::docker_cli;
 
-const TAG: &str = "cartesi/test-machine-snapshot";
-const DOCKERFILE: &str = "../test-fixtures/docker/machine_snapshot.Dockerfile";
+const DOCKER_TAG: &str = "cartesi/test-machine-snapshot";
+const DOCKERFILE: &str = "machine_snapshot";
 const CONTAINER_SNAPSHOT_DIR: &str = "/opt/cartesi/share/dapp-bin";
 const SNAPSHOT_NAME: &str = "0_0";
 
@@ -32,8 +32,8 @@ impl MachineSnapshotsFixture {
         tracing::info!("setting up machine snapshots fixture");
 
         let dir = tempfile::tempdir().expect("failed to create temp dir");
-        docker_cli::build(DOCKERFILE, TAG, &[]);
-        let id = docker_cli::create(TAG);
+        docker_cli::build(DOCKERFILE, DOCKER_TAG, &[]);
+        let id = docker_cli::create(DOCKER_TAG);
         let from_container = format!("{}:{}", id, CONTAINER_SNAPSHOT_DIR);
         let to_host = dir.path().join(SNAPSHOT_NAME);
         docker_cli::cp(&from_container, to_host.to_str().unwrap());

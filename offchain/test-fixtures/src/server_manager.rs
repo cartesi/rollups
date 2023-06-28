@@ -27,8 +27,7 @@ use testcontainers::{
 use tokio::sync::Mutex;
 use tonic::transport::Channel;
 
-const DOCKERFILE: &str =
-    "../test-fixtures/docker/server_manager_nonroot.Dockerfile";
+const DOCKERFILE: &str = "server_manager_nonroot";
 const DOCKER_TAG: &str = "cartesi/test-server-manager-nonroot";
 const SESSION_ID: &str = "default-session-id";
 const RETRY_MAX_ELAPSED_TIME: u64 = 120;

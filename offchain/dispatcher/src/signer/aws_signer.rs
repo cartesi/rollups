@@ -128,8 +128,13 @@ impl Signer for AwsSigner {
 #[cfg(test)]
 pub mod tests {
     use rusoto_core::Region;
+    use serial_test::serial;
+    use test_fixtures::LocalStackFixture;
 
-    use crate::signer::aws_signer::AwsSigner;
+    use crate::signer::{
+        aws_credentials::tests::{clean_all_vars, set_default_vars},
+        aws_signer::AwsSigner,
+    };
 
     #[tokio::test]
     async fn new_aws_signer_with_error() {
@@ -137,5 +142,30 @@ pub mod tests {
         let aws_signer =
             AwsSigner::new(invalid_key_id, 0, Region::UsEast1).await;
         assert!(aws_signer.is_err());
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn new_aws_signer_from_default_credentials() {
+        clean_all_vars();
+        set_default_vars();
+        let fixture = LocalStackFixture::setup().await;
+        let key_id = fixture.create_key();
+        let aws_signer = AwsSigner::new(key_id, 0, create_region()).await;
+        assert!(aws_signer.is_ok());
+    }
+
+    // #[tokio::test]
+    // #[serial]
+    // async fn new_aws_signer_from_web_identity_credentials() {
+    //      would need to mock OIDC server...
+    // }
+
+    // auxiliary
+    pub fn create_region() -> Region {
+        Region::Custom {
+            name: "us-east-1".to_string(),
+            endpoint: LocalStackFixture::ENDPOINT.to_string(),
+        }
     }
 }

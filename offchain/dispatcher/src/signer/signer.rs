@@ -158,12 +158,24 @@ impl Signer for ConditionalSigner {
 #[cfg(test)]
 mod tests {
     use ethers_signers::Signer;
+    use serial_test::serial;
     use state_fold_types::ethers::types::{
         transaction::{eip2718::TypedTransaction, eip2930::AccessList},
         Address, Eip1559TransactionRequest,
     };
+    use test_fixtures::LocalStackFixture;
 
-    use crate::{auth::AuthConfig, signer::ConditionalSigner};
+    use crate::{
+        auth::AuthConfig,
+        signer::{
+            aws_credentials::tests::{clean_all_vars, set_default_vars},
+            aws_signer::tests::create_region,
+            ConditionalSigner,
+        },
+    };
+
+    // NOTE: aws_conditional_signer_from_web_identity_credentials tests are
+    // commented because we would need to mock a OIDC server.
 
     // --------------------------------------------------------------------------------------------
     // new
@@ -178,6 +190,29 @@ mod tests {
         ));
     }
 
+    #[tokio::test]
+    #[serial]
+    async fn new_aws_conditional_signer_from_default_credentials() {
+        let fixture = LocalStackFixture::setup().await;
+        let key_id = fixture.create_key();
+        let conditional_signer =
+            aws_conditional_signer_from_default_credentials(key_id).await;
+        assert!(matches!(
+            conditional_signer,
+            ConditionalSigner::AwsSigner(_)
+        ));
+    }
+
+    // #[tokio::test]
+    // #[serial]
+    // async fn new_aws_conditional_signer_from_web_identity_credentials() {
+    //     let fixture = LocalStackFixture::setup().await;
+    //     let key_id = fixture.create_key();
+    //     let conditional_signer =
+    //         aws_conditional_signer_from_web_identity_credentials(key_id).await;
+    //     assert!(matches!(conditional_signer, ConditionalSigner::Aws(_)));
+    // }
+
     // --------------------------------------------------------------------------------------------
     // sign_transaction
     // --------------------------------------------------------------------------------------------
@@ -189,6 +224,32 @@ mod tests {
         let result = conditional_signer.sign_transaction(&message).await;
         assert!(result.is_ok());
     }
+
+    #[tokio::test]
+    #[serial]
+    async fn sign_transaction_with_aws_conditional_signer_from_default_credentials(
+    ) {
+        let fixture = LocalStackFixture::setup().await;
+        let key_id = fixture.create_key();
+        let conditional_signer =
+            aws_conditional_signer_from_default_credentials(key_id).await;
+        let message = eip1559_message();
+        let result = conditional_signer.sign_transaction(&message).await;
+        assert!(result.is_ok());
+    }
+
+    // #[tokio::test]
+    // #[serial]
+    // async fn sign_transaction_with_aws_conditional_signer_from_web_identity_credentials(
+    // ) {
+    //     let fixture = LocalStackFixture::setup().await;
+    //     let key_id = fixture.create_key();
+    //     let conditional_signer =
+    //         aws_conditional_signer_from_web_identity_credentials(key_id).await;
+    //     let message = eip1559_message();
+    //     let result = conditional_signer.sign_transaction(&message).await;
+    //     assert!(result.is_ok());
+    // }
 
     // --------------------------------------------------------------------------------------------
     // auxiliary
@@ -207,6 +268,29 @@ mod tests {
             .await
             .unwrap()
     }
+
+    async fn aws_conditional_signer_from_default_credentials(
+        key_id: String,
+    ) -> ConditionalSigner {
+        let region = create_region();
+        let auth_config = AuthConfig::AWS { key_id, region };
+        clean_all_vars();
+        set_default_vars();
+        ConditionalSigner::new(CHAIN_ID, &auth_config)
+            .await
+            .unwrap()
+    }
+
+    // async fn aws_conditional_signer_from_web_identity_credentials(
+    //     key_id: String,
+    // ) -> ConditionalSigner {
+    //     let auth_config = create_aws_auth_config(key_id);
+    //     clean_all_vars();
+    //     set_web_identity_vars();
+    //     ConditionalSigner::new(CHAIN_ID, &auth_config)
+    //         .await
+    //         .unwrap()
+    // }
 
     fn eip1559_message() -> TypedTransaction {
         TypedTransaction::Eip1559(
