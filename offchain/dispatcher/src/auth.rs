@@ -15,8 +15,9 @@
 // specific language governing permissions and limitations under the License.
 
 use clap::Parser;
+use rusoto_core::{region::ParseRegionError, Region};
 use snafu::{ResultExt, Snafu};
-use std::fs;
+use std::{fs, str::FromStr};
 
 #[derive(Debug, Snafu)]
 pub enum AuthError {
@@ -33,8 +34,11 @@ pub enum AuthError {
         source: std::io::Error,
     },
 
-    #[snafu(display("Configuration missing AWS region"))]
+    #[snafu(display("Missing AWS region"))]
     MissingRegion,
+
+    #[snafu(display("Invalid AWS region"))]
+    InvalidRegion { source: ParseRegionError },
 }
 
 #[derive(Debug, Clone, Parser)]
@@ -71,7 +75,7 @@ pub enum AuthConfig {
 
     AWS {
         key_id: String,
-        region: String,
+        region: Region,
     },
 }
 
@@ -97,6 +101,8 @@ impl AuthConfig {
                 (None, _) => Err(AuthError::MissingConfiguration),
                 (Some(_), None) => Err(AuthError::MissingRegion),
                 (Some(key_id), Some(region)) => {
+                    let region = Region::from_str(&region)
+                        .context(InvalidRegionSnafu)?;
                     Ok(AuthConfig::AWS { key_id, region })
                 }
             }
