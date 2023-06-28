@@ -34,17 +34,24 @@ mod snapshot;
 pub async fn run(config: Config) -> Result<(), AdvanceRunnerError> {
     tracing::info!(?config, "starting advance runner");
 
-    let health_handle = http_health_check::start(config.health_check_config);
     let advance_runner_handle =
         start_advance_runner(config.advance_runner_config);
 
-    tokio::select! {
-        ret = health_handle => {
-            ret.context(error::HealthCheckSnafu)
+    if config.health_check_config.healthcheck_disabled.is_none() {
+        let health_handle = http_health_check::start(
+            config.health_check_config.healthcheck_port,
+        );
+
+        tokio::select! {
+            ret = health_handle => {
+                ret.context(error::HealthCheckSnafu)
+            }
+            ret = advance_runner_handle => {
+                ret
+            }
         }
-        ret = advance_runner_handle => {
-            ret
-        }
+    } else {
+        advance_runner_handle.await
     }
 }
 

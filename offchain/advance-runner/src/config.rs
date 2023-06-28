@@ -18,7 +18,6 @@ use crate::server_manager::ServerManagerCLIConfig;
 pub use crate::server_manager::ServerManagerConfig;
 pub use crate::snapshot::config::{FSManagerConfig, SnapshotConfig};
 use crate::snapshot::config::{SnapshotCLIConfig, SnapshotConfigError};
-pub use http_health_check::HealthCheckConfig;
 pub use rollups_events::{
     BrokerCLIConfig, BrokerConfig, DAppMetadata, DAppMetadataCLIConfig,
 };
@@ -26,7 +25,7 @@ pub use rollups_events::{
 #[derive(Debug, Clone)]
 pub struct Config {
     pub advance_runner_config: AdvanceRunnerConfig,
-    pub health_check_config: HealthCheckConfig,
+    pub health_check_config: AdvanceRunnerHealthCheckConfig,
 }
 
 #[derive(Debug, Clone)]
@@ -36,6 +35,21 @@ pub struct AdvanceRunnerConfig {
     pub dapp_metadata: DAppMetadata,
     pub snapshot_config: SnapshotConfig,
     pub backoff_max_elapsed_duration: Duration,
+}
+
+#[derive(Debug, Clone, Parser)]
+pub struct AdvanceRunnerHealthCheckConfig {
+    /// Disable health check
+    #[arg(long = "no-advance-runner-healthcheck", env)]
+    pub healthcheck_disabled: Option<String>,
+
+    /// Port of health check
+    #[arg(
+        long = "advance-runner-healthcheck-port",
+        env,
+        default_value = "22021"
+    )]
+    pub healthcheck_port: u16,
 }
 
 impl Config {
@@ -85,7 +99,7 @@ struct CLIConfig {
     snapshot_cli_config: SnapshotCLIConfig,
 
     #[command(flatten)]
-    health_check_config: HealthCheckConfig,
+    health_check_config: AdvanceRunnerHealthCheckConfig,
 
     /// The max elapsed time for backoff in ms
     #[arg(long, env, default_value = "120000")]
