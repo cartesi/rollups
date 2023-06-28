@@ -7,6 +7,5 @@ edition = "2021"
 [dependencies]
 axum = "0.6"
 hyper = "0.14"
-clap = { version = "4.2", features = ["derive", "env"] }
 snafu = "0.7"
 tracing = "0.1"

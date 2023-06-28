@@ -11,7 +11,6 @@
 // specific language governing permissions and limitations under the License.
 
 use axum::{routing::get, Router};
-use clap::Parser;
 use snafu::{ResultExt, Snafu};
 use std::net::SocketAddr;
 
@@ -24,27 +23,12 @@ pub enum HealthCheckError {
     HttpServerError { source: hyper::Error },
 }
 
-#[derive(Debug, Clone, Parser)]
-#[command(name = "http-health-check")]
-pub struct HealthCheckConfig {
-    /// Host address of health check
-    #[arg(long, env, default_value = "0.0.0.0")]
-    pub health_check_address: String,
-
-    /// Port of health check
-    #[arg(long, env, default_value = "8080")]
-    pub health_check_port: u16,
-}
-
 #[tracing::instrument(level = "trace", skip_all)]
-pub async fn start(config: HealthCheckConfig) -> Result<(), HealthCheckError> {
-    tracing::trace!(?config, "starting health-check server");
+pub async fn start(port: u16) -> Result<(), HealthCheckError> {
+    tracing::trace!(?port, "starting health-check server on this port");
 
-    let ip = config
-        .health_check_address
-        .parse()
-        .context(ParseAddressSnafu)?;
-    let addr = SocketAddr::new(ip, config.health_check_port);
+    let ip = "0.0.0.0".parse().context(ParseAddressSnafu)?;
+    let addr = SocketAddr::new(ip, port);
     let app = Router::new().route("/healthz", get(|| async { "" }));
     let server = axum::Server::bind(&addr).serve(app.into_make_service());
 
