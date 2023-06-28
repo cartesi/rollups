@@ -456,9 +456,9 @@ async fn spawn_indexer(
         dapp_metadata,
         broker_config,
     };
-    let health_check_config = http_health_check::HealthCheckConfig {
-        health_check_address: "0.0.0.0".to_owned(),
-        health_check_port: 0,
+    let health_check_config = indexer::config::IndexerHealthCheckConfig {
+        healthcheck_disabled: None,
+        healthcheck_port: 0,
     };
     let config = indexer::Config {
         indexer_config,
