@@ -11,7 +11,7 @@ CYAN=36
 STEP=1
 
 # Number of inputs
-NINPUTS=4
+NINPUTS=8
 
 # Echo with color
 echo2() {

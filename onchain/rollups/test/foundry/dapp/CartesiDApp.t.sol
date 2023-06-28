@@ -29,23 +29,28 @@ import {SimpleConsensus} from "../util/SimpleConsensus.sol";
 import {SimpleERC20} from "../util/SimpleERC20.sol";
 import {SimpleERC721} from "../util/SimpleERC721.sol";
 import {SimpleERC721Receiver} from "../util/SimpleERC721Receiver.sol";
+import {SimpleContract} from "../util/SimpleContract.sol";
 
 import {LibOutputProof0} from "./helper/LibOutputProof0.sol";
 import {LibOutputProof1} from "./helper/LibOutputProof1.sol";
 import {LibOutputProof2} from "./helper/LibOutputProof2.sol";
 import {LibOutputProof3} from "./helper/LibOutputProof3.sol";
+import {LibOutputProof4} from "./helper/LibOutputProof4.sol";
+import {LibOutputProof5} from "./helper/LibOutputProof5.sol";
+import {LibOutputProof6} from "./helper/LibOutputProof6.sol";
+import {LibOutputProof7} from "./helper/LibOutputProof7.sol";
 
 import "forge-std/console.sol";
-
-contract EtherReceiver {
-    receive() external payable {}
-}
 
 // Outputs
 // 0: notice 0xfafafafa
 // 1: voucher ERC-20 transfer
-// 2: voucher ETH withdrawal
-// 3: voucher ERC-721 transfer
+// 2: voucher ERC-721 transfer
+// 3: voucher ETH withdrawal to EOA without payload
+// 4: voucher ETH withdrawal to EOA with payload
+// 5: voucher ETH withdrawal to contract without payload
+// 6: voucher ETH withdrawal to contract with invalid payload
+// 7: voucher ETH withdrawal to contract with valid payload
 
 contract CartesiDAppTest is TestBase {
     Proof proof;
@@ -392,134 +397,6 @@ contract CartesiDAppTest is TestBase {
         );
     }
 
-    // test ether transfer
-
-    function testEtherTransfer(
-        uint256 _inboxInputIndex,
-        uint256 _numInputsAfter
-    ) public {
-        dapp = deployDAppDeterministically();
-
-        bytes memory withdrawEtherPayload = abi.encodeWithSelector(
-            CartesiDApp.withdrawEther.selector,
-            recipient,
-            transferAmount
-        );
-
-        logVoucher(2, address(dapp), withdrawEtherPayload);
-
-        registerProof(
-            _inboxInputIndex,
-            _numInputsAfter,
-            LibOutputProof2.getVoucherProof()
-        );
-
-        // not able to execute voucher because dapp has 0 balance
-        assertEq(address(dapp).balance, 0);
-        assertEq(address(recipient).balance, 0);
-        bool success = dapp.executeVoucher(
-            address(dapp),
-            withdrawEtherPayload,
-            proof
-        );
-        assertEq(success, false);
-        assertEq(address(dapp).balance, 0);
-        assertEq(address(recipient).balance, 0);
-
-        // fund dapp
-        uint256 dappInitBalance = 100;
-        vm.deal(address(dapp), dappInitBalance);
-        assertEq(address(dapp).balance, dappInitBalance);
-        assertEq(address(recipient).balance, 0);
-
-        // expect event
-        vm.expectEmit(false, false, false, true, address(dapp));
-        emit VoucherExecuted(
-            LibOutputValidation.getBitMaskPosition(
-                proof.validity.outputIndex,
-                _inboxInputIndex
-            )
-        );
-
-        // perform call
-        success = dapp.executeVoucher(
-            address(dapp),
-            withdrawEtherPayload,
-            proof
-        );
-
-        // check result
-        assertEq(success, true);
-        assertEq(address(dapp).balance, dappInitBalance - transferAmount);
-        assertEq(address(recipient).balance, transferAmount);
-
-        // cannot execute the same voucher again
-        vm.expectRevert("re-execution not allowed");
-        dapp.executeVoucher(address(dapp), withdrawEtherPayload, proof);
-    }
-
-    function testWithdrawEtherContract(
-        uint256 _value,
-        address _notDApp
-    ) public {
-        dapp = deployDAppDeterministically();
-        vm.assume(_value <= address(this).balance);
-        vm.assume(_notDApp != address(dapp));
-        address receiver = address(new EtherReceiver());
-
-        // fund dapp
-        vm.deal(address(dapp), _value);
-
-        // withdrawEther cannot be called by anyone
-        vm.expectRevert("only itself");
-        vm.prank(_notDApp);
-        dapp.withdrawEther(receiver, _value);
-
-        // withdrawEther can only be called by dapp itself
-        uint256 preBalance = receiver.balance;
-        vm.prank(address(dapp));
-        dapp.withdrawEther(receiver, _value);
-        assertEq(receiver.balance, preBalance + _value);
-        assertEq(address(dapp).balance, 0);
-    }
-
-    function testWithdrawEtherEOA(
-        uint256 _value,
-        address _notDApp,
-        uint256 _receiverSeed
-    ) public {
-        dapp = deployDAppDeterministically();
-        vm.assume(_notDApp != address(dapp));
-        vm.assume(_value <= address(this).balance);
-
-        // by deriving receiver from keccak-256, we avoid
-        // collisions with precompiled contract addresses
-        // assume receiver is not a contract
-        address receiver = address(
-            bytes20(keccak256(abi.encode(_receiverSeed)))
-        );
-        uint256 codeSize;
-        assembly {
-            codeSize := extcodesize(receiver)
-        }
-        vm.assume(codeSize == 0);
-
-        // fund dapp
-        vm.deal(address(dapp), _value);
-
-        // withdrawEther cannot be called by anyone
-        vm.expectRevert("only itself");
-        vm.prank(_notDApp);
-        dapp.withdrawEther(receiver, _value);
-
-        // withdrawEther can only be called by dapp itself
-        uint256 preBalance = receiver.balance;
-        vm.prank(address(dapp));
-        dapp.withdrawEther(receiver, _value);
-        assertEq(receiver.balance, preBalance + _value);
-        assertEq(address(dapp).balance, 0);
-    }
-
     // test NFT transfer
 
     function testWithdrawNFT(
@@ -537,12 +414,12 @@ contract CartesiDAppTest is TestBase {
             tokenId
         );
 
-        logVoucher(3, address(erc721Token), safeTransferFromPayload);
+        logVoucher(2, address(erc721Token), safeTransferFromPayload);
 
         registerProof(
             _inboxInputIndex,
             _numInputsAfter,
-            LibOutputProof3.getVoucherProof()
+            LibOutputProof2.getVoucherProof()
         );
 
         // not able to execute voucher because dapp doesn't have the nft
@@ -587,6 +464,218 @@ contract CartesiDAppTest is TestBase {
             safeTransferFromPayload,
             proof
         );
+    }
+
+    // test ether transfer
+
+    function testWithdrawEtherToEOANoPayload(
+        uint256 _inboxInputIndex,
+        uint256 _numInputsAfter
+    ) public {
+        dapp = deployDAppDeterministically(); // doesn't have to be deterministic here
+        address recipient_asm = recipient; // for the use of assembly
+        uint256 codeSize;
+        assembly {
+            codeSize := extcodesize(recipient_asm)
+        }
+        require(codeSize == 0, "recipient is not EOA");
+
+        logVoucher(3, recipient, transferAmount, "");
+        registerProof(
+            _inboxInputIndex,
+            _numInputsAfter,
+            LibOutputProof3.getVoucherProof()
+        );
+
+        // not able to execute voucher because dapp has 0 balance
+        assertEq(address(dapp).balance, 0);
+        assertEq(recipient.balance, 0);
+        vm.expectCall(recipient, transferAmount, "");
+        bool success = dapp.executeVoucher(
+            recipient,
+            transferAmount,
+            "",
+            proof
+        );
+        assertEq(success, false);
+        assertEq(address(dapp).balance, 0);
+        assertEq(recipient.balance, 0);
+
+        // fund dapp
+        uint256 dappInitBalance = transferAmount;
+        vm.deal(address(dapp), dappInitBalance);
+        assertEq(address(dapp).balance, dappInitBalance);
+        assertEq(recipient.balance, 0);
+
+        // expect event
+        vm.expectEmit(false, false, false, true, address(dapp));
+        emit VoucherExecuted(
+            LibOutputValidation.getBitMaskPosition(
+                proof.validity.outputIndex,
+                _inboxInputIndex
+            )
+        );
+
+        // perform call
+        success = dapp.executeVoucher(recipient, transferAmount, "", proof);
+
+        // check result
+        assertEq(success, true);
+        assertEq(address(dapp).balance, dappInitBalance - transferAmount);
+        assertEq(recipient.balance, transferAmount);
+
+        // cannot execute the same voucher again
+        vm.expectRevert("re-execution not allowed");
+        dapp.executeVoucher(recipient, transferAmount, "", proof);
+    }
+
+    function testWithdrawEtherToEOAWithPayload(
+        uint256 _inboxInputIndex,
+        uint256 _numInputsAfter
+    ) public {
+        dapp = deployDAppDeterministically(); // doesn't have to be deterministic here
+
+        // fund dapp
+        uint256 dappInitBalance = transferAmount;
+        vm.deal(address(dapp), dappInitBalance);
+
+        bytes memory randomPayload = abi.encodeWithSignature(
+            "randomFunction()"
+        );
+        logVoucher(4, recipient, transferAmount, randomPayload);
+        registerProof(
+            _inboxInputIndex,
+            _numInputsAfter,
+            LibOutputProof4.getVoucherProof()
+        );
+
+        // expect event
+        vm.expectEmit(false, false, false, true, address(dapp));
+        emit VoucherExecuted(
+            LibOutputValidation.getBitMaskPosition(
+                proof.validity.outputIndex,
+                _inboxInputIndex
+            )
+        );
+
+        // perform call
+        bool success = dapp.executeVoucher(
+            recipient,
+            transferAmount,
+            randomPayload,
+            proof
+        );
+
+        // check result
+        assertEq(success, true);
+        assertEq(address(dapp).balance, dappInitBalance - transferAmount);
+        assertEq(recipient.balance, transferAmount);
+    }
+
+    function testWithdrawEtherToContractNoPayload(
+        uint256 _inboxInputIndex,
+        uint256 _numInputsAfter
+    ) public {
+        dapp = deployDAppDeterministically(); // doesn't have to be deterministic here
+        SimpleContract simpleContract = deploySimpleContractDeterministically();
+
+        // fund dapp
+        uint256 dappInitBalance = transferAmount;
+        vm.deal(address(dapp), dappInitBalance);
+
+        logVoucher(5, address(simpleContract), transferAmount, "");
+        registerProof(
+            _inboxInputIndex,
+            _numInputsAfter,
+            LibOutputProof5.getVoucherProof()
+        );
+
+        // expect event
+        vm.expectEmit(false, false, false, true, address(dapp));
+        emit VoucherExecuted(
+            LibOutputValidation.getBitMaskPosition(
+                proof.validity.outputIndex,
+                _inboxInputIndex
+            )
+        );
+
+        // perform call
+        bool success = dapp.executeVoucher(
+            address(simpleContract),
+            transferAmount,
+            "",
+            proof
+        );
+
+        // check result
+        assertEq(success, true);
+        assertEq(address(dapp).balance, dappInitBalance - transferAmount);
+        assertEq(address(simpleContract).balance, transferAmount);
+    }
+
+    function testWithdrawEtherToContractWithPayload(
+        uint256 _inboxInputIndex,
+        uint256 _numInputsAfter
+    ) public {
+        dapp = deployDAppDeterministically(); // doesn't have to be deterministic here
+        SimpleContract simpleContract = deploySimpleContractDeterministically();
+
+        // fund dapp
+        uint256 dappInitBalance = transferAmount;
+        vm.deal(address(dapp), dappInitBalance);
+
+        bytes memory randomPayload = abi.encodeWithSignature(
+            "randomFunction()"
+        );
+        logVoucher(6, address(simpleContract), transferAmount, randomPayload);
+        registerProof(
+            _inboxInputIndex,
+            _numInputsAfter,
+            LibOutputProof6.getVoucherProof()
+        );
+
+        // perform a failed call
+        vm.expectCall(address(simpleContract), transferAmount, randomPayload);
+        bool success = dapp.executeVoucher(
+            address(simpleContract),
+            transferAmount,
+            randomPayload,
+            proof
+        );
+        assertEq(success, false);
+        assertEq(address(dapp).balance, dappInitBalance);
+        assertEq(address(simpleContract).balance, 0);
+
+        // now to call a real existing function
+        bytes memory payload = abi.encodeWithSignature("depositEther()");
+        logVoucher(7, address(simpleContract), transferAmount, payload);
+        registerProof(
+            _inboxInputIndex,
+            _numInputsAfter,
+            LibOutputProof7.getVoucherProof()
+        );
+
+        // expect event
+        vm.expectEmit(false, false, false, true, address(dapp));
+        emit VoucherExecuted(
+            LibOutputValidation.getBitMaskPosition(
+                proof.validity.outputIndex,
+                _inboxInputIndex
+            )
+        );
+
+        // perform call
+        success = dapp.executeVoucher(
+            address(simpleContract),
+            transferAmount,
+            payload,
+            proof
+        );
+
+        // check result
+        assertEq(success, true);
+        assertEq(address(dapp).balance, dappInitBalance - transferAmount);
+        assertEq(address(simpleContract).balance, transferAmount);
     }
 
     // test migration
@@ -690,6 +779,14 @@ contract CartesiDAppTest is TestBase {
     {
         vm.prank(tokenOwner);
         return new SimpleERC721Receiver{salt: salt}();
+    }
+
+    function deploySimpleContractDeterministically()
+        internal
+        returns (SimpleContract)
+    {
+        vm.prank(tokenOwner);
+        return new SimpleContract{salt: salt}();
     }
 
     function calculateEpochHash(
