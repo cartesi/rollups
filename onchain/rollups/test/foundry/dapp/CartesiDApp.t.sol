@@ -117,40 +117,6 @@ contract CartesiDAppTest is TestBase {
         assertEq(dapp.getTemplateHash(), _templateHash);
     }
 
-    function logInput(
-        uint256 number,
-        address sender,
-        bytes memory payload
-    ) internal view {
-        console.log("Proof for output %d might be outdated.", number);
-        console.log(sender);
-        console.logBytes(payload);
-        console.log("For more info, see `test/foundry/dapp/helper/README.md`.");
-    }
-
-    function logVoucher(
-        uint256 number,
-        address destination,
-        bytes memory payload
-    ) internal view {
-        logVoucher(number, destination, 0, payload);
-    }
-
-    function logVoucher(
-        uint256 number,
-        address destination,
-        uint256 value,
-        bytes memory payload
-    ) internal view {
-        bytes memory output = abi.encodePacked(destination, value, payload);
-        logInput(number, noticeSender, output);
-    }
-
-    function logNotice(uint256 number, bytes memory notice) internal view {
-        bytes memory output = abi.encodePacked(notice);
-        logInput(number, noticeSender, output);
-    }
-
     // test notices
 
     function testNoticeValidation(
@@ -382,19 +348,6 @@ contract CartesiDAppTest is TestBase {
 
         vm.expectRevert("inbox input index out of bounds");
         dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
-    }
-
-    function setupERC20TransferVoucher(
-        uint256 _inboxInputIndex,
-        uint256 _numInputsAfter
-    ) internal {
-        dapp = deployDAppDeterministically();
-        erc20Token = deployERC20Deterministically();
-        registerProof(
-            _inboxInputIndex,
-            _numInputsAfter,
-            LibOutputProof1.getVoucherProof()
-        );
     }
 
     // test NFT transfer
@@ -723,6 +676,42 @@ contract CartesiDAppTest is TestBase {
         dapp.migrateToConsensus(consensus);
     }
 
+    // internal functions
+
+    function logInput(
+        uint256 number,
+        address sender,
+        bytes memory payload
+    ) internal view {
+        console.log("Proof for output %d might be outdated.", number);
+        console.log(sender);
+        console.logBytes(payload);
+        console.log("For more info, see `test/foundry/dapp/helper/README.md`.");
+    }
+
+    function logVoucher(
+        uint256 number,
+        address destination,
+        bytes memory payload
+    ) internal view {
+        logVoucher(number, destination, 0, payload);
+    }
+
+    function logVoucher(
+        uint256 number,
+        address destination,
+        uint256 value,
+        bytes memory payload
+    ) internal view {
+        bytes memory output = abi.encodePacked(destination, value, payload);
+        logInput(number, noticeSender, output);
+    }
+
+    function logNotice(uint256 number, bytes memory notice) internal view {
+        bytes memory output = abi.encodePacked(notice);
+        logInput(number, noticeSender, output);
+    }
+
     // Store proof in storage
     // Mock consensus so that calls to `getClaim` return
     // values that can be used to validate the proof.
@@ -787,6 +776,19 @@ contract CartesiDAppTest is TestBase {
     {
         vm.prank(tokenOwner);
         return new SimpleContract{salt: salt}();
+    }
+
+    function setupERC20TransferVoucher(
+        uint256 _inboxInputIndex,
+        uint256 _numInputsAfter
+    ) internal {
+        dapp = deployDAppDeterministically();
+        erc20Token = deployERC20Deterministically();
+        registerProof(
+            _inboxInputIndex,
+            _numInputsAfter,
+            LibOutputProof1.getVoucherProof()
+        );
     }
 
     function calculateEpochHash(
