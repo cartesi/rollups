@@ -12,7 +12,6 @@
 
 use clap::Parser;
 
-pub use http_health_check::HealthCheckConfig;
 pub use rollups_data::{RepositoryCLIConfig, RepositoryConfig};
 pub use rollups_events::{
     BrokerCLIConfig, BrokerConfig, DAppMetadata, DAppMetadataCLIConfig,
@@ -25,10 +24,21 @@ pub struct IndexerConfig {
     pub broker_config: BrokerConfig,
 }
 
+#[derive(Debug, Clone, Parser)]
+pub struct IndexerHealthCheckConfig {
+    /// Enable health check
+    #[arg(long = "no-indexer-healthcheck", env)]
+    pub healthcheck_disabled: Option<String>,
+
+    /// Port of health check
+    #[arg(long = "indexer-healthcheck-port", env, default_value = "22024")]
+    pub healthcheck_port: u16,
+}
+
 #[derive(Debug)]
 pub struct Config {
     pub indexer_config: IndexerConfig,
-    pub health_check_config: HealthCheckConfig,
+    pub health_check_config: IndexerHealthCheckConfig,
 }
 
 #[derive(Parser)]
@@ -43,7 +53,7 @@ pub struct CLIConfig {
     broker_config: BrokerCLIConfig,
 
     #[command(flatten)]
-    health_check_config: HealthCheckConfig,
+    health_check_config: IndexerHealthCheckConfig,
 }
 
 impl From<CLIConfig> for Config {
