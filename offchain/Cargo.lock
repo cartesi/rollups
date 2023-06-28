@@ -2471,7 +2471,6 @@ name = "http-health-check"
 version = "1.0.0"
 dependencies = [
  "axum",
- "clap 4.3.0",
  "hyper",
  "snafu",
  "tracing",
