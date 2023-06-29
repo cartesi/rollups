@@ -25,10 +25,7 @@ use types::deployment_files::{
     rollups_deployment::{RollupsDeployment, RollupsDeploymentJson},
 };
 
-use crate::{
-    auth::{AuthConfig, AuthEnvCLIConfig, AuthError},
-    http_health::config::{HealthCheckConfig, HealthCheckEnvCLIConfig},
-};
+use crate::auth::{AuthConfig, AuthEnvCLIConfig, AuthError};
 
 #[derive(Clone, Parser)]
 #[command(name = "rd_config")]
@@ -44,7 +41,7 @@ pub struct DispatcherEnvCLIConfig {
     pub broker_config: BrokerCLIConfig,
 
     #[command(flatten)]
-    pub hc_config: HealthCheckEnvCLIConfig,
+    pub hc_config: DispatcherHealthCheckConfig,
 
     #[command(flatten)]
     pub auth_config: AuthEnvCLIConfig,
@@ -67,13 +64,29 @@ pub struct DispatcherConfig {
     pub sc_config: SCConfig,
     pub tx_config: TxManagerConfig,
     pub broker_config: BrokerConfig,
-    pub hc_config: HealthCheckConfig,
     pub auth_config: AuthConfig,
 
     pub dapp_deployment: DappDeployment,
     pub rollups_deployment: RollupsDeployment,
     pub epoch_duration: u64,
     pub priority: Priority,
+}
+
+#[derive(Debug, Clone, Parser)]
+pub struct DispatcherHealthCheckConfig {
+    /// Enable health check
+    #[arg(long = "no-dispatcher-healthcheck", env)]
+    pub healthcheck_disabled: Option<String>,
+
+    /// Port of health check
+    #[arg(long = "dispatcher-healthcheck-port", env, default_value = "22022")]
+    pub healthcheck_port: u16,
+}
+
+#[derive(Debug)]
+pub struct Config {
+    pub dispatcher_config: DispatcherConfig,
+    pub health_check_config: DispatcherHealthCheckConfig,
 }
 
 #[derive(Debug, Snafu)]
@@ -108,7 +121,7 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-impl DispatcherConfig {
+impl Config {
     pub fn initialize_from_args() -> Result<Self> {
         Self::initialize(DispatcherEnvCLIConfig::parse())
     }
@@ -119,8 +132,6 @@ impl DispatcherConfig {
 
         let tx_config = TxManagerConfig::initialize(env_cli_config.tx_config)
             .context(TxManagerSnafu)?;
-
-        let hc_config = HealthCheckConfig::initialize(env_cli_config.hc_config);
 
         let auth_config = AuthConfig::initialize(env_cli_config.auth_config)
             .context(AuthSnafu)?;
@@ -139,17 +150,21 @@ impl DispatcherConfig {
             "`state-client confirmations` has to be less than `tx-manager confirmations,`"
         );
 
-        Ok(DispatcherConfig {
+        let dispatcher_config = DispatcherConfig {
             sc_config,
             tx_config,
             broker_config,
-            hc_config,
             auth_config,
 
             dapp_deployment,
             rollups_deployment,
             epoch_duration: env_cli_config.rd_epoch_duration,
             priority: Priority::Normal,
+        };
+
+        Ok(Config {
+            dispatcher_config,
+            health_check_config: env_cli_config.hc_config,
         })
     }
 }
