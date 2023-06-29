@@ -12,7 +12,7 @@
 
 use snafu::Snafu;
 
-use crate::{http_health, machine, sender};
+use crate::{machine, sender};
 
 use axum::http::uri::InvalidUri;
 use state_client_lib::error::StateServerError;
@@ -23,7 +23,7 @@ use tonic::transport::Error as TonicError;
 pub enum DispatcherError {
     #[snafu(display("health check error"))]
     HealthCheckError {
-        source: http_health::HealthCheckError,
+        source: http_health_check::HealthCheckError,
     },
 
     #[snafu(display("broker facade error"))]

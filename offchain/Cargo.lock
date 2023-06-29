@@ -1485,6 +1485,7 @@ dependencies = [
  "eth-tx-manager",
  "ethers-signers",
  "futures",
+ "http-health-check",
  "hyper",
  "im",
  "rand 0.8.5",

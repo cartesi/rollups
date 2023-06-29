@@ -10,13 +10,12 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use config::DispatcherConfig;
+use config::Config;
 pub use error::DispatcherError;
 use snafu::ResultExt;
 
 pub mod config;
 pub mod dispatcher;
-pub mod http_health;
 pub mod machine;
 pub mod sender;
 
@@ -27,23 +26,24 @@ mod setup;
 mod signer;
 
 #[tracing::instrument(level = "trace", skip_all)]
-pub async fn run(config: DispatcherConfig) -> Result<(), DispatcherError> {
-    let hc_config = config.hc_config.clone();
+pub async fn run(config: Config) -> Result<(), DispatcherError> {
+    let dispatcher_handle = dispatcher::start(config.dispatcher_config);
 
-    let health_handle = http_health::start_health_check(
-        hc_config.host_address.as_ref(),
-        hc_config.port,
-    );
+    if config.health_check_config.healthcheck_disabled.is_none() {
+        let health_handle = http_health_check::start(
+            config.health_check_config.healthcheck_port,
+        );
 
-    let dispatcher_handle = dispatcher::start(config);
+        tokio::select! {
+            ret = health_handle => {
+                ret.context(error::HealthCheckSnafu)
+            }
 
-    tokio::select! {
-        ret = health_handle => {
-            ret.context(error::HealthCheckSnafu)
+            ret = dispatcher_handle => {
+                ret
+            }
         }
-
-        ret = dispatcher_handle => {
-            ret
-        }
+    } else {
+        dispatcher_handle.await
     }
 }
