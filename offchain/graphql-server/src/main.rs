@@ -11,17 +11,13 @@
 // specific language governing permissions and limitations under the License.
 
 use clap::Parser;
-use graphql_server::{http, schema::Context};
-use http::start_service;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
-use config::{GraphQLCLIConfig, GraphQLConfig};
-
-mod config;
+use graphql_server::CLIConfig;
 
 #[actix_web::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tracing_format = tracing_subscriber::fmt::format()
         .without_time()
         .with_level(true)
@@ -40,17 +36,7 @@ async fn main() {
             .init();
     }
 
-    let config: GraphQLConfig = GraphQLCLIConfig::parse().into();
-    tracing::info!(?config, "starting graphql http service");
+    let config = CLIConfig::parse().into();
 
-    let repository = rollups_data::Repository::new(config.repository_config)
-        .expect("failed to connect to database");
-    let context = Context::new(repository);
-    let service_handler =
-        start_service(&config.graphql_host, config.graphql_port, context)
-            .expect("failed to create server");
-
-    if let Err(e) = service_handler.await {
-        tracing::error!("service terminated with error: {:?}", e);
-    }
+    graphql_server::run(config).await.map_err(|e| e.into())
 }

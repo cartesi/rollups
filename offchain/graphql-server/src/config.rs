@@ -20,8 +20,25 @@ pub struct GraphQLConfig {
     pub repository_config: RepositoryConfig,
 }
 
+#[derive(Debug, Clone, Parser)]
+pub struct GraphQLHealthCheckConfig {
+    /// Enable health check
+    #[arg(long = "no-graphql-healthcheck", env)]
+    pub healthcheck_disabled: Option<String>,
+
+    /// Port of health check
+    #[arg(long = "graphql-healthcheck-port", env, default_value = "22023")]
+    pub healthcheck_port: u16,
+}
+
+#[derive(Debug)]
+pub struct Config {
+    pub graphql_config: GraphQLConfig,
+    pub health_check_config: GraphQLHealthCheckConfig,
+}
+
 #[derive(Parser)]
-pub struct GraphQLCLIConfig {
+pub struct CLIConfig {
     #[arg(long, env, default_value = "127.0.0.1")]
     pub graphql_host: String,
 
@@ -30,14 +47,22 @@ pub struct GraphQLCLIConfig {
 
     #[command(flatten)]
     repository_config: RepositoryCLIConfig,
+
+    #[command(flatten)]
+    health_check_config: GraphQLHealthCheckConfig,
 }
 
-impl From<GraphQLCLIConfig> for GraphQLConfig {
-    fn from(cli_config: GraphQLCLIConfig) -> GraphQLConfig {
-        GraphQLConfig {
+impl From<CLIConfig> for Config {
+    fn from(cli_config: CLIConfig) -> Self {
+        let graphql_config = GraphQLConfig {
             graphql_host: cli_config.graphql_host,
             graphql_port: cli_config.graphql_port,
             repository_config: cli_config.repository_config.into(),
+        };
+
+        Self {
+            graphql_config,
+            health_check_config: cli_config.health_check_config,
         }
     }
 }
