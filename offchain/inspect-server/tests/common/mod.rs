@@ -13,6 +13,7 @@
 #![allow(dead_code)]
 
 use actix_web::dev::ServerHandle;
+use inspect_server::config::InspectServerConfig;
 pub use reqwest::StatusCode;
 use std::sync::Arc;
 use tokio::sync::{oneshot, Notify};
@@ -30,8 +31,8 @@ use inspect_server::grpc::server_manager::{
 };
 pub use inspect_server::grpc::server_manager::{CompletionStatus, Report};
 use inspect_server::grpc::versioning::GetVersionResponse;
+use inspect_server::inspect::InspectClient;
 use inspect_server::server::HttpInspectResponse;
-use inspect_server::{config::Config, inspect::InspectClient};
 
 pub const SERVER_MANAGER_ADDRESS: &'static str = "127.0.0.1:50001";
 pub const INSPECT_SERVER_ADDRESS: &'static str = "127.0.0.1:50002";
@@ -89,20 +90,22 @@ impl InspectServerWrapper {
     /// Start the inspect server in another thread.
     /// This function blocks until the server is ready.
     pub async fn start() -> Self {
-        let config = Config {
+        let inspect_server_config = InspectServerConfig {
             inspect_server_address: INSPECT_SERVER_ADDRESS.to_string(),
             server_manager_address: SERVER_MANAGER_ADDRESS.to_string(),
             session_id: SESSION_ID.to_string(),
             queue_size: QUEUE_SIZE,
             inspect_path_prefix: String::from("/inspect"),
-            healthcheck_path: String::from("/healthz"),
         };
-        let inspect_client = InspectClient::new(&config);
+
+        let inspect_client = InspectClient::new(&inspect_server_config);
         let (handle_tx, handle_rx) = oneshot::channel();
         let join_handle = tokio::spawn(async move {
-            let server =
-                inspect_server::server::create(&config, inspect_client)
-                    .expect("failed to start inspect server");
+            let server = inspect_server::server::create(
+                &inspect_server_config,
+                inspect_client,
+            )
+            .expect("failed to start inspect server");
             handle_tx
                 .send(server.handle())
                 .expect("failed to send server handle");

@@ -17,28 +17,23 @@ use actix_web::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::config::Config;
+use crate::config::InspectServerConfig;
+use crate::error::InspectError;
 use crate::inspect::{
-    CompletionStatus, InspectClient, InspectError, InspectStateResponse, Report,
+    CompletionStatus, InspectClient, InspectStateResponse, Report,
 };
 
 pub fn create(
-    config: &Config,
+    config: &InspectServerConfig,
     inspect_client: InspectClient,
 ) -> std::io::Result<Server> {
     let inspect_path = config.inspect_path_prefix.clone() + "/{payload:.*}";
-    let healthcheck_path = config.healthcheck_path.clone();
     let server = HttpServer::new(move || {
         let cors = Cors::permissive();
         App::new()
             .app_data(web::Data::new(inspect_client.clone()))
             .wrap(middleware::Logger::default())
             .wrap(cors)
-            .service(web::resource("/").route(web::get().to(healthcheck)))
-            .service(
-                web::resource(healthcheck_path.clone())
-                    .route(web::get().to(healthcheck)),
-            )
             .service(
                 web::resource(inspect_path.clone())
                     .route(web::get().to(inspect)),
@@ -47,12 +42,6 @@ pub fn create(
     .bind(config.inspect_server_address.clone())?
     .run();
     Ok(server)
-}
-
-/// The healthcheck is dummy because the inspect server doesn't maintain a permanent connection
-/// with the server manager
-async fn healthcheck() -> HttpResponse {
-    HttpResponse::Ok().finish()
 }
 
 async fn inspect(
@@ -139,6 +128,7 @@ impl From<InspectError> for error::Error {
             InspectError::InspectFailed { .. } => {
                 error::ErrorBadRequest(e.to_string())
             }
+            _ => error::ErrorBadGateway(e.to_string()),
         }
     }
 }
