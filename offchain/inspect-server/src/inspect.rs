@@ -10,12 +10,12 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use snafu::Snafu;
 use tokio::sync::{mpsc, oneshot};
 use tonic::Request;
 use uuid::Uuid;
 
-use crate::config::Config;
+use crate::config::InspectServerConfig;
+use crate::error::InspectError;
 use crate::grpc::server_manager::{
     server_manager_client::ServerManagerClient, InspectStateRequest,
 };
@@ -23,14 +23,6 @@ use crate::grpc::server_manager::{
 pub use crate::grpc::server_manager::{
     CompletionStatus, InspectStateResponse, Report,
 };
-
-#[derive(Debug, Snafu)]
-pub enum InspectError {
-    #[snafu(display("Failed to connect to server manager: {}", message))]
-    FailedToConnect { message: String },
-    #[snafu(display("Failed to inspect state: {}", message))]
-    InspectFailed { message: String },
-}
 
 #[derive(Clone)]
 pub struct InspectClient {
@@ -41,7 +33,7 @@ pub struct InspectClient {
 /// waits for the result. The actual request to the server manager is done by the handle_inspect
 /// function.
 impl InspectClient {
-    pub fn new(config: &Config) -> Self {
+    pub fn new(config: &InspectServerConfig) -> Self {
         let (inspect_tx, inspect_rx) = mpsc::channel(config.queue_size);
         let address = config.server_manager_address.clone();
         let session_id = config.session_id.clone();

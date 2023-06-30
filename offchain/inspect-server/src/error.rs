@@ -10,18 +10,22 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use clap::Parser;
+use snafu::Snafu;
 
-use inspect_server::config::CLIConfig;
+#[derive(Debug, Snafu)]
+#[snafu(visibility(pub(crate)))]
+pub enum InspectError {
+    #[snafu(display("health check error"))]
+    HealthCheckError {
+        source: http_health_check::HealthCheckError,
+    },
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    env_logger::Builder::from_env(
-        env_logger::Env::default().default_filter_or("info"),
-    )
-    .target(env_logger::fmt::Target::Stdout)
-    .init();
-    let config = CLIConfig::parse().into();
+    #[snafu(display("server error"))]
+    ServerError { source: std::io::Error },
 
-    inspect_server::run(config).await.map_err(|e| e.into())
+    #[snafu(display("Failed to connect to server manager: {}", message))]
+    FailedToConnect { message: String },
+
+    #[snafu(display("Failed to inspect state: {}", message))]
+    InspectFailed { message: String },
 }
