@@ -64,7 +64,7 @@
         "notice": "Transfer Ether to a DApp and add an input to the DApp's input box to signal such operation. All the value sent through this function is forwarded to the DApp."
       },
       "getInputBox()": {
-        "notice": "Get the input box used by this portal."
+        "notice": "Get the input box used by this input relay."
       }
     },
     "version": 1
