@@ -81,7 +81,7 @@
         "notice": "Transfer an ERC-721 token to a DApp and add an input to the DApp's input box to signal such operation. The caller must change the approved address for the ERC-721 token to the portal address beforehand, by calling the `approve` function in the token contract."
       },
       "getInputBox()": {
-        "notice": "Get the input box used by this portal."
+        "notice": "Get the input box used by this input relay."
       }
     },
     "version": 1
