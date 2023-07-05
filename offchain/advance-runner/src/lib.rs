@@ -37,10 +37,9 @@ pub async fn run(config: Config) -> Result<(), AdvanceRunnerError> {
     let advance_runner_handle =
         start_advance_runner(config.advance_runner_config);
 
-    if config.health_check_config.healthcheck_disabled.is_none() {
-        let health_handle = http_health_check::start(
-            config.health_check_config.healthcheck_port,
-        );
+    if config.health_check_config.enabled {
+        let health_handle =
+            http_health_check::start(config.health_check_config.port);
 
         tokio::select! {
             ret = health_handle => {

@@ -27,12 +27,20 @@ pub struct IndexerConfig {
 #[derive(Debug, Clone, Parser)]
 pub struct IndexerHealthCheckConfig {
     /// Enable health check
-    #[arg(long = "no-indexer-healthcheck", env)]
-    pub healthcheck_disabled: Option<String>,
+    #[arg(
+        long = "indexer-healthcheck-enabled",
+        env = "INDEXER_HEALTHCHECK_ENABLED",
+        default_value_t = true
+    )]
+    pub enabled: bool,
 
     /// Port of health check
-    #[arg(long = "indexer-healthcheck-port", env, default_value = "22024")]
-    pub healthcheck_port: u16,
+    #[arg(
+        long = "indexer-healthcheck-port",
+        env = "INDEXER_HEALTHCHECK_PORT",
+        default_value_t = 8080
+    )]
+    pub port: u16,
 }
 
 #[derive(Debug)]
