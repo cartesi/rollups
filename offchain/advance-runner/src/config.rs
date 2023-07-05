@@ -39,17 +39,21 @@ pub struct AdvanceRunnerConfig {
 
 #[derive(Debug, Clone, Parser)]
 pub struct AdvanceRunnerHealthCheckConfig {
-    /// Disable health check
-    #[arg(long = "no-advance-runner-healthcheck", env)]
-    pub healthcheck_disabled: Option<String>,
+    /// Enable or disable health check
+    #[arg(
+        long = "advance-runner-healthcheck-enabled",
+        env = "ADVANCE_RUNNER_HEATHCHECK_ENABLED",
+        default_value_t = true
+    )]
+    pub enabled: bool,
 
     /// Port of health check
     #[arg(
         long = "advance-runner-healthcheck-port",
-        env,
-        default_value = "22021"
+        env = "ADVANCE_RUNNER_HEALTHCHECK_PORT",
+        default_value_t = 8080
     )]
-    pub healthcheck_port: u16,
+    pub port: u16,
 }
 
 impl Config {

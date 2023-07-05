@@ -108,8 +108,8 @@ impl AdvanceRunnerFixture {
         };
 
         let health_check_config = AdvanceRunnerHealthCheckConfig {
-            healthcheck_disabled: None,
-            healthcheck_port: 0,
+            enabled: true,
+            port: 0,
         };
 
         let config = Config {

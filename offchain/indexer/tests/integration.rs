@@ -457,8 +457,8 @@ async fn spawn_indexer(
         broker_config,
     };
     let health_check_config = indexer::config::IndexerHealthCheckConfig {
-        healthcheck_disabled: None,
-        healthcheck_port: 0,
+        enabled: true,
+        port: 0,
     };
     let config = indexer::Config {
         indexer_config,

@@ -74,13 +74,21 @@ pub struct DispatcherConfig {
 
 #[derive(Debug, Clone, Parser)]
 pub struct DispatcherHealthCheckConfig {
-    /// Enable health check
-    #[arg(long = "no-dispatcher-healthcheck", env)]
-    pub healthcheck_disabled: Option<String>,
+    /// Enabled or disable health check
+    #[arg(
+        long = "dispatcher-healthcheck-enabled",
+        env = "DISPATCHER_HEALTHCHECK_ENABLED",
+        default_value_t = true
+    )]
+    pub enabled: bool,
 
     /// Port of health check
-    #[arg(long = "dispatcher-healthcheck-port", env, default_value = "22022")]
-    pub healthcheck_port: u16,
+    #[arg(
+        long = "dispatcher-healthcheck-port",
+        env = "DISPATCHER_HEALTHCHECK_PORT",
+        default_value_t = 8080
+    )]
+    pub port: u16,
 }
 
 #[derive(Debug)]
