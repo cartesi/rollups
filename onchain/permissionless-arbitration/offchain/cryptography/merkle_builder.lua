@@ -48,6 +48,8 @@ function Slice:find_cell_containing(elem)
 
     while math.ult(l, r) do
         local m = semi_sum(l, r)
+
+        -- `-1` on both sides changes semantics on underflow... zero means 2^64.
         if math.ult(self:get(m).accumulated_count - 1, elem - 1) then
             l = m + 1
         else

@@ -50,7 +50,7 @@ function Hash:join(other_hash)
 end
 
 function Hash:children()
-    local left, right= self.left, self.right
+    local left, right = self.left, self.right
     if left and right then
         return true, left, right
     else
