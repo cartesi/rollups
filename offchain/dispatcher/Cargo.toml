@@ -28,7 +28,6 @@ clap = { version = "4.2", features = ["derive", "env"] }
 eth-tx-manager = "0.10"
 ethers-signers = { version = "1.0", features = ["aws"] }
 futures = "0.3"
-hyper = "0.14"
 rusoto_core = "0.48"
 rusoto_kms = "0.48"
 rusoto_sts = "0.48"
