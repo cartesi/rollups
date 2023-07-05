@@ -1,6 +1,8 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: Code Format
-on: [push]
+name: Format onchain code
+on:
+  push:
+    paths: 'onchain/**'
 jobs:
   onchain:
     runs-on: ubuntu-22.04
