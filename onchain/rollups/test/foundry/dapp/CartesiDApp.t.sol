@@ -570,7 +570,7 @@ contract CartesiDAppTest is TestBase {
         assertEq(address(simpleContract).balance, transferAmount);
     }
 
-    function testWithdrawEtherToContractWithPayload(
+    function testWithdrawEtherToContractWithRandomPayload(
         uint256 _inboxInputIndex,
         uint256 _numInputsAfter
     ) public {
@@ -602,8 +602,20 @@ contract CartesiDAppTest is TestBase {
         assertEq(success, false);
         assertEq(address(dapp).balance, dappInitBalance);
         assertEq(address(simpleContract).balance, 0);
+    }
 
-        // now to call a real existing function
+    function testWithdrawEtherToContractWithPayload(
+        uint256 _inboxInputIndex,
+        uint256 _numInputsAfter
+    ) public {
+        dapp = deployDAppDeterministically(); // doesn't have to be deterministic here
+        SimpleContract simpleContract = deploySimpleContractDeterministically();
+
+        // fund dapp
+        uint256 dappInitBalance = transferAmount;
+        vm.deal(address(dapp), dappInitBalance);
+
+        // execute voucher to call a function
         bytes memory payload = abi.encodeWithSignature("depositEther()");
         logVoucher(7, address(simpleContract), transferAmount, payload);
         registerProof(
@@ -622,7 +634,7 @@ contract CartesiDAppTest is TestBase {
         );
 
         // perform call
-        success = dapp.executeVoucher(
+        bool success = dapp.executeVoucher(
             address(simpleContract),
             transferAmount,
             payload,
