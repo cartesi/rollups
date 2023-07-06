@@ -30,10 +30,9 @@ pub async fn run(config: Config) -> Result<(), InspectError> {
         server::create(&config.inspect_server_config, inspect_client)
             .context(error::ServerSnafu)?;
 
-    if config.health_check_config.healthcheck_disabled.is_none() {
-        let health_handle = http_health_check::start(
-            config.health_check_config.healthcheck_port,
-        );
+    if config.health_check_config.enabled {
+        let health_handle =
+            http_health_check::start(config.health_check_config.port);
 
         tokio::select! {
             ret = health_handle => {
