@@ -52,7 +52,7 @@ pub struct Config {
 pub struct HostRunnerHealthCheckConfig {
     /// Enable or disable health check
     #[arg(
-        long = "host-runner-healthcheck-enabled",
+        long = "healthcheck-enabled",
         env = "HOST_RUNNER_HEALTHCHECK_ENABLED",
         default_value_t = true
     )]
@@ -60,7 +60,7 @@ pub struct HostRunnerHealthCheckConfig {
 
     /// Port of health check
     #[arg(
-        long = "host-runner-healthcheck-port",
+        long = "healthcheck-port",
         env = "HOST_RUNNER_HEALTHCHECK_PORT",
         default_value_t = 8080
     )]

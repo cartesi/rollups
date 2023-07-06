@@ -46,7 +46,7 @@ pub struct InspectServerConfig {
 pub struct InspectServerHealthCheckConfig {
     /// Enable or disable health check
     #[arg(
-        long = "inspect-server-healthcheck-enabled",
+        long = "healthcheck-enabled",
         env = "INSPECT_SERVER_HEALTHCHECK_ENABLED",
         default_value_t = true
     )]
@@ -54,7 +54,7 @@ pub struct InspectServerHealthCheckConfig {
 
     /// Port of health check
     #[arg(
-        long = "inspect-server-healthcheck-port",
+        long = "healthcheck-port",
         env = "INSPECT_SERVER_HEALTHCHECK_PORT",
         default_value_t = 8080
     )]

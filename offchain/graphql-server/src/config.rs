@@ -24,7 +24,7 @@ pub struct GraphQLConfig {
 pub struct GraphQLHealthCheckConfig {
     /// Enable or disable health check
     #[arg(
-        long = "graphql-healthcheck-enabled",
+        long = "healthcheck-enabled",
         env = "GRAPHQL_HEALTHCHECK_ENABLED",
         default_value_t = true
     )]
@@ -32,7 +32,7 @@ pub struct GraphQLHealthCheckConfig {
 
     /// Port of health check
     #[arg(
-        long = "graphql-healthcheck-port",
+        long = "healthcheck-port",
         env = "GRAPHQL_HEALTHCHECK_PORT",
         default_value_t = 8080
     )]
