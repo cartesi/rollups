@@ -8,6 +8,7 @@ members = [
   "grpc-interfaces",
   "host-runner",
   "http-health-check",
+  "http-server",
   "indexer",
   "inspect-server",
   "redacted",
