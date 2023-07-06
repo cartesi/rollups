@@ -496,10 +496,8 @@ contract CartesiDAppTest is TestBase {
         uint256 dappInitBalance = transferAmount;
         vm.deal(address(dapp), dappInitBalance);
 
-        bytes memory randomPayload = abi.encodeWithSignature(
-            "randomFunction()"
-        );
-        logVoucher(4, recipient, transferAmount, randomPayload);
+        bytes memory somePayload = abi.encodeWithSignature("someFunction()");
+        logVoucher(4, recipient, transferAmount, somePayload);
         registerProof(
             _inboxInputIndex,
             _numInputsAfter,
@@ -519,7 +517,7 @@ contract CartesiDAppTest is TestBase {
         bool success = dapp.executeVoucher(
             recipient,
             transferAmount,
-            randomPayload,
+            somePayload,
             proof
         );
 
@@ -570,7 +568,7 @@ contract CartesiDAppTest is TestBase {
         assertEq(address(simpleContract).balance, transferAmount);
     }
 
-    function testWithdrawEtherToContractWithRandomPayload(
+    function testWithdrawEtherToContractWithWrongPayload(
         uint256 _inboxInputIndex,
         uint256 _numInputsAfter
     ) public {
@@ -581,10 +579,8 @@ contract CartesiDAppTest is TestBase {
         uint256 dappInitBalance = transferAmount;
         vm.deal(address(dapp), dappInitBalance);
 
-        bytes memory randomPayload = abi.encodeWithSignature(
-            "randomFunction()"
-        );
-        logVoucher(6, address(simpleContract), transferAmount, randomPayload);
+        bytes memory wrongPayload = abi.encodeWithSignature("wrongFunction()");
+        logVoucher(6, address(simpleContract), transferAmount, wrongPayload);
         registerProof(
             _inboxInputIndex,
             _numInputsAfter,
@@ -592,11 +588,11 @@ contract CartesiDAppTest is TestBase {
         );
 
         // perform a failed call
-        vm.expectCall(address(simpleContract), transferAmount, randomPayload);
+        vm.expectCall(address(simpleContract), transferAmount, wrongPayload);
         bool success = dapp.executeVoucher(
             address(simpleContract),
             transferAmount,
-            randomPayload,
+            wrongPayload,
             proof
         );
         assertEq(success, false);
