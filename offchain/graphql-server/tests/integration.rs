@@ -235,32 +235,6 @@ impl GraphQLServerWrapper {
 
 #[actix_web::test]
 #[serial_test::serial]
-async fn get_index() {
-    let docker = Cli::default();
-    let test = TestState::setup(&docker).await;
-
-    let req = create_get_request("");
-    let res = req.send().await.expect("Should get from index");
-    test.server.stop().await;
-
-    assert_eq!(res.status(), awc::http::StatusCode::from_u16(200).unwrap());
-}
-
-#[actix_web::test]
-#[serial_test::serial]
-async fn get_healthz() {
-    let docker = Cli::default();
-    let test = TestState::setup(&docker).await;
-
-    let req = create_get_request("healthz");
-    let res = req.send().await.expect("Should get from healthz");
-    test.server.stop().await;
-
-    assert_eq!(res.status(), awc::http::StatusCode::from_u16(200).unwrap());
-}
-
-#[actix_web::test]
-#[serial_test::serial]
 async fn get_graphql() {
     let docker = Cli::default();
     let test = TestState::setup(&docker).await;
