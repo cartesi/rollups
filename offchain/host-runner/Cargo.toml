@@ -8,6 +8,7 @@ name = "host-runner"
 
 [dependencies]
 grpc-interfaces = { path = "../grpc-interfaces" }
+http-health-check = { path = "../http-health-check" }
 
 actix-web = "4.3"
 async-trait = "0.1"

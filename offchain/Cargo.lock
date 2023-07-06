@@ -2384,6 +2384,7 @@ dependencies = [
  "futures-util",
  "grpc-interfaces",
  "hex",
+ "http-health-check",
  "mockall",
  "rand 0.8.5",
  "reqwest",
