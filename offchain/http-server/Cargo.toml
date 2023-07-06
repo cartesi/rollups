@@ -1,0 +1,13 @@
+[package]
+name = "http-server"
+license = "Apache-2.0"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.6"
+clap = { version = "4.2", features = ["derive", "env", "string"] }
+hyper = "0.14"
+prometheus-client = "0.20"
+snafu = "0.7"
+tracing = "0.1"
