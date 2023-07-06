@@ -15,6 +15,7 @@ use eth_tx_manager::{
     config::{Error as TxError, TxEnvCLIConfig, TxManagerConfig},
     Priority,
 };
+use http_server::HttpServerConfig;
 use snafu::{ResultExt, Snafu};
 use state_client_lib::config::{Error as SCError, SCConfig, SCEnvCLIConfig};
 use std::{fs::File, io::BufReader, path::PathBuf};
@@ -39,9 +40,6 @@ pub struct DispatcherEnvCLIConfig {
 
     #[command(flatten)]
     pub broker_config: BrokerCLIConfig,
-
-    #[command(flatten)]
-    pub hc_config: DispatcherHealthCheckConfig,
 
     #[command(flatten)]
     pub auth_config: AuthEnvCLIConfig,
@@ -70,31 +68,6 @@ pub struct DispatcherConfig {
     pub rollups_deployment: RollupsDeployment,
     pub epoch_duration: u64,
     pub priority: Priority,
-}
-
-#[derive(Debug, Clone, Parser)]
-pub struct DispatcherHealthCheckConfig {
-    /// Enabled or disable health check
-    #[arg(
-        long = "dispatcher-healthcheck-enabled",
-        env = "DISPATCHER_HEALTHCHECK_ENABLED",
-        default_value_t = true
-    )]
-    pub enabled: bool,
-
-    /// Port of health check
-    #[arg(
-        long = "dispatcher-healthcheck-port",
-        env = "DISPATCHER_HEALTHCHECK_PORT",
-        default_value_t = 8080
-    )]
-    pub port: u16,
-}
-
-#[derive(Debug)]
-pub struct Config {
-    pub dispatcher_config: DispatcherConfig,
-    pub health_check_config: DispatcherHealthCheckConfig,
 }
 
 #[derive(Debug, Snafu)]
@@ -127,31 +100,35 @@ pub enum Error {
     RollupsJsonParseError { source: serde_json::Error },
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+#[derive(Debug)]
+pub struct Config {
+    pub dispatcher_config: DispatcherConfig,
+    pub http_server_config: HttpServerConfig,
+}
 
 impl Config {
-    pub fn initialize_from_args() -> Result<Self> {
-        Self::initialize(DispatcherEnvCLIConfig::parse())
-    }
+    pub fn initialize() -> Result<Self, Error> {
+        let (http_server_config, dispatcher_config) =
+            HttpServerConfig::parse::<DispatcherEnvCLIConfig>("dispatcher");
 
-    pub fn initialize(env_cli_config: DispatcherEnvCLIConfig) -> Result<Self> {
-        let sc_config = SCConfig::initialize(env_cli_config.sc_config)
+        let sc_config = SCConfig::initialize(dispatcher_config.sc_config)
             .context(StateClientSnafu)?;
 
-        let tx_config = TxManagerConfig::initialize(env_cli_config.tx_config)
-            .context(TxManagerSnafu)?;
+        let tx_config =
+            TxManagerConfig::initialize(dispatcher_config.tx_config)
+                .context(TxManagerSnafu)?;
 
-        let auth_config = AuthConfig::initialize(env_cli_config.auth_config)
+        let auth_config = AuthConfig::initialize(dispatcher_config.auth_config)
             .context(AuthSnafu)?;
 
-        let path = env_cli_config.rd_dapp_deployment_file;
+        let path = dispatcher_config.rd_dapp_deployment_file;
         let dapp_deployment: DappDeployment = read_json(path)?;
 
-        let path = env_cli_config.rd_rollups_deployment_file;
+        let path = dispatcher_config.rd_rollups_deployment_file;
         let rollups_deployment = read_json::<RollupsDeploymentJson>(path)
             .map(RollupsDeployment::from)?;
 
-        let broker_config = BrokerConfig::from(env_cli_config.broker_config);
+        let broker_config = BrokerConfig::from(dispatcher_config.broker_config);
 
         assert!(
             sc_config.default_confirmations < tx_config.default_confirmations,
@@ -166,18 +143,18 @@ impl Config {
 
             dapp_deployment,
             rollups_deployment,
-            epoch_duration: env_cli_config.rd_epoch_duration,
+            epoch_duration: dispatcher_config.rd_epoch_duration,
             priority: Priority::Normal,
         };
 
         Ok(Config {
             dispatcher_config,
-            health_check_config: env_cli_config.hc_config,
+            http_server_config,
         })
     }
 }
 
-fn read_json<T>(path: PathBuf) -> Result<T>
+fn read_json<T>(path: PathBuf) -> Result<T, Error>
 where
     T: serde::de::DeserializeOwned,
 {

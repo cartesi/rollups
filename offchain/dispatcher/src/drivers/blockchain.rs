@@ -18,7 +18,6 @@ use types::foldables::claims::History;
 use crate::error::{BrokerSnafu, DispatcherError, SenderSnafu};
 use crate::{machine::BrokerReceive, sender::Sender};
 
-#[derive(Debug)]
 pub struct BlockchainDriver {
     dapp_address: Address,
 }

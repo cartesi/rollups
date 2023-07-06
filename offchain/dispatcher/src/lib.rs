@@ -10,10 +10,6 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use config::Config;
-pub use error::DispatcherError;
-use snafu::ResultExt;
-
 pub mod config;
 pub mod dispatcher;
 pub mod machine;
@@ -22,20 +18,28 @@ pub mod sender;
 mod auth;
 mod drivers;
 mod error;
+mod metrics;
 mod setup;
 mod signer;
 
+use config::Config;
+use error::DispatcherError;
+use metrics::DispatcherMetrics;
+use snafu::ResultExt;
+
 #[tracing::instrument(level = "trace", skip_all)]
 pub async fn run(config: Config) -> Result<(), DispatcherError> {
-    let dispatcher_handle = dispatcher::start(config.dispatcher_config);
+    let metrics = DispatcherMetrics::default();
+    let dispatcher_handle =
+        dispatcher::start(config.dispatcher_config, metrics.clone());
 
-    if config.health_check_config.enabled {
-        let health_handle =
-            http_health_check::start(config.health_check_config.port);
+    if http_server::should_start(&config.http_server_config) {
+        let http_server_handle =
+            http_server::start(config.http_server_config, metrics.into());
 
         tokio::select! {
-            ret = health_handle => {
-                ret.context(error::HealthCheckSnafu)
+            ret = http_server_handle => {
+                ret.context(error::HttpServerSnafu)
             }
 
             ret = dispatcher_handle => {

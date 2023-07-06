@@ -27,18 +27,18 @@ impl HttpServerConfig {
     ///
     /// The parametric type `C` must be a struct that derives `Parser`.
     pub fn parse<C: CommandFactory + FromArgMatches>(
-        name: &'static str,
+        service: &'static str,
     ) -> (HttpServerConfig, C) {
-        let command = <C as clap::CommandFactory>::command();
-        let command = add_enabled_arg(command, name, "healthcheck");
-        let command = add_enabled_arg(command, name, "metrics");
-        let command = add_port_arg(command, name);
+        let command = <C as CommandFactory>::command();
+        let command = add_enabled_arg(command, service, "healthcheck");
+        let command = add_enabled_arg(command, service, "metrics");
+        let command = add_port_arg(command, service);
 
         let matches = command.get_matches();
         let http_server_config: HttpServerConfig =
-            clap::FromArgMatches::from_arg_matches(&matches).unwrap();
+            FromArgMatches::from_arg_matches(&matches).unwrap();
         let inner_config: C =
-            clap::FromArgMatches::from_arg_matches(&matches).unwrap();
+            FromArgMatches::from_arg_matches(&matches).unwrap();
         (http_server_config, inner_config)
     }
 }
@@ -53,20 +53,20 @@ fn add_enabled_arg<S: ToString>(
     let id = format!("{}_enabled", name);
     command.arg(
         Arg::new(id.clone())
-            .long(format!("{}-enabled", name))
+            .long(id.clone())
             .env(format!("{}_{}", service.to_uppercase(), id.to_uppercase()))
             .value_parser(value_parser!(bool))
             .default_value("true"),
     )
 }
 
-fn add_port_arg<S: ToString>(command: Command, name: S) -> Command {
-    let name = name.to_string().to_uppercase();
+fn add_port_arg<S: ToString>(command: Command, service: S) -> Command {
+    let service = service.to_string().to_uppercase();
     command.arg(
-        clap::Arg::new("port")
+        Arg::new("port")
             .long("http-server-port")
-            .env(format!("{}_HTTP_SERVER_PORT", name))
-            .value_parser(clap::value_parser!(u16))
+            .env(format!("{}_HTTP_SERVER_PORT", service))
+            .value_parser(value_parser!(u16))
             .default_value("8080"),
     )
 }

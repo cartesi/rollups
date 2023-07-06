@@ -28,6 +28,7 @@ use crate::{
         StateServerSnafu,
     },
     machine::BrokerStatus,
+    metrics::DispatcherMetrics,
 };
 
 const BUFFER_LEN: usize = 256;
@@ -67,14 +68,15 @@ pub async fn create_block_subscription(
         s.ready_chunks(BUFFER_LEN)
     };
 
-    let s = s.filter_map(|mut x| {
-        if x.len() == BUFFER_LEN {
-            None
-        } else {
-            let a = x.pop();
-            a
-        }
-    });
+    let s = s.filter_map(
+        |mut x| {
+            if x.len() == BUFFER_LEN {
+                None
+            } else {
+                x.pop()
+            }
+        },
+    );
 
     Ok(s)
 }
@@ -83,6 +85,7 @@ pub async fn create_context(
     config: &DispatcherConfig,
     block_server: &impl BlockServer,
     broker: &impl BrokerStatus,
+    metrics: DispatcherMetrics,
 ) -> Result<Context, DispatcherError> {
     let genesis_timestamp: u64 = block_server
         .query_block(config.dapp_deployment.deploy_block_hash)
@@ -91,9 +94,10 @@ pub async fn create_context(
         .timestamp
         .as_u64();
     let epoch_length = config.epoch_duration;
-    let context = Context::new(genesis_timestamp, epoch_length, broker)
-        .await
-        .context(BrokerSnafu)?;
+    let context =
+        Context::new(genesis_timestamp, epoch_length, broker, metrics)
+            .await
+            .context(BrokerSnafu)?;
 
     Ok(context)
 }

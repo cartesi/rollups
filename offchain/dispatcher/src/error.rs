@@ -10,21 +10,22 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+use axum::http::uri::InvalidUri;
 use snafu::Snafu;
+use state_client_lib::error::StateServerError;
+use std::net::AddrParseError;
+use tonic::transport::Error as TonicError;
 
 use crate::{machine, sender};
-
-use axum::http::uri::InvalidUri;
-use state_client_lib::error::StateServerError;
-use tonic::transport::Error as TonicError;
 
 #[derive(Debug, Snafu)]
 #[snafu(visibility(pub(crate)))]
 pub enum DispatcherError {
-    #[snafu(display("health check error"))]
-    HealthCheckError {
-        source: http_health_check::HealthCheckError,
-    },
+    #[snafu(display("http server error"))]
+    HttpServerError { source: hyper::Error },
+
+    #[snafu(display("metrics address error"))]
+    MetricsAddressError { source: AddrParseError },
 
     #[snafu(display("broker facade error"))]
     BrokerError {
