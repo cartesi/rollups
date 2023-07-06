@@ -2,7 +2,9 @@
 name: Format onchain code
 on:
   push:
-    paths: 'onchain/**'
+    paths:
+      - '.github/workflows/code_format.yml'
+      - 'onchain/**'
 jobs:
   onchain:
     runs-on: ubuntu-22.04
