@@ -41,7 +41,7 @@ pub struct AdvanceRunnerConfig {
 pub struct AdvanceRunnerHealthCheckConfig {
     /// Enable or disable health check
     #[arg(
-        long = "advance-runner-healthcheck-enabled",
+        long = "healthcheck-enabled",
         env = "ADVANCE_RUNNER_HEALTHCHECK_ENABLED",
         default_value_t = true
     )]
@@ -49,7 +49,7 @@ pub struct AdvanceRunnerHealthCheckConfig {
 
     /// Port of health check
     #[arg(
-        long = "advance-runner-healthcheck-port",
+        long = "healthcheck-port",
         env = "ADVANCE_RUNNER_HEALTHCHECK_PORT",
         default_value_t = 8080
     )]

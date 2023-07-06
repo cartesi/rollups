@@ -28,7 +28,7 @@ pub struct IndexerConfig {
 pub struct IndexerHealthCheckConfig {
     /// Enable health check
     #[arg(
-        long = "indexer-healthcheck-enabled",
+        long = "healthcheck-enabled",
         env = "INDEXER_HEALTHCHECK_ENABLED",
         default_value_t = true
     )]
@@ -36,7 +36,7 @@ pub struct IndexerHealthCheckConfig {
 
     /// Port of health check
     #[arg(
-        long = "indexer-healthcheck-port",
+        long = "healthcheck-port",
         env = "INDEXER_HEALTHCHECK_PORT",
         default_value_t = 8080
     )]
