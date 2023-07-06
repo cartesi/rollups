@@ -130,12 +130,6 @@ pub mod tests {
     //   Used by other tests.
     // --------------------------------------------------------------------------------------------
 
-    const DEFAULT_ENV_VARS: [&str; 3] = [
-        "AWS_ACCESS_KEY_ID",
-        "AWS_SECRET_ACCESS_KEY",
-        "AWS_SESSION_TOKEN",
-    ];
-
     fn set_web_identity_var(i: usize) {
         env::set_var(WEB_IDENTITY_ENV_VARS[i], "irrelevant");
     }
@@ -146,27 +140,10 @@ pub mod tests {
         }
     }
 
-    fn set_default_vars() {
-        for env_var in DEFAULT_ENV_VARS {
-            env::set_var(env_var, "irrelevant");
-        }
-    }
-
     fn clean_web_identity_vars() {
         for env_var in WEB_IDENTITY_ENV_VARS {
             env::remove_var(env_var);
         }
-    }
-
-    fn clean_default_vars() {
-        for env_var in DEFAULT_ENV_VARS {
-            env::remove_var(env_var);
-        }
-    }
-
-    fn clean_all_vars() {
-        clean_web_identity_vars();
-        clean_default_vars();
     }
 
     fn remove_web_identity_var(i: usize) {
