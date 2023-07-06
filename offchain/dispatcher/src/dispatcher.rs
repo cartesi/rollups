@@ -22,6 +22,7 @@ use crate::{
     drivers::{blockchain::BlockchainDriver, machine::MachineDriver, Context},
     error::{BrokerSnafu, DispatcherError, SenderSnafu, StateServerSnafu},
     machine::{rollups_broker::BrokerFacade, BrokerReceive, BrokerSend},
+    metrics::DispatcherMetrics,
     sender::ClaimSender,
     setup::{create_block_subscription, create_context, create_state_server},
 };
@@ -29,12 +30,16 @@ use crate::{
 use snafu::{whatever, ResultExt};
 
 #[instrument(level = "trace", skip_all)]
-pub async fn start(config: DispatcherConfig) -> Result<(), DispatcherError> {
+pub async fn start(
+    config: DispatcherConfig,
+    metrics: DispatcherMetrics,
+) -> Result<(), DispatcherError> {
     info!("Setting up dispatcher with config: {:?}", config);
 
     trace!("Creating transaction manager");
-    let mut claim_sender =
-        ClaimSender::new(&config).await.context(SenderSnafu)?;
+    let mut claim_sender = ClaimSender::new(&config, metrics.clone())
+        .await
+        .context(SenderSnafu)?;
 
     trace!("Creating state-server connection");
     let state_server = create_state_server(&config.sc_config).await?;
@@ -60,7 +65,8 @@ pub async fn start(config: DispatcherConfig) -> Result<(), DispatcherError> {
     .context(BrokerSnafu)?;
 
     trace!("Creating context");
-    let mut context = create_context(&config, &state_server, &broker).await?;
+    let mut context =
+        create_context(&config, &state_server, &broker, metrics).await?;
 
     trace!("Creating machine driver and blockchain driver");
     let mut machine_driver =

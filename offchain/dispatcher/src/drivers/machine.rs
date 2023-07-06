@@ -19,7 +19,6 @@ use types::foldables::input_box::{DAppInputBox, Input, InputBox};
 
 use tracing::{debug, instrument, trace};
 
-#[derive(Debug)]
 pub struct MachineDriver {
     dapp_address: Address,
 }
@@ -113,6 +112,7 @@ mod tests {
             Context,
         },
         machine::RollupStatus,
+        metrics::DispatcherMetrics,
     };
 
     use super::MachineDriver;
@@ -127,7 +127,10 @@ mod tests {
         expected: Vec<SendInteraction>,
     ) {
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
-        let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
+        let mut context =
+            Context::new(0, 5, &broker, DispatcherMetrics::default())
+                .await
+                .unwrap(); // zero indexed!
         let machine_driver = MachineDriver::new(H160::random());
         for block_timestamp in input_timestamps {
             let input = mock::new_input(block_timestamp);
@@ -228,7 +231,10 @@ mod tests {
         expected: Vec<SendInteraction>,
     ) {
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
-        let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
+        let mut context =
+            Context::new(0, 5, &broker, DispatcherMetrics::default())
+                .await
+                .unwrap(); // zero indexed!
         let machine_driver = MachineDriver::new(H160::random());
         let dapp_input_box = types::foldables::input_box::DAppInputBox {
             inputs: input_timestamps
@@ -297,7 +303,10 @@ mod tests {
         expected: Vec<SendInteraction>,
     ) {
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
-        let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
+        let mut context =
+            Context::new(0, 5, &broker, DispatcherMetrics::default())
+                .await
+                .unwrap(); // zero indexed!
 
         let dapp_address = H160::random();
         let machine_driver = MachineDriver::new(dapp_address);
@@ -371,7 +380,10 @@ mod tests {
             last_event_is_finish_epoch: false,
         };
         let broker = mock::Broker::new(vec![rollup_status], Vec::new());
-        let mut context = Context::new(0, 5, &broker).await.unwrap(); // zero indexed!
+        let mut context =
+            Context::new(0, 5, &broker, DispatcherMetrics::default())
+                .await
+                .unwrap(); // zero indexed!
         let block = mock::new_block(5);
         let input_box = mock::new_input_box();
         let machine_driver = MachineDriver::new(H160::random());

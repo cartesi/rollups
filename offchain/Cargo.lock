@@ -1450,7 +1450,8 @@ dependencies = [
  "eth-tx-manager",
  "ethers-signers",
  "futures",
- "http-health-check",
+ "http-server",
+ "hyper",
  "im",
  "rand 0.8.5",
  "redis",
@@ -2439,7 +2440,6 @@ dependencies = [
  "clap",
  "hyper",
  "prometheus-client",
- "snafu",
  "tracing",
 ]
 

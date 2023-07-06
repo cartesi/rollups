@@ -48,6 +48,7 @@ use url::{ParseError, Url};
 
 use crate::{
     config::DispatcherConfig,
+    metrics::DispatcherMetrics,
     signer::{ConditionalSigner, ConditionalSignerError},
 };
 
@@ -115,6 +116,7 @@ pub struct ClaimSender {
     priority: Priority,
     from: Address,
     authority: Authority<Provider<MockProvider>>,
+    metrics: DispatcherMetrics,
 }
 
 /// Creates the (layered) middleware instance to be sent to the tx-manager.
@@ -176,7 +178,10 @@ async fn create_tx_manager(
 }
 
 impl ClaimSender {
-    pub async fn new(config: &DispatcherConfig) -> Result<Self, SenderError> {
+    pub async fn new(
+        config: &DispatcherConfig,
+        metrics: DispatcherMetrics,
+    ) -> Result<Self, SenderError> {
         let chain: Chain = (&config.tx_config).into();
 
         let conditional_signer =
@@ -207,6 +212,7 @@ impl ClaimSender {
             priority: config.priority,
             from: conditional_signer.address(),
             authority,
+            metrics,
         })
     }
 }
@@ -245,6 +251,7 @@ impl Sender for ClaimSender {
             .send_transaction(transaction, self.confirmations, self.priority)
             .await
             .context(TransactionManagerSnafu)?;
+        self.metrics.claims_sent.inc();
         trace!("Claim transaction confirmed: `{:?}`", receipt);
 
         Ok(Self { tx_manager, ..self })

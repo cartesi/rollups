@@ -18,7 +18,7 @@ pub use prometheus_client::registry::Registry;
 
 // Re-exporting prometheus metrics.
 // Add any other metrics to re-export here.
-pub use prometheus_client::metrics::counter::Counter;
+pub use prometheus_client::metrics::counter::Counter as CounterRef;
 // End of metrics to re-export.
 
 use axum::{routing::get, Router};
