@@ -122,13 +122,7 @@ contract ERC20PortalTest is Test {
         token = new NormalToken(_amount);
 
         // Construct the ERC-20 deposit input
-        bytes memory input = abi.encodePacked(
-            true,
-            token,
-            alice,
-            _amount,
-            _data
-        );
+        bytes memory input = abi.encode(true, token, alice, _amount, _data);
 
         // Transfer ERC-20 tokens to Alice and start impersonating her
         require(token.transfer(alice, _amount), "token transfer fail");
@@ -167,13 +161,7 @@ contract ERC20PortalTest is Test {
         token = new UntransferableToken(_amount);
 
         // Construct the ERC-20 deposit input
-        bytes memory input = abi.encodePacked(
-            false,
-            token,
-            alice,
-            _amount,
-            _data
-        );
+        bytes memory input = abi.encode(false, token, alice, _amount, _data);
 
         // Start impersonating Alice
         vm.startPrank(alice);

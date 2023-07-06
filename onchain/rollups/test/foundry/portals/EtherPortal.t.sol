@@ -71,7 +71,7 @@ contract EtherPortalTest is Test {
 
     function testEtherDeposit(uint256 value, bytes calldata data) public {
         // Construct the Ether deposit input
-        bytes memory input = abi.encodePacked(alice, value, data);
+        bytes memory input = abi.encode(alice, value, data);
 
         // Transfer Ether to Alice and start impersonating her
         startHoax(alice, value);

@@ -130,11 +130,12 @@ contract ERC721PortalTest is Test {
         token = new NormalToken(alice, _tokenId);
 
         // Construct the ERC-721 deposit input
-        bytes memory input = abi.encodePacked(
+        bytes memory input = abi.encode(
             token,
             alice,
             _tokenId,
-            abi.encode(_baseLayerData, _execLayerData)
+            _baseLayerData,
+            _execLayerData
         );
 
         // Start impersonating Alice
@@ -184,11 +185,12 @@ contract ERC721PortalTest is Test {
         token = new NormalToken(alice, _tokenId);
 
         // Construct the ERC-721 deposit input
-        bytes memory input = abi.encodePacked(
+        bytes memory input = abi.encode(
             token,
             alice,
             _tokenId,
-            abi.encode(_baseLayerData, _execLayerData)
+            _baseLayerData,
+            _execLayerData
         );
 
         // Start impersonating Alice
@@ -301,11 +303,12 @@ contract ERC721PortalTest is Test {
         token = new NormalToken(alice, _tokenId);
 
         // Construct the ERC-721 deposit input
-        bytes memory input = abi.encodePacked(
+        bytes memory input = abi.encode(
             token,
             alice,
             _tokenId,
-            abi.encode(_baseLayerData, _execLayerData)
+            _baseLayerData,
+            _execLayerData
         );
 
         // Start impersonating Alice
