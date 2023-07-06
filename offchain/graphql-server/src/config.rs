@@ -22,13 +22,21 @@ pub struct GraphQLConfig {
 
 #[derive(Debug, Clone, Parser)]
 pub struct GraphQLHealthCheckConfig {
-    /// Enable health check
-    #[arg(long = "no-graphql-healthcheck", env)]
-    pub healthcheck_disabled: Option<String>,
+    /// Enable or disable health check
+    #[arg(
+        long = "graphql-healthcheck-enabled",
+        env = "GRAPHQL_HEALTHCHECK_ENABLED",
+        default_value_t = true
+    )]
+    pub enabled: bool,
 
     /// Port of health check
-    #[arg(long = "graphql-healthcheck-port", env, default_value = "22023")]
-    pub healthcheck_port: u16,
+    #[arg(
+        long = "graphql-healthcheck-port",
+        env = "GRAPHQL_HEALTHCHECK_PORT",
+        default_value_t = 8080
+    )]
+    pub port: u16,
 }
 
 #[derive(Debug)]

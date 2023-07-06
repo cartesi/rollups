@@ -52,25 +52,9 @@ pub fn start_service(
             .wrap(cors)
             .service(graphql)
             .service(juniper_playground)
-            .service(health)
-            .service(healthz)
     })
     .bind((host, port))?
     .run())
-}
-
-#[actix_web::get("/")]
-async fn health() -> impl Responder {
-    HttpResponse::Ok()
-        .content_type("text/html; charset=utf-8")
-        .body("")
-}
-
-#[actix_web::get("/healthz")]
-async fn healthz() -> impl Responder {
-    HttpResponse::Ok()
-        .content_type("text/html; charset=utf-8")
-        .body("")
 }
 
 #[actix_web::get("/graphql")]
