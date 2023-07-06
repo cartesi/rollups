@@ -31,6 +31,14 @@ use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 use config::Config;
 use controller::Controller;
 
+fn log_result<T, E: std::error::Error>(name: &str, result: Result<T, E>) {
+    let prefix = format!("http {} terminated ", name);
+    match result {
+        Ok(_) => tracing::info!("{} successfully", prefix),
+        Err(e) => tracing::warn!("{} with error: {}", prefix, e),
+    };
+}
+
 #[actix_web::main]
 async fn main() {
     let filter = EnvFilter::builder()
@@ -51,14 +59,11 @@ async fn main() {
         let shutdown = grpc_shutdown_rx.map(|_| ());
         let http_service_running = http_service_running.clone();
         tokio::spawn(async move {
-            match grpc::start_service(&config, controller.clone(), shutdown)
-                .await
-            {
-                Ok(_) => tracing::info!("grpc service terminated successfully"),
-                Err(e) => {
-                    tracing::warn!("grpc service terminated with error: {}", e)
-                }
-            }
+            log_result(
+                "gRPC service",
+                grpc::start_service(&config, controller.clone(), shutdown)
+                    .await,
+            );
             if http_service_running.load(Ordering::Relaxed) {
                 panic!("gRPC service terminated before shutdown signal");
             }
@@ -66,9 +71,21 @@ async fn main() {
     };
 
     // We run the actix-web in the main thread because it handles the SIGINT
-    match http::start_services(&config, controller.clone()).await {
-        Ok(_) => tracing::info!("http service terminated successfully"),
-        Err(e) => tracing::warn!("http service terminated with error: {}", e),
+    let host_runner_handle = http::start_services(&config, controller.clone());
+    if config.health_check_config.enabled {
+        let health_handle =
+            http_health_check::start(config.health_check_config.port);
+
+        tokio::select! {
+            result = health_handle => {
+                log_result("http health check", result);
+            }
+            result = host_runner_handle => {
+                log_result("http service", result);
+            }
+        }
+    } else {
+        log_result("http service", host_runner_handle.await);
     }
     http_service_running.store(false, Ordering::Relaxed);
 
