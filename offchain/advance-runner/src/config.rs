@@ -42,7 +42,7 @@ pub struct AdvanceRunnerHealthCheckConfig {
     /// Enable or disable health check
     #[arg(
         long = "advance-runner-healthcheck-enabled",
-        env = "ADVANCE_RUNNER_HEATHCHECK_ENABLED",
+        env = "ADVANCE_RUNNER_HEALTHCHECK_ENABLED",
         default_value_t = true
     )]
     pub enabled: bool,
