@@ -30,10 +30,7 @@ import {SimpleERC20} from "../util/SimpleERC20.sol";
 import {SimpleERC721} from "../util/SimpleERC721.sol";
 import {SimpleERC721Receiver} from "../util/SimpleERC721Receiver.sol";
 
-import {LibOutputProof0} from "./helper/LibOutputProof0.sol";
-import {LibOutputProof1} from "./helper/LibOutputProof1.sol";
-import {LibOutputProof2} from "./helper/LibOutputProof2.sol";
-import {LibOutputProof3} from "./helper/LibOutputProof3.sol";
+import {LibOutputProofs} from "./helper/LibOutputProofs.sol";
 
 import "forge-std/console.sol";
 
@@ -145,7 +142,7 @@ contract CartesiDAppTest is TestBase {
         registerProof(
             _inboxInputIndex,
             _numInputsAfter,
-            LibOutputProof0.getNoticeProof()
+            LibOutputProofs.getNotice0Proof()
         );
 
         bytes memory notice = abi.encodePacked(bytes4(0xfafafafa));
@@ -389,7 +386,7 @@ contract CartesiDAppTest is TestBase {
         registerProof(
             _inboxInputIndex,
             _numInputsAfter,
-            LibOutputProof1.getVoucherProof()
+            LibOutputProofs.getVoucher1Proof()
         );
     }
 
@@ -412,7 +409,7 @@ contract CartesiDAppTest is TestBase {
         registerProof(
             _inboxInputIndex,
             _numInputsAfter,
-            LibOutputProof2.getVoucherProof()
+            LibOutputProofs.getVoucher2Proof()
         );
 
         // not able to execute voucher because dapp has 0 balance
@@ -557,7 +554,7 @@ contract CartesiDAppTest is TestBase {
         registerProof(
             _inboxInputIndex,
             _numInputsAfter,
-            LibOutputProof3.getVoucherProof()
+            LibOutputProofs.getVoucher3Proof()
         );
 
         // not able to execute voucher because dapp doesn't have the nft
