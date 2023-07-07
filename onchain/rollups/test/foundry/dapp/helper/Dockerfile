@@ -30,9 +30,9 @@ RUN export ARCH=$(uname -m | sed 's/aarch64/arm64/') && \
 
 # Download rootfs, linux and rom
 ENV IMAGES_PATH /opt/cartesi/share/images
-RUN wget -O ${IMAGES_PATH}/rootfs.ext2 https://github.com/cartesi/image-rootfs/releases/download/v0.15.0/rootfs-v0.15.0.ext2 && \
-    wget -O ${IMAGES_PATH}/linux.bin https://github.com/cartesi/image-kernel/releases/download/v0.14.0/linux-5.15.63-ctsi-1.bin && \
-    wget -O ${IMAGES_PATH}/rom.bin https://github.com/cartesi/machine-emulator-rom/releases/download/v0.13.0/rom-v0.13.0.bin
+RUN wget -O ${IMAGES_PATH}/rootfs.ext2 https://github.com/cartesi/image-rootfs/releases/download/v0.17.0/rootfs-v0.17.0.ext2 && \
+    wget -O ${IMAGES_PATH}/linux.bin https://github.com/cartesi/image-kernel/releases/download/v0.16.0/linux-5.15.63-ctsi-2.bin && \
+    wget -O ${IMAGES_PATH}/rom.bin https://github.com/cartesi/machine-emulator-rom/releases/download/v0.16.0/rom-v0.16.0.bin
 
 # Download grpc-interfaces repo
 RUN git clone --branch v0.12.0 https://github.com/cartesi/grpc-interfaces
