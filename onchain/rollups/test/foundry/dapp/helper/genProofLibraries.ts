@@ -65,15 +65,21 @@ function setupNoticeProof(positionIndex: number): OutputValidityProof {
     return noticeProof;
 }
 
-function buildSolCodes(
-    noticeProof: OutputValidityProof,
-    voucherProof: OutputValidityProof,
+function generateLibraryCode(
+    noticeProofs: OutputValidityProof[],
+    voucherProofs: OutputValidityProof[],
     libraryName: string
 ): string {
-    const array1 = noticeProof.outputHashInOutputHashesSiblings;
-    const array2 = noticeProof.outputHashesInEpochSiblings;
-    const array3 = voucherProof.outputHashInOutputHashesSiblings;
-    const array4 = voucherProof.outputHashesInEpochSiblings;
+    let functionLines: string[] = [];
+
+    noticeProofs.forEach((noticeProof, index) => {
+        functionLines.push(generateFunctionCode(noticeProof, `getNotice${index}Proof`))
+    });
+
+    voucherProofs.forEach((voucherProof, index) => {
+        functionLines.push(generateFunctionCode(voucherProof, `getVoucher${index}Proof`))
+    });
+
     const lines: string[] = [
         "// SPDX-License-Identifier: UNLICENSED",
         "",
@@ -84,7 +90,23 @@ function buildSolCodes(
         'import {OutputValidityProof} from "contracts/library/LibOutputValidation.sol";',
         "",
         `library ${libraryName} {`,
-        "    function getNoticeProof() internal pure returns (OutputValidityProof memory) {",
+        ...functionLines,
+        "}",
+        ""
+    ];
+
+    return lines.join("\n");
+}
+
+function generateFunctionCode(
+    proof: OutputValidityProof,
+    functionName: string
+): string {
+    const array1 = proof.outputHashInOutputHashesSiblings;
+    const array2 = proof.outputHashesInEpochSiblings;
+
+    const lines: string[] = [
+        `    function ${functionName}() internal pure returns (OutputValidityProof memory) {`,
         `        uint256[${array1.length}] memory array1 = [${array1}];`,
         `        uint256[${array2.length}] memory array2 = [${array2}];`,
         `        bytes32[] memory outputHashInOutputHashesSiblings = new bytes32[](${array1.length});`,
@@ -92,41 +114,22 @@ function buildSolCodes(
         `        for (uint256 i; i < ${array1.length}; ++i) { outputHashInOutputHashesSiblings[i] = bytes32(array1[i]); }`,
         `        for (uint256 i; i < ${array2.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array2[i]); }`,
         `        return OutputValidityProof({`,
-        `            inputIndexWithinEpoch: ${noticeProof.inputIndexWithinEpoch},`,
-        `            outputIndexWithinInput: ${noticeProof.outputIndexWithinInput},`,
-        `            outputHashesRootHash: ${noticeProof.outputHashesRootHash},`,
-        `            vouchersEpochRootHash: ${noticeProof.vouchersEpochRootHash},`,
-        `            noticesEpochRootHash: ${noticeProof.noticesEpochRootHash},`,
-        `            machineStateHash: ${noticeProof.machineStateHash},`,
+        `            inputIndexWithinEpoch: ${proof.inputIndexWithinEpoch},`,
+        `            outputIndexWithinInput: ${proof.outputIndexWithinInput},`,
+        `            outputHashesRootHash: ${proof.outputHashesRootHash},`,
+        `            vouchersEpochRootHash: ${proof.vouchersEpochRootHash},`,
+        `            noticesEpochRootHash: ${proof.noticesEpochRootHash},`,
+        `            machineStateHash: ${proof.machineStateHash},`,
         "            outputHashInOutputHashesSiblings: outputHashInOutputHashesSiblings,",
         "            outputHashesInEpochSiblings: outputHashesInEpochSiblings",
         "        });",
         "    }",
-        "    function getVoucherProof() internal pure returns (OutputValidityProof memory) {",
-        `        uint256[${array3.length}] memory array3 = [${array3}];`,
-        `        uint256[${array4.length}] memory array4 = [${array4}];`,
-        `        bytes32[] memory outputHashInOutputHashesSiblings = new bytes32[](${array3.length});`,
-        `        bytes32[] memory outputHashesInEpochSiblings = new bytes32[](${array4.length});`,
-        `        for (uint256 i; i < ${array3.length}; ++i) { outputHashInOutputHashesSiblings[i] = bytes32(array3[i]); }`,
-        `        for (uint256 i; i < ${array4.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array4[i]); }`,
-        `        return OutputValidityProof({`,
-        `            inputIndexWithinEpoch: ${voucherProof.inputIndexWithinEpoch},`,
-        `            outputIndexWithinInput: ${voucherProof.outputIndexWithinInput},`,
-        `            outputHashesRootHash: ${voucherProof.outputHashesRootHash},`,
-        `            vouchersEpochRootHash: ${voucherProof.vouchersEpochRootHash},`,
-        `            noticesEpochRootHash: ${voucherProof.noticesEpochRootHash},`,
-        `            machineStateHash: ${voucherProof.machineStateHash},`,
-        "            outputHashInOutputHashesSiblings: outputHashInOutputHashesSiblings,",
-        "            outputHashesInEpochSiblings: outputHashesInEpochSiblings",
-        "        });",
-        "    }",
-        "}",
-        "",
     ];
+
     return lines.join("\n");
 }
 
-let pairs = response.proofs.length / 2; // need to half because there's a voucher proof and notice proof for each input
+const pairs = response.proofs.length / 2; // need to half because there's a voucher proof and notice proof for each input
 
 // set up proofs
 let voucherProofs: OutputValidityProof[] = new Array(pairs);
@@ -140,17 +143,15 @@ for (let i = 0; i < response.proofs.length; i++) {
     }
 }
 
-// write to solidity library codes
-for (let i = 0; i < pairs; i++) {
-    let libraryName = `LibOutputProof${i}`;
-    let solidityCode = buildSolCodes(
-        noticeProofs[i],
-        voucherProofs[i],
-        libraryName
-    );
-    let fileName = `${__dirname}/${libraryName}.sol`;
-    fs.writeFile(fileName, solidityCode, (err: any) => {
-        if (err) throw err;
-        console.log(`File '${fileName}' was generated.`);
-    });
-}
+// generate solidity library
+const libraryName = "LibOutputProofs";
+const solidityCode = generateLibraryCode(
+    noticeProofs,
+    voucherProofs,
+    libraryName
+);
+const fileName = `${__dirname}/${libraryName}.sol`;
+fs.writeFile(fileName, solidityCode, (err: any) => {
+    if (err) throw err;
+    console.log(`File '${fileName}' was generated.`);
+});
