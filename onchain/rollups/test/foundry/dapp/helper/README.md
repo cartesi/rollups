@@ -44,6 +44,6 @@ graph TD
     updatedInputs --> genScript.ts --> script[(gen-proofs.sh)]
     script --> docker --> finishEpochResponse[(finish_epoch_response_64.json)]
     finishEpochResponse --> b64to16[python -m b64to16] --> formatedFinishEpochResponse[("finish_epoch_response.json")]
-    formatedFinishEpochResponse --> genProofLibraries.ts
-    genProofLibraries.ts --> proofLibraries[(Proof Libraries)]
+    formatedFinishEpochResponse --> genProofLibrary.ts
+    genProofLibrary.ts --> proofLibrary[(Proof Library)]
 ```

@@ -64,7 +64,7 @@ b64to16() {
 # Generate Solidity libraries with proofs from epoch status
 genlibs() {
     pushd ../../../../../ >/dev/null
-    npx ts-node rollups/test/foundry/dapp/helper/genProofLibraries.ts
+    npx ts-node rollups/test/foundry/dapp/helper/genProofLibrary.ts
     popd >/dev/null
 }
 
