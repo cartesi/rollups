@@ -11,12 +11,12 @@ path = "src/main.rs"
 [dependencies]
 types = { path = "../types" }
 
-block-history = { workspace = true, registry = "cartesi" }
+block-history.workspace = true
 serde.workspace = true
 snafu.workspace = true
-state-fold = { workspace = true, registry = "cartesi" }
-state-fold-types = { workspace = true, registry = "cartesi" }
-state-server-lib = { workspace = true, registry = "cartesi" }
+state-fold.workspace = true
+state-fold-types.workspace = true
+state-server-lib.workspace = true
 tokio = { workspace = true, features = ["macros", "sync", "rt-multi-thread"] }
 tonic = "0.8" # TODO: the state-fold still uses this version
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
