@@ -5,16 +5,16 @@ edition = "2021"
 
 [dependencies]
 grpc-interfaces = { path = "../grpc-interfaces" }
-rollups-events = { path = "../rollups-events" }
 rollups-data = { path = "../data" }
+rollups-events = { path = "../rollups-events" }
 
-anyhow = "1.0"
-backoff = { version = "0.4", features = ["tokio"] }
-tempfile = "3.5"
-testcontainers = "0.14"
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-tonic = "0.9"
-tracing = "0.1"
-users = "0.11"
-json = "0.12"
-hyper = { version = "0.14", features = ["http1", "runtime", "client"] }
+anyhow.workspace = true
+backoff = { workspace = true, features = ["tokio"] }
+hyper = { workspace = true, features = ["http1", "runtime", "client"] }
+json.workspace = true
+tempfile.workspace = true
+testcontainers.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tonic.workspace = true
+tracing.workspace = true
+users.workspace = true

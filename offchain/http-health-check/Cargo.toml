@@ -5,7 +5,7 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.6"
-hyper = "0.14"
-snafu = "0.7"
-tracing = "0.1"
+axum.workspace = true
+hyper.workspace = true
+snafu.workspace = true
+tracing.workspace = true

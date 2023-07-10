@@ -6,25 +6,26 @@ edition = "2021"
 [dependencies]
 redacted = { path = "../redacted" }
 
-backoff = { version = "0.4", features = ["tokio"] }
-base64 = "0.21"
-clap = { version = "4.2", features = ["derive", "env"] }
-hex = "0.4"
-redis = { version = "0.23", features = [
+backoff = { workspace = true, features = ["tokio"] }
+base64.workspace = true
+clap = { workspace = true, features = ["derive", "env"] }
+hex.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+snafu.workspace = true
+tokio = { workspace = true, features = ["macros", "time", "rt-multi-thread"] }
+tracing.workspace = true
+
+redis = { workspace = true, features = [
     "streams",
     "tokio-comp",
     "connection-manager",
     "tls-native-tls",
     "tokio-native-tls-comp",
 ] }
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-snafu = "0.7"
-tokio = { version = "1", features = ["macros", "time", "rt-multi-thread"] }
-tracing = "0.1"
 
 [dev-dependencies]
-env_logger = "0.10"
-testcontainers = "0.14"
-test-log = { version = "0.2", features = ["trace"] }
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+env_logger.workspace = true
+test-log = { workspace = true, features = ["trace"] }
+testcontainers.workspace = true
+tracing-subscriber = { workspace = true, features = ["env-filter"] }

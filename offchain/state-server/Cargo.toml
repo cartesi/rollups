@@ -3,29 +3,22 @@ name = "state-server"
 license = "Apache-2.0"
 version = "1.0.0"
 edition = "2021"
-authors = [
-  "Gabriel Coutinho <gabriel.coutinho@cartesi.io>",
-  "Roman Hodulák <roman.hodulak@cartesi.io>",
-]
-
 
 [[bin]]
 name = "rollups_state_server"
 path = "src/main.rs"
 
 [dependencies]
-block-history = { version = "0.6", registry = "cartesi" }
-state-fold = { version = "0.6", registry = "cartesi" }
-state-fold-types = { version = "0.6", registry = "cartesi" }
-state-server-lib = { version = "0.6", registry = "cartesi" }
-
 types = { path = "../types" }
 
-serde = "1"
-snafu = "0.7"
-tonic = "0.8"
-url = "2"
-
-tokio = { version = "1", features = ["macros", "sync", "rt-multi-thread"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+block-history = { workspace = true, registry = "cartesi" }
+serde.workspace = true
+snafu.workspace = true
+state-fold = { workspace = true, registry = "cartesi" }
+state-fold-types = { workspace = true, registry = "cartesi" }
+state-server-lib = { workspace = true, registry = "cartesi" }
+tokio = { workspace = true, features = ["macros", "sync", "rt-multi-thread"] }
+tonic = "0.8" # TODO: the state-fold still uses this version
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+tracing.workspace = true
+url.workspace = true
