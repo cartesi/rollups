@@ -12,8 +12,8 @@ async-trait.workspace = true
 futures.workspace = true
 im = { workspace = true, features = ["serde"] }
 serde = { workspace = true, features = ["rc"] }
-state-fold = { workspace = true, registry = "cartesi" }
-state-fold-types = { workspace = true, registry = "cartesi", features = ["ethers"] }
+state-fold.workspace = true
+state-fold-types = { workspace = true, features = ["ethers"] }
 
 [dev-dependencies]
 serde_json.workspace = true
