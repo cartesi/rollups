@@ -10,27 +10,27 @@ name = "host-runner"
 grpc-interfaces = { path = "../grpc-interfaces" }
 http-health-check = { path = "../http-health-check" }
 
-actix-web = "4.3"
-async-trait = "0.1"
-byteorder = "1.4"
-clap = { version = "4.2", features = ["derive", "env"] }
-ethabi = "18.0"
-futures-util = "0.3"
-hex = "0.4"
-reqwest = { version = "0.11", features = ["json"] }
-serde = { version = "1.0", features = ["derive"] }
-sha3 = { version = "0.10", features = ["std"] }
-snafu = "0.7"
-tokio = { version = "1.28", features = ["macros", "time", "rt-multi-thread"] }
-tonic = "0.9"
-tonic-health = "0.9"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+actix-web.workspace = true
+async-trait.workspace = true
+byteorder.workspace = true
+clap = { workspace = true, features = ["derive", "env"] }
+ethabi.workspace = true
+futures-util.workspace = true
+hex.workspace = true
+reqwest = { workspace = true, features = ["json"] }
+serde = { workspace = true, features = ["derive"] }
+sha3 = { workspace = true, features = ["std"] }
+snafu.workspace = true
+tokio = { workspace = true, features = ["macros", "time", "rt-multi-thread"] }
+tonic.workspace = true
+tonic-health.workspace = true
+tracing.workspace = true
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
 
 [dev-dependencies]
 rollups-http-client = { path = "../rollups-http-client" }
 
-mockall = "0.11"
-rand = "0.8"
-serial_test = "2.0"
-tracing-test = "0.2"
+mockall.workspace = true
+rand.workspace = true
+serial_test.workspace = true
+tracing-test.workspace = true

@@ -5,8 +5,8 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.6"
-clap = { version = "4.2", features = ["derive", "env", "string"] }
-hyper = "0.14"
-prometheus-client = "0.20"
-tracing = "0.1"
+axum.workspace = true
+clap = { workspace = true, features = ["derive", "env", "string"] }
+hyper.workspace = true
+prometheus-client.workspace = true
+tracing.workspace = true

@@ -16,21 +16,22 @@ path = "src/schema/generate_schema.rs"
 http-health-check = { path = "../http-health-check" }
 rollups-data = { path = "../data" }
 
-actix-cors = "0.6"
-actix-web = "4.3"
-clap = { version = "4.2", features = ["derive", "env"] }
-hex = "0.4"
-juniper = "0.15"
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-snafu = "0.7"
-tokio = { version = "1", features = ["macros", "time", "rt-multi-thread"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+actix-cors.workspace = true
+actix-web.workspace = true
+clap = { workspace = true, features = ["derive", "env"] }
+hex.workspace = true
+juniper.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+snafu.workspace = true
+tokio = { workspace = true, features = ["macros", "time", "rt-multi-thread"] }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+tracing.workspace = true
 
 [dev-dependencies]
 test-fixtures = { path = "../test-fixtures" }
-testcontainers = "0.14"
-awc = "3.1"
-serial_test = "2.0"
-chrono = "0.4"
+
+awc.workspace = true
+chrono.workspace = true
+serial_test.workspace = true
+testcontainers.workspace = true

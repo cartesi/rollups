@@ -3,17 +3,12 @@ name = "contracts"
 license = "Apache-2.0"
 version = "1.0.0"
 edition = "2021"
-authors = [
-  "Felipe Argento <felipe@cartesi.io>",
-  "Gabriel Coutinho <gabriel.coutinho@cartesi.io>",
-  "Roman Hodulák <roman.hodulak@cartesi.io>",
-]
 
 [dependencies]
-state-fold-types = { version = "0.6", registry = "cartesi", features = ["ethers"] }
+state-fold-types = { workspace = true, features = ["ethers"] }
 
 [build-dependencies]
-state-fold-types = { version = "0.6", registry = "cartesi", features = ["ethers"] }
+state-fold-types = { workspace = true, features = ["ethers"] }
 
 [package.metadata.cargo-machete]
 ignored = ["state-fold-types"]

@@ -3,10 +3,6 @@ name = "dispatcher"
 license = "Apache-2.0"
 version = "1.0.0"
 edition = "2021"
-authors = [
-  "Felipe Argento <felipe.argento@cartesi.io>",
-  "Gabriel Coutinho <gabriel.coutinho@cartesi.io>",
-]
 
 [[bin]]
 name = "rollups_dispatcher"
@@ -18,36 +14,35 @@ http-server = { path = "../http-server" }
 rollups-events = { path = "../rollups-events" }
 types = { path = "../types" }
 
-state-client-lib =  { version = "0.6", registry = "cartesi" }
-state-fold-types = { version = "0.6", registry = "cartesi", features = ["ethers"] }
-
-async-trait = "0.1"
-axum = "0.6"
-backoff = { version = "0.4", features = ["tokio"] }
-clap = { version = "4.2", features = ["derive", "env"] }
-eth-tx-manager = "0.10"
-ethers-signers = { version = "1.0", features = ["aws"] }
-futures = "0.3"
-hyper = "0.14"
-rusoto_core = "0.48"
-rusoto_kms = "0.48"
-rusoto_sts = "0.48"
-serde = "1"
-serde_json = "1"
-snafu = "0.7"
-tokio = { version = "1", features = ["sync", "macros", "rt-multi-thread"] }
-tokio-stream = "0.1"
-tonic = "0.8"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-url = "2"
+async-trait.workspace = true
+axum.workspace = true
+backoff = { workspace = true, features = ["tokio"] }
+clap = { workspace = true, features = ["derive", "env"] }
+eth-tx-manager.workspace = true
+ethers-signers = { workspace = true, features = ["aws"] }
+futures.workspace = true
+hyper.workspace = true
+rusoto_core.workspace = true
+rusoto_kms.workspace = true
+rusoto_sts.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+snafu.workspace = true
+state-client-lib =  { workspace = true, registry = "cartesi" }
+state-fold-types = { workspace = true, registry = "cartesi", features = ["ethers"] }
+tokio = { workspace = true, features = ["sync", "macros", "rt-multi-thread"] }
+tokio-stream.workspace = true
+tonic = "0.8" # TODO: the state-fold still uses this version
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+tracing.workspace = true
+url.workspace = true
 
 [dev-dependencies]
 test-fixtures = { path = "../test-fixtures" }
 
-im = { version = "15", features = ["serde"] }
-rand = "0.8"
-redis = "0.23"
-serial_test = "2.0"
-testcontainers = "0.14"
-tracing-test = { version = "0.2", features = ["no-env-filter"] }
+im = { workspace = true, features = ["serde"] }
+rand.workspace = true
+redis.workspace = true
+serial_test.workspace = true
+testcontainers.workspace = true
+tracing-test = { workspace = true, features = ["no-env-filter"] }
