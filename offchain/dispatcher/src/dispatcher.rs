@@ -130,6 +130,7 @@ pub async fn start(
 }
 
 #[instrument(level = "trace", skip_all)]
+#[allow(clippy::too_many_arguments)]
 async fn process_block(
     block: &Block,
 
