@@ -65,8 +65,8 @@ interface IConsensus {
     /// @param _dapp The DApp address
     /// @param _proofContext Data for retrieving the desired claim
     /// @return epochHash_ The claimed epoch hash
-    /// @return firstInputIndex_ The index of the first input of the epoch in the input box
-    /// @return lastInputIndex_ The index of the last input of the epoch in the input box
+    /// @return firstInputIndexWithinEpoch_ The index of the first input of the epoch in the input box
+    /// @return lastInputIndexWithinEpoch_ The index of the last input of the epoch in the input box
     function getClaim(
         address _dapp,
         bytes calldata _proofContext
@@ -75,8 +75,8 @@ interface IConsensus {
         view
         returns (
             bytes32 epochHash_,
-            uint256 firstInputIndex_,
-            uint256 lastInputIndex_
+            uint256 firstInputIndexWithinEpoch_,
+            uint256 lastInputIndexWithinEpoch_
         );
 
     /// @notice Signal the consensus that the message sender wants to join its validation set.

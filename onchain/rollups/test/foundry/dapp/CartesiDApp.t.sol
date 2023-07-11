@@ -351,11 +351,12 @@ contract CartesiDAppTest is TestBase {
         // If the epoch input index were 0, then there would be no way for the
         // inbox input index to be out of bounds because every claim is non-empty,
         // as it must contain at least one input
-        assert(proof.validity.inputIndex > 0);
+        assert(proof.validity.inputIndexWithinEpoch > 0);
 
         // This assumption aims to avoid an integer overflow in the CartesiDApp
         vm.assume(
-            _inboxInputIndex <= type(uint256).max - proof.validity.inputIndex
+            _inboxInputIndex <=
+                type(uint256).max - proof.validity.inputIndexWithinEpoch
         );
 
         // Calculate epoch hash from proof
@@ -654,21 +655,26 @@ contract CartesiDAppTest is TestBase {
         OutputValidityProof memory _validity
     ) internal {
         // check if `_inboxInputIndex` and `_numInputsAfter` are valid
-        vm.assume(_validity.inputIndex <= _inboxInputIndex);
+        vm.assume(_validity.inputIndexWithinEpoch <= _inboxInputIndex);
         vm.assume(_numInputsAfter <= type(uint256).max - _inboxInputIndex);
 
         // calculate epoch hash from proof
         bytes32 epochHash = calculateEpochHash(_validity);
 
         // calculate input index range based on proof and fuzzy variables
-        uint256 firstInputIndex = _inboxInputIndex - _validity.inputIndex;
-        uint256 lastInputIndex = _inboxInputIndex + _numInputsAfter;
+        uint256 firstInputIndexWithinEpoch = _inboxInputIndex -
+            _validity.inputIndexWithinEpoch;
+        uint256 lastInputIndexWithinEpoch = _inboxInputIndex + _numInputsAfter;
 
         // mock the consensus contract to return the right epoch hash
         vm.mockCall(
             address(consensus),
             abi.encodeWithSelector(IConsensus.getClaim.selector),
-            abi.encode(epochHash, firstInputIndex, lastInputIndex)
+            abi.encode(
+                epochHash,
+                firstInputIndexWithinEpoch,
+                lastInputIndexWithinEpoch
+            )
         );
 
         // store proof in storage
