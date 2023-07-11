@@ -5,11 +5,6 @@
         "internalType": "address",
         "name": "_owner",
         "type": "address"
-      },
-      {
-        "internalType": "contract IInputBox",
-        "name": "_inputBox",
-        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -31,25 +26,6 @@
       }
     ],
     "name": "ApplicationJoined",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "contract IInputBox",
-        "name": "inputBox",
-        "type": "address"
-      }
-    ],
-    "name": "ConsensusCreated",
     "type": "event"
   },
   {
