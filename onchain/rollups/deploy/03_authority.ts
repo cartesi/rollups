@@ -28,11 +28,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         log: true,
     };
 
-    const { InputBox } = await deployments.all();
-
     const Authority = await deployments.deploy("Authority", {
         ...opts,
-        args: [deployer, InputBox.address],
+        args: [deployer],
     });
 
     const History = await deployments.deploy("History", {
@@ -57,5 +55,4 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 export default func;
-func.dependencies = ["Input"];
 func.tags = ["Authority"];
