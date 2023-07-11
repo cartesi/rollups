@@ -10,12 +10,12 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-///! This module is an indexer-specific extension for the broker
-///!
-///! It would be too complex to implement the indexer extension as a generic broker method.
-///! Instead, we decided to implement the extension that we need for the indexer as a submodule.
-///! This extension should be in this crate because it accesses the Redis interface directly.
-///! (All Redis interaction should be hidden in this crate.)
+//! This module is an indexer-specific extension for the broker
+//!
+//! It would be too complex to implement the indexer extension as a generic broker method.
+//! Instead, we decided to implement the extension that we need for the indexer as a submodule.
+//! This extension should be in this crate because it accesses the Redis interface directly.
+//! (All Redis interaction should be hidden in this crate.)
 use backoff::future::retry;
 use redis::streams::{StreamReadOptions, StreamReadReply};
 use redis::AsyncCommands;
@@ -89,8 +89,7 @@ impl Broker {
             .keys
             .iter_mut()
             .find(|stream| stream.key == input_stream_key)
-            .map(|stream| stream.ids.pop())
-            .flatten();
+            .and_then(|stream| stream.ids.pop());
         if let Some(stream_id) = input_stream_id {
             tracing::trace!("found input event; parsing it");
             let event: Event<RollupsInput> = stream_id.try_into()?;
@@ -102,8 +101,7 @@ impl Broker {
             .keys
             .iter_mut()
             .find(|stream| stream.key == output_stream_key)
-            .map(|stream| stream.ids.pop())
-            .flatten();
+            .and_then(|stream| stream.ids.pop());
         if let Some(stream_id) = output_stream_id {
             tracing::trace!("found output event; parsing it");
             let event: Event<RollupsOutput> = stream_id.try_into()?;

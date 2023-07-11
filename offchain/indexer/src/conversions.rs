@@ -10,9 +10,9 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-///! Convert from rollups-events types to rollups-data types.
-///! This code cannot use the From trait because both types are defined in
-///! external crates.
+//! Convert from rollups-events types to rollups-data types.
+//! This code cannot use the From trait because both types are defined in
+//! external crates.
 use chrono::naive::NaiveDateTime;
 
 use rollups_events::{

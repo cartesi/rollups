@@ -10,8 +10,8 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-///! This module contains functions to convert from gRPC types to
-///! rollups-events types
+//! This module contains functions to convert from gRPC types to
+//! rollups-events types
 use grpc_interfaces::cartesi_machine::Hash;
 use grpc_interfaces::cartesi_server_manager::{
     Address, OutputEnum, OutputValidityProof, Proof,

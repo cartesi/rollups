@@ -14,7 +14,7 @@ use state_fold_types::ethers::types::Address;
 
 use std::{collections::HashSet, sync::Arc};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct UserData {
     addresses: HashSet<Arc<Address>>,
 }
@@ -29,14 +29,6 @@ impl UserData {
                 assert!(self.addresses.insert(s.clone()));
                 s
             }
-        }
-    }
-}
-
-impl Default for UserData {
-    fn default() -> Self {
-        Self {
-            addresses: HashSet::new(),
         }
     }
 }

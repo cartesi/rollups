@@ -10,8 +10,8 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-///! For more information about each type, see the GraphQL API definition in
-///! `offchain/graphql-server/schema.graphql`
+//! For more information about each type, see the GraphQL API definition in
+//! `offchain/graphql-server/schema.graphql`
 use serde::{Deserialize, Serialize};
 
 use crate::{rollups_stream::decl_broker_stream, Address, Hash, Payload};
