@@ -3,7 +3,7 @@ import fs from "fs";
 import response from "./finish_epoch_response.json";
 
 interface OutputValidityProof {
-    inputIndex: number;
+    inputIndexWithinEpoch: number;
     outputIndex: number;
     outputHashesRootHash: BytesLike;
     vouchersEpochRootHash: BytesLike;
@@ -26,7 +26,7 @@ function setupVoucherProof(positionIndex: number): OutputValidityProof {
         outputHashesInEpochSiblings.push(element.data);
     });
     let voucherProof: OutputValidityProof = {
-        inputIndex: Number(v.inputIndex),
+        inputIndexWithinEpoch: Number(v.inputIndex),
         outputIndex: Number(v.outputIndex),
         outputHashesRootHash: v.outputHashesRootHash.data,
         vouchersEpochRootHash: v.vouchersEpochRootHash.data,
@@ -51,7 +51,7 @@ function setupNoticeProof(positionIndex: number): OutputValidityProof {
         outputHashesInEpochSiblings.push(element.data);
     });
     let noticeProof: OutputValidityProof = {
-        inputIndex: Number(v.inputIndex),
+        inputIndexWithinEpoch: Number(v.inputIndex),
         outputIndex: Number(v.outputIndex),
         outputHashesRootHash: v.outputHashesRootHash.data,
         vouchersEpochRootHash: v.vouchersEpochRootHash.data,
@@ -90,7 +90,7 @@ function buildSolCodes(
         `        for (uint256 i; i < ${array1.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array1[i]); }`,
         `        for (uint256 i; i < ${array2.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array2[i]); }`,
         `        return OutputValidityProof({`,
-        `            inputIndex: ${noticeProof.inputIndex},`,
+        `            inputIndexWithinEpoch: ${noticeProof.inputIndexWithinEpoch},`,
         `            outputIndex: ${noticeProof.outputIndex},`,
         `            outputHashesRootHash: ${noticeProof.outputHashesRootHash},`,
         `            vouchersEpochRootHash: ${noticeProof.vouchersEpochRootHash},`,
@@ -108,7 +108,7 @@ function buildSolCodes(
         `        for (uint256 i; i < ${array3.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array3[i]); }`,
         `        for (uint256 i; i < ${array4.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array4[i]); }`,
         `        return OutputValidityProof({`,
-        `            inputIndex: ${voucherProof.inputIndex},`,
+        `            inputIndexWithinEpoch: ${voucherProof.inputIndexWithinEpoch},`,
         `            outputIndex: ${voucherProof.outputIndex},`,
         `            outputHashesRootHash: ${voucherProof.outputHashesRootHash},`,
         `            vouchersEpochRootHash: ${voucherProof.vouchersEpochRootHash},`,
@@ -130,11 +130,11 @@ let pairs = response.proofs.length / 2; // need to half because there's a vouche
 let voucherProofs: OutputValidityProof[] = new Array(pairs);
 let noticeProofs: OutputValidityProof[] = new Array(pairs);
 for (let i = 0; i < response.proofs.length; i++) {
-    let inputIndex = Number(response.proofs[i].inputIndex);
+    let inputIndexWithinEpoch = Number(response.proofs[i].inputIndex);
     if (response.proofs[i].outputEnum == "NOTICE") {
-        noticeProofs[inputIndex] = setupNoticeProof(i);
+        noticeProofs[inputIndexWithinEpoch] = setupNoticeProof(i);
     } else {
-        voucherProofs[inputIndex] = setupVoucherProof(i);
+        voucherProofs[inputIndexWithinEpoch] = setupVoucherProof(i);
     }
 }
 

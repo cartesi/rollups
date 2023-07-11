@@ -16,7 +16,7 @@ import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {MerkleV2} from "@cartesi/util/contracts/MerkleV2.sol";
 import {OutputEncoding} from "../common/OutputEncoding.sol";
 
-/// @param inputIndex Which input, inside the epoch, the output belongs to
+/// @param inputIndexWithinEpoch Which input, inside the epoch, the output belongs to
 /// @param outputIndex Index of output emitted by the input
 /// @param outputHashesRootHash Merkle root of hashes of outputs emitted by the input
 /// @param vouchersEpochRootHash Merkle root of all epoch's voucher metadata hashes
@@ -25,7 +25,7 @@ import {OutputEncoding} from "../common/OutputEncoding.sol";
 /// @param keccakInHashesSiblings Proof that this output metadata is in metadata memory range
 /// @param outputHashesInEpochSiblings Proof that this output metadata is in epoch's output memory range
 struct OutputValidityProof {
-    uint64 inputIndex;
+    uint64 inputIndexWithinEpoch;
     uint64 outputIndex;
     bytes32 outputHashesRootHash;
     bytes32 vouchersEpochRootHash;
@@ -90,7 +90,7 @@ library LibOutputValidation {
         if (
             MerkleV2.getRootAfterReplacementInDrive(
                 CanonicalMachine.getIntraMemoryRangePosition(
-                    v.inputIndex,
+                    v.inputIndexWithinEpoch,
                     CanonicalMachine.KECCAK_LOG2_SIZE
                 ),
                 CanonicalMachine.KECCAK_LOG2_SIZE.uint64OfSize(),
@@ -203,21 +203,22 @@ library LibOutputValidation {
 
     /// @notice Validate input index range and get the inbox input index.
     /// @param v The output validity proof
-    /// @param firstInputIndex The index of the first input of the epoch in the input box
-    /// @param lastInputIndex The index of the last input of the epoch in the input box
+    /// @param firstInputIndexWithinEpoch The index of the first input of the epoch in the input box
+    /// @param lastInputIndexWithinEpoch The index of the last input of the epoch in the input box
     /// @return The index of the input in the DApp's input box
     /// @dev Reverts if epoch input index is not compatible with the provided input index range.
     function validateInputIndexRange(
         OutputValidityProof calldata v,
-        uint256 firstInputIndex,
-        uint256 lastInputIndex
+        uint256 firstInputIndexWithinEpoch,
+        uint256 lastInputIndexWithinEpoch
     ) internal pure returns (uint256) {
-        uint256 inboxInputIndex = firstInputIndex + v.inputIndex;
+        uint256 inboxInputIndexWithinEpoch = firstInputIndexWithinEpoch +
+            v.inputIndexWithinEpoch;
 
-        if (inboxInputIndex > lastInputIndex) {
+        if (inboxInputIndexWithinEpoch > lastInputIndexWithinEpoch) {
             revert InputIndexOutOfClaimBounds();
         }
 
-        return inboxInputIndex;
+        return inboxInputIndexWithinEpoch;
     }
 }
