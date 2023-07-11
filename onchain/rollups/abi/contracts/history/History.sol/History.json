@@ -12,6 +12,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidClaimIndex",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidInputIndices",
     "type": "error"
   },
