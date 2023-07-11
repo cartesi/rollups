@@ -17,7 +17,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IConsensus} from "../IConsensus.sol";
 import {AbstractConsensus} from "../AbstractConsensus.sol";
-import {IInputBox} from "../../inputs/IInputBox.sol";
 import {IHistory} from "../../history/IHistory.sol";
 
 /// @title Authority consensus
@@ -30,12 +29,6 @@ contract Authority is AbstractConsensus, Ownable {
     /// @dev See the `getHistory` and `setHistory` functions.
     IHistory internal history;
 
-    /// @notice The `Authority` contract was created.
-    /// @param owner The address that initially owns the `Authority` contract
-    /// @param inputBox The input box from which the authority fetches new inputs
-    /// @dev MUST be triggered during construction.
-    event ConsensusCreated(address owner, IInputBox inputBox);
-
     /// @notice A new history contract is used to store claims.
     /// @param history The new history contract
     /// @dev MUST be triggered on a successful call to `setHistory`.
@@ -46,15 +39,12 @@ contract Authority is AbstractConsensus, Ownable {
 
     /// @notice Constructs an `Authority` contract.
     /// @param _owner The initial contract owner
-    /// @param _inputBox The input box contract
-    /// @dev Emits a `ConsensusCreated` event.
-    constructor(address _owner, IInputBox _inputBox) {
+    constructor(address _owner) {
         // constructor in Ownable already called `transferOwnership(msg.sender)`, so
         // we only need to call `transferOwnership(_owner)` if _owner != msg.sender
         if (msg.sender != _owner) {
             transferOwnership(_owner);
         }
-        emit ConsensusCreated(_owner, _inputBox);
     }
 
     /// @notice Submits a claim to the current history contract.
