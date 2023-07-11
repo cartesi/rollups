@@ -50,11 +50,14 @@ fn add_enabled_arg<S: ToString>(
 ) -> Command {
     let service = service.to_string();
     let name = name.to_string();
-    let id = format!("{}_enabled", name);
     command.arg(
-        Arg::new(id.clone())
-            .long(id.clone())
-            .env(format!("{}_{}", service.to_uppercase(), id.to_uppercase()))
+        Arg::new(format!("{}_ENABLED", name.to_uppercase()))
+            .long(format!("{}-enabled", name))
+            .env(format!(
+                "{}_{}_ENABLED",
+                service.to_uppercase(),
+                name.to_uppercase()
+            ))
             .value_parser(value_parser!(bool))
             .default_value("true"),
     )
@@ -63,7 +66,7 @@ fn add_enabled_arg<S: ToString>(
 fn add_port_arg<S: ToString>(command: Command, service: S) -> Command {
     let service = service.to_string().to_uppercase();
     command.arg(
-        Arg::new("port")
+        Arg::new("PORT")
             .long("http-server-port")
             .env(format!("{}_HTTP_SERVER_PORT", service))
             .value_parser(value_parser!(u16))
