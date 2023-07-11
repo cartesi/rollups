@@ -16,7 +16,6 @@ pragma solidity ^0.8.8;
 import {Test} from "forge-std/Test.sol";
 import {TestBase} from "../../util/TestBase.sol";
 import {Authority} from "contracts/consensus/authority/Authority.sol";
-import {IInputBox} from "contracts/inputs/IInputBox.sol";
 import {IHistory} from "contracts/history/IHistory.sol";
 import {History} from "contracts/history/History.sol";
 import {Vm} from "forge-std/Vm.sol";
@@ -62,11 +61,10 @@ contract AuthorityTest is TestBase {
         address indexed previousOwner,
         address indexed newOwner
     );
-    event ConsensusCreated(address owner, IInputBox inputBox);
     event NewHistory(IHistory history);
     event ApplicationJoined(address application);
 
-    function testConstructor(address _owner, IInputBox _inputBox) public {
+    function testConstructor(address _owner) public {
         vm.assume(_owner != address(0));
         uint256 numOfEvents;
 
@@ -83,27 +81,21 @@ contract AuthorityTest is TestBase {
             ++numOfEvents;
         }
 
-        // then the event `ConsensusCreated` will be emitted
-        vm.expectEmit(false, false, false, true);
-        emit ConsensusCreated(_owner, _inputBox);
-        ++numOfEvents;
-
         vm.recordLogs();
-        authority = new Authority(_owner, _inputBox);
+        authority = new Authority(_owner);
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         assertEq(entries.length, numOfEvents, "number of events");
         assertEq(authority.owner(), _owner, "authority owner");
     }
 
-    function testRevertsOwnerAddressZero(IInputBox _inputBox) public {
+    function testRevertsOwnerAddressZero() public {
         vm.expectRevert("Ownable: new owner is the zero address");
-        new Authority(address(0), _inputBox);
+        new Authority(address(0));
     }
 
     function testMigrateHistory(
         address _owner,
-        IInputBox _inputBox,
         IHistory _history,
         address _newConsensus
     ) public isMockable(address(_history)) {
@@ -111,7 +103,7 @@ contract AuthorityTest is TestBase {
         vm.assume(_owner != address(this));
         vm.assume(_newConsensus != address(0));
 
-        authority = new Authority(_owner, _inputBox);
+        authority = new Authority(_owner);
 
         vm.prank(_owner);
         authority.setHistory(_history);
@@ -145,14 +137,13 @@ contract AuthorityTest is TestBase {
 
     function testSubmitClaim(
         address _owner,
-        IInputBox _inputBox,
         IHistory _history,
         bytes calldata _claim
     ) public isMockable(address(_history)) {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
 
-        authority = new Authority(_owner, _inputBox);
+        authority = new Authority(_owner);
 
         vm.prank(_owner);
         authority.setHistory(_history);
@@ -180,14 +171,13 @@ contract AuthorityTest is TestBase {
 
     function testSetHistory(
         address _owner,
-        IInputBox _inputBox,
         IHistory _history,
         IHistory _newHistory
     ) public {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
 
-        authority = new Authority(_owner, _inputBox);
+        authority = new Authority(_owner);
 
         vm.prank(_owner);
         vm.expectEmit(false, false, false, true);
@@ -215,7 +205,6 @@ contract AuthorityTest is TestBase {
 
     function testGetClaim(
         address _owner,
-        IInputBox _inputBox,
         IHistory _history,
         address _dapp,
         bytes calldata _proofContext,
@@ -226,7 +215,7 @@ contract AuthorityTest is TestBase {
         vm.assume(_owner != address(0));
         vm.assume(_owner != address(this));
 
-        authority = new Authority(_owner, _inputBox);
+        authority = new Authority(_owner);
 
         vm.prank(_owner);
         authority.setHistory(_history);
@@ -267,7 +256,6 @@ contract AuthorityTest is TestBase {
     // test behaviors when history reverts
     function testHistoryReverts(
         address _owner,
-        IInputBox _inputBox,
         IHistory _newHistory,
         address _dapp,
         bytes calldata _claim,
@@ -278,7 +266,7 @@ contract AuthorityTest is TestBase {
 
         HistoryReverts historyR = new HistoryReverts();
 
-        authority = new Authority(_owner, _inputBox);
+        authority = new Authority(_owner);
 
         vm.prank(_owner);
         authority.setHistory(historyR);
@@ -302,7 +290,6 @@ contract AuthorityTest is TestBase {
 
     function testWithdrawERC20TokensNotOwner(
         address _owner,
-        IInputBox _inputBox,
         IHistory _history,
         address _notOwner,
         IERC20 _token,
@@ -312,7 +299,7 @@ contract AuthorityTest is TestBase {
         vm.assume(_owner != address(0));
         vm.assume(_owner != _notOwner);
 
-        authority = new Authority(_owner, _inputBox);
+        authority = new Authority(_owner);
 
         vm.prank(_owner);
         authority.setHistory(_history);
@@ -324,7 +311,6 @@ contract AuthorityTest is TestBase {
 
     function testWithdrawERC20Tokens(
         address _owner,
-        IInputBox _inputBox,
         IHistory _history,
         address _recipient,
         uint256 _amount,
@@ -335,7 +321,7 @@ contract AuthorityTest is TestBase {
         vm.assume(_amount <= _balance);
         vm.assume(_balance < type(uint256).max);
 
-        authority = new Authority(_owner, _inputBox);
+        authority = new Authority(_owner);
 
         vm.prank(_owner);
         authority.setHistory(_history);
@@ -365,7 +351,6 @@ contract AuthorityTest is TestBase {
 
     function testWithdrawERC20TokensFailed(
         address _owner,
-        IInputBox _inputBox,
         IHistory _history,
         address _recipient,
         uint256 _amount,
@@ -376,7 +361,7 @@ contract AuthorityTest is TestBase {
         vm.assume(_amount <= _balance);
         vm.assume(_balance < type(uint256).max);
 
-        authority = new Authority(_owner, _inputBox);
+        authority = new Authority(_owner);
 
         vm.prank(_owner);
         authority.setHistory(_history);
@@ -403,15 +388,10 @@ contract AuthorityTest is TestBase {
         assertEq(tokenFailed.balanceOf(_recipient), 0);
     }
 
-    function testJoin(
-        address _owner,
-        IInputBox _inputBox,
-        IHistory _history,
-        address _dapp
-    ) public {
+    function testJoin(address _owner, IHistory _history, address _dapp) public {
         vm.assume(_owner != address(0));
 
-        authority = new Authority(_owner, _inputBox);
+        authority = new Authority(_owner);
 
         vm.prank(_owner);
         authority.setHistory(_history);
@@ -639,8 +619,7 @@ contract AuthorityInvariantTest is Test {
 
     function setUp() public {
         // this setup is only for invariant testing
-        address inputBox = vm.addr(uint256(keccak256("inputBox")));
-        Authority auth = new Authority(address(this), IInputBox(inputBox));
+        Authority auth = new Authority(address(this));
         History hist = new History(address(auth));
         auth.setHistory(hist);
 
