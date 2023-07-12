@@ -57,11 +57,8 @@ jobs:
       - name: Set sweep timestamp
         run: cargo sweep -s
 
-      - name: Check code
-        run: cargo check --workspace
-
       - name: Build binaries and tests
-        run: cargo test --no-run
+        run: cargo build --all-targets
 
       - name: Clean old build files
         run: cargo sweep -f
