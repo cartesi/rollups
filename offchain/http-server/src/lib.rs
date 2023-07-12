@@ -28,12 +28,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-/// If neither the healthcheck and the metrics are enabled, there is no
-/// point in starting the server.
-pub fn should_start(config: &HttpServerConfig) -> bool {
-    config.healthcheck_enabled || config.metrics_enabled
-}
-
 /// Starts a HTTP server with two endpoints: /healthz and /metrics.
 ///
 /// The `Registry` parameter is a `prometheus` type used for metric tracking.
@@ -41,20 +35,14 @@ pub async fn start(
     config: HttpServerConfig,
     registry: Registry,
 ) -> Result<(), hyper::Error> {
-    assert!(should_start(&config));
-
     let ip = "0.0.0.0".parse().expect("could not parse host address");
     let addr = SocketAddr::new(ip, config.port);
     tracing::info!("Starting HTTP server at {}", addr);
 
-    let mut router = Router::new();
-    if config.healthcheck_enabled {
-        router = router.route("/healthz", get(|| async { "" }));
-    }
-    if config.metrics_enabled {
-        let registry = Arc::new(Mutex::new(registry));
-        router = router.route("/metrics", get(|| get_metrics(registry)));
-    }
+    let registry = Arc::new(Mutex::new(registry));
+    let router = Router::new()
+        .route("/healthz", get(|| async { "" }))
+        .route("/metrics", get(|| get_metrics(registry)));
 
     axum::Server::bind(&addr)
         .serve(router.into_make_service())

@@ -455,17 +455,10 @@ async fn spawn_indexer(
         repository_config,
         dapp_metadata,
         broker_config,
-    };
-    let health_check_config = indexer::config::IndexerHealthCheckConfig {
-        enabled: true,
-        port: 0,
-    };
-    let config = indexer::Config {
-        indexer_config,
-        health_check_config,
+        healthcheck_port: 0,
     };
     tokio::spawn(async move {
-        indexer::run(config).await.map_err(|e| {
+        indexer::run(indexer_config).await.map_err(|e| {
             tracing::error!("{:?}", e);
             e
         })

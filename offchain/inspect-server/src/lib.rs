@@ -13,7 +13,7 @@
 use error::InspectError;
 use snafu::ResultExt;
 
-pub use config::Config;
+pub use config::InspectServerConfig;
 pub use inspect::InspectClient;
 
 pub mod config;
@@ -23,26 +23,18 @@ pub mod inspect;
 pub mod server;
 
 #[tracing::instrument(level = "trace", skip_all)]
-pub async fn run(config: Config) -> Result<(), InspectError> {
+pub async fn run(config: InspectServerConfig) -> Result<(), InspectError> {
     log::info!("starting inspect server with {:?}", config);
-    let inspect_client = InspectClient::new(&config.inspect_server_config);
+    let health_handle = http_health_check::start(config.healthcheck_port);
+    let inspect_client = InspectClient::new(&config);
     let inspect_server =
-        server::create(&config.inspect_server_config, inspect_client)
-            .context(error::ServerSnafu)?;
-
-    if config.health_check_config.enabled {
-        let health_handle =
-            http_health_check::start(config.health_check_config.port);
-
-        tokio::select! {
-            ret = health_handle => {
-                ret.context(error::HealthCheckSnafu)
-            }
-            ret = inspect_server => {
-                ret.context(error::ServerSnafu)
-            }
+        server::create(&config, inspect_client).context(error::ServerSnafu)?;
+    tokio::select! {
+        ret = health_handle => {
+            ret.context(error::HealthCheckSnafu)
         }
-    } else {
-        inspect_server.await.context(error::ServerSnafu)
+        ret = inspect_server => {
+            ret.context(error::ServerSnafu)
+        }
     }
 }

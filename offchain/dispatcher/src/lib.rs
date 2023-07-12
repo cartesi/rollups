@@ -32,21 +32,14 @@ pub async fn run(config: Config) -> Result<(), DispatcherError> {
     let metrics = DispatcherMetrics::default();
     let dispatcher_handle =
         dispatcher::start(config.dispatcher_config, metrics.clone());
-
-    if http_server::should_start(&config.http_server_config) {
-        let http_server_handle =
-            http_server::start(config.http_server_config, metrics.into());
-
-        tokio::select! {
-            ret = http_server_handle => {
-                ret.context(error::HttpServerSnafu)
-            }
-
-            ret = dispatcher_handle => {
-                ret
-            }
+    let http_server_handle =
+        http_server::start(config.http_server_config, metrics.into());
+    tokio::select! {
+        ret = http_server_handle => {
+            ret.context(error::HttpServerSnafu)
         }
-    } else {
-        dispatcher_handle.await
+        ret = dispatcher_handle => {
+            ret
+        }
     }
 }

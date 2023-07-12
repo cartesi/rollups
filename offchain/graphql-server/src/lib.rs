@@ -12,7 +12,7 @@
 
 use snafu::ResultExt;
 
-pub use config::{CLIConfig, Config};
+pub use config::{CLIConfig, GraphQLConfig};
 pub use error::GraphQLServerError;
 pub use http::start_service;
 pub use schema::Context;
@@ -23,33 +23,24 @@ pub mod http;
 pub mod schema;
 
 #[tracing::instrument(level = "trace", skip_all)]
-pub async fn run(config: Config) -> Result<(), GraphQLServerError> {
+pub async fn run(config: GraphQLConfig) -> Result<(), GraphQLServerError> {
     tracing::info!(?config, "starting graphql http service");
 
-    let repository =
-        rollups_data::Repository::new(config.graphql_config.repository_config)
-            .expect("failed to connect to database");
+    let repository = rollups_data::Repository::new(config.repository_config)
+        .expect("failed to connect to database");
     let context = Context::new(repository);
-    let service_handler = start_service(
-        &config.graphql_config.graphql_host,
-        config.graphql_config.graphql_port,
-        context,
-    )
-    .expect("failed to create server");
+    let service_handler =
+        start_service(&config.graphql_host, config.graphql_port, context)
+            .expect("failed to create server");
 
-    if config.health_check_config.enabled {
-        let health_handle =
-            http_health_check::start(config.health_check_config.port);
+    let health_handle = http_health_check::start(config.healthcheck_port);
 
-        tokio::select! {
-            ret = health_handle => {
-                ret.context(error::HealthCheckSnafu)
-            }
-            ret = service_handler => {
-                ret.context(error::ServerSnafu)
-            }
+    tokio::select! {
+        ret = health_handle => {
+            ret.context(error::HealthCheckSnafu)
         }
-    } else {
-        service_handler.await.context(error::ServerSnafu)
+        ret = service_handler => {
+            ret.context(error::ServerSnafu)
+        }
     }
 }

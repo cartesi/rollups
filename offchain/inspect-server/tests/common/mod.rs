@@ -96,6 +96,7 @@ impl InspectServerWrapper {
             session_id: SESSION_ID.to_string(),
             queue_size: QUEUE_SIZE,
             inspect_path_prefix: String::from("/inspect"),
+            healthcheck_port: 0,
         };
 
         let inspect_client = InspectClient::new(&inspect_server_config);

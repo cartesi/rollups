@@ -12,7 +12,7 @@
 
 use backoff::ExponentialBackoffBuilder;
 use broker::BrokerFacade;
-use config::{AdvanceRunnerConfig, Config};
+use config::AdvanceRunnerConfig;
 use runner::Runner;
 use server_manager::ServerManagerFacade;
 use snafu::ResultExt;
@@ -31,26 +31,20 @@ mod server_manager;
 mod snapshot;
 
 #[tracing::instrument(level = "trace", skip_all)]
-pub async fn run(config: Config) -> Result<(), AdvanceRunnerError> {
+pub async fn run(
+    config: AdvanceRunnerConfig,
+) -> Result<(), AdvanceRunnerError> {
     tracing::info!(?config, "starting advance runner");
 
-    let advance_runner_handle =
-        start_advance_runner(config.advance_runner_config);
-
-    if config.health_check_config.enabled {
-        let health_handle =
-            http_health_check::start(config.health_check_config.port);
-
-        tokio::select! {
-            ret = health_handle => {
-                ret.context(error::HealthCheckSnafu)
-            }
-            ret = advance_runner_handle => {
-                ret
-            }
+    let health_handle = http_health_check::start(config.healthcheck_port);
+    let advance_runner_handle = start_advance_runner(config);
+    tokio::select! {
+        ret = health_handle => {
+            ret.context(error::HealthCheckSnafu)
         }
-    } else {
-        advance_runner_handle.await
+        ret = advance_runner_handle => {
+            ret
+        }
     }
 }
 

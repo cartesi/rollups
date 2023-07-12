@@ -22,31 +22,7 @@ pub struct IndexerConfig {
     pub repository_config: RepositoryConfig,
     pub dapp_metadata: DAppMetadata,
     pub broker_config: BrokerConfig,
-}
-
-#[derive(Debug, Clone, Parser)]
-pub struct IndexerHealthCheckConfig {
-    /// Enable health check
-    #[arg(
-        long = "healthcheck-enabled",
-        env = "INDEXER_HEALTHCHECK_ENABLED",
-        default_value_t = true
-    )]
-    pub enabled: bool,
-
-    /// Port of health check
-    #[arg(
-        long = "healthcheck-port",
-        env = "INDEXER_HEALTHCHECK_PORT",
-        default_value_t = 8080
-    )]
-    pub port: u16,
-}
-
-#[derive(Debug)]
-pub struct Config {
-    pub indexer_config: IndexerConfig,
-    pub health_check_config: IndexerHealthCheckConfig,
+    pub healthcheck_port: u16,
 }
 
 #[derive(Parser)]
@@ -60,20 +36,22 @@ pub struct CLIConfig {
     #[command(flatten)]
     broker_config: BrokerCLIConfig,
 
-    #[command(flatten)]
-    health_check_config: IndexerHealthCheckConfig,
+    /// Port of health check
+    #[arg(
+        long = "healthcheck-port",
+        env = "INDEXER_HEALTHCHECK_PORT",
+        default_value_t = 8080
+    )]
+    pub healthcheck_port: u16,
 }
 
-impl From<CLIConfig> for Config {
+impl From<CLIConfig> for IndexerConfig {
     fn from(cli_config: CLIConfig) -> Self {
-        let indexer_config = IndexerConfig {
+        Self {
             repository_config: cli_config.repository_config.into(),
             dapp_metadata: cli_config.dapp_metadata_config.into(),
             broker_config: cli_config.broker_config.into(),
-        };
-        Self {
-            indexer_config,
-            health_check_config: cli_config.health_check_config,
+            healthcheck_port: cli_config.healthcheck_port,
         }
     }
 }
