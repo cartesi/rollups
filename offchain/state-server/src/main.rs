@@ -23,6 +23,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config =
         state_server_lib::config::StateServerConfig::initialize_from_args()?;
 
+    tracing::info!(?config, "starting state server");
+
     state_server::run_server::<RollupsState>(config)
         .await
         .map_err(|e| e.into())
