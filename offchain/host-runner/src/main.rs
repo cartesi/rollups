@@ -72,20 +72,14 @@ async fn main() {
 
     // We run the actix-web in the main thread because it handles the SIGINT
     let host_runner_handle = http::start_services(&config, controller.clone());
-    if config.health_check_config.enabled {
-        let health_handle =
-            http_health_check::start(config.health_check_config.port);
-
-        tokio::select! {
-            result = health_handle => {
-                log_result("http health check", result);
-            }
-            result = host_runner_handle => {
-                log_result("http service", result);
-            }
+    let health_handle = http_health_check::start(config.healthcheck_port);
+    tokio::select! {
+        result = health_handle => {
+            log_result("http health check", result);
         }
-    } else {
-        log_result("http service", host_runner_handle.await);
+        result = host_runner_handle => {
+            log_result("http service", result);
+        }
     }
     http_service_running.store(false, Ordering::Relaxed);
 

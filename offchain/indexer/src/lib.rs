@@ -12,7 +12,7 @@
 
 use snafu::ResultExt;
 
-pub use config::{CLIConfig, Config, IndexerConfig};
+pub use config::{CLIConfig, IndexerConfig};
 pub use error::IndexerError;
 
 pub mod config;
@@ -21,23 +21,16 @@ mod error;
 mod indexer;
 
 #[tracing::instrument(level = "trace", skip_all)]
-pub async fn run(config: Config) -> Result<(), IndexerError> {
+pub async fn run(config: IndexerConfig) -> Result<(), IndexerError> {
     tracing::info!(?config, "starting indexer");
-    let indexer_handle = indexer::Indexer::start(config.indexer_config);
-
-    if config.health_check_config.enabled {
-        let health_handle =
-            http_health_check::start(config.health_check_config.port);
-
-        tokio::select! {
-            ret = health_handle => {
-                ret.context(error::HealthCheckSnafu)
-            }
-            ret = indexer_handle => {
-                ret
-            }
+    let health_handle = http_health_check::start(config.healthcheck_port);
+    let indexer_handle = indexer::Indexer::start(config);
+    tokio::select! {
+        ret = health_handle => {
+            ret.context(error::HealthCheckSnafu)
         }
-    } else {
-        indexer_handle.await
+        ret = indexer_handle => {
+            ret
+        }
     }
 }

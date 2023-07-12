@@ -40,32 +40,7 @@ pub struct InspectServerConfig {
     pub session_id: String,
     pub queue_size: usize,
     pub inspect_path_prefix: String,
-}
-
-#[derive(Debug, Clone, Parser)]
-pub struct InspectServerHealthCheckConfig {
-    /// Enable or disable health check
-    #[arg(
-        long = "healthcheck-enabled",
-        env = "INSPECT_SERVER_HEALTHCHECK_ENABLED",
-        default_value_t = true
-    )]
-    pub enabled: bool,
-
-    /// Port of health check
-    #[arg(
-        long = "healthcheck-port",
-        env = "INSPECT_SERVER_HEALTHCHECK_PORT",
-        default_value_t = 8080
-    )]
-    pub port: u16,
-}
-
-/// Final config structure exported by this module
-#[derive(Debug)]
-pub struct Config {
-    pub inspect_server_config: InspectServerConfig,
-    pub health_check_config: InspectServerHealthCheckConfig,
+    pub healthcheck_port: u16,
 }
 
 #[derive(Parser)]
@@ -94,11 +69,16 @@ pub struct CLIConfig {
     #[arg(long, env)]
     pub config_path: Option<String>,
 
-    #[command(flatten)]
-    health_check_config: InspectServerHealthCheckConfig,
+    /// Port of health check
+    #[arg(
+        long,
+        env = "INSPECT_SERVER_HEALTHCHECK_PORT",
+        default_value_t = 8080
+    )]
+    pub healthcheck_port: u16,
 }
 
-impl From<CLIConfig> for Config {
+impl From<CLIConfig> for InspectServerConfig {
     fn from(cli_config: CLIConfig) -> Self {
         let file_config: FileConfig = load_config_file(cli_config.config_path)
             .expect("couldn't read config file");
@@ -130,17 +110,13 @@ impl From<CLIConfig> for Config {
             .unwrap_or(Ok(String::from("/inspect")))
             .expect("invalid inspect path");
 
-        let inspect_server_config = InspectServerConfig {
+        Self {
             inspect_server_address,
             server_manager_address,
             session_id,
             queue_size,
             inspect_path_prefix,
-        };
-
-        Self {
-            inspect_server_config,
-            health_check_config: cli_config.health_check_config,
+            healthcheck_port: cli_config.healthcheck_port,
         }
     }
 }

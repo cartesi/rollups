@@ -44,25 +44,7 @@ pub struct Config {
     #[arg(long, env, default_value = "10000")]
     pub finish_timeout: u64,
 
-    #[command(flatten)]
-    pub health_check_config: HostRunnerHealthCheckConfig,
-}
-
-#[derive(Debug, Clone, Parser)]
-pub struct HostRunnerHealthCheckConfig {
-    /// Enable or disable health check
-    #[arg(
-        long = "healthcheck-enabled",
-        env = "HOST_RUNNER_HEALTHCHECK_ENABLED",
-        default_value_t = true
-    )]
-    pub enabled: bool,
-
     /// Port of health check
-    #[arg(
-        long = "healthcheck-port",
-        env = "HOST_RUNNER_HEALTHCHECK_PORT",
-        default_value_t = 8080
-    )]
-    pub port: u16,
+    #[arg(long, env = "HOST_RUNNER_HEALTHCHECK_PORT", default_value_t = 8080)]
+    pub healthcheck_port: u16,
 }

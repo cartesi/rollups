@@ -11,8 +11,8 @@
 // specific language governing permissions and limitations under the License.
 
 use advance_runner::config::{
-    AdvanceRunnerConfig, AdvanceRunnerHealthCheckConfig, BrokerConfig, Config,
-    DAppMetadata, FSManagerConfig, ServerManagerConfig, SnapshotConfig,
+    AdvanceRunnerConfig, BrokerConfig, DAppMetadata, FSManagerConfig,
+    ServerManagerConfig, SnapshotConfig,
 };
 use advance_runner::AdvanceRunnerError;
 use grpc_interfaces::cartesi_machine::{
@@ -26,7 +26,7 @@ use std::time::Duration;
 use tokio::task::JoinHandle;
 
 pub struct AdvanceRunnerFixture {
-    config: Config,
+    config: AdvanceRunnerConfig,
     handler: RefCell<Option<JoinHandle<Result<(), AdvanceRunnerError>>>>,
 }
 
@@ -99,24 +99,14 @@ impl AdvanceRunnerFixture {
 
         let backoff_max_elapsed_duration = Duration::from_millis(1);
 
-        let advance_runner_config = AdvanceRunnerConfig {
+        let config = AdvanceRunnerConfig {
             server_manager_config,
             broker_config,
             dapp_metadata,
             snapshot_config,
             backoff_max_elapsed_duration,
+            healthcheck_port: 0,
         };
-
-        let health_check_config = AdvanceRunnerHealthCheckConfig {
-            enabled: true,
-            port: 0,
-        };
-
-        let config = Config {
-            advance_runner_config,
-            health_check_config,
-        };
-
         let handler = RefCell::new(Some(start_advance_runner(config.clone())));
         Self { config, handler }
     }
@@ -148,7 +138,7 @@ impl AdvanceRunnerFixture {
 }
 
 fn start_advance_runner(
-    config: Config,
+    config: AdvanceRunnerConfig,
 ) -> JoinHandle<Result<(), AdvanceRunnerError>> {
     tokio::spawn(async move {
         let output = advance_runner::run(config).await;

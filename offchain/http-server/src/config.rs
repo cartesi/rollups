@@ -16,8 +16,6 @@ use clap::{
 
 #[derive(Debug, Parser)]
 pub struct HttpServerConfig {
-    pub(crate) healthcheck_enabled: bool,
-    pub(crate) metrics_enabled: bool,
     pub(crate) port: u16,
 }
 
@@ -30,8 +28,6 @@ impl HttpServerConfig {
         service: &'static str,
     ) -> (HttpServerConfig, C) {
         let command = <C as CommandFactory>::command();
-        let command = add_enabled_arg(command, service, "healthcheck");
-        let command = add_enabled_arg(command, service, "metrics");
         let command = add_port_arg(command, service);
 
         let matches = command.get_matches();
@@ -43,30 +39,10 @@ impl HttpServerConfig {
     }
 }
 
-fn add_enabled_arg<S: ToString>(
-    command: Command,
-    service: S,
-    name: S,
-) -> Command {
-    let service = service.to_string();
-    let name = name.to_string();
-    command.arg(
-        Arg::new(format!("{}_ENABLED", name.to_uppercase()))
-            .long(format!("{}-enabled", name))
-            .env(format!(
-                "{}_{}_ENABLED",
-                service.to_uppercase(),
-                name.to_uppercase()
-            ))
-            .value_parser(value_parser!(bool))
-            .default_value("true"),
-    )
-}
-
 fn add_port_arg<S: ToString>(command: Command, service: S) -> Command {
     let service = service.to_string().to_uppercase();
     command.arg(
-        Arg::new("PORT")
+        Arg::new("port")
             .long("http-server-port")
             .env(format!("{}_HTTP_SERVER_PORT", service))
             .value_parser(value_parser!(u16))

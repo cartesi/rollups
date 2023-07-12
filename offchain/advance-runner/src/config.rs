@@ -23,40 +23,16 @@ pub use rollups_events::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Config {
-    pub advance_runner_config: AdvanceRunnerConfig,
-    pub health_check_config: AdvanceRunnerHealthCheckConfig,
-}
-
-#[derive(Debug, Clone)]
 pub struct AdvanceRunnerConfig {
     pub server_manager_config: ServerManagerConfig,
     pub broker_config: BrokerConfig,
     pub dapp_metadata: DAppMetadata,
     pub snapshot_config: SnapshotConfig,
     pub backoff_max_elapsed_duration: Duration,
+    pub healthcheck_port: u16,
 }
 
-#[derive(Debug, Clone, Parser)]
-pub struct AdvanceRunnerHealthCheckConfig {
-    /// Enable or disable health check
-    #[arg(
-        long = "healthcheck-enabled",
-        env = "ADVANCE_RUNNER_HEALTHCHECK_ENABLED",
-        default_value_t = true
-    )]
-    pub enabled: bool,
-
-    /// Port of health check
-    #[arg(
-        long = "healthcheck-port",
-        env = "ADVANCE_RUNNER_HEALTHCHECK_PORT",
-        default_value_t = 8080
-    )]
-    pub port: u16,
-}
-
-impl Config {
+impl AdvanceRunnerConfig {
     pub fn parse() -> Result<Self, ConfigError> {
         let cli_config = CLIConfig::parse();
         let broker_config = cli_config.broker_cli_config.into();
@@ -68,16 +44,14 @@ impl Config {
                 .context(SnapshotConfigSnafu)?;
         let backoff_max_elapsed_duration =
             Duration::from_millis(cli_config.backoff_max_elapsed_duration);
-        let advance_runner_config = AdvanceRunnerConfig {
+        let healthcheck_port = cli_config.healthcheck_port;
+        Ok(Self {
             server_manager_config,
             broker_config,
             dapp_metadata,
             snapshot_config,
             backoff_max_elapsed_duration,
-        };
-        Ok(Self {
-            advance_runner_config,
-            health_check_config: cli_config.health_check_config,
+            healthcheck_port,
         })
     }
 }
@@ -102,10 +76,15 @@ struct CLIConfig {
     #[command(flatten)]
     snapshot_cli_config: SnapshotCLIConfig,
 
-    #[command(flatten)]
-    health_check_config: AdvanceRunnerHealthCheckConfig,
-
     /// The max elapsed time for backoff in ms
     #[arg(long, env, default_value = "120000")]
     backoff_max_elapsed_duration: u64,
+
+    /// Port of health check
+    #[arg(
+        long,
+        env = "ADVANCE_RUNNER_HEALTHCHECK_PORT",
+        default_value_t = 8080
+    )]
+    pub healthcheck_port: u16,
 }
