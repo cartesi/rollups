@@ -10,6 +10,7 @@ backoff = { workspace = true, features = ["tokio"] }
 base64.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 hex.workspace = true
+prometheus-client.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 snafu.workspace = true

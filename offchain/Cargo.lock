@@ -4077,6 +4077,7 @@ dependencies = [
  "clap",
  "env_logger",
  "hex",
+ "prometheus-client",
  "redacted",
  "redis",
  "serde",

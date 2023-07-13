@@ -10,6 +10,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+use rollups_events::DAppMetadata;
 use snafu::ResultExt;
 use state_client_lib::{
     config::SCConfig, error::StateServerError, BlockServer,
@@ -85,6 +86,7 @@ pub async fn create_context(
     config: &DispatcherConfig,
     block_server: &impl BlockServer,
     broker: &impl BrokerStatus,
+    dapp_metadata: DAppMetadata,
     metrics: DispatcherMetrics,
 ) -> Result<Context, DispatcherError> {
     let genesis_timestamp: u64 = block_server
@@ -94,10 +96,15 @@ pub async fn create_context(
         .timestamp
         .as_u64();
     let epoch_length = config.epoch_duration;
-    let context =
-        Context::new(genesis_timestamp, epoch_length, broker, metrics)
-            .await
-            .context(BrokerSnafu)?;
+    let context = Context::new(
+        genesis_timestamp,
+        epoch_length,
+        broker,
+        dapp_metadata,
+        metrics,
+    )
+    .await
+    .context(BrokerSnafu)?;
 
     Ok(context)
 }
