@@ -12,6 +12,12 @@
 
 use http_server::{CounterRef, Registry};
 
+const METRICS_PREFIX: &str = "cartesi_rollups_dispatcher";
+
+fn prefixed_metrics(name: &str) -> String {
+    format!("{}_{}", METRICS_PREFIX, name)
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct DispatcherMetrics {
     pub claims_sent: CounterRef,
@@ -23,17 +29,17 @@ impl From<DispatcherMetrics> for Registry {
     fn from(metrics: DispatcherMetrics) -> Self {
         let mut registry = Registry::default();
         registry.register(
-            "claims_sent",
+            prefixed_metrics("claims_sent"),
             "Counts the number of claims sent",
             metrics.claims_sent,
         );
         registry.register(
-            "advance_inputs_sent",
+            prefixed_metrics("advance_inputs_sent"),
             "Counts the number of <advance_input>s sent",
             metrics.advance_inputs_sent,
         );
         registry.register(
-            "finish_epochs_sent",
+            prefixed_metrics("finish_epochs_sent"),
             "Counts the number of <finish_epoch>s sent",
             metrics.finish_epochs_sent,
         );
