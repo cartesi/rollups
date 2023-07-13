@@ -15,6 +15,7 @@ use crate::{
     metrics::DispatcherMetrics,
 };
 
+use rollups_events::DAppMetadata;
 use types::foldables::input_box::Input;
 
 #[derive(Debug)]
@@ -27,6 +28,7 @@ pub struct Context {
     genesis_timestamp: u64,
     epoch_length: u64,
 
+    dapp_metadata: DAppMetadata,
     metrics: DispatcherMetrics,
 }
 
@@ -35,6 +37,7 @@ impl Context {
         genesis_timestamp: u64,
         epoch_length: u64,
         broker: &impl BrokerStatus,
+        dapp_metadata: DAppMetadata,
         metrics: DispatcherMetrics,
     ) -> Result<Self, BrokerFacadeError> {
         let status = broker.status().await?;
@@ -45,6 +48,7 @@ impl Context {
             last_timestamp: genesis_timestamp,
             genesis_timestamp,
             epoch_length,
+            dapp_metadata,
             metrics,
         })
     }
@@ -70,7 +74,10 @@ impl Context {
         broker: &impl BrokerSend,
     ) -> Result<(), BrokerFacadeError> {
         broker.enqueue_input(self.inputs_sent_count, input).await?;
-        self.metrics.advance_inputs_sent.inc();
+        self.metrics
+            .advance_inputs_sent
+            .get_or_create(&self.dapp_metadata)
+            .inc();
         self.inputs_sent_count += 1;
         self.last_event_is_finish_epoch = false;
         Ok(())
@@ -102,7 +109,10 @@ impl Context {
     ) -> Result<(), BrokerFacadeError> {
         assert!(event_timestamp >= self.genesis_timestamp);
         broker.finish_epoch(self.inputs_sent_count).await?;
-        self.metrics.finish_epochs_sent.inc();
+        self.metrics
+            .finish_epochs_sent
+            .get_or_create(&self.dapp_metadata)
+            .inc();
         self.last_timestamp = event_timestamp;
         self.last_event_is_finish_epoch = true;
         Ok(())
@@ -113,7 +123,7 @@ impl Context {
 mod private_tests {
     use crate::{drivers::mock, metrics::DispatcherMetrics};
 
-    use super::Context;
+    use super::{Context, DAppMetadata};
 
     // --------------------------------------------------------------------------------------------
     // calculate_epoch_for
@@ -129,6 +139,7 @@ mod private_tests {
             last_timestamp: 0,
             genesis_timestamp,
             epoch_length,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         }
     }
@@ -179,6 +190,7 @@ mod private_tests {
             last_timestamp: 3,
             genesis_timestamp: 0,
             epoch_length: 5,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         assert!(!context.should_finish_epoch(4));
@@ -192,6 +204,7 @@ mod private_tests {
             last_timestamp: 3,
             genesis_timestamp: 0,
             epoch_length: 5,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         assert!(!context.should_finish_epoch(4));
@@ -205,6 +218,7 @@ mod private_tests {
             last_timestamp: 3,
             genesis_timestamp: 0,
             epoch_length: 5,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         assert!(context.should_finish_epoch(5));
@@ -218,6 +232,7 @@ mod private_tests {
             last_timestamp: 3,
             genesis_timestamp: 0,
             epoch_length: 5,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         assert!(!context.should_finish_epoch(5));
@@ -235,6 +250,7 @@ mod private_tests {
             last_timestamp: 3,
             genesis_timestamp: 0,
             epoch_length: 5,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::new(vec![], vec![]);
@@ -254,6 +270,7 @@ mod private_tests {
             last_timestamp: 6,
             genesis_timestamp: 5,
             epoch_length: 5,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::new(vec![], vec![]);
@@ -270,6 +287,7 @@ mod private_tests {
             last_timestamp,
             genesis_timestamp: 0,
             epoch_length: 5,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::with_finish_epoch_error();
@@ -291,7 +309,7 @@ mod public_tests {
         metrics::DispatcherMetrics,
     };
 
-    use super::Context;
+    use super::{Context, DAppMetadata};
 
     // --------------------------------------------------------------------------------------------
     // new
@@ -312,6 +330,7 @@ mod public_tests {
             genesis_timestamp,
             epoch_length,
             &broker,
+            DAppMetadata::default(),
             DispatcherMetrics::default(),
         )
         .await;
@@ -328,9 +347,14 @@ mod public_tests {
     #[tokio::test]
     async fn new_broker_error() {
         let broker = Broker::with_status_error();
-        let result =
-            Context::new(1337, 7331, &broker, DispatcherMetrics::default())
-                .await;
+        let result = Context::new(
+            1337,
+            7331,
+            &broker,
+            DAppMetadata::default(),
+            DispatcherMetrics::default(),
+        )
+        .await;
         assert!(result.is_err());
     }
 
@@ -347,6 +371,7 @@ mod public_tests {
             last_timestamp: 0,                 // ignored
             genesis_timestamp: 0,              // ignored
             epoch_length: 0,                   // ignored
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         assert_eq!(context.inputs_sent_count(), inputs_sent_count);
@@ -364,6 +389,7 @@ mod public_tests {
             last_timestamp: 2,
             genesis_timestamp: 0,
             epoch_length: 4,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::new(vec![], vec![]);
@@ -381,6 +407,7 @@ mod public_tests {
             last_timestamp: 2,
             genesis_timestamp: 0,
             epoch_length: 2,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::new(vec![], vec![]);
@@ -397,6 +424,7 @@ mod public_tests {
             last_timestamp: 2,
             genesis_timestamp: 0,
             epoch_length: 4,
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::with_finish_epoch_error();
@@ -417,6 +445,7 @@ mod public_tests {
             last_timestamp: 0,    // ignored
             genesis_timestamp: 0, // ignored
             epoch_length: 0,      // ignored
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         let input = mock::new_input(2);
@@ -438,6 +467,7 @@ mod public_tests {
             last_timestamp: 0,    // ignored
             genesis_timestamp: 0, // ignored
             epoch_length: 0,      // ignored
+            dapp_metadata: DAppMetadata::default(),
             metrics: DispatcherMetrics::default(),
         };
         let broker = mock::Broker::with_enqueue_input_error();

@@ -27,7 +27,7 @@ use eth_tx_manager::{
     transaction::{Priority, Transaction, Value},
     Chain,
 };
-use rollups_events::RollupsClaim;
+use rollups_events::{DAppMetadata, RollupsClaim};
 use snafu::{OptionExt, ResultExt, Snafu};
 use state_fold_types::{
     ethabi::Token,
@@ -116,6 +116,7 @@ pub struct ClaimSender {
     priority: Priority,
     from: Address,
     authority: Authority<Provider<MockProvider>>,
+    dapp_metadata: DAppMetadata,
     metrics: DispatcherMetrics,
 }
 
@@ -180,6 +181,7 @@ async fn create_tx_manager(
 impl ClaimSender {
     pub async fn new(
         config: &DispatcherConfig,
+        dapp_metadata: DAppMetadata,
         metrics: DispatcherMetrics,
     ) -> Result<Self, SenderError> {
         let chain: Chain = (&config.tx_config).into();
@@ -212,6 +214,7 @@ impl ClaimSender {
             priority: config.priority,
             from: conditional_signer.address(),
             authority,
+            dapp_metadata,
             metrics,
         })
     }
@@ -251,7 +254,10 @@ impl Sender for ClaimSender {
             .send_transaction(transaction, self.confirmations, self.priority)
             .await
             .context(TransactionManagerSnafu)?;
-        self.metrics.claims_sent.inc();
+        self.metrics
+            .claims_sent
+            .get_or_create(&self.dapp_metadata)
+            .inc();
         trace!("Claim transaction confirmed: `{:?}`", receipt);
 
         Ok(Self { tx_manager, ..self })

@@ -36,10 +36,16 @@ pub async fn start(
 ) -> Result<(), DispatcherError> {
     info!("Setting up dispatcher with config: {:?}", config);
 
+    let dapp_metadata = DAppMetadata {
+        chain_id: config.tx_config.chain_id,
+        dapp_address: Address::new(config.dapp_deployment.dapp_address.into()),
+    };
+
     trace!("Creating transaction manager");
-    let mut claim_sender = ClaimSender::new(&config, metrics.clone())
-        .await
-        .context(SenderSnafu)?;
+    let mut claim_sender =
+        ClaimSender::new(&config, dapp_metadata.clone(), metrics.clone())
+            .await
+            .context(SenderSnafu)?;
 
     trace!("Creating state-server connection");
     let state_server = create_state_server(&config.sc_config).await?;
@@ -52,21 +58,15 @@ pub async fn start(
     .await?;
 
     trace!("Creating broker connection");
-    let broker = BrokerFacade::new(
-        config.broker_config.clone(),
-        DAppMetadata {
-            chain_id: config.tx_config.chain_id,
-            dapp_address: Address::new(
-                config.dapp_deployment.dapp_address.into(),
-            ),
-        },
-    )
-    .await
-    .context(BrokerSnafu)?;
+    let broker =
+        BrokerFacade::new(config.broker_config.clone(), dapp_metadata.clone())
+            .await
+            .context(BrokerSnafu)?;
 
     trace!("Creating context");
     let mut context =
-        create_context(&config, &state_server, &broker, metrics).await?;
+        create_context(&config, &state_server, &broker, dapp_metadata, metrics)
+            .await?;
 
     trace!("Creating machine driver and blockchain driver");
     let mut machine_driver =

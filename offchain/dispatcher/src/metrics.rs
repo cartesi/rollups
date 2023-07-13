@@ -10,7 +10,8 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use http_server::{CounterRef, Registry};
+use http_server::{CounterRef, FamilyRef, Registry};
+use rollups_events::DAppMetadata;
 
 const METRICS_PREFIX: &str = "cartesi_rollups_dispatcher";
 
@@ -20,9 +21,9 @@ fn prefixed_metrics(name: &str) -> String {
 
 #[derive(Debug, Clone, Default)]
 pub struct DispatcherMetrics {
-    pub claims_sent: CounterRef,
-    pub advance_inputs_sent: CounterRef,
-    pub finish_epochs_sent: CounterRef,
+    pub claims_sent: FamilyRef<DAppMetadata, CounterRef>,
+    pub advance_inputs_sent: FamilyRef<DAppMetadata, CounterRef>,
+    pub finish_epochs_sent: FamilyRef<DAppMetadata, CounterRef>,
 }
 
 impl From<DispatcherMetrics> for Registry {

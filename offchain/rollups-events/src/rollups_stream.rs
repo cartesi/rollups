@@ -12,11 +12,12 @@
 
 use crate::Address;
 use clap::Parser;
+use prometheus_client::encoding::EncodeLabelSet;
 use serde_json::Value;
 use std::{fs::File, io::BufReader};
 
 /// DApp metadata used to define the stream keys
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Default, Hash, Eq, PartialEq, EncodeLabelSet)]
 pub struct DAppMetadata {
     pub chain_id: u64,
     pub dapp_address: Address,

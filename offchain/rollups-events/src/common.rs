@@ -11,13 +11,16 @@
 // specific language governing permissions and limitations under the License.
 
 use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+use prometheus_client::encoding::EncodeLabelValue;
+use prometheus_client::encoding::LabelValueEncoder;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::fmt::Write;
 
 pub const ADDRESS_SIZE: usize = 20;
 pub const HASH_SIZE: usize = 32;
 
 /// A binary array that is converted to a hex string when serialized
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Hash, Eq, PartialEq)]
 pub struct HexArray<const N: usize>([u8; N]);
 
 impl<const N: usize> HexArray<N> {
@@ -78,6 +81,15 @@ impl<const N: usize> std::fmt::Debug for HexArray<N> {
 impl<const N: usize> Default for HexArray<N> {
     fn default() -> Self {
         Self::new([0; N])
+    }
+}
+
+impl<const N: usize> EncodeLabelValue for HexArray<N> {
+    fn encode(
+        &self,
+        encoder: &mut LabelValueEncoder<'_>,
+    ) -> Result<(), std::fmt::Error> {
+        write!(encoder, "{}", hex::encode(self.inner()))
     }
 }
 
