@@ -5,7 +5,7 @@ version = "1.0.0"
 edition = "2021"
 
 [[bin]]
-name = "advance-runner"
+name = "cartesi-rollups-advance-runner"
 path = "src/main.rs"
 
 [dependencies]

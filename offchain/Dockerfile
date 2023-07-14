@@ -41,25 +41,25 @@ WORKDIR /usr/src/app/offchain
 COPY . /usr/src/app
 
 FROM builder as state_server_build
-RUN cargo build --release --bin rollups_state_server
+RUN cargo build --release --bin cartesi-rollups-state-server
 
 FROM builder as dispatcher_build
-RUN cargo build --release --bin rollups_dispatcher
+RUN cargo build --release --bin cartesi-rollups-dispatcher
 
 FROM builder as indexer_build
-RUN cargo build --release --bin indexer
+RUN cargo build --release --bin cartesi-rollups-indexer
 
 FROM builder as inspect_server_build
-RUN cargo build --release --bin inspect-server
+RUN cargo build --release --bin cartesi-rollups-inspect-server
 
 FROM builder as advance_runner_build
-RUN PATH="$PATH:$HOME/.local/bin" cargo build --release --bin advance-runner
+RUN PATH="$PATH:$HOME/.local/bin" cargo build --release --bin cartesi-rollups-advance-runner
 
 FROM builder as graphql_server_build
-RUN cargo build --release --bin graphql-server
+RUN cargo build --release --bin cartesi-rollups-graphql-server
 
 FROM builder as host_runner_build
-RUN cargo build --release --bin host-runner
+RUN cargo build --release --bin cartesi-rollups-host-runner
 
 # define runtime image
 FROM debian:bookworm-20230612-slim as runtime
@@ -77,9 +77,9 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=state_server_build /usr/src/app/offchain/target/release/rollups_state_server /opt/cartesi/bin/rollups_state_server
+COPY --from=state_server_build /usr/src/app/offchain/target/release/cartesi-rollups-state-server /opt/cartesi/bin/cartesi-rollups-state-server
 USER cartesi
-ENTRYPOINT ["/opt/cartesi/bin/rollups_state_server"]
+ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-state-server"]
 
 FROM runtime AS indexer
 RUN <<EOF
@@ -87,9 +87,9 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5 ca-certificates
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=indexer_build /usr/src/app/offchain/target/release/indexer /opt/cartesi/bin/indexer
+COPY --from=indexer_build /usr/src/app/offchain/target/release/cartesi-rollups-indexer /opt/cartesi/bin/cartesi-rollups-indexer
 USER cartesi
-ENTRYPOINT ["/opt/cartesi/bin/indexer"]
+ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-indexer"]
 
 FROM runtime AS dispatcher
 RUN <<EOF
@@ -97,10 +97,10 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=dispatcher_build /usr/src/app/offchain/target/release/rollups_dispatcher /opt/cartesi/bin/rollups_dispatcher
+COPY --from=dispatcher_build /usr/src/app/offchain/target/release/cartesi-rollups-dispatcher /opt/cartesi/bin/cartesi-rollups-dispatcher
 COPY onchain/rollups/export/abi /opt/cartesi/share/deployments/
 USER cartesi
-ENTRYPOINT ["/opt/cartesi/bin/rollups_dispatcher"]
+ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-dispatcher"]
 
 FROM runtime AS advance_runner
 RUN <<EOF
@@ -108,14 +108,14 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates curl
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=advance_runner_build /usr/src/app/offchain/target/release/advance-runner /opt/cartesi/bin/advance-runner
+COPY --from=advance_runner_build /usr/src/app/offchain/target/release/cartesi-rollups-advance-runner /opt/cartesi/bin/cartesi-rollups-advance-runner
 USER cartesi
-ENTRYPOINT ["/opt/cartesi/bin/advance-runner"]
+ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-advance-runner"]
 
 FROM runtime AS inspect_server
-COPY --from=inspect_server_build /usr/src/app/offchain/target/release/inspect-server /opt/cartesi/bin/inspect-server
+COPY --from=inspect_server_build /usr/src/app/offchain/target/release/cartesi-rollups-inspect-server /opt/cartesi/bin/cartesi-rollups-inspect-server
 USER cartesi
-ENTRYPOINT ["/opt/cartesi/bin/inspect-server"]
+ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-inspect-server"]
 
 FROM runtime AS graphql_server
 RUN <<EOF
@@ -123,14 +123,14 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=graphql_server_build /usr/src/app/offchain/target/release/graphql-server /opt/cartesi/bin/graphql-server
+COPY --from=graphql_server_build /usr/src/app/offchain/target/release/cartesi-rollups-graphql-server /opt/cartesi/bin/cartesi-rollups-graphql-server
 USER cartesi
-ENTRYPOINT ["/opt/cartesi/bin/graphql-server"]
+ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-graphql-server"]
 
 FROM runtime AS host_runner
-COPY --from=host_runner_build /usr/src/app/offchain/target/release/host-runner /opt/cartesi/bin/host-runner
+COPY --from=host_runner_build /usr/src/app/offchain/target/release/cartesi-rollups-host-runner /opt/cartesi/bin/cartesi-rollups-host-runner
 USER cartesi
-ENTRYPOINT ["/opt/cartesi/bin/host-runner"]
+ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-host-runner"]
 
 FROM scratch AS deployments
 

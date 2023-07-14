@@ -29,7 +29,7 @@ pub fn get_http_rollup_server_address() -> String {
 
 pub fn get_host_runner_path() -> String {
     std::env::var("CARTESI_HOST_RUNNER_PATH")
-        .unwrap_or(String::from("../target/debug/host-runner"))
+        .unwrap_or(String::from("../target/debug/cartesi-rollups-host-runner"))
 }
 
 pub fn get_test_verbose() -> bool {

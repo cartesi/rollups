@@ -5,7 +5,7 @@ version = "1.0.0"
 edition = "2021"
 
 [[bin]]
-name = "rollups_dispatcher"
+name = "cartesi-rollups-dispatcher"
 path = "src/main.rs"
 
 [dependencies]

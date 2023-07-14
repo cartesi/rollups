@@ -5,7 +5,7 @@ edition = "2021"
 license = "Apache-2.0"
 
 [[bin]]
-name = "graphql-server"
+name = "cartesi-rollups-graphql-server"
 path = "src/main.rs"
 
 [[bin]]

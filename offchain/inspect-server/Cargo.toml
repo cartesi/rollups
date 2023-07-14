@@ -5,7 +5,7 @@ version = "1.0.0"
 edition = "2021"
 
 [[bin]]
-name = "inspect-server"
+name = "cartesi-rollups-inspect-server"
 path = "src/main.rs"
 
 [dependencies]

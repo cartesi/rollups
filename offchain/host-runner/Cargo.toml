@@ -4,7 +4,8 @@ version = "1.0.0"
 edition = "2021"
 
 [[bin]]
-name = "host-runner"
+name = "cartesi-rollups-host-runner"
+path = "src/main.rs"
 
 [dependencies]
 grpc-interfaces = { path = "../grpc-interfaces" }
