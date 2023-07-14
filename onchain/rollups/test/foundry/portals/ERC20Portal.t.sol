@@ -101,7 +101,7 @@ contract ERC20PortalTest is Test {
 
     event InputAdded(
         address indexed dapp,
-        uint256 indexed inboxInputIndex,
+        uint256 indexed inputIndex,
         address sender,
         bytes input
     );

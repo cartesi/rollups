@@ -117,14 +117,14 @@ contract CartesiDApp is
         bytes32 epochHash;
         uint256 firstInputIndex;
         uint256 lastInputIndex;
-        uint256 inboxInputIndex;
+        uint256 inputIndex;
 
         // query the current consensus for the desired claim
         (epochHash, firstInputIndex, lastInputIndex) = getClaim(_proof.context);
 
         // validate the epoch input index and calculate the inbox input index
         // based on the input index range provided by the consensus
-        inboxInputIndex = _proof.validity.validateInputIndexRange(
+        inputIndex = _proof.validity.validateInputIndexRange(
             firstInputIndex,
             lastInputIndex
         );
@@ -134,7 +134,7 @@ contract CartesiDApp is
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _proof.validity.outputIndexWithinInput,
-            inboxInputIndex
+            inputIndex
         );
 
         // check if voucher has been executed
@@ -155,12 +155,12 @@ contract CartesiDApp is
     }
 
     function wasVoucherExecuted(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _outputIndexWithinInput
     ) external view override returns (bool) {
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _outputIndexWithinInput,
-            _inboxInputIndex
+            _inputIndex
         );
         return _wasVoucherExecuted(voucherPosition);
     }

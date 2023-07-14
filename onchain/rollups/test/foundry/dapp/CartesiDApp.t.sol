@@ -138,12 +138,12 @@ contract CartesiDAppTest is TestBase {
     // test notices
 
     function testNoticeValidation(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
         dapp = deployDAppDeterministically();
         registerProof(
-            _inboxInputIndex,
+            _inputIndex,
             _numInputsAfter,
             LibOutputProof0.getNoticeProof()
         );
@@ -164,10 +164,10 @@ contract CartesiDAppTest is TestBase {
     // test vouchers
 
     function testExecuteVoucherAndEvent(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inboxInputIndex, _numInputsAfter);
+        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
 
         logVoucher(1, address(erc20Token), erc20TransferPayload);
 
@@ -195,7 +195,7 @@ contract CartesiDAppTest is TestBase {
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
                 proof.validity.outputIndexWithinInput,
-                _inboxInputIndex
+                _inputIndex
             )
         );
 
@@ -216,10 +216,10 @@ contract CartesiDAppTest is TestBase {
     }
 
     function testRevertsReexecution(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inboxInputIndex, _numInputsAfter);
+        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
 
         // fund dapp
         uint256 dappInitBalance = 100;
@@ -246,30 +246,30 @@ contract CartesiDAppTest is TestBase {
         assertEq(erc20Token.balanceOf(recipient), transferAmount);
     }
 
-    // `_inboxInputIndex` and `_outputIndexWithinInput` are always less than 2**128
+    // `_inputIndex` and `_outputIndexWithinInput` are always less than 2**128
     function testWasVoucherExecutedForAny(
-        uint128 _inboxInputIndex,
+        uint128 _inputIndex,
         uint128 _numInputsAfter,
         uint128 _outputIndexWithinInput
     ) public {
-        setupERC20TransferVoucher(_inboxInputIndex, _numInputsAfter);
+        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
 
         bool executed = dapp.wasVoucherExecuted(
-            _inboxInputIndex,
+            _inputIndex,
             _outputIndexWithinInput
         );
         assertEq(executed, false);
     }
 
     function testWasVoucherExecuted(
-        uint128 _inboxInputIndex,
+        uint128 _inputIndex,
         uint128 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inboxInputIndex, _numInputsAfter);
+        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
 
         // before executing voucher
         bool executed = dapp.wasVoucherExecuted(
-            _inboxInputIndex,
+            _inputIndex,
             proof.validity.outputIndexWithinInput
         );
         assertEq(executed, false);
@@ -284,7 +284,7 @@ contract CartesiDAppTest is TestBase {
 
         // `wasVoucherExecuted` should still return false
         executed = dapp.wasVoucherExecuted(
-            _inboxInputIndex,
+            _inputIndex,
             proof.validity.outputIndexWithinInput
         );
         assertEq(executed, false);
@@ -302,17 +302,17 @@ contract CartesiDAppTest is TestBase {
 
         // after executing voucher, `wasVoucherExecuted` should return true
         executed = dapp.wasVoucherExecuted(
-            _inboxInputIndex,
+            _inputIndex,
             proof.validity.outputIndexWithinInput
         );
         assertEq(executed, true);
     }
 
     function testRevertsEpochHash(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inboxInputIndex, _numInputsAfter);
+        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
 
         proof.validity.vouchersEpochRootHash = bytes32(uint256(0xdeadbeef));
 
@@ -321,10 +321,10 @@ contract CartesiDAppTest is TestBase {
     }
 
     function testRevertsOutputsEpochRootHash(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inboxInputIndex, _numInputsAfter);
+        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
 
         proof.validity.outputHashesRootHash = bytes32(uint256(0xdeadbeef));
 
@@ -335,10 +335,10 @@ contract CartesiDAppTest is TestBase {
     }
 
     function testRevertsOutputHashesRootHash(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inboxInputIndex, _numInputsAfter);
+        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
 
         proof.validity.outputIndexWithinInput = 0xdeadbeef;
 
@@ -348,8 +348,8 @@ contract CartesiDAppTest is TestBase {
         dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
     }
 
-    function testRevertsInputIndexOOB(uint256 _inboxInputIndex) public {
-        setupERC20TransferVoucher(_inboxInputIndex, 0);
+    function testRevertsInputIndexOOB(uint256 _inputIndex) public {
+        setupERC20TransferVoucher(_inputIndex, 0);
 
         // If the epoch input index were 0, then there would be no way for the
         // inbox input index to be out of bounds because every claim is non-empty,
@@ -358,7 +358,7 @@ contract CartesiDAppTest is TestBase {
 
         // This assumption aims to avoid an integer overflow in the CartesiDApp
         vm.assume(
-            _inboxInputIndex <=
+            _inputIndex <=
                 type(uint256).max - proof.validity.inputIndexWithinEpoch
         );
 
@@ -371,7 +371,7 @@ contract CartesiDAppTest is TestBase {
         vm.mockCall(
             address(consensus),
             abi.encodeWithSelector(IConsensus.getClaim.selector),
-            abi.encode(epochHash, _inboxInputIndex, _inboxInputIndex)
+            abi.encode(epochHash, _inputIndex, _inputIndex)
         );
 
         vm.expectRevert(
@@ -381,13 +381,13 @@ contract CartesiDAppTest is TestBase {
     }
 
     function setupERC20TransferVoucher(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _numInputsAfter
     ) internal {
         dapp = deployDAppDeterministically();
         erc20Token = deployERC20Deterministically();
         registerProof(
-            _inboxInputIndex,
+            _inputIndex,
             _numInputsAfter,
             LibOutputProof1.getVoucherProof()
         );
@@ -396,7 +396,7 @@ contract CartesiDAppTest is TestBase {
     // test ether transfer
 
     function testEtherTransfer(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
         dapp = deployDAppDeterministically();
@@ -410,7 +410,7 @@ contract CartesiDAppTest is TestBase {
         logVoucher(2, address(dapp), withdrawEtherPayload);
 
         registerProof(
-            _inboxInputIndex,
+            _inputIndex,
             _numInputsAfter,
             LibOutputProof2.getVoucherProof()
         );
@@ -438,7 +438,7 @@ contract CartesiDAppTest is TestBase {
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
                 proof.validity.outputIndexWithinInput,
-                _inboxInputIndex
+                _inputIndex
             )
         );
 
@@ -538,7 +538,7 @@ contract CartesiDAppTest is TestBase {
     // test NFT transfer
 
     function testWithdrawNFT(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
         dapp = deployDAppDeterministically();
@@ -555,7 +555,7 @@ contract CartesiDAppTest is TestBase {
         logVoucher(3, address(erc721Token), safeTransferFromPayload);
 
         registerProof(
-            _inboxInputIndex,
+            _inputIndex,
             _numInputsAfter,
             LibOutputProof3.getVoucherProof()
         );
@@ -580,7 +580,7 @@ contract CartesiDAppTest is TestBase {
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
                 proof.validity.outputIndexWithinInput,
-                _inboxInputIndex
+                _inputIndex
             )
         );
 
@@ -653,21 +653,20 @@ contract CartesiDAppTest is TestBase {
     // Mock consensus so that calls to `getClaim` return
     // values that can be used to validate the proof.
     function registerProof(
-        uint256 _inboxInputIndex,
+        uint256 _inputIndex,
         uint256 _numInputsAfter,
         OutputValidityProof memory _validity
     ) internal {
-        // check if `_inboxInputIndex` and `_numInputsAfter` are valid
-        vm.assume(_validity.inputIndexWithinEpoch <= _inboxInputIndex);
-        vm.assume(_numInputsAfter <= type(uint256).max - _inboxInputIndex);
+        // check if `_inputIndex` and `_numInputsAfter` are valid
+        vm.assume(_validity.inputIndexWithinEpoch <= _inputIndex);
+        vm.assume(_numInputsAfter <= type(uint256).max - _inputIndex);
 
         // calculate epoch hash from proof
         bytes32 epochHash = calculateEpochHash(_validity);
 
         // calculate input index range based on proof and fuzzy variables
-        uint256 firstInputIndex = _inboxInputIndex -
-            _validity.inputIndexWithinEpoch;
-        uint256 lastInputIndex = _inboxInputIndex + _numInputsAfter;
+        uint256 firstInputIndex = _inputIndex - _validity.inputIndexWithinEpoch;
+        uint256 lastInputIndex = _inputIndex + _numInputsAfter;
 
         // mock the consensus contract to return the right epoch hash
         vm.mockCall(
