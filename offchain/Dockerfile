@@ -40,26 +40,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 WORKDIR /usr/src/app/offchain
 COPY . /usr/src/app
 
-FROM builder as state_server_build
-RUN cargo build --release --bin cartesi-rollups-state-server
-
-FROM builder as dispatcher_build
-RUN cargo build --release --bin cartesi-rollups-dispatcher
-
-FROM builder as indexer_build
-RUN cargo build --release --bin cartesi-rollups-indexer
-
-FROM builder as inspect_server_build
-RUN cargo build --release --bin cartesi-rollups-inspect-server
-
-FROM builder as advance_runner_build
-RUN PATH="$PATH:$HOME/.local/bin" cargo build --release --bin cartesi-rollups-advance-runner
-
-FROM builder as graphql_server_build
-RUN cargo build --release --bin cartesi-rollups-graphql-server
-
-FROM builder as host_runner_build
-RUN cargo build --release --bin cartesi-rollups-host-runner
+RUN cargo build --release
 
 # define runtime image
 FROM debian:bookworm-20230612-slim as runtime
@@ -77,7 +58,7 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=state_server_build /usr/src/app/offchain/target/release/cartesi-rollups-state-server /opt/cartesi/bin/cartesi-rollups-state-server
+COPY --from=builder /usr/src/app/offchain/target/release/cartesi-rollups-state-server /opt/cartesi/bin/cartesi-rollups-state-server
 USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-state-server"]
 
@@ -87,7 +68,7 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5 ca-certificates
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=indexer_build /usr/src/app/offchain/target/release/cartesi-rollups-indexer /opt/cartesi/bin/cartesi-rollups-indexer
+COPY --from=builder /usr/src/app/offchain/target/release/cartesi-rollups-indexer /opt/cartesi/bin/cartesi-rollups-indexer
 USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-indexer"]
 
@@ -97,7 +78,7 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=dispatcher_build /usr/src/app/offchain/target/release/cartesi-rollups-dispatcher /opt/cartesi/bin/cartesi-rollups-dispatcher
+COPY --from=builder /usr/src/app/offchain/target/release/cartesi-rollups-dispatcher /opt/cartesi/bin/cartesi-rollups-dispatcher
 COPY onchain/rollups/export/abi /opt/cartesi/share/deployments/
 USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-dispatcher"]
@@ -108,12 +89,12 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends ca-certificates curl
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=advance_runner_build /usr/src/app/offchain/target/release/cartesi-rollups-advance-runner /opt/cartesi/bin/cartesi-rollups-advance-runner
+COPY --from=builder /usr/src/app/offchain/target/release/cartesi-rollups-advance-runner /opt/cartesi/bin/cartesi-rollups-advance-runner
 USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-advance-runner"]
 
 FROM runtime AS inspect_server
-COPY --from=inspect_server_build /usr/src/app/offchain/target/release/cartesi-rollups-inspect-server /opt/cartesi/bin/cartesi-rollups-inspect-server
+COPY --from=builder /usr/src/app/offchain/target/release/cartesi-rollups-inspect-server /opt/cartesi/bin/cartesi-rollups-inspect-server
 USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-inspect-server"]
 
@@ -123,12 +104,12 @@ apt-get update
 DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends libpq5
 rm -rf /var/lib/apt/lists/*
 EOF
-COPY --from=graphql_server_build /usr/src/app/offchain/target/release/cartesi-rollups-graphql-server /opt/cartesi/bin/cartesi-rollups-graphql-server
+COPY --from=builder /usr/src/app/offchain/target/release/cartesi-rollups-graphql-server /opt/cartesi/bin/cartesi-rollups-graphql-server
 USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-graphql-server"]
 
 FROM runtime AS host_runner
-COPY --from=host_runner_build /usr/src/app/offchain/target/release/cartesi-rollups-host-runner /opt/cartesi/bin/cartesi-rollups-host-runner
+COPY --from=builder /usr/src/app/offchain/target/release/cartesi-rollups-host-runner /opt/cartesi/bin/cartesi-rollups-host-runner
 USER cartesi
 ENTRYPOINT ["/opt/cartesi/bin/cartesi-rollups-host-runner"]
 
