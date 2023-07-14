@@ -212,12 +212,12 @@ library LibOutputValidation {
         uint256 firstInputIndex,
         uint256 lastInputIndex
     ) internal pure returns (uint256) {
-        uint256 inboxInputIndex = firstInputIndex + v.inputIndexWithinEpoch;
+        uint256 inputIndex = firstInputIndex + v.inputIndexWithinEpoch;
 
-        if (inboxInputIndex > lastInputIndex) {
+        if (inputIndex > lastInputIndex) {
             revert InputIndexOutOfClaimBounds();
         }
 
-        return inboxInputIndex;
+        return inputIndex;
     }
 }

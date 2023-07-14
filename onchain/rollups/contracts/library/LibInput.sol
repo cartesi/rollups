@@ -26,14 +26,14 @@ library LibInput {
     /// @param blockNumber `block.number`
     /// @param blockTimestamp `block.timestamp`
     /// @param input The input blob
-    /// @param inboxInputIndex The index of the input in the input box
+    /// @param inputIndex The index of the input in the input box
     /// @return The input hash
     function computeInputHash(
         address sender,
         uint256 blockNumber,
         uint256 blockTimestamp,
         bytes calldata input,
-        uint256 inboxInputIndex
+        uint256 inputIndex
     ) internal pure returns (bytes32) {
         if (input.length > CanonicalMachine.INPUT_MAX_SIZE) {
             revert InputSizeExceedsLimit();
@@ -45,7 +45,7 @@ library LibInput {
                 blockNumber,
                 blockTimestamp,
                 0, //TODO decide how to deal with epoch index
-                inboxInputIndex // input index in the input box
+                inputIndex // input index in the input box
             )
         );
 
