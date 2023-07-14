@@ -37,12 +37,8 @@ jobs:
       - name: Update rust
         run: rustup update
 
-      - name: Install cargo-machete
-        run: cargo install cargo-machete
-
-      - name: Analyze dependencies
-        run: cargo machete .
-        continue-on-error: true
+      - name: print-versions
+        run: rustup -V && rustc -V && cargo -V && cargo clippy -V
 
       - name: Run linter
         run: cargo clippy
