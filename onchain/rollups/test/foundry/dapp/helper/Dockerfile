@@ -35,7 +35,7 @@ RUN wget -O ${IMAGES_PATH}/rootfs.ext2 https://github.com/cartesi/image-rootfs/r
     wget -O ${IMAGES_PATH}/rom.bin https://github.com/cartesi/machine-emulator-rom/releases/download/v0.13.0/rom-v0.13.0.bin
 
 # Download grpc-interfaces repo
-RUN git clone --branch v0.12.0 https://github.com/cartesi/grpc-interfaces
+RUN git clone --branch v0.13.0 https://github.com/cartesi/grpc-interfaces
 
 # Generate machine with echo and store it
 ENV MACHINE_DIR=/tmp/gen-proofs-machine
