@@ -79,7 +79,7 @@ graph TD
 
 ## Input Box
 
-This module is the one responsible for receiving inputs from users that want to interact with DApps. For each DApp, the module keeps an append-only list of hashes. Each hash is derived from the input and some metadata, such as the input sender, and the block timestamp. All the data needed to recontstruct a hash is available forever on-chain. As a result, one does not need to trust data providers in order to sync the off-chain machine with the latest input. Note that this module is completely permissionless, and we leave the off-chain machine to judge whether an input is valid or not.
+This module is the one responsible for receiving inputs from users that want to interact with DApps. For each DApp, the module keeps an append-only list of hashes. Each hash is derived from the input and some metadata, such as the input sender, and the block timestamp. All the data needed to reconstruct a hash is available forever on-chain. As a result, one does not need to trust data providers in order to sync the off-chain machine with the latest input. Note that this module is completely permissionless, and we leave the off-chain machine to judge whether an input is valid or not.
 
 ## Cartesi DApp
 
@@ -172,9 +172,9 @@ Notices are informational statements that can be proved by contracts in the base
 
 ## Consensus
 
-This module is responsible for providing valid claims to DApps after reaching some form of consensus. The module's interface aims to be as generic as possible to accomodate any consensus model, since there are plenty to choose from. The way claims are encoded and stored is abstracted entirely by the interface. Implementation-wise, this is left to a History contract.
+This module is responsible for providing valid claims to DApps after reaching some form of consensus. The module's interface aims to be as generic as possible to accommodate any consensus model, since there are plenty to choose from. The way claims are encoded and stored is abstracted entirely by the interface. Implementation-wise, this is left to a History contract.
 
-The only type of consensus that is currently implemented by Cartesi is called Authority. It is owned by a single address, who has complete power over the consensus. It is arguably the simplest consensus to implement, although quite vulnerable.
+The only type of consensus that is currently implemented by Cartesi is called Authority. It is owned by a single address, which has complete power over the consensus. It is arguably the simplest consensus to implement, although quite vulnerable.
 
 ## History
 
