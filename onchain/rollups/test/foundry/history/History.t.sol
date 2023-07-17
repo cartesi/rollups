@@ -206,18 +206,18 @@ contract HistoryTest is Test {
         address dapp,
         uint256 claimIndex,
         bytes32 epochHash,
-        uint256 firstInputIndexWithinEpoch,
-        uint256 lastInputIndexWithinEpoch
+        uint256 firstInputIndex,
+        uint256 lastInputIndex
     ) internal {
         (
             bytes32 retEpochHash,
-            uint256 retFirstInputIndexWithinEpoch,
-            uint256 retLastInputIndexWithinEpoch
+            uint256 retFirstInputIndex,
+            uint256 retLastInputIndex
         ) = history.getClaim(dapp, abi.encode(claimIndex));
 
         assertEq(retEpochHash, epochHash);
-        assertEq(retFirstInputIndexWithinEpoch, firstInputIndexWithinEpoch);
-        assertEq(retLastInputIndexWithinEpoch, lastInputIndexWithinEpoch);
+        assertEq(retFirstInputIndex, firstInputIndex);
+        assertEq(retLastInputIndex, lastInputIndex);
     }
 
     function testRevertsGetClaimEncoding(address dapp) public {

@@ -194,7 +194,7 @@ contract CartesiDAppTest is TestBase {
         vm.expectEmit(false, false, false, true, address(dapp));
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
-                proof.validity.outputIndex,
+                proof.validity.outputIndexWithinInput,
                 _inboxInputIndex
             )
         );
@@ -246,15 +246,18 @@ contract CartesiDAppTest is TestBase {
         assertEq(erc20Token.balanceOf(recipient), transferAmount);
     }
 
-    // `_inboxInputIndex` and `_outputIndex` are always less than 2**128
+    // `_inboxInputIndex` and `_outputIndexWithinInput` are always less than 2**128
     function testWasVoucherExecutedForAny(
         uint128 _inboxInputIndex,
         uint128 _numInputsAfter,
-        uint128 _outputIndex
+        uint128 _outputIndexWithinInput
     ) public {
         setupERC20TransferVoucher(_inboxInputIndex, _numInputsAfter);
 
-        bool executed = dapp.wasVoucherExecuted(_inboxInputIndex, _outputIndex);
+        bool executed = dapp.wasVoucherExecuted(
+            _inboxInputIndex,
+            _outputIndexWithinInput
+        );
         assertEq(executed, false);
     }
 
@@ -267,7 +270,7 @@ contract CartesiDAppTest is TestBase {
         // before executing voucher
         bool executed = dapp.wasVoucherExecuted(
             _inboxInputIndex,
-            proof.validity.outputIndex
+            proof.validity.outputIndexWithinInput
         );
         assertEq(executed, false);
 
@@ -282,7 +285,7 @@ contract CartesiDAppTest is TestBase {
         // `wasVoucherExecuted` should still return false
         executed = dapp.wasVoucherExecuted(
             _inboxInputIndex,
-            proof.validity.outputIndex
+            proof.validity.outputIndexWithinInput
         );
         assertEq(executed, false);
 
@@ -300,7 +303,7 @@ contract CartesiDAppTest is TestBase {
         // after executing voucher, `wasVoucherExecuted` should return true
         executed = dapp.wasVoucherExecuted(
             _inboxInputIndex,
-            proof.validity.outputIndex
+            proof.validity.outputIndexWithinInput
         );
         assertEq(executed, true);
     }
@@ -337,7 +340,7 @@ contract CartesiDAppTest is TestBase {
     ) public {
         setupERC20TransferVoucher(_inboxInputIndex, _numInputsAfter);
 
-        proof.validity.outputIndex = 0xdeadbeef;
+        proof.validity.outputIndexWithinInput = 0xdeadbeef;
 
         vm.expectRevert(
             LibOutputValidation.IncorrectOutputHashesRootHash.selector
@@ -434,7 +437,7 @@ contract CartesiDAppTest is TestBase {
         vm.expectEmit(false, false, false, true, address(dapp));
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
-                proof.validity.outputIndex,
+                proof.validity.outputIndexWithinInput,
                 _inboxInputIndex
             )
         );
@@ -576,7 +579,7 @@ contract CartesiDAppTest is TestBase {
         vm.expectEmit(false, false, false, true, address(dapp));
         emit VoucherExecuted(
             LibOutputValidation.getBitMaskPosition(
-                proof.validity.outputIndex,
+                proof.validity.outputIndexWithinInput,
                 _inboxInputIndex
             )
         );
@@ -662,19 +665,15 @@ contract CartesiDAppTest is TestBase {
         bytes32 epochHash = calculateEpochHash(_validity);
 
         // calculate input index range based on proof and fuzzy variables
-        uint256 firstInputIndexWithinEpoch = _inboxInputIndex -
+        uint256 firstInputIndex = _inboxInputIndex -
             _validity.inputIndexWithinEpoch;
-        uint256 lastInputIndexWithinEpoch = _inboxInputIndex + _numInputsAfter;
+        uint256 lastInputIndex = _inboxInputIndex + _numInputsAfter;
 
         // mock the consensus contract to return the right epoch hash
         vm.mockCall(
             address(consensus),
             abi.encodeWithSelector(IConsensus.getClaim.selector),
-            abi.encode(
-                epochHash,
-                firstInputIndexWithinEpoch,
-                lastInputIndexWithinEpoch
-            )
+            abi.encode(epochHash, firstInputIndex, lastInputIndex)
         );
 
         // store proof in storage

@@ -66,11 +66,11 @@ interface ICartesiDApp {
 
     /// @notice Check whether a voucher has been executed.
     /// @param _inboxInputIndex The index of the input in the input box
-    /// @param _outputIndex The index of output emitted by the input
+    /// @param _outputIndexWithinInput The index of output emitted by the input
     /// @return Whether the voucher has been executed before
     function wasVoucherExecuted(
         uint256 _inboxInputIndex,
-        uint256 _outputIndex
+        uint256 _outputIndexWithinInput
     ) external view returns (bool);
 
     /// @notice Validate a notice.

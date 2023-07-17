@@ -4,35 +4,36 @@ import response from "./finish_epoch_response.json";
 
 interface OutputValidityProof {
     inputIndexWithinEpoch: number;
-    outputIndex: number;
+    outputIndexWithinInput: number;
     outputHashesRootHash: BytesLike;
     vouchersEpochRootHash: BytesLike;
     noticesEpochRootHash: BytesLike;
     machineStateHash: BytesLike;
-    keccakInHashesSiblings: BytesLike[];
+    outputHashInOutputHashesSiblings: BytesLike[];
     outputHashesInEpochSiblings: BytesLike[];
 }
 
 function setupVoucherProof(positionIndex: number): OutputValidityProof {
     let v = response.proofs[positionIndex].validity;
-    let keccakInHashesSiblingsRawData = v.keccakInHashesSiblings;
+    let outputHashInOutputHashesSiblingsRawData =
+        v.outputHashInOutputHashesSiblings;
     let outputHashesInEpochSiblingsRawData = v.outputHashesInEpochSiblings;
-    var keccakInHashesSiblings: BytesLike[] = [];
+    var outputHashInOutputHashesSiblings: BytesLike[] = [];
     var outputHashesInEpochSiblings: BytesLike[] = [];
-    keccakInHashesSiblingsRawData.forEach((element: any) => {
-        keccakInHashesSiblings.push(element.data);
+    outputHashInOutputHashesSiblingsRawData.forEach((element: any) => {
+        outputHashInOutputHashesSiblings.push(element.data);
     });
     outputHashesInEpochSiblingsRawData.forEach((element: any) => {
         outputHashesInEpochSiblings.push(element.data);
     });
     let voucherProof: OutputValidityProof = {
-        inputIndexWithinEpoch: Number(v.inputIndex),
-        outputIndex: Number(v.outputIndex),
+        inputIndexWithinEpoch: Number(v.inputIndexWithinEpoch),
+        outputIndexWithinInput: Number(v.outputIndexWithinInput),
         outputHashesRootHash: v.outputHashesRootHash.data,
         vouchersEpochRootHash: v.vouchersEpochRootHash.data,
         noticesEpochRootHash: v.noticesEpochRootHash.data,
         machineStateHash: v.machineStateHash.data,
-        keccakInHashesSiblings: keccakInHashesSiblings, // siblings should be bottom-up ordered (from the leaf to the root)
+        outputHashInOutputHashesSiblings: outputHashInOutputHashesSiblings, // siblings should be bottom-up ordered (from the leaf to the root)
         outputHashesInEpochSiblings: outputHashesInEpochSiblings,
     };
     return voucherProof;
@@ -40,24 +41,25 @@ function setupVoucherProof(positionIndex: number): OutputValidityProof {
 
 function setupNoticeProof(positionIndex: number): OutputValidityProof {
     let v = response.proofs[positionIndex].validity;
-    let keccakInHashesSiblingsRawData = v.keccakInHashesSiblings;
+    let outputHashInOutputHashesSiblingsRawData =
+        v.outputHashInOutputHashesSiblings;
     let outputHashesInEpochSiblingsRawData = v.outputHashesInEpochSiblings;
-    var keccakInHashesSiblings: BytesLike[] = [];
+    var outputHashInOutputHashesSiblings: BytesLike[] = [];
     var outputHashesInEpochSiblings: BytesLike[] = [];
-    keccakInHashesSiblingsRawData.forEach((element) => {
-        keccakInHashesSiblings.push(element.data);
+    outputHashInOutputHashesSiblingsRawData.forEach((element) => {
+        outputHashInOutputHashesSiblings.push(element.data);
     });
     outputHashesInEpochSiblingsRawData.forEach((element) => {
         outputHashesInEpochSiblings.push(element.data);
     });
     let noticeProof: OutputValidityProof = {
-        inputIndexWithinEpoch: Number(v.inputIndex),
-        outputIndex: Number(v.outputIndex),
+        inputIndexWithinEpoch: Number(v.inputIndexWithinEpoch),
+        outputIndexWithinInput: Number(v.outputIndexWithinInput),
         outputHashesRootHash: v.outputHashesRootHash.data,
         vouchersEpochRootHash: v.vouchersEpochRootHash.data,
         noticesEpochRootHash: v.noticesEpochRootHash.data,
         machineStateHash: v.machineStateHash.data,
-        keccakInHashesSiblings: keccakInHashesSiblings,
+        outputHashInOutputHashesSiblings: outputHashInOutputHashesSiblings,
         outputHashesInEpochSiblings: outputHashesInEpochSiblings,
     };
     return noticeProof;
@@ -68,9 +70,9 @@ function buildSolCodes(
     voucherProof: OutputValidityProof,
     libraryName: string
 ): string {
-    const array1 = noticeProof.keccakInHashesSiblings;
+    const array1 = noticeProof.outputHashInOutputHashesSiblings;
     const array2 = noticeProof.outputHashesInEpochSiblings;
-    const array3 = voucherProof.keccakInHashesSiblings;
+    const array3 = voucherProof.outputHashInOutputHashesSiblings;
     const array4 = voucherProof.outputHashesInEpochSiblings;
     const lines: string[] = [
         "// SPDX-License-Identifier: UNLICENSED",
@@ -85,36 +87,36 @@ function buildSolCodes(
         "    function getNoticeProof() internal pure returns (OutputValidityProof memory) {",
         `        uint256[${array1.length}] memory array1 = [${array1}];`,
         `        uint256[${array2.length}] memory array2 = [${array2}];`,
-        `        bytes32[] memory keccakInHashesSiblings = new bytes32[](${array1.length});`,
+        `        bytes32[] memory outputHashInOutputHashesSiblings = new bytes32[](${array1.length});`,
         `        bytes32[] memory outputHashesInEpochSiblings = new bytes32[](${array2.length});`,
-        `        for (uint256 i; i < ${array1.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array1[i]); }`,
+        `        for (uint256 i; i < ${array1.length}; ++i) { outputHashInOutputHashesSiblings[i] = bytes32(array1[i]); }`,
         `        for (uint256 i; i < ${array2.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array2[i]); }`,
         `        return OutputValidityProof({`,
         `            inputIndexWithinEpoch: ${noticeProof.inputIndexWithinEpoch},`,
-        `            outputIndex: ${noticeProof.outputIndex},`,
+        `            outputIndexWithinInput: ${noticeProof.outputIndexWithinInput},`,
         `            outputHashesRootHash: ${noticeProof.outputHashesRootHash},`,
         `            vouchersEpochRootHash: ${noticeProof.vouchersEpochRootHash},`,
         `            noticesEpochRootHash: ${noticeProof.noticesEpochRootHash},`,
         `            machineStateHash: ${noticeProof.machineStateHash},`,
-        "            keccakInHashesSiblings: keccakInHashesSiblings,",
+        "            outputHashInOutputHashesSiblings: outputHashInOutputHashesSiblings,",
         "            outputHashesInEpochSiblings: outputHashesInEpochSiblings",
         "        });",
         "    }",
         "    function getVoucherProof() internal pure returns (OutputValidityProof memory) {",
         `        uint256[${array3.length}] memory array3 = [${array3}];`,
         `        uint256[${array4.length}] memory array4 = [${array4}];`,
-        `        bytes32[] memory keccakInHashesSiblings = new bytes32[](${array3.length});`,
+        `        bytes32[] memory outputHashInOutputHashesSiblings = new bytes32[](${array3.length});`,
         `        bytes32[] memory outputHashesInEpochSiblings = new bytes32[](${array4.length});`,
-        `        for (uint256 i; i < ${array3.length}; ++i) { keccakInHashesSiblings[i] = bytes32(array3[i]); }`,
+        `        for (uint256 i; i < ${array3.length}; ++i) { outputHashInOutputHashesSiblings[i] = bytes32(array3[i]); }`,
         `        for (uint256 i; i < ${array4.length}; ++i) { outputHashesInEpochSiblings[i] = bytes32(array4[i]); }`,
         `        return OutputValidityProof({`,
         `            inputIndexWithinEpoch: ${voucherProof.inputIndexWithinEpoch},`,
-        `            outputIndex: ${voucherProof.outputIndex},`,
+        `            outputIndexWithinInput: ${voucherProof.outputIndexWithinInput},`,
         `            outputHashesRootHash: ${voucherProof.outputHashesRootHash},`,
         `            vouchersEpochRootHash: ${voucherProof.vouchersEpochRootHash},`,
         `            noticesEpochRootHash: ${voucherProof.noticesEpochRootHash},`,
         `            machineStateHash: ${voucherProof.machineStateHash},`,
-        "            keccakInHashesSiblings: keccakInHashesSiblings,",
+        "            outputHashInOutputHashesSiblings: outputHashInOutputHashesSiblings,",
         "            outputHashesInEpochSiblings: outputHashesInEpochSiblings",
         "        });",
         "    }",
@@ -130,11 +132,11 @@ let pairs = response.proofs.length / 2; // need to half because there's a vouche
 let voucherProofs: OutputValidityProof[] = new Array(pairs);
 let noticeProofs: OutputValidityProof[] = new Array(pairs);
 for (let i = 0; i < response.proofs.length; i++) {
-    let inputIndexWithinEpoch = Number(response.proofs[i].inputIndex);
+    let inputIndex = Number(response.proofs[i].inputIndex);
     if (response.proofs[i].outputEnum == "NOTICE") {
-        noticeProofs[inputIndexWithinEpoch] = setupNoticeProof(i);
+        noticeProofs[inputIndex] = setupNoticeProof(i);
     } else {
-        voucherProofs[inputIndexWithinEpoch] = setupVoucherProof(i);
+        voucherProofs[inputIndex] = setupVoucherProof(i);
     }
 }
 
