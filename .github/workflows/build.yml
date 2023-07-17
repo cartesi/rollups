@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       CARGO_REGISTRIES_CARTESI_INDEX: https://github.com/cartesi/crates-index
-      RUSTFLAGS: -D warnings -C debuginfo=none
+      RUSTFLAGS: -D warnings -C debuginfo=0
     defaults:
       run:
         working-directory: offchain
