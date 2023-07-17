@@ -115,29 +115,25 @@ contract CartesiDApp is
         Proof calldata _proof
     ) external override nonReentrant returns (bool) {
         bytes32 epochHash;
-        uint256 firstInputIndexWithinEpoch;
-        uint256 lastInputIndexWithinEpoch;
+        uint256 firstInputIndex;
+        uint256 lastInputIndex;
         uint256 inboxInputIndex;
 
         // query the current consensus for the desired claim
-        (
-            epochHash,
-            firstInputIndexWithinEpoch,
-            lastInputIndexWithinEpoch
-        ) = getClaim(_proof.context);
+        (epochHash, firstInputIndex, lastInputIndex) = getClaim(_proof.context);
 
         // validate the epoch input index and calculate the inbox input index
         // based on the input index range provided by the consensus
         inboxInputIndex = _proof.validity.validateInputIndexRange(
-            firstInputIndexWithinEpoch,
-            lastInputIndexWithinEpoch
+            firstInputIndex,
+            lastInputIndex
         );
 
         // reverts if proof isn't valid
         _proof.validity.validateVoucher(_destination, _payload, epochHash);
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
-            _proof.validity.outputIndex,
+            _proof.validity.outputIndexWithinInput,
             inboxInputIndex
         );
 
@@ -160,10 +156,10 @@ contract CartesiDApp is
 
     function wasVoucherExecuted(
         uint256 _inboxInputIndex,
-        uint256 _outputIndex
+        uint256 _outputIndexWithinInput
     ) external view override returns (bool) {
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
-            _outputIndex,
+            _outputIndexWithinInput,
             _inboxInputIndex
         );
         return _wasVoucherExecuted(voucherPosition);
@@ -180,21 +176,17 @@ contract CartesiDApp is
         Proof calldata _proof
     ) external view override returns (bool) {
         bytes32 epochHash;
-        uint256 firstInputIndexWithinEpoch;
-        uint256 lastInputIndexWithinEpoch;
+        uint256 firstInputIndex;
+        uint256 lastInputIndex;
 
         // query the current consensus for the desired claim
-        (
-            epochHash,
-            firstInputIndexWithinEpoch,
-            lastInputIndexWithinEpoch
-        ) = getClaim(_proof.context);
+        (epochHash, firstInputIndex, lastInputIndex) = getClaim(_proof.context);
 
         // validate the epoch input index based on the input index range
         // provided by the consensus
         _proof.validity.validateInputIndexRange(
-            firstInputIndexWithinEpoch,
-            lastInputIndexWithinEpoch
+            firstInputIndex,
+            lastInputIndex
         );
 
         // reverts if proof isn't valid

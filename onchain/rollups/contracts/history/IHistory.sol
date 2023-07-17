@@ -36,8 +36,8 @@ interface IHistory {
     /// @param _dapp The DApp address
     /// @param _proofContext Data for retrieving the desired claim
     /// @return epochHash_ The claimed epoch hash
-    /// @return firstInputIndexWithinEpoch_ The index of the first input of the epoch in the input box
-    /// @return lastInputIndexWithinEpoch_ The index of the last input of the epoch in the input box
+    /// @return firstInputIndex_ The index of the first input of the epoch in the input box
+    /// @return lastInputIndex_ The index of the last input of the epoch in the input box
     function getClaim(
         address _dapp,
         bytes calldata _proofContext
@@ -46,7 +46,7 @@ interface IHistory {
         view
         returns (
             bytes32 epochHash_,
-            uint256 firstInputIndexWithinEpoch_,
-            uint256 lastInputIndexWithinEpoch_
+            uint256 firstInputIndex_,
+            uint256 lastInputIndex_
         );
 }
