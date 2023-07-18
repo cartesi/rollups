@@ -51,7 +51,7 @@ contract InputBox is IInputBox {
             inputIndex
         );
 
-        // add input to correct inbox
+        // add input to the input box
         inputBox.push(inputHash);
 
         // block.number and timestamp can be retrieved by the event metadata itself

@@ -351,8 +351,8 @@ contract CartesiDAppTest is TestBase {
     function testRevertsInputIndexOOB(uint256 _inputIndex) public {
         setupERC20TransferVoucher(_inputIndex, 0);
 
-        // If the epoch input index were 0, then there would be no way for the
-        // inbox input index to be out of bounds because every claim is non-empty,
+        // If the input index within epoch were 0, then there would be no way for the
+        // input index in input box to be out of bounds because every claim is non-empty,
         // as it must contain at least one input
         assert(proof.validity.inputIndexWithinEpoch > 0);
 
