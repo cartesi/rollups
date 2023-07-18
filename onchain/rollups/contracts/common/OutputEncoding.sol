@@ -18,16 +18,19 @@ library OutputEncoding {
 
     /// @notice Encode a voucher.
     /// @param destination The address that will receive the payload through a message call
+    /// @param value The amount of Wei to be passed along the call
     /// @param payload The payload, which—in the case of Solidity contracts—encodes a function call
     /// @return The encoded output
     function encodeVoucher(
         address destination,
+        uint256 value,
         bytes calldata payload
     ) internal pure returns (bytes memory) {
         return
             abi.encodeWithSignature(
-                "Voucher(address,bytes)",
+                "Voucher(address,uint256,bytes)",
                 destination,
+                value,
                 payload
             );
     }
