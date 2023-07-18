@@ -253,7 +253,7 @@ contract CartesiDAppTest is TestBase {
         Voucher memory voucher = getVoucher(1);
         Proof memory proof = setupVoucherProof(1, _inputIndex, _numInputsAfter);
 
-        proof.validity.vouchersEpochRootHash = bytes32(uint256(0xdeadbeef));
+        proof.validity.outputsEpochRootHash = bytes32(uint256(0xdeadbeef));
 
         vm.expectRevert(LibOutputValidation.IncorrectEpochHash.selector);
         executeVoucher(voucher, proof);
@@ -641,15 +641,27 @@ contract CartesiDAppTest is TestBase {
         ));
     }
 
+    function encodeVoucher(
+        Voucher calldata voucher
+    ) external pure returns (bytes memory) {
+        return OutputEncoding.encodeVoucher(voucher.destination, voucher.payload);
+    }
+
+    function encodeNotice(
+        bytes calldata notice
+    ) external pure returns (bytes memory) {
+        return OutputEncoding.encodeNotice(notice);
+    }
+
     function writeInputs() internal {
         for (uint256 i; i < outputEnums.length; ++i) {
             LibServerManager.OutputEnum outputEnum = outputEnums[i];
             if (outputEnum == LibServerManager.OutputEnum.VOUCHER) {
                 Voucher memory voucher = getVoucher(i);
-                writeInput(i, voucher.destination, voucher.payload);
+                writeInput(i, noticeSender, this.encodeVoucher(voucher));
             } else {
                 bytes memory notice = getNotice(i);
-                writeInput(i, noticeSender, notice);
+                writeInput(i, noticeSender, this.encodeNotice(notice));
             }
         }
     }
@@ -718,8 +730,7 @@ contract CartesiDAppTest is TestBase {
         return
             keccak256(
                 abi.encodePacked(
-                    _validity.vouchersEpochRootHash,
-                    _validity.noticesEpochRootHash,
+                    _validity.outputsEpochRootHash,
                     _validity.machineStateHash
                 )
             );
@@ -740,7 +751,7 @@ contract CartesiDAppTest is TestBase {
         uint256 _inputIndex,
         uint256 _numInputsAfter
     ) internal returns (Proof memory) {
-        Proof memory proof = getVoucherProof(_inputIndexWithinEpoch);
+        Proof memory proof = getNoticeProof(_inputIndexWithinEpoch);
         registerProof(_inputIndex, _numInputsAfter, proof);
         return proof;
     }
@@ -792,8 +803,7 @@ contract CartesiDAppTest is TestBase {
                 inputIndexWithinEpoch: uint64(v.inputIndexWithinEpoch),
                 outputIndexWithinInput: uint64(v.outputIndexWithinInput),
                 outputHashesRootHash: v.outputHashesRootHash,
-                vouchersEpochRootHash: v.vouchersEpochRootHash,
-                noticesEpochRootHash: v.noticesEpochRootHash,
+                outputsEpochRootHash: v.noticesEpochRootHash,
                 machineStateHash: v.machineStateHash,
                 outputHashInOutputHashesSiblings: v
                     .outputHashInOutputHashesSiblings,
