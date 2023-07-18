@@ -6,16 +6,4 @@ local constants = {
     a = 64, b = 63,
 }
 
---[[
-a = 2
-b = 2
-
-states = 2^b + 1
-
-x (0 0 0 | x) (0 0 0 | x) (0 0 0 | x) (0 0 0 | x)
-
-0  1 2 3   0   1 2 3   0   0
-
---]]
-
 return constants

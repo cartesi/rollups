@@ -1,14 +1,18 @@
-local keccak_bin = require "cartesi".keccak
+local keccak = require "cartesi".keccak
 
 local function hex_from_bin(bin)
     assert(bin:len() == 32)
-    return "0x" .. string.gsub(bin, ".", function(c)
-        return string.format("%02x", string.byte(c))
-    end)
+    return "0x" .. (bin:gsub('.', function (c)
+        return string.format('%02x', string.byte(c))
+    end))
 end
 
-local function keccak(...)
-    return hex_from_bin(keccak_bin(...))
+local function bin_from_hex(hex)
+    assert(hex:len() == 66, string.format("%s %d", hex, hex:len()))
+    local h = assert(hex:match("0x(%x+)"), hex)
+    return (h:gsub('..', function (cc)
+        return string.char(tonumber(cc, 16))
+    end))
 end
 
 local internalized_hahes = {}
@@ -17,35 +21,37 @@ local iterateds = {}
 local Hash = {}
 Hash.__index = Hash
 
-function Hash:from_digest(digest_hex)
-    assert(type(digest_hex) == "string", digest_hex:len() == 66)
+function Hash:from_digest(digest)
+    assert(type(digest) == "string", digest:len() == 32)
 
-    local x = internalized_hahes[digest_hex]
+    local x = internalized_hahes[digest]
     if x then return x end
 
-    local h = {digest_hex = digest_hex}
+    local h = {digest = digest}
     iterateds[h] = {h}
     setmetatable(h, self)
-    internalized_hahes[digest_hex] = h
+    internalized_hahes[digest] = h
     return h
 end
 
-function Hash:from_digest_bin(digest_bin)
-    local digest_hex = hex_from_bin(digest_bin)
-    return self:from_digest(digest_hex)
+function Hash:from_digest_hex(digest_hex)
+    assert(type(digest_hex) == "string", digest_hex:len() == 66)
+    local digest = bin_from_hex(digest_hex)
+    return self:from_digest(digest)
 end
 
 function Hash:from_data(data)
-    local digest_hex = keccak(data)
-    return self:from_digest(digest_hex)
+    local digest = keccak(data)
+    return self:from_digest(digest)
 end
 
 function Hash:join(other_hash)
-    assert(getmetatable(other_hash) == Hash)
-    local digest_hex = keccak(self.digest_hex, other_hash.digest_hex)
-    local ret = Hash:from_digest(digest_hex)
-    ret.left = self.digest_hex
-    ret.right = other_hash.digest_hex
+    Hash:is_of_type_hash(other_hash)
+
+    local digest = keccak(self.digest, other_hash.digest)
+    local ret = Hash:from_digest(digest)
+    ret.left = self.digest
+    ret.right = other_hash.digest
     return ret
 end
 
@@ -77,18 +83,17 @@ function Hash:iterated_merkle(level)
 end
 
 Hash.__tostring = function (x)
-    return x.digest_hex
+    return hex_from_bin(x.digest)
 end
 
 local zero_bytes32 = "0x0000000000000000000000000000000000000000000000000000000000000000"
-local zero_hash = Hash:from_digest(zero_bytes32)
+local zero_hash = Hash:from_digest_hex(zero_bytes32)
 
 Hash.zero = zero_hash
 
 function Hash:is_zero()
     return self == zero_hash
 end
-
 
 function Hash:is_of_type_hash(x)
     return getmetatable(x) == self
