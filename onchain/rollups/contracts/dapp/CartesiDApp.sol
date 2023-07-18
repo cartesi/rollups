@@ -122,7 +122,7 @@ contract CartesiDApp is
         // query the current consensus for the desired claim
         (epochHash, firstInputIndex, lastInputIndex) = getClaim(_proof.context);
 
-        // validate the epoch input index and calculate the inbox input index
+        // validate input index range and calculate the input index
         // based on the input index range provided by the consensus
         inputIndex = _proof.validity.validateInputIndexRange(
             firstInputIndex,

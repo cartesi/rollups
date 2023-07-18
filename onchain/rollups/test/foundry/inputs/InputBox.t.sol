@@ -30,7 +30,7 @@ contract InputBoxHandler is Test {
 
     InputData[] inputDataArray;
 
-    // array of addresses of dapps whose inboxes aren't empty
+    // array of addresses of dapps whose input boxes aren't empty
     address[] dapps;
 
     // mapping of dapp addresses to number of inputs
@@ -67,13 +67,13 @@ contract InputBoxHandler is Test {
         uint256 index = inputBox.getNumberOfInputs(_dapp);
 
         // Check if `getNumberOfInputs` matches internal count
-        assertEq(index, numOfInputs[_dapp], "inbox size");
+        assertEq(index, numOfInputs[_dapp], "input box size");
 
-        // Make the sender add the input to the DApp's inbox
+        // Make the sender add the input to the DApp's input box
         vm.prank(msg.sender);
         bytes32 inputHash = inputBox.addInput(_dapp, _input);
 
-        // If this is the first input being added to the DApp's inbox,
+        // If this is the first input being added to the DApp's input box,
         // then push the dapp to the array of dapps
         if (index == 0) {
             dapps.push(_dapp);
@@ -92,11 +92,11 @@ contract InputBoxHandler is Test {
         // Add the input data to the array
         inputDataArray.push(inputData);
 
-        // Check if the inbox size increases by one
+        // Check if the input box size increases by one
         assertEq(
             index + 1,
             inputBox.getNumberOfInputs(_dapp),
-            "inbox size increment"
+            "input box size increment"
         );
 
         // Check if the input hash matches the one returned by `getInputHash`
@@ -230,7 +230,7 @@ contract InputBoxTest is Test {
             // Get input data and metadata passed to `addInput`
             InputBoxHandler.InputData memory inputData = handler.getInputAt(i);
 
-            // Make sure the input index is less than the inbox size
+            // Make sure the input index is less than the input box size
             assertLt(
                 inputData.index,
                 inputBox.getNumberOfInputs(inputData.dapp),

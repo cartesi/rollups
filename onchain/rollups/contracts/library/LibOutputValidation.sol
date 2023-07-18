@@ -201,7 +201,7 @@ library LibOutputValidation {
         return (((voucher << 128) | input));
     }
 
-    /// @notice Validate input index range and get the inbox input index.
+    /// @notice Validate input index range and get the input index.
     /// @param v The output validity proof
     /// @param firstInputIndex The index of the first input of the epoch in the input box
     /// @param lastInputIndex The index of the last input of the epoch in the input box
