@@ -6,6 +6,17 @@ local consts = require "constants"
 
 local ulte = arithmetic.ulte
 
+--[[
+a = 2
+b = 2
+
+states = 2^b + 1
+
+x (0 0 0 | x) (0 0 0 | x) (0 0 0 | x) (0 0 0 | x)
+0  1 2 3   0   1 2 3   0   1
+
+--]]
+
 local function build_small_machine_commitment(base_cycle, log2_stride_count, machine)
     machine:advance(base_cycle)
     local initial_state = machine:result().state

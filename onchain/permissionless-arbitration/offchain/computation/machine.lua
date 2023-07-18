@@ -16,7 +16,7 @@ function ComputationResult:new(state, halted, uhalted)
 end
 
 function ComputationResult:from_current_machine_state(machine)
-    local hash = Hash:from_digest_bin(machine:get_root_hash())
+    local hash = Hash:from_digest(machine:get_root_hash())
     return ComputationResult:new(
         hash,
         machine:read_iflags_H(),
