@@ -13,7 +13,7 @@ library OutputEncoding {
     function encodeNotice(
         bytes calldata notice
     ) internal pure returns (bytes memory) {
-        return abi.encode(notice);
+        return abi.encodeWithSignature("Notice(bytes)", notice);
     }
 
     /// @notice Encode a voucher.
@@ -24,6 +24,11 @@ library OutputEncoding {
         address destination,
         bytes calldata payload
     ) internal pure returns (bytes memory) {
-        return abi.encode(destination, payload);
+        return
+            abi.encodeWithSignature(
+                "Voucher(address,bytes)",
+                destination,
+                payload
+            );
     }
 }
