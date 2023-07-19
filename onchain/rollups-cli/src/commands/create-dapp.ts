@@ -17,7 +17,7 @@ import { parseUnits } from "@ethersproject/units";
 import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/dapp/ICartesiDAppFactory";
 
 import { BlockchainArgs, blockchainBuilder } from "../args";
-import { factory } from "../connect";
+import { dappFactory } from "../connect";
 import { safeHandler } from "../util";
 
 interface Args extends BlockchainArgs {
@@ -84,6 +84,7 @@ const builder = (yargs: Argv<{}>): Argv<Args> => {
 
 const handler = safeHandler<Args>(async (args) => {
     const {
+        consensusAddress,
         deploymentFile,
         mnemonic,
         accountIndex,
@@ -96,8 +97,8 @@ const handler = safeHandler<Args>(async (args) => {
     // connect to provider, use deployment address based on returned chain id of provider
     console.log(`connecting to ${rpc}`);
 
-    // connect to factory
-    const factoryContract = await factory(
+    // connect to the DApp factory
+    const factoryContract = await dappFactory(
         rpc,
         mnemonic,
         accountIndex,
@@ -123,7 +124,6 @@ const handler = safeHandler<Args>(async (args) => {
         overrides.gasLimit = gasLimit;
     }
 
-    const consensusAddress = args.consensusAddress;
     const dappOwner = args.dappOwner || address;
 
     let tx;
@@ -144,7 +144,7 @@ const handler = safeHandler<Args>(async (args) => {
     console.log("waiting for confirmation...");
     const receipt = await tx.wait(1);
 
-    // find new application event in receipt
+    // find ApplicationCreated event in receipt
     const event = receipt.events?.find(
         (e) => e.event === "ApplicationCreated"
     ) as ApplicationCreatedEvent | undefined;

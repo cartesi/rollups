@@ -97,7 +97,7 @@ function getContractConnector<T>(contractName: string, contractFactory: any) {
     };
 }
 
-export const factory = getContractConnector<CartesiDAppFactory>(
+export const dappFactory = getContractConnector<CartesiDAppFactory>(
     "CartesiDAppFactory",
     CartesiDAppFactory__factory
 );
