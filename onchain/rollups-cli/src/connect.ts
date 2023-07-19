@@ -13,8 +13,6 @@ import fs from "fs";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import {
-    Authority,
-    Authority__factory,
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
 } from "@cartesi/rollups";
@@ -98,11 +96,6 @@ function getContractConnector<T>(contractName: string, contractFactory: any) {
         return contractFactory.connect(address, signer || provider);
     };
 }
-
-export const authority = getContractConnector<Authority>(
-    "Authority",
-    Authority__factory
-);
 
 export const factory = getContractConnector<CartesiDAppFactory>(
     "CartesiDAppFactory",

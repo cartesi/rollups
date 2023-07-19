@@ -17,12 +17,12 @@ import { parseUnits } from "@ethersproject/units";
 import { ApplicationCreatedEvent } from "@cartesi/rollups/dist/src/types/contracts/dapp/ICartesiDAppFactory";
 
 import { BlockchainArgs, blockchainBuilder } from "../args";
-import { authority, factory } from "../connect";
+import { factory } from "../connect";
 import { safeHandler } from "../util";
 
 interface Args extends BlockchainArgs {
     dappOwner?: string;
-    consensusAddress?: string;
+    consensusAddress: string;
     templateHash?: string;
     templateHashFile?: string;
     salt?: string;
@@ -52,6 +52,7 @@ const builder = (yargs: Argv<{}>): Argv<Args> => {
         .option("consensusAddress", {
             describe: "Consensus contract address",
             type: "string",
+            demandOption: true,
         })
         .option("templateHash", {
             describe: "Cartesi Machine template hash",
@@ -95,14 +96,6 @@ const handler = safeHandler<Args>(async (args) => {
     // connect to provider, use deployment address based on returned chain id of provider
     console.log(`connecting to ${rpc}`);
 
-    // connect to authority
-    const authorityContract = await authority(
-        rpc,
-        mnemonic,
-        accountIndex,
-        deploymentFile
-    );
-
     // connect to factory
     const factoryContract = await factory(
         rpc,
@@ -130,7 +123,7 @@ const handler = safeHandler<Args>(async (args) => {
         overrides.gasLimit = gasLimit;
     }
 
-    const consensusAddress = args.consensusAddress || authorityContract.address;
+    const consensusAddress = args.consensusAddress;
     const dappOwner = args.dappOwner || address;
 
     let tx;
