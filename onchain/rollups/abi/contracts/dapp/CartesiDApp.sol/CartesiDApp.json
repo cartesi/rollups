@@ -118,12 +118,12 @@
             "components": [
               {
                 "internalType": "uint64",
-                "name": "inputIndex",
+                "name": "inputIndexWithinEpoch",
                 "type": "uint64"
               },
               {
                 "internalType": "uint64",
-                "name": "outputIndex",
+                "name": "outputIndexWithinInput",
                 "type": "uint64"
               },
               {
@@ -148,7 +148,7 @@
               },
               {
                 "internalType": "bytes32[]",
-                "name": "keccakInHashesSiblings",
+                "name": "outputHashInOutputHashesSiblings",
                 "type": "bytes32[]"
               },
               {
@@ -399,12 +399,12 @@
             "components": [
               {
                 "internalType": "uint64",
-                "name": "inputIndex",
+                "name": "inputIndexWithinEpoch",
                 "type": "uint64"
               },
               {
                 "internalType": "uint64",
-                "name": "outputIndex",
+                "name": "outputIndexWithinInput",
                 "type": "uint64"
               },
               {
@@ -429,7 +429,7 @@
               },
               {
                 "internalType": "bytes32[]",
-                "name": "keccakInHashesSiblings",
+                "name": "outputHashInOutputHashesSiblings",
                 "type": "bytes32[]"
               },
               {
@@ -473,7 +473,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_outputIndex",
+        "name": "_outputIndexWithinInput",
         "type": "uint256"
       }
     ],
