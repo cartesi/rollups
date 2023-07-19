@@ -1,0 +1,169 @@
+{
+  "contractName": "IHistoryFactory",
+  "sourceName": "contracts/history/IHistoryFactory.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "historyOwner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract History",
+          "name": "history",
+          "type": "address"
+        }
+      ],
+      "name": "HistoryCreated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_historyOwner",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_salt",
+          "type": "bytes32"
+        }
+      ],
+      "name": "calculateHistoryAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_historyOwner",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_salt",
+          "type": "bytes32"
+        }
+      ],
+      "name": "newHistory",
+      "outputs": [
+        {
+          "internalType": "contract History",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_historyOwner",
+          "type": "address"
+        }
+      ],
+      "name": "newHistory",
+      "outputs": [
+        {
+          "internalType": "contract History",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "HistoryCreated(address,address)": {
+        "details": "MUST be triggered on a successful call to `newHistory`.",
+        "params": {
+          "history": "The history",
+          "historyOwner": "The initial history owner"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "calculateHistoryAddress(address,bytes32)": {
+        "details": "Beware that only the `newHistory` function with the `_salt` parameter      is able to deterministically deploy a history.",
+        "params": {
+          "_historyOwner": "The initial history owner",
+          "_salt": "The salt used to deterministically generate the history address"
+        },
+        "returns": {
+          "_0": "The deterministic history address"
+        }
+      },
+      "newHistory(address)": {
+        "details": "On success, MUST emit a `HistoryCreated` event.",
+        "params": {
+          "_historyOwner": "The initial history owner"
+        },
+        "returns": {
+          "_0": "The history"
+        }
+      },
+      "newHistory(address,bytes32)": {
+        "details": "On success, MUST emit a `HistoryCreated` event.",
+        "params": {
+          "_historyOwner": "The initial history owner",
+          "_salt": "The salt used to deterministically generate the history address"
+        },
+        "returns": {
+          "_0": "The history"
+        }
+      }
+    },
+    "title": "History Factory interface",
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "HistoryCreated(address,address)": {
+        "notice": "A new history was deployed."
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "calculateHistoryAddress(address,bytes32)": {
+        "notice": "Calculate the address of a history to be deployed deterministically."
+      },
+      "newHistory(address)": {
+        "notice": "Deploy a new history."
+      },
+      "newHistory(address,bytes32)": {
+        "notice": "Deploy a new history deterministically."
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "calculateHistoryAddress(address,bytes32)": "50f9c5ba",
+      "newHistory(address)": "88d49a62",
+      "newHistory(address,bytes32)": "2ab8b115"
+    }
+  }
+}

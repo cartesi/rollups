@@ -1,0 +1,169 @@
+{
+  "contractName": "IAuthorityFactory",
+  "sourceName": "contracts/consensus/authority/IAuthorityFactory.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "authorityOwner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "contract Authority",
+          "name": "authority",
+          "type": "address"
+        }
+      ],
+      "name": "AuthorityCreated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_authorityOwner",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_salt",
+          "type": "bytes32"
+        }
+      ],
+      "name": "calculateAuthorityAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_authorityOwner",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_salt",
+          "type": "bytes32"
+        }
+      ],
+      "name": "newAuthority",
+      "outputs": [
+        {
+          "internalType": "contract Authority",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_authorityOwner",
+          "type": "address"
+        }
+      ],
+      "name": "newAuthority",
+      "outputs": [
+        {
+          "internalType": "contract Authority",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "devdoc": {
+    "events": {
+      "AuthorityCreated(address,address)": {
+        "details": "MUST be triggered on a successful call to `newAuthority`.",
+        "params": {
+          "authority": "The authority",
+          "authorityOwner": "The initial authority owner"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "calculateAuthorityAddress(address,bytes32)": {
+        "details": "Beware that only the `newAuthority` function with the `_salt` parameter      is able to deterministically deploy an authority.",
+        "params": {
+          "_authorityOwner": "The initial authority owner",
+          "_salt": "The salt used to deterministically generate the authority address"
+        },
+        "returns": {
+          "_0": "The deterministic authority address"
+        }
+      },
+      "newAuthority(address)": {
+        "details": "On success, MUST emit an `AuthorityCreated` event.",
+        "params": {
+          "_authorityOwner": "The initial authority owner"
+        },
+        "returns": {
+          "_0": "The authority"
+        }
+      },
+      "newAuthority(address,bytes32)": {
+        "details": "On success, MUST emit an `AuthorityCreated` event.",
+        "params": {
+          "_authorityOwner": "The initial authority owner",
+          "_salt": "The salt used to deterministically generate the authority address"
+        },
+        "returns": {
+          "_0": "The authority"
+        }
+      }
+    },
+    "title": "Authority Factory interface",
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "AuthorityCreated(address,address)": {
+        "notice": "A new authority was deployed."
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "calculateAuthorityAddress(address,bytes32)": {
+        "notice": "Calculate the address of an authority to be deployed deterministically."
+      },
+      "newAuthority(address)": {
+        "notice": "Deploy a new authority."
+      },
+      "newAuthority(address,bytes32)": {
+        "notice": "Deploy a new authority deterministically."
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": null,
+    "methodIdentifiers": {
+      "calculateAuthorityAddress(address,bytes32)": "009c5784",
+      "newAuthority(address)": "b3a51b84",
+      "newAuthority(address,bytes32)": "5a3f27d3"
+    }
+  }
+}

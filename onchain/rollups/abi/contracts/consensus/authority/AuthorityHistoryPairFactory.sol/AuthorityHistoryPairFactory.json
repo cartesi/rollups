@@ -1,0 +1,145 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IAuthorityFactory",
+        "name": "_authorityFactory",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IHistoryFactory",
+        "name": "_historyFactory",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "contract IAuthorityFactory",
+        "name": "authorityFactory",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract IHistoryFactory",
+        "name": "historyFactory",
+        "type": "address"
+      }
+    ],
+    "name": "AuthorityHistoryPairFactoryCreated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_authorityOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_salt",
+        "type": "bytes32"
+      }
+    ],
+    "name": "calculateAuthorityHistoryAddressPair",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "authorityAddress_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "historyAddress_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAuthorityFactory",
+    "outputs": [
+      {
+        "internalType": "contract IAuthorityFactory",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getHistoryFactory",
+    "outputs": [
+      {
+        "internalType": "contract IHistoryFactory",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_authorityOwner",
+        "type": "address"
+      }
+    ],
+    "name": "newAuthorityHistoryPair",
+    "outputs": [
+      {
+        "internalType": "contract Authority",
+        "name": "authority_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract History",
+        "name": "history_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_authorityOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_salt",
+        "type": "bytes32"
+      }
+    ],
+    "name": "newAuthorityHistoryPair",
+    "outputs": [
+      {
+        "internalType": "contract Authority",
+        "name": "authority_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract History",
+        "name": "history_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
