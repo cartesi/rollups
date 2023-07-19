@@ -46,12 +46,12 @@
               "components": [
                 {
                   "internalType": "uint64",
-                  "name": "inputIndex",
+                  "name": "inputIndexWithinEpoch",
                   "type": "uint64"
                 },
                 {
                   "internalType": "uint64",
-                  "name": "outputIndex",
+                  "name": "outputIndexWithinInput",
                   "type": "uint64"
                 },
                 {
@@ -76,7 +76,7 @@
                 },
                 {
                   "internalType": "bytes32[]",
-                  "name": "keccakInHashesSiblings",
+                  "name": "outputHashInOutputHashesSiblings",
                   "type": "bytes32[]"
                 },
                 {
@@ -163,12 +163,12 @@
               "components": [
                 {
                   "internalType": "uint64",
-                  "name": "inputIndex",
+                  "name": "inputIndexWithinEpoch",
                   "type": "uint64"
                 },
                 {
                   "internalType": "uint64",
-                  "name": "outputIndex",
+                  "name": "outputIndexWithinInput",
                   "type": "uint64"
                 },
                 {
@@ -193,7 +193,7 @@
                 },
                 {
                   "internalType": "bytes32[]",
-                  "name": "keccakInHashesSiblings",
+                  "name": "outputHashInOutputHashesSiblings",
                   "type": "bytes32[]"
                 },
                 {
@@ -237,7 +237,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "_outputIndex",
+          "name": "_outputIndexWithinInput",
           "type": "uint256"
         }
       ],
@@ -312,7 +312,7 @@
       "wasVoucherExecuted(uint256,uint256)": {
         "params": {
           "_inboxInputIndex": "The index of the input in the input box",
-          "_outputIndex": "The index of output emitted by the input"
+          "_outputIndexWithinInput": "The index of output emitted by the input"
         },
         "returns": {
           "_0": "Whether the voucher has been executed before"
