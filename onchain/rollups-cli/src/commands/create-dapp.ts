@@ -172,7 +172,7 @@ const handler = safeHandler<Args>(async (args) => {
 });
 
 const cmd: CommandModule<{}, Args> = {
-    command: "create",
+    command: "create-dapp",
     describe: "Instantiate rollups application",
     builder,
     handler,
