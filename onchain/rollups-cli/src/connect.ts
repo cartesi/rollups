@@ -15,6 +15,10 @@ import { ethers } from "ethers";
 import {
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
+    AuthorityFactory,
+    AuthorityFactory__factory,
+    AuthorityHistoryPairFactory,
+    AuthorityHistoryPairFactory__factory,
 } from "@cartesi/rollups";
 import goerli from "@cartesi/rollups/export/abi/goerli.json";
 import sepolia from "@cartesi/rollups/export/abi/sepolia.json";
@@ -101,3 +105,14 @@ export const dappFactory = getContractConnector<CartesiDAppFactory>(
     "CartesiDAppFactory",
     CartesiDAppFactory__factory
 );
+
+export const authorityFactory = getContractConnector<AuthorityFactory>(
+    "AuthorityFactory",
+    AuthorityFactory__factory
+);
+
+export const authorityHistoryPairFactory =
+    getContractConnector<AuthorityHistoryPairFactory>(
+        "AuthorityHistoryPairFactory",
+        AuthorityHistoryPairFactory__factory
+    );

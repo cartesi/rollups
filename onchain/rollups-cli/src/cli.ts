@@ -13,9 +13,11 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import create_dapp from "./commands/create-dapp";
+import create_authority from "./commands/create-authority";
 
 yargs(hideBin(process.argv))
     .version()
     .command(create_dapp)
+    .command(create_authority)
     .strict()
     .alias({ h: "help" }).argv;
