@@ -73,7 +73,9 @@ impl From<DAppMetadataCLIConfig> for DAppMetadata {
 }
 
 /// Declares a struct that implements the BrokerStream interface
-/// The generated key has the format `chain-<chain_id>:dapp-<dapp_address>:<key>`
+/// The generated key has the format `{chain-<chain_id>:dapp-<dapp_address>}:<key>`.
+/// The curly braces define a hash tag to ensure that all of a dapp's streams
+/// are located in the same node when connected to a Redis cluster.
 macro_rules! decl_broker_stream {
     ($stream: ident, $payload: ty, $key: literal) => {
         #[derive(Debug)]
@@ -93,7 +95,7 @@ macro_rules! decl_broker_stream {
             pub fn new(metadata: &crate::rollups_stream::DAppMetadata) -> Self {
                 Self {
                     key: format!(
-                        "chain-{}:dapp-{}:{}",
+                        "{{chain-{}:dapp-{}}}:{}",
                         metadata.chain_id,
                         hex::encode(metadata.dapp_address.inner()),
                         $key
@@ -124,6 +126,6 @@ mod tests {
             dapp_address: Address::new([0xfa; ADDRESS_SIZE]),
         };
         let stream = MockStream::new(&metadata);
-        assert_eq!(stream.key, "chain-123:dapp-fafafafafafafafafafafafafafafafafafafafa:rollups-mock");
+        assert_eq!(stream.key, "{chain-123:dapp-fafafafafafafafafafafafafafafafafafafafa}:rollups-mock");
     }
 }
