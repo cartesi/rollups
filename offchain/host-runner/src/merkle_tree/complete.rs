@@ -415,9 +415,9 @@ mod tests {
         assert_eq!(
             proof.sibling_hashes,
             vec![
-                tree.pristine.get_hash(2).unwrap().clone(),
-                tree.pristine.get_hash(1).unwrap().clone(),
                 tree.pristine.get_hash(0).unwrap().clone(),
+                tree.pristine.get_hash(1).unwrap().clone(),
+                tree.pristine.get_hash(2).unwrap().clone(),
             ]
         );
     }
@@ -438,9 +438,9 @@ mod tests {
         assert_eq!(
             proof.sibling_hashes,
             vec![
-                Hash::decode("bb1bfb5bfc9ba6ba8e25341a7b70725d8f74121b9e31dd2314e68e27b8d24244"),
-                Hash::decode("bd8b151773dbbefd7b0df67f2dcc482901728b6df477f4fb2f192733a005d396"),
                 Hash::from([0xFF; HASH_SIZE]),
+                Hash::decode("bd8b151773dbbefd7b0df67f2dcc482901728b6df477f4fb2f192733a005d396"),
+                Hash::decode("bb1bfb5bfc9ba6ba8e25341a7b70725d8f74121b9e31dd2314e68e27b8d24244"),
             ]
         );
     }

@@ -70,7 +70,8 @@ impl Proof {
     /// Converts log2_size to index into siblings array
     fn log2_size_to_index(&self, log2_size: usize) -> Result<usize, Error> {
         snafu::ensure!(log2_size < self.log2_root_size, SizeOutOfRangeSnafu);
-        let index = self.log2_root_size - 1 - log2_size;
+        snafu::ensure!(log2_size >= self.log2_target_size, SizeOutOfRangeSnafu);
+        let index = log2_size - self.log2_target_size;
         snafu::ensure!(index < self.sibling_hashes.len(), SizeOutOfRangeSnafu);
         Ok(index)
     }
