@@ -1,18 +1,18 @@
 # Processes forge test output and prints out a jq filter to be applied
-# to the vouchers.json file in order to update the faulty proofs
+# to the inputs.json file in order to update the faulty proofs
 
 /^[ ]*Proof for output [0-9]+ might be outdated/ {
-    voucherFound = 1;
-    voucherRow = NR;
-    voucherId = $4;
+    outputFound = 1;
+    outputRow = NR;
+    outputId = $4;
 }
 
-voucherFound && (NR == voucherRow + 1) {
-    sender[voucherId] = $1;
+outputFound && (NR == outputRow + 1) {
+    sender[outputId] = $1;
 }
 
-voucherFound && (NR == voucherRow + 2) {
-    payload[voucherId] = $1;
+outputFound && (NR == outputRow + 2) {
+    payload[outputId] = $1;
 }
 
 END {
