@@ -61,8 +61,8 @@ b64to16() {
     python3 -m b64to16 output/finish_epoch_response_64.json > finish_epoch_response.json
 }
 
-# Generate Solidity libraries with proofs from epoch status
-genlibs() {
+# Generate Solidity library with proofs from epoch status
+genlib() {
     pushd ../../../../../ >/dev/null
     npx ts-node rollups/test/foundry/dapp/helper/genProofLibrary.ts
     popd >/dev/null
@@ -128,10 +128,10 @@ then
 
     b64to16
 
-    echo3 $GREEN "Generating Solidity libraries for each output..."
+    echo3 $GREEN "Generating Solidity library with proofs..."
     echo
 
-    genlibs
+    genlib
     echo
 
     echo2 $CYAN "All set up!"
@@ -185,10 +185,10 @@ echo
 
 b64to16
 
-echo3 $GREEN "Generating Solidity libraries for each output..."
+echo3 $GREEN "Generating Solidity library with proofs..."
 echo
 
-genlibs
+genlib
 echo
 
 echo2 $CYAN "Proofs were updated!"
