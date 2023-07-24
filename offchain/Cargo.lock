@@ -1497,6 +1497,7 @@ dependencies = [
  "http-server",
  "hyper",
  "im",
+ "logs",
  "rand 0.8.5",
  "redis",
  "rollups-events",
@@ -2989,6 +2990,15 @@ name = "log"
 version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b06a4cde4c0f271a446782e3eff8de789548ce57dbc8eca9292c27f4a42004b4"
+
+[[package]]
+name = "logs"
+version = "1.0.0"
+dependencies = [
+ "clap",
+ "tracing",
+ "tracing-subscriber",
+]
 
 [[package]]
 name = "matchers"

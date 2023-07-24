@@ -16,6 +16,7 @@ use eth_tx_manager::{
     Priority,
 };
 use http_server::HttpServerConfig;
+use logs::{LogsEnvCliConfig, LogsConfig};
 use snafu::{ResultExt, Snafu};
 use state_client_lib::config::{Error as SCError, SCConfig, SCEnvCLIConfig};
 use std::{fs::File, io::BufReader, path::PathBuf};
@@ -44,6 +45,9 @@ pub struct DispatcherEnvCLIConfig {
     #[command(flatten)]
     pub auth_config: AuthEnvCLIConfig,
 
+    #[command(flatten)]
+    pub logs_config: LogsEnvCliConfig,
+
     /// Path to file with deployment json of dapp
     #[arg(long, env, default_value = "./dapp_deployment.json")]
     pub rd_dapp_deployment_file: PathBuf,
@@ -63,6 +67,7 @@ pub struct DispatcherConfig {
     pub tx_config: TxManagerConfig,
     pub broker_config: BrokerConfig,
     pub auth_config: AuthConfig,
+    pub logs_config: LogsConfig,
 
     pub dapp_deployment: DappDeployment,
     pub rollups_deployment: RollupsDeployment,
@@ -121,6 +126,8 @@ impl Config {
         let auth_config = AuthConfig::initialize(dispatcher_config.auth_config)
             .context(AuthSnafu)?;
 
+        let logs_config = LogsConfig::initialize(dispatcher_config.logs_config);
+
         let path = dispatcher_config.rd_dapp_deployment_file;
         let dapp_deployment: DappDeployment = read_json(path)?;
 
@@ -140,6 +147,7 @@ impl Config {
             tx_config,
             broker_config,
             auth_config,
+            logs_config,
 
             dapp_deployment,
             rollups_deployment,

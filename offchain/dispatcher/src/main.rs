@@ -10,17 +10,23 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+
+use tracing::info;
+use logs;
 
 // NOTE: doesn't support History upgradability.
 // NOTE: doesn't support changing epoch_duration in the middle of things.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let filter = EnvFilter::builder()
-        .with_default_directive(LevelFilter::INFO.into())
-        .from_env_lossy();
-    tracing_subscriber::fmt().with_env_filter(filter).init();
+    // let filter = EnvFilter::builder()
+    //     .with_default_directive(LevelFilter::INFO.into())
+    //     .from_env_lossy();
+    // tracing_subscriber::fmt().with_env_filter(filter).init();
 
     let config = dispatcher::config::Config::initialize()?;
+
+    logs::initialize_logs(&config.dispatcher_config.logs_config);
+
+    info!("Starting Dispatcher");
     dispatcher::run(config).await.map_err(|e| e.into())
 }
