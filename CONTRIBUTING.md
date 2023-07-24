@@ -8,6 +8,7 @@ We highly appreciate even the smallest of fixes or additions to our project.
  - [Basic Contributing Guidelines](#basic)
  - [Commit Message Guidelines](#commit)
  - [Signing the CLA](#cla)
+ - [Authors](#authors)
  - [Get in Touch](#touch)
 
 
@@ -141,6 +142,20 @@ Closes #<pr number>
 Breaking Change section should start with the phrase "BREAKING CHANGE: " followed by a summary of the breaking change, a blank line, and a detailed description of the breaking change that also includes migration instructions.
 
 Similarly, a Deprecation section should start with "DEPRECATED: " followed by a short description of what is deprecated, a blank line, and a detailed description of the deprecation that also mentions the recommended update path.
+
+
+## <a name="authors" \>Authors
+
+Any contributor who has in the past had at least one pull request for a code change accepted in this repo may submit a pull request to have their name added to the AUTHORS file.
+Submissions to the AUTHORS file should be in the format below:
+
+```
+Name <email>
+```
+
+Inclusion in the AUTHORS file for each repo is entirely voluntary.
+It is up to each individual author to decide whether they would like attribution in a given AUTHORS file and to submit a pull request accordingly.
+Please note that a contributor's decision on whether to seek attribution in an AUTHORS file will have no impact on copyright ownership.
 
 
 ## <a name="cla" />Signing the CLA
