@@ -1,0 +1,10 @@
+[package]
+name = "logs"
+version = "1.0.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4.2", features = ["derive", "env"] }
