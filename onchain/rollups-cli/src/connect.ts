@@ -10,14 +10,9 @@ import {
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
 } from "@cartesi/rollups";
-import goerli from "@cartesi/rollups/export/abi/goerli.json";
-import sepolia from "@cartesi/rollups/export/abi/sepolia.json";
-import polygon_mumbai from "@cartesi/rollups/export/abi/polygon_mumbai.json";
 import arbitrum_goerli from "@cartesi/rollups/export/abi/arbitrum_goerli.json";
 import optimism_goerli from "@cartesi/rollups/export/abi/optimism_goerli.json";
-import bsc_testnet from "@cartesi/rollups/export/abi/bsc_testnet.json";
-import iotex_testnet from "@cartesi/rollups/export/abi/iotex_testnet.json";
-import chiado from "@cartesi/rollups/export/abi/chiado.json";
+import sepolia from "@cartesi/rollups/export/abi/sepolia.json";
 
 type DeploymentContract = {
     address: string;
@@ -31,14 +26,9 @@ type Deployment = {
 };
 
 const deployments: Record<number, Deployment> = {
-    5: goerli,
-    11155111: sepolia,
-    80001: polygon_mumbai,
     421613: arbitrum_goerli,
     420: optimism_goerli,
-    97: bsc_testnet,
-    4690: iotex_testnet,
-    10200: chiado,
+    11155111: sepolia,
 };
 
 function getContractConnector<T>(contractName: string, contractFactory: any) {

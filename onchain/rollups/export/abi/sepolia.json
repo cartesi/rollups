@@ -3,7 +3,7 @@
   "chainId": "11155111",
   "contracts": {
     "Authority": {
-      "address": "0x35EC7d70cAff883844d94b54cD19634fFAb5d8CC",
+      "address": "0xf5cd3d72af355addD7A4BA8Ccbab08652B212E82",
       "abi": [
         {
           "inputs": [
@@ -11,15 +11,15 @@
               "internalType": "address",
               "name": "_owner",
               "type": "address"
-            },
-            {
-              "internalType": "contract IInputBox",
-              "name": "_inputBox",
-              "type": "address"
             }
           ],
           "stateMutability": "nonpayable",
           "type": "constructor"
+        },
+        {
+          "inputs": [],
+          "name": "AuthorityWithdrawalFailed",
+          "type": "error"
         },
         {
           "anonymous": false,
@@ -32,25 +32,6 @@
             }
           ],
           "name": "ApplicationJoined",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": false,
-              "internalType": "address",
-              "name": "owner",
-              "type": "address"
-            },
-            {
-              "indexed": false,
-              "internalType": "contract IInputBox",
-              "name": "inputBox",
-              "type": "address"
-            }
-          ],
-          "name": "ConsensusCreated",
           "type": "event"
         },
         {
@@ -237,7 +218,7 @@
       ]
     },
     "CartesiDAppFactory": {
-      "address": "0xE1A3433c7aEd747bF071481B47d27FE6d7C53eC0",
+      "address": "0x7122cd1221C20892234186facfE8615e6743Ab02",
       "abi": [
         {
           "anonymous": false,
@@ -370,7 +351,7 @@
       ]
     },
     "DAppAddressRelay": {
-      "address": "0x8Bbc0e6daB541DF0A9f0bDdA5D41B3B08B081d55",
+      "address": "0xF5DE34d6BbC0446E2a45719E718efEbaaE179daE",
       "abi": [
         {
           "inputs": [
@@ -411,8 +392,142 @@
         }
       ]
     },
+    "ERC1155BatchPortal": {
+      "address": "0xedB53860A6B52bbb7561Ad596416ee9965B055Aa",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "_inputBox",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract IERC1155",
+              "name": "_token",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "_tokenIds",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "_values",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_baseLayerData",
+              "type": "bytes"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_execLayerData",
+              "type": "bytes"
+            }
+          ],
+          "name": "depositBatchERC1155Token",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "getInputBox",
+          "outputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ]
+    },
+    "ERC1155SinglePortal": {
+      "address": "0x7CFB0193Ca87eB6e48056885E026552c3A941FC4",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "_inputBox",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract IERC1155",
+              "name": "_token",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_dapp",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_tokenId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_baseLayerData",
+              "type": "bytes"
+            },
+            {
+              "internalType": "bytes",
+              "name": "_execLayerData",
+              "type": "bytes"
+            }
+          ],
+          "name": "depositSingleERC1155Token",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "getInputBox",
+          "outputs": [
+            {
+              "internalType": "contract IInputBox",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ]
+    },
     "ERC20Portal": {
-      "address": "0x4340ac4FcdFC5eF8d34930C96BBac2Af1301DF40",
+      "address": "0x9C21AEb2093C32DDbC53eEF24B873BDCd1aDa1DB",
       "abi": [
         {
           "inputs": [
@@ -469,7 +584,7 @@
       ]
     },
     "ERC721Portal": {
-      "address": "0x4CA354590EB934E6094Be762b38dE75d1Dd605a9",
+      "address": "0x237F8DD094C0e47f4236f12b4Fa01d6Dae89fb87",
       "abi": [
         {
           "inputs": [
@@ -531,7 +646,7 @@
       ]
     },
     "EtherPortal": {
-      "address": "0xA89A3216F46F66486C9B794C1e28d3c44D59591e",
+      "address": "0xFfdbe43d4c855BF7e0f105c400A50857f53AB044",
       "abi": [
         {
           "inputs": [
@@ -543,6 +658,11 @@
           ],
           "stateMutability": "nonpayable",
           "type": "constructor"
+        },
+        {
+          "inputs": [],
+          "name": "EtherTransferFailed",
+          "type": "error"
         },
         {
           "inputs": [
@@ -578,7 +698,7 @@
       ]
     },
     "History": {
-      "address": "0xFB34DaDd5f3Aba55004C448AcFd24fAF5A4Ff83E",
+      "address": "0x9f8c308300c21E10d737219692cB4c5f9fAA7741",
       "abi": [
         {
           "inputs": [
@@ -590,6 +710,21 @@
           ],
           "stateMutability": "nonpayable",
           "type": "constructor"
+        },
+        {
+          "inputs": [],
+          "name": "InvalidClaimIndex",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "InvalidInputIndices",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "UnclaimedInputs",
+          "type": "error"
         },
         {
           "anonymous": false,
@@ -742,8 +877,13 @@
       ]
     },
     "InputBox": {
-      "address": "0x5a723220579C0DCb8C9253E6b4c62e572E379945",
+      "address": "0x59b22D57D4f067708AB0c00552767405926dc768",
       "abi": [
+        {
+          "inputs": [],
+          "name": "InputSizeExceedsLimit",
+          "type": "error"
+        },
         {
           "anonymous": false,
           "inputs": [
@@ -756,7 +896,7 @@
             {
               "indexed": true,
               "internalType": "uint256",
-              "name": "inboxInputIndex",
+              "name": "inputIndex",
               "type": "uint256"
             },
             {
@@ -845,193 +985,11 @@
       ]
     },
     "Bitmask": {
-      "address": "0x3F62ccC0e41287ea4d28dce6582a215B75bB43fd",
+      "address": "0xF5B2d8c81cDE4D6238bBf20D3D77DB37df13f735",
       "abi": []
     },
-    "BitsManipulation": {
-      "address": "0x91E780568A1FEdd5d01E1c1E4cAed68E3a849345",
-      "abi": [
-        {
-          "inputs": [
-            {
-              "internalType": "int32",
-              "name": "number",
-              "type": "int32"
-            },
-            {
-              "internalType": "uint32",
-              "name": "wordSize",
-              "type": "uint32"
-            }
-          ],
-          "name": "int32SignExtension",
-          "outputs": [
-            {
-              "internalType": "int32",
-              "name": "",
-              "type": "int32"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint32",
-              "name": "num",
-              "type": "uint32"
-            }
-          ],
-          "name": "uint32SwapEndian",
-          "outputs": [
-            {
-              "internalType": "uint32",
-              "name": "",
-              "type": "uint32"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint64",
-              "name": "number",
-              "type": "uint64"
-            },
-            {
-              "internalType": "uint64",
-              "name": "wordSize",
-              "type": "uint64"
-            }
-          ],
-          "name": "uint64SignExtension",
-          "outputs": [
-            {
-              "internalType": "uint64",
-              "name": "",
-              "type": "uint64"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint64",
-              "name": "num",
-              "type": "uint64"
-            }
-          ],
-          "name": "uint64SwapEndian",
-          "outputs": [
-            {
-              "internalType": "uint64",
-              "name": "",
-              "type": "uint64"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        }
-      ]
-    },
-    "BitsManipulationLibrary": {
-      "address": "0x302311FF8A135c0FC8703Cb4769EAa1604A4A515",
-      "abi": [
-        {
-          "inputs": [
-            {
-              "internalType": "int32",
-              "name": "number",
-              "type": "int32"
-            },
-            {
-              "internalType": "uint32",
-              "name": "wordSize",
-              "type": "uint32"
-            }
-          ],
-          "name": "int32SignExtension",
-          "outputs": [
-            {
-              "internalType": "int32",
-              "name": "",
-              "type": "int32"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint32",
-              "name": "num",
-              "type": "uint32"
-            }
-          ],
-          "name": "uint32SwapEndian",
-          "outputs": [
-            {
-              "internalType": "uint32",
-              "name": "",
-              "type": "uint32"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint64",
-              "name": "number",
-              "type": "uint64"
-            },
-            {
-              "internalType": "uint64",
-              "name": "wordSize",
-              "type": "uint64"
-            }
-          ],
-          "name": "uint64SignExtension",
-          "outputs": [
-            {
-              "internalType": "uint64",
-              "name": "",
-              "type": "uint64"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint64",
-              "name": "num",
-              "type": "uint64"
-            }
-          ],
-          "name": "uint64SwapEndian",
-          "outputs": [
-            {
-              "internalType": "uint64",
-              "name": "",
-              "type": "uint64"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        }
-      ]
-    },
     "CartesiMathV2": {
-      "address": "0x7db3A9BdA16D1C295b23B94a61808EFf82288269",
+      "address": "0xB634F716BEd5Dd5A2b9a91C92474C499e50Cb27D",
       "abi": [
         {
           "inputs": [
@@ -1149,152 +1107,8 @@
         }
       ]
     },
-    "Merkle": {
-      "address": "0x7CD2b2F951BAc762BF7affd73689A3e1198596AB",
-      "abi": [
-        {
-          "inputs": [
-            {
-              "internalType": "bytes32[]",
-              "name": "hashes",
-              "type": "bytes32[]"
-            }
-          ],
-          "name": "calculateRootFromPowerOfTwo",
-          "outputs": [
-            {
-              "internalType": "bytes32",
-              "name": "",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint256",
-              "name": "number",
-              "type": "uint256"
-            }
-          ],
-          "name": "getLog2Floor",
-          "outputs": [
-            {
-              "internalType": "uint8",
-              "name": "",
-              "type": "uint8"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint8",
-              "name": "_log2Size",
-              "type": "uint8"
-            }
-          ],
-          "name": "getPristineHash",
-          "outputs": [
-            {
-              "internalType": "bytes32",
-              "name": "",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint64",
-              "name": "_position",
-              "type": "uint64"
-            },
-            {
-              "internalType": "bytes8",
-              "name": "_value",
-              "type": "bytes8"
-            },
-            {
-              "internalType": "bytes32[]",
-              "name": "proof",
-              "type": "bytes32[]"
-            }
-          ],
-          "name": "getRoot",
-          "outputs": [
-            {
-              "internalType": "bytes32",
-              "name": "",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint64",
-              "name": "_position",
-              "type": "uint64"
-            },
-            {
-              "internalType": "uint8",
-              "name": "_logOfSize",
-              "type": "uint8"
-            },
-            {
-              "internalType": "bytes32",
-              "name": "_drive",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "bytes32[]",
-              "name": "siblings",
-              "type": "bytes32[]"
-            }
-          ],
-          "name": "getRootWithDrive",
-          "outputs": [
-            {
-              "internalType": "bytes32",
-              "name": "",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint256",
-              "name": "number",
-              "type": "uint256"
-            }
-          ],
-          "name": "isPowerOf2",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "pure",
-          "type": "function"
-        }
-      ]
-    },
     "MerkleV2": {
-      "address": "0x353439934aCC3C435A2627954835241ab9FacBF8",
+      "address": "0x33436035441927Df1a73FE3AAC5906854632e53d",
       "abi": [
         {
           "inputs": [
@@ -1424,7 +1238,7 @@
       ]
     },
     "UnrolledCordic": {
-      "address": "0x9F7EBA84FfED559c7C63Bdf4DB6a1C6eB763ffb3",
+      "address": "0x3F8FdcD1B0F421D817BF58C96b7C91B98100B450",
       "abi": [
         {
           "inputs": [
@@ -1443,775 +1257,6 @@
             }
           ],
           "stateMutability": "pure",
-          "type": "function"
-        }
-      ]
-    },
-    "WorkerAuthManagerImpl": {
-      "address": "0x50bEFaEfD3AAaFac11Fd936A8dfEB1050eC5Cf00",
-      "abi": [
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerManager",
-              "type": "address"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "constructor"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "dapp",
-              "type": "address"
-            }
-          ],
-          "name": "Authorization",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "dapp",
-              "type": "address"
-            }
-          ],
-          "name": "Deauthorization",
-          "type": "event"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_dappAddress",
-              "type": "address"
-            }
-          ],
-          "name": "authorize",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_dappAddress",
-              "type": "address"
-            }
-          ],
-          "name": "deauthorize",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "getOwner",
-          "outputs": [
-            {
-              "internalType": "address",
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_dappAddress",
-              "type": "address"
-            }
-          ],
-          "name": "isAuthorized",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        }
-      ]
-    },
-    "WorkerManagerAuthManagerImpl": {
-      "address": "0x89f1f1bc37Ef872ff0073bee7eE6d6B0D94Fd166",
-      "abi": [
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "dapp",
-              "type": "address"
-            }
-          ],
-          "name": "Authorization",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "dapp",
-              "type": "address"
-            }
-          ],
-          "name": "Deauthorization",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            }
-          ],
-          "name": "JobAccepted",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            }
-          ],
-          "name": "JobOffer",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            }
-          ],
-          "name": "JobRejected",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            }
-          ],
-          "name": "Retired",
-          "type": "event"
-        },
-        {
-          "inputs": [],
-          "name": "acceptJob",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_dappAddress",
-              "type": "address"
-            }
-          ],
-          "name": "authorize",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "cancelHire",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_dappAddress",
-              "type": "address"
-            }
-          ],
-          "name": "deauthorize",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "getOwner",
-          "outputs": [
-            {
-              "internalType": "address",
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "getUser",
-          "outputs": [
-            {
-              "internalType": "address",
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address payable",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "hire",
-          "outputs": [],
-          "stateMutability": "payable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address payable",
-              "name": "_workerAddress",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_dappAddress",
-              "type": "address"
-            }
-          ],
-          "name": "hireAndAuthorize",
-          "outputs": [],
-          "stateMutability": "payable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_dappAddress",
-              "type": "address"
-            }
-          ],
-          "name": "isAuthorized",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "isAvailable",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "isOwned",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "isPending",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "isRetired",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [],
-          "name": "rejectJob",
-          "outputs": [],
-          "stateMutability": "payable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address payable",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "retire",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        }
-      ]
-    },
-    "WorkerManagerImpl": {
-      "address": "0xdeCac9ff6b588642887414e85dfdDE740A797F56",
-      "abi": [
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            }
-          ],
-          "name": "JobAccepted",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            }
-          ],
-          "name": "JobOffer",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            }
-          ],
-          "name": "JobRejected",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "worker",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "user",
-              "type": "address"
-            }
-          ],
-          "name": "Retired",
-          "type": "event"
-        },
-        {
-          "inputs": [],
-          "name": "acceptJob",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "cancelHire",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "getOwner",
-          "outputs": [
-            {
-              "internalType": "address",
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "getUser",
-          "outputs": [
-            {
-              "internalType": "address",
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address payable",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "hire",
-          "outputs": [],
-          "stateMutability": "payable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "isAvailable",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "isOwned",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "isPending",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "isRetired",
-          "outputs": [
-            {
-              "internalType": "bool",
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [],
-          "name": "rejectJob",
-          "outputs": [],
-          "stateMutability": "payable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address payable",
-              "name": "_workerAddress",
-              "type": "address"
-            }
-          ],
-          "name": "retire",
-          "outputs": [],
-          "stateMutability": "nonpayable",
           "type": "function"
         }
       ]
