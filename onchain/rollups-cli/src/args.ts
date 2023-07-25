@@ -16,7 +16,7 @@ export interface BlockchainArgs {
 
 export const blockchainBuilder = (
     yargs: Argv<{}>,
-    transactional: boolean = false
+    transactional: boolean = false,
 ): Argv<BlockchainArgs> => {
     return yargs
         .option("rpc", {
