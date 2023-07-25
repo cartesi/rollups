@@ -4,6 +4,7 @@
 import path from "path";
 import { HardhatUserConfig } from "hardhat/config";
 import { HttpNetworkUserConfig } from "hardhat/types";
+import { getSingletonFactoryInfo } from "@safe-global/safe-singleton-factory";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomicfoundation/hardhat-verify";
@@ -28,7 +29,7 @@ let mnemonic = process.env.MNEMONIC;
 const ppath = (packageName: string, pathname: string) => {
     return path.join(
         path.dirname(require.resolve(`${packageName}/package.json`)),
-        pathname
+        pathname,
     );
 };
 
@@ -75,6 +76,27 @@ const config: HardhatUserConfig = {
         artifacts: "artifacts",
         deploy: "deploy",
         deployments: "deployments",
+    },
+    deterministicDeployment: (network: string) => {
+        // networks will use another deterministic deployment proxy
+        // https://github.com/safe-global/safe-singleton-factory
+        const chainId = parseInt(network);
+        const info = getSingletonFactoryInfo(chainId);
+        if (info) {
+            return {
+                factory: info.address,
+                deployer: info.signerAddress,
+                funding: (
+                    BigInt(info.gasPrice) * BigInt(info.gasLimit)
+                ).toString(),
+                signedTx: info.transaction,
+            };
+        } else {
+            console.warn(
+                `unsupported deterministic deployment for network ${network}`,
+            );
+            return undefined;
+        }
     },
     abiExporter: {
         runOnCompile: true,
