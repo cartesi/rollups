@@ -46,7 +46,7 @@ function getContractConnector<T>(contractName: string, contractFactory: any) {
         rpc: string,
         mnemonic?: string,
         accountIndex?: number,
-        deploymentPath?: string
+        deploymentPath?: string,
     ): Promise<T> => {
         // connect to JSON-RPC provider
         const provider = new JsonRpcProvider(rpc);
@@ -55,7 +55,7 @@ function getContractConnector<T>(contractName: string, contractFactory: any) {
         const signer = mnemonic
             ? ethers.Wallet.fromMnemonic(
                   mnemonic,
-                  `m/44'/60'/0'/0/${accountIndex}`
+                  `m/44'/60'/0'/0/${accountIndex}`,
               ).connect(provider)
             : undefined;
 
@@ -66,16 +66,16 @@ function getContractConnector<T>(contractName: string, contractFactory: any) {
             case 31337: // hardhat
                 if (!deploymentPath) {
                     throw new Error(
-                        `undefined deployment path for network ${31337}`
+                        `undefined deployment path for network ${31337}`,
                     );
                 }
                 if (!fs.existsSync(deploymentPath)) {
                     throw new Error(
-                        `deployment file '${deploymentPath}' not found`
+                        `deployment file '${deploymentPath}' not found`,
                     );
                 }
                 const deployment: Deployment = JSON.parse(
-                    fs.readFileSync(deploymentPath, "utf8")
+                    fs.readFileSync(deploymentPath, "utf8"),
                 );
                 address = deployment.contracts[contractName].address;
                 break;
@@ -93,10 +93,10 @@ function getContractConnector<T>(contractName: string, contractFactory: any) {
 
 export const authority = getContractConnector<Authority>(
     "Authority",
-    Authority__factory
+    Authority__factory,
 );
 
 export const factory = getContractConnector<CartesiDAppFactory>(
     "CartesiDAppFactory",
-    CartesiDAppFactory__factory
+    CartesiDAppFactory__factory,
 );

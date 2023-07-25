@@ -92,7 +92,7 @@ const handler = safeHandler<Args>(async (args) => {
         rpc,
         mnemonic,
         accountIndex,
-        deploymentFile
+        deploymentFile,
     );
 
     // connect to factory
@@ -100,7 +100,7 @@ const handler = safeHandler<Args>(async (args) => {
         rpc,
         mnemonic,
         accountIndex,
-        deploymentFile
+        deploymentFile,
     );
 
     const address = await factoryContract.signer.getAddress();
@@ -108,7 +108,7 @@ const handler = safeHandler<Args>(async (args) => {
 
     if (!args.templateHash && !args.templateHashFile) {
         throw new Error(
-            "either --templateHash or --templateHashFile must be defined"
+            "either --templateHash or --templateHashFile must be defined",
         );
     }
     const templateHash =
@@ -135,7 +135,7 @@ const handler = safeHandler<Args>(async (args) => {
             consensusAddress,
             dappOwner,
             templateHash,
-            overrides
+            overrides,
         );
     }
 
@@ -145,7 +145,7 @@ const handler = safeHandler<Args>(async (args) => {
 
     // find new application event in receipt
     const event = receipt.events?.find(
-        (e) => e.event === "ApplicationCreated"
+        (e) => e.event === "ApplicationCreated",
     ) as ApplicationCreatedEvent | undefined;
     const application = event?.args.application;
 
@@ -163,8 +163,8 @@ const handler = safeHandler<Args>(async (args) => {
                         transactionHash: receipt.transactionHash,
                     },
                     null,
-                    4
-                )
+                    4,
+                ),
             );
         }
     }

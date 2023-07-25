@@ -17,21 +17,21 @@
     },
     "dependencies": {
         "@cartesi/rollups": "*",
-        "@ethersproject/contracts": "^5.7.0",
-        "@ethersproject/units": "^5.7.0",
-        "fs-extra": "^11.1.0",
-        "yargs": "^17.4.0"
+        "@ethersproject/contracts": "^5",
+        "@ethersproject/units": "^5",
+        "fs-extra": "^11",
+        "yargs": "^17.4"
     },
     "devDependencies": {
-        "@types/fs-extra": "^9.0.13",
-        "@types/node": "^18.6.1",
-        "@types/yargs": "^17.0.10",
-        "esbuild": "^0.16.10",
-        "npm-run-all": "^4.1.5",
-        "prettier": "^2.6.2",
-        "rimraf": "^3.0.2",
-        "ts-node": "^10.9.1",
-        "typescript": "^4.7.4"
+        "@types/fs-extra": "^11",
+        "@types/node": "^20",
+        "@types/yargs": "^17",
+        "esbuild": "^0.18",
+        "npm-run-all": "^4",
+        "prettier": "^3",
+        "rimraf": "^5",
+        "ts-node": "^10",
+        "typescript": "^5"
     },
     "files": [
         "dist"
