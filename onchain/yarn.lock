@@ -816,6 +816,11 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.8.0.tgz#6854c37df205dd2c056bdfa1b853f5d732109109"
   integrity sha512-AGuwhRRL+NaKx73WKRNzeCxOCOCxpaqF+kp8TJ89QzAipSwZy/NoflkWaL9bywXFRhIzXt8j38sfF7KBKCPWLw==
 
+"@safe-global/safe-singleton-factory@^1":
+  version "1.0.14"
+  resolved "https://registry.yarnpkg.com/@safe-global/safe-singleton-factory/-/safe-singleton-factory-1.0.14.tgz#a4c3937670946d21428b45f09c779d672cc716de"
+  integrity sha512-5dyEfPU8oVY/2whxcc14eqWS2WJ8V1j1h3XiretSi9bb09IA+/FTlpooArtOiNs14v6KsMMRnwsHhpDQuZV6Sw==
+
 "@scure/base@~1.1.0":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@scure/base/-/base-1.1.1.tgz#ebb651ee52ff84f420097055f4bf46cfba403938"
