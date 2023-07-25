@@ -1,3 +1,6 @@
+// (c) Cartesi and individual authors (see AUTHORS)
+// SPDX-License-Identifier: Apache-2.0 (see LICENSE)
+
 import { BytesLike } from "@ethersproject/bytes";
 import fs from "fs";
 import response from "./finish_epoch_response.json";
@@ -73,11 +76,15 @@ function generateLibraryCode(
     let functionLines: string[] = [];
 
     noticeProofs.forEach((noticeProof, index) => {
-        functionLines.push(generateFunctionCode(noticeProof, `getNotice${index}Proof`))
+        functionLines.push(
+            generateFunctionCode(noticeProof, `getNotice${index}Proof`)
+        );
     });
 
     voucherProofs.forEach((voucherProof, index) => {
-        functionLines.push(generateFunctionCode(voucherProof, `getVoucher${index}Proof`))
+        functionLines.push(
+            generateFunctionCode(voucherProof, `getVoucher${index}Proof`)
+        );
     });
 
     const lines: string[] = [
@@ -92,7 +99,7 @@ function generateLibraryCode(
         `library ${libraryName} {`,
         ...functionLines,
         "}",
-        ""
+        "",
     ];
 
     return lines.join("\n");

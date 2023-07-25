@@ -1,80 +1,81 @@
-// Copyright Cartesi Pte. Ltd.
-
-// SPDX-License-Identifier: Apache-2.0
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-// this file except in compliance with the License. You may obtain a copy of the
-// License at http://www.apache.org/licenses/LICENSE-2.0
-
-// Unless required by applicable law or agreed to in writing, software distributed
-// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-// CONDITIONS OF ANY KIND, either express or implied. See the License for the
-// specific language governing permissions and limitations under the License.
+// (c) Cartesi and individual authors (see AUTHORS)
+// SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../../src/splice/SpliceMachine.sol";
 import "../../src/splice/SpliceMachineEnum.sol";
-import { Merkle } from "utils/Merkle.sol";
-
+import {Merkle} from "utils/Merkle.sol";
 
 contract TestSpliceMachineEnum is Test {
-    
-    function setUp() public {
-    }
+    function setUp() public {}
 
     //
     // `WaitingSpliceClaim` methods
     //
 
     function test_enumOfWaitingSpliceClaim() public {
-        SpliceMachine.WaitingSpliceClaim memory waitingSpliceClaim =
-            createWaitingSplice();
+        SpliceMachine.WaitingSpliceClaim
+            memory waitingSpliceClaim = createWaitingSplice();
 
-        SpliceMachineEnum.T memory enumWaitingSpliceClaim = 
-            SpliceMachineEnum.enumOfWaitingSpliceClaim(waitingSpliceClaim);
-        
+        SpliceMachineEnum.T memory enumWaitingSpliceClaim = SpliceMachineEnum
+            .enumOfWaitingSpliceClaim(waitingSpliceClaim);
+
         assertTrue(
-            SpliceMachineEnum.isWaitingSpliceClaimVariant(enumWaitingSpliceClaim)
+            SpliceMachineEnum.isWaitingSpliceClaimVariant(
+                enumWaitingSpliceClaim
+            )
         );
     }
 
     function testFail_isWaitingSpliceClaimVariant() public {
-        SpliceMachine.WaitingAgreement memory waitingAgreemnt =
-            createWaitingAgreement();
-        
-        SpliceMachineEnum.T memory enumWaitingAgreement = 
-            SpliceMachineEnum.enumOfWaitingAgreement(waitingAgreemnt);
-        
+        SpliceMachine.WaitingAgreement
+            memory waitingAgreemnt = createWaitingAgreement();
+
+        SpliceMachineEnum.T memory enumWaitingAgreement = SpliceMachineEnum
+            .enumOfWaitingAgreement(waitingAgreemnt);
+
         assertTrue(
             SpliceMachineEnum.isWaitingSpliceClaimVariant(enumWaitingAgreement)
         );
     }
 
     function test_getWaitingSpliceClaimVariant() public {
-        SpliceMachine.WaitingSpliceClaim memory waitingSpliceClaim =
-            createWaitingSplice();
+        SpliceMachine.WaitingSpliceClaim
+            memory waitingSpliceClaim = createWaitingSplice();
 
-        SpliceMachineEnum.T memory enumWaitingSpliceClaim = 
-            SpliceMachineEnum.enumOfWaitingSpliceClaim(waitingSpliceClaim);
-        
-        SpliceMachine.WaitingSpliceClaim memory recoveredWaitingSpliceClaim =
-            SpliceMachineEnum.getWaitingSpliceClaimVariant(enumWaitingSpliceClaim);
-        
+        SpliceMachineEnum.T memory enumWaitingSpliceClaim = SpliceMachineEnum
+            .enumOfWaitingSpliceClaim(waitingSpliceClaim);
+
+        SpliceMachine.WaitingSpliceClaim
+            memory recoveredWaitingSpliceClaim = SpliceMachineEnum
+                .getWaitingSpliceClaimVariant(enumWaitingSpliceClaim);
+
         assertTrue(
-            recoveredWaitingSpliceClaim.machineDisagree.inputIndex == 
-            waitingSpliceClaim.machineDisagree.inputIndex
+            recoveredWaitingSpliceClaim.machineDisagree.inputIndex ==
+                waitingSpliceClaim.machineDisagree.inputIndex
         );
         assertTrue(
-            Merkle.Hash.unwrap(recoveredWaitingSpliceClaim.machineDisagree.preAdvanceMachine) == 
-            Merkle.Hash.unwrap(waitingSpliceClaim.machineDisagree.preAdvanceMachine)
+            Merkle.Hash.unwrap(
+                recoveredWaitingSpliceClaim.machineDisagree.preAdvanceMachine
+            ) ==
+                Merkle.Hash.unwrap(
+                    waitingSpliceClaim.machineDisagree.preAdvanceMachine
+                )
         );
         assertTrue(
-            Merkle.Hash.unwrap(recoveredWaitingSpliceClaim.machineDisagree.postAdvanceMachineClaim) == 
-            Merkle.Hash.unwrap(waitingSpliceClaim.machineDisagree.postAdvanceMachineClaim)
+            Merkle.Hash.unwrap(
+                recoveredWaitingSpliceClaim
+                    .machineDisagree
+                    .postAdvanceMachineClaim
+            ) ==
+                Merkle.Hash.unwrap(
+                    waitingSpliceClaim.machineDisagree.postAdvanceMachineClaim
+                )
         );
         assertTrue(
-            recoveredWaitingSpliceClaim.epochIndex == 
-            waitingSpliceClaim.epochIndex
+            recoveredWaitingSpliceClaim.epochIndex ==
+                waitingSpliceClaim.epochIndex
         );
     }
 
@@ -83,53 +84,67 @@ contract TestSpliceMachineEnum is Test {
     //
 
     function test_enumOfWaitingAgreement() public {
-        SpliceMachine.WaitingAgreement memory waitingAgreement =
-            createWaitingAgreement();
+        SpliceMachine.WaitingAgreement
+            memory waitingAgreement = createWaitingAgreement();
 
-        SpliceMachineEnum.T memory enumWaitingAgreement = 
-            SpliceMachineEnum.enumOfWaitingAgreement(waitingAgreement);
-        
+        SpliceMachineEnum.T memory enumWaitingAgreement = SpliceMachineEnum
+            .enumOfWaitingAgreement(waitingAgreement);
+
         assertTrue(
             SpliceMachineEnum.isWaitingAgreementVariant(enumWaitingAgreement)
         );
     }
 
     function testFail_isWaitingAgreementVariant() public {
-        SpliceMachine.WaitingSpliceClaim memory waitingSpliceClaim =
-            createWaitingSplice();
-        
-        SpliceMachineEnum.T memory enumWaitingSpliceClaim = 
-            SpliceMachineEnum.enumOfWaitingSpliceClaim(waitingSpliceClaim);
-        
+        SpliceMachine.WaitingSpliceClaim
+            memory waitingSpliceClaim = createWaitingSplice();
+
+        SpliceMachineEnum.T memory enumWaitingSpliceClaim = SpliceMachineEnum
+            .enumOfWaitingSpliceClaim(waitingSpliceClaim);
+
         assertTrue(
             SpliceMachineEnum.isWaitingAgreementVariant(enumWaitingSpliceClaim)
         );
     }
 
     function test_getWaitingAgreementVariant() public {
-        SpliceMachine.WaitingAgreement memory waitingAgreement =
-            createWaitingAgreement();
+        SpliceMachine.WaitingAgreement
+            memory waitingAgreement = createWaitingAgreement();
 
-        SpliceMachineEnum.T memory enumWaitingAgreement = 
-            SpliceMachineEnum.enumOfWaitingAgreement(waitingAgreement);
-        
-        SpliceMachine.WaitingAgreement memory recoveredWaitingAgreement =
-            SpliceMachineEnum.getWaitingAgreementVariant(enumWaitingAgreement);
-        
+        SpliceMachineEnum.T memory enumWaitingAgreement = SpliceMachineEnum
+            .enumOfWaitingAgreement(waitingAgreement);
+
+        SpliceMachine.WaitingAgreement
+            memory recoveredWaitingAgreement = SpliceMachineEnum
+                .getWaitingAgreementVariant(enumWaitingAgreement);
+
         assertTrue(
-            Merkle.Hash.unwrap(recoveredWaitingAgreement.postSpliceMachineHashClaim) ==
-            Merkle.Hash.unwrap(waitingAgreement.postSpliceMachineHashClaim)
+            Merkle.Hash.unwrap(
+                recoveredWaitingAgreement.postSpliceMachineHashClaim
+            ) == Merkle.Hash.unwrap(waitingAgreement.postSpliceMachineHashClaim)
         );
         assertTrue(
-            recoveredWaitingAgreement.preSpliceData.machineDisagree.inputIndex ==
-            waitingAgreement.preSpliceData.machineDisagree.inputIndex
+            recoveredWaitingAgreement
+                .preSpliceData
+                .machineDisagree
+                .inputIndex ==
+                waitingAgreement.preSpliceData.machineDisagree.inputIndex
         );
         assertTrue(
-            Merkle.Hash.unwrap(recoveredWaitingAgreement.preSpliceData.machineDisagree.preAdvanceMachine) ==
-            Merkle.Hash.unwrap(waitingAgreement.preSpliceData.machineDisagree.preAdvanceMachine)
+            Merkle.Hash.unwrap(
+                recoveredWaitingAgreement
+                    .preSpliceData
+                    .machineDisagree
+                    .preAdvanceMachine
+            ) ==
+                Merkle.Hash.unwrap(
+                    waitingAgreement
+                        .preSpliceData
+                        .machineDisagree
+                        .preAdvanceMachine
+                )
         );
     }
-
 
     /*
         Internal helper methods
@@ -137,33 +152,38 @@ contract TestSpliceMachineEnum is Test {
 
     bytes32 constant INITIAL_HASH =
         0x0000000000000000000000000000000000000000000000000000000000000000;
-    
-    function createWaitingSplice() internal pure returns (SpliceMachine.WaitingSpliceClaim memory) {
-        EpochHashSplit.MachineDisagree memory machineDisagree_ =
-            EpochHashSplit.MachineDisagree(
+
+    function createWaitingSplice()
+        internal
+        pure
+        returns (SpliceMachine.WaitingSpliceClaim memory)
+    {
+        EpochHashSplit.MachineDisagree memory machineDisagree_ = EpochHashSplit
+            .MachineDisagree(
                 Merkle.Hash.wrap(INITIAL_HASH),
                 Merkle.Hash.wrap(INITIAL_HASH),
                 0
             );
-        
-        return (
-            SpliceMachine.createSplice(machineDisagree_, 0)
-        );
+
+        return (SpliceMachine.createSplice(machineDisagree_, 0));
     }
 
-    function createWaitingAgreement() internal pure returns (SpliceMachine.WaitingAgreement memory) {
-        EpochHashSplit.MachineDisagree memory machineDisagree_ =
-            EpochHashSplit.MachineDisagree(
+    function createWaitingAgreement()
+        internal
+        pure
+        returns (SpliceMachine.WaitingAgreement memory)
+    {
+        EpochHashSplit.MachineDisagree memory machineDisagree_ = EpochHashSplit
+            .MachineDisagree(
                 Merkle.Hash.wrap(INITIAL_HASH),
                 Merkle.Hash.wrap(INITIAL_HASH),
                 0
             );
-        SpliceMachine.WaitingSpliceClaim memory waitingSplice_ = 
-            SpliceMachine.createSplice(machineDisagree_, 0);
+        SpliceMachine.WaitingSpliceClaim memory waitingSplice_ = SpliceMachine
+            .createSplice(machineDisagree_, 0);
         Merkle.Hash postSpliceMachineHash_ = Merkle.Hash.wrap(INITIAL_HASH);
-        SpliceMachine.WaitingAgreement memory waitingAgree_ =
-            SpliceMachine.spliceSupplyHash(waitingSplice_, postSpliceMachineHash_);
+        SpliceMachine.WaitingAgreement memory waitingAgree_ = SpliceMachine
+            .spliceSupplyHash(waitingSplice_, postSpliceMachineHash_);
         return waitingAgree_;
     }
-
 }

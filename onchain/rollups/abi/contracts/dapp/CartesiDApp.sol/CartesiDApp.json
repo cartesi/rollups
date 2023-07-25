@@ -468,7 +468,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_inboxInputIndex",
+        "name": "_inputIndex",
         "type": "uint256"
       },
       {

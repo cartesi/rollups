@@ -1,21 +1,11 @@
-// Copyright Cartesi Pte. Ltd.
-
-// SPDX-License-Identifier: Apache-2.0
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-// this file except in compliance with the License. You may obtain a copy of the
-// License at http://www.apache.org/licenses/LICENSE-2.0
-
-// Unless required by applicable law or agreed to in writing, software distributed
-// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-// CONDITIONS OF ANY KIND, either express or implied. See the License for the
-// specific language governing permissions and limitations under the License.
+// (c) Cartesi and individual authors (see AUTHORS)
+// SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../../src/partition/Partition.sol";
 
 contract TestPartition is Test {
-
     function setUp() public {}
 
     //
@@ -23,13 +13,12 @@ contract TestPartition is Test {
     //
 
     function test_createPartition() public {
-        Partition.WaitingHash memory waitingHash =
-            Partition.createPartition(
-                0,
-                2,
-                INITIAL_HASH,
-                CLAIMER_FINAL_HASH
-            );
+        Partition.WaitingHash memory waitingHash = Partition.createPartition(
+            0,
+            2,
+            INITIAL_HASH,
+            CLAIMER_FINAL_HASH
+        );
 
         assertEq(waitingHash.agreePoint, 0);
         assertEq(waitingHash.disagreePoint, 2);
@@ -38,43 +27,27 @@ contract TestPartition is Test {
     }
 
     function testFail_createPartition1() public pure {
-        Partition.createPartition(
-            1,
-            0,
-            INITIAL_HASH,
-            CLAIMER_FINAL_HASH
-        );
+        Partition.createPartition(1, 0, INITIAL_HASH, CLAIMER_FINAL_HASH);
     }
 
     function testFail_createPartition2() public pure {
-        Partition.createPartition(
-            1,
-            1,
-            INITIAL_HASH,
-            CLAIMER_FINAL_HASH
-        );
+        Partition.createPartition(1, 1, INITIAL_HASH, CLAIMER_FINAL_HASH);
     }
 
     function testFail_createPartition3() public pure {
-        Partition.createPartition(
-            0,
-            1,
-            INITIAL_HASH,
-            CLAIMER_FINAL_HASH
-        );
+        Partition.createPartition(0, 1, INITIAL_HASH, CLAIMER_FINAL_HASH);
     }
 
     function test_supplyIntermediateHash() public {
-        Partition.WaitingHash memory waitingHash =
-            Partition.createPartition(
-                0,
-                4,
-                INITIAL_HASH,
-                CLAIMER_FINAL_HASH
-            );
+        Partition.WaitingHash memory waitingHash = Partition.createPartition(
+            0,
+            4,
+            INITIAL_HASH,
+            CLAIMER_FINAL_HASH
+        );
 
-        Partition.WaitingInterval memory waitingInterval =
-            Partition.WaitingInterval(waitingHash, INTERMEDIATE_HASH);
+        Partition.WaitingInterval memory waitingInterval = Partition
+            .WaitingInterval(waitingHash, INTERMEDIATE_HASH);
 
         assertEq(waitingInterval.waitingHash.agreePoint, 0);
         assertEq(waitingInterval.waitingHash.disagreePoint, 4);
@@ -84,19 +57,18 @@ contract TestPartition is Test {
     }
 
     function test_supplyDivergenceIntervalAgree() public {
-        Partition.WaitingHash memory waitingHash =
-            Partition.createPartition(
-                0,
-                4,
-                INITIAL_HASH,
-                CLAIMER_FINAL_HASH
-            );
+        Partition.WaitingHash memory waitingHash = Partition.createPartition(
+            0,
+            4,
+            INITIAL_HASH,
+            CLAIMER_FINAL_HASH
+        );
 
-        Partition.WaitingInterval memory waitingInterval =
-            Partition.supplyIntermediateHash(waitingHash, INTERMEDIATE_HASH);
+        Partition.WaitingInterval memory waitingInterval = Partition
+            .supplyIntermediateHash(waitingHash, INTERMEDIATE_HASH);
 
-        Partition.WaitingHash memory nextWaitingHash =
-            Partition.supplyDivergenceInterval(waitingInterval, true);
+        Partition.WaitingHash memory nextWaitingHash = Partition
+            .supplyDivergenceInterval(waitingInterval, true);
 
         assertEq(2, nextWaitingHash.agreePoint);
         assertEq(4, nextWaitingHash.disagreePoint);
@@ -105,19 +77,18 @@ contract TestPartition is Test {
     }
 
     function test_supplyDivergenceIntervalDisagree() public {
-        Partition.WaitingHash memory waitingHash =
-            Partition.createPartition(
-                0,
-                4,
-                INITIAL_HASH,
-                CLAIMER_FINAL_HASH
-            );
+        Partition.WaitingHash memory waitingHash = Partition.createPartition(
+            0,
+            4,
+            INITIAL_HASH,
+            CLAIMER_FINAL_HASH
+        );
 
-        Partition.WaitingInterval memory waitingInterval =
-            Partition.supplyIntermediateHash(waitingHash, INTERMEDIATE_HASH);
+        Partition.WaitingInterval memory waitingInterval = Partition
+            .supplyIntermediateHash(waitingHash, INTERMEDIATE_HASH);
 
-        Partition.WaitingHash memory nextWaitingHash =
-            Partition.supplyDivergenceInterval(waitingInterval, false);
+        Partition.WaitingHash memory nextWaitingHash = Partition
+            .supplyDivergenceInterval(waitingInterval, false);
 
         assertEq(0, nextWaitingHash.agreePoint);
         assertEq(2, nextWaitingHash.disagreePoint);
@@ -126,19 +97,20 @@ contract TestPartition is Test {
     }
 
     function test_endPartitionAgree() public {
-        Partition.WaitingHash memory waitingHash =
-            Partition.createPartition(
-                0,
-                2,
-                INITIAL_HASH,
-                CLAIMER_FINAL_HASH
-            );
+        Partition.WaitingHash memory waitingHash = Partition.createPartition(
+            0,
+            2,
+            INITIAL_HASH,
+            CLAIMER_FINAL_HASH
+        );
 
-        Partition.WaitingInterval memory waitingInterval =
-            Partition.supplyIntermediateHash(waitingHash, INTERMEDIATE_HASH);
+        Partition.WaitingInterval memory waitingInterval = Partition
+            .supplyIntermediateHash(waitingHash, INTERMEDIATE_HASH);
 
-        Partition.Divergence memory d =
-            Partition.endPartition(waitingInterval, true);
+        Partition.Divergence memory d = Partition.endPartition(
+            waitingInterval,
+            true
+        );
 
         assertEq(1, d.divergencePoint);
         assertEq(INTERMEDIATE_HASH, d.beforeHash);
@@ -146,26 +118,25 @@ contract TestPartition is Test {
     }
 
     function test_endPartitionDisagree() public {
-        Partition.WaitingHash memory waitingHash =
-            Partition.createPartition(
-                0,
-                2,
-                INITIAL_HASH,
-                CLAIMER_FINAL_HASH
-            );
+        Partition.WaitingHash memory waitingHash = Partition.createPartition(
+            0,
+            2,
+            INITIAL_HASH,
+            CLAIMER_FINAL_HASH
+        );
 
-        Partition.WaitingInterval memory waitingInterval =
-            Partition.supplyIntermediateHash(waitingHash, INTERMEDIATE_HASH);
+        Partition.WaitingInterval memory waitingInterval = Partition
+            .supplyIntermediateHash(waitingHash, INTERMEDIATE_HASH);
 
-        Partition.Divergence memory d =
-            Partition.endPartition(waitingInterval, false);
-
+        Partition.Divergence memory d = Partition.endPartition(
+            waitingInterval,
+            false
+        );
 
         assertEq(0, d.divergencePoint);
         assertEq(INITIAL_HASH, d.beforeHash);
         assertEq(INTERMEDIATE_HASH, d.afterHash);
     }
-
 
     //
     // Partition proofs
@@ -224,19 +195,18 @@ contract TestPartition is Test {
             return;
         }
 
-        Partition.WaitingHash memory waitingHash =
-            Partition.WaitingHash(
-                initialPoint,
-                finalPoint,
-                initialHash,
-                claimerFinalHash
-            );
+        Partition.WaitingHash memory waitingHash = Partition.WaitingHash(
+            initialPoint,
+            finalPoint,
+            initialHash,
+            claimerFinalHash
+        );
 
         assertTrue(
-            Partition.mustEndPartition(waitingHash) &&
-            !Partition.mustContinuePartition(waitingHash) ||
-            !Partition.mustEndPartition(waitingHash) &&
-            Partition.mustContinuePartition(waitingHash)
+            (Partition.mustEndPartition(waitingHash) &&
+                !Partition.mustContinuePartition(waitingHash)) ||
+                (!Partition.mustEndPartition(waitingHash) &&
+                    Partition.mustContinuePartition(waitingHash))
         );
     }
 
@@ -252,20 +222,19 @@ contract TestPartition is Test {
             return;
         }
 
-        Partition.WaitingHash memory waitingHash =
-            Partition.WaitingHash(
-                initialPoint,
-                finalPoint,
-                initialHash,
-                claimerFinalHash
-            );
+        Partition.WaitingHash memory waitingHash = Partition.WaitingHash(
+            initialPoint,
+            finalPoint,
+            initialHash,
+            claimerFinalHash
+        );
 
         if (Partition.mustEndPartition(waitingHash)) {
             return;
         }
 
-        Partition.WaitingInterval memory waitingInterval =
-            Partition.supplyIntermediateHash(waitingHash, intermediateHash);
+        Partition.WaitingInterval memory waitingInterval = Partition
+            .supplyIntermediateHash(waitingHash, intermediateHash);
 
         Partition.WaitingHash memory w = waitingInterval.waitingHash;
         compareWaitingHash(waitingHash, w);
@@ -273,15 +242,17 @@ contract TestPartition is Test {
 
         if (agreeProxy == 0) {
             if (w.agreePoint + 2 == w.disagreePoint) {
-                Partition.Divergence memory d =
-                    Partition.endPartition(waitingInterval, true);
+                Partition.Divergence memory d = Partition.endPartition(
+                    waitingInterval,
+                    true
+                );
 
                 assertEq(d.divergencePoint, w.agreePoint + 1);
                 assertEq(d.beforeHash, intermediateHash);
                 assertEq(d.afterHash, claimerFinalHash);
             } else {
-                Partition.WaitingHash memory nextWaitingHash =
-                    Partition.supplyDivergenceInterval(waitingInterval, true);
+                Partition.WaitingHash memory nextWaitingHash = Partition
+                    .supplyDivergenceInterval(waitingInterval, true);
 
                 assertEq(
                     Arithmetic.semiSum(initialPoint, finalPoint),
@@ -292,17 +263,21 @@ contract TestPartition is Test {
                 assertEq(claimerFinalHash, nextWaitingHash.disagreeHash);
             }
         } else {
-            if (w.agreePoint + 2 == w.disagreePoint ||
-                w.agreePoint + 3 == w.disagreePoint) {
-                Partition.Divergence memory d =
-                    Partition.endPartition(waitingInterval, false);
+            if (
+                w.agreePoint + 2 == w.disagreePoint ||
+                w.agreePoint + 3 == w.disagreePoint
+            ) {
+                Partition.Divergence memory d = Partition.endPartition(
+                    waitingInterval,
+                    false
+                );
 
                 assertEq(d.divergencePoint, w.agreePoint);
                 assertEq(d.beforeHash, initialHash);
                 assertEq(d.afterHash, intermediateHash);
             } else {
-                Partition.WaitingHash memory nextWaitingHash =
-                    Partition.supplyDivergenceInterval(waitingInterval, false);
+                Partition.WaitingHash memory nextWaitingHash = Partition
+                    .supplyDivergenceInterval(waitingInterval, false);
 
                 assertEq(w.agreePoint, nextWaitingHash.agreePoint);
                 assertEq(
@@ -315,15 +290,14 @@ contract TestPartition is Test {
         }
     }
 
-
     //
     // SemiSum tests
     //
 
-    function test_semiSum() public{
+    function test_semiSum() public {
         assertEq(0, Arithmetic.semiSum(0, 0));
         assertEq(0, Arithmetic.semiSum(0, 1));
-        assertEq(1, Arithmetic.semiSum(0, 2 ));
+        assertEq(1, Arithmetic.semiSum(0, 2));
         assertEq(1, Arithmetic.semiSum(0, 3));
         assertEq(2, Arithmetic.semiSum(0, 4));
         assertEq(15, Arithmetic.semiSum(10, 20));
@@ -351,7 +325,6 @@ contract TestPartition is Test {
         Arithmetic.semiSum(a, b);
     }
 
-
     //
     // Internal helper methods
     //
@@ -366,9 +339,7 @@ contract TestPartition is Test {
     function compareWaitingHash(
         Partition.WaitingHash memory w1,
         Partition.WaitingHash memory w2
-    )
-        internal
-    {
+    ) internal {
         assertEq(w1.agreePoint, w2.agreePoint);
         assertEq(w1.disagreePoint, w2.disagreePoint);
         assertEq(w1.agreeHash, w2.agreeHash);

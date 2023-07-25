@@ -16,7 +16,7 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "inboxInputIndex",
+        "name": "inputIndex",
         "type": "uint256"
       },
       {
