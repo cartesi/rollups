@@ -9,4 +9,5 @@ abi
 out
 lib
 forge-cache
-test/foundry/dapp/helper
+test/foundry/dapp/helper/input
+test/foundry/dapp/helper/output

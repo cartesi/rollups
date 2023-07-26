@@ -1,5 +1,1 @@
-gen-proofs.sh
-finish_epoch_response.json
 output
-LibOutputProof*.sol
-inputs.json
