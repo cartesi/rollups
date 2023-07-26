@@ -29,7 +29,7 @@
     },
     "dependencies": {
         "@cartesi/util": "6.0.0",
-        "@openzeppelin/contracts": "4.8.0"
+        "@openzeppelin/contracts": "4.9.2"
     },
     "devDependencies": {
         "@ethersproject/abi": "^5",
