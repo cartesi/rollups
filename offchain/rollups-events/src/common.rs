@@ -11,7 +11,7 @@ pub const ADDRESS_SIZE: usize = 20;
 pub const HASH_SIZE: usize = 32;
 
 /// A binary array that is converted to a hex string when serialized
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Clone, Hash, Eq, PartialEq, PartialOrd, Ord)]
 pub struct HexArray<const N: usize>([u8; N]);
 
 impl<const N: usize> HexArray<N> {
