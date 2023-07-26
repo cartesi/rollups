@@ -9,7 +9,10 @@ USER root
 
 # Install system dependencies
 RUN apt-get update && \
-    apt-get install -y wget xxd jq git
+    apt-get install -y wget xxd jq git python3 python3-pip
+
+# Install Python dependencies
+RUN pip install base64-to-hex-converter==0.4.1
 
 # Install grpcurl
 RUN export ARCH=$(uname -m | sed 's/aarch64/arm64/') && \

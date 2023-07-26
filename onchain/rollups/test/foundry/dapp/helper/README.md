@@ -4,20 +4,16 @@ When someone tries to execute a voucher or to validate a notice, they need to pr
 
 ## Dependencies
 
+-   docker
+-   forge
 -   yarn
--   GNU awk
--   Docker
--   Python 3.8 or newer
--   jq
 
 ## Setup
 
 Once you've installed all dependencies listed above, there is still some setup left to do.
 
-**Warning:** We use `python3` and `pip3` to interact with Python. If you do not wish to dirty your global Python installation, we recommend you to create a local virtual environment (with `venv` or `pyenv`), and activate it beforehand.
-
 ```sh
-./update-proofs.sh --setup
+yarn proofs:setup
 ```
 
 ## Procedure
@@ -25,7 +21,7 @@ Once you've installed all dependencies listed above, there is still some setup l
 Now, everytime you suspect the proofs might need to be updated, you can simply run the following command.
 
 ```sh
-./update-proofs.sh
+yarn proofs:update
 ```
 
 ## Pipeline
@@ -34,16 +30,8 @@ If you're curious to know how the `update-proofs.sh` script works, here's a diag
 
 ```mermaid
 graph TD
-    forge[forge test] --> testOutput[(Test Output)]
-    jqFilterProgram[(jqFilter.awk)] -. as program .-> awk
-    testOutput -- as input --> awk
-    awk --> jqFilter[(jq Filter)]
-    inputs[(inputs.json)] -- as input --> jq
-    jqFilter -. as filter .-> jq
-    jq --> updatedInputs[("inputs.json (updated)")]
-    updatedInputs --> genScript.ts --> script[(gen-proofs.sh)]
-    script --> docker --> finishEpochResponse[(finish_epoch_response_64.json)]
-    finishEpochResponse --> b64to16[python -m b64to16] --> formatedFinishEpochResponse[("finish_epoch_response.json")]
-    formatedFinishEpochResponse --> genProofLibrary.ts
-    genProofLibrary.ts --> proofLibrary[(Proof Library)]
+    forge[forge test] -- writes --> inputs[(input/*.json)]
+    inputs -- is read by --> dockerImage[docker image]
+    dockerImage[docker image] -- writes--> finishEpochResponse[(output/finish_epoch_response.json)]
+    finishEpochResponse -- is read by --> forge
 ```

@@ -16,12 +16,11 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
+import {LibServerManager} from "../util/LibServerManager.sol";
 import {SimpleConsensus} from "../util/SimpleConsensus.sol";
 import {SimpleERC20} from "../util/SimpleERC20.sol";
 import {SimpleERC721} from "../util/SimpleERC721.sol";
 import {SimpleERC721Receiver} from "../util/SimpleERC721Receiver.sol";
-
-import {LibOutputProofs} from "./helper/LibOutputProofs.sol";
 
 import "forge-std/console.sol";
 
@@ -36,12 +35,30 @@ contract EtherReceiver {
 // 3: voucher ERC-721 transfer
 
 contract CartesiDAppTest is TestBase {
-    Proof proof;
+    using LibServerManager for LibServerManager.RawFinishEpochResponse;
+    using LibServerManager for LibServerManager.Proof;
+
+    error ProofNotFound(
+        LibServerManager.OutputEnum outputEnum,
+        uint256 inputIndex
+    );
+
     CartesiDApp dapp;
     IConsensus consensus;
     IERC20 erc20Token;
     IERC721 erc721Token;
     IERC721Receiver erc721Receiver;
+
+    struct Voucher {
+        address destination;
+        bytes payload;
+    }
+
+    LibServerManager.OutputEnum[] outputEnums;
+    mapping(uint256 => Voucher) vouchers;
+    mapping(uint256 => bytes) notices;
+
+    bytes encodedFinishEpochResponse;
 
     uint256 constant initialSupply = 1000000;
     uint256 constant transferAmount = 7;
@@ -53,13 +70,6 @@ contract CartesiDAppTest is TestBase {
     bytes32 constant salt = keccak256("salt");
     bytes32 constant templateHash = keccak256("templateHash");
 
-    bytes constant erc20TransferPayload =
-        abi.encodeWithSelector(
-            IERC20.transfer.selector,
-            recipient,
-            transferAmount
-        );
-
     event VoucherExecuted(uint256 voucherPosition);
     event OwnershipTransferred(
         address indexed previousOwner,
@@ -68,7 +78,10 @@ contract CartesiDAppTest is TestBase {
     event NewConsensus(IConsensus newConsensus);
 
     function setUp() public {
-        consensus = deployConsensusDeterministically();
+        deployContracts();
+        generateOutputs();
+        writeInputs();
+        readFinishEpochResponse();
     }
 
     function testConstructorWithOwnerAsZeroAddress(
@@ -100,45 +113,16 @@ contract CartesiDAppTest is TestBase {
         assertEq(dapp.getTemplateHash(), _templateHash);
     }
 
-    function logInput(
-        uint256 number,
-        address sender,
-        bytes memory payload
-    ) internal view {
-        console.log("Proof for output %d might be outdated.", number);
-        console.log(sender);
-        console.logBytes(payload);
-        console.log("For more info, see `test/foundry/dapp/helper/README.md`.");
-    }
-
-    function logVoucher(
-        uint256 number,
-        address destination,
-        bytes memory payload
-    ) internal view {
-        logInput(number, destination, payload);
-    }
-
-    function logNotice(uint256 number, bytes memory notice) internal view {
-        logInput(number, noticeSender, notice);
-    }
-
     // test notices
 
     function testNoticeValidation(
         uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        dapp = deployDAppDeterministically();
-        registerProof(
-            _inputIndex,
-            _numInputsAfter,
-            LibOutputProofs.getNotice0Proof()
-        );
+        bytes memory notice = getNotice(0);
+        Proof memory proof = setupNoticeProof(0, _inputIndex, _numInputsAfter);
 
-        bytes memory notice = abi.encodePacked(bytes4(0xfafafafa));
-        logNotice(0, notice);
-        bool ret = dapp.validateNotice(notice, proof);
+        bool ret = validateNotice(notice, proof);
         assertEq(ret, true);
 
         // reverts if notice is incorrect
@@ -146,7 +130,7 @@ contract CartesiDAppTest is TestBase {
         vm.expectRevert(
             LibOutputValidation.IncorrectOutputHashesRootHash.selector
         );
-        dapp.validateNotice(falseNotice, proof);
+        validateNotice(falseNotice, proof);
     }
 
     // test vouchers
@@ -155,18 +139,13 @@ contract CartesiDAppTest is TestBase {
         uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
-
-        logVoucher(1, address(erc20Token), erc20TransferPayload);
+        Voucher memory voucher = getVoucher(1);
+        Proof memory proof = setupVoucherProof(1, _inputIndex, _numInputsAfter);
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(erc20Token.balanceOf(address(dapp)), 0);
         assertEq(erc20Token.balanceOf(recipient), 0);
-        bool success = dapp.executeVoucher(
-            address(erc20Token),
-            erc20TransferPayload,
-            proof
-        );
+        bool success = executeVoucher(voucher, proof);
         assertEq(success, false);
         assertEq(erc20Token.balanceOf(address(dapp)), 0);
         assertEq(erc20Token.balanceOf(recipient), 0);
@@ -188,11 +167,7 @@ contract CartesiDAppTest is TestBase {
         );
 
         // perform call
-        success = dapp.executeVoucher(
-            address(erc20Token),
-            erc20TransferPayload,
-            proof
-        );
+        success = executeVoucher(voucher, proof);
 
         // check result
         assertEq(success, true);
@@ -207,7 +182,8 @@ contract CartesiDAppTest is TestBase {
         uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
+        Voucher memory voucher = getVoucher(1);
+        Proof memory proof = setupVoucherProof(1, _inputIndex, _numInputsAfter);
 
         // fund dapp
         uint256 dappInitBalance = 100;
@@ -215,16 +191,12 @@ contract CartesiDAppTest is TestBase {
         erc20Token.transfer(address(dapp), dappInitBalance);
 
         // 1st execution attempt should succeed
-        bool success = dapp.executeVoucher(
-            address(erc20Token),
-            erc20TransferPayload,
-            proof
-        );
+        bool success = executeVoucher(voucher, proof);
         assertEq(success, true);
 
         // 2nd execution attempt should fail
         vm.expectRevert(CartesiDApp.VoucherReexecutionNotAllowed.selector);
-        dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
+        executeVoucher(voucher, proof);
 
         // end result should be the same as executing successfully only once
         assertEq(
@@ -234,26 +206,12 @@ contract CartesiDAppTest is TestBase {
         assertEq(erc20Token.balanceOf(recipient), transferAmount);
     }
 
-    // `_inputIndex` and `_outputIndexWithinInput` are always less than 2**128
-    function testWasVoucherExecutedForAny(
-        uint128 _inputIndex,
-        uint128 _numInputsAfter,
-        uint128 _outputIndexWithinInput
-    ) public {
-        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
-
-        bool executed = dapp.wasVoucherExecuted(
-            _inputIndex,
-            _outputIndexWithinInput
-        );
-        assertEq(executed, false);
-    }
-
     function testWasVoucherExecuted(
         uint128 _inputIndex,
         uint128 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
+        Voucher memory voucher = getVoucher(1);
+        Proof memory proof = setupVoucherProof(1, _inputIndex, _numInputsAfter);
 
         // before executing voucher
         bool executed = dapp.wasVoucherExecuted(
@@ -263,11 +221,7 @@ contract CartesiDAppTest is TestBase {
         assertEq(executed, false);
 
         // execute voucher - failed
-        bool success = dapp.executeVoucher(
-            address(erc20Token),
-            erc20TransferPayload,
-            proof
-        );
+        bool success = executeVoucher(voucher, proof);
         assertEq(success, false);
 
         // `wasVoucherExecuted` should still return false
@@ -281,11 +235,7 @@ contract CartesiDAppTest is TestBase {
         uint256 dappInitBalance = 100;
         vm.prank(tokenOwner);
         erc20Token.transfer(address(dapp), dappInitBalance);
-        success = dapp.executeVoucher(
-            address(erc20Token),
-            erc20TransferPayload,
-            proof
-        );
+        success = executeVoucher(voucher, proof);
         assertEq(success, true);
 
         // after executing voucher, `wasVoucherExecuted` should return true
@@ -300,44 +250,48 @@ contract CartesiDAppTest is TestBase {
         uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
+        Voucher memory voucher = getVoucher(1);
+        Proof memory proof = setupVoucherProof(1, _inputIndex, _numInputsAfter);
 
         proof.validity.vouchersEpochRootHash = bytes32(uint256(0xdeadbeef));
 
         vm.expectRevert(LibOutputValidation.IncorrectEpochHash.selector);
-        dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
+        executeVoucher(voucher, proof);
     }
 
     function testRevertsOutputsEpochRootHash(
         uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
+        Voucher memory voucher = getVoucher(1);
+        Proof memory proof = setupVoucherProof(1, _inputIndex, _numInputsAfter);
 
         proof.validity.outputHashesRootHash = bytes32(uint256(0xdeadbeef));
 
         vm.expectRevert(
             LibOutputValidation.IncorrectOutputsEpochRootHash.selector
         );
-        dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
+        executeVoucher(voucher, proof);
     }
 
     function testRevertsOutputHashesRootHash(
         uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        setupERC20TransferVoucher(_inputIndex, _numInputsAfter);
+        Voucher memory voucher = getVoucher(1);
+        Proof memory proof = setupVoucherProof(1, _inputIndex, _numInputsAfter);
 
         proof.validity.outputIndexWithinInput = 0xdeadbeef;
 
         vm.expectRevert(
             LibOutputValidation.IncorrectOutputHashesRootHash.selector
         );
-        dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
+        executeVoucher(voucher, proof);
     }
 
     function testRevertsInputIndexOOB(uint256 _inputIndex) public {
-        setupERC20TransferVoucher(_inputIndex, 0);
+        Voucher memory voucher = getVoucher(1);
+        Proof memory proof = setupVoucherProof(1, _inputIndex, 0);
 
         // If the input index within epoch were 0, then there would be no way for the
         // input index in input box to be out of bounds because every claim is non-empty,
@@ -365,20 +319,7 @@ contract CartesiDAppTest is TestBase {
         vm.expectRevert(
             LibOutputValidation.InputIndexOutOfClaimBounds.selector
         );
-        dapp.executeVoucher(address(erc20Token), erc20TransferPayload, proof);
-    }
-
-    function setupERC20TransferVoucher(
-        uint256 _inputIndex,
-        uint256 _numInputsAfter
-    ) internal {
-        dapp = deployDAppDeterministically();
-        erc20Token = deployERC20Deterministically();
-        registerProof(
-            _inputIndex,
-            _numInputsAfter,
-            LibOutputProofs.getVoucher1Proof()
-        );
+        executeVoucher(voucher, proof);
     }
 
     // test ether transfer
@@ -387,30 +328,13 @@ contract CartesiDAppTest is TestBase {
         uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        dapp = deployDAppDeterministically();
-
-        bytes memory withdrawEtherPayload = abi.encodeWithSelector(
-            CartesiDApp.withdrawEther.selector,
-            recipient,
-            transferAmount
-        );
-
-        logVoucher(2, address(dapp), withdrawEtherPayload);
-
-        registerProof(
-            _inputIndex,
-            _numInputsAfter,
-            LibOutputProofs.getVoucher2Proof()
-        );
+        Voucher memory voucher = getVoucher(2);
+        Proof memory proof = setupVoucherProof(2, _inputIndex, _numInputsAfter);
 
         // not able to execute voucher because dapp has 0 balance
         assertEq(address(dapp).balance, 0);
         assertEq(address(recipient).balance, 0);
-        bool success = dapp.executeVoucher(
-            address(dapp),
-            withdrawEtherPayload,
-            proof
-        );
+        bool success = executeVoucher(voucher, proof);
         assertEq(success, false);
         assertEq(address(dapp).balance, 0);
         assertEq(address(recipient).balance, 0);
@@ -431,11 +355,7 @@ contract CartesiDAppTest is TestBase {
         );
 
         // perform call
-        success = dapp.executeVoucher(
-            address(dapp),
-            withdrawEtherPayload,
-            proof
-        );
+        success = executeVoucher(voucher, proof);
 
         // check result
         assertEq(success, true);
@@ -444,14 +364,13 @@ contract CartesiDAppTest is TestBase {
 
         // cannot execute the same voucher again
         vm.expectRevert(CartesiDApp.VoucherReexecutionNotAllowed.selector);
-        dapp.executeVoucher(address(dapp), withdrawEtherPayload, proof);
+        executeVoucher(voucher, proof);
     }
 
     function testWithdrawEtherContract(
         uint256 _value,
         address _notDApp
     ) public {
-        dapp = deployDAppDeterministically();
         vm.assume(_value <= address(this).balance);
         vm.assume(_notDApp != address(dapp));
         address receiver = address(new EtherReceiver());
@@ -477,7 +396,6 @@ contract CartesiDAppTest is TestBase {
         address _notDApp,
         uint256 _receiverSeed
     ) public {
-        dapp = deployDAppDeterministically();
         vm.assume(_notDApp != address(dapp));
         vm.assume(_value <= address(this).balance);
 
@@ -510,7 +428,6 @@ contract CartesiDAppTest is TestBase {
     }
 
     function testRevertsWithdrawEther(uint256 _value, uint256 _funds) public {
-        dapp = deployDAppDeterministically();
         vm.assume(_value > _funds);
         address receiver = address(new EtherReceiver());
 
@@ -529,32 +446,12 @@ contract CartesiDAppTest is TestBase {
         uint256 _inputIndex,
         uint256 _numInputsAfter
     ) public {
-        dapp = deployDAppDeterministically();
-        erc721Token = deployERC721Deterministically();
-        erc721Receiver = deployERC721ReceiverDeterministically();
-
-        bytes memory safeTransferFromPayload = abi.encodeWithSignature(
-            "safeTransferFrom(address,address,uint256)",
-            dapp, // from
-            erc721Receiver, // to
-            tokenId
-        );
-
-        logVoucher(3, address(erc721Token), safeTransferFromPayload);
-
-        registerProof(
-            _inputIndex,
-            _numInputsAfter,
-            LibOutputProofs.getVoucher3Proof()
-        );
+        Voucher memory voucher = getVoucher(3);
+        Proof memory proof = setupVoucherProof(3, _inputIndex, _numInputsAfter);
 
         // not able to execute voucher because dapp doesn't have the nft
         assertEq(erc721Token.ownerOf(tokenId), tokenOwner);
-        bool success = dapp.executeVoucher(
-            address(erc721Token),
-            safeTransferFromPayload,
-            proof
-        );
+        bool success = executeVoucher(voucher, proof);
         assertEq(success, false);
         assertEq(erc721Token.ownerOf(tokenId), tokenOwner);
 
@@ -573,11 +470,7 @@ contract CartesiDAppTest is TestBase {
         );
 
         // perform call
-        success = dapp.executeVoucher(
-            address(erc721Token),
-            safeTransferFromPayload,
-            proof
-        );
+        success = executeVoucher(voucher, proof);
 
         // check result
         assertEq(success, true);
@@ -585,11 +478,7 @@ contract CartesiDAppTest is TestBase {
 
         // cannot execute the same voucher again
         vm.expectRevert(CartesiDApp.VoucherReexecutionNotAllowed.selector);
-        dapp.executeVoucher(
-            address(erc721Token),
-            safeTransferFromPayload,
-            proof
-        );
+        executeVoucher(voucher, proof);
     }
 
     // test migration
@@ -643,17 +532,18 @@ contract CartesiDAppTest is TestBase {
     function registerProof(
         uint256 _inputIndex,
         uint256 _numInputsAfter,
-        OutputValidityProof memory _validity
+        Proof memory _proof
     ) internal {
         // check if `_inputIndex` and `_numInputsAfter` are valid
-        vm.assume(_validity.inputIndexWithinEpoch <= _inputIndex);
+        vm.assume(_proof.validity.inputIndexWithinEpoch <= _inputIndex);
         vm.assume(_numInputsAfter <= type(uint256).max - _inputIndex);
 
         // calculate epoch hash from proof
-        bytes32 epochHash = calculateEpochHash(_validity);
+        bytes32 epochHash = calculateEpochHash(_proof.validity);
 
         // calculate input index range based on proof and fuzzy variables
-        uint256 firstInputIndex = _inputIndex - _validity.inputIndexWithinEpoch;
+        uint256 firstInputIndex = _inputIndex -
+            _proof.validity.inputIndexWithinEpoch;
         uint256 lastInputIndex = _inputIndex + _numInputsAfter;
 
         // mock the consensus contract to return the right epoch hash
@@ -662,9 +552,14 @@ contract CartesiDAppTest is TestBase {
             abi.encodeWithSelector(IConsensus.getClaim.selector),
             abi.encode(epochHash, firstInputIndex, lastInputIndex)
         );
+    }
 
-        // store proof in storage
-        proof = Proof({validity: _validity, context: ""});
+    function deployContracts() internal {
+        consensus = deployConsensusDeterministically();
+        dapp = deployDAppDeterministically();
+        erc20Token = deployERC20Deterministically();
+        erc721Token = deployERC721Deterministically();
+        erc721Receiver = deployERC721ReceiverDeterministically();
     }
 
     function deployDAppDeterministically() internal returns (CartesiDApp) {
@@ -695,6 +590,128 @@ contract CartesiDAppTest is TestBase {
         return new SimpleERC721Receiver{salt: salt}();
     }
 
+    function addVoucher(
+        address destination,
+        bytes memory payload
+    ) internal {
+        uint256 index = outputEnums.length;
+        outputEnums.push(LibServerManager.OutputEnum.VOUCHER);
+        vouchers[index] = Voucher(destination, payload);
+    }
+
+    function getVoucher(
+        uint256 inputIndex
+    ) internal view returns (Voucher memory) {
+        assert(outputEnums[inputIndex] == LibServerManager.OutputEnum.VOUCHER);
+        return vouchers[inputIndex];
+    }
+
+    function addNotice(
+        bytes memory notice
+    ) internal {
+        uint256 index = outputEnums.length;
+        outputEnums.push(LibServerManager.OutputEnum.NOTICE);
+        notices[index] = notice;
+    }
+
+    function getNotice(
+        uint256 inputIndex
+    ) internal view returns (bytes memory) {
+        assert(outputEnums[inputIndex] == LibServerManager.OutputEnum.NOTICE);
+        return notices[inputIndex];
+    }
+
+    function generateOutputs() internal {
+        addNotice(abi.encode(bytes4(0xfafafafa)));
+        addVoucher(address(erc20Token), abi.encodeWithSelector(
+            IERC20.transfer.selector,
+            recipient,
+            transferAmount
+        ));
+        addVoucher(address(dapp), abi.encodeWithSelector(
+            CartesiDApp.withdrawEther.selector,
+            recipient,
+            transferAmount
+        ));
+        addVoucher(address(erc721Token), abi.encodeWithSignature(
+            "safeTransferFrom(address,address,uint256)",
+            dapp,
+            erc721Receiver,
+            tokenId
+        ));
+    }
+
+    function writeInputs() internal {
+        for (uint256 i; i < outputEnums.length; ++i) {
+            LibServerManager.OutputEnum outputEnum = outputEnums[i];
+            if (outputEnum == LibServerManager.OutputEnum.VOUCHER) {
+                Voucher memory voucher = getVoucher(i);
+                writeInput(i, voucher.destination, voucher.payload);
+            } else {
+                bytes memory notice = getNotice(i);
+                writeInput(i, noticeSender, notice);
+            }
+        }
+    }
+
+    function writeInput(
+        uint256 inputIndex,
+        address sender,
+        bytes memory payload
+    ) internal {
+        string memory inputIndexStr = vm.toString(inputIndex);
+        string memory objectKey = string.concat("input", inputIndexStr);
+        vm.serializeAddress(objectKey, "sender", sender);
+        string memory json = vm.serializeBytes(objectKey, "payload", payload);
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(
+            root,
+            "/test",
+            "/foundry",
+            "/dapp",
+            "/helper",
+            "/input",
+            "/",
+            inputIndexStr,
+            ".json"
+        );
+        vm.writeJson(json, path);
+    }
+
+    function readFinishEpochResponse() internal {
+        // Construct path to FinishEpoch response JSON
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(
+            root,
+            "/test",
+            "/foundry",
+            "/dapp",
+            "/helper",
+            "/output",
+            "/finish_epoch_response.json"
+        );
+
+        // Read contents of JSON file
+        string memory json = vm.readFile(path);
+
+        // Parse JSON into ABI-encoded data
+        encodedFinishEpochResponse = vm.parseJson(json);
+    }
+
+    function validateNotice(
+        bytes memory notice,
+        Proof memory proof
+    ) internal view returns (bool) {
+        return dapp.validateNotice(notice, proof);
+    }
+
+    function executeVoucher(
+        Voucher memory voucher,
+        Proof memory proof
+    ) internal returns (bool) {
+        return dapp.executeVoucher(voucher.destination, voucher.payload, proof);
+    }
+
     function calculateEpochHash(
         OutputValidityProof memory _validity
     ) internal pure returns (bytes32) {
@@ -706,5 +723,87 @@ contract CartesiDAppTest is TestBase {
                     _validity.machineStateHash
                 )
             );
+    }
+
+    function setupNoticeProof(
+        uint256 _inputIndexWithinEpoch,
+        uint256 _inputIndex,
+        uint256 _numInputsAfter
+    ) internal returns (Proof memory) {
+        Proof memory proof = getNoticeProof(_inputIndexWithinEpoch);
+        registerProof(_inputIndex, _numInputsAfter, proof);
+        return proof;
+    }
+
+    function setupVoucherProof(
+        uint256 _inputIndexWithinEpoch,
+        uint256 _inputIndex,
+        uint256 _numInputsAfter
+    ) internal returns (Proof memory) {
+        Proof memory proof = getVoucherProof(_inputIndexWithinEpoch);
+        registerProof(_inputIndex, _numInputsAfter, proof);
+        return proof;
+    }
+
+    function getNoticeProof(
+        uint256 inputIndex
+    ) internal view returns (Proof memory) {
+        return getProof(LibServerManager.OutputEnum.NOTICE, inputIndex, 0);
+    }
+
+    function getVoucherProof(
+        uint256 inputIndex
+    ) internal view returns (Proof memory) {
+        return getProof(LibServerManager.OutputEnum.VOUCHER, inputIndex, 0);
+    }
+
+    function getProof(
+        LibServerManager.OutputEnum outputEnum,
+        uint256 inputIndex,
+        uint256 outputIndex
+    ) internal view returns (Proof memory) {
+        // Decode ABI-encoded data into raw struct
+        LibServerManager.RawFinishEpochResponse memory raw = abi.decode(
+            encodedFinishEpochResponse,
+            (LibServerManager.RawFinishEpochResponse)
+        );
+
+        // Format raw finish epoch response
+        LibServerManager.FinishEpochResponse memory response = raw.fmt(vm);
+
+        // Find the proof that proves the provided output
+        LibServerManager.Proof[] memory proofs = response.proofs;
+        for (uint256 i; i < proofs.length; ++i) {
+            LibServerManager.Proof memory proof = proofs[i];
+            if (proof.proves(outputEnum, inputIndex, outputIndex)) {
+                return convert(proof);
+            }
+        }
+
+        // If a proof was not found, raise an error
+        revert ProofNotFound(outputEnum, inputIndex);
+    }
+
+    function convert(
+        LibServerManager.OutputValidityProof memory v
+    ) internal pure returns (OutputValidityProof memory) {
+        return
+            OutputValidityProof({
+                inputIndexWithinEpoch: uint64(v.inputIndexWithinEpoch),
+                outputIndexWithinInput: uint64(v.outputIndexWithinInput),
+                outputHashesRootHash: v.outputHashesRootHash,
+                vouchersEpochRootHash: v.vouchersEpochRootHash,
+                noticesEpochRootHash: v.noticesEpochRootHash,
+                machineStateHash: v.machineStateHash,
+                outputHashInOutputHashesSiblings: v
+                    .outputHashInOutputHashesSiblings,
+                outputHashesInEpochSiblings: v.outputHashesInEpochSiblings
+            });
+    }
+
+    function convert(
+        LibServerManager.Proof memory p
+    ) internal pure returns (Proof memory) {
+        return Proof({validity: convert(p.validity), context: p.context});
     }
 }
