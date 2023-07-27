@@ -137,7 +137,6 @@ jobs:
           targets: deps
           push: true
           project: ${{ vars.DEPOT_PROJECT }}
-          provenance: false
 
       - uses: snok/container-retention-policy@v1
         with:

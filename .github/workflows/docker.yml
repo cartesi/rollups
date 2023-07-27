@@ -69,4 +69,3 @@ jobs:
           targets: ${{ inputs.target }}
           push: true
           project: ${{ vars.DEPOT_PROJECT }}
-          provenance: false
