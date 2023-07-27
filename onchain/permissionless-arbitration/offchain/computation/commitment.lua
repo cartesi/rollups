@@ -6,93 +6,74 @@ local consts = require "constants"
 
 local ulte = arithmetic.ulte
 
---[[
-a = 2
-b = 2
+local function run_uarch_span(machine)
+    assert(machine.ucycle == 0)
+    machine:increment_uarch()
+    local builder = MerkleBuilder:new()
 
-states = 2^b + 1
+    local i = 0
+    repeat
+        builder:add(machine:state().root_hash)
+        machine:increment_uarch()
+        i = i + 1
+    until machine:state().uhalted
 
-x (0 0 0 | x) (0 0 0 | x) (0 0 0 | x) (0 0 0 | x)
-0  1 2 3   0   1 2 3   0   1
+    -- Add all remaining fixed-point states, filling the tree up to the last leaf.
+    builder:add(machine:state().root_hash, consts.uarch_span - i)
 
---]]
+    -- At this point, we've added `2^a - 1` hashes to the inner merkle builder.
+    -- Note that these states range from "meta" ucycle `1` to `2^a - 1`.
+
+    -- Now we do the last state transition (ureset), and add the last state,
+    -- closing in a power-of-two number of leaves (`2^a` leaves).
+    machine:ureset()
+    builder:add(machine:state().root_hash)
+
+    return builder:build()
+end
 
 local function build_small_machine_commitment(base_cycle, log2_stride_count, machine)
-    machine:advance(base_cycle)
-    local initial_state = machine:result().state
+    machine:run(base_cycle)
+    local initial_state = machine:state().root_hash
 
-    local outer_builder = MerkleBuilder:new()
-    local big_instructions = 1 << (log2_stride_count - consts.a)
-    local big_machine_halted = false
+    local builder = MerkleBuilder:new()
+    local instruction_count = arithmetic.max_uint(log2_stride_count - consts.log2_uarch_span)
+    local instruction = 0
+    while ulte(instruction, instruction_count) do
+        builder:add(run_uarch_span(machine))
+        instruction = instruction + 1
 
-    local big_instruction = 0
-    while math.ult(big_instruction, big_instructions) do
-        local inner_builder = MerkleBuilder:new()
-
-        -- This loop runs from `1` to `2^a - 1`, for a total of `2^a - 1` times
-        local ucycle = 1
-        local small_instructions = arithmetic.max_int(consts.a)
-        while ulte(ucycle, small_instructions) do
-            machine:uadvance(ucycle)
-            local state = machine:result()
-
-            if not state.uhalted then
-                inner_builder:add(state.state)
-            else
-                -- add this loop plus all remainings
-                inner_builder:add(state.state, small_instructions - ucycle + 1)
-                break
-            end
-
-            ucycle = ucycle + 1
-        end
-
-        -- At this point, we've added `2^a - 1` hashes to the inner merkle builder.
-        -- Now we do the last state transition (ureset), and add the last state,
-        -- closing in a power-of-two number of leaves (`2^a` leaves).
-        machine:ureset()
-        local state = machine:result()
-        inner_builder:add(state.state)
-
-        if not big_machine_halted then
-            outer_builder:add(inner_builder:build())
-            big_machine_halted = state.halted
-        else
-            -- add this loop plus all remainings
-            outer_builder:add(inner_builder:build(), big_instructions - big_instruction + 1)
+        -- Optional optimization, just comment to remove.
+        if machine:state().halted then
+            builder:add(run_uarch_span(machine), instruction_count - instruction + 1)
             break
         end
-
-        big_instruction = big_instruction + 1
     end
 
-    return initial_state, outer_builder:build()
+    return initial_state, builder:build()
 end
 
 
 
 local function build_big_machine_commitment(base_cycle, log2_stride, log2_stride_count, machine)
-    machine:advance(base_cycle + 0)
-    local initial_state = machine:result().state
+    machine:run(base_cycle)
+    local initial_state = machine:state().root_hash
 
     local builder = MerkleBuilder:new()
-    local strides = (1 << log2_stride_count) - 1
+    local instruction_count = arithmetic.max_uint(log2_stride_count)
+    local instruction = 0
+    while ulte(instruction, instruction_count) do
+        local cycle = ((instruction + 1) << (log2_stride - consts.log2_uarch_span))
+        machine:run(base_cycle + cycle)
 
-    local stride = 0
-    while ulte(stride, strides) do
-        local cycle = ((stride + 1) << (log2_stride - consts.a))
-        machine:advance(base_cycle + cycle)
-
-        local state = machine:result()
-        if not state.halted then
-            builder:add(state.state)
+        if not machine:state().halted then
+            builder:add(machine:state().root_hash)
+            instruction = instruction + 1
         else
             -- add this loop plus all remainings
-            builder:add(state.state, strides - stride + 1)
+            builder:add(machine:state().root_hash, instruction_count - instruction + 1)
             break
         end
-
-        stride = stride + 1
     end
 
     return initial_state, builder:build()
@@ -101,8 +82,8 @@ end
 local function build_commitment(base_cycle, log2_stride, log2_stride_count, machine_path)
     local machine = Machine:new_from_path(machine_path)
 
-    if log2_stride >= consts.a then
-        assert(log2_stride - consts.a + log2_stride_count <= 63)
+    if log2_stride >= consts.log2_uarch_span then
+        assert(log2_stride - consts.log2_uarch_span + log2_stride_count <= 63)
         return build_big_machine_commitment(base_cycle, log2_stride, log2_stride_count, machine)
     else
         assert(log2_stride == 0)
@@ -110,10 +91,67 @@ local function build_commitment(base_cycle, log2_stride, log2_stride_count, mach
     end
 end
 
-local path = "program/simple-program"
 
-local initial, tree = build_commitment(0, 0, 64, path)
+-- local path = "program/simple-program"
+-- -- local initial, tree = build_commitment(0, 0, 64, path)
+-- local initial, tree = build_commitment(400, 0, 67, path)
 -- local initial, tree = build_commitment(0, 64, 63, path)
-print(initial, tree.root_hash)
+-- print(initial, tree.root_hash)
+
+-- 0x95ebed36f6708365e01abbec609b89e5b2909b7a127636886afeeffafaf0c2ec
+-- 0x0f42278e1dd53a54a4743633bcbc3db7035fd9952eccf5fcad497b6f73c8917c
+--
+--0xd4a3511d1c56eb421e64dc218e8d7bf29c5d3ad848306f04c1b7f43b8883b670
+--0x66af9174ab9acb9d47d036b2e735cb9ba31226fd9b06198ce5bc0782c5ca03ff
+--
+-- 0x95ebed36f6708365e01abbec609b89e5b2909b7a127636886afeeffafaf0c2ec
+-- 0xa27e413a85c252c5664624e5a53c5415148b443983d7101bb3ca88829d1ab269
+
+
+--[[
+--[[
+a = 2
+b = 2
+
+states = 2^b + 1
+
+x (0 0 0 | x) (0 0 0 | x) (0 0 0 | x) (0 0 0 | x)
+0  1 2 3   0   1 2 3   0   1
+--]]
+
+
+
+
+-- local function x(log2_stride, log2_stride_count, machine)
+--     local uarch_instruction_count = arithmetic.max_uint(log2_stride_count)
+--     local stride = 1 << log2_stride
+--     local inner_builder = MerkleBuilder:new()
+
+--     local ucycle = stride
+--     while ulte(ucycle, uarch_instruction_count) do
+--         machine:run_uarch(ucycle)
+--         local state = machine:state()
+
+--         if not state.uhalted then
+--             inner_builder:add(state.state)
+--             ucycle = ucycle + stride
+--         else
+--             -- add this loop plus all remainings
+--             inner_builder:add(state.state, uarch_instruction_count - ucycle + 1)
+--             ucycle = uarch_instruction_count
+--             break
+--         end
+--     end
+
+--     -- At this point, we've added `uarch_instruction_count - 1` hashes to the inner merkle builder.
+--     -- Now we do the last state transition (ureset), and add the last state,
+--     -- closing in a power-of-two number of leaves (`2^a` leaves).
+--     machine:ureset()
+--     local state = machine:state()
+--     inner_builder:add(state.state)
+
+--     return inner_builder:build()
+-- end
+--]]
 
 return build_commitment

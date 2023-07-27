@@ -1,7 +1,9 @@
-local function max_int(k)
+local function max_uint(k)
     assert(k <= 64)
     return (1 << k) - 1
 end
+
+local max_uint64 = max_uint(64)
 
 local function ulte(x, y)
     return x == y or math.ult(x, y)
@@ -38,7 +40,8 @@ local function semi_sum(a, b)
 end
 
 return {
-    max_int = max_int,
+    max_uint = max_uint,
+    max_uint64 = max_uint64,
     ulte = ulte,
     is_pow2 = is_pow2,
     clz = clz,
