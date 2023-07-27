@@ -2,12 +2,12 @@ local Hash = require "cryptography.hash"
 local arithmetic = require "utils.arithmetic"
 local cartesi = require "cartesi"
 
-local ComputationResult = {}
-ComputationResult.__index = ComputationResult
+local ComputationState = {}
+ComputationState.__index = ComputationState
 
-function ComputationResult:new(state, halted, uhalted)
+function ComputationState:new(root_hash, halted, uhalted)
     local r = {
-        state = state,
+        root_hash = root_hash,
         halted = halted,
         uhalted = uhalted
     }
@@ -15,19 +15,19 @@ function ComputationResult:new(state, halted, uhalted)
     return r
 end
 
-function ComputationResult:from_current_machine_state(machine)
+function ComputationState:from_current_machine_state(machine)
     local hash = Hash:from_digest(machine:get_root_hash())
-    return ComputationResult:new(
+    return ComputationState:new(
         hash,
         machine:read_iflags_H(),
         machine:read_uarch_halt_flag()
     )
 end
 
-ComputationResult.__tostring = function(x)
+ComputationState.__tostring = function(x)
     return string.format(
-        "{state = %s, halted = %s, uhalted = %s}",
-        x.state,
+        "{root_hash = %s, halted = %s, uhalted = %s}",
+        x.root_hash,
         x.halted,
         x.uhalted
     )
@@ -38,6 +38,7 @@ end
 ---
 --
 
+-- TODO Consider removing this abstraction
 local Machine = {}
 Machine.__index = Machine
 
@@ -60,36 +61,45 @@ function Machine:new_from_path(path)
     return b
 end
 
-function Machine:result()
-    return ComputationResult:from_current_machine_state(self.machine)
+function Machine:state()
+    return ComputationState:from_current_machine_state(self.machine)
 end
 
-local function add_and_clamp(x, ...)
-    for _,v in ipairs {...} do
-        if arithmetic.ulte(x, x + v) then
-            x = x + v
-        else
-            return -1
-        end
+local function add_and_clamp(x, y)
+    if math.ult(x, arithmetic.max_uint64 - y) then
+        return x + y
+    else
+        return arithmetic.max_uint64
+    end
+end
+
+function Machine:run(cycle)
+    assert(arithmetic.ulte(self.cycle, cycle))
+    local physical_cycle = add_and_clamp(self.start_cycle, cycle) -- TODO reconsider for lambda
+
+    local machine = self.machine
+    while not (machine:read_iflags_H() or machine:read_mcycle() == physical_cycle) do
+        machine:run(physical_cycle)
     end
 
-    return x
-end
-
-function Machine:advance(cycle, ...)
-    cycle = add_and_clamp(cycle, ...)
-    assert(self.cycle <= cycle)
-    self.machine:run(add_and_clamp(self.start_cycle, cycle))
     self.cycle = cycle
 end
 
-function Machine:uadvance(ucycle)
+function Machine:run_uarch(ucycle)
     assert(arithmetic.ulte(self.ucycle, ucycle), string.format("%u, %u", self.ucycle, ucycle))
     self.machine:run_uarch(ucycle)
     self.ucycle = ucycle
 end
 
+function Machine:increment_uarch()
+    self.machine:run_uarch(self.ucycle + 1)
+    self.ucycle = self.ucycle + 1
+end
+
+
+
 function Machine:ureset()
+    assert(self.ucycle == arithmetic.max_uint64)
     self.machine:reset_uarch_state()
     self.cycle = self.cycle + 1
     self.ucycle = 0
