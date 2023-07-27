@@ -10,7 +10,10 @@ import {
     CartesiDAppFactory,
     CartesiDAppFactory__factory,
 } from "@cartesi/rollups";
+import arbitrum from "@cartesi/rollups/export/abi/arbitrum.json";
 import arbitrum_goerli from "@cartesi/rollups/export/abi/arbitrum_goerli.json";
+import mainnet from "@cartesi/rollups/export/abi/mainnet.json";
+import optimism from "@cartesi/rollups/export/abi/optimism.json";
 import optimism_goerli from "@cartesi/rollups/export/abi/optimism_goerli.json";
 import sepolia from "@cartesi/rollups/export/abi/sepolia.json";
 
@@ -26,7 +29,10 @@ type Deployment = {
 };
 
 const deployments: Record<number, Deployment> = {
+    42161: arbitrum,
     421613: arbitrum_goerli,
+    1: mainnet,
+    10: optimism,
     420: optimism_goerli,
     11155111: sepolia,
 };
