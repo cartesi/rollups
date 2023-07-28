@@ -11,6 +11,7 @@ members = [
   "http-server",
   "indexer",
   "inspect-server",
+  "machine-hash",
   "redacted",
   "rollups-events",
   "rollups-http-client",

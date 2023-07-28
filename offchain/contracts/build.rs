@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("InputBox", "inputs/InputBox", "input_box.rs"),
         ("Authority", "consensus/authority/Authority", "authority.rs"),
         ("History", "history/History", "history.rs"),
-        // ("CartesiDApp", "dapp/CartesiDApp", "cartesi_dapp.rs"),
+        ("CartesiDApp", "dapp/CartesiDApp", "cartesi_dapp.rs"),
         // (
         //     "CartesiDAppFactory",
         //     "dapp/CartesiDAppFactory",
