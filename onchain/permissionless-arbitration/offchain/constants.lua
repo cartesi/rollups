@@ -5,7 +5,6 @@ local log2_emulator_span = 63
 
 local constants = {
     levels = 4,
-    max_cycle = 63, -- TODO
     log2step = {24, 14, 7, 0},
     heights = {39, 10, 7, 7},
 

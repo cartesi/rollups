@@ -17,22 +17,16 @@ import "src/tournament/abstracts/RootTournament.sol";
 import "src/tournament/factories/RootTournamentFactory.sol";
 import "src/tournament/factories/InnerTournamentFactory.sol";
 import "src/CanonicalConstants.sol";
-import "step/contracts/UArchStep.sol";
-import "step/contracts/UArchState.sol";
-import "step/contracts/interfaces/IUArchStep.sol";
-import "step/contracts/interfaces/IUArchState.sol";
 
 pragma solidity ^0.8.0;
 
 contract TournamentFactoryTest is Test {
     IRootTournamentFactory rootFactory;
     IInnerTournamentFactory innerFactory;
-    IUArchState state = new UArchState();
-    IUArchStep step = new UArchStep();
 
     function setUp() public {
-        innerFactory = new InnerTournamentFactory(state, step);
-        rootFactory = new RootTournamentFactory(innerFactory, state, step);
+        innerFactory = new InnerTournamentFactory();
+        rootFactory = new RootTournamentFactory(innerFactory);
     }
 
     function testRootTournament() public {

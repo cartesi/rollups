@@ -3,8 +3,6 @@ pragma solidity ^0.8.17;
 
 import "../abstracts/LeafTournament.sol";
 import "../abstracts/NonRootTournament.sol";
-import "step/contracts/interfaces/IUArchState.sol";
-import "step/contracts/interfaces/IUArchStep.sol";
 
 /// @notice Bottom tournament of a multi-level instance
 contract BottomTournament is LeafTournament, NonRootTournament {
@@ -17,11 +15,9 @@ contract BottomTournament is LeafTournament, NonRootTournament {
         Time.Duration _allowance,
         uint256 _startCycle,
         uint64 _level,
-        IUArchState _stateInterface,
-        IUArchStep _stepInterface,
         NonLeafTournament _parent
     )
-        LeafTournament(_stateInterface, _stepInterface)
+        LeafTournament()
         NonRootTournament(
             _initialHash,
             _contestedCommitmentOne,

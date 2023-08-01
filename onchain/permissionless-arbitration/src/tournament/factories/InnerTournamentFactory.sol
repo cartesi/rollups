@@ -4,17 +4,9 @@ pragma solidity ^0.8.17;
 import "../interfaces/IInnerTournamentFactory.sol";
 import "../concretes/MiddleTournament.sol";
 import "../concretes/BottomTournament.sol";
-import "step/contracts/interfaces/IUArchState.sol";
-import "step/contracts/interfaces/IUArchStep.sol";
 
 contract InnerTournamentFactory is IInnerTournamentFactory {
-    IUArchState immutable stateInterface;
-    IUArchStep immutable stepInterface;
-
-    constructor(IUArchState _stateInterface, IUArchStep _stepInterface) {
-        stateInterface = _stateInterface;
-        stepInterface = _stepInterface;
-    }
+    constructor() {}
 
     function instantiateInner(
         Machine.Hash _initialHash,
@@ -100,8 +92,6 @@ contract InnerTournamentFactory is IInnerTournamentFactory {
             _allowance,
             _startCycle,
             _level,
-            stateInterface,
-            stepInterface,
             NonLeafTournament(msg.sender)
         );
 

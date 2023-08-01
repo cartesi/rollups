@@ -17,10 +17,6 @@ import "./Util.sol";
 import "src/tournament/factories/RootTournamentFactory.sol";
 import "src/tournament/factories/InnerTournamentFactory.sol";
 import "src/CanonicalConstants.sol";
-import "step/contracts/UArchStep.sol";
-import "step/contracts/UArchState.sol";
-import "step/contracts/interfaces/IUArchStep.sol";
-import "step/contracts/interfaces/IUArchState.sol";
 
 pragma solidity ^0.8.0;
 
@@ -34,8 +30,6 @@ contract MultiTournamentTest is Test {
     // player 0, player 1, and player 2
     Tree.Node[][3] playerNodes;
 
-    IUArchState immutable state;
-    IUArchStep immutable step;
     IRootTournamentFactory immutable rootFactory;
     IInnerTournamentFactory immutable innerFactory;
     TopTournament topTournament;
@@ -49,10 +43,8 @@ contract MultiTournamentTest is Test {
     event newInnerTournament(Match.IdHash indexed, NonRootTournament);
 
     constructor() {
-        state = new UArchState();
-        step = new UArchStep();
-        innerFactory = new InnerTournamentFactory(state, step);
-        rootFactory = new RootTournamentFactory(innerFactory, state, step);
+        innerFactory = new InnerTournamentFactory();
+        rootFactory = new RootTournamentFactory(innerFactory);
     }
 
     function setUp() public {
