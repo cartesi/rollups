@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
+import "./TournamentFactory.sol";
 import "../abstracts/NonLeafTournament.sol";
-import "../abstracts/NonRootTournament.sol";
+import "../concretes/MiddleTournament.sol";
 
-import "../factories/TournamentFactory.sol";
+import "../../Machine.sol";
+import "../../Tree.sol";
+import "../../Time.sol";
 
-/// @notice Middle tournament is non-top, non-bottom of a multi-level instance
-contract MiddleTournament is NonLeafTournament, NonRootTournament {
-    constructor(
+contract MiddleTournamentFactory {
+    constructor() {}
+
+    function instantiate(
         Machine.Hash _initialHash,
         Tree.Node _contestedCommitmentOne,
         Machine.Hash _contestedFinalStateOne,
@@ -17,11 +21,9 @@ contract MiddleTournament is NonLeafTournament, NonRootTournament {
         Time.Duration _allowance,
         uint256 _startCycle,
         uint64 _level,
-        NonLeafTournament _parent,
-        TournamentFactory _tournamentFactory
-    )
-        NonLeafTournament(_tournamentFactory)
-        NonRootTournament(
+        NonLeafTournament _parent
+    ) external returns (MiddleTournament) {
+        MiddleTournament _tournament = new MiddleTournament(
             _initialHash,
             _contestedCommitmentOne,
             _contestedFinalStateOne,
@@ -30,7 +32,10 @@ contract MiddleTournament is NonLeafTournament, NonRootTournament {
             _allowance,
             _startCycle,
             _level,
-            _parent
-        )
-    {}
+            _parent,
+            TournamentFactory(msg.sender)
+        );
+
+        return _tournament;
+    }
 }

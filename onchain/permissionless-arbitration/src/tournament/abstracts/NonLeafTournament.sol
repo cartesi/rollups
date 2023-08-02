@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "../interfaces/IInnerTournamentFactory.sol";
+import "../factories/ITournamentFactory.sol";
 import "./Tournament.sol";
 import "./NonRootTournament.sol";
 
@@ -20,7 +20,7 @@ abstract contract NonLeafTournament is Tournament {
     // Constants
     //
 
-    IInnerTournamentFactory immutable innerFactory;
+    ITournamentFactory immutable tournamentFactory;
 
     //
     // Storage
@@ -49,8 +49,8 @@ abstract contract NonLeafTournament is Tournament {
     // Constructor
     //
 
-    constructor(IInnerTournamentFactory _innerFactory) {
-        innerFactory = _innerFactory;
+    constructor(ITournamentFactory _tournamentFactory) {
+        tournamentFactory = _tournamentFactory;
     }
 
     function sealInnerMatchAndCreateInnerTournament(
@@ -98,7 +98,7 @@ abstract contract NonLeafTournament is Tournament {
             );
         }
 
-        NonRootTournament _inner = innerFactory.instantiateInner(
+        NonRootTournament _inner = instantiateInner(
             _initialHash,
             _matchId.commitmentOne,
             _finalStateOne,
@@ -160,4 +160,46 @@ abstract contract NonLeafTournament is Tournament {
             updateParentTournamentDelay(_delay);
         }
     }
+
+    function instantiateInner(
+        Machine.Hash _initialHash,
+        Tree.Node _contestedCommitmentOne,
+        Machine.Hash _contestedFinalStateOne,
+        Tree.Node _contestedCommitmentTwo,
+        Machine.Hash _contestedFinalStateTwo,
+        Time.Duration _allowance,
+        uint256 _startCycle,
+        uint64 _level
+    ) private returns (NonRootTournament) {
+        // the inner tournament is bottom tournament at last level
+        // else instantiate middle tournament
+        Tournament _tournament;
+        if (_level == ArbitrationConstants.LEVELS - 1) {
+            _tournament = tournamentFactory.instantiateBottom(
+                _initialHash,
+                _contestedCommitmentOne,
+                _contestedFinalStateOne,
+                _contestedCommitmentTwo,
+                _contestedFinalStateTwo,
+                _allowance,
+                _startCycle,
+                _level
+            );
+        } else {
+            _tournament = tournamentFactory.instantiateMiddle(
+                _initialHash,
+                _contestedCommitmentOne,
+                _contestedFinalStateOne,
+                _contestedCommitmentTwo,
+                _contestedFinalStateTwo,
+                _allowance,
+                _startCycle,
+                _level
+            );
+        }
+
+        return NonRootTournament(address(_tournament));
+    }
+
+
 }

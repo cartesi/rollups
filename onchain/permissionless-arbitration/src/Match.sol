@@ -60,7 +60,7 @@ library Match {
         Tree.Node rightNode;
         // Once match is done, leftNode and rightNode change meaning
         // and contains contested final states.
-        uint64 runningLeafPosition;
+        uint256 runningLeafPosition;
         uint64 height;
         uint64 currentHeight;
     }
@@ -81,8 +81,8 @@ library Match {
             leftNodeOfTwo,
             rightNodeOfTwo,
             0,
-            height, // TODO
-            height // TODO
+            height,
+            height
         );
 
         return (matchId.hashFromId(), state);
@@ -111,7 +111,7 @@ library Match {
         state.leftNode = newLeftNode;
         state.rightNode = newRightNode;
 
-        state.runningLeafPosition += uint64(1 << state.currentHeight); // TODO: verify
+        state.runningLeafPosition += 1 << state.currentHeight; // TODO: verify
         state.currentHeight--;
     }
 
@@ -157,13 +157,22 @@ library Match {
     }
 
     function getDivergence(
-        State storage state
+        State storage state,
+        uint256 startCycle,
+        uint64 level
     )
         internal
         view
-        returns (Machine.Hash finalStateOne, Machine.Hash finalStateTwo)
+        returns (
+            Machine.Hash agreeHash,
+            uint256 agreeCycle,
+            Machine.Hash finalStateOne,
+            Machine.Hash finalStateTwo
+        )
     {
         assert(state.currentHeight == 0);
+        agreeHash = Machine.Hash.wrap(Tree.Node.unwrap(state.otherParent));
+        agreeCycle = state.toCycle(startCycle, level);
 
         if (state.runningLeafPosition % 2 == 0) {
             // divergence was set on left leaf
@@ -190,6 +199,7 @@ library Match {
         State storage state,
         Machine.Hash initialState
     ) internal {
+        assert(state.currentHeight == 0);
         state.otherParent = Tree.Node.wrap(Machine.Hash.unwrap(initialState));
     }
 
@@ -267,7 +277,7 @@ library Match {
         uint64 log2step
     ) internal pure returns (uint256) {
         uint256 step = 1 << log2step;
-        uint256 leafPosition = state.runningLeafPosition + 1; // +1 is implicit initialHash
+        uint256 leafPosition = state.runningLeafPosition;
         return base + (leafPosition * step); // TODO verify
     }
 }

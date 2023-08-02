@@ -14,8 +14,7 @@ import "forge-std/console.sol";
 import "forge-std/Test.sol";
 
 import "./Util.sol";
-import "src/tournament/factories/RootTournamentFactory.sol";
-import "src/tournament/factories/InnerTournamentFactory.sol";
+import "src/tournament/factories/TournamentFactory.sol";
 import "src/CanonicalConstants.sol";
 
 pragma solidity ^0.8.0;
@@ -31,8 +30,7 @@ contract TournamentTest is Test {
     Tree.Node[][3] playerNodes;
     Tree.Node constant ONE_NODE = Tree.Node.wrap(bytes32(uint256(1)));
 
-    IRootTournamentFactory immutable rootFactory;
-    IInnerTournamentFactory immutable innerFactory;
+    TournamentFactory immutable factory;
     TopTournament topTournament;
     MiddleTournament middleTournament;
 
@@ -44,8 +42,7 @@ contract TournamentTest is Test {
     event newInnerTournament(Match.IdHash indexed, NonRootTournament);
 
     constructor() {
-        innerFactory = new InnerTournamentFactory();
-        rootFactory = new RootTournamentFactory(innerFactory);
+        factory = Util.instantiateTournamentFactory();
     }
 
     function setUp() public {
@@ -76,7 +73,7 @@ contract TournamentTest is Test {
     function testJoinTournament() public {
         topTournament = Util.initializePlayer0Tournament(
             playerNodes,
-            rootFactory
+            factory
         );
 
         // duplicate commitment should be reverted
@@ -97,7 +94,7 @@ contract TournamentTest is Test {
     function testTimeout() public {
         topTournament = Util.initializePlayer0Tournament(
             playerNodes,
-            rootFactory
+            factory
         );
 
         uint256 _t = block.timestamp;
@@ -150,7 +147,7 @@ contract TournamentTest is Test {
 
         topTournament = Util.initializePlayer0Tournament(
             playerNodes,
-            rootFactory
+            factory
         );
         _t = block.timestamp;
 

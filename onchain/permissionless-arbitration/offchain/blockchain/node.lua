@@ -63,57 +63,110 @@ end
 
 local function deploy_contracts(endpoint, deployer, initial_hash)
 
-    -- Deploy Inner Factory
-    print "Deploying inner factory..."
+    --
+    -- Deploy Single Level Factory
+    print "Deploying Single Level factory..."
 
-    local cmd_inner = string.format(
-        [[sh -c "forge create InnerTournamentFactory --rpc-url=%s --private-key=%s"]],
+    local cmd_sl = string.format(
+        [[sh -c "forge create SingleLevelTournamentFactory --rpc-url=%s --private-key=%s"]],
         endpoint, deployer
     )
 
-    local handle_inner = io.popen(cmd_inner)
-    assert(handle_inner, "`popen` returned nil handle")
+    local handle_sl = io.popen(cmd_sl)
+    assert(handle_sl, "`popen` returned nil handle")
 
-    local _, _, inner_factory_address = handle_inner:read("*a"):find("Deployed to: (0x%x+)")
-    assert(inner_factory_address, "deployment failed, factory_address is nil")
-    print("Inner factory deployed at", inner_factory_address)
-    handle_inner:close()
+    local _, _, sl_factory_address = handle_sl:read("*a"):find("Deployed to: (0x%x+)")
+    assert(sl_factory_address, "deployment failed, factory_address is nil")
+    print("Single Level factory deployed at", sl_factory_address)
+    handle_sl:close()
 
     --
-    -- Deploy Root Factory
-    print "Deploying root factory..."
+    -- Deploy top Factory
+    print "Deploying Top factory..."
+
+    local cmd_top = string.format(
+        [[sh -c "forge create TopTournamentFactory --rpc-url=%s --private-key=%s"]],
+        endpoint, deployer
+    )
+
+    local handle_top = io.popen(cmd_top)
+    assert(handle_top, "`popen` returned nil handle")
+
+    local _, _, top_factory_address = handle_top:read("*a"):find("Deployed to: (0x%x+)")
+    assert(top_factory_address, "deployment failed, factory_address is nil")
+    print("Top factory deployed at", top_factory_address)
+    handle_top:close()
+
+    --
+    -- Deploy middle Factory
+    print "Deploying Middle factory..."
+
+    local cmd_mid = string.format(
+        [[sh -c "forge create MiddleTournamentFactory --rpc-url=%s --private-key=%s"]],
+        endpoint, deployer
+    )
+
+    local handle_mid = io.popen(cmd_mid)
+    assert(handle_mid, "`popen` returned nil handle")
+
+    local _, _, mid_factory_address = handle_mid:read("*a"):find("Deployed to: (0x%x+)")
+    assert(mid_factory_address, "deployment failed, factory_address is nil")
+    print("Middle factory deployed at", mid_factory_address)
+    handle_mid:close()
+
+    --
+    -- Deploy bottom Factory
+    print "Deploying Bottom factory..."
+
+    local cmd_bot = string.format(
+        [[sh -c "forge create BottomTournamentFactory --rpc-url=%s --private-key=%s"]],
+        endpoint, deployer
+    )
+
+    local handle_bot = io.popen(cmd_bot)
+    assert(handle_bot, "`popen` returned nil handle")
+
+    local _, _, bot_factory_address = handle_bot:read("*a"):find("Deployed to: (0x%x+)")
+    assert(bot_factory_address, "deployment failed, factory_address is nil")
+    print("Bottom factory deployed at", bot_factory_address)
+    handle_bot:close()
+
+
+    --
+    -- Deploy Tournament Factory
+    print "Deploying Tournament factory..."
+
+    local cmd_tournament = string.format(
+        [[sh -c "forge create TournamentFactory --rpc-url=%s --private-key=%s --constructor-args %s %s %s %s"]],
+        endpoint, deployer, sl_factory_address, top_factory_address, mid_factory_address, bot_factory_address
+    )
+
+    local handle_tournament = io.popen(cmd_tournament)
+    assert(handle_tournament, "`popen` returned nil handle")
+
+    local _, _, tournament_factory_address = handle_tournament:read("*a"):find("Deployed to: (0x%x+)")
+    assert(tournament_factory_address, "deployment failed, factory_address is nil")
+    print("tournament factory deployed at", tournament_factory_address)
+    handle_tournament:close()
+
+
+    --
+    -- Instantiate Root Tournament
+    print "Instantiate root tournament contract..."
 
     local cmd_root = string.format(
-        [[sh -c "forge create RootTournamentFactory --rpc-url=%s --private-key=%s --constructor-args %s"]],
-        endpoint, deployer, inner_factory_address
+        [[cast send --private-key "%s" --rpc-url "%s" "%s" "instantiateTop(bytes32)" "%s"]],
+        deployer, endpoint, tournament_factory_address, initial_hash
     )
 
     local handle_root = io.popen(cmd_root)
     assert(handle_root, "`popen` returned nil handle")
 
-    local _, _, root_factory_address = handle_root:read("*a"):find("Deployed to: (0x%x+)")
-    assert(root_factory_address, "deployment failed, factory_address is nil")
-    print("Root factory deployed at", root_factory_address)
-    handle_root:close()
-
-
-    --
-    -- Instantiate Root Tournament
-    print "Instantiate root contract..."
-
-    local cmd2 = string.format(
-        [[cast send --private-key "%s" --rpc-url "%s" "%s" "instantiateTopOfMultiple(bytes32)" "%s"]],
-        deployer, endpoint, root_factory_address, initial_hash
-    )
-
-    local handle2 = io.popen(cmd2)
-    assert(handle2, "`popen` returned nil handle")
-
-    local _, _, a = handle2:read("*a"):find [["data":"0x000000000000000000000000(%x+)"]]
+    local _, _, a = handle_root:read("*a"):find [["data":"0x000000000000000000000000(%x+)"]]
     local address = "0x" .. a
     assert(address, "deployment failed, address is nil")
     print("Contract deployed at", address)
-    handle2:close()
+    handle_root:close()
 
     return address
 end

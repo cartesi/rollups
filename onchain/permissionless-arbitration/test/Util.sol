@@ -14,7 +14,11 @@ import "src/Match.sol";
 import "src/CanonicalConstants.sol";
 import "src/tournament/concretes/TopTournament.sol";
 import "src/tournament/concretes/MiddleTournament.sol";
-import "src/tournament/interfaces/IRootTournamentFactory.sol";
+
+import "src/tournament/factories/SingleLevelTournamentFactory.sol";
+import "src/tournament/factories/TopTournamentFactory.sol";
+import "src/tournament/factories/MiddleTournamentFactory.sol";
+import "src/tournament/factories/BottomTournamentFactory.sol";
 
 pragma solidity ^0.8.0;
 
@@ -109,10 +113,10 @@ library Util {
     // create new _topTournament and player 0 joins it
     function initializePlayer0Tournament(
         Tree.Node[][3] memory _playerNodes,
-        IRootTournamentFactory _rootFactory
+        TournamentFactory _factory
     ) internal returns (TopTournament _topTournament) {
         _topTournament = TopTournament(
-            address(_rootFactory.instantiateTopOfMultiple(Machine.ZERO_STATE))
+            address(_factory.instantiateTop(Machine.ZERO_STATE))
         );
         // player 0 joins tournament
         joinTopTournament(_playerNodes, _topTournament, 0);
@@ -214,5 +218,16 @@ library Util {
                 _playerNodes[0][ArbitrationConstants.height(_level)],
                 _playerNodes[_opponent][ArbitrationConstants.height(_level)]
             );
+    }
+
+
+    // instantiates all sub-factories and TournamentFactory
+    function instantiateTournamentFactory() internal returns (TournamentFactory) {
+        SingleLevelTournamentFactory singleLevelFactory = new SingleLevelTournamentFactory();
+        TopTournamentFactory topFactory = new TopTournamentFactory();
+        MiddleTournamentFactory middleFactory = new MiddleTournamentFactory();
+        BottomTournamentFactory bottomFactory = new BottomTournamentFactory();
+
+        return new TournamentFactory(singleLevelFactory, topFactory, middleFactory, bottomFactory);
     }
 }

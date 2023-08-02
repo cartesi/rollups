@@ -56,7 +56,7 @@ abstract contract LeafTournament is Tournament {
             require(_initialHash.eq(initialHash), "initial hash incorrect");
         } else {
             _matchId.commitmentOne.proveHash(
-                _matchState.runningLeafPosition - 1,
+                _matchState.runningLeafPosition,
                 _initialHash,
                 _initialHashProof
             );
@@ -80,18 +80,18 @@ abstract contract LeafTournament is Tournament {
         _clockOne.requireInitialized();
         _clockTwo.requireInitialized();
 
-        Machine.Hash _finalState = Machine.Hash.wrap(metaStep(
-            _matchState.runningLeafPosition,
-            AccessLogs.Context(
-                Tree.Node.unwrap(_matchState.otherParent),
-                Buffer.Context(proofs, 0)
-            )
-        ));
-
         (
+            Machine.Hash _agreeHash,
+            uint256 _agreeCycle,
             Machine.Hash _finalStateOne,
             Machine.Hash _finalStateTwo
-        ) = _matchState.getDivergence();
+        ) = _matchState.getDivergence(startCycle, level);
+
+        Machine.Hash _finalState = runMetaStep(
+            _agreeHash,
+            _agreeCycle,
+            proofs
+        );
 
         if (_leftNode.join(_rightNode).eq(_matchId.commitmentOne)) {
             require(
@@ -126,21 +126,39 @@ abstract contract LeafTournament is Tournament {
         delete matches[_matchId.hashFromId()];
     }
 
+    function runMetaStep(Machine.Hash machineState, uint256 counter, bytes memory proofs)
+         internal
+         pure
+         returns (Machine.Hash)
+    {
+        return Machine.Hash.wrap(metaStep(
+            Machine.Hash.unwrap(machineState),
+            counter,
+            proofs
+        ));
+    }
+
     // TODO: move to step repo
     // TODO: add ureset
-    function metaStep(uint256 counter, AccessLogs.Context memory accessLogs)
+    function metaStep(bytes32 machineState, uint256 counter, bytes memory proofs)
          internal
          pure
          returns (bytes32)
-     {
+    {
+        // TODO: create a more convinient constructor.
+        AccessLogs.Context memory accessLogs = AccessLogs.Context(
+            machineState,
+            Buffer.Context(proofs, 0)
+        );
+
          uint256 mask = (1 << 64) - 1;
          if (counter & mask == mask) {
              // reset
              revert("RESET UNIMPLEMENTED");
          } else {
              UArchStep.step(accessLogs);
-             bytes32 machineState = accessLogs.currentRootHash;
-             return machineState;
+             bytes32 newMachineState = accessLogs.currentRootHash;
+             return newMachineState;
          }
-     }
+    }
 }
