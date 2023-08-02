@@ -25,7 +25,7 @@ library Commitment {
 
     function proveHash(
         Tree.Node root,
-        uint64 position,
+        uint256 position,
         Machine.Hash hash,
         bytes32[] calldata hashProof
     ) internal pure {

@@ -14,8 +14,7 @@ import "forge-std/console.sol";
 import "forge-std/Test.sol";
 
 import "./Util.sol";
-import "src/tournament/factories/RootTournamentFactory.sol";
-import "src/tournament/factories/InnerTournamentFactory.sol";
+import "src/tournament/factories/TournamentFactory.sol";
 import "src/CanonicalConstants.sol";
 
 pragma solidity ^0.8.0;
@@ -30,8 +29,7 @@ contract MultiTournamentTest is Test {
     // player 0, player 1, and player 2
     Tree.Node[][3] playerNodes;
 
-    IRootTournamentFactory immutable rootFactory;
-    IInnerTournamentFactory immutable innerFactory;
+    TournamentFactory immutable factory;
     TopTournament topTournament;
     MiddleTournament middleTournament;
 
@@ -43,8 +41,7 @@ contract MultiTournamentTest is Test {
     event newInnerTournament(Match.IdHash indexed, NonRootTournament);
 
     constructor() {
-        innerFactory = new InnerTournamentFactory();
-        rootFactory = new RootTournamentFactory(innerFactory);
+        factory = Util.instantiateTournamentFactory();
     }
 
     function setUp() public {
@@ -75,7 +72,7 @@ contract MultiTournamentTest is Test {
     function testRootWinner() public {
         topTournament = Util.initializePlayer0Tournament(
             playerNodes,
-            rootFactory
+            factory
         );
 
         // no winner before tournament finished
@@ -128,7 +125,7 @@ contract MultiTournamentTest is Test {
     function testInner() public {
         topTournament = Util.initializePlayer0Tournament(
             playerNodes,
-            rootFactory
+            factory
         );
 
         // pair commitment, expect a match
@@ -160,7 +157,7 @@ contract MultiTournamentTest is Test {
 
         topTournament = Util.initializePlayer0Tournament(
             playerNodes,
-            rootFactory
+            factory
         );
 
         // pair commitment, expect a match
@@ -194,7 +191,7 @@ contract MultiTournamentTest is Test {
     function testInnerWinner() public {
         topTournament = Util.initializePlayer0Tournament(
             playerNodes,
-            rootFactory
+            factory
         );
 
         // pair commitment, expect a match
@@ -278,7 +275,7 @@ contract MultiTournamentTest is Test {
         //create another tournament for other test
         topTournament = Util.initializePlayer0Tournament(
             playerNodes,
-            rootFactory
+            factory
         );
 
         // pair commitment, expect a match

@@ -14,25 +14,24 @@ import "forge-std/console.sol";
 import "forge-std/Test.sol";
 
 import "src/tournament/abstracts/RootTournament.sol";
-import "src/tournament/factories/RootTournamentFactory.sol";
-import "src/tournament/factories/InnerTournamentFactory.sol";
+import "src/tournament/factories/TournamentFactory.sol";
 import "src/CanonicalConstants.sol";
+
+import "./Util.sol";
 
 pragma solidity ^0.8.0;
 
 contract TournamentFactoryTest is Test {
-    IRootTournamentFactory rootFactory;
-    IInnerTournamentFactory innerFactory;
+    TournamentFactory factory;
 
     function setUp() public {
-        innerFactory = new InnerTournamentFactory();
-        rootFactory = new RootTournamentFactory(innerFactory);
+        factory = Util.instantiateTournamentFactory();
     }
 
     function testRootTournament() public {
-        RootTournament rootTournament = rootFactory.instantiateSingle(
+        RootTournament rootTournament = RootTournament(address(factory.instantiateSingleLevel(
             Machine.ZERO_STATE
-        );
+        )));
 
         (uint64 _level, uint64 _log2step, uint64 _height) = rootTournament
             .tournamentLevelConstants();
@@ -49,9 +48,9 @@ contract TournamentFactoryTest is Test {
             "height should match"
         );
 
-        rootTournament = rootFactory.instantiateTopOfMultiple(
+        rootTournament = RootTournament(address(factory.instantiateTop(
             Machine.ZERO_STATE
-        );
+        )));
 
         (_level, _log2step, _height) = rootTournament
             .tournamentLevelConstants();
