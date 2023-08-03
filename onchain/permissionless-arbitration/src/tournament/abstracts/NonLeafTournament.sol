@@ -105,7 +105,7 @@ abstract contract NonLeafTournament is Tournament {
             _matchId.commitmentTwo,
             _finalStateTwo,
             _maxDuration,
-            _matchState.toCycle(startCycle, level),
+            _matchState.toCycle(startCycle),
             level + 1
         );
         matchIdFromInnerTournaments[_inner] = _matchId.hashFromId();
