@@ -85,7 +85,7 @@ abstract contract LeafTournament is Tournament {
             uint256 _agreeCycle,
             Machine.Hash _finalStateOne,
             Machine.Hash _finalStateTwo
-        ) = _matchState.getDivergence(startCycle, level);
+        ) = _matchState.getDivergence(startCycle);
 
         Machine.Hash _finalState = runMetaStep(
             _agreeHash,

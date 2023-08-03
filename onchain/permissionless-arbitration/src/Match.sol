@@ -61,8 +61,9 @@ library Match {
         // Once match is done, leftNode and rightNode change meaning
         // and contains contested final states.
         uint256 runningLeafPosition;
-        uint64 height;
         uint64 currentHeight;
+
+        uint64 level; // constant
     }
 
     function createMatch(
@@ -70,7 +71,7 @@ library Match {
         Tree.Node two,
         Tree.Node leftNodeOfTwo,
         Tree.Node rightNodeOfTwo,
-        uint64 height
+        uint64 level
     ) internal pure returns (IdHash, State memory) {
         assert(two.verify(leftNodeOfTwo, rightNodeOfTwo));
 
@@ -81,8 +82,8 @@ library Match {
             leftNodeOfTwo,
             rightNodeOfTwo,
             0,
-            height,
-            height
+            ArbitrationConstants.height(level),
+            level
         );
 
         return (matchId.hashFromId(), state);
@@ -126,7 +127,7 @@ library Match {
         state.rightNode = leftLeaf;
         state.currentHeight = 0;
 
-        if (state.height % 2 == 0) {
+        if (state.height() % 2 == 0) {
             finalStateOne = state.leftNode.toMachineHash();
             finalStateTwo = state.rightNode.toMachineHash();
         } else {
@@ -147,7 +148,7 @@ library Match {
         state.runningLeafPosition += 1; // TODO: verify
         state.currentHeight = 0;
 
-        if (state.height % 2 == 0) {
+        if (state.height() % 2 == 0) {
             finalStateOne = state.rightNode.toMachineHash();
             finalStateTwo = state.leftNode.toMachineHash();
         } else {
@@ -158,8 +159,7 @@ library Match {
 
     function getDivergence(
         State storage state,
-        uint256 startCycle,
-        uint64 level
+        uint256 startCycle
     )
         internal
         view
@@ -172,11 +172,11 @@ library Match {
     {
         assert(state.currentHeight == 0);
         agreeHash = Machine.Hash.wrap(Tree.Node.unwrap(state.otherParent));
-        agreeCycle = state.toCycle(startCycle, level);
+        agreeCycle = state.toCycle(startCycle);
 
         if (state.runningLeafPosition % 2 == 0) {
             // divergence was set on left leaf
-            if (state.height % 2 == 0) {
+            if (state.height() % 2 == 0) {
                 finalStateOne = state.leftNode.toMachineHash();
                 finalStateTwo = state.rightNode.toMachineHash();
             } else {
@@ -185,7 +185,7 @@ library Match {
             }
         } else {
             // divergence was set on right leaf
-            if (state.height % 2 == 0) {
+            if (state.height() % 2 == 0) {
                 finalStateOne = state.rightNode.toMachineHash();
                 finalStateTwo = state.leftNode.toMachineHash();
             } else {
@@ -232,11 +232,16 @@ library Match {
 
     function toCycle(
         State memory state,
-        uint256 startCycle,
-        uint64 level
+        uint256 startCycle
     ) internal pure returns (uint256) {
-        uint64 log2step = ArbitrationConstants.log2step(level);
+        uint64 log2step = ArbitrationConstants.log2step(state.level);
         return _toCycle(state, startCycle, log2step);
+    }
+
+    function height(
+        State memory state
+    ) internal pure returns (uint64) {
+        return ArbitrationConstants.height(state.level);
     }
 
     //

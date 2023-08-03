@@ -263,7 +263,7 @@ abstract contract Tournament {
         Match.IdHash _matchIdHash
     ) external view returns (uint256) {
         Match.State memory _m = getMatch(_matchIdHash);
-        return _m.toCycle(startCycle, level);
+        return _m.toCycle(startCycle);
     }
 
     function tournamentLevelConstants()
@@ -329,7 +329,7 @@ abstract contract Tournament {
                     _rootHash,
                     _leftNode,
                     _rightNode,
-                    ArbitrationConstants.height(level)
+                    level
                 );
 
             matches[_matchId] = _matchState;
