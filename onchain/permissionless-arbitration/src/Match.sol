@@ -261,7 +261,7 @@ library Match {
     }
 
     function requireCanBeAdvanced(State memory state) internal pure {
-        require(!state.canBeFinalized(), "match is ready to be finalized");
+        require(state.canBeAdvanced(), "match can't be advanced");
     }
 
     function requireParentHasChildren(
