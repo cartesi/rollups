@@ -18,10 +18,12 @@ local function start_blockchain(account_num)
 
     local pid = tonumber(reader:read())
 
-    local handle = {reader = reader, pid = pid}
-    setmetatable(handle, {__gc = function(t)
-        stop_blockchain(t.reader, t.pid)
-    end})
+    local handle = { reader = reader, pid = pid }
+    setmetatable(handle, {
+        __gc = function(t)
+            stop_blockchain(t.reader, t.pid)
+        end
+    })
 
     print(string.format("Blockchain running with pid %d", pid))
     return handle
@@ -57,12 +59,11 @@ local function capture_blockchain_data(reader, account_num)
         _, _, endpoint = str:find("Listening on ([%w%p]+)")
     until endpoint
 
-    return {address = addresses, pk = pks}, endpoint
+    return { address = addresses, pk = pks }, endpoint
 end
 
 
 local function deploy_contracts(endpoint, deployer, initial_hash)
-
     --
     -- Deploy Single Level Factory
     print "Deploying Single Level factory..."
@@ -183,7 +184,7 @@ function Blockchain:new(account_num)
     blockchain._handle = handle
     blockchain._accounts = accounts
     blockchain._current_account = 1
-    blockchain.endpoint = "http://"..endpoint
+    blockchain.endpoint = "http://" .. endpoint
 
     setmetatable(blockchain, self)
     return blockchain

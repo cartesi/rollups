@@ -10,7 +10,7 @@ local function ulte(x, y)
 end
 
 local function is_pow2(x)
-    return (x & (x-1)) == 0
+    return (x & (x - 1)) == 0
 end
 
 -- Returns number of leading zeroes of x. Shamelessly stolen from the book
@@ -18,12 +18,22 @@ end
 local function clz(x)
     if x == 0 then return 64 end
     local n = 0
-    if (x & 0xFFFFFFFF00000000) == 0 then n = n + 32; x = x << 32 end
-    if (x & 0xFFFF000000000000) == 0 then n = n + 16; x = x << 16 end
-    if (x & 0xFF00000000000000) == 0 then n = n +  8; x = x <<  8 end
-    if (x & 0xF000000000000000) == 0 then n = n +  4; x = x <<  4 end
-    if (x & 0xC000000000000000) == 0 then n = n +  2; x = x <<  2 end
-    if (x & 0x8000000000000000) == 0 then n = n +  1 end
+    if (x & 0xFFFFFFFF00000000) == 0 then
+        n = n + 32; x = x << 32
+    end
+    if (x & 0xFFFF000000000000) == 0 then
+        n = n + 16; x = x << 16
+    end
+    if (x & 0xFF00000000000000) == 0 then
+        n = n + 8; x = x << 8
+    end
+    if (x & 0xF000000000000000) == 0 then
+        n = n + 4; x = x << 4
+    end
+    if (x & 0xC000000000000000) == 0 then
+        n = n + 2; x = x << 2
+    end
+    if (x & 0x8000000000000000) == 0 then n = n + 1 end
     return n
 end
 

@@ -1,5 +1,5 @@
 local Hash = require "cryptography.hash"
-local utils = require "utils"
+local eth_ebi = require "utils.eth_ebi"
 
 local function parse_topics(json)
     local _, _, topics = json:find(
@@ -7,7 +7,7 @@ local function parse_topics(json)
     )
 
     local t = {}
-    for k,_ in string.gmatch(topics, [["(0x%x+)"]]) do
+    for k, _ in string.gmatch(topics, [["(0x%x+)"]]) do
         table.insert(t, k)
     end
 
@@ -19,7 +19,7 @@ local function parse_data(json, sig)
         [==["data":"(0x%x+)"]==]
     )
 
-    local decoded_data = utils.decode_event_data(sig, data)
+    local decoded_data = eth_ebi.decode_event_data(sig, data)
     return decoded_data
 end
 
@@ -48,11 +48,11 @@ end
 
 local function parse_logs(logs, data_sig)
     local ret = {}
-    for k,_ in string.gmatch(logs, [[{[^}]*}]]) do
+    for k, _ in string.gmatch(logs, [[{[^}]*}]]) do
         local emited_topics = parse_topics(k)
         local decoded_data = parse_data(k, data_sig)
         local meta = parse_meta(k)
-        table.insert(ret, {emited_topics = emited_topics, decoded_data = decoded_data, meta = meta})
+        table.insert(ret, { emited_topics = emited_topics, decoded_data = decoded_data, meta = meta })
     end
 
     return ret
@@ -62,7 +62,7 @@ local function join_tables(...)
     local function join(ret, t, ...)
         if not t then return ret end
 
-        for k,v in ipairs(t) do
+        for k, v in ipairs(t) do
             ret[k] = v
         end
 
@@ -91,15 +91,15 @@ local function sort_and_dedup(t)
     end)
 
     local ret = {}
-    for k,v in ipairs(t) do
-        local v2 = t[k+1]
+    for k, v in ipairs(t) do
+        local v2 = t[k + 1]
         if not v2 then
             table.insert(ret, v)
         else
             local m1, m2 = v.meta, v2.meta
             if not (m1.block_number == m2.block_number and m1.log_index == m2.log_index) then
                 table.insert(ret, v)
-           end
+            end
         end
     end
 
@@ -107,8 +107,8 @@ local function sort_and_dedup(t)
 end
 
 local function quote_args(args, not_quote)
-   local quoted_args = {}
-    for _,v in ipairs(args) do
+    local quoted_args = {}
+    for _, v in ipairs(args) do
         if type(v) == "table" then
             if v._tag == "tuple" then
                 local qa = quote_args(v, true)
@@ -116,7 +116,7 @@ local function quote_args(args, not_quote)
                 local sb = "'(" .. ca .. ")'"
                 table.insert(quoted_args, sb)
             else
-                local qa = quote_args(v,  true)
+                local qa = quote_args(v, true)
                 local ca = table.concat(qa, ",")
                 local sb = "'[" .. ca .. "]'"
                 table.insert(quoted_args, sb)
@@ -124,7 +124,7 @@ local function quote_args(args, not_quote)
         elseif not_quote then
             table.insert(quoted_args, v)
         else
-            table.insert(quoted_args, '"'..v..'"')
+            table.insert(quoted_args, '"' .. v .. '"')
         end
     end
 
@@ -144,7 +144,6 @@ function Client:new(blockchain)
 
     setmetatable(client, self)
     return client
-
 end
 
 local cast_logs_template = [==[
@@ -153,16 +152,16 @@ cast rpc -r "%s" eth_getLogs \
 ]==]
 
 function Client:_read_logs(tournament_address, sig, topics, data_sig)
-    topics = topics or {false, false, false}
-    local encoded_sig = utils.encode_sig(sig)
+    topics = topics or { false, false, false }
+    local encoded_sig = eth_ebi.encode_sig(sig)
     table.insert(topics, 1, encoded_sig)
     assert(#topics == 4, "topics doesn't have four elements")
 
     local topics_strs = {}
-    for _,v in ipairs(topics) do
+    for _, v in ipairs(topics) do
         local s
         if v then
-            s = '"'..v..'"'
+            s = '"' .. v .. '"'
         else
             s = "null"
         end
@@ -198,8 +197,8 @@ cast call --rpc-url "%s" "%s" "%s" %s 2>&1
 
 function Client:_call(address, sig, args)
     local quoted_args = {}
-    for _,v in ipairs(args) do
-        table.insert(quoted_args, '"'..v..'"')
+    for _, v in ipairs(args) do
+        table.insert(quoted_args, '"' .. v .. '"')
     end
     local args_str = table.concat(quoted_args, " ")
 
@@ -236,20 +235,20 @@ function Client:read_match_created(tournament_address, commitment_hash)
     local sig = "matchCreated(bytes32,bytes32,bytes32)"
     local data_sig = "(bytes32)"
 
-    local logs1 = self:_read_logs(tournament_address, sig, {commitment_hash, false, false}, data_sig)
-    local logs2 = self:_read_logs(tournament_address, sig, {false, commitment_hash, false}, data_sig)
+    local logs1 = self:_read_logs(tournament_address, sig, { commitment_hash, false, false }, data_sig)
+    local logs2 = self:_read_logs(tournament_address, sig, { false, commitment_hash, false }, data_sig)
 
     local logs = sort_and_dedup(join_tables(logs1, logs2))
 
     local ret = {}
-    for k,v in ipairs(logs) do
+    for k, v in ipairs(logs) do
         local log = {}
         log.tournament_address = tournament_address
         log.meta = v.meta
 
-        log.commitment_one = Hash:from_digest(v.emited_topics[2])
-        log.commitment_two = Hash:from_digest(v.emited_topics[3])
-        log.left_hash = Hash:from_digest(v.decoded_data[1])
+        log.commitment_one = Hash:from_digest_hex(v.emited_topics[2])
+        log.commitment_two = Hash:from_digest_hex(v.emited_topics[3])
+        log.left_hash = Hash:from_digest_hex(v.decoded_data[1])
         log.match_id_hash = log.commitment_one:join(log.commitment_two)
 
         ret[k] = log
@@ -261,7 +260,7 @@ end
 function Client:read_commitment(tournament_address, commitment_hash)
     local sig = "getCommitment(bytes32)((uint64,uint64),bytes32)"
 
-    local call_ret = self:_call(tournament_address, sig, {commitment_hash})
+    local call_ret = self:_call(tournament_address, sig, { commitment_hash })
     assert(#call_ret == 2)
 
     local allowance, last_resume = call_ret[1]:match "%((%d+),(%d+)%)"
@@ -274,7 +273,7 @@ function Client:read_commitment(tournament_address, commitment_hash)
 
     local ret = {
         clock = clock,
-        final_state = Hash:from_digest(call_ret[2])
+        final_state = Hash:from_digest_hex(call_ret[2])
     }
 
     return ret
@@ -284,14 +283,14 @@ function Client:read_tournament_created(tournament_address, match_id_hash)
     local sig = "newInnerTournament(bytes32,address)"
     local data_sig = "(address)"
 
-    local logs = self:_read_logs(tournament_address, sig, {match_id_hash, false, false}, data_sig)
+    local logs = self:_read_logs(tournament_address, sig, { match_id_hash, false, false }, data_sig)
     assert(#logs <= 1)
 
     if #logs == 0 then return false end
     local log = logs[1]
 
     local ret = {
-        parent_match = Hash:from_digest(match_id_hash),
+        parent_match = Hash:from_digest_hex(match_id_hash),
         new_tournament = log.decoded_data[1],
     }
 
@@ -300,10 +299,10 @@ end
 
 function Client:match(address, match_id_hash)
     local sig = "getMatch(bytes32)(bytes32,bytes32,bytes32,uint64,uint64,uint64)"
-    local ret = self:_call(address, sig, {match_id_hash})
-    ret[1] = Hash:from_digest(ret[1])
-    ret[2] = Hash:from_digest(ret[2])
-    ret[3] = Hash:from_digest(ret[3])
+    local ret = self:_call(address, sig, { match_id_hash })
+    ret[1] = Hash:from_digest_hex(ret[1])
+    ret[2] = Hash:from_digest_hex(ret[2])
+    ret[3] = Hash:from_digest_hex(ret[3])
 
     return ret
 end
@@ -312,17 +311,16 @@ function Client:tournament_winner(address)
     local sig = "tournamentWinner()(bytes32)"
     local ret = self:_call(address, sig, {})
 
-    return Hash:from_digest(ret[1])
+    return Hash:from_digest_hex(ret[1])
 end
 
 function Client:root_tournament_winner(address)
     local sig = "rootTournamentFinalState()(bool,bytes32)"
     local ret = self:_call(address, sig, {})
-    ret[2] = Hash:from_digest(ret[2])
+    ret[2] = Hash:from_digest_hex(ret[2])
 
     return ret
 end
-
 
 function Client:maximum_delay(address)
     local sig = "maximumEnforceableDelay()(uint64)"
@@ -330,7 +328,6 @@ function Client:maximum_delay(address)
 
     return ret
 end
-
 
 local cast_send_template = [[
 cast send --private-key "%s" --rpc-url "%s" "%s" "%s" %s 2>&1
@@ -363,7 +360,7 @@ end
 
 function Client:tx_join_tournament(tournament_address, final_state, proof, left_child, right_child)
     local sig = [[joinTournament(bytes32,bytes32[],bytes32,bytes32)]]
-    self:_send_tx(tournament_address, sig, {final_state, proof, left_child, right_child})
+    self:_send_tx(tournament_address, sig, { final_state, proof, left_child, right_child })
 end
 
 function Client:tx_advance_match(
@@ -373,30 +370,29 @@ function Client:tx_advance_match(
     self:_send_tx(
         tournament_address,
         sig,
-        {{commitment_one, commitment_two, _tag = "tuple"}, left, right, new_left, new_right}
+        { { commitment_one, commitment_two, _tag = "tuple" }, left, right, new_left, new_right }
     )
 end
-
 
 function Client:tx_seal_inner_match(
     tournament_address, commitment_one, commitment_two, left, right, initial_hash, proof
 )
     local sig =
-        [[sealInnerMatchAndCreateInnerTournament((bytes32,bytes32),bytes32,bytes32,bytes32,bytes32[])]]
+    [[sealInnerMatchAndCreateInnerTournament((bytes32,bytes32),bytes32,bytes32,bytes32,bytes32[])]]
     self:_send_tx(
         tournament_address,
         sig,
-        {{commitment_one, commitment_two, _tag = "tuple"}, left, right, initial_hash, proof}
+        { { commitment_one, commitment_two, _tag = "tuple" }, left, right, initial_hash, proof }
     )
 end
 
 function Client:tx_win_inner_match(tournament_address, child_tournament_address, left, right)
     local sig =
-        [[winInnerMatch(address,bytes32,bytes32)]]
+    [[winInnerMatch(address,bytes32,bytes32)]]
     self:_send_tx(
         tournament_address,
         sig,
-        {child_tournament_address, left, right}
+        { child_tournament_address, left, right }
     )
 end
 
@@ -404,11 +400,11 @@ function Client:tx_seal_leaf_match(
     tournament_address, commitment_one, commitment_two, left, right, initial_hash, proof
 )
     local sig =
-        [[sealLeafMatch((bytes32,bytes32),bytes32,bytes32,bytes32,bytes32[])]]
+    [[sealLeafMatch((bytes32,bytes32),bytes32,bytes32,bytes32,bytes32[])]]
     self:_send_tx(
         tournament_address,
         sig,
-        {{commitment_one, commitment_two, _tag = "tuple"}, left, right, initial_hash, proof}
+        { { commitment_one, commitment_two, _tag = "tuple" }, left, right, initial_hash, proof }
     )
 end
 
@@ -416,14 +412,13 @@ function Client:tx_win_leaf_match(
     tournament_address, commitment_one, commitment_two, left, right
 )
     local sig =
-        [[winLeafMatch((bytes32,bytes32),bytes32,bytes32)]]
+    [[winLeafMatch((bytes32,bytes32),bytes32,bytes32)]]
     self:_send_tx(
         tournament_address,
         sig,
-        {{commitment_one, commitment_two, _tag = "tuple"}, left, right}
+        { { commitment_one, commitment_two, _tag = "tuple" }, left, right }
     )
 end
-
 
 return Client
 

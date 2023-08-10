@@ -55,6 +55,7 @@ function Machine:new_from_path(path)
         cycle = 0,
         ucycle = 0,
         start_cycle = start_cycle,
+        initial_hash = Hash:from_digest(machine:get_root_hash())
     }
 
     setmetatable(b, self)
@@ -95,8 +96,6 @@ function Machine:increment_uarch()
     self.machine:run_uarch(self.ucycle + 1)
     self.ucycle = self.ucycle + 1
 end
-
-
 
 function Machine:ureset()
     assert(self.ucycle == arithmetic.max_uint64)
