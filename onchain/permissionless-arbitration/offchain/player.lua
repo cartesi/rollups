@@ -3,15 +3,16 @@ local constants = require "constants"
 local Player = {}
 Player.__index = Player
 
-function Player:new(root_tournament_address, client, machine)
+function Player:new(root_tournament_address, client, commitment_builder)
     local player = {
         root_tournament = {
+            base_big_cycle = 0,
             address = root_tournament_address,
             level = constants.levels,
             parent = false,
         },
         client = client,
-        machine = machine,
+        commitment_builder = commitment_builder,
         commitments = {},
         called_win = {}
     }
@@ -28,11 +29,9 @@ end
 function Player:_react_tournament(tournament)
     local commitment = self.commitments[tournament.address]
     if not commitment then
-        commitment = self.machine:commitment(
-            constants.log2step[tournament.level],
-            constants.heights[constants.levels - tournament.level + 1],
-            false, -- TODO
-            false -- TODO
+        commitment = self.commitment_builder:build(
+            tournament.base_big_cycle,
+            tournament.level
         )
         self.commitments[tournament.address] = commitment
     end
@@ -114,7 +113,6 @@ function Player:_react_match(match, commitment)
                 left,
                 right
             )
-
         else
             local address = self.client:read_tournament_created(
                 match.tournament.address,
@@ -128,7 +126,6 @@ function Player:_react_match(match, commitment)
 
             return self:_react_tournament(new_tournament)
         end
-
     elseif match.current_height == 1 then
         -- match to be sealed
         local found, left, right = commitment:children(match.current_other_parent)
@@ -183,6 +180,7 @@ function Player:_react_match(match, commitment)
             new_tournament.address = address
             new_tournament.level = match.tournament.level - 1
             new_tournament.parent = match.tournament
+            new_tournament.base_big_cycle = match.leaf_cycle
 
             return self:_react_tournament(new_tournament)
         end
@@ -221,7 +219,6 @@ function Player:_react_match(match, commitment)
     end
 end
 
-
 function Player:_latest_match(tournament, commitment)
     local matches = self.client:read_match_created(tournament.address, commitment.root)
     local last_match = matches[#matches]
@@ -236,6 +233,10 @@ function Player:_latest_match(tournament, commitment)
     last_match.height = tonumber(m[5])
     last_match.current_height = tonumber(m[6])
     last_match.tournament = tournament
+
+    local level = tournament.level
+    last_match.leaf_cycle = tournament.base_big_cycle +
+        (last_match.running_leaf << (constants.log2step[level] + constants.log2_uarch_span))
 
     return last_match
 end

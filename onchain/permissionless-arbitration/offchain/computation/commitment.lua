@@ -83,7 +83,10 @@ local function build_commitment(base_cycle, log2_stride, log2_stride_count, mach
     local machine = Machine:new_from_path(machine_path)
 
     if log2_stride >= consts.log2_uarch_span then
-        assert(log2_stride - consts.log2_uarch_span + log2_stride_count <= 63)
+        assert(
+            log2_stride + log2_stride_count <=
+            consts.log2_emulator_span + consts.log2_uarch_span
+        )
         return build_big_machine_commitment(base_cycle, log2_stride, log2_stride_count, machine)
     else
         assert(log2_stride == 0)
@@ -91,6 +94,34 @@ local function build_commitment(base_cycle, log2_stride, log2_stride_count, mach
     end
 end
 
+local CommitmentBuilder = {}
+CommitmentBuilder.__index = CommitmentBuilder
+
+function CommitmentBuilder:new(machine_path)
+    local c = {
+        machine_path = machine_path,
+        commitments = {}
+    }
+    setmetatable(c, self)
+    return c
+end
+
+function CommitmentBuilder:build(base_cycle, level)
+    assert(level <= consts.levels)
+    if not self.commitments[level] then
+        self.commitments[level] = {}
+    elseif self.commitments[level][base_cycle] then
+        return self.commitments[level][base_cycle]
+    end
+
+    local l = consts.levels - level + 1
+    local log2_stride, log2_stride_count = consts.log2step[l], consts.heights[l]
+    print(log2_stride, log2_stride_count)
+
+    local _, commitment = build_commitment(base_cycle, log2_stride, log2_stride_count, self.machine_path)
+    self.commitments[level][base_cycle] = commitment
+    return commitment
+end
 
 -- local path = "program/simple-program"
 -- -- local initial, tree = build_commitment(0, 0, 64, path)
@@ -154,4 +185,4 @@ x (0 0 0 | x) (0 0 0 | x) (0 0 0 | x) (0 0 0 | x)
 -- end
 --]]
 
-return build_commitment
+return CommitmentBuilder
