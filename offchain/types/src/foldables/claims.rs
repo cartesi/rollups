@@ -3,11 +3,11 @@
 
 use crate::{FoldableError, UserData};
 
-use state_fold::{
+use eth_state_fold::{
     utils as fold_utils, FoldMiddleware, Foldable, StateFoldEnvironment,
     SyncMiddleware,
 };
-use state_fold_types::{
+use eth_state_fold_types::{
     ethers::{
         prelude::EthEvent,
         providers::Middleware,

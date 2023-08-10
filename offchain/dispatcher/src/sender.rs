@@ -10,17 +10,7 @@
 
 use async_trait::async_trait;
 use contracts::{authority::Authority, history::Claim};
-use eth_tx_manager::{
-    database::FileSystemDatabase as Database,
-    gas_oracle::DefaultGasOracle as GasOracle,
-    manager::Configuration,
-    time::DefaultTime as Time,
-    transaction::{Priority, Transaction, Value},
-    Chain,
-};
-use rollups_events::{DAppMetadata, RollupsClaim};
-use snafu::{OptionExt, ResultExt, Snafu};
-use state_fold_types::{
+use eth_state_fold_types::{
     ethabi::Token,
     ethers::{
         self,
@@ -33,6 +23,16 @@ use state_fold_types::{
         types::{Address, Bytes, NameOrAddress},
     },
 };
+use eth_tx_manager::{
+    database::FileSystemDatabase as Database,
+    gas_oracle::DefaultGasOracle as GasOracle,
+    manager::Configuration,
+    time::DefaultTime as Time,
+    transaction::{Priority, Transaction, Value},
+    Chain,
+};
+use rollups_events::{DAppMetadata, RollupsClaim};
+use snafu::{OptionExt, ResultExt, Snafu};
 use std::sync::Arc;
 use tracing::{info, instrument, trace};
 use url::{ParseError, Url};

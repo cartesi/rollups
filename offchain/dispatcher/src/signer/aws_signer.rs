@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
 use async_trait::async_trait;
-use rusoto_core::{HttpClient, Region};
-use rusoto_kms::KmsClient;
-use state_fold_types::ethers::{
+use eth_state_fold_types::ethers::{
     signers::{AwsSigner as InnerAwsSigner, AwsSignerError, Signer},
     types::{
         transaction::{eip2718::TypedTransaction, eip712::Eip712},
         Address, Signature,
     },
 };
+use rusoto_core::{HttpClient, Region};
+use rusoto_kms::KmsClient;
 
 use super::aws_credentials::AwsCredentialsProvider;
 

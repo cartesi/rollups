@@ -322,14 +322,14 @@ mod broker_facade_tests {
     use std::{sync::Arc, time::Duration};
 
     use backoff::ExponentialBackoffBuilder;
+    use eth_state_fold_types::{
+        ethereum_types::{Bloom, H160, H256, U256, U64},
+        Block,
+    };
     use rollups_events::{
         BrokerConfig, BrokerEndpoint, DAppMetadata, Hash, InputMetadata,
         Payload, RedactedUrl, RollupsAdvanceStateInput, RollupsClaim,
         RollupsData, Url, HASH_SIZE,
-    };
-    use state_fold_types::{
-        ethereum_types::{Bloom, H160, H256, U256, U64},
-        Block,
     };
     use test_fixtures::broker::BrokerFixture;
     use testcontainers::clients::Cli;

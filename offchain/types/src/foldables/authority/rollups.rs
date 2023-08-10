@@ -9,10 +9,10 @@ use crate::{
     FoldableError, UserData,
 };
 
-use state_fold::{
+use eth_state_fold::{
     FoldMiddleware, Foldable, StateFoldEnvironment, SyncMiddleware,
 };
-use state_fold_types::{
+use eth_state_fold_types::{
     ethers::{providers::Middleware, types::Address},
     Block, QueryBlock,
 };

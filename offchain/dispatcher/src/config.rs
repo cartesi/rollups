@@ -2,13 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
 use clap::Parser;
+use eth_state_client_lib::config::{
+    Error as SCError, SCConfig, SCEnvCLIConfig,
+};
 use eth_tx_manager::{
     config::{Error as TxError, TxEnvCLIConfig, TxManagerConfig},
     Priority,
 };
 use http_server::HttpServerConfig;
 use snafu::{ResultExt, Snafu};
-use state_client_lib::config::{Error as SCError, SCConfig, SCEnvCLIConfig};
 use std::{fs::File, io::BufReader, path::PathBuf};
 
 use rollups_events::{BrokerCLIConfig, BrokerConfig};

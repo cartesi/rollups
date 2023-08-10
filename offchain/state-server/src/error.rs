@@ -1,9 +1,9 @@
 // (c) Cartesi and individual authors (see AUTHORS)
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
-use block_history::BlockArchiveError;
+use eth_block_history::BlockArchiveError;
+use eth_state_fold_types::ethers::providers::{Http, RetryClient};
 use snafu::Snafu;
-use state_fold_types::ethers::providers::{Http, RetryClient};
 use tonic::transport::Error as TonicError;
 use url::ParseError;
 
@@ -19,7 +19,9 @@ pub enum StateServerError {
     #[snafu(display("block archive error"))]
     BlockArchiveError {
         source: BlockArchiveError<
-            state_fold_types::ethers::providers::Provider<RetryClient<Http>>,
+            eth_state_fold_types::ethers::providers::Provider<
+                RetryClient<Http>,
+            >,
         >,
     },
 }

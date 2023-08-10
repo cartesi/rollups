@@ -1,13 +1,13 @@
 // (c) Cartesi and individual authors (see AUTHORS)
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
-use rollups_events::DAppMetadata;
-use snafu::ResultExt;
-use state_client_lib::{
+use eth_state_client_lib::{
     config::SCConfig, error::StateServerError, BlockServer,
     GrpcStateFoldClient, StateServer,
 };
-use state_fold_types::BlockStreamItem;
+use eth_state_fold_types::BlockStreamItem;
+use rollups_events::DAppMetadata;
+use snafu::ResultExt;
 use tokio_stream::{Stream, StreamExt};
 use tonic::transport::Channel;
 use types::foldables::authority::{RollupsInitialState, RollupsState};

@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
 use async_trait::async_trait;
-use snafu::{ResultExt, Snafu};
-use state_fold_types::ethers::{
+use eth_state_fold_types::ethers::{
     signers::{
         coins_bip39::English, AwsSignerError, LocalWallet, MnemonicBuilder,
         Signer, WalletError,
@@ -13,6 +12,7 @@ use state_fold_types::ethers::{
         Address, Signature,
     },
 };
+use snafu::{ResultExt, Snafu};
 
 use crate::{auth::AuthConfig, signer::aws_signer::AwsSigner};
 
@@ -148,11 +148,11 @@ impl Signer for ConditionalSigner {
 
 #[cfg(test)]
 mod tests {
-    use ethers_signers::Signer;
-    use state_fold_types::ethers::types::{
+    use eth_state_fold_types::ethers::types::{
         transaction::{eip2718::TypedTransaction, eip2930::AccessList},
         Address, Eip1559TransactionRequest,
     };
+    use ethers_signers::Signer;
 
     use crate::{auth::AuthConfig, signer::ConditionalSigner};
 

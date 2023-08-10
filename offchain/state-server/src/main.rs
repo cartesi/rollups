@@ -1,6 +1,7 @@
 // (c) Cartesi and individual authors (see AUTHORS)
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
+use eth_state_server_lib::config::StateServerConfig;
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 use types::foldables::authority::rollups::RollupsState;
 
@@ -11,8 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .from_env_lossy();
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
-    let config =
-        state_server_lib::config::StateServerConfig::initialize_from_args()?;
+    let config = StateServerConfig::initialize_from_args()?;
 
     tracing::info!(?config, "starting state server");
 

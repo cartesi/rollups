@@ -1,8 +1,8 @@
 // (c) Cartesi and individual authors (see AUTHORS)
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
+use eth_state_fold_types::ethereum_types::Address;
 use snafu::ResultExt;
-use state_fold_types::ethereum_types::Address;
 use tracing::{info, instrument, trace};
 use types::foldables::claims::History;
 
@@ -54,8 +54,8 @@ fn claims_sent(history: &History, dapp_address: &Address) -> u64 {
 
 #[cfg(test)]
 mod tests {
+    use eth_state_fold_types::ethereum_types::H160;
     use rollups_events::{RollupsClaim, HASH_SIZE};
-    use state_fold_types::ethereum_types::H160;
 
     use crate::drivers::mock;
 

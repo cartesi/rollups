@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
 use axum::http::uri::InvalidUri;
+use eth_state_client_lib::error::StateServerError;
 use snafu::Snafu;
-use state_client_lib::error::StateServerError;
 use std::net::AddrParseError;
 use tonic::transport::Error as TonicError;
 

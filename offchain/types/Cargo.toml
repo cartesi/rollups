@@ -9,11 +9,11 @@ contracts = { path = "../contracts" }
 
 anyhow.workspace = true
 async-trait.workspace = true
+eth-state-fold-types = { workspace = true, features = ["ethers"] }
+eth-state-fold.workspace = true
 futures.workspace = true
 im = { workspace = true, features = ["serde"] }
 serde = { workspace = true, features = ["rc"] }
-state-fold.workspace = true
-state-fold-types = { workspace = true, features = ["ethers"] }
 
 [dev-dependencies]
 serde_json.workspace = true

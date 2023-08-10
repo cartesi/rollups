@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
 use async_trait::async_trait;
-use im::{hashmap, Vector};
-use rollups_events::RollupsClaim;
-use snafu::whatever;
-use state_fold_types::{
+use eth_state_fold_types::{
     ethereum_types::{Address, Bloom, H160, H256},
     Block,
 };
+use im::{hashmap, Vector};
+use rollups_events::RollupsClaim;
+use snafu::whatever;
 use std::{
     collections::VecDeque,
     ops::{Deref, DerefMut},

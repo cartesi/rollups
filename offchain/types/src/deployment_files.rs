@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
 pub mod dapp_deployment {
+    use eth_state_fold_types::ethers::types::{Address, H256};
     use serde::Deserialize;
-    use state_fold_types::ethers::types::{Address, H256};
 
     #[derive(Clone, Debug, Deserialize)]
     pub struct DappDeployment {
@@ -16,8 +16,8 @@ pub mod dapp_deployment {
 }
 
 pub mod rollups_deployment {
+    use eth_state_fold_types::ethers::types::Address;
     use serde::Deserialize;
-    use state_fold_types::ethers::types::Address;
 
     #[derive(Clone, Debug, Deserialize)]
     struct DappDeployment {

@@ -260,7 +260,7 @@ dependencies = [
  "test-log",
  "testcontainers",
  "tokio",
- "tonic 0.9.2",
+ "tonic",
  "tracing",
  "tracing-subscriber",
  "uuid 1.4.0",
@@ -777,21 +777,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "block-history"
-version = "0.6.3"
-source = "registry+https://github.com/cartesi/crates-index"
-checksum = "a257730087685ef9e3ba243c436b9eb8c46bbc68c81b406aed2b970bb640d6ce"
-dependencies = [
- "async-stream",
- "clap",
- "snafu",
- "state-fold-types",
- "tokio",
- "tokio-stream",
- "tracing",
-]
-
-[[package]]
 name = "block-padding"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1138,7 +1123,7 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 name = "contracts"
 version = "1.0.0"
 dependencies = [
- "state-fold-types",
+ "eth-state-fold-types",
 ]
 
 [[package]]
@@ -1497,6 +1482,8 @@ dependencies = [
  "backoff",
  "clap",
  "contracts",
+ "eth-state-client-lib",
+ "eth-state-fold-types",
  "eth-tx-manager",
  "ethers-signers",
  "futures",
@@ -1513,13 +1500,11 @@ dependencies = [
  "serde_json",
  "serial_test",
  "snafu",
- "state-client-lib",
- "state-fold-types",
  "test-fixtures",
  "testcontainers",
  "tokio",
  "tokio-stream",
- "tonic 0.8.3",
+ "tonic",
  "tracing",
  "tracing-subscriber",
  "tracing-test",
@@ -1648,6 +1633,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "eth-block-history"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f6d8a743cf2f981025acfcb83cbcb8c523e1c7bc2810e2c5889a5942adb31cf"
+dependencies = [
+ "async-stream",
+ "clap",
+ "eth-state-fold-types",
+ "snafu",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+]
+
+[[package]]
 name = "eth-keystore"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1667,6 +1667,95 @@ dependencies = [
  "sha3",
  "thiserror",
  "uuid 0.8.2",
+]
+
+[[package]]
+name = "eth-state-client-lib"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78b7d6b6315771fab8783b4aefdd034e887c2e688ac0357dc1007b97b49e4296"
+dependencies = [
+ "async-trait",
+ "clap",
+ "eth-state-fold-types",
+ "eth-state-server-common",
+ "serde",
+ "serde_json",
+ "snafu",
+ "tokio",
+ "tokio-stream",
+ "tonic",
+]
+
+[[package]]
+name = "eth-state-fold"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ea428349ac2706740e5261a9519ba39bcffae97b82d0b0562add7f56f82e5c2"
+dependencies = [
+ "async-recursion",
+ "async-trait",
+ "clap",
+ "eth-block-history",
+ "eth-state-fold-types",
+ "futures",
+ "snafu",
+ "tokio",
+]
+
+[[package]]
+name = "eth-state-fold-types"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bae8c94fecc1de2d8d94e599835c4835f426924f0efef40529a34956790dcd4"
+dependencies = [
+ "anyhow",
+ "ethabi",
+ "ethers",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "snafu",
+ "toml 0.5.11",
+]
+
+[[package]]
+name = "eth-state-server-common"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4953e04ab2e41d45722a21e92d066f03111a8ab81ec765ae6b4873ee77040c43"
+dependencies = [
+ "anyhow",
+ "eth-state-fold-types",
+ "prost",
+ "serde",
+ "serde_json",
+ "snafu",
+ "tonic",
+ "tonic-build",
+]
+
+[[package]]
+name = "eth-state-server-lib"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "819fa6c22d25963976ebf2ae1db3c1c5489bb951b847ee21d85481097ead2190"
+dependencies = [
+ "clap",
+ "eth-block-history",
+ "eth-state-fold",
+ "eth-state-fold-types",
+ "eth-state-server-common",
+ "futures",
+ "serde",
+ "serde_json",
+ "snafu",
+ "tokio",
+ "tokio-stream",
+ "tonic",
+ "tonic-health",
+ "tracing",
 ]
 
 [[package]]
@@ -2341,8 +2430,8 @@ name = "grpc-interfaces"
 version = "1.0.0"
 dependencies = [
  "prost",
- "tonic 0.9.2",
- "tonic-build 0.9.2",
+ "tonic",
+ "tonic-build",
 ]
 
 [[package]]
@@ -2453,8 +2542,8 @@ dependencies = [
  "sha3",
  "snafu",
  "tokio",
- "tonic 0.9.2",
- "tonic-health 0.9.2",
+ "tonic",
+ "tonic-health",
  "tracing",
  "tracing-subscriber",
  "tracing-test",
@@ -2754,8 +2843,8 @@ dependencies = [
  "snafu",
  "tokio",
  "toml 0.7.6",
- "tonic 0.9.2",
- "tonic-build 0.9.2",
+ "tonic",
+ "tonic-build",
  "tracing",
  "uuid 1.4.0",
 ]
@@ -4782,110 +4871,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "state-client-lib"
-version = "0.6.3"
-source = "registry+https://github.com/cartesi/crates-index"
-checksum = "a62f67a1ffe3473285384e99479e76d50b0b7ea206f29243ddd81816a6d5b2c9"
-dependencies = [
- "async-trait",
- "clap",
- "serde",
- "serde_json",
- "snafu",
- "state-fold-types",
- "state-server-common",
- "tokio",
- "tokio-stream",
- "tonic 0.8.3",
-]
-
-[[package]]
-name = "state-fold"
-version = "0.6.3"
-source = "registry+https://github.com/cartesi/crates-index"
-checksum = "7720a97b75bb5e2b79101cd4f080b0fbd9bd1e7123a1b1d00b3f78091bd4d017"
-dependencies = [
- "async-recursion",
- "async-trait",
- "block-history",
- "clap",
- "futures",
- "snafu",
- "state-fold-types",
- "tokio",
-]
-
-[[package]]
-name = "state-fold-types"
-version = "0.6.3"
-source = "registry+https://github.com/cartesi/crates-index"
-checksum = "ede870473c503c528abc35b0cb2df12edd44d2698eafef3da4a0c0a37a6335f4"
-dependencies = [
- "anyhow",
- "ethabi",
- "ethers",
- "proc-macro2",
- "quote",
- "serde",
- "serde_json",
- "snafu",
- "toml 0.5.11",
-]
-
-[[package]]
 name = "state-server"
 version = "1.0.0"
 dependencies = [
- "block-history",
+ "eth-block-history",
+ "eth-state-fold",
+ "eth-state-fold-types",
+ "eth-state-server-lib",
  "serde",
  "snafu",
- "state-fold",
- "state-fold-types",
- "state-server-lib",
  "tokio",
- "tonic 0.8.3",
+ "tonic",
  "tracing",
  "tracing-subscriber",
  "types",
  "url",
-]
-
-[[package]]
-name = "state-server-common"
-version = "0.6.3"
-source = "registry+https://github.com/cartesi/crates-index"
-checksum = "a244c7ff28b4c45fcc2f5d7211804c0ba94e5a6c81a84262c7b39f5fb6071cfa"
-dependencies = [
- "anyhow",
- "prost",
- "serde",
- "serde_json",
- "snafu",
- "state-fold-types",
- "tonic 0.8.3",
- "tonic-build 0.8.4",
-]
-
-[[package]]
-name = "state-server-lib"
-version = "0.6.3"
-source = "registry+https://github.com/cartesi/crates-index"
-checksum = "c33bcb03f5424f5a67a720fb113d1c38cc86cbf7862589cb2b9830926a9ad6ec"
-dependencies = [
- "block-history",
- "clap",
- "futures",
- "serde",
- "serde_json",
- "snafu",
- "state-fold",
- "state-fold-types",
- "state-server-common",
- "tokio",
- "tokio-stream",
- "tonic 0.8.3",
- "tonic-health 0.7.1",
- "tracing",
 ]
 
 [[package]]
@@ -5049,7 +5049,7 @@ dependencies = [
  "tempfile",
  "testcontainers",
  "tokio",
- "tonic 0.9.2",
+ "tonic",
  "tracing",
  "users",
 ]
@@ -5332,38 +5332,6 @@ dependencies = [
 
 [[package]]
 name = "tonic"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f219fad3b929bef19b1f86fbc0358d35daed8f2cac972037ac0dc10bbb8d5fb"
-dependencies = [
- "async-stream",
- "async-trait",
- "axum",
- "base64 0.13.1",
- "bytes",
- "futures-core",
- "futures-util",
- "h2",
- "http",
- "http-body",
- "hyper",
- "hyper-timeout",
- "percent-encoding",
- "pin-project",
- "prost",
- "prost-derive",
- "tokio",
- "tokio-stream",
- "tokio-util",
- "tower",
- "tower-layer",
- "tower-service",
- "tracing",
- "tracing-futures",
-]
-
-[[package]]
-name = "tonic"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3082666a3a6433f7f511c7192923fa1fe07c69332d3c6a2e6bb040b569199d5a"
@@ -5392,19 +5360,6 @@ dependencies = [
 
 [[package]]
 name = "tonic-build"
-version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5bf5e9b9c0f7e0a7c027dcfaba7b2c60816c7049171f679d99ee2ff65d0de8c4"
-dependencies = [
- "prettyplease",
- "proc-macro2",
- "prost-build",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "tonic-build"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6fdaae4c2c638bb70fe42803a26fbd6fc6ac8c72f5c59f67ecc2a2dcabf4b07"
@@ -5418,20 +5373,6 @@ dependencies = [
 
 [[package]]
 name = "tonic-health"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "632faf60b81a5b5f439d9635102b2b2921ee39171faf14f3e0008d99f98689f1"
-dependencies = [
- "async-stream",
- "bytes",
- "prost",
- "tokio",
- "tokio-stream",
- "tonic 0.8.3",
-]
-
-[[package]]
-name = "tonic-health"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "080964d45894b90273d2b1dd755fdd114560db8636bb41cea615213c45043c4d"
@@ -5440,7 +5381,7 @@ dependencies = [
  "prost",
  "tokio",
  "tokio-stream",
- "tonic 0.9.2",
+ "tonic",
 ]
 
 [[package]]
@@ -5611,12 +5552,12 @@ dependencies = [
  "anyhow",
  "async-trait",
  "contracts",
+ "eth-state-fold",
+ "eth-state-fold-types",
  "futures",
  "im",
  "serde",
  "serde_json",
- "state-fold",
- "state-fold-types",
 ]
 
 [[package]]

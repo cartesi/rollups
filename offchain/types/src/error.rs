@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 (see LICENSE)
 
 use anyhow::Error;
-use state_fold::Foldable;
-use state_fold_types::ethers::prelude::{ContractError, Middleware};
+use eth_state_fold::Foldable;
+use eth_state_fold_types::ethers::prelude::{ContractError, Middleware};
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
@@ -30,11 +30,13 @@ impl<M: Middleware + 'static> From<ContractError<M>> for FoldableError {
 }
 
 impl<M: Middleware + 'static, F: Foldable + 'static>
-    From<state_fold::error::FoldableError<M, F>> for FoldableError
+    From<eth_state_fold::error::FoldableError<M, F>> for FoldableError
 where
     <F as Foldable>::Error: Send + Sync,
 {
-    fn from(contract_error: state_fold::error::FoldableError<M, F>) -> Self {
+    fn from(
+        contract_error: eth_state_fold::error::FoldableError<M, F>,
+    ) -> Self {
         FoldableError(contract_error.into())
     }
 }

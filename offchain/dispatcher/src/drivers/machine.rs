@@ -5,7 +5,7 @@ use super::Context;
 
 use crate::machine::{rollups_broker::BrokerFacadeError, BrokerSend};
 
-use state_fold_types::{ethereum_types::Address, Block};
+use eth_state_fold_types::{ethereum_types::Address, Block};
 use types::foldables::input_box::{DAppInputBox, Input, InputBox};
 
 use tracing::{debug, instrument, trace};
@@ -94,8 +94,8 @@ impl MachineDriver {
 
 #[cfg(test)]
 mod tests {
+    use eth_state_fold_types::{ethereum_types::H160, Block};
     use rollups_events::DAppMetadata;
-    use state_fold_types::{ethereum_types::H160, Block};
     use std::sync::Arc;
 
     use crate::{
