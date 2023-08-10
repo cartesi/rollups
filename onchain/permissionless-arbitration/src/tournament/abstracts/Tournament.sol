@@ -68,7 +68,6 @@ abstract contract Tournament {
         Tree.Node leftOfTwo
     );
 
-    event matchAdvanced(Match.IdHash indexed, Tree.Node parent, Tree.Node left);
 
     //
     // Modifiers
@@ -125,7 +124,7 @@ abstract contract Tournament {
         Tree.Node _commitmentRoot = _leftNode.join(_rightNode);
 
         // Prove final state is in commitmentRoot
-        _commitmentRoot.proveFinalState(level, _finalState, _proof);
+        _commitmentRoot.requireFinalState(level, _finalState, _proof);
 
         // Verify whether finalState is one of the two allowed of tournament if nested
         requireValidContestedFinalState(_finalState);
@@ -152,26 +151,17 @@ abstract contract Tournament {
         _matchState.requireCanBeAdvanced();
         _matchState.requireParentHasChildren(_leftNode, _rightNode);
 
-        if (!_matchState.agreesOnLeftNode(_leftNode)) {
-            // go down left in Commitment tree
-            _leftNode.requireChildren(_newLeftNode, _newRightNode);
-            _matchState.goDownLeftTree(_newLeftNode, _newRightNode);
-        } else {
-            // go down right in Commitment tree
-            _rightNode.requireChildren(_newLeftNode, _newRightNode);
-            _matchState.goDownRightTree(_newLeftNode, _newRightNode);
-        }
+        _matchState.advanceMatch(
+            _matchId,
+            _leftNode,
+            _rightNode,
+            _newLeftNode,
+            _newRightNode
+        );
 
         // advance clocks
         clocks[_matchId.commitmentOne].advanceClock();
         clocks[_matchId.commitmentTwo].advanceClock();
-
-        // TODO move event to lib?
-        emit matchAdvanced(
-            _matchId.hashFromId(),
-            _matchState.otherParent,
-            _matchState.leftNode
-        );
     }
 
     function winMatchByTimeout(

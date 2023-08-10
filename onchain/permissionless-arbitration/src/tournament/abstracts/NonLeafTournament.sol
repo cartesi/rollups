@@ -59,25 +59,12 @@ abstract contract NonLeafTournament is Tournament {
         Match.Id calldata _matchId,
         Tree.Node _leftLeaf,
         Tree.Node _rightLeaf,
-        Machine.Hash _initialHash,
-        bytes32[] calldata _initialHashProof
+        Machine.Hash _agreeHash,
+        bytes32[] calldata _agreeHashProof
     ) external tournamentNotFinished {
         Match.State storage _matchState = matches[_matchId.hashFromId()];
         _matchState.requireCanBeFinalized();
         _matchState.requireParentHasChildren(_leftLeaf, _rightLeaf);
-
-        Machine.Hash _finalStateOne;
-        Machine.Hash _finalStateTwo;
-
-        if (!_matchState.agreesOnLeftNode(_leftLeaf)) {
-            // Divergence is in the left leaf!
-            (_finalStateOne, _finalStateTwo) = _matchState
-                .setDivergenceOnLeftLeaf(_leftLeaf);
-        } else {
-            // Divergence is in the right leaf!
-            (_finalStateOne, _finalStateTwo) = _matchState
-                .setDivergenceOnRightLeaf(_rightLeaf);
-        }
 
         // Pause clocks
         Time.Duration _maxDuration;
@@ -89,19 +76,20 @@ abstract contract NonLeafTournament is Tournament {
             _maxDuration = Clock.max(_clock1, _clock2);
         }
 
-        // Prove initial hash is in commitment
-        if (_matchState.runningLeafPosition == 0) {
-            require(_initialHash.eq(initialHash), "initial hash incorrect");
-        } else {
-            _matchId.commitmentOne.proveHash(
-                _matchState.runningLeafPosition - 1,
-                _initialHash,
-                _initialHashProof
-            );
-        }
+        (
+            Machine.Hash _finalStateOne,
+            Machine.Hash _finalStateTwo
+        ) = _matchState.sealMatch(
+            _matchId,
+            initialHash,
+            _leftLeaf,
+            _rightLeaf,
+            _agreeHash,
+            _agreeHashProof
+        );
 
         NonRootTournament _inner = instantiateInner(
-            _initialHash,
+            _agreeHash,
             _matchId.commitmentOne,
             _finalStateOne,
             _matchId.commitmentTwo,

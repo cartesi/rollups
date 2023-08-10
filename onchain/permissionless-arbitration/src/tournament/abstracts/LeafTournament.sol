@@ -5,7 +5,6 @@ pragma solidity ^0.8.17;
 
 import "./Tournament.sol";
 import "../../Commitment.sol";
-import "../../Merkle.sol";
 
 import "step/ready_src/UArchStep.sol";
 
@@ -24,47 +23,32 @@ abstract contract LeafTournament is Tournament {
         Match.Id calldata _matchId,
         Tree.Node _leftLeaf,
         Tree.Node _rightLeaf,
-        Machine.Hash _initialHash,
-        bytes32[] calldata _initialHashProof
+        Machine.Hash _agreeHash,
+        bytes32[] calldata _agreeHashProof
     ) external tournamentNotFinished {
         Match.State storage _matchState = matches[_matchId.hashFromId()];
         _matchState.requireExist();
         _matchState.requireCanBeFinalized();
         _matchState.requireParentHasChildren(_leftLeaf, _rightLeaf);
 
-        Machine.Hash _finalStateOne;
-        Machine.Hash _finalStateTwo;
-
-        if (!_matchState.agreesOnLeftNode(_leftLeaf)) {
-            // Divergence is in the left leaf!
-            (_finalStateOne, _finalStateTwo) = _matchState
-                .setDivergenceOnLeftLeaf(_leftLeaf);
-        } else {
-            // Divergence is in the right leaf!
-            (_finalStateOne, _finalStateTwo) = _matchState
-                .setDivergenceOnRightLeaf(_rightLeaf);
-        }
-
         // Unpause clocks
-        Clock.State storage _clock1 = clocks[_matchId.commitmentOne];
-        Clock.State storage _clock2 = clocks[_matchId.commitmentTwo];
-        _clock1.setPaused();
-        _clock1.advanceClock();
-        _clock2.setPaused();
-        _clock2.advanceClock();
-
-        // Prove initial hash is in commitment
-        if (_matchState.runningLeafPosition == 0) {
-            require(_initialHash.eq(initialHash), "initial hash incorrect");
-        } else {
-            _matchId.commitmentOne.proveHash(
-                _matchState.runningLeafPosition,
-                _initialHash,
-                _initialHashProof
-            );
+        {
+            Clock.State storage _clock1 = clocks[_matchId.commitmentOne];
+            Clock.State storage _clock2 = clocks[_matchId.commitmentTwo];
+            _clock1.setPaused();
+            _clock1.advanceClock();
+            _clock2.setPaused();
+            _clock2.advanceClock();
         }
 
-        _matchState.setInitialState(_initialHash);
+        _matchState.sealMatch(
+            _matchId,
+            initialHash,
+            _leftLeaf,
+            _rightLeaf,
+            _agreeHash,
+            _agreeHashProof
+        );
     }
 
     function winLeafMatch(
