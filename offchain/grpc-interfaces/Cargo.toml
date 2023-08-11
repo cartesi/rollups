@@ -1,7 +1,8 @@
 [package]
 name = "grpc-interfaces"
-version = "1.0.0"
-edition = "2021"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
 
 [dependencies]
 tonic.workspace = true

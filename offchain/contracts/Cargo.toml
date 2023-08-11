@@ -1,8 +1,8 @@
 [package]
 name = "contracts"
-license = "Apache-2.0"
-version = "1.0.0"
-edition = "2021"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
 
 [dependencies]
 eth-state-fold-types = { workspace = true, features = ["ethers"] }

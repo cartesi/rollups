@@ -19,6 +19,11 @@ members = [
   "types",
 ]
 
+[workspace.package]
+version = "1.0.0"
+license = "Apache-2.0"
+edition = "2021"
+
 # This list is sorted alphabetically.
 [workspace.dependencies]
 actix-cors = "0.6"
