@@ -87,16 +87,20 @@ jobs:
         with:
           version: nightly-d369d2486f85576eec4ca41d277391dfdae21ba7
 
-      - name: Install jq
-        run: sudo apt update && sudo apt install -y jq
+      - name: Install dependencies
+        run: yarn
+        working-directory: onchain/rollups
 
-      - run: yarn install
+      - name: Build contracts
+        run: yarn build
         working-directory: onchain/rollups
-      - run: yarn build
+
+      - name: Generate proofs
+        run: yarn proofs:setup
         working-directory: onchain/rollups
-      - run: ./test/foundry/dapp/helper/update-proofs.sh --setup
-        working-directory: onchain/rollups
-      - run: forge test -vvv
+
+      - name: Run tests
+        run: yarn test
         working-directory: onchain/rollups
 
   build_docker:
