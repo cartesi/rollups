@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] 2023-08-21
+
+### Added
+
+- Deployed ERC-1155 portals
+- Deployed contracts to mainnets `arbitrum`, `ethereum`, and `optimism`
+- Added input relay interface and base contract
+- Added `InvalidClaimIndex` error in `History` contract
+- Added mainnets to `rollups-cli`
+- Added `RPC_URL` environment variable during deployment
+- Added Prometheus metrics to the `dispatcher` service
+- Added Redis TLS support to the node
+- Added Redis cluster support to the node
+- Added AWS KMS to sign node transactions
+- Added Web Identity support to the AWS KMS signer
+- Added README for the node
+
+### Changed
+
+- Started using custom errors in contracts
+- Made portals and relays inherit `InputRelay`
+- Renamed `inboxInputIndex` to `inputIndex` in contracts
+- Deployed contracts deterministically with `CREATE2` factory
+- Improved proof generation system for on-chain tests
+- Renamed fields in `OutputValidityProof` structure
+- Renamed `host-server-manager` service to `host-runner`
+- Renamed `deployments` image to `rollups-deployments`
+- Standardized health-check in node services
+- Standardized node binary names to use `cartesi-node` prefix
+- Updated `@cartesi/util` to 6.0.0
+- Updated Debian version to bookworm in node Docker images
+- Updated Rust version to 1.71.0 in node Docker images
+- Updated gRPC interfaces to 0.14.0
+- Updated the emulator SDK to 0.16.0
+- Updated the `server-manager` to 0.8.0
+
+### Removed
+
+- Removed base portal and relay contracts and interfaces
+- Removed `ConsensusCreated` event from `Authority` contract
+- Removed `IInputBox` parameter from `Authority` constructor
+- Removed `grpc_health_check` tool from node images
+- Removed testnet deployments of `goerli`, `polygon_mumbai`, `bsc_testnet`, `iotex_testnet`, and `chiado`
+
+### Fixed
+
+- Fixed input size limit in `InputBox` contract
+- Fixed vouchers and notices proofs in `host-runner`
+
 ## [0.9.1] 2023-06-14
 
 ### Changed
@@ -185,6 +234,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Specific ERC-20 Portal
 - Deprecated mock contracts
 
+[1.0.0]: https://github.com/cartesi/rollups/releases/tag/v1.0.0
 [0.9.1]: https://github.com/cartesi/rollups/releases/tag/v0.9.1
 [0.9.0]: https://github.com/cartesi/rollups/releases/tag/v0.9.0
 [0.8.2]: https://github.com/cartesi/rollups/releases/tag/v0.8.2
