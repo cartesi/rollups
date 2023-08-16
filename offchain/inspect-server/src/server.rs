@@ -86,6 +86,8 @@ fn convert_status(status: i32) -> String {
         String::from("CycleLimitExceeded")
     } else if status == CompletionStatus::TimeLimitExceeded as i32 {
         String::from("TimeLimitExceeded")
+    } else if status == CompletionStatus::PayloadLengthLimitExceeded as i32 {
+        String::from("PayloadLengthLimitExceeded")
     } else {
         log::error!("Invalid status received from server-manager: {}", status);
         String::from("Unknown")
