@@ -165,7 +165,7 @@ finish_epoch() {
 }
 
 # Start server-manager in background
-/opt/cartesi/bin/server-manager --manager-address=127.0.0.1:5001 &
+server-manager --manager-address=127.0.0.1:5001 &
 
 # Wait until server-manager is up
 wait_for_get_version_response
