@@ -179,5 +179,8 @@ add_inputs
 # Wait for all inputs to be processed
 wait_for_inputs_to_be_processed
 
+# Activate python virtual environment
+source /opt/venv/bin/activate
+
 # Finish epoch
-finish_epoch | python3 -m b64to16 > ./output/finish_epoch_response.json
+finish_epoch | python -m b64to16 > ./output/finish_epoch_response.json
