@@ -19,12 +19,9 @@ The Cartesi Node depends on the following components:
 
 | Component | Version |
 |---|---|
-| Cartesi Server Manager | [v0.8.0](https://github.com/cartesi/server-manager/releases/tag/v0.8.0) |
-| Cartesi Machine Emulator ROM | [v0.16.0](https://github.com/cartesi/machine-emulator-rom/releases/tag/v0.16.0) |
-| Cartesi Machine Image Rootfs | [v0.17.0](https://github.com/cartesi/image-rootfs/releases/tag/v0.17.0) |
-| Cartesi Machine SDK | [v0.14.0](https://github.com/cartesi/machine-emulator/releases/tag/v0.14.0) |
+| Cartesi Machine SDK | [v0.16.0](https://github.com/cartesi/machine-emulator/releases/tag/v0.16.0) |
 | Cartesi OpenAPI Interfaces | [v0.6.0](https://github.com/cartesi/openapi-interfaces/releases/tag/v0.6.0) |
-| Linux Kernel | [v5.15.63-ctsi-2](https://github.com/cartesi/linux/releases/tag/v5.15.63-ctsi-2) |
+| Cartesi Server Manager | [v0.8.0](https://github.com/cartesi/server-manager/releases/tag/v0.8.0) |
 
 ### Running
 

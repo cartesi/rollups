@@ -10,7 +10,7 @@ use crate::docker_cli;
 
 const TAG: &str = "cartesi/test-machine-snapshot";
 const DOCKERFILE: &str = "../test-fixtures/docker/machine_snapshot.Dockerfile";
-const CONTAINER_SNAPSHOT_DIR: &str = "/opt/cartesi/share/dapp-bin";
+const CONTAINER_SNAPSHOT_DIR: &str = "/tmp/dapp-bin";
 const SNAPSHOT_NAME: &str = "0_0";
 
 pub struct MachineSnapshotsFixture {
