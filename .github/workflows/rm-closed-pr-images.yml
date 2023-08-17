@@ -13,9 +13,9 @@ jobs:
     strategy:
       matrix:
         image:
-          - deployments
           - rollups-advance-runner
           - rollups-cli
+          - rollups-deployments
           - rollups-dispatcher
           - rollups-graphql-server
           - rollups-hardhat
