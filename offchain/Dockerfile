@@ -34,7 +34,7 @@ COPY . /usr/src/app
 RUN cargo build --release
 
 # define runtime image
-FROM debian:bookworm-20230725-slim as runtime
+FROM debian:bookworm-20230814-slim as runtime
 RUN addgroup --system --gid 102 cartesi && \
     adduser --system --uid 102 --ingroup cartesi --disabled-login --no-create-home --home /nonexistent --gecos "cartesi user" --shell /bin/false cartesi
 RUN mkdir -p /var/opt/cartesi
