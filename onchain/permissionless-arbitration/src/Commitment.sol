@@ -66,13 +66,13 @@ library Commitment {
         bytes32[] calldata hashProof
     ) internal pure {
         uint64 treeHeight = ArbitrationConstants.height(level);
-        // Tree.Node expectedCommitment = getRootForLastLeaf(
-        //     treeHeight,
-        //     Machine.Hash.unwrap(finalState),
-        //     hashProof
-        // );
+        Tree.Node expectedCommitment = getRootForLastLeaf(
+            treeHeight,
+            Machine.Hash.unwrap(finalState),
+            hashProof
+        );
 
-        // require(commitment.eq(expectedCommitment), "commitment last state doesn't match");
+        require(commitment.eq(expectedCommitment), "commitment last state doesn't match");
     }
 
 
@@ -81,10 +81,9 @@ library Commitment {
         bytes32 leaf,
         bytes32[] calldata siblings
     ) internal pure returns (Tree.Node) {
-        uint nodesCount = treeHeight - 1;
-        assert(nodesCount == siblings.length);
+        assert(treeHeight == siblings.length);
 
-        for (uint i = 0; i < nodesCount; i++) {
+        for (uint i = 0; i < treeHeight; i++) {
             leaf = keccak256(abi.encodePacked(siblings[i], leaf));
         }
 

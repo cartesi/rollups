@@ -36,19 +36,15 @@ end
 
 local function generate_proof(proof, root, height, include_index)
     if height == 0 then
-        if include_index == 0 then
-            proof.leaf = root
-            return
-        else
-            table.insert(proof, root)
-        end
+        proof.leaf = root
+        return
     end
 
     local new_height = height - 1
     local ok, left, right = root:children()
     assert(ok)
 
-    if (include_index >> new_height) == 0 then
+    if (include_index >> new_height) & 1 == 0 then
         generate_proof(proof, left, new_height, include_index)
         table.insert(proof, right)
     else
@@ -65,6 +61,8 @@ function MerkleTree:prove_leaf(index)
     else
         height = self.log2size
     end
+
+    print(index, height, "P")
 
     assert((index >> height) == 0)
     local proof = {}
@@ -93,5 +91,21 @@ function MerkleTree:last()
 
     return old_right, array_reverse(proof)
 end
+
+-- local Hash = require "cryptography.hash"
+-- local MerkleBuilder = require "cryptography.merkle_builder"
+-- local builder = MerkleBuilder:new()
+-- builder:add(Hash.zero, 1 << 8)
+-- local mt = builder:build()
+
+-- local i, p = mt:last((1 << 8) - 1)
+-- local r = assert(i)
+-- print(i)
+-- for _, v in ipairs(p) do
+--     print(v)
+--     r = v:join(r)
+-- end
+
+-- print("FINAL", r, mt.root_hash)
 
 return MerkleTree

@@ -7,11 +7,13 @@ print "Hello, world!"
 os.execute "cd offchain/program && ./gen_machine_simple.sh"
 local machine_path = "offchain/program/simple-program"
 
+
 local Player = require "player"
 local Client = require "blockchain.client"
 
 local Machine = require "computation.machine"
-local initial_hash = Machine:new_from_path(machine_path):state().root_hash
+local m = Machine:new_from_path(machine_path)
+local initial_hash = m:state().root_hash
 
 local Blockchain = require "blockchain.node"
 local blockchain = Blockchain:new()
@@ -29,6 +31,11 @@ end
 local p2
 do
     local FakeCommitmentBuilder = require "computation.fake_commitment"
+
+    -- m:run(m.start_cycle + 1)
+    -- local second_hash = m:state().root_hash
+    -- local builder = FakeCommitmentBuilder:new(initial_hash, second_hash)
+
     local builder = FakeCommitmentBuilder:new(initial_hash)
     local client = Client:new(blockchain)
     p2 = Player:new(contract, client, builder)
