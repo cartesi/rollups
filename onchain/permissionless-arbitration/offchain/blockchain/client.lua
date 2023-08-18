@@ -419,7 +419,7 @@ function Client:tx_win_leaf_match(
     tournament_address, commitment_one, commitment_two, left, right, proof
 )
     local sig =
-    [[winLeafMatch((bytes32,bytes32),bytes32,bytes32)]]
+    [[winLeafMatch((bytes32,bytes32),bytes32,bytes32,bytes)]]
     self:_send_tx(
         tournament_address,
         sig,

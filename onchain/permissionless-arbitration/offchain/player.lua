@@ -1,11 +1,13 @@
 local constants = require "constants"
 local bint = require 'utils.bint' (256) -- use 256 bits integers
+local Machine = require "computation.machine"
 
 local Player = {}
 Player.__index = Player
 
-function Player:new(root_tournament_address, client, commitment_builder)
+function Player:new(root_tournament_address, client, commitment_builder, machine_path)
     local player = {
+        machine_path = machine_path,
         root_tournament = {
             base_big_cycle = 0,
             address = root_tournament_address,
@@ -43,7 +45,7 @@ function Player:_react_tournament(tournament)
         local winner_final_state = self.client:root_tournament_winner(tournament.address)
         if winner_final_state[1] == "true" then
             print "TOURNAMENT FINISHED, HURRAYYY"
-            print("Final state: " .. winner_final_state[2])
+            print("Final state: " .. winner_final_state[2]:hex_string())
             return true
         end
     else
@@ -104,18 +106,28 @@ function Player:_react_match(match, commitment)
             end
 
             print(string.format(
+                "Calculating access logs for step %s",
+                match.running_leaf
+            ))
+
+            local cycle = (match.running_leaf >> constants.log2_uarch_span):touinteger()
+            local ucycle = (match.running_leaf & constants.uarch_span):touinteger()
+            local logs = Machine:get_logs(self.machine_path, cycle, ucycle)
+
+            print(string.format(
                 "win leaf match in tournament %s of level %d for commitment %s",
                 match.tournament.address,
                 match.tournament.level,
                 commitment.root_hash
             ))
-            self.client:tx_win_leaf_match(
+            pcall(self.client.tx_win_leaf_match,
+                self.client,
                 match.tournament.address,
                 match.commitment_one,
                 match.commitment_two,
                 left,
                 right,
-                ""
+                logs
             )
         else
             local address = self.client:read_tournament_created(

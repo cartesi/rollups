@@ -1,7 +1,7 @@
 local Hash = require "cryptography.hash"
 local arithmetic = require "utils.arithmetic"
-local consts = require "constants"
 local cartesi = require "cartesi"
+local consts = require "constants"
 
 local ComputationState = {}
 ComputationState.__index = ComputationState
@@ -39,7 +39,6 @@ end
 ---
 --
 
--- TODO Consider removing this abstraction
 local Machine = {}
 Machine.__index = Machine
 
@@ -52,6 +51,7 @@ function Machine:new_from_path(path)
     assert(machine:read_uarch_cycle() == 0)
 
     local b = {
+        path = path,
         machine = machine,
         cycle = 0,
         ucycle = 0,
@@ -102,6 +102,71 @@ function Machine:ureset()
     self.machine:reset_uarch_state()
     self.cycle = self.cycle + 1
     self.ucycle = 0
+end
+
+local keccak = require "cartesi".keccak
+
+local function hex_from_bin(bin)
+    assert(bin:len() == 32)
+    return "0x" .. (bin:gsub('.', function(c)
+        return string.format('%02x', string.byte(c))
+    end))
+end
+
+local function ver(t, p, s)
+    local stride = p >> 3
+    for k, v in ipairs(s) do
+        if (stride >> (k - 1)) % 2 == 0 then
+            t = keccak(t, v)
+        else
+            t = keccak(v, t)
+        end
+    end
+
+    return t
+end
+
+
+function Machine:get_logs(path, cycle, ucycle)
+    local machine = Machine:new_from_path(path)
+    machine:run(cycle)
+    machine:run_uarch(ucycle)
+
+    if ucycle == consts.uarch_span then
+        error "ureset, not implemented"
+
+        machine:run_uarch(consts.uarch_span)
+        -- get reset-uarch logs
+
+        return
+    end
+
+    local logs = machine.machine:step_uarch { annotations = true, proofs = true }
+
+    local encoded = {}
+
+    for _, a in ipairs(logs.accesses) do
+        assert(a.log2_size == 3)
+        if a.type == "read" then
+            table.insert(encoded, a.read)
+        end
+
+        table.insert(encoded, a.proof.target_hash)
+
+        local siblings = arithmetic.array_reverse(a.proof.sibling_hashes)
+        for _, h in ipairs(siblings) do
+            table.insert(encoded, h)
+        end
+
+        assert(ver(a.proof.target_hash, a.address, siblings) == a.proof.root_hash)
+    end
+
+    local data = table.concat(encoded)
+    local hex_data = "0x" .. (data:gsub('.', function(c)
+        return string.format('%02x', string.byte(c))
+    end))
+
+    return '"' .. hex_data .. '"'
 end
 
 return Machine

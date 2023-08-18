@@ -82,8 +82,6 @@ end
 local function build_commitment(base_cycle, log2_stride, log2_stride_count, machine_path)
     local machine = Machine:new_from_path(machine_path)
 
-    print(log2_stride, log2_stride_count)
-
     if log2_stride >= consts.log2_uarch_span then
         assert(
             log2_stride + log2_stride_count <=
@@ -118,7 +116,6 @@ function CommitmentBuilder:build(base_cycle, level)
 
     local l = consts.levels - level + 1
     local log2_stride, log2_stride_count = consts.log2step[l], consts.heights[l]
-    print(log2_stride, log2_stride_count)
 
     local _, commitment = build_commitment(base_cycle, log2_stride, log2_stride_count, self.machine_path)
     self.commitments[level][base_cycle] = commitment

@@ -49,6 +49,14 @@ local function semi_sum(a, b)
     return a + (b - a) // 2
 end
 
+local function array_reverse(x)
+    local n, m = #x, #x / 2
+    for i = 1, m do
+        x[i], x[n - i + 1] = x[n - i + 1], x[i]
+    end
+    return x
+end
+
 return {
     max_uint = max_uint,
     max_uint64 = max_uint64,
@@ -57,4 +65,5 @@ return {
     clz = clz,
     ctz = ctz,
     semi_sum = semi_sum,
+    array_reverse = array_reverse,
 }

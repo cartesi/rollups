@@ -1,3 +1,5 @@
+local arithmetic = require "utils.arithmetic"
+
 local MerkleTree = {}
 MerkleTree.__index = MerkleTree
 
@@ -62,20 +64,10 @@ function MerkleTree:prove_leaf(index)
         height = self.log2size
     end
 
-    print(index, height, "P")
-
     assert((index >> height) == 0)
     local proof = {}
     generate_proof(proof, self.root_hash, height, index)
     return proof.leaf, proof
-end
-
-local function array_reverse(x)
-    local n, m = #x, #x / 2
-    for i = 1, m do
-        x[i], x[n - i + 1] = x[n - i + 1], x[i]
-    end
-    return x
 end
 
 function MerkleTree:last()
@@ -89,7 +81,7 @@ function MerkleTree:last()
         ok, left, right = right:children()
     end
 
-    return old_right, array_reverse(proof)
+    return old_right, arithmetic.array_reverse(proof)
 end
 
 -- local Hash = require "cryptography.hash"

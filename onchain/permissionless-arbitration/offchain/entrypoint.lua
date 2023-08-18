@@ -7,6 +7,11 @@ print "Hello, world!"
 os.execute "cd offchain/program && ./gen_machine_simple.sh"
 local machine_path = "offchain/program/simple-program"
 
+-- local Machine = require "computation.machine"
+-- Machine:get_logs(machine_path, 0, 0)
+
+-- os.exit()
+
 
 local Player = require "player"
 local Client = require "blockchain.client"
@@ -25,7 +30,7 @@ do
     local CommitmentBuilder = require "computation.commitment"
     local builder = CommitmentBuilder:new(machine_path)
     local client = Client:new(blockchain)
-    p1 = Player:new(contract, client, builder)
+    p1 = Player:new(contract, client, builder, machine_path)
 end
 
 local p2
@@ -38,7 +43,7 @@ do
 
     local builder = FakeCommitmentBuilder:new(initial_hash)
     local client = Client:new(blockchain)
-    p2 = Player:new(contract, client, builder)
+    p2 = Player:new(contract, client, builder, machine_path)
 end
 
 local i = 0
