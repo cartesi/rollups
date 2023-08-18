@@ -1,4 +1,5 @@
 local Hash = require "cryptography.hash"
+local MerkleTree = require "cryptography.merkle_tree"
 local eth_ebi = require "utils.eth_ebi"
 
 local function parse_topics(json)
@@ -109,7 +110,13 @@ end
 local function quote_args(args, not_quote)
     local quoted_args = {}
     for _, v in ipairs(args) do
-        if type(v) == "table" then
+        if type(v) == "table" and (getmetatable(v) == Hash or getmetatable(v) == MerkleTree) then
+            if not_quote then
+                table.insert(quoted_args, v:hex_string())
+            else
+                table.insert(quoted_args, '"' .. v:hex_string() .. '"')
+            end
+        elseif type(v) == "table" then
             if v._tag == "tuple" then
                 local qa = quote_args(v, true)
                 local ca = table.concat(qa, ",")
@@ -122,7 +129,7 @@ local function quote_args(args, not_quote)
                 table.insert(quoted_args, sb)
             end
         elseif not_quote then
-            table.insert(quoted_args, v)
+            table.insert(quoted_args, tostring(v))
         else
             table.insert(quoted_args, '"' .. v .. '"')
         end
@@ -235,8 +242,8 @@ function Client:read_match_created(tournament_address, commitment_hash)
     local sig = "matchCreated(bytes32,bytes32,bytes32)"
     local data_sig = "(bytes32)"
 
-    local logs1 = self:_read_logs(tournament_address, sig, { commitment_hash, false, false }, data_sig)
-    local logs2 = self:_read_logs(tournament_address, sig, { false, commitment_hash, false }, data_sig)
+    local logs1 = self:_read_logs(tournament_address, sig, { commitment_hash:hex_string(), false, false }, data_sig)
+    local logs2 = self:_read_logs(tournament_address, sig, { false, commitment_hash:hex_string(), false }, data_sig)
 
     local logs = sort_and_dedup(join_tables(logs1, logs2))
 
@@ -260,7 +267,7 @@ end
 function Client:read_commitment(tournament_address, commitment_hash)
     local sig = "getCommitment(bytes32)((uint64,uint64),bytes32)"
 
-    local call_ret = self:_call(tournament_address, sig, { commitment_hash })
+    local call_ret = self:_call(tournament_address, sig, { commitment_hash:hex_string() })
     assert(#call_ret == 2)
 
     local allowance, last_resume = call_ret[1]:match "%((%d+),(%d+)%)"
@@ -283,14 +290,14 @@ function Client:read_tournament_created(tournament_address, match_id_hash)
     local sig = "newInnerTournament(bytes32,address)"
     local data_sig = "(address)"
 
-    local logs = self:_read_logs(tournament_address, sig, { match_id_hash, false, false }, data_sig)
+    local logs = self:_read_logs(tournament_address, sig, { match_id_hash:hex_string(), false, false }, data_sig)
     assert(#logs <= 1)
 
     if #logs == 0 then return false end
     local log = logs[1]
 
     local ret = {
-        parent_match = Hash:from_digest_hex(match_id_hash),
+        parent_match = match_id_hash,
         new_tournament = log.decoded_data[1],
     }
 
@@ -298,8 +305,8 @@ function Client:read_tournament_created(tournament_address, match_id_hash)
 end
 
 function Client:match(address, match_id_hash)
-    local sig = "getMatch(bytes32)(bytes32,bytes32,bytes32,uint64,uint64,uint64)"
-    local ret = self:_call(address, sig, { match_id_hash })
+    local sig = "getMatch(bytes32)(bytes32,bytes32,bytes32,uint256,uint64,uint64)"
+    local ret = self:_call(address, sig, { match_id_hash:hex_string() })
     ret[1] = Hash:from_digest_hex(ret[1])
     ret[2] = Hash:from_digest_hex(ret[2])
     ret[3] = Hash:from_digest_hex(ret[3])
@@ -382,7 +389,7 @@ function Client:tx_seal_inner_match(
     self:_send_tx(
         tournament_address,
         sig,
-        { { commitment_one, commitment_two, _tag = "tuple" }, left, right, initial_hash, proof }
+        { { commitment_one, commitment_two, _tag = "tuple" }, left, right, initial_hash:hex_string(), proof }
     )
 end
 
@@ -409,14 +416,14 @@ function Client:tx_seal_leaf_match(
 end
 
 function Client:tx_win_leaf_match(
-    tournament_address, commitment_one, commitment_two, left, right
+    tournament_address, commitment_one, commitment_two, left, right, proof
 )
     local sig =
     [[winLeafMatch((bytes32,bytes32),bytes32,bytes32)]]
     self:_send_tx(
         tournament_address,
         sig,
-        { { commitment_one, commitment_two, _tag = "tuple" }, left, right }
+        { { commitment_one, commitment_two, _tag = "tuple" }, left, right, proof }
     )
 end
 

@@ -2,7 +2,7 @@ local keccak = require "cartesi".keccak
 
 local function hex_from_bin(bin)
     assert(bin:len() == 32)
-    return "0x" .. (bin:gsub('.', function (c)
+    return "0x" .. (bin:gsub('.', function(c)
         return string.format('%02x', string.byte(c))
     end))
 end
@@ -10,7 +10,7 @@ end
 local function bin_from_hex(hex)
     assert(hex:len() == 66, string.format("%s %d", hex, hex:len()))
     local h = assert(hex:match("0x(%x+)"), hex)
-    return (h:gsub('..', function (cc)
+    return (h:gsub('..', function(cc)
         return string.char(tonumber(cc, 16))
     end))
 end
@@ -27,8 +27,8 @@ function Hash:from_digest(digest)
     local x = internalized_hahes[digest]
     if x then return x end
 
-    local h = {digest = digest}
-    iterateds[h] = {h}
+    local h = { digest = digest }
+    iterateds[h] = { h }
     setmetatable(h, self)
     internalized_hahes[digest] = h
     return h
@@ -46,12 +46,12 @@ function Hash:from_data(data)
 end
 
 function Hash:join(other_hash)
-    Hash:is_of_type_hash(other_hash)
+    assert(Hash:is_of_type_hash(other_hash))
 
     local digest = keccak(self.digest, other_hash.digest)
     local ret = Hash:from_digest(digest)
-    ret.left = self.digest
-    ret.right = other_hash.digest
+    ret.left = self
+    ret.right = other_hash
     return ret
 end
 
@@ -82,7 +82,11 @@ function Hash:iterated_merkle(level)
     return highest_level
 end
 
-Hash.__tostring = function (x)
+function Hash:hex_string()
+    return hex_from_bin(self.digest)
+end
+
+Hash.__tostring = function(x)
     return hex_from_bin(x.digest)
 end
 

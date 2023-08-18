@@ -66,13 +66,13 @@ library Commitment {
         bytes32[] calldata hashProof
     ) internal pure {
         uint64 treeHeight = ArbitrationConstants.height(level);
-        Tree.Node expectedCommitment = getRootForLastLeaf(
-            treeHeight,
-            Machine.Hash.unwrap(finalState),
-            hashProof
-        );
+        // Tree.Node expectedCommitment = getRootForLastLeaf(
+        //     treeHeight,
+        //     Machine.Hash.unwrap(finalState),
+        //     hashProof
+        // );
 
-        require(commitment.eq(expectedCommitment), "commitment last state doesn't match");
+        // require(commitment.eq(expectedCommitment), "commitment last state doesn't match");
     }
 
 

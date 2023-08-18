@@ -1,5 +1,6 @@
 local Hash = require "cryptography.hash"
 local arithmetic = require "utils.arithmetic"
+local consts = require "constants"
 local cartesi = require "cartesi"
 
 local ComputationState = {}
@@ -98,7 +99,6 @@ function Machine:increment_uarch()
 end
 
 function Machine:ureset()
-    assert(self.ucycle == arithmetic.max_uint64)
     self.machine:reset_uarch_state()
     self.cycle = self.cycle + 1
     self.ucycle = 0

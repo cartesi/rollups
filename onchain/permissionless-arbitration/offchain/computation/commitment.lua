@@ -50,7 +50,7 @@ local function build_small_machine_commitment(base_cycle, log2_stride_count, mac
         end
     end
 
-    return initial_state, builder:build()
+    return initial_state, builder:build(initial_state)
 end
 
 
@@ -76,11 +76,13 @@ local function build_big_machine_commitment(base_cycle, log2_stride, log2_stride
         end
     end
 
-    return initial_state, builder:build()
+    return initial_state, builder:build(initial_state)
 end
 
 local function build_commitment(base_cycle, log2_stride, log2_stride_count, machine_path)
     local machine = Machine:new_from_path(machine_path)
+
+    print(log2_stride, log2_stride_count)
 
     if log2_stride >= consts.log2_uarch_span then
         assert(

@@ -60,7 +60,6 @@ function Slice:find_cell_containing(elem)
     return l
 end
 
-
 local MerkleBuilder = {}
 MerkleBuilder.__index = MerkleBuilder
 
@@ -82,17 +81,17 @@ function MerkleBuilder:add(hash, rep)
         local accumulated_count = rep + last.accumulated_count
 
         if not math.ult(rep, accumulated_count) then -- overflow...
-            assert(accumulated_count == 0) -- then it has to be zero, and nothing else can fit.
+            assert(accumulated_count == 0)           -- then it has to be zero, and nothing else can fit.
         end
 
-        table.insert(self.leafs, {hash = hash, accumulated_count = accumulated_count})
+        table.insert(self.leafs, { hash = hash, accumulated_count = accumulated_count })
     else
-        table.insert(self.leafs, {hash = hash, accumulated_count = rep})
+        table.insert(self.leafs, { hash = hash, accumulated_count = rep })
     end
 end
 
 local function merkle(leafs, log2size, stride)
-    local first_time =  stride * (1 << log2size) + 1
+    local first_time = stride * (1 << log2size) + 1
     local last_time = (stride + 1) * (1 << log2size)
 
     local first_cell = leafs:find_cell_containing(first_time)
@@ -109,7 +108,7 @@ local function merkle(leafs, log2size, stride)
     return hash_left:join(hash_right)
 end
 
-function MerkleBuilder:build()
+function MerkleBuilder:build(implicit_hash)
     local last = assert(self.leafs[#self.leafs], #self.leafs)
     local count = last.accumulated_count
 
@@ -122,7 +121,7 @@ function MerkleBuilder:build()
     end
 
     local root_hash = merkle(Slice:new(self.leafs), log2size, 0)
-    return MerkleTree:new(self.leafs, root_hash, log2size)
+    return MerkleTree:new(self.leafs, root_hash, log2size, implicit_hash)
 end
 
 -- local Hash = require "cryptography.hash"

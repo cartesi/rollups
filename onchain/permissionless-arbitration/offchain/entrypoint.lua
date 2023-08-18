@@ -29,7 +29,7 @@ end
 local p2
 do
     local FakeCommitmentBuilder = require "computation.fake_commitment"
-    local builder = FakeCommitmentBuilder:new()
+    local builder = FakeCommitmentBuilder:new(initial_hash)
     local client = Client:new(blockchain)
     p2 = Player:new(contract, client, builder)
 end
