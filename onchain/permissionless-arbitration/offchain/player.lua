@@ -45,14 +45,15 @@ function Player:_react_tournament(tournament)
         local winner_final_state = self.client:root_tournament_winner(tournament.address)
         if winner_final_state[1] == "true" then
             print "TOURNAMENT FINISHED, HURRAYYY"
-            print("Final state: " .. winner_final_state[2]:hex_string())
+            print("Winner commitment: " .. winner_final_state[2]:hex_string())
+            print("Final state: " .. winner_final_state[3]:hex_string())
             return true
         end
     else
-        local tournament_winner = self.client:tournament_winner(tournament.address)
-        if not tournament_winner:is_zero() then
+        local tournament_winner = self.client:inner_tournament_winner(tournament.address)
+        if tournament_winner[1] == "true" then
             local old_commitment = self.commitments[tournament.parent.address]
-            if tournament_winner ~= old_commitment.root_hash then
+            if tournament_winner[2] ~= old_commitment.root_hash then
                 print "player lost tournament"
                 self.has_lost = true
                 return
@@ -120,7 +121,7 @@ function Player:_react_match(match, commitment)
                 match.tournament.level,
                 commitment.root_hash
             ))
-            pcall(self.client.tx_win_leaf_match,
+            local ok, e = pcall(self.client.tx_win_leaf_match,
                 self.client,
                 match.tournament.address,
                 match.commitment_one,
@@ -129,6 +130,12 @@ function Player:_react_match(match, commitment)
                 right,
                 logs
             )
+            if not ok then
+                print(string.format(
+                    "win leaf match reverted: %s",
+                    e
+                ))
+            end
         else
             local address = self.client:read_tournament_created(
                 match.tournament.address,

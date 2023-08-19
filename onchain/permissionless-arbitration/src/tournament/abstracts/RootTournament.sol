@@ -15,10 +15,6 @@ abstract contract RootTournament is Tournament {
         Machine.Hash _initialHash
     ) Tournament(_initialHash, ArbitrationConstants.CENSORSHIP_TOLERANCE, 0, 0) {}
 
-    function tournamentWinner() external view override returns (Tree.Node) {
-        return _tournamentWinner();
-    }
-
     function updateParentTournamentDelay(
         Time.Instant _delay
     ) internal override {
@@ -32,9 +28,9 @@ abstract contract RootTournament is Tournament {
         return true;
     }
 
-    function rootTournamentFinalState() external view returns (bool, Machine.Hash) {
+    function arbitrationResult() external view returns (bool, Tree.Node, Machine.Hash) {
         if (!isFinished()) {
-            return (false, Machine.ZERO_STATE);
+            return (false, Tree.ZERO_NODE, Machine.ZERO_STATE);
         }
 
         (bool _hasDanglingCommitment, Tree.Node _danglingCommitment) =
@@ -42,6 +38,6 @@ abstract contract RootTournament is Tournament {
         assert(_hasDanglingCommitment);
 
         Machine.Hash _finalState = finalStates[_danglingCommitment];
-        return (true, _finalState);
+        return (true, _danglingCommitment, _finalState);
     }
 }

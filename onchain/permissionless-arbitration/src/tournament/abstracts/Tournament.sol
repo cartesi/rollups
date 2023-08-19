@@ -110,6 +110,19 @@ abstract contract Tournament {
         }
     }
 
+
+    //
+    // Virtual Methods
+    //
+
+    function updateParentTournamentDelay(Time.Instant _delay) internal virtual;
+
+    /// @return bool if commitment with _finalState is allowed to join the tournament
+    function validContestedFinalState(
+        Machine.Hash _finalState
+    ) internal view virtual returns (bool);
+
+
     //
     // Methods
     //
@@ -209,22 +222,6 @@ abstract contract Tournament {
         delete matches[_matchId.hashFromId()];
     }
 
-    function _tournamentWinner() internal view returns (Tree.Node) {
-        if (!isFinished()) {
-            return Tree.ZERO_NODE;
-        }
-
-        (
-            bool _hasDanglingCommitment,
-            Tree.Node _danglingCommitment
-        ) = hasDanglingCommitment();
-        assert(_hasDanglingCommitment);
-
-        return _danglingCommitment;
-    }
-
-    /// @return _winner commitment of the tournament
-    function tournamentWinner() external view virtual returns (Tree.Node);
 
     //
     // View methods
@@ -272,6 +269,15 @@ abstract contract Tournament {
     // Helper functions
     //
 
+    function requireValidContestedFinalState(
+        Machine.Hash _finalState
+    ) internal view {
+        require(
+            validContestedFinalState(_finalState),
+            "tournament doesn't have contested final state"
+        );
+    }
+
     function hasDanglingCommitment()
         internal
         view
@@ -292,23 +298,13 @@ abstract contract Tournament {
         danglingCommitment = Tree.ZERO_NODE;
     }
 
-    function updateParentTournamentDelay(Time.Instant _delay) internal virtual;
-
-    function setMaximumDelay(Time.Instant _delay) internal returns (bool) {
-        if (_delay.gt(maximumEnforceableDelay)) {
-            maximumEnforceableDelay = _delay;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     function pairCommitment(
         Tree.Node _rootHash,
         Clock.State memory _newClock,
         Tree.Node _leftNode,
         Tree.Node _rightNode
     ) internal {
+        assert(_leftNode.join(_rightNode).eq(_rootHash));
         (
             bool _hasDanglingCommitment,
             Tree.Node _danglingCommitment
@@ -345,19 +341,10 @@ abstract contract Tournament {
         }
     }
 
-    /// @return bool if _fianlState is allowed to join the tournament
-    function validContestedFinalState(
-        Machine.Hash _fianlState
-    ) internal view virtual returns (bool);
 
-    function requireValidContestedFinalState(
-        Machine.Hash _finalState
-    ) internal view {
-        require(
-            validContestedFinalState(_finalState),
-            "tournament doesn't have contested final state"
-        );
-    }
+    //
+    // Clock methods
+    //
 
     /// @return bool if the tournament is still open to join
     function isClosed() internal view returns (bool) {
@@ -374,5 +361,14 @@ abstract contract Tournament {
     /// @return bool if the tournament is over
     function isFinished() internal view returns (bool) {
         return Time.currentTime().gt(maximumEnforceableDelay);
+    }
+
+    function setMaximumDelay(Time.Instant _delay) internal returns (bool) {
+        if (_delay.gt(maximumEnforceableDelay)) {
+            maximumEnforceableDelay = _delay;
+            return true;
+        } else {
+            return false;
+        }
     }
 }

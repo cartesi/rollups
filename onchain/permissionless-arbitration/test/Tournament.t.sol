@@ -134,9 +134,8 @@ contract TournamentTest is Test {
         );
 
         vm.warp(_tournamentFinishWithMatch);
-        Tree.Node _winner = topTournament.tournamentWinner();
-        (bool _finished, Machine.Hash _finalState) = topTournament
-            .rootTournamentFinalState();
+        (bool _finished, Tree.Node _winner, Machine.Hash _finalState) = topTournament
+            .arbitrationResult();
 
         assertTrue(
             _winner.eq(playerNodes[1][ArbitrationConstants.height(0)]),
@@ -191,8 +190,7 @@ contract TournamentTest is Test {
         );
 
         vm.warp(_tournamentFinishWithMatch);
-        _winner = topTournament.tournamentWinner();
-        (_finished, _finalState) = topTournament.rootTournamentFinalState();
+        (_finished, _winner, _finalState) = topTournament.arbitrationResult();
 
         assertTrue(
             _winner.eq(playerNodes[0][ArbitrationConstants.height(0)]),

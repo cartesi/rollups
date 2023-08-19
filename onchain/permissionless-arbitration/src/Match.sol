@@ -303,8 +303,8 @@ library Match {
         state.leftNode = newLeftNode;
         state.rightNode = newRightNode;
 
-        state.runningLeafPosition += 1 << state.currentHeight;
         state.currentHeight--;
+        state.runningLeafPosition += 1 << state.currentHeight;
     }
 
     function _setDivergenceOnLeftLeaf(
@@ -336,8 +336,8 @@ library Match {
     {
         assert(state.currentHeight == 1);
         state.leftNode = rightLeaf;
-        state.runningLeafPosition += 1;
         state.currentHeight = 0;
+        state.runningLeafPosition += 1;
 
         if (state.height() % 2 == 0) {
             finalStateOne = state.rightNode.toMachineHash();

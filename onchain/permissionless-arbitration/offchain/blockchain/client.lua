@@ -314,17 +314,19 @@ function Client:match(address, match_id_hash)
     return ret
 end
 
-function Client:tournament_winner(address)
-    local sig = "tournamentWinner()(bytes32)"
+function Client:inner_tournament_winner(address)
+    local sig = "innerTournamentWinner()(bool,bytes32)"
     local ret = self:_call(address, sig, {})
+    ret[2] = Hash:from_digest_hex(ret[2])
 
-    return Hash:from_digest_hex(ret[1])
+    return ret
 end
 
 function Client:root_tournament_winner(address)
-    local sig = "rootTournamentFinalState()(bool,bytes32)"
+    local sig = "arbitrationResult()(bool,bytes32,bytes32)"
     local ret = self:_call(address, sig, {})
     ret[2] = Hash:from_digest_hex(ret[2])
+    ret[3] = Hash:from_digest_hex(ret[3])
 
     return ret
 end

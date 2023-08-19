@@ -45,20 +45,24 @@ abstract contract NonRootTournament is Tournament {
     }
 
     /// @notice get the dangling commitment at current level and then retrieve the winner commitment
-    function tournamentWinner() external view override returns (Tree.Node) {
-        Tree.Node _danglingCommitment = _tournamentWinner();
-
-        if (_danglingCommitment.isZero()) {
-            return Tree.ZERO_NODE;
+    function innerTournamentWinner() external view returns (bool, Tree.Node) {
+        if (!isFinished()) {
+            return (false, Tree.ZERO_NODE);
         }
+
+        (
+            bool _hasDanglingCommitment,
+            Tree.Node _danglingCommitment
+        ) = hasDanglingCommitment();
+        assert(_hasDanglingCommitment);
 
         Machine.Hash _finalState = finalStates[_danglingCommitment];
 
         if (_finalState.eq(contestedFinalStateOne)) {
-            return contestedCommitmentOne;
+            return (true, contestedCommitmentOne);
         } else {
             assert(_finalState.eq(contestedFinalStateTwo));
-            return contestedCommitmentTwo;
+            return (true, contestedCommitmentTwo);
         }
     }
 
@@ -72,12 +76,6 @@ abstract contract NonRootTournament is Tournament {
     function validContestedFinalState(
         Machine.Hash _finalState
     ) internal view override returns (bool) {
-        if (contestedFinalStateOne.eq(_finalState)) {
-            return true;
-        } else if (contestedFinalStateTwo.eq(_finalState)) {
-            return true;
-        } else {
-            return false;
-        }
+        return contestedFinalStateOne.eq(_finalState) || contestedFinalStateTwo.eq(_finalState);
     }
 }

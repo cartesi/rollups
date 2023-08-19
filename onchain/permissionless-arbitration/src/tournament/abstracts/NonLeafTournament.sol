@@ -115,7 +115,8 @@ abstract contract NonLeafTournament is Tournament {
         _matchState.requireExist();
         _matchState.requireIsFinished();
 
-        Tree.Node _winner = _childTournament.tournamentWinner();
+        (bool finished, Tree.Node _winner) = _childTournament.innerTournamentWinner();
+        require(finished, "child tournament is not finished");
         _winner.requireExist();
 
         Tree.Node _commitmentRoot = _leftNode.join(_rightNode);
@@ -190,6 +191,4 @@ abstract contract NonLeafTournament is Tournament {
 
         return NonRootTournament(address(_tournament));
     }
-
-
 }

@@ -76,9 +76,8 @@ contract MultiTournamentTest is Test {
         );
 
         // no winner before tournament finished
-        Tree.Node _winner = topTournament.tournamentWinner();
-        (bool _finished, Machine.Hash _finalState) = topTournament
-            .rootTournamentFinalState();
+        (bool _finished, Tree.Node _winner, Machine.Hash _finalState) = topTournament
+            .arbitrationResult();
 
         assertTrue(_winner.isZero(), "winner should be zero node");
         assertFalse(_finished, "tournament shouldn't be finished");
@@ -98,8 +97,7 @@ contract MultiTournamentTest is Test {
             Time.Duration.unwrap(ArbitrationConstants.CENSORSHIP_TOLERANCE);
 
         vm.warp(_tournamentFinish);
-        _winner = topTournament.tournamentWinner();
-        (_finished, _finalState) = topTournament.rootTournamentFinalState();
+        (_finished, _winner, _finalState) = topTournament.arbitrationResult();
 
         assertTrue(
             _winner.eq(playerNodes[0][ArbitrationConstants.height(0)]),
@@ -119,7 +117,7 @@ contract MultiTournamentTest is Test {
         // no dangling commitment available, should revert
         vm.warp(_tournamentFinishWithMatch);
         vm.expectRevert();
-        _winner = topTournament.tournamentWinner();
+        topTournament.arbitrationResult();
     }
 
     function testInner() public {
@@ -239,8 +237,8 @@ contract MultiTournamentTest is Test {
             address(bytes20(bytes32(_entries[0].data) << (12 * 8)))
         );
 
-        Tree.Node _winner = middleTournament.tournamentWinner();
-        assertTrue(_winner.isZero(), "winner should be zero node");
+        (bool _finished, Tree.Node _winner) = middleTournament.innerTournamentWinner();
+        assertFalse(_finished, "winner should be zero node");
 
         // player 0 should win after fast forward time to inner tournament finishes
         uint256 _t = block.timestamp;
@@ -251,26 +249,28 @@ contract MultiTournamentTest is Test {
         Util.joinMiddleTournament(playerNodes, middleTournament, 0, 1);
 
         vm.warp(_rootTournamentFinish - 1);
-        _winner = middleTournament.tournamentWinner();
+        (_finished, _winner) = middleTournament.innerTournamentWinner();
         topTournament.winInnerMatch(
             middleTournament,
             playerNodes[0][ArbitrationConstants.height(0) - 1],
             playerNodes[0][ArbitrationConstants.height(0) - 1]
         );
 
+        {
         vm.warp(_rootTournamentFinish + 1);
-        (bool _finished, Machine.Hash _finalState) = topTournament
-            .rootTournamentFinalState();
+        (bool _finishedTop, Tree.Node _commitment, Machine.Hash _finalState) = topTournament
+            .arbitrationResult();
 
         assertTrue(
-            _winner.eq(playerNodes[0][ArbitrationConstants.height(0)]),
+            _commitment.eq(playerNodes[0][ArbitrationConstants.height(0)]),
             "winner should be player 0"
         );
-        assertTrue(_finished, "tournament should be finished");
+        assertTrue(_finishedTop, "tournament should be finished");
         assertTrue(
             _finalState.eq(Tree.ZERO_NODE.toMachineHash()),
             "final state should be zero"
         );
+        }
 
         //create another tournament for other test
         topTournament = Util.initializePlayer0Tournament(
@@ -323,7 +323,7 @@ contract MultiTournamentTest is Test {
             address(bytes20(bytes32(_entries[0].data) << (12 * 8)))
         );
 
-        _winner = middleTournament.tournamentWinner();
+        (_finished, _winner) = middleTournament.innerTournamentWinner();
         assertTrue(_winner.isZero(), "winner should be zero node");
 
         _t = block.timestamp;
@@ -358,24 +358,27 @@ contract MultiTournamentTest is Test {
         );
 
         vm.warp(_middleTournamentFinish);
-        _winner = middleTournament.tournamentWinner();
+        (_finished, _winner) = middleTournament.innerTournamentWinner();
         topTournament.winInnerMatch(
             middleTournament,
             playerNodes[1][ArbitrationConstants.height(0) - 1],
             playerNodes[1][ArbitrationConstants.height(0) - 1]
         );
 
+        {
         vm.warp(_rootTournamentFinish);
-        (_finished, _finalState) = topTournament.rootTournamentFinalState();
+        (bool _finishedTop, Tree.Node _commitment, Machine.Hash _finalState) = topTournament
+            .arbitrationResult();
 
         assertTrue(
-            _winner.eq(playerNodes[1][ArbitrationConstants.height(0)]),
+            _commitment.eq(playerNodes[1][ArbitrationConstants.height(0)]),
             "winner should be player 1"
         );
-        assertTrue(_finished, "tournament should be finished");
+        assertTrue(_finishedTop, "tournament should be finished");
         assertTrue(
             _finalState.eq(Util.ONE_NODE.toMachineHash()),
             "final state should be 1"
         );
+        }
     }
 }

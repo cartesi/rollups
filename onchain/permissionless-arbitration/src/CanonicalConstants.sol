@@ -15,8 +15,8 @@ library ArbitrationConstants {
     //     Time.Duration.wrap(60 * 60 * 24 * 7); // TODO
 
     // Dummy
-    Time.Duration constant VALIDATOR_EFFORT = Time.Duration.wrap(200);
-    Time.Duration constant CENSORSHIP_TOLERANCE = Time.Duration.wrap(90);
+    Time.Duration constant VALIDATOR_EFFORT = Time.Duration.wrap(0);
+    Time.Duration constant CENSORSHIP_TOLERANCE = Time.Duration.wrap(210);
 
     Time.Duration constant DISPUTE_TIMEOUT =
         Time.Duration.wrap(
