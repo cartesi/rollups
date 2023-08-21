@@ -3,32 +3,41 @@
 
 pragma solidity ^0.8.8;
 
-import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {PaymentSplitter} from "@openzeppelin/contracts/finance/PaymentSplitter.sol";
-
 import {AbstractConsensus} from "../AbstractConsensus.sol";
+import {IConsensus} from "../IConsensus.sol";
 import {IHistory} from "../../history/IHistory.sol";
 
 /// @title Quorum consensus
 /// @notice A consensus model controlled by a small set of addresses, the validators.
-/// @dev This contract uses several OpenZeppelin contracts:
-/// `AccessControlEnumerable`, `EnumerableSet`, and `PaymentSplitter`.
-/// For more information on those, please consult OpenZeppelin's official documentation.
-contract Quorum is AbstractConsensus, AccessControlEnumerable, PaymentSplitter {
-    using EnumerableSet for EnumerableSet.AddressSet;
-
-    /// @notice The validator role.
-    /// @dev Only validators can submit claims.
-    bytes32 public constant VALIDATOR_ROLE = keccak256("VALIDATOR_ROLE");
-
+///         In this version, we assume the quorum doesn't change after the constructor.
+contract Quorum is AbstractConsensus, PaymentSplitter {
     /// @notice The history contract.
     /// @dev See the `getHistory` function.
     IHistory internal immutable history;
 
-    /// @notice For each claim, the set of validators that agree
-    /// that it should be submitted to the history contract.
-    mapping(bytes => EnumerableSet.AddressSet) internal yeas;
+    // Quorum members
+    // Map an address to true if it's a validator
+    mapping(address => bool) public validators;
+    uint256 public immutable quorumSize;
+
+    // Quorum claims
+    struct Voted {
+        uint256 count;
+        // Map an address to true if it has voted yea
+        mapping(address => bool) voted;
+    }
+    // Map a claim to struct Voted
+    mapping(bytes => Voted) internal yeas;
+
+    /// @notice Raised if not a validator
+    error OnlyValidator();
+    modifier onlyValidator() {
+        if (!validators[msg.sender]) {
+            revert OnlyValidator();
+        }
+        _;
+    }
 
     /// @notice Construct a Quorum consensus
     /// @param _validators the list of validators
@@ -39,17 +48,15 @@ contract Quorum is AbstractConsensus, AccessControlEnumerable, PaymentSplitter {
         uint256[] memory _shares,
         IHistory _history
     ) PaymentSplitter(_validators, _shares) {
-        // Iterate through the array of validators,
-        // and grant to each the validator role.
+        // Add the array of validators into the quorum
         for (uint256 i; i < _validators.length; ++i) {
-            grantRole(VALIDATOR_ROLE, _validators[i]);
+            validators[_validators[i]] = true;
         }
-
-        // Set history.
+        quorumSize = _validators.length;
         history = _history;
     }
 
-    /// @notice Submits a claim for voting.
+    /// @notice Submits (Votes) a claim.
     ///         If this is the claim that reaches the majority, then
     ///         the claim is submitted to the history contract.
     ///         The encoding of `_claimData` might vary depending on the
@@ -58,26 +65,16 @@ contract Quorum is AbstractConsensus, AccessControlEnumerable, PaymentSplitter {
     /// @dev Can only be called by a validator,
     ///      and the `Quorum` contract must have ownership over
     ///      its current history contract.
-    function submitClaim(
-        bytes calldata _claimData
-    ) external onlyRole(VALIDATOR_ROLE) {
-        // Get the set of validators in favour of the claim
-        EnumerableSet.AddressSet storage claimYeas = yeas[_claimData];
+    function submitClaim(bytes calldata _claimData) external onlyValidator {
+        Voted storage claimYeas = yeas[_claimData];
 
-        // Add the message sender to such set.
-        // If the `add` function returns `true`,
-        // then the message sender was not in the set.
-        if (claimYeas.add(msg.sender)) {
-            // Get the number of validators in favour of the claim,
-            // taking into account the message sender as well.
-            uint256 numOfVotesInFavour = claimYeas.length();
+        // If the msg.sender hasn't submitted the same claim before
+        if (!claimYeas.voted[msg.sender]) {
+            claimYeas.voted[msg.sender] = true;
 
-            // Get the number of validators in the quorum.
-            uint256 quorumSize = getRoleMemberCount(VALIDATOR_ROLE);
-
-            // If this claim has now just over half of the quorum's approval,
+            // If this claim has now just over half of the quorum's votes,
             // then we can submit it to the history contract.
-            if (numOfVotesInFavour == 1 + quorumSize / 2) {
+            if (++claimYeas.count == 1 + quorumSize / 2) {
                 history.submitClaim(_claimData);
             }
         }
@@ -89,6 +86,10 @@ contract Quorum is AbstractConsensus, AccessControlEnumerable, PaymentSplitter {
         return history;
     }
 
+    /// @notice Get a claim from the current history.
+    ///         The encoding of `_proofContext` might vary depending on the
+    ///         implementation of the current history contract.
+    /// @inheritdoc IConsensus
     function getClaim(
         address _dapp,
         bytes calldata _proofContext
