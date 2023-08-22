@@ -4,13 +4,16 @@
 pragma solidity ^0.8.8;
 
 import {PaymentSplitter} from "@openzeppelin/contracts/finance/PaymentSplitter.sol";
+
 import {AbstractConsensus} from "../AbstractConsensus.sol";
 import {IConsensus} from "../IConsensus.sol";
 import {IHistory} from "../../history/IHistory.sol";
 
 /// @title Quorum consensus
 /// @notice A consensus model controlled by a small set of addresses, the validators.
-///         In this version, we assume the quorum doesn't change after the constructor.
+///         In this version, the validator set is immutable.
+/// @dev This contract uses OpenZeppelin `PaymentSplitter`.
+///      For more information on `PaymentSplitter`, please consult OpenZeppelin's official documentation.
 contract Quorum is AbstractConsensus, PaymentSplitter {
     /// @notice The history contract.
     /// @dev See the `getHistory` function.
@@ -21,7 +24,7 @@ contract Quorum is AbstractConsensus, PaymentSplitter {
     mapping(address => bool) public validators;
     uint256 public immutable quorumSize;
 
-    // Quorum claims
+    // Quorum votes
     struct Voted {
         uint256 count;
         // Map an address to true if it has voted yea
@@ -56,7 +59,7 @@ contract Quorum is AbstractConsensus, PaymentSplitter {
         history = _history;
     }
 
-    /// @notice Submits (Votes) a claim.
+    /// @notice Vote for a claim to be submitted.
     ///         If this is the claim that reaches the majority, then
     ///         the claim is submitted to the history contract.
     ///         The encoding of `_claimData` might vary depending on the
