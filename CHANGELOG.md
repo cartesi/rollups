@@ -40,8 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Debian version to bookworm in node Docker images
 - Updated Rust version to 1.71.0 in node Docker images
 - Updated gRPC interfaces to 0.14.0
-- Updated the emulator SDK to 0.16.0
-- Updated the `server-manager` to 0.8.0
+- Updated emulator SDK to 0.16.2
+- Updated `server-manager` to 0.8.2
 
 ### Removed
 
