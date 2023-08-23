@@ -12,6 +12,7 @@ import "@typechain/hardhat";
 import "hardhat-deploy";
 import "hardhat-abi-exporter";
 import "hardhat-gas-reporter";
+import "@rumblefishdev/hardhat-kms-signer";
 
 import {
     Chain,
@@ -25,6 +26,9 @@ import {
 
 // read MNEMONIC from env variable
 let mnemonic = process.env.MNEMONIC;
+
+// use KMS if env variable is defined
+const kmsKeyId = process.env.KMS_KEY_ID;
 
 const ppath = (packageName: string, pathname: string) => {
     return path.join(
@@ -47,6 +51,7 @@ const networkConfig = (chain: Chain): HttpNetworkUserConfig => {
         chainId: chain.id,
         url,
         accounts: mnemonic ? { mnemonic } : undefined,
+        kmsKeyId,
     };
 };
 
