@@ -1,0 +1,6 @@
+[submodule "node"]
+	path = node
+	url = https://github.com/cartesi/rollups-node
+[submodule "contracts"]
+	path = contracts
+	url = https://github.com/cartesi/rollups-contracts
