@@ -142,11 +142,12 @@ end
 local Client = {}
 Client.__index = Client
 
-function Client:new(blockchain)
+function Client:new(account_index)
+    local blockchain_data = require "blockchain.constants"
+
     local client = {
-        endpoint = blockchain.endpoint,
-        account = blockchain:new_account(),
-        blockchain = blockchain,
+        endpoint = blockchain_data.endpoint,
+        pk = blockchain_data.pks[account_index],
     }
 
     setmetatable(client, self)
@@ -193,8 +194,6 @@ function Client:_read_logs(tournament_address, sig, topics, data_sig)
     end
 
     local ret = parse_logs(logs, data_sig)
-
-    self.blockchain:read_to("eth_getLogs")
     return ret
 end
 
@@ -234,7 +233,6 @@ function Client:_call(address, sig, args)
     end
     handle:close()
 
-    self.blockchain:read_to("eth_call")
     return ret
 end
 
@@ -348,7 +346,7 @@ function Client:_send_tx(tournament_address, sig, args)
 
     local cmd = string.format(
         cast_send_template,
-        self.account.pk,
+        self.pk,
         self.endpoint,
         tournament_address,
         sig,
@@ -364,7 +362,6 @@ function Client:_send_tx(tournament_address, sig, args)
         error(string.format("Send transaction `%s` reverted:\n%s", sig, ret))
     end
     handle:close()
-    self.blockchain:read_to("eth_sendRawTransaction")
 end
 
 function Client:tx_join_tournament(tournament_address, final_state, proof, left_child, right_child)

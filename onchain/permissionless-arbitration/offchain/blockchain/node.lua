@@ -11,7 +11,7 @@ local function start_blockchain(account_num)
     account_num = account_num or default_account_number
     print(string.format("Starting blockchain with %d accounts...", account_num))
 
-    local cmd = string.format([[sh -c "echo $$ ; exec anvil --block-time 1 -a %d"]], account_num)
+    local cmd = string.format([[sh -c "echo $$ ; exec anvil --block-time 1 -a %d > anvil.log 2>&1"]], account_num)
 
     local reader = io.popen(cmd)
     assert(reader, "`popen` returned nil reader")
@@ -29,37 +29,9 @@ local function start_blockchain(account_num)
     return handle
 end
 
-local function capture_blockchain_data(reader, account_num)
-    account_num = account_num or default_account_number
-    local str
-
-    local addresses = {}
-    repeat
-        str = reader:read();
-        local _, _, address = str:find [[%(%d+%) ("0x%x+")]]
-        if address then
-            table.insert(addresses, address)
-        end
-    until str:find("Private Keys")
-    assert(#addresses == account_num)
-
-    local pks = {}
-    repeat
-        str = reader:read();
-        local _, _, pk = str:find("%(%d+%) (0x%x+)")
-        if pk then
-            table.insert(pks, pk)
-        end
-    until str:find("Wallet")
-    assert(#pks == account_num)
-
-    local endpoint
-    repeat
-        str = reader:read();
-        _, _, endpoint = str:find("Listening on ([%w%p]+)")
-    until endpoint
-
-    return { address = addresses, pk = pks }, endpoint
+local function capture_blockchain_data()
+    local blockchain_data = require "blockchain.constants"
+    return { address = blockchain_data.addresses, pk = blockchain_data.pks }, blockchain_data.endpoint
 end
 
 
@@ -78,7 +50,7 @@ local function deploy_contracts(endpoint, deployer, initial_hash)
 
     local _, _, sl_factory_address = handle_sl:read("*a"):find("Deployed to: (0x%x+)")
     assert(sl_factory_address, "deployment failed, factory_address is nil")
-    print("Single Level factory deployed at", sl_factory_address)
+    print("Single Level factory deployed at: " .. sl_factory_address)
     handle_sl:close()
 
     --
@@ -95,7 +67,7 @@ local function deploy_contracts(endpoint, deployer, initial_hash)
 
     local _, _, top_factory_address = handle_top:read("*a"):find("Deployed to: (0x%x+)")
     assert(top_factory_address, "deployment failed, factory_address is nil")
-    print("Top factory deployed at", top_factory_address)
+    print("Top factory deployed at: " .. top_factory_address)
     handle_top:close()
 
     --
@@ -112,7 +84,7 @@ local function deploy_contracts(endpoint, deployer, initial_hash)
 
     local _, _, mid_factory_address = handle_mid:read("*a"):find("Deployed to: (0x%x+)")
     assert(mid_factory_address, "deployment failed, factory_address is nil")
-    print("Middle factory deployed at", mid_factory_address)
+    print("Middle factory deployed at: " .. mid_factory_address)
     handle_mid:close()
 
     --
@@ -129,7 +101,7 @@ local function deploy_contracts(endpoint, deployer, initial_hash)
 
     local _, _, bot_factory_address = handle_bot:read("*a"):find("Deployed to: (0x%x+)")
     assert(bot_factory_address, "deployment failed, factory_address is nil")
-    print("Bottom factory deployed at", bot_factory_address)
+    print("Bottom factory deployed at: " .. bot_factory_address)
     handle_bot:close()
 
 
@@ -147,7 +119,7 @@ local function deploy_contracts(endpoint, deployer, initial_hash)
 
     local _, _, tournament_factory_address = handle_tournament:read("*a"):find("Deployed to: (0x%x+)")
     assert(tournament_factory_address, "deployment failed, factory_address is nil")
-    print("tournament factory deployed at", tournament_factory_address)
+    print("tournament factory deployed at: " .. tournament_factory_address)
     handle_tournament:close()
 
 
@@ -166,7 +138,7 @@ local function deploy_contracts(endpoint, deployer, initial_hash)
     local _, _, a = handle_root:read("*a"):find [["data":"0x000000000000000000000000(%x+)"]]
     local address = "0x" .. a
     assert(address, "deployment failed, address is nil")
-    print("Contract deployed at", address)
+    print("Contract deployed at: " .. address)
     handle_root:close()
 
     return address
@@ -179,12 +151,12 @@ function Blockchain:new(account_num)
     local blockchain = {}
 
     local handle = start_blockchain(account_num)
-    local accounts, endpoint = capture_blockchain_data(handle.reader, account_num)
+    local accounts, endpoint = capture_blockchain_data()
 
     blockchain._handle = handle
     blockchain._accounts = accounts
     blockchain._current_account = 1
-    blockchain.endpoint = "http://" .. endpoint
+    blockchain.endpoint = endpoint
 
     setmetatable(blockchain, self)
     return blockchain
@@ -209,10 +181,6 @@ function Blockchain:deploy_contract(initial_hash, deployer)
     deployer = deployer or self:new_account()
     local address = deploy_contracts(self.endpoint, deployer.pk, initial_hash)
     return address, deployer
-end
-
-function Blockchain:read_to(p)
-    repeat until self._handle.reader:read():find(p)
 end
 
 -- local bc = Blockchain:new(100)
