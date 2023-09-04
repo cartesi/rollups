@@ -1,6 +1,6 @@
 local constants = require "constants"
 local bint = require 'utils.bint' (256) -- use 256 bits integers
-local log = require 'utils.log'
+local helper = require 'utils.helper'
 
 local Machine = require "computation.machine"
 local Client = require "blockchain.client"
@@ -48,9 +48,9 @@ function Player:_react_tournament(tournament)
     if not tournament.parent then
         local winner_final_state = self.client:root_tournament_winner(tournament.address)
         if winner_final_state[1] == "true" then
-            log.log(self.player_index, "TOURNAMENT FINISHED, HURRAYYY")
-            log.log(self.player_index, "Winner commitment: " .. winner_final_state[2]:hex_string())
-            log.log(self.player_index, "Final state: " .. winner_final_state[3]:hex_string())
+            helper.log(self.player_index, "TOURNAMENT FINISHED, HURRAYYY")
+            helper.log(self.player_index, "Winner commitment: " .. winner_final_state[2]:hex_string())
+            helper.log(self.player_index, "Final state: " .. winner_final_state[3]:hex_string())
             return true
         end
     else
@@ -58,19 +58,19 @@ function Player:_react_tournament(tournament)
         if tournament_winner[1] == "true" then
             local old_commitment = self.commitments[tournament.parent.address]
             if tournament_winner[2] ~= old_commitment.root_hash then
-                log.log(self.player_index, "player lost tournament")
+                helper.log(self.player_index, "player lost tournament")
                 self.has_lost = true
                 return
             end
 
             if self.called_win[tournament.address] then
-                log.log(self.player_index, "player already called winInnerMatch")
+                helper.log(self.player_index, "player already called winInnerMatch")
                 return
             else
                 self.called_win[tournament.address] = true
             end
 
-            log.log(self.player_index, string.format(
+            helper.log(self.player_index, string.format(
                 "win tournament %s of level %d for commitment %s",
                 tournament.address,
                 tournament.level,
@@ -94,7 +94,7 @@ end
 function Player:_react_match(match, commitment)
     -- TODO call timeout if needed
 
-    log.log(self.player_index, "HEIGHT: " .. match.current_height)
+    helper.log(self.player_index, "HEIGHT: " .. match.current_height)
     if match.current_height == 0 then
         -- match sealed
         if match.tournament.level == 1 then
@@ -106,11 +106,11 @@ function Player:_react_match(match, commitment)
 
             if finished then
                 local delay = tonumber(self.client:maximum_delay(match.tournament.address)[1])
-                log.log(self.player_index, "DELAY", delay - os.time())
+                helper.log(self.player_index, "DELAY", delay - os.time())
                 return
             end
 
-            log.log(self.player_index, string.format(
+            helper.log(self.player_index, string.format(
                 "Calculating access logs for step %s",
                 match.running_leaf
             ))
@@ -119,7 +119,7 @@ function Player:_react_match(match, commitment)
             local ucycle = (match.running_leaf & constants.uarch_span):touinteger()
             local logs = Machine:get_logs(self.machine_path, cycle, ucycle)
 
-            log.log(self.player_index, string.format(
+            helper.log(self.player_index, string.format(
                 "win leaf match in tournament %s of level %d for commitment %s",
                 match.tournament.address,
                 match.tournament.level,
@@ -135,7 +135,7 @@ function Player:_react_match(match, commitment)
                 logs
             )
             if not ok then
-                log.log(self.player_index, string.format(
+                helper.log(self.player_index, string.format(
                     "win leaf match reverted: %s",
                     e
                 ))
@@ -157,7 +157,10 @@ function Player:_react_match(match, commitment)
     elseif match.current_height == 1 then
         -- match to be sealed
         local found, left, right = match.current_other_parent:children()
-        if not found then return end
+        if not found then
+            helper.touch_player_idle(self.player_index)
+            return
+        end
 
         local initial_hash, proof
         if match.running_leaf:iszero() then
@@ -167,7 +170,7 @@ function Player:_react_match(match, commitment)
         end
 
         if match.tournament.level == 1 then
-            log.log(self.player_index, string.format(
+            helper.log(self.player_index, string.format(
                 "seal leaf match in tournament %s of level %d for commitment %s",
                 match.tournament.address,
                 match.tournament.level,
@@ -183,7 +186,7 @@ function Player:_react_match(match, commitment)
                 proof
             )
         else
-            log.log(self.player_index, string.format(
+            helper.log(self.player_index, string.format(
                 "seal inner match in tournament %s of level %d for commitment %s",
                 match.tournament.address,
                 match.tournament.level,
@@ -216,6 +219,7 @@ function Player:_react_match(match, commitment)
         -- match running
         local found, left, right = match.current_other_parent:children()
         if not found then
+            helper.touch_player_idle(self.player_index)
             return
         end
 
@@ -230,7 +234,7 @@ function Player:_react_match(match, commitment)
             assert(f)
         end
 
-        log.log(self.player_index, string.format(
+        helper.log(self.player_index, string.format(
             "advance match with current height %d in tournament %s of level %d for commitment %s",
             match.current_height,
             match.tournament.address,
@@ -284,13 +288,15 @@ function Player:_join_tournament_if_needed(tournament, commitment)
         assert(f)
         local last, proof = commitment:last()
 
-        log.log(self.player_index, string.format(
+        helper.log(self.player_index, string.format(
             "join tournament %s of level %d with commitment %s",
             tournament.address,
             tournament.level,
             commitment.root_hash
         ))
         self.client:tx_join_tournament(tournament.address, last, proof, left, right)
+    else
+        helper.touch_player_idle(self.player_index)
     end
 end
 

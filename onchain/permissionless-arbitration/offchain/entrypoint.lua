@@ -4,28 +4,11 @@ package.path = package.path .. ";./offchain/?.lua"
 package.cpath = package.cpath .. ";/opt/cartesi/lib/lua/5.4/?.so"
 
 local machine_path = "offchain/program/simple-program"
-local ps_template = [[ps %s | grep defunct | wc -l]]
 
-local log = require 'utils.log'
+local helper = require 'utils.helper'
 local Blockchain = require "blockchain.node"
 local Machine = require "computation.machine"
-
-local function is_zombie(pid)
-    local reader = io.popen(string.format(ps_template, pid))
-    ret = reader:read()
-    reader:close()
-    return tonumber(ret) == 1
-end
-
-local function stop_players(pid_reader)
-    for pid, reader in pairs(pid_reader) do
-        print(string.format("Stopping player with pid %s...", pid))
-        os.execute(string.format("kill -15 %s", pid))
-        reader:close()
-        print "Player stopped"
-    end
-
-end
+local Client = require "blockchain.client"
 
 print "Hello, world!"
 os.execute "cd offchain/program && ./gen_machine_simple.sh"
@@ -53,23 +36,45 @@ end
 -- gracefully end children processes
 setmetatable(pid_reader, {
     __gc = function(t)
-        stop_players(t)
+        helper.stop_players(t)
     end
 })
 
 local no_active_players = 0
+local all_idle = 0
+local client = Client:new(1)
+local last_ts = [[01/01/2000 00:00:00]]
 while true do
-    local last_ts = [[01/01/2000 00:00:00]]
     local players = 0
 
     for pid, reader in pairs(pid_reader) do
+        local msg_out = 0
         players = players + 1
-        if is_zombie(pid) then
-            log.log(pid_player[pid], string.format("player process %s is dead", pid))
+        last_ts, msg_out = helper.log_to_ts(reader, last_ts)
+
+        -- close the reader and delete the reader entry when there's no more msg in the buffer
+        -- and the process has already ended
+        if msg_out == 0 and helper.is_zombie(pid) then
+            helper.log(pid_player[pid], string.format("player process %s is dead", pid))
             reader:close()
             pid_reader[pid] = nil
+            pid_player[pid] = nil
+        end
+    end
+
+    if players > 0 then
+        if helper.all_players_idle(pid_player) then
+            all_idle = all_idle + 1
+            helper.rm_all_players_idle(pid_player)
         else
-            last_ts = log.log_to_ts(reader, last_ts)
+            all_idle = 0
+        end
+
+        -- if all players are idle for 10 consecutive iterations, advance blockchain
+        if all_idle == 10 then
+            print("all players idle, fastforward blockchain for 30 seconds...")
+            client:advance_time(30)
+            all_idle = 0
         end
     end
 
@@ -81,8 +86,6 @@ while true do
 
     -- if no active player processes for 10 consecutive iterations, break loop
     if no_active_players == 10 then break end
-
-    -- TODO: if all players are idle, advance anvil
 end
 
 print "Good-bye, world!"
