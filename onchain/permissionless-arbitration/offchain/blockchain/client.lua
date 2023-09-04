@@ -426,6 +426,27 @@ function Client:tx_win_leaf_match(
     )
 end
 
+local cast_advance_template = [[
+cast rpc -r "%s" evm_increaseTime %d
+]]
+
+function Client:advance_time(seconds)
+    local cmd = string.format(
+        cast_advance_template,
+        self.endpoint,
+        seconds
+    )
+
+    local handle = io.popen(cmd)
+    assert(handle)
+    local ret = handle:read "*a"
+    handle:close()
+
+    if ret:find "Error" then
+        error(string.format("Advance time `%d`s failed:\n%s", seconds, ret))
+    end
+end
+
 return Client
 
 
