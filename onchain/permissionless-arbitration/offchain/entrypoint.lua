@@ -71,7 +71,7 @@ while true do
         end
 
         -- if all players are idle for 10 consecutive iterations, advance blockchain
-        if all_idle == 10 then
+        if all_idle == 5 then
             print("all players idle, fastforward blockchain for 30 seconds...")
             client:advance_time(30)
             all_idle = 0
@@ -85,7 +85,10 @@ while true do
     end
 
     -- if no active player processes for 10 consecutive iterations, break loop
-    if no_active_players == 10 then break end
+    if no_active_players == 10 then
+        print("no active players, end program...")
+        break
+    end
 end
 
 print "Good-bye, world!"
