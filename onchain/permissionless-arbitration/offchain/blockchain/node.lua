@@ -1,4 +1,4 @@
-local default_account_number = 10
+local default_account_number = 40
 
 local function stop_blockchain(handle, pid)
     print(string.format("Stopping blockchain with pid %d...", pid))
@@ -7,11 +7,10 @@ local function stop_blockchain(handle, pid)
     print "Blockchain stopped"
 end
 
-local function start_blockchain(account_num)
-    account_num = account_num or default_account_number
-    print(string.format("Starting blockchain with %d accounts...", account_num))
+local function start_blockchain()
+    print(string.format("Starting blockchain with %d accounts...", default_account_number))
 
-    local cmd = string.format([[sh -c "echo $$ ; exec anvil --block-time 1 -a %d > anvil.log 2>&1"]], account_num)
+    local cmd = string.format([[sh -c "echo $$ ; exec anvil --block-time 1 -a %d > anvil.log 2>&1"]], default_account_number)
 
     local reader = io.popen(cmd)
     assert(reader, "`popen` returned nil reader")
@@ -147,24 +146,22 @@ end
 local Blockchain = {}
 Blockchain.__index = Blockchain
 
-function Blockchain:new(account_num)
+function Blockchain:new()
     local blockchain = {}
 
-    local handle = start_blockchain(account_num)
+    local handle = start_blockchain()
     local accounts, endpoint = capture_blockchain_data()
 
     blockchain._handle = handle
     blockchain._accounts = accounts
-    blockchain._current_account = 1
     blockchain.endpoint = endpoint
 
     setmetatable(blockchain, self)
     return blockchain
 end
 
-function Blockchain:new_account()
-    local current_account = self._current_account
-    self._current_account = current_account + 1
+function Blockchain:default_account()
+    local current_account = 1
     local accounts = self._accounts
     assert(current_account <= #accounts.address, "no more accounts")
 
@@ -178,13 +175,9 @@ end
 
 function Blockchain:deploy_contract(initial_hash, deployer)
     assert(initial_hash)
-    deployer = deployer or self:new_account()
+    deployer = deployer or self:default_account()
     local address = deploy_contracts(self.endpoint, deployer.pk, initial_hash)
     return address, deployer
 end
-
--- local bc = Blockchain:new(100)
--- local initial_hash = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
--- bc:deploy_contract(initial_hash)
 
 return Blockchain
