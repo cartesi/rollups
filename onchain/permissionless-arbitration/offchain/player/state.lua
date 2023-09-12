@@ -1,77 +1,72 @@
 local constants = require "constants"
 local bint = require 'utils.bint' (256) -- use 256 bits integers
 
-local Client = require "blockchain.client"
+local Reader = require "blockchain.reader"
 
-local Player = {}
-Player.__index = Player
+local State = {}
+State.__index = State
 
-function Player:new(root_tournament_address, player_index, commitment_builder, machine_path)
-    local player = {
-        machine_path = machine_path,
+function State:new(root_tournament_address)
+    local state = {
         root_tournament = {
             base_big_cycle = 0,
             address = root_tournament_address,
             level = constants.levels,
             parent = false,
-            commitment = false,
-            commitment_status = {},
-            tournament_winner = {},
-            latest_match = {},
+            commitments = {},
+            matches = {},
+            tournament_winner = {}
         },
-        client = Client:new(player_index),
-        commitment_builder = commitment_builder,
-        player_index = player_index
+        reader = Reader:new()
     }
 
-    setmetatable(player, self)
-    return player
+    setmetatable(state, self)
+    return state
 end
 
-function Player:fetch()
+function State:fetch()
     return self:_fetch_tournament(self.root_tournament)
 end
 
-function Player:_fetch_tournament(tournament)
-    local commitment = tournament.commitment
-    if not commitment then
-        commitment = self.commitment_builder:build(
-            tournament.base_big_cycle,
-            tournament.level
-        )
-        tournament.commitment = commitment
+function State:_fetch_tournament(tournament)
+    local matches =  self:_matches(tournament)
+    local commitments = self.reader:read_commitment_joined(tournament.address)
+
+    for _, log in ipairs(commitments) do
+        local root = log.root
+        local status = self.reader:read_commitment(tournament.address, root)
+        tournament.commitments[root] = { status = status, latest_match = false }
     end
+
+    for _, match in ipairs(matches) do
+        if match then
+            self:_fetch_match(match)
+            tournament.commitments[match.commitment_one].latest_match = match
+            tournament.commitments[match.commitment_two].latest_match = match
+        end
+    end
+    tournament.matches = matches
 
     if not tournament.parent then
-        tournament.tournament_winner = self.client:root_tournament_winner(tournament.address)
+        tournament.tournament_winner = self.reader:root_tournament_winner(tournament.address)
     else
-        tournament.tournament_winner = self.client:inner_tournament_winner(tournament.address)
-    end
-
-    tournament.latest_match =  self:_latest_match(tournament)
-
-    if not tournament.latest_match then
-        tournament.commitment_status = self.client:read_commitment(tournament.address, commitment.root_hash)
-    else
-        self:_fetch_match(tournament.latest_match, commitment)
+        tournament.tournament_winner = self.reader:inner_tournament_winner(tournament.address)
     end
 end
 
-function Player:_fetch_match(match, commitment)
+function State:_fetch_match(match)
     if match.current_height == 0 then
         -- match sealed
         if match.tournament.level == 1 then
-            local f, left, right = commitment.root_hash:children()
-            assert(f)
 
             match.finished =
-                self.client:match(match.tournament.address, match.match_id_hash)[1]:is_zero()
+                self.reader:match(match.tournament.address, match.match_id_hash)[1]:is_zero()
 
             if match.finished then
-                match.delay = tonumber(self.client:maximum_delay(match.tournament.address)[1])
+                match.delay = tonumber(self.reader:maximum_delay(match.tournament.address)[1])
             end
         else
-            local address = self.client:read_tournament_created(
+            local address = self.reader:read_tournament_created(
                 match.tournament.address,
                 match.match_id_hash
             ).new_tournament
@@ -81,6 +76,7 @@ function Player:_fetch_match(match, commitment)
             new_tournament.level = match.tournament.level - 1
             new_tournament.parent = match.tournament
             new_tournament.base_big_cycle = match.base_big_cycle
+            new_tournament.commitments = {}
             match.inner_tournament = new_tournament
 
             return self:_fetch_tournament(new_tournament)
@@ -88,32 +84,31 @@ function Player:_fetch_match(match, commitment)
     end
 end
 
-function Player:_latest_match(tournament)
-    local commitment = tournament.commitment
-    local matches = self.client:read_match_created(tournament.address, commitment.root_hash)
-    local last_match = matches[#matches]
+function State:_matches(tournament)
+    local matches = self.reader:read_match_created(tournament.address)
 
-    if not last_match then return false end
+    for k, match in ipairs(matches) do
+        local m = self.reader:match(tournament.address, match.match_id_hash)
+        if m[1]:is_zero() and m[2]:is_zero() and m[3]:is_zero() then
+            matches[k] = false
+        else
+            match.current_other_parent = m[1]
+            match.current_left = m[2]
+            match.current_right = m[3]
+            match.running_leaf = bint(m[4])
+            match.current_height = tonumber(m[5])
+            match.level = tonumber(m[6])
+            match.tournament = tournament
 
-    local m = self.client:match(tournament.address, last_match.match_id_hash)
-    if m[1]:is_zero() and m[2]:is_zero() and m[3]:is_zero() then
-        return false
+            local level = tournament.level
+            local base = bint(tournament.base_big_cycle)
+            local step = bint(1) << constants.log2step[level]
+            match.leaf_cycle = base + (step * match.running_leaf)
+            match.base_big_cycle = (match.leaf_cycle >> constants.log2_uarch_span):touinteger()
+        end
     end
-    last_match.current_other_parent = m[1]
-    last_match.current_left = m[2]
-    last_match.current_right = m[3]
-    last_match.running_leaf = bint(m[4])
-    last_match.current_height = tonumber(m[5])
-    last_match.level = tonumber(m[6])
-    last_match.tournament = tournament
 
-    local level = tournament.level
-    local base = bint(tournament.base_big_cycle)
-    local step = bint(1) << constants.log2step[level]
-    last_match.leaf_cycle = base + (step * last_match.running_leaf)
-    last_match.base_big_cycle = (last_match.leaf_cycle >> constants.log2_uarch_span):touinteger()
-
-    return last_match
+    return matches
 end
 
-return Player
+return State

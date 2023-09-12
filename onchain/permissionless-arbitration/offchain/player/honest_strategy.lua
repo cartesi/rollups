@@ -3,67 +3,72 @@ local helper = require 'utils.helper'
 
 local Machine = require "computation.machine"
 
-local _react_match_honestly
-local _react_tournament_honestly
+local HonestStrategy = {}
+HonestStrategy.__index = HonestStrategy
 
-local function _join_tournament_if_needed(player, tournament)
-    if tournament.commitment_status.clock.allowance == 0 then
-        local f, left, right = tournament.commitment:children(tournament.commitment.root_hash)
-        assert(f)
-        local last, proof = tournament.commitment:last()
+function HonestStrategy:new(commitment_builder, machine_path, sender)
+    local honest_strategy = {
+        commitment_builder = commitment_builder,
+        machine_path = machine_path,
+        sender = sender
+    }
 
-        helper.log(player.player_index, string.format(
-            "join tournament %s of level %d with commitment %s",
-            tournament.address,
-            tournament.level,
-            tournament.commitment.root_hash
+    setmetatable(honest_strategy, self)
+    return honest_strategy
+end
+
+function HonestStrategy:_join_tournament(state, tournament, commitment)
+    local f, left, right = commitment:children(commitment.root_hash)
+    assert(f)
+    local last, proof = commitment:last()
+
+    helper.log(self.sender.index, string.format(
+        "join tournament %s of level %d with commitment %s",
+        tournament.address,
+        tournament.level,
+        commitment.root_hash
+    ))
+    local ok, e = self.sender:tx_join_tournament(
+        tournament.address,
+        last,
+        proof,
+        left,
+        right
+    )
+    if not ok then
+        helper.log(self.sender.index, string.format(
+            "join tournament reverted: %s",
+            e
         ))
-        local ok, e = pcall(player.client.tx_join_tournament,
-            player.client,
-            tournament.address,
-            last,
-            proof,
-            left,
-            right
-        )
-        if not ok then
-            helper.log(player.player_index, string.format(
-                "join tournament reverted: %s",
-                e
-            ))
-        end
-    else
-        helper.touch_player_idle(player.player_index)
     end
 end
 
-_react_match_honestly = function(player, match, commitment)
+function HonestStrategy:_react_match(state, match, commitment)
     -- TODO call timeout if needed
 
-    helper.log(player.player_index, "HEIGHT: " .. match.current_height)
+    helper.log(self.sender.index, "Enter match at HEIGHT: " .. match.current_height)
     if match.current_height == 0 then
         -- match sealed
         if match.tournament.level == 1 then
             local f, left, right = commitment.root_hash:children()
             assert(f)
 
-            helper.log(player.player_index, string.format(
+            helper.log(self.sender.index, string.format(
                 "Calculating access logs for step %s",
                 match.running_leaf
             ))
 
             local cycle = (match.running_leaf >> constants.log2_uarch_span):touinteger()
             local ucycle = (match.running_leaf & constants.uarch_span):touinteger()
-            local logs = Machine:get_logs(player.machine_path, cycle, ucycle)
+            local logs = Machine:get_logs(self.machine_path, cycle, ucycle)
 
-            helper.log(player.player_index, string.format(
+            helper.log(self.sender.index, string.format(
                 "win leaf match in tournament %s of level %d for commitment %s",
                 match.tournament.address,
                 match.tournament.level,
                 commitment.root_hash
             ))
-            local ok, e = pcall(player.client.tx_win_leaf_match,
-                player.client,
+            local ok, e = self.sender:tx_win_leaf_match(
                 match.tournament.address,
                 match.commitment_one,
                 match.commitment_two,
@@ -72,19 +77,18 @@ _react_match_honestly = function(player, match, commitment)
                 logs
             )
             if not ok then
-                helper.log(player.player_index, string.format(
+                helper.log(self.sender.index, string.format(
                     "win leaf match reverted: %s",
                     e
                 ))
             end
-        else
-            return _react_tournament_honestly(player, match.inner_tournament)
+        elseif match.inner_tournament then
+            return self:_react_tournament(state, match.inner_tournament)
         end
     elseif match.current_height == 1 then
         -- match to be sealed
         local found, left, right = match.current_other_parent:children()
         if not found then
-            helper.touch_player_idle(player.player_index)
             return
         end
 
@@ -96,14 +100,13 @@ _react_match_honestly = function(player, match, commitment)
         end
 
         if match.tournament.level == 1 then
-            helper.log(player.player_index, string.format(
+            helper.log(self.sender.index, string.format(
                 "seal leaf match in tournament %s of level %d for commitment %s",
                 match.tournament.address,
                 match.tournament.level,
                 commitment.root_hash
             ))
-            local ok, e = pcall(player.client.tx_seal_leaf_match,
-                player.client,
+            local ok, e = self.sender:tx_seal_leaf_match(
                 match.tournament.address,
                 match.commitment_one,
                 match.commitment_two,
@@ -113,20 +116,19 @@ _react_match_honestly = function(player, match, commitment)
                 proof
             )
             if not ok then
-                helper.log(player.player_index, string.format(
+                helper.log(self.sender.index, string.format(
                     "seal leaf match reverted: %s",
                     e
                 ))
             end
         else
-            helper.log(player.player_index, string.format(
+            helper.log(self.sender.index, string.format(
                 "seal inner match in tournament %s of level %d for commitment %s",
                 match.tournament.address,
                 match.tournament.level,
                 commitment.root_hash
             ))
-            local ok, e = pcall(player.client.tx_seal_inner_match,
-                player.client,
+            local ok, e = self.sender:tx_seal_inner_match(
                 match.tournament.address,
                 match.commitment_one,
                 match.commitment_two,
@@ -136,7 +138,7 @@ _react_match_honestly = function(player, match, commitment)
                 proof
             )
             if not ok then
-                helper.log(player.player_index, string.format(
+                helper.log(self.sender.index, string.format(
                     "seal inner match reverted: %s",
                     e
                 ))
@@ -146,7 +148,6 @@ _react_match_honestly = function(player, match, commitment)
         -- match running
         local found, left, right = match.current_other_parent:children()
         if not found then
-            helper.touch_player_idle(player.player_index)
             return
         end
 
@@ -161,15 +162,14 @@ _react_match_honestly = function(player, match, commitment)
             assert(f)
         end
 
-        helper.log(player.player_index, string.format(
+        helper.log(self.sender.index, string.format(
             "advance match with current height %d in tournament %s of level %d for commitment %s",
             match.current_height,
             match.tournament.address,
             match.tournament.level,
             commitment.root_hash
         ))
-        local ok, e = pcall(player.client.tx_advance_match,
-            player.client,
+        local ok, e = self.sender:tx_advance_match(
             match.tournament.address,
             match.commitment_one,
             match.commitment_two,
@@ -179,7 +179,7 @@ _react_match_honestly = function(player, match, commitment)
             new_right
         )
         if not ok then
-            helper.log(player.player_index, string.format(
+            helper.log(self.sender.index, string.format(
                 "advance match reverted: %s",
                 e
             ))
@@ -187,45 +187,52 @@ _react_match_honestly = function(player, match, commitment)
     end
 end
 
-_react_tournament_honestly = function(player, tournament)
+function HonestStrategy:_react_tournament(state, tournament)
+    helper.log(self.sender.index, "Enter tournament at address: " .. tournament.address)
+    local commitment = self.commitment_builder:build(
+        tournament.base_big_cycle,
+        tournament.level
+    )
+
     local tournament_winner = tournament.tournament_winner
     if tournament_winner[1] == "true" then
         if not tournament.parent then
-            helper.log(player.player_index, "TOURNAMENT FINISHED, HURRAYYY")
-            helper.log(player.player_index, "Winner commitment: " .. tournament_winner[2]:hex_string())
-            helper.log(player.player_index, "Final state: " .. tournament_winner[3]:hex_string())
+            helper.log(self.sender.index, "TOURNAMENT FINISHED, HURRAYYY")
+            helper.log(self.sender.index, "Winner commitment: " .. tournament_winner[2]:hex_string())
+            helper.log(self.sender.index, "Final state: " .. tournament_winner[3]:hex_string())
             return true
         else
-            local old_commitment = tournament.parent.commitment
+            local old_commitment = self.commitment_builder:build(
+                tournament.parent.base_big_cycle,
+                tournament.parent.level
+            )
             if tournament_winner[2] ~= old_commitment.root_hash then
-                helper.log(player.player_index, "player lost tournament")
-                player.has_lost = true
-                return
+                helper.log(self.sender.index, "player lost tournament")
+                return true
             end
 
-            if tournament.called_win then
-                helper.log(player.player_index, "player already called winInnerMatch")
+            if tournament.commitments[commitment.root_hash].called_win then
+                helper.log(self.sender.index, "player already called winInnerMatch")
                 return
             else
-                tournament.called_win = true
+                tournament.commitments[commitment.root_hash].called_win = true
             end
 
-            helper.log(player.player_index, string.format(
+            helper.log(self.sender.index, string.format(
                 "win tournament %s of level %d for commitment %s",
                 tournament.address,
                 tournament.level,
-                tournament.commitment.root_hash
+                commitment.root_hash
             ))
             local _, left, right = old_commitment:children(old_commitment.root_hash)
-            local ok, e = pcall(player.client.tx_win_inner_match,
-                player.client,
+            local ok, e = self.sender:tx_win_inner_match(
                 tournament.parent.address,
                 tournament.address,
                 left,
                 right
             )
             if not ok then
-                helper.log(player.player_index, string.format(
+                helper.log(self.sender.index, string.format(
                     "win inner match reverted: %s",
                     e
                 ))
@@ -234,20 +241,18 @@ _react_tournament_honestly = function(player, tournament)
         end
     end
 
-    if not tournament.latest_match then
-        _join_tournament_if_needed(player, tournament)
+    if not tournament.commitments[commitment.root_hash] then
+        self:_join_tournament(state, tournament, commitment)
     else
-        _react_match_honestly(player, tournament.latest_match, tournament.commitment)
+        local latest_match = tournament.commitments[commitment.root_hash].latest_match
+        if latest_match then
+            return self:_react_match(state, latest_match, commitment)
+        end
     end
 end
 
-local function _react_honestly(player)
-    if player.has_lost then
-        return true
-    end
-    return _react_tournament_honestly(player, player.root_tournament)
+function HonestStrategy:react(state)
+    return self:_react_tournament(state, state.root_tournament)
 end
 
-return {
-    react_honestly = _react_honestly
-}
+return HonestStrategy
