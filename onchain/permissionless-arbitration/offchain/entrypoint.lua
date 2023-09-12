@@ -4,11 +4,16 @@ package.path = package.path .. ";./offchain/?.lua"
 package.cpath = package.cpath .. ";/opt/cartesi/lib/lua/5.4/?.so"
 
 local machine_path = "offchain/program/simple-program"
+local FF_TIME = 30
+local IDLE_LIMIT = 5
+local INACTIVE_LIMIT = 10
 
 local helper = require 'utils.helper'
+local blockchain_utils = require "blockchain.utils"
+local time = require "utils.time"
+local blockchain_constants = require "blockchain.constants"
 local Blockchain = require "blockchain.node"
 local Machine = require "computation.machine"
-local Client = require "blockchain.client"
 
 print "Hello, world!"
 os.execute "cd offchain/program && ./gen_machine_simple.sh"
@@ -16,6 +21,7 @@ os.execute "cd offchain/program && ./gen_machine_simple.sh"
 local m = Machine:new_from_path(machine_path)
 local initial_hash = m:state().root_hash
 local blockchain = Blockchain:new()
+time.sleep(2)
 local contract = blockchain:deploy_contract(initial_hash)
 
 -- add more player instances here
@@ -42,7 +48,6 @@ setmetatable(pid_reader, {
 
 local no_active_players = 0
 local all_idle = 0
-local client = Client:new(1)
 local last_ts = [[01/01/2000 00:00:00]]
 while true do
     local players = 0
@@ -70,10 +75,10 @@ while true do
             all_idle = 0
         end
 
-        -- if all players are idle for 10 consecutive iterations, advance blockchain
-        if all_idle == 5 then
-            print("all players idle, fastforward blockchain for 30 seconds...")
-            client:advance_time(30)
+        -- if all players are idle for `IDLE_LIMIT` consecutive iterations, advance blockchain
+        if all_idle == IDLE_LIMIT then
+            print(string.format("all players idle, fastforward blockchain for %d seconds...", FF_TIME))
+            blockchain_utils.advance_time(FF_TIME, blockchain_constants.endpoint)
             all_idle = 0
         end
     end
@@ -84,8 +89,8 @@ while true do
         no_active_players = 0
     end
 
-    -- if no active player processes for 10 consecutive iterations, break loop
-    if no_active_players == 10 then
+    -- if no active player processes for `INACTIVE_LIMIT` consecutive iterations, break loop
+    if no_active_players == INACTIVE_LIMIT then
         print("no active players, end program...")
         break
     end

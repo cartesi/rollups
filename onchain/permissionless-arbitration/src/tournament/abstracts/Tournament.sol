@@ -67,6 +67,7 @@ abstract contract Tournament {
         Tree.Node indexed two,
         Tree.Node leftOfTwo
     );
+    event commitmentJoined(Tree.Node root);
 
 
     //
@@ -148,6 +149,7 @@ abstract contract Tournament {
         _clock.setNewPaused(startInstant, allowance);
 
         pairCommitment(_commitmentRoot, _clock, _leftNode, _rightNode);
+        emit commitmentJoined(_commitmentRoot);
     }
 
     /// @notice Advance the match until the smallest divergence is found at current level

@@ -1,7 +1,7 @@
 local color = require "utils.color"
 
 local names = {'green', 'yellow', 'blue', 'pink', 'cyan', 'white'}
-local idle_template = [[ls player%d_idle 2> /dev/null | grep player%d_idle | wc -l]]
+local idle_template = [[ls player%d_idle 2>/dev/null | grep player%d_idle | wc -l]]
 local ps_template = [[ps %s | grep defunct | wc -l]]
 
 local function log(player_index, msg)
@@ -63,7 +63,7 @@ local function is_player_idle(player_index)
 end
 
 local function rm_player_idle(player_index)
-    os.execute(string.format("rm player%d_idle", player_index))
+    os.execute(string.format("rm player%d_idle 2>/dev/null", player_index))
 end
 
 local function all_players_idle(pid_player)
@@ -89,5 +89,6 @@ return {
     stop_players = stop_players,
     touch_player_idle = touch_player_idle,
     all_players_idle = all_players_idle,
-    rm_all_players_idle = rm_all_players_idle
+    rm_all_players_idle = rm_all_players_idle,
+    rm_player_idle = rm_player_idle
 }
