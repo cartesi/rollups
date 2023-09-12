@@ -18,7 +18,20 @@ local function _join_tournament_if_needed(player, tournament)
             tournament.level,
             tournament.commitment.root_hash
         ))
-        player.client:tx_join_tournament(tournament.address, last, proof, left, right)
+        local ok, e = pcall(player.client.tx_join_tournament,
+            player.client,
+            tournament.address,
+            last,
+            proof,
+            left,
+            right
+        )
+        if not ok then
+            helper.log(player.player_index, string.format(
+                "join tournament reverted: %s",
+                e
+            ))
+        end
     else
         helper.touch_player_idle(player.player_index)
     end
@@ -89,7 +102,8 @@ _react_match_honestly = function(player, match, commitment)
                 match.tournament.level,
                 commitment.root_hash
             ))
-            player.client:tx_seal_leaf_match(
+            local ok, e = pcall(player.client.tx_seal_leaf_match,
+                player.client,
                 match.tournament.address,
                 match.commitment_one,
                 match.commitment_two,
@@ -98,6 +112,12 @@ _react_match_honestly = function(player, match, commitment)
                 initial_hash,
                 proof
             )
+            if not ok then
+                helper.log(player.player_index, string.format(
+                    "seal leaf match reverted: %s",
+                    e
+                ))
+            end
         else
             helper.log(player.player_index, string.format(
                 "seal inner match in tournament %s of level %d for commitment %s",
@@ -105,7 +125,8 @@ _react_match_honestly = function(player, match, commitment)
                 match.tournament.level,
                 commitment.root_hash
             ))
-            player.client:tx_seal_inner_match(
+            local ok, e = pcall(player.client.tx_seal_inner_match,
+                player.client,
                 match.tournament.address,
                 match.commitment_one,
                 match.commitment_two,
@@ -114,6 +135,12 @@ _react_match_honestly = function(player, match, commitment)
                 initial_hash,
                 proof
             )
+            if not ok then
+                helper.log(player.player_index, string.format(
+                    "seal inner match reverted: %s",
+                    e
+                ))
+            end
         end
     else
         -- match running
@@ -141,7 +168,8 @@ _react_match_honestly = function(player, match, commitment)
             match.tournament.level,
             commitment.root_hash
         ))
-        player.client:tx_advance_match(
+        local ok, e = pcall(player.client.tx_advance_match,
+            player.client,
             match.tournament.address,
             match.commitment_one,
             match.commitment_two,
@@ -150,6 +178,12 @@ _react_match_honestly = function(player, match, commitment)
             new_left,
             new_right
         )
+        if not ok then
+            helper.log(player.player_index, string.format(
+                "advance match reverted: %s",
+                e
+            ))
+        end
     end
 end
 
@@ -183,7 +217,19 @@ _react_tournament_honestly = function(player, tournament)
                 tournament.commitment.root_hash
             ))
             local _, left, right = old_commitment:children(old_commitment.root_hash)
-            player.client:tx_win_inner_match(tournament.parent.address, tournament.address, left, right)
+            local ok, e = pcall(player.client.tx_win_inner_match,
+                player.client,
+                tournament.parent.address,
+                tournament.address,
+                left,
+                right
+            )
+            if not ok then
+                helper.log(player.player_index, string.format(
+                    "win inner match reverted: %s",
+                    e
+                ))
+            end
             return
         end
     end
